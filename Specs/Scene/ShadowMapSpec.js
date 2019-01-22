@@ -717,6 +717,7 @@ defineSuite([
             scene.render(); // Model is pre-loaded, render one frame to make it ready
 
             scene.camera.lookAt(origins[i], offsets[i]);
+            scene.camera.moveForward(0.5);
 
             // Render without shadows
             scene.shadowMap.enabled = false;
@@ -1070,7 +1071,8 @@ defineSuite([
     });
 
     it('model updates derived commands when the shadow map is dirty', function() {
-        var spy = spyOn(ShadowMap, 'createDerivedCommands').and.callThrough();
+        var spy1 = spyOn(ShadowMap, 'createReceiveDerivedCommand').and.callThrough();
+        var spy2 = spyOn(ShadowMap, 'createCastDerivedCommand').and.callThrough();
 
         box.show = true;
         floor.show = true;
@@ -1116,21 +1118,34 @@ defineSuite([
             scene.render();
         }
 
-        var callCount;
-        if (!scene.logarithmicDepthBuffer) {
-            // Expect derived commands to be updated twice for both the floor and box,
-            // once on the first frame and again when the shadow map is dirty
-            callCount = 4;
-        } else {
-            // Same as without log z, but doubled. The derived cast commands do not write log z, but
-            // the derived receive commands do.
-            callCount = 8;
-        }
-
-        expect(spy.calls.count()).toEqual(callCount);
+        // When using WebGL, this value is 8. When using the stub, this value is 4.
+        expect(spy1.calls.count()).toBeLessThanOrEqualTo(8);
+        expect(spy2.calls.count()).toEqual(4);
 
         box.show = false;
         floor.show = false;
+    });
+
+    it('does not receive shadows if fromLightSource is false', function() {
+        box.show = true;
+        floorTranslucent.show = true;
+        createCascadedShadowMap();
+        scene.shadowMap.fromLightSource = false;
+
+        // Render without shadows
+        scene.shadowMap.enabled = false;
+        var unshadowedColor;
+        renderAndCall(function(rgba) {
+            unshadowedColor = rgba;
+            expect(rgba).not.toEqual(backgroundColor);
+        });
+
+        // Render with shadows
+        scene.shadowMap.enabled = true;
+        renderAndCall(function(rgba) {
+            expect(rgba).not.toEqual(backgroundColor);
+            expect(rgba).toEqual(unshadowedColor);
+        });
     });
 
     it('tweaking shadow bias parameters works', function() {

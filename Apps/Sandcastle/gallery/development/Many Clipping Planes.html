@@ -10,7 +10,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        if(typeof require === "function") {
+        if(typeof require === 'function') {
             require.config({
                 baseUrl : '../../../Source',
                 waitSeconds : 120
@@ -152,9 +152,9 @@ function updateClippingPlanes() {
 }
 
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
-var agiHqUrl = Cesium.IonResource.fromAssetId(3836);
-var instancedUrl = Cesium.IonResource.fromAssetId(3876);
-var pointCloudUrl = Cesium.IonResource.fromAssetId(3844);
+var agiHqUrl = Cesium.IonResource.fromAssetId(6074);
+var instancedUrl = '../../SampleData/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json';
+var pointCloudUrl = Cesium.IonResource.fromAssetId(5713);
 
 function loadModel(url) {
     createClippingPlanes();
@@ -179,7 +179,7 @@ function loadModel(url) {
 }
 
 var tileset;
-function loadTileset(url) {
+function loadTileset(url, height) {
     createClippingPlanes();
     tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
         url : url,
@@ -191,7 +191,7 @@ function loadTileset(url) {
 
         var cartographic = Cesium.Cartographic.fromCartesian(boundingSphere.center);
         var surface = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 0.0);
-        var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, 100.0);
+        var offset = Cesium.Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, height);
         var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
         tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
 
@@ -214,23 +214,19 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
     } else if (newValue === clipObjects[1]) {
         // B3dm photogrammetry
         agiHqUrl.then(function(resource) {
-            return loadTileset(resource);
+            return loadTileset(resource, 0.0);
         });
     } else if (newValue === clipObjects[2]) {
         // Point clouds
         radiusMultiplier = 20.0;
         pointCloudUrl.then(function(resource) {
-            return loadTileset(resource);
+            return loadTileset(resource, 0.0);
         }).then(function() {
             tileset.pointCloudShading.attenuation = true;
         });
     } else if (newValue === clipObjects[3]) {
         // i3dm
-        instancedUrl.then(function(resource) {
-            return loadTileset(resource);
-        }).then(function() {
-            tileset.clippingPlanes.modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(tileset.boundingSphere.center);
-        });
+        loadTileset(instancedUrl, 100.0);
     } else if (newValue === clipObjects[4]) {
         // Terrain
         var position = Cesium.Cartesian3.fromRadians(-2.0872979473351286, 0.6596620013036164, 2380.0);
@@ -271,10 +267,10 @@ Sandcastle.addToggleButton('enabled', enabled, function(checked) {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

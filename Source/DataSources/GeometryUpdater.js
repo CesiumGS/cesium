@@ -14,6 +14,7 @@ define([
         '../Scene/ShadowMode',
         './ColorMaterialProperty',
         './ConstantProperty',
+        './Entity',
         './Property'
     ], function(
         Check,
@@ -31,6 +32,7 @@ define([
         ShadowMode,
         ColorMaterialProperty,
         ConstantProperty,
+        Entity,
         Property) {
     'use strict';
 
@@ -44,8 +46,7 @@ define([
     var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
     /**
-     * A {@link GeometryUpdater} for boxes.
-     * Clients do not normally create this class directly, but instead rely on {@link DataSourceDisplay}.
+     * An abstract class for updating geometry entites.
      * @alias GeometryUpdater
      * @constructor
      *
@@ -88,8 +89,7 @@ define([
         this._geometryPropertyName = geometryPropertyName;
         this._id = geometryPropertyName + '-' + entity.id;
         this._observedPropertyNames = options.observedPropertyNames;
-
-        this._onEntityPropertyChanged(entity, geometryPropertyName, entity[geometryPropertyName], undefined);
+        this._supportsMaterialsforEntitiesOnTerrain = Entity.supportsMaterialsforEntitiesOnTerrain(options.scene);
     }
 
     defineProperties(GeometryUpdater.prototype, {
@@ -306,7 +306,8 @@ define([
      */
     GeometryUpdater.prototype.isOutlineVisible = function(time) {
         var entity = this._entity;
-        return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+        var visible = this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+        return defaultValue(visible, false);
     };
 
     /**
@@ -317,12 +318,14 @@ define([
      */
     GeometryUpdater.prototype.isFilled = function(time) {
         var entity = this._entity;
-        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+        var visible = this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+        return defaultValue(visible, false);
     };
 
     /**
      * Creates the geometry instance which represents the fill of the geometry.
      *
+     * @function
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the filled portion of the geometry.
      *
@@ -333,6 +336,7 @@ define([
     /**
      * Creates the geometry instance which represents the outline of the geometry.
      *
+     * @function
      * @param {JulianDate} time The time to use when retrieving initial attribute values.
      * @returns {GeometryInstance} The geometry instance representing the outline portion of the geometry.
      *
@@ -401,8 +405,8 @@ define([
     /**
      * @param {Entity} entity
      * @param {String} propertyName
-     * @param {Object} newValue
-     * @param {Object} oldValue
+     * @param {*} newValue
+     * @param {*} oldValue
      * @private
      */
     GeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
@@ -460,7 +464,9 @@ define([
 
         this._fillEnabled = fillEnabled;
 
-        var onTerrain = this._isOnTerrain(entity, geometry);
+        var onTerrain = this._isOnTerrain(entity, geometry) &&
+            (this._supportsMaterialsforEntitiesOnTerrain || this._materialProperty instanceof ColorMaterialProperty);
+
         if (outlineEnabled && onTerrain) {
             oneTimeWarning(oneTimeWarning.geometryOutlines);
             outlineEnabled = false;

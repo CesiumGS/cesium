@@ -86,7 +86,7 @@ defineSuite([
 
         viewSun(scene.camera, scene.context.uniformState);
         scene.frameState.passes.render = false;
-        var command = scene.sun.update(scene.frameState, scene._passState);
+        var command = scene.sun.update(scene.frameState, scene._view.passState);
         expect(command).not.toBeDefined();
     });
 

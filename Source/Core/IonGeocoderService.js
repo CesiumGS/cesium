@@ -1,5 +1,6 @@
 define([
     './Check',
+    './Credit',
     './defaultValue',
     './defined',
     './defineProperties',
@@ -9,6 +10,7 @@ define([
     './Resource'
 ], function (
     Check,
+    Credit,
     defaultValue,
     defined,
     defineProperties,
@@ -44,7 +46,7 @@ define([
 
         var defaultTokenCredit = Ion.getDefaultTokenCredit(accessToken);
         if (defined(defaultTokenCredit)) {
-            options.scene._frameState.creditDisplay.addDefaultCredit(defaultTokenCredit);
+            options.scene.frameState.creditDisplay.addDefaultCredit(Credit.clone(defaultTokenCredit));
         }
 
         var searchEndpoint = server.getDerivedResource({
@@ -65,7 +67,7 @@ define([
      *
      * @param {String} query The query to be sent to the geocoder service
      * @param {GeocodeType} [type=GeocodeType.SEARCH] The type of geocode to perform.
-     * @returns {Promise<GeocoderResult[]>}
+     * @returns {Promise<GeocoderService~Result[]>}
      */
     IonGeocoderService.prototype.geocode = function (query, geocodeType) {
         return this._pelias.geocode(query, geocodeType);

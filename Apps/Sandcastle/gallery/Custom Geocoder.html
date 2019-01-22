@@ -48,7 +48,7 @@ function OpenStreetMapNominatimGeocoder() {
  * The function called to geocode using this geocoder service.
  *
  * @param {String} input The query to be sent to the geocoder service
- * @returns {Promise<GeocoderResult[]>}
+ * @returns {Promise<GeocoderService~Result[]>}
  */
 OpenStreetMapNominatimGeocoder.prototype.geocode = function (input) {
     var endpoint = 'https://nominatim.openstreetmap.org/search';
@@ -85,10 +85,10 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

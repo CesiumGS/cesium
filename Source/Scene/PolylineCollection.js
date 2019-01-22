@@ -13,6 +13,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EncodedCartesian3',
+        '../Core/FeatureDetection',
         '../Core/IndexDatatype',
         '../Core/Intersect',
         '../Core/Math',
@@ -52,6 +53,7 @@ define([
         destroyObject,
         DeveloperError,
         EncodedCartesian3,
+        FeatureDetection,
         IndexDatatype,
         Intersect,
         CesiumMath,
@@ -185,7 +187,6 @@ define([
         this._translucentRS = undefined;
 
         this._colorCommands = [];
-        this._pickCommands = [];
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -311,7 +312,6 @@ define([
             if (defined(polyline._bucket)) {
                 var bucket = polyline._bucket;
                 bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.destroy();
-                bucket.pickShaderProgram = bucket.pickShaderProgram && bucket.pickShaderProgram.destroy();
             }
             polyline._destroy();
             return true;
@@ -570,21 +570,16 @@ define([
 
         this._batchTable.update(frameState);
 
-        if (pass.render) {
+        if (pass.render || pass.pick) {
             var colorList = this._colorCommands;
-            createCommandLists(this, frameState, colorList, modelMatrix, true);
-        }
-
-        if (pass.pick) {
-            var pickList = this._pickCommands;
-            createCommandLists(this, frameState, pickList, modelMatrix, false);
+            createCommandLists(this, frameState, colorList, modelMatrix);
         }
     };
 
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, frameState, commands, modelMatrix, renderPass) {
+    function createCommandLists(polylineCollection, frameState, commands, modelMatrix) {
         var context = frameState.context;
         var commandList = frameState.commandList;
 
@@ -608,7 +603,7 @@ define([
                 var bucketLocator = buckets[n];
 
                 var offset = bucketLocator.offset;
-                var sp = renderPass ? bucketLocator.bucket.shaderProgram : bucketLocator.bucket.pickShaderProgram;
+                var sp = bucketLocator.bucket.shaderProgram;
 
                 var polylines = bucketLocator.bucket.polylines;
                 var polylineLength = polylines.length;
@@ -644,7 +639,8 @@ define([
                             command.vertexArray = va.va;
                             command.renderState = translucent ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
                             command.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
-                            command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
+                            command.debugShowBoundingVolume = debugShowBoundingVolume;
+                            command.pickId = 'v_pickColor';
 
                             command.uniformMap = uniformMap;
                             command.count = count;
@@ -713,7 +709,8 @@ define([
                     command.vertexArray = va.va;
                     command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
                     command.pass = currentMaterial.isTranslucent() ? Pass.TRANSLUCENT : Pass.OPAQUE;
-                    command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
+                    command.debugShowBoundingVolume = debugShowBoundingVolume;
+                    command.pickId = 'v_pickColor';
 
                     command.uniformMap = uniformMap;
                     command.count = count;
@@ -1133,7 +1130,9 @@ define([
 
     PolylineCollection.prototype._updatePolyline = function(polyline, propertyChanged) {
         this._polylinesUpdated = true;
-        this._polylinesToUpdate.push(polyline);
+        if (!polyline._dirty) {
+            this._polylinesToUpdate.push(polyline);
+        }
         ++this._propertiesChanged[propertyChanged];
     };
 
@@ -1158,7 +1157,6 @@ define([
         this.lengthOfPositions = 0;
         this.material = material;
         this.shaderProgram = undefined;
-        this.pickShaderProgram = undefined;
         this.mode = mode;
         this.modelMatrix = modelMatrix;
     }
@@ -1186,9 +1184,13 @@ define([
             defines.push('POLYLINE_DASH');
         }
 
+        if (!FeatureDetection.isInternetExplorer()) {
+            defines.push('CLIP_POLYLINE');
+        }
+
         var fs = new ShaderSource({
             defines : defines,
-            sources : [this.material.shaderSource, PolylineFS]
+            sources : ['varying vec4 v_pickColor;\n', this.material.shaderSource, PolylineFS]
         });
 
         var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
@@ -1197,22 +1199,10 @@ define([
             sources : [PolylineCommon, vsSource]
         });
 
-        var fsPick = new ShaderSource({
-            sources : fs.sources,
-            pickColorQualifier : 'varying'
-        });
-
         this.shaderProgram = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations : attributeLocations
-        });
-
-        this.pickShaderProgram = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fsPick,
             attributeLocations : attributeLocations
         });
     };

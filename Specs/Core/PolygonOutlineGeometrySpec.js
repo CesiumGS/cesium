@@ -1,15 +1,19 @@
 defineSuite([
         'Core/PolygonOutlineGeometry',
+        'Core/arrayFill',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/GeometryOffsetAttribute',
         'Core/Math',
         'Specs/createPackableSpecs'
     ], function(
         PolygonOutlineGeometry,
+        arrayFill,
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
+        GeometryOffsetAttribute,
         CesiumMath,
         createPackableSpecs) {
     'use strict';
@@ -92,6 +96,46 @@ defineSuite([
         expect(geometry).toBeUndefined();
     });
 
+    it('createGeometry returns undefined due to duplicate hierarchy positions with different heights', function() {
+        var hierarchy = {
+            positions : Cartesian3.fromDegreesArrayHeights([
+                1.0, 1.0, 10.0,
+                1.0, 1.0, 20.0,
+                1.0, 1.0, 30.0
+            ]),
+            holes : [{
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    0.0, 0.0, 10.0,
+                    0.0, 0.0, 20.0,
+                    0.0, 0.0, 30.0
+                ])
+            }]
+        };
+
+        var geometry = PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({ polygonHierarchy : hierarchy }));
+        expect(geometry).toBeUndefined();
+    });
+
+    it('createGeometry returns geometry if duplicate hierarchy positions with different heights and perPositionHeight is true', function() {
+        var hierarchy = {
+            positions : Cartesian3.fromDegreesArrayHeights([
+                1.0, 1.0, 10.0,
+                1.0, 1.0, 20.0,
+                1.0, 1.0, 30.0
+            ]),
+            holes : [{
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    0.0, 0.0, 10.0,
+                    0.0, 0.0, 20.0,
+                    0.0, 0.0, 30.0
+                ])
+            }]
+        };
+
+        var geometry = PolygonOutlineGeometry.createGeometry(new PolygonOutlineGeometry({ polygonHierarchy : hierarchy, perPositionHeight: true }));
+        expect(geometry).toBeDefined();
+    });
+
     it('computes positions', function() {
         var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : Cartesian3.fromDegreesArray([
@@ -122,6 +166,28 @@ defineSuite([
 
         expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 0)).height).toEqualEpsilon(height, CesiumMath.EPSILON6);
         expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 3)).height).toEqualEpsilon(0, CesiumMath.EPSILON6);
+    });
+
+    it('uses correct value with extrudedHeight and perPositionHeight', function() {
+        var ellipsoid = Ellipsoid.WGS84;
+        var maxHeight = 100.0;
+        var minHeight = 60.0;
+        var extrudedHeight = 50.0;
+        var positions = Cartesian3.fromDegreesArrayHeights([
+            -1.0, -1.0, maxHeight,
+            1.0, -1.0, minHeight,
+            1.0, 1.0, minHeight,
+            -1.0, 1.0, minHeight
+        ]);
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : positions,
+            perPositionHeight : true,
+            extrudedHeight: extrudedHeight
+        }));
+
+        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 0)).height).toEqualEpsilon(maxHeight, CesiumMath.EPSILON6);
+        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 3)).height).toEqualEpsilon(minHeight, CesiumMath.EPSILON6);
+        expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 24)).height).toEqualEpsilon(extrudedHeight, CesiumMath.EPSILON6);
     });
 
     it('creates a polygon from hierarchy', function() {
@@ -228,24 +294,24 @@ defineSuite([
             granularity : CesiumMath.PI_OVER_THREE
         }));
 
-        expect(p).toEqual(Cartesian3.fromDegreesArray([
+        expect(p).toEqualEpsilon(Cartesian3.fromDegreesArray([
                                                        -124.0, 35.0,
                                                        -124.0, 40.0,
                                                        -110.0, 40.0,
                                                        -110.0, 35.0
-                                                   ]));
-        expect(h1).toEqual(Cartesian3.fromDegreesArray([
+                                                   ]), CesiumMath.EPSILON9);
+        expect(h1).toEqualEpsilon(Cartesian3.fromDegreesArray([
                                                         -122.0, 36.0,
                                                         -112.0, 36.0,
                                                         -112.0, 39.0,
                                                         -122.0, 39.0
-                                                    ]));
-        expect(h2).toEqual(Cartesian3.fromDegreesArray([
+                                                    ]), CesiumMath.EPSILON9);
+        expect(h2).toEqualEpsilon(Cartesian3.fromDegreesArray([
                                                         -120.0, 36.5,
                                                         -120.0, 38.5,
                                                         -114.0, 38.5,
                                                         -114.0, 36.5
-                                                    ]));
+                                                    ]), CesiumMath.EPSILON9);
     });
 
     it('computes correct bounding sphere at height 0', function() {
@@ -338,6 +404,71 @@ defineSuite([
         expect(p.indices.length).toEqual(36 * 2); // 12 top + 12 bottom + 12 edges
     });
 
+    it('computes offset attribute', function() {
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            offsetAttribute : GeometryOffsetAttribute.TOP
+        }));
+
+        var numVertices = 8;
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for top vertices', function() {
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            extrudedHeight: 30000,
+            offsetAttribute : GeometryOffsetAttribute.TOP
+        }));
+
+        var numVertices = 16;
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 0);
+        expected = arrayFill(expected, 1, 0, 8);
+        expect(offset).toEqual(expected);
+    });
+
+    it('computes offset attribute extruded for all vertices', function() {
+        var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, -1.0,
+                1.0, -1.0,
+                1.0, 1.0,
+                -1.0, 1.0
+            ]),
+            extrudedHeight: 30000,
+            offsetAttribute : GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 16;
+        expect(p.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = p.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
+    });
+
     it('undefined is returned if there are less than 3 positions', function() {
         var polygonOutline = PolygonOutlineGeometry.fromPositions({
             positions : Cartesian3.fromDegreesArray([
@@ -393,7 +524,6 @@ defineSuite([
     packedInstance.push(3.0, 0.0);
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
-    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 1.0, 42);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 1.0, -1, 43);
     createPackableSpecs(PolygonOutlineGeometry, polygon, packedInstance);
-
 });

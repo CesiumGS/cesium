@@ -18,12 +18,13 @@ define([
         '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/ShadowVolumeFS',
-        '../Shaders/ShadowVolumeVS',
+        '../Shaders/VectorTileVS',
         './BlendingState',
         './Cesium3DTileFeature',
         './ClassificationType',
         './DepthFunction',
         './Expression',
+        './StencilConstants',
         './StencilFunction',
         './StencilOperation',
         './Vector3DTileBatch'
@@ -47,12 +48,13 @@ define([
         ShaderSource,
         VertexArray,
         ShadowVolumeFS,
-        ShadowVolumeVS,
+        VectorTileVS,
         BlendingState,
         Cesium3DTileFeature,
         ClassificationType,
         DepthFunction,
         Expression,
+        StencilConstants,
         StencilFunction,
         StencilOperation,
         Vector3DTileBatch) {
@@ -113,7 +115,9 @@ define([
         this._vaSwap = undefined;
 
         this._rsStencilPreloadPass = undefined;
+        this._rsStencilPreloadPass3DTiles = undefined;
         this._rsStencilDepthPass = undefined;
+        this._rsStencilDepthPass3DTiles = undefined;
         this._rsColorPass = undefined;
         this._rsPickPass = undefined;
         this._rsWireframe = undefined;
@@ -161,10 +165,8 @@ define([
         this._vertexShaderSource = options._vertexShaderSource;
         this._fragmentShaderSource = options._fragmentShaderSource;
         this._attributeLocations = options._attributeLocations;
-        this._pickVertexShaderSource = options._pickVertexShaderSource;
-        this._pickFragmentShaderSource = options._pickFragmentShaderSource;
         this._uniformMap = options._uniformMap;
-        this._pickUniformMap = options._pickUniformMap;
+        this._pickId = options._pickId;
         this._modelMatrix = options._modelMatrix;
         this._boundingSphere = options._boundingSphere;
 
@@ -279,29 +281,41 @@ define([
         var batchTable = primitive._batchTable;
         var attributeLocations = defaultValue(primitive._attributeLocations, defaultAttributeLocations);
 
+        var pickId = primitive._pickId;
         var vertexShaderSource = primitive._vertexShaderSource;
+        var fragmentShaderSource = primitive._fragmentShaderSource;
         if (defined(vertexShaderSource)) {
             primitive._sp = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : vertexShaderSource,
-                fragmentShaderSource : primitive._fragmentShaderSource,
+                fragmentShaderSource : fragmentShaderSource,
                 attributeLocations : attributeLocations
             });
             primitive._spStencil = primitive._sp;
+
+            fragmentShaderSource = ShaderSource.replaceMain(fragmentShaderSource, 'czm_non_pick_main');
+            fragmentShaderSource =
+                fragmentShaderSource +
+                'void main() \n' +
+                '{ \n' +
+                '    czm_non_pick_main(); \n' +
+                '    gl_FragColor = ' + pickId + '; \n' +
+                '} \n';
             primitive._spPick = ShaderProgram.fromCache({
                 context : context,
-                vertexShaderSource : primitive._pickVertexShaderSource,
-                fragmentShaderSource : primitive._pickFragmentShaderSource,
+                vertexShaderSource : vertexShaderSource,
+                fragmentShaderSource : fragmentShaderSource,
                 attributeLocations : attributeLocations
             });
             return;
         }
 
-        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(ShadowVolumeVS);
+        var vsSource = batchTable.getVertexShaderCallback(false, 'a_batchId', undefined)(VectorTileVS);
         var fsSource = batchTable.getFragmentShaderCallback()(ShadowVolumeFS, false, undefined);
 
+        pickId = batchTable.getPickId();
+
         var vs = new ShaderSource({
-            defines : ['VECTOR_TILE'],
             sources : [vsSource]
         });
         var fs = new ShaderSource({
@@ -317,8 +331,7 @@ define([
         });
 
         vs = new ShaderSource({
-            defines : ['VECTOR_TILE'],
-            sources : [ShadowVolumeVS]
+            sources : [VectorTileVS]
         });
         fs = new ShaderSource({
             defines : ['VECTOR_TILE'],
@@ -332,11 +345,16 @@ define([
             attributeLocations : attributeLocations
         });
 
-        vsSource = batchTable.getPickVertexShaderCallbackIgnoreShow('a_batchId')(ShadowVolumeVS);
-        fsSource = batchTable.getPickFragmentShaderCallbackIgnoreShow()(ShadowVolumeFS);
+        fsSource = ShaderSource.replaceMain(fsSource, 'czm_non_pick_main');
+        fsSource =
+            fsSource + '\n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_non_pick_main(); \n' +
+            '    gl_FragColor = ' + pickId + '; \n' +
+            '} \n';
 
         var pickVS = new ShaderSource({
-            defines : ['VECTOR_TILE'],
             sources : [vsSource]
         });
         var pickFS = new ShaderSource({
@@ -351,69 +369,74 @@ define([
         });
     }
 
-    var stencilReference = 0;
-    var stencilMask = 0x0F;
+    function getStencilPreloadRenderState(mask3DTiles) {
+        var stencilFunction = mask3DTiles ? StencilFunction.EQUAL : StencilFunction.ALWAYS;
+        return {
+            colorMask : {
+                red : false,
+                green : false,
+                blue : false,
+                alpha : false
+            },
+            stencilTest : {
+                enabled : true,
+                frontFunction : stencilFunction,
+                frontOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.DECREMENT_WRAP,
+                    zPass : StencilOperation.DECREMENT_WRAP
+                },
+                backFunction : stencilFunction,
+                backOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.INCREMENT_WRAP,
+                    zPass : StencilOperation.INCREMENT_WRAP
+                },
+                reference : StencilConstants.CESIUM_3D_TILE_MASK,
+                mask : StencilConstants.CESIUM_3D_TILE_MASK
+            },
+            stencilMask : StencilConstants.CLASSIFICATION_MASK,
+            depthTest : {
+                enabled : false
+            },
+            depthMask : false
+        };
+    }
 
-    var stencilPreloadRenderState = {
-        colorMask : {
-            red : false,
-            green : false,
-            blue : false,
-            alpha : false
-        },
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.ALWAYS,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.DECREMENT_WRAP,
-                zPass : StencilOperation.DECREMENT_WRAP
+    function getStencilDepthRenderState(mask3DTiles) {
+        var stencilFunction = mask3DTiles ? StencilFunction.EQUAL : StencilFunction.ALWAYS;
+        return {
+            colorMask : {
+                red : false,
+                green : false,
+                blue : false,
+                alpha : false
             },
-            backFunction : StencilFunction.ALWAYS,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.INCREMENT_WRAP,
-                zPass : StencilOperation.INCREMENT_WRAP
+            stencilTest : {
+                enabled : true,
+                frontFunction : stencilFunction,
+                frontOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.INCREMENT_WRAP
+                },
+                backFunction : stencilFunction,
+                backOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.DECREMENT_WRAP
+                },
+                reference : StencilConstants.CESIUM_3D_TILE_MASK,
+                mask : StencilConstants.CESIUM_3D_TILE_MASK
             },
-            reference : stencilReference,
-            mask : stencilMask
-        },
-        depthTest : {
-            enabled : false
-        },
-        depthMask : false
-    };
-
-    var stencilDepthRenderState = {
-        colorMask : {
-            red : false,
-            green : false,
-            blue : false,
-            alpha : false
-        },
-        stencilTest : {
-            enabled : true,
-            frontFunction : StencilFunction.ALWAYS,
-            frontOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.INCREMENT_WRAP
+            stencilMask : StencilConstants.CLASSIFICATION_MASK,
+            depthTest : {
+                enabled : true,
+                func : DepthFunction.LESS_OR_EQUAL
             },
-            backFunction : StencilFunction.ALWAYS,
-            backOperation : {
-                fail : StencilOperation.KEEP,
-                zFail : StencilOperation.KEEP,
-                zPass : StencilOperation.DECREMENT_WRAP
-            },
-            reference : stencilReference,
-            mask : stencilMask
-        },
-        depthTest : {
-            enabled : true,
-            func : DepthFunction.LESS_OR_EQUAL
-        },
-        depthMask : false
-    };
+            depthMask : false
+        };
+    }
 
     var colorRenderState = {
         stencilTest : {
@@ -430,9 +453,10 @@ define([
                 zFail : StencilOperation.KEEP,
                 zPass : StencilOperation.DECREMENT_WRAP
             },
-            reference : stencilReference,
-            mask : stencilMask
+            reference : 0,
+            mask : StencilConstants.CLASSIFICATION_MASK
         },
+        stencilMask : StencilConstants.CLASSIFICATION_MASK,
         depthTest : {
             enabled : false
         },
@@ -455,9 +479,10 @@ define([
                 zFail : StencilOperation.KEEP,
                 zPass : StencilOperation.DECREMENT_WRAP
             },
-            reference : stencilReference,
-            mask : stencilMask
+            reference : 0,
+            mask : StencilConstants.CLASSIFICATION_MASK
         },
+        stencilMask : StencilConstants.CLASSIFICATION_MASK,
         depthTest : {
             enabled : false
         },
@@ -469,8 +494,10 @@ define([
             return;
         }
 
-        primitive._rsStencilPreloadPass = RenderState.fromCache(stencilPreloadRenderState);
-        primitive._rsStencilDepthPass = RenderState.fromCache(stencilDepthRenderState);
+        primitive._rsStencilPreloadPass = RenderState.fromCache(getStencilPreloadRenderState(false));
+        primitive._rsStencilPreloadPass3DTiles = RenderState.fromCache(getStencilPreloadRenderState(true));
+        primitive._rsStencilDepthPass = RenderState.fromCache(getStencilDepthRenderState(false));
+        primitive._rsStencilDepthPass3DTiles = RenderState.fromCache(getStencilDepthRenderState(true));
         primitive._rsColorPass = RenderState.fromCache(colorRenderState);
         primitive._rsPickPass = RenderState.fromCache(pickRenderState);
     }
@@ -499,7 +526,6 @@ define([
         };
 
         primitive._uniformMap = primitive._batchTable.getUniformMapCallback()(uniformMap);
-        primitive._pickUniformMap = primitive._batchTable.getPickUniformMapCallback()(primitive._uniformMap);
     }
 
     function copyIndicesCPU(indices, newIndices, currentOffset, offsets, counts, batchIds, batchIdLookUp) {
@@ -714,6 +740,12 @@ define([
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
             stencilPreloadCommand.cull = false;
+            stencilPreloadCommand.pass = Pass.TERRAIN_CLASSIFICATION;
+
+            var stencilPreloadDerivedCommand = DrawCommand.shallowClone(stencilPreloadCommand, stencilPreloadCommand.derivedCommands.tileset);
+            stencilPreloadDerivedCommand.renderState = primitive._rsStencilPreloadPass3DTiles;
+            stencilPreloadDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            stencilPreloadCommand.derivedCommands.tileset = stencilPreloadDerivedCommand;
 
             var stencilDepthCommand = commands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
@@ -731,6 +763,12 @@ define([
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
             stencilDepthCommand.cull = false;
+            stencilDepthCommand.pass = Pass.TERRAIN_CLASSIFICATION;
+
+            var stencilDepthDerivedCommand = DrawCommand.shallowClone(stencilDepthCommand, stencilDepthCommand.derivedCommands.tileset);
+            stencilDepthDerivedCommand.renderState = primitive._rsStencilDepthPass3DTiles;
+            stencilDepthDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            stencilDepthCommand.derivedCommands.tileset = stencilDepthDerivedCommand;
 
             var colorCommand = commands[j * 3 + 2];
             if (!defined(colorCommand)) {
@@ -748,6 +786,11 @@ define([
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
             colorCommand.cull = false;
+            colorCommand.pass = Pass.TERRAIN_CLASSIFICATION;
+
+            var colorDerivedCommand = DrawCommand.shallowClone(colorCommand, colorCommand.derivedCommands.tileset);
+            colorDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            colorCommand.derivedCommands.tileset = colorDerivedCommand;
         }
 
         primitive._commandsDirty = true;
@@ -796,7 +839,7 @@ define([
         var spStencil = primitive._spStencil;
         var spPick = primitive._spPick;
         var modelMatrix = defaultValue(primitive._modelMatrix, Matrix4.IDENTITY);
-        var uniformMap = primitive._pickUniformMap;
+        var uniformMap = primitive._uniformMap;
 
         for (var j = 0; j < length; ++j) {
             var offset = primitive._indexOffsets[j];
@@ -806,7 +849,8 @@ define([
             var stencilPreloadCommand = pickCommands[j * 3];
             if (!defined(stencilPreloadCommand)) {
                 stencilPreloadCommand = pickCommands[j * 3] = new DrawCommand({
-                    owner : primitive
+                    owner : primitive,
+                    pickOnly : true
                 });
             }
 
@@ -818,11 +862,18 @@ define([
             stencilPreloadCommand.shaderProgram = spStencil;
             stencilPreloadCommand.uniformMap = uniformMap;
             stencilPreloadCommand.boundingVolume = bv;
+            stencilPreloadCommand.pass = Pass.TERRAIN_CLASSIFICATION;
+
+            var stencilPreloadDerivedCommand = DrawCommand.shallowClone(stencilPreloadCommand, stencilPreloadCommand.derivedCommands.tileset);
+            stencilPreloadDerivedCommand.renderState = primitive._rsStencilPreloadPass3DTiles;
+            stencilPreloadDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            stencilPreloadCommand.derivedCommands.tileset = stencilPreloadDerivedCommand;
 
             var stencilDepthCommand = pickCommands[j * 3 + 1];
             if (!defined(stencilDepthCommand)) {
                 stencilDepthCommand = pickCommands[j * 3 + 1] = new DrawCommand({
-                    owner : primitive
+                    owner : primitive,
+                    pickOnly : true
                 });
             }
 
@@ -834,11 +885,18 @@ define([
             stencilDepthCommand.shaderProgram = spStencil;
             stencilDepthCommand.uniformMap = uniformMap;
             stencilDepthCommand.boundingVolume = bv;
+            stencilDepthCommand.pass = Pass.TERRAIN_CLASSIFICATION;
+
+            var stencilDepthDerivedCommand = DrawCommand.shallowClone(stencilDepthCommand, stencilDepthCommand.derivedCommands.tileset);
+            stencilDepthDerivedCommand.renderState = primitive._rsStencilDepthPass3DTiles;
+            stencilDepthDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            stencilDepthCommand.derivedCommands.tileset = stencilDepthDerivedCommand;
 
             var colorCommand = pickCommands[j * 3 + 2];
             if (!defined(colorCommand)) {
                 colorCommand = pickCommands[j * 3 + 2] = new DrawCommand({
-                    owner : primitive
+                    owner : primitive,
+                    pickOnly : true
                 });
             }
 
@@ -850,6 +908,11 @@ define([
             colorCommand.shaderProgram = spPick;
             colorCommand.uniformMap = uniformMap;
             colorCommand.boundingVolume = bv;
+            colorCommand.pass = Pass.TERRAIN_CLASSIFICATION;
+
+            var colorDerivedCommand = DrawCommand.shallowClone(colorCommand, colorCommand.derivedCommands.tileset);
+            colorDerivedCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            colorCommand.derivedCommands.tileset = colorDerivedCommand;
         }
 
         primitive._pickCommandsDirty = false;
@@ -916,11 +979,10 @@ define([
     /**
      * Apply a style to the content.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      * @param {Cesium3DTileFeature[]} features The array of features.
      */
-    Vector3DTilePrimitive.prototype.applyStyle = function(frameState, style, features) {
+    Vector3DTilePrimitive.prototype.applyStyle = function(style, features) {
         if (!defined(style)) {
             clearStyle(this, features);
             return;
@@ -938,8 +1000,8 @@ define([
             var batchId = batchIds[i];
             var feature = features[batchId];
 
-            feature.color = defined(style.color) ? style.color.evaluateColor(frameState, feature, scratchColor) : DEFAULT_COLOR_VALUE;
-            feature.show = defined(style.show) ? style.show.evaluate(frameState, feature) : DEFAULT_SHOW_VALUE;
+            feature.color = defined(style.color) ? style.color.evaluateColor(feature, scratchColor) : DEFAULT_COLOR_VALUE;
+            feature.show = defined(style.show) ? style.show.evaluate(feature) : DEFAULT_SHOW_VALUE;
         }
 
         if (isSimpleStyle) {
@@ -1038,14 +1100,26 @@ define([
         this._batchDirty = true;
     };
 
-    function queueCommands(frameState, pass, commands, commandsIgnoreShow) {
+    function queueCommands(primitive, frameState, commands, commandsIgnoreShow) {
+        var classificationType = primitive.classificationType;
+        var queueTerrainCommands = (classificationType !== ClassificationType.CESIUM_3D_TILE);
+        var queue3DTilesCommands = (classificationType !== ClassificationType.TERRAIN);
+
         var commandList = frameState.commandList;
         var commandLength = commands.length;
+        var command;
         var i;
         for (i = 0; i < commandLength; ++i) {
-            var command = commands[i];
-            command.pass = pass;
-            commandList.push(command);
+            if (queueTerrainCommands) {
+                command = commands[i];
+                command.pass = Pass.TERRAIN_CLASSIFICATION;
+                commandList.push(command);
+            }
+            if (queue3DTilesCommands) {
+                command = commands[i].derivedCommands.tileset;
+                command.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+                commandList.push(command);
+            }
         }
 
         if (!frameState.invertClassification || !defined(commandsIgnoreShow)) {
@@ -1115,18 +1189,6 @@ define([
         createRenderStates(this);
         createUniformMap(this, context);
 
-        var pass;
-        switch (this.classificationType) {
-            case ClassificationType.TERRAIN:
-                pass = Pass.TERRAIN_CLASSIFICATION;
-                break;
-            case ClassificationType.CESIUM_3D_TILE:
-                pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
-                break;
-            default:
-                pass = Pass.CLASSIFICATION;
-        }
-
         var passes = frameState.passes;
         if (passes.render) {
             createColorCommands(this, context);
@@ -1136,13 +1198,13 @@ define([
             if (this._debugWireframe) {
                 queueWireframeCommands(frameState, this._commands);
             } else {
-                queueCommands(frameState, pass, this._commands, this._commandsIgnoreShow);
+                queueCommands(this, frameState, this._commands, this._commandsIgnoreShow);
             }
         }
 
         if (passes.pick) {
             createPickCommands(this);
-            queueCommands(frameState, pass, this._pickCommands);
+            queueCommands(this, frameState, this._pickCommands);
         }
     };
 

@@ -1,10 +1,12 @@
 define([
         '../Core/AssociativeArray',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
         './BoundingSphereState',
@@ -13,11 +15,13 @@ define([
         './Property'
     ], function(
         AssociativeArray,
+        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
+        OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         Primitive,
         BoundingSphereState,
@@ -28,6 +32,8 @@ define([
 
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
+    var defaultOffset = Cartesian3.ZERO;
+    var offsetScratch = new Cartesian3();
 
     function Batch(primitives, appearanceType, materialProperty, depthFailAppearanceType, depthFailMaterialProperty, closed, shadows) {
         this.primitives = primitives;
@@ -74,7 +80,7 @@ define([
         var id = updater.id;
         this.updaters.set(id, updater);
         this.geometry.set(id, updater.createFillGeometryInstance(time));
-        if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
+        if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)  || !Property.isConstant(updater.terrainOffsetProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
             var that = this;
@@ -96,9 +102,11 @@ define([
             if (defined(unsubscribe)) {
                 unsubscribe();
                 this.subscriptions.remove(id);
+                this.showsUpdated.remove(id);
             }
+            return true;
         }
-        return this.createPrimitive;
+        return false;
     };
 
     var colorScratch = new Color();
@@ -108,7 +116,6 @@ define([
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
-        var attributes;
         var i;
 
         if (this.createPrimitive) {
@@ -119,24 +126,6 @@ define([
                         this.oldPrimitive = primitive;
                     } else {
                         primitives.remove(primitive);
-                    }
-                }
-
-                for (i = 0; i < geometriesLength; i++) {
-                    var geometry = geometries[i];
-                    var originalAttributes = geometry.attributes;
-                    attributes = this.attributes.get(geometry.id.id);
-
-                    if (defined(attributes)) {
-                        if (defined(originalAttributes.show)) {
-                            originalAttributes.show.value = attributes.show;
-                        }
-                        if (defined(originalAttributes.color)) {
-                            originalAttributes.color.value = attributes.color;
-                        }
-                        if (defined(originalAttributes.depthFailColor)) {
-                            originalAttributes.depthFailColor.value = attributes.depthFailColor;
-                        }
                     }
                 }
 
@@ -204,7 +193,7 @@ define([
                 var entity = updater.entity;
                 var instance = this.geometry.get(updater.id);
 
-                attributes = this.attributes.get(instance.id.id);
+                var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);
@@ -231,6 +220,15 @@ define([
                     if (!DistanceDisplayCondition.equals(distanceDisplayCondition, attributes._lastDistanceDisplayCondition)) {
                         attributes._lastDistanceDisplayCondition = DistanceDisplayCondition.clone(distanceDisplayCondition, attributes._lastDistanceDisplayCondition);
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
+                    }
+                }
+
+                var offsetProperty = updater.terrainOffsetProperty;
+                if (!Property.isConstant(offsetProperty)) {
+                    var offset = Property.getValueOrDefault(offsetProperty, time, defaultOffset, offsetScratch);
+                    if (!Cartesian3.equals(offset, attributes._lastOffset)) {
+                        attributes._lastOffset = Cartesian3.clone(offset, attributes._lastOffset);
+                        attributes.offset = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
                     }
                 }
             }
@@ -260,6 +258,7 @@ define([
             var currentShow = attributes.show[0] === 1;
             if (show !== currentShow) {
                 attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                instance.attributes.show.value[0] = attributes.show[0];
             }
         }
         this.showsUpdated.removeAll();
@@ -357,7 +356,7 @@ define([
         }
 
         var isUpdated = true;
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < items.length; i++) {
             isUpdated = items[i].update(time) && isUpdated;
         }
         return isUpdated;
@@ -368,7 +367,7 @@ define([
         var length = items.length;
         for (var i = 0; i < length; i++) {
             var item = items[i];
-            if(item.contains(updater)){
+            if (item.contains(updater)){
                 return item.getBoundingSphere(updater, result);
             }
         }

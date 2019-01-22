@@ -49,7 +49,7 @@ defineSuite([
                     '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
                     '</DataExtents>' +
                     '</TileMap>';
-                var xml = parser.parseFromString(xmlString, "text/xml");
+                var xml = parser.parseFromString(xmlString, 'text/xml');
                 deferred.resolve(xml);
             }, 1);
         };
@@ -202,7 +202,7 @@ defineSuite([
                     '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
                     '</DataExtents>' +
                     '</TileMap>';
-                var xml = parser.parseFromString(xmlString, "text/xml");
+                var xml = parser.parseFromString(xmlString, 'text/xml');
                 deferred.resolve(xml);
             }, 1);
         };

@@ -18,12 +18,13 @@ defineSuite([
         DomEventSimulator) {
     'use strict';
 
-    var usePointerEvents = FeatureDetection.supportsPointerEvents();
+    var usePointerEvents;
     var canvas;
     var handler;
     var handler2;
 
     beforeAll(function() {
+        usePointerEvents = FeatureDetection.supportsPointerEvents();
         canvas = createCanvas(1024, 768);
     });
 
@@ -215,10 +216,28 @@ defineSuite([
         expect(handler.anyButtonDown).toEqual(true);
 
         simulateMouseUp(options);
-        expect(handler.anyButtonDown).toEqual(true);
 
         options.button = MouseButtons.LEFT;
         simulateMouseUp(options);
+
+        expect(handler.anyButtonDown).toEqual(false);
+    });
+
+    it('cancels anyButtonDown on any button up', function() {
+        expect(handler.anyButtonDown).toEqual(false);
+
+        var options = {
+            button : MouseButtons.LEFT,
+            clientX : 0,
+            clientY : 0
+        };
+        simulateMouseDown(options);
+
+        options.button = MouseButtons.RIGHT;
+        simulateMouseDown(options);
+
+        simulateMouseUp(options);
+
         expect(handler.anyButtonDown).toEqual(false);
     });
 

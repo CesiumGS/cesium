@@ -3,6 +3,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
         'Core/Math',
         'Core/Quaternion',
@@ -14,6 +15,7 @@ defineSuite([
         'DataSources/Entity',
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
+        'Scene/HeightReference',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
         'Specs/createDynamicProperty',
@@ -24,6 +26,7 @@ defineSuite([
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        GeometryOffsetAttribute,
         JulianDate,
         CesiumMath,
         Quaternion,
@@ -35,6 +38,7 @@ defineSuite([
         Entity,
         SampledPositionProperty,
         SampledProperty,
+        HeightReference,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
@@ -160,6 +164,7 @@ defineSuite([
         expect(geometry._radii).toEqual(options.radii);
         expect(geometry._stackPartitions).toEqual(options.stackPartitions);
         expect(geometry._slicePartitions).toEqual(options.slicePartitions);
+        expect(geometry._offsetAttribute).toBeUndefined();
 
         instance = updater.createOutlineGeometryInstance(time);
         geometry = instance.geometry;
@@ -168,6 +173,53 @@ defineSuite([
         expect(geometry._stackPartitions).toEqual(options.stackPartitions);
         expect(geometry._slicePartitions).toEqual(options.slicePartitions);
         expect(geometry._subdivisions).toEqual(options.subdivisions);
+        expect(geometry._offsetAttribute).toBeUndefined();
+    });
+
+    it('Creates geometry with expected offsetAttribute', function() {
+        var entity = createBasicEllipsoid();
+        var graphics = entity.ellipsoid;
+        graphics.outline = true;
+        graphics.outlineColor = Color.BLACK;
+        graphics.height = new ConstantProperty(20.0);
+        graphics.extrudedHeight = new ConstantProperty(0.0);
+        var updater = new EllipsoidGeometryUpdater(entity, getScene());
+
+        var instance;
+
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+
+        graphics.heightReference = new ConstantProperty(HeightReference.NONE);
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+
+        graphics.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+
+        graphics.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+        updater._onEntityPropertyChanged(entity, 'ellipsoid');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+    });
+
+    it('computes center', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+
+        expect(updater._computeCenter(time)).toEqual(entity.position.getValue(time));
     });
 
     it('dynamic ellipsoid creates and updates', function() {

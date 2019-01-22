@@ -32,6 +32,9 @@ define([
         TextureMinificationFilter) {
     'use strict';
 
+    /**
+     * @private
+     */
     function CubeMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -104,6 +107,10 @@ define([
         if ((pixelDatatype === PixelDatatype.FLOAT) && !context.floatingPointTexture) {
             throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.');
         }
+
+        if ((pixelDatatype === PixelDatatype.HALF_FLOAT) && !context.halfFloatingPointTexture) {
+            throw new DeveloperError('When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension.');
+        }
         //>>includeEnd('debug');
 
         var sizeInBytes = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, size, size) * 6;
@@ -123,6 +130,10 @@ define([
         function createFace(target, sourceFace, preMultiplyAlpha, flipY) {
             // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
             var arrayBufferView = sourceFace.arrayBufferView;
+            if (!defined(arrayBufferView)) {
+                arrayBufferView = sourceFace.bufferView;
+            }
+
             if (arrayBufferView) {
                 gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
@@ -158,7 +169,7 @@ define([
         }
         gl.bindTexture(textureTarget, null);
 
-        this._gl = gl;
+        this._context = context;
         this._textureFilterAnisotropic = context._textureFilterAnisotropic;
         this._textureTarget = textureTarget;
         this._texture = texture;
@@ -227,13 +238,16 @@ define([
                     (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
                     (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
 
-                // float textures only support nearest filtering, so override the sampler's settings
-                if (this._pixelDatatype === PixelDatatype.FLOAT) {
+                var context = this._context;
+                var pixelDatatype = this._pixelDatatype;
+
+                // float textures only support nearest filtering unless the linear extensions are supported, so override the sampler's settings
+                if ((pixelDatatype === PixelDatatype.FLOAT && !context.textureFloatLinear) || (pixelDatatype === PixelDatatype.HALF_FLOAT && !context.textureHalfFloatLinear)) {
                     minificationFilter = mipmap ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST : TextureMinificationFilter.NEAREST;
                     magnificationFilter = TextureMagnificationFilter.NEAREST;
                 }
 
-                var gl = this._gl;
+                var gl = context._gl;
                 var target = this._textureTarget;
 
                 gl.activeTexture(gl.TEXTURE0);
@@ -328,7 +342,7 @@ define([
 
         this._hasMipmap = true;
 
-        var gl = this._gl;
+        var gl = this._context._gl;
         var target = this._textureTarget;
         gl.hint(gl.GENERATE_MIPMAP_HINT, hint);
         gl.activeTexture(gl.TEXTURE0);
@@ -342,7 +356,7 @@ define([
     };
 
     CubeMap.prototype.destroy = function() {
-        this._gl.deleteTexture(this._texture);
+        this._context._gl.deleteTexture(this._texture);
         this._positiveX = destroyObject(this._positiveX);
         this._negativeX = destroyObject(this._negativeX);
         this._positiveY = destroyObject(this._positiveY);

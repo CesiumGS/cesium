@@ -1,17 +1,37 @@
 define([
+        './Cartesian2',
+        './Cartesian3',
+        './Cartographic',
         './Check',
         './defaultValue',
         './defined',
         './DeveloperError',
+        './GeometryOffsetAttribute',
         './GeometryType',
-        './PrimitiveType'
+        './Matrix2',
+        './Matrix3',
+        './Matrix4',
+        './PrimitiveType',
+        './Quaternion',
+        './Rectangle',
+        './Transforms'
     ], function(
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
         Check,
         defaultValue,
         defined,
         DeveloperError,
+        GeometryOffsetAttribute,
         GeometryType,
-        PrimitiveType) {
+        Matrix2,
+        Matrix3,
+        Matrix4,
+        PrimitiveType,
+        Quaternion,
+        Rectangle,
+        Transforms) {
     'use strict';
 
     /**
@@ -158,6 +178,12 @@ define([
          * @private
          */
         this.boundingSphereCV = options.boundingSphereCV;
+
+        /**
+         * @private
+         * Used for computing the bounding sphere for geometry using the applyOffset vertex attribute
+         */
+        this.offsetAttribute = options.offsetAttribute;
     }
 
     /**
@@ -193,6 +219,132 @@ define([
         }
 
         return numberOfVertices;
+    };
+
+    var rectangleCenterScratch = new Cartographic();
+    var enuCenterScratch = new Cartesian3();
+    var fixedFrameToEnuScratch = new Matrix4();
+    var boundingRectanglePointsCartographicScratch = [new Cartographic(), new Cartographic(), new Cartographic()];
+    var boundingRectanglePointsEnuScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2()];
+    var points2DScratch = [new Cartesian2(), new Cartesian2(), new Cartesian2()];
+    var pointEnuScratch = new Cartesian3();
+    var enuRotationScratch = new Quaternion();
+    var enuRotationMatrixScratch = new Matrix4();
+    var rotation2DScratch = new Matrix2();
+
+    /**
+     * For remapping texture coordinates when rendering GroundPrimitives with materials.
+     * GroundPrimitive texture coordinates are computed to align with the cartographic coordinate system on the globe.
+     * However, EllipseGeometry, RectangleGeometry, and PolygonGeometry all bake rotations to per-vertex texture coordinates
+     * using different strategies.
+     *
+     * This method is used by EllipseGeometry and PolygonGeometry to approximate the same visual effect.
+     * We encapsulate rotation and scale by computing a "transformed" texture coordinate system and computing
+     * a set of reference points from which "cartographic" texture coordinates can be remapped to the "transformed"
+     * system using distances to lines in 2D.
+     *
+     * This approximation becomes less accurate as the covered area increases, especially for GroundPrimitives near the poles,
+     * but is generally reasonable for polygons and ellipses around the size of USA states.
+     *
+     * RectangleGeometry has its own version of this method that computes remapping coordinates using cartographic space
+     * as an intermediary instead of local ENU, which is more accurate for large-area rectangles.
+     *
+     * @param {Cartesian3[]} positions Array of positions outlining the geometry
+     * @param {Number} stRotation Texture coordinate rotation.
+     * @param {Ellipsoid} ellipsoid Ellipsoid for projecting and generating local vectors.
+     * @param {Rectangle} boundingRectangle Bounding rectangle around the positions.
+     * @returns {Number[]} An array of 6 numbers specifying [minimum point, u extent, v extent] as points in the "cartographic" system.
+     * @private
+     */
+    Geometry._textureCoordinateRotationPoints = function(positions, stRotation, ellipsoid, boundingRectangle) {
+        var i;
+
+        // Create a local east-north-up coordinate system centered on the polygon's bounding rectangle.
+        // Project the southwest, northwest, and southeast corners of the bounding rectangle into the plane of ENU as 2D points.
+        // These are the equivalents of (0,0), (0,1), and (1,0) in the texture coordiante system computed in ShadowVolumeAppearanceFS,
+        // aka "ENU texture space."
+        var rectangleCenter = Rectangle.center(boundingRectangle, rectangleCenterScratch);
+        var enuCenter = Cartographic.toCartesian(rectangleCenter, ellipsoid, enuCenterScratch);
+        var enuToFixedFrame = Transforms.eastNorthUpToFixedFrame(enuCenter, ellipsoid, fixedFrameToEnuScratch);
+        var fixedFrameToEnu = Matrix4.inverse(enuToFixedFrame, fixedFrameToEnuScratch);
+
+        var boundingPointsEnu = boundingRectanglePointsEnuScratch;
+        var boundingPointsCarto = boundingRectanglePointsCartographicScratch;
+
+        boundingPointsCarto[0].longitude = boundingRectangle.west;
+        boundingPointsCarto[0].latitude = boundingRectangle.south;
+
+        boundingPointsCarto[1].longitude = boundingRectangle.west;
+        boundingPointsCarto[1].latitude = boundingRectangle.north;
+
+        boundingPointsCarto[2].longitude = boundingRectangle.east;
+        boundingPointsCarto[2].latitude = boundingRectangle.south;
+
+        var posEnu = pointEnuScratch;
+
+        for (i = 0; i < 3; i++) {
+            Cartographic.toCartesian(boundingPointsCarto[i], ellipsoid, posEnu);
+            posEnu = Matrix4.multiplyByPointAsVector(fixedFrameToEnu, posEnu, posEnu);
+            boundingPointsEnu[i].x = posEnu.x;
+            boundingPointsEnu[i].y = posEnu.y;
+        }
+
+        // Rotate each point in the polygon around the up vector in the ENU by -stRotation and project into ENU as 2D.
+        // Compute the bounding box of these rotated points in the 2D ENU plane.
+        // Rotate the corners back by stRotation, then compute their equivalents in the ENU texture space using the corners computed earlier.
+        var rotation = Quaternion.fromAxisAngle(Cartesian3.UNIT_Z, -stRotation, enuRotationScratch);
+        var textureMatrix = Matrix3.fromQuaternion(rotation, enuRotationMatrixScratch);
+
+        var positionsLength = positions.length;
+        var enuMinX = Number.POSITIVE_INFINITY;
+        var enuMinY = Number.POSITIVE_INFINITY;
+        var enuMaxX = Number.NEGATIVE_INFINITY;
+        var enuMaxY = Number.NEGATIVE_INFINITY;
+        for (i = 0; i < positionsLength; i++) {
+            posEnu = Matrix4.multiplyByPointAsVector(fixedFrameToEnu, positions[i], posEnu);
+            posEnu = Matrix3.multiplyByVector(textureMatrix, posEnu, posEnu);
+
+            enuMinX = Math.min(enuMinX, posEnu.x);
+            enuMinY = Math.min(enuMinY, posEnu.y);
+            enuMaxX = Math.max(enuMaxX, posEnu.x);
+            enuMaxY = Math.max(enuMaxY, posEnu.y);
+        }
+
+        var toDesiredInComputed = Matrix2.fromRotation(stRotation, rotation2DScratch);
+
+        var points2D = points2DScratch;
+        points2D[0].x = enuMinX;
+        points2D[0].y = enuMinY;
+
+        points2D[1].x = enuMinX;
+        points2D[1].y = enuMaxY;
+
+        points2D[2].x = enuMaxX;
+        points2D[2].y = enuMinY;
+
+        var boundingEnuMin = boundingPointsEnu[0];
+        var boundingPointsWidth = boundingPointsEnu[2].x - boundingEnuMin.x;
+        var boundingPointsHeight = boundingPointsEnu[1].y - boundingEnuMin.y;
+
+        for (i = 0; i < 3; i++) {
+            var point2D = points2D[i];
+            // rotate back
+            Matrix2.multiplyByVector(toDesiredInComputed, point2D, point2D);
+
+            // Convert point into east-north texture coordinate space
+            point2D.x = (point2D.x - boundingEnuMin.x) / boundingPointsWidth;
+            point2D.y = (point2D.y - boundingEnuMin.y) / boundingPointsHeight;
+        }
+
+        var minXYCorner = points2D[0];
+        var maxYCorner = points2D[1];
+        var maxXCorner = points2D[2];
+        var result = new Array(6);
+        Cartesian2.pack(minXYCorner, result);
+        Cartesian2.pack(maxYCorner, result, 2);
+        Cartesian2.pack(maxXCorner, result, 4);
+
+        return result;
     };
 
     return Geometry;

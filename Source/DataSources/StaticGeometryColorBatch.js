@@ -1,10 +1,12 @@
 define([
         '../Core/AssociativeArray',
+        '../Core/Cartesian3',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defined',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/Primitive',
         './BoundingSphereState',
@@ -13,11 +15,13 @@ define([
         './Property'
     ], function(
         AssociativeArray,
+        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         defined,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
+        OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         Primitive,
         BoundingSphereState,
@@ -29,6 +33,8 @@ define([
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
+    var defaultOffset = Cartesian3.ZERO;
+    var offsetScratch = new Cartesian3();
 
     function Batch(primitives, translucent, appearanceType, depthFailAppearanceType, depthFailMaterialProperty, closed, shadows) {
         this.translucent = translucent;
@@ -80,7 +86,7 @@ define([
         this.createPrimitive = true;
         this.geometry.set(id, instance);
         this.updaters.set(id, updater);
-        if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty)) {
+        if (!updater.hasConstantFill || !updater.fillMaterialProperty.isConstant || !Property.isConstant(updater.distanceDisplayConditionProperty) || !Property.isConstant(updater.terrainOffsetProperty)) {
             this.updatersWithAttributes.set(id, updater);
         } else {
             var that = this;
@@ -101,8 +107,11 @@ define([
             if (defined(unsubscribe)) {
                 unsubscribe();
                 this.subscriptions.remove(id);
+                this.showsUpdated.remove(id);
             }
+            return true;
         }
+        return false;
     };
 
     Batch.prototype.update = function(time) {
@@ -110,7 +119,6 @@ define([
         var removedCount = 0;
         var primitive = this.primitive;
         var primitives = this.primitives;
-        var attributes;
         var i;
 
         if (this.createPrimitive) {
@@ -122,24 +130,6 @@ define([
                         this.oldPrimitive = primitive;
                     } else {
                         primitives.remove(primitive);
-                    }
-                }
-
-                for (i = 0; i < geometriesLength; i++) {
-                    var geometryItem = geometries[i];
-                    var originalAttributes = geometryItem.attributes;
-                    attributes = this.attributes.get(geometryItem.id.id);
-
-                    if (defined(attributes)) {
-                        if (defined(originalAttributes.show)) {
-                            originalAttributes.show.value = attributes.show;
-                        }
-                        if (defined(originalAttributes.color)) {
-                            originalAttributes.color.value = attributes.color;
-                        }
-                        if (defined(originalAttributes.depthFailColor)) {
-                            originalAttributes.depthFailColor.value = attributes.depthFailColor;
-                        }
                     }
                 }
 
@@ -203,7 +193,7 @@ define([
                 var updater = updatersWithAttributes[i];
                 var instance = this.geometry.get(updater.id);
 
-                attributes = this.attributes.get(instance.id.id);
+                var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);
@@ -244,6 +234,15 @@ define([
                         attributes.distanceDisplayCondition = DistanceDisplayConditionGeometryInstanceAttribute.toValue(distanceDisplayCondition, attributes.distanceDisplayCondition);
                     }
                 }
+
+                var offsetProperty = updater.terrainOffsetProperty;
+                if (!Property.isConstant(offsetProperty)) {
+                    var offset = Property.getValueOrDefault(offsetProperty, time, defaultOffset, offsetScratch);
+                    if (!Cartesian3.equals(offset, attributes._lastOffset)) {
+                        attributes._lastOffset = Cartesian3.clone(offset, attributes._lastOffset);
+                        attributes.offset = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
+                    }
+                }
             }
 
             this.updateShows(primitive);
@@ -272,6 +271,7 @@ define([
             var currentShow = attributes.show[0] === 1;
             if (show !== currentShow) {
                 attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                instance.attributes.show.value[0] = attributes.show[0];
             }
         }
         this.showsUpdated.removeAll();
@@ -295,24 +295,6 @@ define([
         return BoundingSphereState.DONE;
     };
 
-    Batch.prototype.removeAllPrimitives = function() {
-        var primitives = this.primitives;
-
-        var primitive = this.primitive;
-        if (defined(primitive)) {
-            primitives.remove(primitive);
-            this.primitive = undefined;
-            this.geometry.removeAll();
-            this.updaters.removeAll();
-        }
-
-        var oldPrimitive = this.oldPrimitive;
-        if (defined(oldPrimitive)) {
-            primitives.remove(oldPrimitive);
-            this.oldPrimitive = undefined;
-        }
-    };
-
     Batch.prototype.destroy = function() {
         var primitive = this.primitive;
         var primitives = this.primitives;
@@ -323,7 +305,7 @@ define([
         if (defined(oldPrimitive)) {
             primitives.remove(oldPrimitive);
         }
-        if(defined(this.removeMaterialSubscription)) {
+        if (defined(this.removeMaterialSubscription)) {
             this.removeMaterialSubscription();
         }
     };
@@ -374,8 +356,8 @@ define([
                 if (item.updaters.length === 0) {
                     items.splice(i, 1);
                     item.destroy();
-                    return true;
                 }
+                return true;
             }
         }
         return false;
@@ -452,7 +434,7 @@ define([
         var length = items.length;
         for (var i = 0; i < length; i++) {
             var item = items[i];
-            if(item.contains(updater)){
+            if (item.contains(updater)){
                 return item.getBoundingSphere(updater, result);
             }
         }

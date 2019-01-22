@@ -1,23 +1,29 @@
 defineSuite([
         'DataSources/DataSourceDisplay',
+        'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Iso8601',
         'DataSources/BoundingSphereState',
         'DataSources/DataSourceCollection',
         'DataSources/Entity',
+        'Scene/GroundPolylinePrimitive',
         'Scene/GroundPrimitive',
+        'ThirdParty/when',
         'Specs/createScene',
         'Specs/MockDataSource'
     ], function(
         DataSourceDisplay,
+        ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
         Iso8601,
         BoundingSphereState,
         DataSourceCollection,
         Entity,
+        GroundPolylinePrimitive,
         GroundPrimitive,
+        when,
         createScene,
         MockDataSource) {
     'use strict';
@@ -29,16 +35,15 @@ defineSuite([
         scene = createScene();
         dataSourceCollection = new DataSourceCollection();
 
-        return GroundPrimitive.initializeTerrainHeights();
+        return when.join(GroundPrimitive.initializeTerrainHeights(), GroundPolylinePrimitive.initializeTerrainHeights());
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
 
         // Leave ground primitive uninitialized
-        GroundPrimitive._initialized = false;
-        GroundPrimitive._initPromise = undefined;
-        GroundPrimitive._terrainHeights = undefined;
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     afterEach(function() {
@@ -356,9 +361,8 @@ defineSuite([
     });
 
     it('verify update returns false till terrain heights are initialized', function() {
-        GroundPrimitive._initialized = false;
-        GroundPrimitive._initPromise = undefined;
-        GroundPrimitive._terrainHeights = undefined;
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
 
         var source1 = new MockDataSource();
         var source2 = new MockDataSource();

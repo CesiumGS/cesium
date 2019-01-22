@@ -4,6 +4,7 @@ defineSuite([
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
@@ -13,9 +14,10 @@ defineSuite([
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        ClassificationType,
         ShadowMode,
         testDefinitionChanged,
-        testMaterialDefinitionChanged) {
+    testMaterialDefinitionChanged) {
     'use strict';
 
     it('creates expected instance from raw assignment and construction', function() {
@@ -26,9 +28,12 @@ defineSuite([
             show : true,
             width : 1,
             followSurface : false,
+            clampToGround : true,
             granularity : 2,
             shadows : ShadowMode.DISABLED,
-            distanceDisplayCondition : new DistanceDisplayCondition()
+            distanceDisplayCondition : new DistanceDisplayCondition(),
+            classificationType : ClassificationType.TERRAIN,
+            zIndex : 0
         };
 
         var polyline = new PolylineGraphics(options);
@@ -38,9 +43,12 @@ defineSuite([
         expect(polyline.show).toBeInstanceOf(ConstantProperty);
         expect(polyline.width).toBeInstanceOf(ConstantProperty);
         expect(polyline.followSurface).toBeInstanceOf(ConstantProperty);
+        expect(polyline.clampToGround).toBeInstanceOf(ConstantProperty);
         expect(polyline.granularity).toBeInstanceOf(ConstantProperty);
         expect(polyline.shadows).toBeInstanceOf(ConstantProperty);
         expect(polyline.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(polyline.classificationType).toBeInstanceOf(ConstantProperty);
+        expect(polyline.zIndex).toBeInstanceOf(ConstantProperty);
 
         expect(polyline.material.color.getValue()).toEqual(options.material);
         expect(polyline.depthFailMaterial.color.getValue()).toEqual(options.depthFailMaterial);
@@ -48,9 +56,12 @@ defineSuite([
         expect(polyline.show.getValue()).toEqual(options.show);
         expect(polyline.width.getValue()).toEqual(options.width);
         expect(polyline.followSurface.getValue()).toEqual(options.followSurface);
+        expect(polyline.clampToGround.getValue()).toEqual(options.clampToGround);
         expect(polyline.granularity.getValue()).toEqual(options.granularity);
         expect(polyline.shadows.getValue()).toEqual(options.shadows);
         expect(polyline.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(polyline.classificationType.getValue()).toEqual(options.classificationType);
+        expect(polyline.zIndex.getValue()).toEqual(options.zIndex);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -61,9 +72,12 @@ defineSuite([
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
         source.followSurface = new ConstantProperty();
+        source.clampToGround = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        source.classificationType = new ConstantProperty(ClassificationType.TERRAIN);
+        source.zIndex = new ConstantProperty();
 
         var target = new PolylineGraphics();
         target.merge(source);
@@ -73,9 +87,12 @@ defineSuite([
         expect(target.width).toBe(source.width);
         expect(target.show).toBe(source.show);
         expect(target.followSurface).toBe(source.followSurface);
+        expect(target.clampToGround).toBe(source.clampToGround);
         expect(target.granularity).toBe(source.granularity);
         expect(target.shadows).toBe(source.shadows);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.classificationType).toBe(source.classificationType);
+        expect(target.zIndex).toBe(source.zIndex);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -86,9 +103,12 @@ defineSuite([
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
         source.followSurface = new ConstantProperty();
+        source.clampToGround = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
+        source.classificationType = new ConstantProperty();
+        source.zIndex = new ConstantProperty();
 
         var color = new ColorMaterialProperty();
         var depthFailColor = new ColorMaterialProperty();
@@ -96,9 +116,12 @@ defineSuite([
         var width = new ConstantProperty();
         var show = new ConstantProperty();
         var followSurface = new ConstantProperty();
+        var clampToGround = new ConstantProperty();
         var granularity = new ConstantProperty();
         var shadows = new ConstantProperty();
         var distanceDisplayCondition = new ConstantProperty();
+        var classificationType = new ConstantProperty();
+        var zIndex = new ConstantProperty();
 
         var target = new PolylineGraphics();
         target.material = color;
@@ -107,9 +130,12 @@ defineSuite([
         target.width = width;
         target.show = show;
         target.followSurface = followSurface;
+        target.clampToGround = clampToGround;
         target.granularity = granularity;
         target.shadows = shadows;
         target.distanceDisplayCondition = distanceDisplayCondition;
+        target.classificationType = classificationType;
+        target.zIndex = zIndex;
 
         target.merge(source);
         expect(target.material).toBe(color);
@@ -118,9 +144,12 @@ defineSuite([
         expect(target.width).toBe(width);
         expect(target.show).toBe(show);
         expect(target.followSurface).toBe(followSurface);
+        expect(target.clampToGround).toBe(clampToGround);
         expect(target.granularity).toBe(granularity);
         expect(target.shadows).toBe(shadows);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+        expect(target.classificationType).toBe(classificationType);
+        expect(target.zIndex).toBe(zIndex);
     });
 
     it('clone works', function() {
@@ -131,9 +160,12 @@ defineSuite([
         source.positions = new ConstantProperty();
         source.show = new ConstantProperty();
         source.followSurface = new ConstantProperty();
+        source.clampToGround = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
+        source.classificationType = new ConstantProperty();
+        source.zIndex = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -142,9 +174,12 @@ defineSuite([
         expect(result.width).toBe(source.width);
         expect(result.show).toBe(source.show);
         expect(result.followSurface).toBe(source.followSurface);
+        expect(result.clampToGround).toBe(source.clampToGround);
         expect(result.granularity).toBe(source.granularity);
         expect(result.shadows).toBe(source.shadows);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.classificationType).toBe(source.classificationType);
+        expect(result.zIndex).toBe(source.zIndex);
     });
 
     it('merge throws if source undefined', function() {
@@ -162,8 +197,11 @@ defineSuite([
         testDefinitionChanged(property, 'positions', [], []);
         testDefinitionChanged(property, 'width', 3, 4);
         testDefinitionChanged(property, 'followSurface', false, true);
+        testDefinitionChanged(property, 'clampToGround', false, true);
         testDefinitionChanged(property, 'granularity', 2, 1);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 20.0));
+        testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN);
+        testDefinitionChanged(property, 'zIndex', 20, 5);
     });
 });

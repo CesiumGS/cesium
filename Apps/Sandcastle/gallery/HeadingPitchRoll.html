@@ -120,7 +120,7 @@ var planePrimitive = scene.primitives.add(Cesium.Model.fromGltf({
 planePrimitive.readyPromise.then(function(model) {
     // Play and loop all animations at half-speed
     model.activeAnimations.addAll({
-        speedup : 0.5,
+        multiplier : 0.5,
         loop : Cesium.ModelAnimationLoop.REPEAT
     });
 
@@ -226,10 +226,10 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

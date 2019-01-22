@@ -89,6 +89,10 @@ defineSuite([
         };
     }
 
+    function returnMetadataAvailabilityTileJson() {
+        return returnTileJson('Data/CesiumTerrainTileJson/MetadataAvailability.tile.json');
+    }
+
     function waitForTile(level, x, y, requestNormals, requestWaterMask, f) {
         var terrainProvider = new CesiumTerrainProvider({
             url : 'made/up/url',
@@ -461,6 +465,20 @@ defineSuite([
         });
     });
 
+    it('do not add blank attribution if layer.json does not have one', function() {
+        returnTileJson('Data/CesiumTerrainTileJson/WaterMask.tile.json');
+
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider._tileCredit).toBeUndefined();
+        });
+    });
+
     describe('requestTileGeometry', function() {
 
         it('uses multiple urls specified in layer.json', function() {
@@ -638,6 +656,33 @@ defineSuite([
             });
         });
 
+        it('provides QuantizedMeshTerrainData with Metadata availability', function() {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                Resource._DefaultImplementations.loadWithXhr('Data/CesiumTerrainTileJson/tile.metadataavailability.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnMetadataAvailabilityTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : 'made/up/url'
+            });
+
+            return pollToPromise(function() {
+                return terrainProvider.ready;
+            }).then(function() {
+                expect(terrainProvider.hasMetadata).toBe(true);
+                expect(terrainProvider._layers[0].availabilityLevels).toBe(10);
+                expect(terrainProvider.availability.isTileAvailable(0,0,0)).toBe(true);
+                expect(terrainProvider.availability.isTileAvailable(0,1,0)).toBe(true);
+                expect(terrainProvider.availability.isTileAvailable(1,0,0)).toBe(false);
+
+                return terrainProvider.requestTileGeometry(0, 0, 0);
+            }).then(function(loadedData) {
+                expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+                expect(terrainProvider.availability.isTileAvailable(1,0,0)).toBe(true);
+            });
+        });
+
         it('returns undefined if too many requests are already in progress', function() {
             var baseUrl = 'made/up/url';
 
@@ -709,6 +754,29 @@ defineSuite([
             }).then(function() {
                 expect(terrainProvider.getTileDataAvailable(1, 3, 2)).toBe(true);
                 expect(terrainProvider.getTileDataAvailable(1, 0, 2)).toBe(false);
+            });
+        });
+
+        it('getTileDataAvailable() with Metadata availability', function() {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                Resource._DefaultImplementations.loadWithXhr('Data/CesiumTerrainTileJson/tile.metadataavailability.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnMetadataAvailabilityTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : 'made/up/url'
+            });
+
+            return pollToPromise(function() {
+                return terrainProvider.ready;
+            }).then(function() {
+                expect(terrainProvider.getTileDataAvailable(0,0,0)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(0,0,1)).toBeUndefined();
+
+                return terrainProvider.requestTileGeometry(0, 0, 0);
+            }).then(function() {
+                expect(terrainProvider.getTileDataAvailable(0,0,1)).toBe(true);
             });
         });
 

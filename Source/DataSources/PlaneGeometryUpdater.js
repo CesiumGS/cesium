@@ -9,6 +9,8 @@ define([
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/GeometryInstance',
         '../Core/Iso8601',
+        '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/PlaneGeometry',
         '../Core/PlaneOutlineGeometry',
@@ -31,6 +33,8 @@ define([
         DistanceDisplayConditionGeometryInstanceAttribute,
         GeometryInstance,
         Iso8601,
+        CesiumMath,
+        Matrix3,
         Matrix4,
         PlaneGeometry,
         PlaneOutlineGeometry,
@@ -71,6 +75,8 @@ define([
             geometryPropertyName : 'plane',
             observedPropertyNames : ['availability', 'position', 'orientation', 'plane']
         });
+
+        this._onEntityPropertyChanged(entity, 'plane', entity.plane, undefined);
     }
 
     if (defined(Object.create)) {
@@ -134,7 +140,7 @@ define([
         options.plane = plane;
         options.dimensions = dimensions;
 
-        modelMatrix = createPrimitiveMatrix(plane, dimensions, modelMatrix, modelMatrix);
+        modelMatrix = createPrimitiveMatrix(plane, dimensions, modelMatrix, this._scene.mapProjection.ellipsoid, modelMatrix);
 
         return new GeometryInstance({
             id : entity,
@@ -175,7 +181,7 @@ define([
         options.plane = plane;
         options.dimensions = dimensions;
 
-        modelMatrix = createPrimitiveMatrix(plane, dimensions, modelMatrix, modelMatrix);
+        modelMatrix = createPrimitiveMatrix(plane, dimensions, modelMatrix, this._scene.mapProjection.ellipsoid, modelMatrix);
 
         return new GeometryInstance({
             id : entity,
@@ -240,30 +246,38 @@ define([
         options.dimensions = Property.getValueOrUndefined(plane.dimensions, time, options.dimensions);
     };
 
+    var scratchAxis = new Cartesian3();
+    var scratchAxis2 = new Cartesian3();
     var scratchTranslation = new Cartesian3();
     var scratchNormal = new Cartesian3();
     var scratchScale = new Cartesian3();
-    function createPrimitiveMatrix (plane, dimensions, modelMatrix, result) {
-        var normal;
-        var distance;
-        if (defined(plane)) {
-            normal = plane.normal;
-            distance = plane.distance;
-        } else {
-            normal = Cartesian3.clone(Cartesian3.UNIT_X, scratchNormal);
-            distance = 0.0;
-        }
-
-        if (!defined(dimensions)) {
-            dimensions = new Cartesian2(1.0, 1.0);
-        }
+    var scratchQuaternion = new Quaternion();
+    var scratchMatrix3 = new Matrix3();
+    function createPrimitiveMatrix(plane, dimensions, transform, ellipsoid, result) {
+        var normal = plane.normal;
+        var distance = plane.distance;
 
         var translation = Cartesian3.multiplyByScalar(normal, -distance, scratchTranslation);
-        translation = Matrix4.multiplyByPoint(modelMatrix, translation, translation);
+        translation = Matrix4.multiplyByPoint(transform, translation, translation);
 
-        var transformedNormal = Matrix4.multiplyByPointAsVector(modelMatrix, normal, scratchNormal);
+        var transformedNormal = Matrix4.multiplyByPointAsVector(transform, normal, scratchNormal);
         Cartesian3.normalize(transformedNormal, transformedNormal);
-        var rotation = getRotationMatrix(transformedNormal, Cartesian3.UNIT_Z);
+
+        var up = ellipsoid.geodeticSurfaceNormal(translation, scratchAxis2);
+        if (CesiumMath.equalsEpsilon(Math.abs(Cartesian3.dot(up, transformedNormal)), 1.0, CesiumMath.EPSILON8)) {
+            up = Cartesian3.clone(Cartesian3.UNIT_Z, up);
+        }
+
+        var left = Cartesian3.cross(up, transformedNormal, scratchAxis);
+        up = Cartesian3.cross(transformedNormal, left, up);
+        Cartesian3.normalize(left, left);
+        Cartesian3.normalize(up, up);
+
+        var rotationMatrix = scratchMatrix3;
+        Matrix3.setColumn(rotationMatrix, 0, left, rotationMatrix);
+        Matrix3.setColumn(rotationMatrix, 1, up, rotationMatrix);
+        Matrix3.setColumn(rotationMatrix, 2, transformedNormal, rotationMatrix);
+        var rotation = Quaternion.fromRotationMatrix(rotationMatrix, scratchQuaternion);
 
         var scale = Cartesian2.clone(dimensions, scratchScale);
         scale.z = 1.0;
@@ -271,18 +285,10 @@ define([
         return Matrix4.fromTranslationQuaternionRotationScale(translation, rotation, scale, result);
     }
 
-    // get a rotation according to a normal
-    var scratchAxis = new Cartesian3();
-    var scratchQuaternion = new Quaternion();
-    function getRotationMatrix(direction, up) {
-        var angle = Cartesian3.angleBetween(direction, up);
-        if (angle === 0.0) {
-            return Quaternion.clone(Quaternion.IDENTITY, scratchQuaternion);
-        }
-
-        var axis = Cartesian3.cross(up, direction, scratchAxis);
-        return Quaternion.fromAxisAngle(axis, angle, scratchQuaternion);
-    }
+    /**
+     * @private
+     */
+    PlaneGeometryUpdater.createPrimitiveMatrix = createPrimitiveMatrix;
 
     return PlaneGeometryUpdater;
 });

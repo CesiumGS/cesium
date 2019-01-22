@@ -44,7 +44,7 @@ define([
         /**
          * The URL endpoint for the Bing geocoder service
          * @type {String}
-         * @memberof {BingMapsGeocoderService.prototype}
+         * @memberof BingMapsGeocoderService.prototype
          * @readonly
          */
         url : {
@@ -56,7 +56,7 @@ define([
         /**
          * The key for the Bing geocoder service
          * @type {String}
-         * @memberof {BingMapsGeocoderService.prototype}
+         * @memberof BingMapsGeocoderService.prototype
          * @readonly
          */
         key : {
@@ -70,7 +70,7 @@ define([
      * @function
      *
      * @param {String} query The query to be sent to the geocoder service
-     * @returns {Promise<GeocoderResult[]>}
+     * @returns {Promise<GeocoderService~Result[]>}
      */
     BingMapsGeocoderService.prototype.geocode = function(query) {
         //>>includeStart('debug', pragmas.debug);

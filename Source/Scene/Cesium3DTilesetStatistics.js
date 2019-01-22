@@ -17,7 +17,7 @@ define([
         this.numberOfPendingRequests = 0;
         this.numberOfTilesProcessing = 0;
         this.numberOfTilesWithContentReady = 0; // Number of tiles with content loaded, does not include empty tiles
-        this.numberOfTilesTotal = 0; // Number of tiles in tileset.json (and other tileset.json files as they are loaded)
+        this.numberOfTilesTotal = 0; // Number of tiles in tileset JSON (and other tileset JSON files as they are loaded)
         // Features statistics
         this.numberOfFeaturesSelected = 0; // Number of features rendered
         this.numberOfFeaturesLoaded = 0; // Number of features in memory

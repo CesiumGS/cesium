@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+### 6.0.0 - 2018-05-01
+* Upgrade to eslint 5.x and it's new default rules.
+* Set ecmaVersion to 2017 for Node.js code.
+* Enable [no-var](https://eslint.org/docs/rules/no-var) in Node.js code.
+* Enable [prefer-const](https://eslint.org/docs/rules/prefer-const) in Node.js code.
+
+### 5.0.0 - 2018-05-01
+* Enable [eol-last](https://eslint.org/docs/rules/eol-last).
+
 ### 4.0.0 - 2018-03-05
 * Enable [no-multiple-empty-lines](https://eslint.org/docs/rules/no-multiple-empty-lines).
 

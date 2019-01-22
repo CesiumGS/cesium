@@ -1,4 +1,5 @@
 define([
+        '../Core/ApproximateTerrainHeights',
         '../Core/BoundingSphere',
         '../Core/Check',
         '../Core/defaultValue',
@@ -6,7 +7,9 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/EventHelper',
+        '../Scene/GroundPolylinePrimitive',
         '../Scene/GroundPrimitive',
+        '../Scene/OrderedGroundPrimitiveCollection',
         '../Scene/PrimitiveCollection',
         './BillboardVisualizer',
         './BoundingSphereState',
@@ -18,6 +21,7 @@ define([
         './PointVisualizer',
         './PolylineVisualizer'
     ], function(
+        ApproximateTerrainHeights,
         BoundingSphere,
         Check,
         defaultValue,
@@ -25,7 +29,9 @@ define([
         defineProperties,
         destroyObject,
         EventHelper,
+        GroundPolylinePrimitive,
         GroundPrimitive,
+        OrderedGroundPrimitiveCollection,
         PrimitiveCollection,
         BillboardVisualizer,
         BoundingSphereState,
@@ -58,6 +64,7 @@ define([
         //>>includeEnd('debug');
 
         GroundPrimitive.initializeTerrainHeights();
+        GroundPolylinePrimitive.initializeTerrainHeights();
 
         var scene = options.scene;
         var dataSourceCollection = options.dataSourceCollection;
@@ -128,7 +135,7 @@ define([
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
                 new PathVisualizer(scene, entities),
-                new PolylineVisualizer(scene, entities)];
+                new PolylineVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives)];
     };
 
     defineProperties(DataSourceDisplay.prototype, {
@@ -240,7 +247,7 @@ define([
         Check.defined('time', time);
         //>>includeEnd('debug');
 
-        if (!GroundPrimitive._initialized) {
+        if (!ApproximateTerrainHeights.initialized) {
             this._ready = false;
             return false;
         }
@@ -362,7 +369,7 @@ define([
         var displayGroundPrimitives = this._groundPrimitives;
 
         var primitives = displayPrimitives.add(new PrimitiveCollection());
-        var groundPrimitives = displayGroundPrimitives.add(new PrimitiveCollection());
+        var groundPrimitives = displayGroundPrimitives.add(new OrderedGroundPrimitiveCollection());
 
         dataSource._primitives = primitives;
         dataSource._groundPrimitives = groundPrimitives;

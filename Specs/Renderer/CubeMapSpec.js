@@ -384,6 +384,248 @@ defineSuite([
         });
     });
 
+    it('creates a cube map with floating-point textures and linear filtering', function() {
+        if (!context.floatingPointTexture) {
+            return;
+        }
+
+        var positiveXColor = new Color(0.0, 1.0, 1.0, 1.0);
+        var negativeXColor = new Color(0.0, 0.0, 1.0, 1.0);
+        var positiveYColor = new Color(0.0, 1.0, 0.0, 1.0);
+        var negativeYColor = new Color(1.0, 0.0, 0.0, 1.0);
+        var positiveZColor = new Color(1.0, 0.0, 1.0, 1.0);
+        var negativeZColor = new Color(1.0, 1.0, 0.0, 1.0);
+
+        cubeMap = new CubeMap({
+            context : context,
+            source : {
+                positiveX : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([positiveXColor.red, positiveXColor.green, positiveXColor.blue, positiveXColor.alpha])
+                },
+                negativeX : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([negativeXColor.red, negativeXColor.green, negativeXColor.blue, negativeXColor.alpha])
+                },
+                positiveY : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([positiveYColor.red, positiveYColor.green, positiveYColor.blue, positiveYColor.alpha])
+                },
+                negativeY : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([negativeYColor.red, negativeYColor.green, negativeYColor.blue, negativeYColor.alpha])
+                },
+                positiveZ : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([positiveZColor.red, positiveZColor.green, positiveZColor.blue, positiveZColor.alpha])
+                },
+                negativeZ : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Float32Array([negativeZColor.red, negativeZColor.green, negativeZColor.blue, negativeZColor.alpha])
+                }
+            },
+            pixelDatatype : PixelDatatype.FLOAT,
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
+            })
+        });
+
+        var fs =
+            'uniform samplerCube u_texture;' +
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(vec3(1.0, 1.0, 0.0))); }';
+
+        var uniformMap = {
+            u_texture : function() {
+                return cubeMap;
+            }
+        };
+
+        if (!context.textureFloatLinear) {
+            expect({
+                context : context,
+                fragmentShader : fs,
+                uniformMap : uniformMap,
+                epsilon : 1
+            }).contextToRender(positiveYColor.toBytes());
+        } else {
+            Color.multiplyByScalar(positiveXColor, 1.0 - 0.5, positiveXColor);
+            Color.multiplyByScalar(positiveYColor, 0.5, positiveYColor);
+            var color = Color.add(positiveXColor, positiveYColor, positiveXColor);
+            expect({
+                context : context,
+                fragmentShader : fs,
+                uniformMap : uniformMap,
+                epsilon : 1
+            }).contextToRender(color.toBytes());
+        }
+    });
+
+    it('creates a cube map with half floating-point textures', function() {
+        if (!context.halfFloatingPointTexture) {
+            return;
+        }
+
+        var positiveXFloats = [12902, 13926, 14541, 15360];
+        var negativeXFloats = [13926, 12902, 14541, 15360];
+        var positiveYFloats = [14541, 13926, 12902, 15360];
+        var negativeYFloats = [12902, 14541, 13926, 15360];
+        var positiveZFloats = [13926, 14541, 12902, 15360];
+        var negativeZFloats = [14541, 12902, 13926, 15360];
+
+        var positiveXColor = new Color(0.2, 0.4, 0.6, 1.0);
+        var negativeXColor = new Color(0.4, 0.2, 0.6, 1.0);
+        var positiveYColor = new Color(0.6, 0.4, 0.2, 1.0);
+        var negativeYColor = new Color(0.2, 0.6, 0.4, 1.0);
+        var positiveZColor = new Color(0.4, 0.6, 0.2, 1.0);
+        var negativeZColor = new Color(0.6, 0.2, 0.4, 1.0);
+
+        cubeMap = new CubeMap({
+            context : context,
+            source : {
+                positiveX : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(positiveXFloats)
+                },
+                negativeX : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(negativeXFloats)
+                },
+                positiveY : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(positiveYFloats)
+                },
+                negativeY : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(negativeYFloats)
+                },
+                positiveZ : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(positiveZFloats)
+                },
+                negativeZ : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(negativeZFloats)
+                }
+            },
+            pixelDatatype : PixelDatatype.HALF_FLOAT
+        });
+
+        expectCubeMapFaces({
+            cubeMap : cubeMap,
+            expectedColors : [
+                positiveXColor.toBytes(),
+                negativeXColor.toBytes(),
+                positiveYColor.toBytes(),
+                negativeYColor.toBytes(),
+                positiveZColor.toBytes(),
+                negativeZColor.toBytes()
+            ]
+        });
+    });
+
+    it('creates a cube map with half floating-point textures and linear filtering', function() {
+        if (!context.halfFloatingPointTexture) {
+            return;
+        }
+
+        var positiveXFloats = [12902, 13926, 14541, 15360];
+        var negativeXFloats = [13926, 12902, 14541, 15360];
+        var positiveYFloats = [14541, 13926, 12902, 15360];
+        var negativeYFloats = [12902, 14541, 13926, 15360];
+        var positiveZFloats = [13926, 14541, 12902, 15360];
+        var negativeZFloats = [14541, 12902, 13926, 15360];
+
+        var positiveXColor = new Color(0.2, 0.4, 0.6, 1.0);
+        var positiveYColor = new Color(0.6, 0.4, 0.2, 1.0);
+
+        cubeMap = new CubeMap({
+            context : context,
+            source : {
+                positiveX : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(positiveXFloats)
+                },
+                negativeX : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(negativeXFloats)
+                },
+                positiveY : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(positiveYFloats)
+                },
+                negativeY : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(negativeYFloats)
+                },
+                positiveZ : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(positiveZFloats)
+                },
+                negativeZ : {
+                    width : 1,
+                    height : 1,
+                    arrayBufferView : new Uint16Array(negativeZFloats)
+                }
+            },
+            pixelDatatype : PixelDatatype.HALF_FLOAT,
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
+            })
+        });
+
+        var fs =
+            'uniform samplerCube u_texture;' +
+            'void main() { gl_FragColor = textureCube(u_texture, normalize(vec3(1.0, 1.0, 0.0))); }';
+
+        var uniformMap = {
+            u_texture : function() {
+                return cubeMap;
+            }
+        };
+
+        if (!context.textureHalfFloatLinear) {
+            expect({
+                context : context,
+                fragmentShader : fs,
+                uniformMap : uniformMap,
+                epsilon : 1
+            }).contextToRender(positiveYColor.toBytes());
+        } else {
+            Color.multiplyByScalar(positiveXColor, 1.0 - 0.5, positiveXColor);
+            Color.multiplyByScalar(positiveYColor, 0.5, positiveYColor);
+            var color = Color.add(positiveXColor, positiveYColor, positiveXColor);
+            expect({
+                context : context,
+                fragmentShader : fs,
+                uniformMap : uniformMap,
+                epsilon : 1
+            }).contextToRender(color.toBytes());
+        }
+    });
+
     it('creates a cube map with typed arrays and images', function() {
         cubeMap = new CubeMap({
             context : context,
@@ -847,6 +1089,19 @@ defineSuite([
         }
     });
 
+    it('throws during creation if pixelDatatype is HALF_FLOAT, and OES_texture_half_float is not supported', function() {
+        if (!context.halfFloatingPointTexture) {
+            expect(function() {
+                cubeMap = new CubeMap({
+                    context : context,
+                    width : 16,
+                    height : 16,
+                    pixelDatatype : PixelDatatype.HALF_FLOAT
+                });
+            }).toThrowDeveloperError();
+        }
+    });
+
     it('fails to create (pixelDatatype)', function() {
         expect(function() {
             cubeMap = new CubeMap({
@@ -1034,6 +1289,40 @@ defineSuite([
 
         expect(function() {
             cubeMap.negativeZ.copyFromFramebuffer(0, 0, 0, 0, 0, cubeMap.height + 1);
+        }).toThrowDeveloperError();
+    });
+
+    it('fails to copy from the framebuffer (FLOAT', function() {
+        if (!context.floatingPointTexture) {
+            return;
+        }
+
+        cubeMap = new CubeMap({
+            context : context,
+            width : 1,
+            height : 1,
+            pixelDatatype : PixelDatatype.FLOAT
+        });
+
+        expect(function() {
+            cubeMap.negativeX.copyFromFramebuffer(0, 0, 0, 0, 0, 0);
+        }).toThrowDeveloperError();
+    });
+
+    it('fails to copy from the framebuffer (HALF_FLOAT', function() {
+        if (!context.halfFloatingPointTexture) {
+            return;
+        }
+
+        cubeMap = new CubeMap({
+            context : context,
+            width : 1,
+            height : 1,
+            pixelDatatype : PixelDatatype.HALF_FLOAT
+        });
+
+        expect(function() {
+            cubeMap.negativeX.copyFromFramebuffer(0, 0, 0, 0, 0, 0);
         }).toThrowDeveloperError();
     });
 

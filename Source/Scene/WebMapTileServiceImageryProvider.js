@@ -53,7 +53,7 @@ define([
      * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
      * @param {Array} [options.tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
      * @param {Clock} [options.clock] A Clock instance that is used when determining the value for the time dimension. Required when options.times is specified.
-     * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
+     * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
      * @param {Object} [options.dimensions] A object containing static dimensions and their values.
      * @param {Number} [options.tileWidth=256] The tile width in pixels.
      * @param {Number} [options.tileHeight=256] The tile height in pixels.
