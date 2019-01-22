@@ -50,13 +50,7 @@ define([
 
     var descendantSelectionDepth = 2;
 
-    function fudgeMaxSSE(tileset, frameState) {
-        // return tileset._maximumScreenSpaceError + cameraChanges.sseFudge;
-        return tileset._maximumScreenSpaceError + frameState.camera.cameraChanges.sseFudge;
-        // return tileset._maximumScreenSpaceError;
-    }
-
-    var scratchCartesian3 = new Cartesian3();
+    var delta = new Cartesian3();
     Cesium3DTilesetTraversal.selectTiles = function(tileset, frameState) {
         tileset._requestedTiles.length = 0;
 
@@ -67,18 +61,25 @@ define([
         // TODO: camera percentageChanged threshold is at 50% it seems, record our own changes for now
         var camera = frameState.camera;
         var cameraChanges = camera.cameraChanges;
-        // if (defined(cameraChanges.positionAmount)) {
         if (defined(cameraChanges)) {
-            // var positionDelta = new Cartesian3(camera.positionWC - cameraChanges.oldPosition);
-            var positionDelta = new Cartesian3(camera.position - cameraChanges.oldPosition);
-            cameraChanges.positionAmount = Cartesian3.dot(positionDelta, positionDelta);
-            // cameraChanges.oldPosition = Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
-            cameraChanges.oldPosition = Cartesian3.clone(camera.position, cameraChanges.oldPosition);
+
+            Cartesian3.subtract(camera.positionWC, cameraChanges.oldPosition, delta);
+            cameraChanges.positionAmount = Cartesian3.dot(delta, delta);
+            Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
+
             cameraChanges.directionAmount = 0.5 * (-Cartesian3.dot(camera.directionWC, cameraChanges.oldDirection) + 1.0);
-            cameraChanges.oldDirection = Cartesian3.clone(camera.directionWC, cameraChanges.oldDirection);
+            Cartesian3.clone(camera.directionWC, cameraChanges.oldDirection);
+
+            var fudgeAmount = 51200000;
+            cameraChanges.sseFudge = (cameraChanges.directionAmount + cameraChanges.positionAmount) > 0 ? fudgeAmount : 0;
+            if (cameraChanges.sseFudge > 0) {
+                // console.log('moving');
+            } else {
+                // console.log(delta);
+            }
         } else {
             camera.cameraChanges = {
-                positionAmount: undefined, // squared length
+                positionAmount: 0, // squared length
                 oldPosition: new Cartesian3(),
                 directionAmount: 0, // value [0, 1]
                 oldDirection: new Cartesian3(),
@@ -86,20 +87,10 @@ define([
             };
             cameraChanges = camera.cameraChanges;
 
-            cameraChanges.positionAmount = 0;
-            // cameraChanges.oldPosition = Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
-            cameraChanges.oldPosition = Cartesian3.clone(camera.position, cameraChanges.oldPosition);
-            cameraChanges.directionAmount = 0;
-            cameraChanges.oldDirection = Cartesian3.clone(camera.directionWC, cameraChanges.oldDirection);
-            cameraChanges.sseFudge = 0;
+            Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
+            Cartesian3.clone(camera.directionWC, cameraChanges.oldDirection);
         }
 
-        var fudgeAmount = 51200000;
-        cameraChanges.sseFudge = cameraChanges.positionAmount > 0 ? fudgeAmount : 0;
-        cameraChanges.sseFudge += cameraChanges.directionAmount > 0 ? fudgeAmount : 0; // can lerp on this one since value is normalized [0, 1]
-        if (cameraChanges.sseFudge > 0) {
-            console.log('moving');
-        }
 
         tileset._selectedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
