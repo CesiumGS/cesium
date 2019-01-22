@@ -13,20 +13,20 @@ defineSuite([
     'use strict';
 
     it('construct0', function() {
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection');
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection');
         expect(projection.ellipsoid).toEqual(Ellipsoid.WGS84);
     });
 
     it('construct1', function() {
         var ellipsoid = Ellipsoid.UNIT_SPHERE;
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection', ellipsoid);
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection', ellipsoid);
         expect(projection.ellipsoid).toEqual(ellipsoid);
     });
 
     it('project0', function() {
         var height = 10.0;
         var cartographic = new Cartographic(0.0, 0.0, height);
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection');
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection');
         return projection.readyPromise.then(function() {
             expect(projection.project(cartographic)).toEqual(new Cartesian3(0.0, 0.0, height));
         });
@@ -36,7 +36,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var cartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO, 0.0);
         var expected = new Cartesian3(Math.PI * ellipsoid.radii.x, CesiumMath.PI_OVER_TWO * ellipsoid.radii.x, 0.0);
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection', ellipsoid);
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection', ellipsoid);
         return projection.readyPromise.then(function() {
             expect(projection.project(cartographic)).toEqual(expected);
         });
@@ -46,7 +46,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var cartographic = new Cartographic(-Math.PI, CesiumMath.PI_OVER_TWO, 0.0);
         var expected = new Cartesian3(-Math.PI * ellipsoid.radii.x, CesiumMath.PI_OVER_TWO * ellipsoid.radii.x, 0.0);
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection', ellipsoid);
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection', ellipsoid);
         return projection.readyPromise.then(function() {
             expect(projection.project(cartographic)).toEqual(expected);
         });
@@ -56,7 +56,7 @@ defineSuite([
         var ellipsoid = Ellipsoid.WGS84;
         var cartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO, 0.0);
         var expected = new Cartesian3(Math.PI * ellipsoid.radii.x, CesiumMath.PI_OVER_TWO * ellipsoid.radii.x, 0.0);
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection', ellipsoid);
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection', ellipsoid);
         return projection.readyPromise.then(function() {
             var result = new Cartesian3(0.0, 0.0, 0.0);
             var returnValue = projection.project(cartographic, result);
@@ -67,7 +67,7 @@ defineSuite([
 
     it('unproject', function() {
         var cartographic = new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_FOUR, 12.0);
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection');
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection');
         return projection.readyPromise.then(function() {
             var projected = projection.project(cartographic);
             expect(Cartographic.equalsEpsilon(projection.unproject(projected), cartographic, CesiumMath.EPSILON10)).toBe(true);
@@ -76,7 +76,7 @@ defineSuite([
 
     it('unproject with result parameter', function() {
         var cartographic = new Cartographic(CesiumMath.PI_OVER_TWO, CesiumMath.PI_OVER_FOUR, 12.0);
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection');
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection');
         return projection.readyPromise.then(function() {
             var projected = projection.project(cartographic);
             var result = new Cartographic(0.0, 0.0, 0.0);
@@ -87,7 +87,7 @@ defineSuite([
     });
 
     it('project throws without cartesian', function() {
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection');
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection');
         return projection.readyPromise.then(function() {
             expect(function() {
                 return projection.unproject();
@@ -96,7 +96,7 @@ defineSuite([
     });
 
     it('throws when custom projection is not yet loaded', function() {
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection2');
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection2');
         expect(function() {
             var cartographic = new Cartographic(-Math.PI, CesiumMath.PI_OVER_TWO, 0.0);
             projection.project(cartographic);
