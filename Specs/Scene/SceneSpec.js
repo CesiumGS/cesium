@@ -1099,9 +1099,11 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
         s.camera.moveEnd.addEventListener(spyListener);
 
-        s.cameraEventWaitTime = 0.0;
+        s.cameraEventWaitTime = -1.0;
         s.camera.moveLeft();
+        // The first render will trigger the moveStart event.
         s.render();
+        // The second will trigger the moveEnd.
         s.render();
 
         expect(spyListener.calls.count()).toBe(1);
