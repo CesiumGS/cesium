@@ -73,10 +73,18 @@ define([
             var fudgeAmount = 51200000;
             cameraChanges.sseFudge = (cameraChanges.directionAmount + cameraChanges.positionAmount) > 0 ? fudgeAmount : 0;
             if (cameraChanges.sseFudge > 0) {
-                // console.log('moving');
+                console.log('moving');
             } else {
-                // console.log(delta);
+                console.log(delta);
             }
+
+            // as soon as you move the camera it locks to moving, camera._changed is always true
+            // if (!Cartesian3.equals(camera._changedPosition, camera._position)) {
+            //     console.log('moving');
+            // } else {
+            //     console.log(delta);
+            // }
+
         } else {
             camera.cameraChanges = {
                 positionAmount: 0, // squared length
