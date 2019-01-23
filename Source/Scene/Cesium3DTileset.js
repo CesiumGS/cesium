@@ -1581,14 +1581,16 @@ define([
         requestedTilesInFlight.length -= removeCount;
     }
 
-    function requestTiles(tileset) {
+    function requestTiles(tileset, isAsync) {
         // Sort requests by priority before making any requests.
         // This makes it less likely that requests will be cancelled after being issued.
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
         var i;
-        for (i = 0; i < length; ++i) {
-            requestedTiles[i].updatePriority();
+        if (!isAsync) { // Prevent async picks from having their priorities overwritten
+            for (i = 0; i < length; ++i) {
+                requestedTiles[i].updatePriority();
+            }
         }
         requestedTiles.sort(sortRequestByPriority);
         for (i = 0; i < length; ++i) {
@@ -2068,7 +2070,7 @@ define([
         }
 
         if (isRender || isAsync) {
-            requestTiles(tileset);
+            requestTiles(tileset, isAsync);
         }
 
         if (isRender) {
