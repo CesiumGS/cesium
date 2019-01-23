@@ -1,6 +1,5 @@
 define([
         '../Core/BoundingSphere',
-        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/defaultValue',
@@ -22,7 +21,6 @@ define([
         './TileTerrain'
     ], function(
         BoundingSphere,
-        Cartesian2,
         Cartesian3,
         Cartesian4,
         defaultValue,

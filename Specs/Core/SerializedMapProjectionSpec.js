@@ -39,7 +39,7 @@ defineSuite([
     });
 
     it('serializes and de-serializes CustomProjection', function() {
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection', Ellipsoid.UNIT_SPHERE);
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection', Ellipsoid.UNIT_SPHERE);
         var serialized = new SerializedMapProjection(projection);
 
         return SerializedMapProjection.deserialize(serialized)

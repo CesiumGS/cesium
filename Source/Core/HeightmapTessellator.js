@@ -121,7 +121,7 @@ define([
      *                  low-order element.  If it is true, the first element is the high-order element.
      * @param {Boolean} [options.includeWebMercatorT=false] Indicates that the vertices should include a T coordinate to compensate for Web Mercator Latitude.
      *
-     * @param {MapProjection} mapProjection MapProjection for projecting for terrain positions to the target 2D coordinate system.
+     * @param {MapProjection} mapProjection MapProjection for projecting terrain positions to the target 2D coordinate system.
      * @example
      * var width = 5;
      * var height = 5;
@@ -414,7 +414,7 @@ define([
 
                 if (nonEquatorialCylindricalProjection) {
                     var cartographic = cartographicScratch;
-                    cartographic.height = 0.0;
+                    cartographic.height = heightSample;
                     cartographic.longitude = longitude;
                     cartographic.latitude = latitude;
                     positions2D[index] = mapProjection.project(cartographic);

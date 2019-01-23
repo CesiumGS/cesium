@@ -33,7 +33,7 @@ define([
      * may produce unexpected results outside their valid boundaries in Cartographic space (wgs84Bounds).
      * These boundaries may be looked up at spatialreference.org.
      *
-     * Scenes using Proj4Projection will default to MapMode2D.ROTATE instead of MapMode2D.INFINITE_SCROLL.
+     * Scenes using Proj4Projection will default to <code>MapMode2D.ROTATE</code> instead of <code>MapMode2D.INFINITE_SCROLL</code>.
      *
      * @alias Proj4Projection
      * @constructor
@@ -112,7 +112,7 @@ define([
 
     var scratchProjectionArray = [0.0, 0.0];
     /**
-     * Projects a set of {@link Cartographic} coordinates, in radians, to map coordinates, in meters based on
+     * Projects a {@link Cartographic} coordinate, in radians, to map coordinates in meters based on
      * the specified projection.
      *
      * @param {Cartographic} cartographic The coordinates to project.
@@ -152,8 +152,8 @@ define([
     };
 
     /**
-     * Unprojects a set of projected {@link Cartesian3} coordinates, in meters, to {@link Cartographic}
-     * coordinates, in radians based on the specified projection.
+     * Unprojects a projected {@link Cartesian3} coordinates in meters, to {@link Cartographic}
+     * coordinates in radians based on the specified projection.
      *
      * @param {Cartesian3} cartesian The Cartesian position to unproject with height (z) in meters.
      * @param {Cartographic} [result] An instance into which to copy the result.  If this parameter is

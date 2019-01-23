@@ -95,8 +95,17 @@ defineSuite([
         });
     });
 
+    it('provides a ready accessor', function() {
+        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection3');
+        expect(projection.ready).toBe(false);
+        return projection.readyPromise.then(function() {
+            expect(projection.ready).toBe(true);
+        });
+    });
+
     it('throws when custom projection is not yet loaded', function() {
         var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection2');
+        expect(projection.ready).toBe(false);
         expect(function() {
             var cartographic = new Cartographic(-Math.PI, CesiumMath.PI_OVER_TWO, 0.0);
             projection.project(cartographic);

@@ -27,19 +27,19 @@ define([
     var loadedProjectionFunctions = {};
 
     /**
-     * MapProjection that uses custom project and unproject functions defined in an external file.
+     * {@link MapProjection} that uses custom project and unproject functions defined in an external file.
      *
      * The external file must contain a function named <code>createProjectionFunctions</code> that implements the
      * <code>CustomProjection~factory</code> interface to provide <code>CustomProjection~project</code> and
      * <code>CustomProjection~unproject</code> functions to a callback.
      *
-     * Scenes using CustomProjection will default to MapMode2D.ROTATE instead of MapMode2D.INFINITE_SCROLL.
+     * Scenes using CustomProjection will default to <code>MapMode2D.ROTATE</code> instead of <code>MapMode2D.INFINITE_SCROLL</code>.
      *
      * @alias CustomProjection
      * @constructor
      *
      * @param {String} options.url The url of the external file.
-     * @param {String} options.projectionName A name for this projection.
+     * @param {String} options.projectionName A unique name for this projection.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The MapProjection's ellipsoid.
      */
     function CustomProjection(url, projectionName, ellipsoid) {
@@ -78,7 +78,7 @@ define([
         },
         /**
          * Gets whether or not the projection evenly maps meridians to vertical lines.
-         * No guarantee that a custom projection will be cylindrical about the equator.
+         * This is not guaranteed for custom projections and is assumed false.
          *
          * @memberof CustomProjection.prototype
          *
@@ -101,14 +101,24 @@ define([
          *
          * @example
          * customProjection.readyPromise.then(function(projection) {
-         *  var viewer = new Cesium.Viewer('cesiumContainer', {
-         *      mapProjection : projection
-         *   });
+         *     var viewer = new Cesium.Viewer('cesiumContainer', {
+         *         mapProjection : projection
+         *     });
          * });
          */
         readyPromise : {
             get : function() {
                 return this._readyPromise;
+            }
+        },
+        /**
+         * Gets a value indicating whether or not the projection is ready for use.
+         * @memberof CustomProjection.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : function() {
+                return this._ready;
             }
         },
         /**
@@ -125,7 +135,7 @@ define([
             }
         },
         /**
-         * Gets the name for this projection.
+         * Gets the unique name for this projection.
          *
          * @memberOf CustomProjection.prototype
          *
@@ -153,7 +163,7 @@ define([
     CustomProjection.prototype.project = function(cartographic, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
-            throw new DeveloperError('CustomProjection is not loaded. User CustomProjection.readyPromise or wait for CustomProjection.ready to be true.');
+            throw new DeveloperError('CustomProjection is not loaded. Use CustomProjection.readyPromise or wait for CustomProjection.ready to be true.');
         }
         Check.defined('cartographic', cartographic);
         //>>includeEnd('debug');
@@ -180,7 +190,7 @@ define([
     CustomProjection.prototype.unproject = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
-            throw new DeveloperError('CustomProjection is not loaded. User CustomProjection.readyPromise or wait for CustomProjection.ready to be true.');
+            throw new DeveloperError('CustomProjection is not loaded. Use CustomProjection.readyPromise or wait for CustomProjection.ready to be true.');
         }
         Check.defined('cartesian', cartesian);
         //>>includeEnd('debug');
@@ -243,15 +253,15 @@ define([
      * @example
      * function createProjectionFunctions(callback) {
      *     function project(cartographic, result) {
-     *          result.x = cartographic.longitude * 6378137.0;
-     *          result.y = cartographic.latitude * 6378137.0;
-     *          result.z = cartographic.height;
+     *         result.x = cartographic.longitude * 6378137.0;
+     *         result.y = cartographic.latitude * 6378137.0;
+     *         result.z = cartographic.height;
      *     }
      *
      *     function unproject(cartesian, result) {
-     *          result.longitude = cartesian.x / 6378137.0;
-     *          result.latitude = cartesian.y / 6378137.0;
-     *          result.height = cartesian.z;
+     *         result.longitude = cartesian.x / 6378137.0;
+     *         result.latitude = cartesian.y / 6378137.0;
+     *         result.height = cartesian.z;
      *     }
      *
      *     callback(project, unproject);
@@ -263,28 +273,30 @@ define([
      * For example, a Geographic projection would project latitude and longitude to the X/Y plane and the altitude to Z.
      * @callback CustomProjection~project
      *
-     * @param {Cartographic} cartographic A Cesium Cartographic type providing the latitude and longitude in radians and the height in meters.
-     * @param {Cartesian3} result A Cesium Cartesian3 type onto which the projected x/y/z coordinate should be placed.
+     * @param {Cartographic} cartographic A Cesium {@link Cartographic} type providing the latitude and longitude in radians and the height in meters.
+     * @param {Cartesian3} result A Cesium {@link Cartesian3} type onto which the projected x/y/z coordinates should be placed.
      * @example
      * function project(cartographic, result) {
-     *      result.x = cartographic.longitude * 6378137.0;
-     *      result.y = cartographic.latitude * 6378137.0;
-     *      result.z = cartographic.height;
+     *     result.x = cartographic.longitude * 6378137.0;
+     *     result.y = cartographic.latitude * 6378137.0;
+     *     result.z = cartographic.height;
      * }
      */
 
     /**
+     * A function that unprojects x/y/z meter coordinates in 2.5D space to cartographic coordinates.
+     *
      * Coordinates come from a Z-up space, so for example, a Geographic projection would unproject x/y coordinates in meters
      * to latitude and longitude, and z coordinates to altitudes in meters over the x/y plane.
      * @callback CustomProjection~unproject
      *
-     * @param {Cartesian3} cartesian A x/y/z coordinate in projected space space.
-     * @param {Cartographic} result A cartographic array onto which unprojected longitude and latitude in radians and height in meters coordinates should be placed.
+     * @param {Cartesian3} cartesian A Cesium {@link Cartesian3} type containing a x/y/z coordinates in projected space.
+     * @param {Cartographic} result A Cesium {@link Cartographic} type onto which unprojected longitude and latitude in radians and height in meters should be placed.
      * @example
      * function unproject(cartesian, result) {
-     *      result.longitude = cartesian.x / 6378137.0;
-     *      result.latitude = cartesian.y / 6378137.0;
-     *      result.height = cartesian.z;
+     *     result.longitude = cartesian.x / 6378137.0;
+     *     result.latitude = cartesian.y / 6378137.0;
+     *     result.height = cartesian.z;
      * }
      */
 

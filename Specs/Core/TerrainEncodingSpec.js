@@ -236,13 +236,14 @@ defineSuite([
 
         var buffer = [];
         var height = (maximumHeight + minimumHeight) * 0.5;
-        encoding.encode(buffer, 0, center, Cartesian2.ZERO, height, Cartesian3.UNIT_X, 0.0, center2D);
+        encoding.encode(buffer, 0, center, Cartesian2.ZERO, height, Cartesian3.UNIT_X, 0.0, new Cartesian3(center.x, center.y, 1.0));
 
         expect(encoding.getStride()).toEqual(6);
         expect(buffer.length).toEqual(encoding.getStride());
 
         expect(buffer[3]).toEqual(0.0);
         expect(buffer[4]).toEqual(0.0);
+        expect(buffer[5]).toEqual(1.0);
     });
 
     it('gets oct-encoded normal', function() {

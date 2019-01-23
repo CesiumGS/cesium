@@ -943,7 +943,7 @@ define([
      * @param {Rectangle} projectedRectangle An input rectangle in projected coordinates
      * @param {MapProjection} mapProjection A MapProjection indicating a projection from cartographic coordiantes.
      * @param {Rectangle} [result] Rectangle on which to store the projected extents of the input.
-     * @param {Number} [steps=3] Number of points to sample along each side of the projected Rectangle.
+     * @param {Number} [steps=16] Number of points to sample along each side of the projected Rectangle.
      */
     Rectangle.approximateCartographicExtents = function(projectedRectangle, mapProjection, result, steps) {
         //>>includeStart('debug', pragmas.debug);

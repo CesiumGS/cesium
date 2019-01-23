@@ -92,6 +92,7 @@ define([
     MapProjection.prototype.unproject = DeveloperError.throwInstantiationError;
 
     var maxcoordRectangleScratch = new Rectangle();
+    var rectangleCenterScratch = new Cartographic();
     /**
      * Approximates the extents of a map projection in 2D.
      *
@@ -106,9 +107,10 @@ define([
 
         var maxCoord = defaultValue(result, new Cartesian3());
         var projectedExtents = Rectangle.approximateProjectedExtents(Rectangle.MAX_VALUE, mapProjection, maxcoordRectangleScratch);
+        var projectedCenter = Rectangle.center(projectedExtents, rectangleCenterScratch);
 
-        maxCoord.x = projectedExtents.width * 0.5;
-        maxCoord.y = projectedExtents.height * 0.5;
+        maxCoord.x = projectedCenter.longitude + projectedExtents.width * 0.5;
+        maxCoord.y = projectedCenter.latitude + projectedExtents.height * 0.5;
 
         return maxCoord;
     };
