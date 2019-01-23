@@ -35,7 +35,7 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polyline.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the polyline.
      * @param {MaterialProperty} [options.depthFailMaterial] A property specifying the material used to draw the polyline when it is below the terrain.
-     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if lineType is now LineType.STRAIGHT.
+     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude if lineType is not LineType.STRAIGHT.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polyline casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polyline will be displayed.
      * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this polyline will classify terrain, 3D Tiles, or both when on the ground.

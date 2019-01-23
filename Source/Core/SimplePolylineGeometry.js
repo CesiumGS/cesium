@@ -265,7 +265,8 @@ define([
         positions : scratchArray1,
         height: scratchArray2,
         ellipsoid: undefined,
-        minDistance : undefined
+        minDistance : undefined,
+        granularity : undefined
     };
 
     /**

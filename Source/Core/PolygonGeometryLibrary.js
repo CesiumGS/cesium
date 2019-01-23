@@ -188,10 +188,13 @@ define([
     };
 
     PolygonGeometryLibrary.subdivideRhumbLine = function(ellipsoid, p0, p1, minDistance, result) {
-        var numVertices = PolygonGeometryLibrary.subdivideRhumbLineCount(ellipsoid, p0, p1, minDistance);
         var c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
         var c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
         var rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
+
+        var n = rhumb.surfaceDistance / minDistance;
+        var countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
+        var numVertices = Math.pow(2, countDivide);
         var distanceBetweenVertices = rhumb.surfaceDistance / numVertices;
 
         if (!defined(result)) {
