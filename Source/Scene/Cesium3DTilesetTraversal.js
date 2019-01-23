@@ -63,23 +63,23 @@ define([
         var cameraChanges = camera.cameraChanges;
         if (defined(cameraChanges)) {
 
-            Cartesian3.subtract(camera.positionWC, cameraChanges.oldPosition, delta);
+            Cartesian3.subtract(camera.position, cameraChanges.oldPosition, delta);
             cameraChanges.positionAmount = Cartesian3.dot(delta, delta);
-            Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
+            Cartesian3.clone(camera.position, cameraChanges.oldPosition);
 
-            cameraChanges.directionAmount = 0.5 * (-Cartesian3.dot(camera.directionWC, cameraChanges.oldDirection) + 1.0);
-            Cartesian3.clone(camera.directionWC, cameraChanges.oldDirection);
+            cameraChanges.directionAmount = 0.5 * (-Cartesian3.dot(camera.direction, cameraChanges.oldDirection) + 1.0);
+            Cartesian3.clone(camera.direction, cameraChanges.oldDirection);
 
             var fudgeAmount = 512000000000000;
             cameraChanges.sseFudge = (cameraChanges.directionAmount + cameraChanges.positionAmount) > 0 ? fudgeAmount : 0;
-            // if (cameraChanges.sseFudge > 0) {
-            //     console.log('moving');
-            // } else {
-            //     console.log(delta);
-            // }
+            if (cameraChanges.sseFudge > 0) {
+                console.log('moving');
+            } else {
+                console.log(delta);
+            }
 
-            // as soon as you move the camera it locks to moving, camera._changed is always true
-            // if (!Cartesian3.equals(camera._changedPosition, camera._position)) {
+            // as soon as you move the camera it locks to moving(_changedPosition === _position or position), camera._changed is always true
+            // if (!Cartesian3.equals(camera._changedPosition, camera.position)) {
             //     console.log('moving');
             // } else {
             //     console.log(delta);

@@ -117,6 +117,13 @@ define([
         this._positionCartographic = new Cartographic();
 
         /**
+         * The old position of the camera.
+         *
+         * @type {Cartesian3}
+         */
+        this.oldPosition = new Cartesian3();
+
+        /**
          * The view direction of the camera.
          *
          * @type {Cartesian3}
@@ -124,6 +131,13 @@ define([
         this.direction = new Cartesian3();
         this._direction = new Cartesian3();
         this._directionWC = new Cartesian3();
+
+        /**
+         * The old view direction of the camera.
+         *
+         * @type {Cartesian3}
+         */
+        this.oldDirection = new Cartesian3();
 
         /**
          * The up direction of the camera.
