@@ -581,8 +581,8 @@ define([
         if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
             throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
         }
-        if (defined(options.lineType) && options.lineType === LineType.STRAIGHT) {
-            throw new DeveloperError('Cannot use LineType.STRAIGHT as option.lineType');
+        if (defined(options.lineType) && options.lineType !== LineType.GEODESIC && options.lineType !== LineType.RHUMB) {
+            throw new DeveloperError('Invalid lineType. Valid options are LineType.GEODESIC and LineType.RHUMB.');
         }
         //>>includeEnd('debug');
 

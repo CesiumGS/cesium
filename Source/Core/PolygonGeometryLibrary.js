@@ -6,6 +6,7 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './DeveloperError',
         './Ellipsoid',
         './EllipsoidRhumbLine',
         './Geometry',
@@ -29,6 +30,7 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
+        DeveloperError,
         Ellipsoid,
         EllipsoidRhumbLine,
         Geometry,
@@ -536,6 +538,8 @@ define([
                     tempPositions = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance, computeWallIndicesSubdivided);
                 } else if (lineType === LineType.RHUMB) {
                     tempPositions = PolygonGeometryLibrary.subdivideRhumbLine(ellipsoid, p1, p2, minDistance, computeWallIndicesSubdivided);
+                } else {
+                    throw new DeveloperError('Unrecognized lineType. Valid options are LineType.GEODESIC and LineType.RHUMB');
                 }
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j, ++index) {

@@ -109,8 +109,8 @@ define([
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
-        if (defined(options.lineType) && options.lineType === LineType.STRAIGHT) {
-            throw new DeveloperError('Only Geodesic and Rhumb line types are supported.');
+        if (defined(options.lineType) && options.lineType !== LineType.GEODESIC && options.lineType !== LineType.RHUMB) {
+            throw new DeveloperError('Valid options for lineType are LineType.GEODESIC and LineType.RHUMB.');
         }
         //>>includeEnd('debug');
 
@@ -220,6 +220,8 @@ define([
             ellipsoidLine = new EllipsoidGeodesic(start, end, ellipsoid);
         } else if (lineType === LineType.RHUMB) {
             ellipsoidLine = new EllipsoidRhumbLine(start, end, ellipsoid);
+        } else {
+            throw new DeveloperError('Unrecognized lineType. Valid options are LineType.GEODESIC and LineType.RHUMB');
         }
 
         var surfaceDistance = ellipsoidLine.surfaceDistance;
