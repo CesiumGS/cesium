@@ -76,12 +76,14 @@ define([
     };
 
     TerrainFillMesh.prototype.destroy = function(vertexArraysToDestroy) {
-        if (defined(vertexArraysToDestroy)) {
-            vertexArraysToDestroy.push(this.vertexArray);
-        } else {
-            GlobeSurfaceTile._freeVertexArray(this.vertexArray, vertexArraysToDestroy);
+        if (defined(this.vertexArray)) {
+            if (defined(vertexArraysToDestroy)) {
+                vertexArraysToDestroy.push(this.vertexArray);
+            } else {
+                GlobeSurfaceTile._freeVertexArray(this.vertexArray, vertexArraysToDestroy);
+            }
+            this.vertexArray = undefined;
         }
-        this.vertexArray = undefined;
         return undefined;
     };
 
@@ -668,11 +670,14 @@ define([
 
         var context = frameState.context;
 
-        if (defined(vertexArraysToDestroy)) {
-            vertexArraysToDestroy.push(fill.vertexArray);
-        } else {
-            GlobeSurfaceTile._freeVertexArray(fill.vertexArray);
+        if (defined(fill.vertexArray)) {
+            if (defined(vertexArraysToDestroy)) {
+                vertexArraysToDestroy.push(fill.vertexArray);
+            } else {
+                GlobeSurfaceTile._freeVertexArray(fill.vertexArray);
+            }
         }
+
         fill.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(context, fill.mesh);
         surfaceTile.processImagery(tile, tileProvider.terrainProvider, frameState, true);
     }
