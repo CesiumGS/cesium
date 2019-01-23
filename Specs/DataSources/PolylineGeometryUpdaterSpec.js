@@ -622,12 +622,16 @@ defineSuite([
 
         expect(primitives.length).toBe(1);
         var polylineCollection = primitives.get(0);
-        var primitive = polylineCollection.get(0);
+        var polylineObject = polylineCollection.get(0);
 
-        expect(primitive.show).toEqual(true);
+        expect(polylineObject.show).toEqual(true);
+
+        var geodesicPolylinePositionsLength = polylineObject.positions.length;
 
         lineTypeVar = LineType.STRAIGHT;
         dynamicUpdater.update(time);
+
+        expect(polylineObject.positions.length).not.toEqual(geodesicPolylinePositionsLength);
 
         dynamicUpdater.destroy();
 
