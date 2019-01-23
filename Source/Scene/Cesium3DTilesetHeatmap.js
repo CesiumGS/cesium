@@ -104,6 +104,7 @@ define([
         var heatmapValue = getHeatmapValueAndUpdateMinMax(this, tile);
         var min = this._previousMin;
         var max = this._previousMax;
+
         if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
             return;
         }

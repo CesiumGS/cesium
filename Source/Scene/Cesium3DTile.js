@@ -333,7 +333,6 @@ define([
         this._ancestorWithContentAvailable = undefined;
         this._refines = false;
         this._shouldSelect = false;
-        this._priority = 0.0;
         this._isClipped = true;
         this._clippingPlanesState = 0; // encapsulates (_isClipped, clippingPlanes.enabled) and number/function
         this._debugBoundingVolume = undefined;
@@ -342,6 +341,10 @@ define([
         this._debugColor = Color.fromRandom({ alpha : 1.0 });
         this._debugColorizeTiles = false;
 
+        this._priority = 0.0; // The priority used for request sorting
+        this._priorityDistance = Number.MAX_VALUE; // The value to update in the priority refinement chain
+        this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
+        this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
         this._loadTimestamp = new JulianDate();
 
         this._commandsLength = 0;
@@ -1260,6 +1263,48 @@ define([
 
         scratchCommandList.length = 0;
         frameState.commandList = savedCommandList;
+    };
+
+    /**
+     * Takes a value and maps it down to a 0-1 value given a min and max
+     */
+    function normalizeValue(value, min, max) {
+        if (max === min) {
+            return 0;
+        }
+
+        // Shift min max window to 0
+        var shiftedMax = max - min;
+        var shiftedValue = value - min;
+
+        // Map to [0..1]
+        return (CesiumMath.fromSNorm(shiftedValue, shiftedMax) + 1) * 0.5;
+    }
+
+    /**
+     * Sets the priority of the tile based on distance and depth
+     * @private
+     */
+    Cesium3DTile.prototype.updatePriority = function() {
+        var tileset = this.tileset;
+        var minPriority = tileset._minPriority;
+        var maxPriority = tileset._maxPriority;
+
+        // Mix priorities by mapping them into base 10 numbers
+        // Because the mappings are fuzzy you need a digit of separation so priorities don't bleed into each other
+        // Maybe this mental model is terrible and just rename to weights?
+        var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
+        var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
+
+        // Map 0-1 then convert to digit
+        var distanceDigit = distanceScale * normalizeValue(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
+
+        // Map 0-1 then convert to digit
+        var depthDigit = depthScale * normalizeValue(this._depth, minPriority.depth, maxPriority.depth);
+
+        // Get the final base 10 number
+        var number = distanceDigit + depthDigit;
+        this._priority = number;
     };
 
     /**

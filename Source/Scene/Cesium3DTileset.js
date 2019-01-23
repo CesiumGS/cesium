@@ -222,6 +222,8 @@ define([
 
         this._requestedTilesInFlight = [];
 
+        this._maxPriority = { depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
+        this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
 
         this._tilesLoaded = false;
@@ -1584,8 +1586,12 @@ define([
         // This makes it less likely that requests will be cancelled after being issued.
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
+        var i;
+        for (i = 0; i < length; ++i) {
+            requestedTiles[i].updatePriority();
+        }
         requestedTiles.sort(sortRequestByPriority);
-        for (var i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             requestContent(tileset, requestedTiles[i]);
         }
     }
@@ -1988,6 +1994,14 @@ define([
         }
     }
 
+    function resetMinMax(tileset) {
+        tileset._heatmap.resetMinMax();
+        tileset._minPriority.depth = Number.MAX_VALUE;
+        tileset._maxPriority.depth = -Number.MAX_VALUE;
+        tileset._minPriority.distance = Number.MAX_VALUE;
+        tileset._maxPriority.distance = -Number.MAX_VALUE;
+    }
+
     ///////////////////////////////////////////////////////////////////////////
 
     function update(tileset, frameState) {
@@ -2035,7 +2049,7 @@ define([
         ++tileset._updatedVisibilityFrame;
 
         // Update any tracked min max values
-        tileset._heatmap.resetMinMax();
+        resetMinMax(tileset);
 
         var ready;
 
