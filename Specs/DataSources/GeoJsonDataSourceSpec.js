@@ -4,7 +4,6 @@ defineSuite([
         'Core/Color',
         'Core/Event',
         'Core/JulianDate',
-        'Core/LineType',
         'Core/PolygonHierarchy',
         'Core/RuntimeError',
         'DataSources/CallbackProperty',
@@ -18,7 +17,6 @@ defineSuite([
         Color,
         Event,
         JulianDate,
-        LineType,
         PolygonHierarchy,
         RuntimeError,
         CallbackProperty,
@@ -35,7 +33,6 @@ defineSuite([
     var defaultStrokeWidth;
     var defaultFill;
     var defaultClampToGround;
-    var defaultLineType;
 
     beforeAll(function() {
         defaultMarkerSize = GeoJsonDataSource.markerSize;
@@ -45,7 +42,6 @@ defineSuite([
         defaultStrokeWidth = GeoJsonDataSource.strokeWidth;
         defaultFill = GeoJsonDataSource.fill;
         defaultClampToGround = GeoJsonDataSource.clampToGround;
-        defaultLineType = GeoJsonDataSource.lineType;
     });
 
     beforeEach(function() {
@@ -56,7 +52,6 @@ defineSuite([
         GeoJsonDataSource.strokeWidth = defaultStrokeWidth;
         GeoJsonDataSource.fill = defaultFill;
         GeoJsonDataSource.clampToGround = defaultClampToGround;
-        GeoJsonDataSource.lineType = defaultLineType;
     });
 
     var time = new JulianDate();
@@ -682,22 +677,6 @@ defineSuite([
             expect(entity.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
             expect(entity.polyline.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
             expect(entity.polyline.width.getValue(time)).toEqual(2);
-            expect(entity.polyline.lineType.getValue(time)).toEqual(GeoJsonDataSource.lineType);
-        });
-    });
-
-    it('Works with lineString geometry with geodesic lines', function() {
-        var dataSource = new GeoJsonDataSource();
-        return dataSource.load(lineString, {
-            lineType : LineType.GEODESIC
-        }).then(function() {
-            var entityCollection = dataSource.entities;
-            var entity = entityCollection.values[0];
-            expect(entity.properties).toBe(lineString.properties);
-            expect(entity.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
-            expect(entity.polyline.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
-            expect(entity.polyline.width.getValue(time)).toEqual(2);
-            expect(entity.polyline.lineType.getValue(time)).toEqual(LineType.GEODESIC);
         });
     });
 
@@ -713,24 +692,6 @@ defineSuite([
             expect(entity.polyline.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
             expect(entity.polyline.width.getValue(time)).toEqual(2);
             expect(entity.polyline.clampToGround.getValue(time)).toEqual(true);
-            expect(entity.polyline.lineType.getValue(time)).toEqual(GeoJsonDataSource.lineType);
-        });
-    });
-
-    it('Works with lineString geometry with geodesic lines clamped to ground', function() {
-        var dataSource = new GeoJsonDataSource();
-        return dataSource.load(lineString, {
-            clampToGround : true,
-            lineType : LineType.GEODESIC
-        }).then(function() {
-            var entityCollection = dataSource.entities;
-            var entity = entityCollection.values[0];
-            expect(entity.properties).toBe(lineString.properties);
-            expect(entity.polyline.positions.getValue(time)).toEqual(coordinatesArrayToCartesian(lineString.coordinates));
-            expect(entity.polyline.material.color.getValue(time)).toEqual(GeoJsonDataSource.stroke);
-            expect(entity.polyline.width.getValue(time)).toEqual(2);
-            expect(entity.polyline.clampToGround.getValue(time)).toEqual(true);
-            expect(entity.polyline.lineType.getValue(time)).toEqual(LineType.GEODESIC);
         });
     });
 
@@ -746,26 +707,6 @@ defineSuite([
                 expect(entity.polyline.positions.getValue(time)).toEqual(lines[i]);
                 expect(entity.polyline.material.color.getValue(time)).toEqual(Color.YELLOW);
                 expect(entity.polyline.width.getValue(time)).toEqual(2);
-                expect(entity.polyline.lineType.getValue(time)).toEqual(GeoJsonDataSource.lineType);
-            }
-        });
-    });
-
-    it('Works with multiLineString geometry with geodesic lines', function() {
-        var dataSource = new GeoJsonDataSource();
-        return dataSource.load(multiLineString, {
-            lineType : LineType.GEODESIC
-        }).then(function() {
-            var entityCollection = dataSource.entities;
-            var entities = entityCollection.values;
-            var lines = multiLineToCartesian(multiLineString);
-            for (var i = 0; i < multiLineString.coordinates.length; i++) {
-                var entity = entities[i];
-                expect(entity.properties).toBe(multiLineString.properties);
-                expect(entity.polyline.positions.getValue(time)).toEqual(lines[i]);
-                expect(entity.polyline.material.color.getValue(time)).toEqual(Color.YELLOW);
-                expect(entity.polyline.width.getValue(time)).toEqual(2);
-                expect(entity.polyline.lineType.getValue(time)).toEqual(LineType.GEODESIC);
             }
         });
     });
@@ -789,27 +730,6 @@ defineSuite([
         });
     });
 
-    it('Works with multiLineString geometry with geodesic lines clamped to ground', function() {
-        var dataSource = new GeoJsonDataSource();
-        return dataSource.load(multiLineString, {
-            clampToGround : true,
-            lineType : LineType.GEODESIC
-        }).then(function() {
-            var entityCollection = dataSource.entities;
-            var entities = entityCollection.values;
-            var lines = multiLineToCartesian(multiLineString);
-            for (var i = 0; i < multiLineString.coordinates.length; i++) {
-                var entity = entities[i];
-                expect(entity.properties).toBe(multiLineString.properties);
-                expect(entity.polyline.positions.getValue(time)).toEqual(lines[i]);
-                expect(entity.polyline.material.color.getValue(time)).toEqual(Color.YELLOW);
-                expect(entity.polyline.width.getValue(time)).toEqual(2);
-                expect(entity.polyline.clampToGround.getValue(time)).toEqual(true);
-                expect(entity.polyline.lineType.getValue(time)).toEqual(LineType.GEODESIC);
-            }
-        });
-    });
-
     it('Works with polygon geometry', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(polygon).then(function() {
@@ -823,26 +743,6 @@ defineSuite([
             expect(entity.polygon.outlineWidth.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
             expect(entity.polygon.outlineColor.getValue(time)).toEqual(GeoJsonDataSource.stroke);
             expect(entity.polygon.height).toBeInstanceOf(ConstantProperty);
-            expect(entity.polygon.lineType.getValue(time)).toEqual(GeoJsonDataSource.lineType);
-        });
-    });
-
-    it('Works with polygon geometry with geodesic lines', function() {
-        var dataSource = new GeoJsonDataSource();
-        return dataSource.load(polygon, {
-            lineType : LineType.GEODESIC
-        }).then(function() {
-            var entityCollection = dataSource.entities;
-            var entity = entityCollection.values[0];
-            expect(entity.properties).toBe(polygon.properties);
-            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygon.coordinates[0])));
-            expect(entity.polygon.perPositionHeight).toBeUndefined();
-            expect(entity.polygon.material.color.getValue(time)).toEqual(GeoJsonDataSource.fill);
-            expect(entity.polygon.outline.getValue(time)).toEqual(true);
-            expect(entity.polygon.outlineWidth.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
-            expect(entity.polygon.outlineColor.getValue(time)).toEqual(GeoJsonDataSource.stroke);
-            expect(entity.polygon.height).toBeInstanceOf(ConstantProperty);
-            expect(entity.polygon.lineType.getValue(time)).toEqual(LineType.GEODESIC);
         });
     });
 
@@ -861,27 +761,6 @@ defineSuite([
             expect(entity.polygon.outlineWidth.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
             expect(entity.polygon.outlineColor.getValue(time)).toEqual(GeoJsonDataSource.stroke);
             expect(entity.polygon.height).toBeUndefined();
-            expect(entity.polygon.lineType.getValue(time)).toEqual(GeoJsonDataSource.lineType);
-        });
-    });
-
-    it('Works with polygon geometry with geodesic lines clamped to ground', function() {
-        var dataSource = new GeoJsonDataSource();
-        return dataSource.load(polygon, {
-            clampToGround : true,
-            lineType : LineType.GEODESIC
-        }).then(function() {
-            var entityCollection = dataSource.entities;
-            var entity = entityCollection.values[0];
-            expect(entity.properties).toBe(polygon.properties);
-            expect(entity.polygon.hierarchy.getValue(time)).toEqual(new PolygonHierarchy(polygonCoordinatesToCartesian(polygon.coordinates[0])));
-            expect(entity.polygon.perPositionHeight).toBeUndefined();
-            expect(entity.polygon.material.color.getValue(time)).toEqual(GeoJsonDataSource.fill);
-            expect(entity.polygon.outline.getValue(time)).toEqual(true);
-            expect(entity.polygon.outlineWidth.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
-            expect(entity.polygon.outlineColor.getValue(time)).toEqual(GeoJsonDataSource.stroke);
-            expect(entity.polygon.height).toBeUndefined();
-            expect(entity.polygon.lineType.getValue(time)).toEqual(LineType.GEODESIC);
         });
     });
 
@@ -897,7 +776,6 @@ defineSuite([
             expect(entity.polygon.outline.getValue(time)).toEqual(true);
             expect(entity.polygon.outlineWidth.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
             expect(entity.polygon.outlineColor.getValue(time)).toEqual(GeoJsonDataSource.stroke);
-            expect(entity.polygon.lineType.getValue(time)).toEqual(GeoJsonDataSource.lineType);
         });
     });
 
@@ -982,7 +860,6 @@ defineSuite([
         GeoJsonDataSource.stroke = Color.ORANGE;
         GeoJsonDataSource.strokeWidth = 8;
         GeoJsonDataSource.fill = Color.RED;
-        GeoJsonDataSource.lineType = LineType.GEODESIC;
 
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(mixedGeometries).then(function() {
@@ -992,13 +869,11 @@ defineSuite([
             var entity = entities[0];
             expect(entity.polyline.material.color.getValue()).toEqual(GeoJsonDataSource.stroke);
             expect(entity.polyline.width.getValue()).toEqual(GeoJsonDataSource.strokeWidth);
-            expect(entity.polyline.lineType.getValue()).toEqual(GeoJsonDataSource.lineType);
 
             entity = entities[1];
             expect(entity.polygon.material.color.getValue()).toEqual(GeoJsonDataSource.fill);
             expect(entity.polygon.outlineColor.getValue()).toEqual(GeoJsonDataSource.stroke);
             expect(entity.polygon.outlineWidth.getValue()).toEqual(GeoJsonDataSource.strokeWidth);
-            expect(entity.polygon.lineType.getValue()).toEqual(GeoJsonDataSource.lineType);
 
             entity = entities[2];
             var expectedImage = dataSource._pinBuilder.fromMakiIconId(GeoJsonDataSource.markerSymbol, GeoJsonDataSource.markerColor, GeoJsonDataSource.markerSize);

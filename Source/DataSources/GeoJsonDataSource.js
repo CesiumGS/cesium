@@ -77,7 +77,6 @@ define([
     var defaultStrokeWidth = 2;
     var defaultFill = Color.fromBytes(255, 255, 0, 100);
     var defaultClampToGround = false;
-    var defaultLineType = LineType.RHUMB;
 
     var sizes = {
         small : 24,
@@ -368,7 +367,7 @@ define([
         polylineGraphics.material = material;
         polylineGraphics.width = widthProperty;
         polylineGraphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
-        polylineGraphics.lineType = options.lineType;
+        polylineGraphics.lineType = LineType.RHUMB;
     }
 
     function processLineString(dataSource, geoJson, geometry, crsFunction, options) {
@@ -438,7 +437,7 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
-        polygon.lineType = options.lineType;
+        polygon.lineType = LineType.RHUMB;
 
         var holes = [];
         for (var i = 1, len = coordinates.length; i < len; i++) {
@@ -527,7 +526,6 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
-     * @param {LineType} [options.lineType=GeoJsonDataSource.lineType] The line type used to interpolate between points. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
      *
      * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
@@ -633,20 +631,6 @@ define([
             },
             set : function(value) {
                 defaultClampToGround = value;
-            }
-        },
-        /**
-         * Gets or sets default of the path interpolation type. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
-         * @memberof GeoJsonDataSource
-         * @type {LineType}
-         * @default false
-         */
-        lineType : {
-            get : function() {
-                return defaultLineType;
-            },
-            set : function(value) {
-                defaultLineType = value;
             }
         },
 
@@ -820,7 +804,6 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground.
-     * @param {LineType} [options.lineType=GeoJsonDataSource.lineType] The line type used to interpolate between points. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
      *
      * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
      */
@@ -852,8 +835,7 @@ define([
             strokeWidthProperty : new ConstantProperty(defaultValue(options.strokeWidth, defaultStrokeWidth)),
             strokeMaterialProperty : new ColorMaterialProperty(defaultValue(options.stroke, defaultStroke)),
             fillMaterialProperty : new ColorMaterialProperty(defaultValue(options.fill, defaultFill)),
-            clampToGround : defaultValue(options.clampToGround, defaultClampToGround),
-            lineType : defaultValue(options.lineType, defaultLineType)
+            clampToGround : defaultValue(options.clampToGround, defaultClampToGround)
         };
 
         var that = this;
