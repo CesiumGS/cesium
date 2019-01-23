@@ -26,7 +26,8 @@ define([
         './ImageryLayerCollection',
         './QuadtreePrimitive',
         './SceneMode',
-        './ShadowMode'
+        './ShadowMode',
+        './TileSelectionResult'
     ], function(
         BoundingSphere,
         buildModuleUrl,
@@ -55,7 +56,8 @@ define([
         ImageryLayerCollection,
         QuadtreePrimitive,
         SceneMode,
-        ShadowMode) {
+        ShadowMode,
+        TileSelectionResult) {
     'use strict';
 
     /**
@@ -494,10 +496,8 @@ define([
                 // TODO: ok to allocate / recreate the bounding sphere every time here?
                 boundingVolume = BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, projection, surfaceTile.tileBoundingRegion.minimumHeight, surfaceTile.tileBoundingRegion.maximumHeight, boundingVolume);
                 Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
-            } else if (surfaceTile.renderableTile !== undefined) {
-                BoundingSphere.fromRectangle3D(tile.rectangle, tile.tilingScheme.ellipsoid, surfaceTile.tileBoundingRegion.maximumHeight, boundingVolume);
-            } else if (surfaceTile.mesh !== undefined) {
-                BoundingSphere.clone(surfaceTile.mesh.boundingSphere3D, boundingVolume);
+            } else if (defined(surfaceTile.renderedMesh)) {
+                BoundingSphere.clone(surfaceTile.renderedMesh.boundingSphere3D, boundingVolume);
             } else {
                 // So wait how did we render this thing then? It shouldn't be possible to get here.
                 continue;
@@ -586,22 +586,19 @@ define([
             }
         }
 
-        if (!defined(tile) || !Rectangle.contains(tile.rectangle, cartographic)) {
+        if (i >= length) {
             return undefined;
         }
 
-        while (tile.renderable) {
+        while (tile._lastSelectionResult === TileSelectionResult.REFINED) {
             tile = tileIfContainsCartographic(tile.southwestChild, cartographic) ||
                    tileIfContainsCartographic(tile.southeastChild, cartographic) ||
                    tileIfContainsCartographic(tile.northwestChild, cartographic) ||
                    tile.northeastChild;
         }
 
-        while (defined(tile) && (!defined(tile.data) || !defined(tile.data.mesh))) {
-            tile = tile.parent;
-        }
-
-        if (!defined(tile) || !defined(tile.data) || !defined(tile.data.tileBoundingRegion)) {
+        if (tile._lastSelectionResult !== TileSelectionResult.RENDERED) {
+            // Tile was not rendered (culled).
             return undefined;
         }
 
@@ -621,7 +618,7 @@ define([
         if (!defined(rayOrigin)) {
             // intersection point is outside the ellipsoid, try other value
             // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
-            var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
+            var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0), -11500.0);
 
             // multiply by the *positive* value of the magnitude
             var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchGetHeightIntersection);

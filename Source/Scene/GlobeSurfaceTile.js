@@ -136,6 +136,27 @@ define([
 
                 return shouldRemoveTile;
             }
+        },
+
+        /**
+         * Gets the {@link TerrainMesh} that is used for rendering this tile, if any.
+         * Returns the value of the {@link GlobeSurfaceTile#mesh} property if
+         * {@link GlobeSurfaceTile#vertexArray} is defined. Otherwise, It returns the
+         * {@link TerrainFillMesh#mesh} property of the {@link GlobeSurfaceTile#fill}.
+         * If there is no fill, it returns undefined.
+         *
+         * @memberof GlobeSurfaceTile.prototype
+         * @type {TerrainMesh}
+         */
+        renderedMesh : {
+            get : function() {
+                if (defined(this.vertexArray)) {
+                    return this.mesh;
+                } else if (defined(this.fill)) {
+                    return this.fill.mesh;
+                }
+                return undefined;
+            }
         }
     });
 
@@ -158,7 +179,7 @@ define([
     var scratchResult = new Cartesian3();
 
     GlobeSurfaceTile.prototype.pick = function(ray, mode, projection, cullBackFaces, result) {
-        var mesh = this.mesh || (this.fill && this.fill.mesh);
+        var mesh = this.renderedMesh;
         if (!defined(mesh)) {
             return undefined;
         }
@@ -229,13 +250,13 @@ define([
         }
     };
 
-    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, terrainOnly) {
+    GlobeSurfaceTile.processStateMachine = function(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy, terrainOnly) {
         GlobeSurfaceTile.initialize(tile, terrainProvider, imageryLayerCollection);
 
         var surfaceTile = tile.data;
 
         if (tile.state === QuadtreeTileLoadState.LOADING) {
-            processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection);
+            processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy);
         }
 
         // From here down we're loading imagery, not terrain. We don't want to load imagery until
@@ -348,7 +369,7 @@ define([
         }
     }
 
-    function processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection) {
+    function processTerrainStateMachine(tile, frameState, terrainProvider, imageryLayerCollection, vertexArraysToDestroy) {
         var surfaceTile = tile.data;
 
         // If this tile is FAILED, we'll need to upsample from the parent. If the parent isn't
@@ -374,7 +395,7 @@ define([
         }
 
         if (surfaceTile.terrainState === TerrainState.TRANSFORMED) {
-            createResources(surfaceTile, frameState.context, terrainProvider, tile.x, tile.y, tile.level);
+            createResources(surfaceTile, frameState.context, terrainProvider, tile.x, tile.y, tile.level, vertexArraysToDestroy);
         }
 
         if (surfaceTile.terrainState >= TerrainState.RECEIVED && surfaceTile.waterMaskTexture === undefined && terrainProvider.hasWaterMask) {
@@ -548,10 +569,10 @@ define([
 
     };
 
-    function createResources(surfaceTile, context, terrainProvider, x, y, level) {
+    function createResources(surfaceTile, context, terrainProvider, x, y, level, vertexArraysToDestroy) {
         surfaceTile.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(context, surfaceTile.mesh);
         surfaceTile.terrainState = TerrainState.READY;
-        surfaceTile.fill = surfaceTile.fill && surfaceTile.fill.destroy();
+        surfaceTile.fill = surfaceTile.fill && surfaceTile.fill.destroy(vertexArraysToDestroy);
     }
 
     function getContextWaterMaskData(context) {

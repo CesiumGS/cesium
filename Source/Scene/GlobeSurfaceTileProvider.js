@@ -182,6 +182,8 @@ define([
         this._uniformMaps = [];
         this._usedDrawCommands = 0;
 
+        this._vertexArraysToDestroy = [];
+
         this._debug = {
             wireframe : false,
             boundingSphereTile : undefined
@@ -398,6 +400,13 @@ define([
 
         // Add credits for terrain and imagery providers.
         updateCredits(this, frameState);
+
+        var vertexArraysToDestroy = this._vertexArraysToDestroy;
+        var length = vertexArraysToDestroy.length;
+        for (var j = 0; j < length; ++j) {
+            GlobeSurfaceTile._freeVertexArray(vertexArraysToDestroy[j]);
+        }
+        vertexArraysToDestroy.length = 0;
     };
 
     /**
@@ -458,7 +467,7 @@ define([
         // If this frame has a mix of loaded and fill tiles, we need to propagate
         // loaded heights to the fill tiles.
         if (this._hasFillTilesThisFrame && this._hasLoadedTilesThisFrame) {
-            TerrainFillMesh.updateFillTiles(this, this._quadtree._tilesToRender, frameState);
+            TerrainFillMesh.updateFillTiles(this, this._quadtree._tilesToRender, frameState, this._vertexArraysToDestroy);
         }
 
         // Add the tile render commands to the command list, sorted by texture count.
@@ -531,7 +540,7 @@ define([
             terrainStateBefore = surfaceTile.terrainState;
         }
 
-        GlobeSurfaceTile.processStateMachine(tile, frameState, this.terrainProvider, this._imageryLayers, terrainOnly);
+        GlobeSurfaceTile.processStateMachine(tile, frameState, this.terrainProvider, this._imageryLayers, this._vertexArraysToDestroy, terrainOnly);
 
         surfaceTile = tile.data;
         if (terrainOnly && terrainStateBefore !== tile.data.terrainState) {
@@ -541,7 +550,7 @@ define([
             // Then we'll load imagery, too.
             if (this.computeTileVisibility(tile, frameState, this.quadtree.occluders) && surfaceTile.boundingVolumeSourceTile === tile) {
                 terrainOnly = false;
-                GlobeSurfaceTile.processStateMachine(tile, frameState, this.terrainProvider, this._imageryLayers, terrainOnly);
+                GlobeSurfaceTile.processStateMachine(tile, frameState, this.terrainProvider, this._imageryLayers, this._vertexArraysToDestroy, terrainOnly);
             }
         }
     };
@@ -615,8 +624,8 @@ define([
             BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, tileBoundingRegion.minimumHeight, tileBoundingRegion.maximumHeight, boundingVolume);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
-            if (frameState.mode === SceneMode.MORPHING && surfaceTile.mesh !== undefined) {
-                boundingVolume = BoundingSphere.union(surfaceTile.mesh.boundingSphere3D, boundingVolume, boundingVolume);
+            if (frameState.mode === SceneMode.MORPHING && defined(surfaceTile.renderedMesh)) {
+                boundingVolume = BoundingSphere.union(surfaceTile.renderedMesh.boundingSphere3D, boundingVolume, boundingVolume);
             }
         }
 
@@ -1370,10 +1379,10 @@ define([
         var mesh;
         var vertexArray;
 
-        if (surfaceTile.vertexArray !== undefined) {
+        if (defined(surfaceTile.vertexArray)) {
             mesh = surfaceTile.mesh;
             vertexArray = surfaceTile.vertexArray;
-        } else if (surfaceTile.fill !== undefined && surfaceTile.fill.vertexArray !== undefined) {
+        } else if (defined(surfaceTile.fill) && defined(surfaceTile.fill.vertexArray)) {
             mesh = surfaceTile.fill.mesh;
             vertexArray = surfaceTile.fill.vertexArray;
         }
@@ -1593,7 +1602,7 @@ define([
             --maxTextures;
         }
 
-        var mesh = surfaceTile.vertexArray ? surfaceTile.mesh : surfaceTile.fill.mesh;
+        var mesh = surfaceTile.renderedMesh;
         var rtc = mesh.center;
         var encoding = mesh.encoding;
 

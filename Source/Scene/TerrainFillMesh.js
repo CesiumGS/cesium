@@ -68,22 +68,26 @@ define([
         this.vertexArray = undefined;
     }
 
-    TerrainFillMesh.prototype.update = function(tileProvider, frameState) {
+    TerrainFillMesh.prototype.update = function(tileProvider, frameState, vertexArraysToDestroy) {
         if (this.changedThisFrame) {
-            createFillMesh(tileProvider, frameState, this.tile);
+            createFillMesh(tileProvider, frameState, this.tile, vertexArraysToDestroy);
             this.changedThisFrame = false;
         }
     };
 
-    TerrainFillMesh.prototype.destroy = function() {
-        GlobeSurfaceTile._freeVertexArray(this.vertexArray);
+    TerrainFillMesh.prototype.destroy = function(vertexArraysToDestroy) {
+        if (defined(vertexArraysToDestroy)) {
+            vertexArraysToDestroy.push(this.vertexArray);
+        } else {
+            GlobeSurfaceTile._freeVertexArray(this.vertexArray, vertexArraysToDestroy);
+        }
         this.vertexArray = undefined;
         return undefined;
     };
 
     var traversalQueueScratch = new Queue();
 
-    TerrainFillMesh.updateFillTiles = function(tileProvider, renderedTiles, frameState) {
+    TerrainFillMesh.updateFillTiles = function(tileProvider, renderedTiles, frameState, vertexArraysToDestroy) {
         // We want our fill tiles to look natural, which means they should align perfectly with
         // adjacent loaded tiles, and their edges that are not adjacent to loaded tiles should have
         // sensible heights (e.g. the average of the heights of loaded edges). Some fill tiles may
@@ -118,25 +122,25 @@ define([
             var tileToSouth = tile.findTileToSouth(levelZeroTiles);
             var tileToEast = tile.findTileToEast(levelZeroTiles);
             var tileToNorth = tile.findTileToNorth(levelZeroTiles);
-            visitRenderedTiles(tileProvider, frameState, tile, tileToWest, lastSelectionFrameNumber, TileEdge.EAST, false, traversalQueue);
-            visitRenderedTiles(tileProvider, frameState, tile, tileToSouth, lastSelectionFrameNumber, TileEdge.NORTH, false, traversalQueue);
-            visitRenderedTiles(tileProvider, frameState, tile, tileToEast, lastSelectionFrameNumber, TileEdge.WEST, false, traversalQueue);
-            visitRenderedTiles(tileProvider, frameState, tile, tileToNorth, lastSelectionFrameNumber, TileEdge.SOUTH, false, traversalQueue);
+            visitRenderedTiles(tileProvider, frameState, tile, tileToWest, lastSelectionFrameNumber, TileEdge.EAST, false, traversalQueue, vertexArraysToDestroy);
+            visitRenderedTiles(tileProvider, frameState, tile, tileToSouth, lastSelectionFrameNumber, TileEdge.NORTH, false, traversalQueue, vertexArraysToDestroy);
+            visitRenderedTiles(tileProvider, frameState, tile, tileToEast, lastSelectionFrameNumber, TileEdge.WEST, false, traversalQueue, vertexArraysToDestroy);
+            visitRenderedTiles(tileProvider, frameState, tile, tileToNorth, lastSelectionFrameNumber, TileEdge.SOUTH, false, traversalQueue, vertexArraysToDestroy);
 
             var tileToNorthwest = tileToWest.findTileToNorth(levelZeroTiles);
             var tileToSouthwest = tileToWest.findTileToSouth(levelZeroTiles);
             var tileToNortheast = tileToEast.findTileToNorth(levelZeroTiles);
             var tileToSoutheast = tileToEast.findTileToSouth(levelZeroTiles);
-            visitRenderedTiles(tileProvider, frameState, tile, tileToNorthwest, lastSelectionFrameNumber, TileEdge.SOUTHEAST, false, traversalQueue);
-            visitRenderedTiles(tileProvider, frameState, tile, tileToNortheast, lastSelectionFrameNumber, TileEdge.SOUTHWEST, false, traversalQueue);
-            visitRenderedTiles(tileProvider, frameState, tile, tileToSouthwest, lastSelectionFrameNumber, TileEdge.NORTHEAST, false, traversalQueue);
-            visitRenderedTiles(tileProvider, frameState, tile, tileToSoutheast, lastSelectionFrameNumber, TileEdge.NORTHWEST, false, traversalQueue);
+            visitRenderedTiles(tileProvider, frameState, tile, tileToNorthwest, lastSelectionFrameNumber, TileEdge.SOUTHEAST, false, traversalQueue, vertexArraysToDestroy);
+            visitRenderedTiles(tileProvider, frameState, tile, tileToNortheast, lastSelectionFrameNumber, TileEdge.SOUTHWEST, false, traversalQueue, vertexArraysToDestroy);
+            visitRenderedTiles(tileProvider, frameState, tile, tileToSouthwest, lastSelectionFrameNumber, TileEdge.NORTHEAST, false, traversalQueue, vertexArraysToDestroy);
+            visitRenderedTiles(tileProvider, frameState, tile, tileToSoutheast, lastSelectionFrameNumber, TileEdge.NORTHWEST, false, traversalQueue, vertexArraysToDestroy);
 
             tile = traversalQueue.dequeue();
         }
     };
 
-    function visitRenderedTiles(tileProvider, frameState, sourceTile, startTile, currentFrameNumber, tileEdge, downOnly, traversalQueue) {
+    function visitRenderedTiles(tileProvider, frameState, sourceTile, startTile, currentFrameNumber, tileEdge, downOnly, traversalQueue, vertexArraysToDestroy) {
         if (startTile === undefined) {
             // There are no tiles North or South of the poles.
             return;
@@ -182,7 +186,7 @@ define([
                 // No further processing necessary for renderable tiles.
                 return;
             }
-            visitTile(tileProvider, frameState, sourceTile, tile, tileEdge, currentFrameNumber, traversalQueue);
+            visitTile(tileProvider, frameState, sourceTile, tile, tileEdge, currentFrameNumber, traversalQueue, vertexArraysToDestroy);
             return;
         }
 
@@ -194,39 +198,39 @@ define([
         // Visit the tiles in counter-clockwise order.
         switch (tileEdge) {
             case TileEdge.WEST:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northwestChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southwestChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
                 break;
             case TileEdge.EAST:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southeastChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northeastChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
                 break;
             case TileEdge.SOUTH:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southwestChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southeastChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
                 break;
             case TileEdge.NORTH:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northeastChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northwestChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
                 break;
             case TileEdge.NORTHWEST:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northwestChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
                 break;
             case TileEdge.NORTHEAST:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.northeastChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
                 break;
             case TileEdge.SOUTHWEST:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southwestChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southwestChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
                 break;
             case TileEdge.SOUTHEAST:
-                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southeastChild, currentFrameNumber, tileEdge, true, traversalQueue);
+                visitRenderedTiles(tileProvider, frameState, sourceTile, startTile.southeastChild, currentFrameNumber, tileEdge, true, traversalQueue, vertexArraysToDestroy);
                 break;
             default:
                 throw new DeveloperError('Invalid edge');
         }
     }
 
-    function visitTile(tileProvider, frameState, sourceTile, destinationTile, tileEdge, frameNumber, traversalQueue) {
+    function visitTile(tileProvider, frameState, sourceTile, destinationTile, tileEdge, frameNumber, traversalQueue, vertexArraysToDestroy) {
         var destinationSurfaceTile = destinationTile.data;
 
         if (destinationSurfaceTile.fill === undefined) {
@@ -243,10 +247,10 @@ define([
             traversalQueue.enqueue(destinationTile);
         }
 
-        propagateEdge(tileProvider, frameState, sourceTile, destinationTile, tileEdge);
+        propagateEdge(tileProvider, frameState, sourceTile, destinationTile, tileEdge, vertexArraysToDestroy);
     }
 
-    function propagateEdge(tileProvider, frameState, sourceTile, destinationTile, tileEdge) {
+    function propagateEdge(tileProvider, frameState, sourceTile, destinationTile, tileEdge, vertexArraysToDestroy) {
         var destinationFill = destinationTile.data.fill;
 
         var sourceMesh;
@@ -256,7 +260,7 @@ define([
 
             // Source is a fill, create/update it if necessary.
             if (sourceFill.changedThisFrame) {
-                createFillMesh(tileProvider, frameState, sourceTile);
+                createFillMesh(tileProvider, frameState, sourceTile, vertexArraysToDestroy);
                 sourceFill.changedThisFrame = false;
             }
             sourceMesh = sourceTile.data.fill.mesh;
@@ -461,7 +465,7 @@ define([
     var neVertexScratch = new HeightAndNormal();
     var heightmapBuffer = typeof Uint8Array !== 'undefined' ? new Uint8Array(9 * 9) : undefined;
 
-    function createFillMesh(tileProvider, frameState, tile) {
+    function createFillMesh(tileProvider, frameState, tile, vertexArraysToDestroy) {
         GlobeSurfaceTile.initialize(tile, tileProvider.terrainProvider, tileProvider._imageryLayers);
 
         var surfaceTile = tile.data;
@@ -664,7 +668,11 @@ define([
 
         var context = frameState.context;
 
-        GlobeSurfaceTile._freeVertexArray(fill.vertexArray);
+        if (defined(vertexArraysToDestroy)) {
+            vertexArraysToDestroy.push(fill.vertexArray);
+        } else {
+            GlobeSurfaceTile._freeVertexArray(fill.vertexArray);
+        }
         fill.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(context, fill.mesh);
         surfaceTile.processImagery(tile, tileProvider.terrainProvider, frameState, true);
     }

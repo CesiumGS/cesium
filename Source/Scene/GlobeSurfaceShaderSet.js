@@ -95,7 +95,7 @@ define([
         var quantization = 0;
         var quantizationDefine = '';
 
-        var mesh = surfaceTile.vertexArray !== undefined ? surfaceTile.mesh : surfaceTile.fill.mesh;
+        var mesh = surfaceTile.renderedMesh;
         var terrainEncoding = mesh.encoding;
         var quantizationMode = terrainEncoding.quantization;
         if (quantizationMode === TerrainQuantization.BITS12) {
