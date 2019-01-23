@@ -1581,17 +1581,21 @@ define([
         requestedTilesInFlight.length -= removeCount;
     }
 
+    function updateTilePriorities(tileset) {
+        var requestedTiles = tileset._requestedTiles;
+        var length = requestedTiles.length;
+        for (var i = 0; i < length; ++i) {
+            requestedTiles[i].updatePriority();
+        }
+    }
+
     function requestTiles(tileset) {
         // Sort requests by priority before making any requests.
         // This makes it less likely that requests will be cancelled after being issued.
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
-        var i;
-        for (i = 0; i < length; ++i) {
-            requestedTiles[i].updatePriority();
-        }
         requestedTiles.sort(sortRequestByPriority);
-        for (i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             requestContent(tileset, requestedTiles[i]);
         }
     }
@@ -2061,6 +2065,10 @@ define([
 
         if (isRender) {
             cancelOutOfViewRequestedTiles(tileset, frameState);
+        }
+
+        if (!isAsync) {
+            updateTilePriorities(tileset);
         }
 
         if (isRender || isAsync) {
