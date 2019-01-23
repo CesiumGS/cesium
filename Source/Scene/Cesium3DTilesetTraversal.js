@@ -277,13 +277,13 @@ define([
     }
 
     function updateTile(tileset, tile, frameState) {
-        // Reset some of the tile's flags and re-evaluate visability
+        // Reset some of the tile's flags and re-evaluate visibility
         updateTileVisibility(tileset, tile, frameState);
         tile.updateExpiration();
 
         // Request priority
-        tile._wasMinChild = false; // Needed for knowing when to continue dependency chain
-        tile._priorityDistance = tile._distanceToCamera; // updateAndPushChildren() needs this value for the priority chaining so it must be determined here and not loadTile
+        tile._wasMinPriorityChild = false;
+        tile._priorityDistance = tile._distanceToCamera;
         tile._priorityDistanceHolder = tile;
         updateMinMaxPriority(tileset, tile);
 
@@ -301,9 +301,9 @@ define([
             // ancestorWithContent is an ancestor that has content or has the potential to have
             // content. Used in conjunction with tileset.skipLevels to know when to skip a tile.
             // ancestorWithContentAvailable is an ancestor that is rendered if a desired tile is not loaded.
-            var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber); // In order for the second bool to work, this must be called after the tile has been requested and not during updateTile
+            var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber);
             tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
-            tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable; // Links a decendent up to its contentAvailable ancestor as the traversal progresses.
+            tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable; // Links a decendant up to its contentAvailable ancestor as the traversal progresses.
         }
     }
 
@@ -354,23 +354,24 @@ define([
 
         // Determining min child
         var minIndex = -1;
-        var minDistancePriority = Number.MAX_VALUE;
+        var minPriorityDistance = Number.MAX_VALUE;
 
+        var child;
         for (i = 0; i < length; ++i) {
-            var child = children[i];
+            child = children[i];
             if (isVisible(child)) {
                 stack.push(child);
-                if (child._priorityDistance < minDistancePriority) {
+                if (child._priorityDistance < minPriorityDistance) {
                     minIndex = i;
-                    minDistancePriority = child._priorityDistance;
+                    minPriorityDistance = child._priorityDistance;
                 }
                 anyChildrenVisible = true;
             } else if (checkRefines || tileset.loadSiblings) {
                 // Keep non-visible children loaded since they are still needed before the parent can refine.
                 // Or loadSiblings is true so always load tiles regardless of visibility.
-                if (child._priorityDistance < minDistancePriority) {
+                if (child._priorityDistance < minPriorityDistance) {
                     minIndex = i;
-                    minDistancePriority = child._priorityDistance;
+                    minPriorityDistance = child._priorityDistance;
                 }
                 loadTile(tileset, child, frameState);
                 touchTile(tileset, child, frameState);
@@ -392,20 +393,17 @@ define([
             refines = false;
         }
 
-        // For the priority scheme, priorites are inherited up the tree as needed.
-        // Only link up if the tile hasn't already been linked to something else (this will be the case if the tile is the root or the closest child tile amongst its siblings in a previous updateAndPushChildren)
-        // Need siblings to link their minPriority their siblings to help refinement along, otherwise it will get held up the renfinement dependencies will be out of sync priority wise (important for non-skipLOD in general and important for skipLOD to remove higher lod artifacts as fast as possible (giant triangles cutting through the near parts of the scene) helps alpha blending look nicer)
         if (minIndex !== -1) {
+            // An ancestor will hold the _priorityDistance for decendants between itself and its highest priority decendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
+            // Priority of all tiles that refer to the _priorityDistance stored in the common ancestor will be differentiated based on their _depth.
             var minPriorityChild = children[minIndex];
-            minPriorityChild._wasMinChild = true;
-            var priorityHolder = tile._wasMinChild || tile === tileset.root ? tile._priorityDistanceHolder : tile; // This is where priority dependencies chains are wired up and existing one or started anew.
-            var thisMin =  minPriorityChild._priorityDistance;
-            var currentMin = priorityHolder._priorityDistance;
-            priorityHolder._priorityDistance = thisMin < currentMin ? thisMin : currentMin;
+            minPriorityChild._wasMinPriorityChild = true;
+            var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) ? tile._priorityDistanceHolder : tile; // This is where priority dependency chains are wired up or started anew.
+            priorityHolder._priorityDistance = Math.min(minPriorityChild._priorityDistance, priorityHolder._priorityDistance);
 
             for (i = 0; i < length; ++i) {
-                var theChild = children[i];
-                theChild._priorityDistanceHolder = priorityHolder;
+                child = children[i];
+                child._priorityDistanceHolder = priorityHolder;
             }
         }
 

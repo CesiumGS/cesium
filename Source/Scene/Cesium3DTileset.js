@@ -1588,7 +1588,7 @@ define([
         var length = requestedTiles.length;
         var i;
         for (i = 0; i < length; ++i) {
-            requestedTiles[i].updatePriority(); // Cannot determine priority during traversal, and do not want to use a previous frame scheme to achieve that
+            requestedTiles[i].updatePriority();
         }
         requestedTiles.sort(sortRequestByPriority);
         for (i = 0; i < length; ++i) {
