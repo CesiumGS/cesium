@@ -582,7 +582,7 @@ define([
             throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
         }
         if (defined(options.lineType) && options.lineType === LineType.STRAIGHT) {
-            throw new DeveloperError('Cannot use {@link LineType.STRAIGHT} as option.lineType');
+            throw new DeveloperError('Cannot use LineType.STRAIGHT as option.lineType');
         }
         //>>includeEnd('debug');
 
