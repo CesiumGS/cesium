@@ -70,13 +70,13 @@ define([
             cameraChanges.directionAmount = 0.5 * (-Cartesian3.dot(camera.directionWC, cameraChanges.oldDirection) + 1.0);
             Cartesian3.clone(camera.directionWC, cameraChanges.oldDirection);
 
-            var fudgeAmount = 51200000;
+            var fudgeAmount = 512000000000000;
             cameraChanges.sseFudge = (cameraChanges.directionAmount + cameraChanges.positionAmount) > 0 ? fudgeAmount : 0;
-            if (cameraChanges.sseFudge > 0) {
-                console.log('moving');
-            } else {
-                console.log(delta);
-            }
+            // if (cameraChanges.sseFudge > 0) {
+            //     console.log('moving');
+            // } else {
+            //     console.log(delta);
+            // }
 
             // as soon as you move the camera it locks to moving, camera._changed is always true
             // if (!Cartesian3.equals(camera._changedPosition, camera._position)) {
