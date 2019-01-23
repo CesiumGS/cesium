@@ -1982,7 +1982,6 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
