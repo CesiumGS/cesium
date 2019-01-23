@@ -1581,21 +1581,19 @@ define([
         requestedTilesInFlight.length -= removeCount;
     }
 
-    function updateTilePriorities(tileset) {
-        var requestedTiles = tileset._requestedTiles;
-        var length = requestedTiles.length;
-        for (var i = 0; i < length; ++i) {
-            requestedTiles[i].updatePriority();
-        }
-    }
-
-    function requestTiles(tileset) {
+    function requestTiles(tileset, isAsync) {
         // Sort requests by priority before making any requests.
         // This makes it less likely that requests will be cancelled after being issued.
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
+        var i;
+        if (!isAsync) { // Prevent async picks from having their priorities overwritten
+            for (i = 0; i < length; ++i) {
+                requestedTiles[i].updatePriority();
+            }
+        }
         requestedTiles.sort(sortRequestByPriority);
-        for (var i = 0; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             requestContent(tileset, requestedTiles[i]);
         }
     }
@@ -2067,12 +2065,8 @@ define([
             cancelOutOfViewRequestedTiles(tileset, frameState);
         }
 
-        if (!isAsync) {
-            updateTilePriorities(tileset);
-        }
-
         if (isRender || isAsync) {
-            requestTiles(tileset);
+            requestTiles(tileset, isAsync);
         }
 
         if (isRender) {
