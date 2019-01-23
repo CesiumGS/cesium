@@ -989,6 +989,11 @@ defineSuite([
             });
     });
 
+    it('cartographicLimitRectangle defaults to Rectangle.MAX_VALUE', function() {
+        scene.globe.cartographicLimitRectangle = undefined;
+        expect(scene.globe.cartographicLimitRectangle.equals(Rectangle.MAX_VALUE)).toBe(true);
+    });
+
     it('cartographicLimitRectangle culls tiles outside the region', function() {
         switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
          var unculledCommandCount;
