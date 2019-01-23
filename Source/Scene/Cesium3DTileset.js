@@ -1588,7 +1588,7 @@ define([
         var length = requestedTiles.length;
         var i;
         for (i = 0; i < length; ++i) {
-            requestedTiles[i].updatePriority(); // Cannot determine priority during traversal, and do not want to use a previous frame scheme to achieve that
+            requestedTiles[i].updatePriority();
         }
         requestedTiles.sort(sortRequestByPriority);
         for (i = 0; i < length; ++i) {
@@ -1982,7 +1982,6 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
             });
@@ -1993,6 +1992,14 @@ define([
                 });
             }
         }
+    }
+
+    function resetMinMax(tileset) {
+        tileset._heatmap.resetMinMax();
+        tileset._minPriority.depth = Number.MAX_VALUE;
+        tileset._maxPriority.depth = -Number.MAX_VALUE;
+        tileset._minPriority.distance = Number.MAX_VALUE;
+        tileset._maxPriority.distance = -Number.MAX_VALUE;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2042,7 +2049,7 @@ define([
         ++tileset._updatedVisibilityFrame;
 
         // Update any tracked min max values
-        tileset.resetMinMax();
+        resetMinMax(tileset);
 
         var ready;
 
@@ -2118,19 +2125,6 @@ define([
         }
 
         return (this._extensionsUsed.indexOf(extensionName) > -1);
-    };
-
-    /**
-     * Resets tracked min and max values
-     *
-     * @private
-     */
-    Cesium3DTileset.prototype.resetMinMax = function() {
-        this._heatmap.resetMinMax();
-        this._minPriority.depth = Number.MAX_VALUE;
-        this._maxPriority.depth = -Number.MAX_VALUE;
-        this._minPriority.distance = Number.MAX_VALUE;
-        this._maxPriority.distance = -Number.MAX_VALUE;
     };
 
     /**

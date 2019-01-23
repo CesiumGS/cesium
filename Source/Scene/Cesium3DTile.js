@@ -343,8 +343,8 @@ define([
 
         this._priority = 0.0; // The priority used for request sorting
         this._priorityDistance = Number.MAX_VALUE; // The value to update in the priority refinement chain
-        this._priorityDistanceHolder = this; // Reference to the tile up the tree that holds the priorityDistance for all tiles in the refinement chain.
-        this._wasMinChild = false; // Needed for knowing when to continue a refinement chain, gets reset in updateTile in traversal, gets set in updateAndPushChildren in traversal
+        this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
+        this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
         this._loadTimestamp = new JulianDate();
 
         this._commandsLength = 0;
