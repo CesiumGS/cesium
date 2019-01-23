@@ -3544,4 +3544,29 @@ defineSuite([
         });
     });
 
+    it('sorts requests by priority', function() {
+        viewNothing();
+
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
+            // Make requests
+            viewAllTiles();
+            scene.renderForSpecs();
+            var requestedTilesInFlight = tileset._requestedTilesInFlight;
+            var requestedTilesInFlightLength = requestedTilesInFlight.length;
+            expect(requestedTilesInFlightLength).toBeGreaterThan(0);
+
+            // Verify sort
+            var allSorted = true;
+            var lastPriority = -Number.MAX_VALUE;
+            var thisPriority;
+            for (var i = 0; i < requestedTilesInFlightLength; i++) {
+                thisPriority = requestedTilesInFlight[i]._priority;
+                allSorted = allSorted && thisPriority >= lastPriority;
+                lastPriority = thisPriority;
+            }
+
+            expect(allSorted).toBe(true);
+            expect(lastPriority !== requestedTilesInFlight[0]._priority).toBe(true); // Not all the same value
+        });
+    });
 }, 'WebGL');

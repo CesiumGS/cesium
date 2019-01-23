@@ -375,11 +375,10 @@ defineSuite([
         tile1.updatePriority();
         tile2.updatePriority();
 
-        var threshold = 0.01;
         var tile1ExpectedPriority = 0;
         var tile2ExpectedPriority = 1;
-        expect(Math.abs(tile1._priority - tile1ExpectedPriority)).toBeLessThan(threshold);
-        expect(Math.abs(tile2._priority - tile2ExpectedPriority)).toBeLessThan(threshold);
+        expect(CesiumMath.equalsEpsilon(tile1._priority, tile1ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
+        expect(CesiumMath.equalsEpsilon(tile2._priority, tile2ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
     });
 
 }, 'WebGL');

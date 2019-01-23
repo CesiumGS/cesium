@@ -329,8 +329,8 @@ define([
         this._visitedFrame = 0;
         this._selectedFrame = 0;
         this._requestedFrame = 0;
-        this._ancestorWithContent = undefined; // Content being requested. Used to know when to skip a tile in skipLOD.
-        this._ancestorWithContentAvailable = undefined; // Rendered if a desired tile is not loaded in skipLOD.
+        this._ancestorWithContent = undefined;
+        this._ancestorWithContentAvailable = undefined;
         this._refines = false;
         this._shouldSelect = false;
         this._isClipped = true;
@@ -343,9 +343,9 @@ define([
 
         this._priority = 0.0; // The priority used for request sorting
         this._priorityDistance = Number.MAX_VALUE; // The value to update in the priority refinement chain
-        this._priorityDistanceHolder = this; // Reference to the tile up the tree that holds the priorityDistance for all tiles in the refinement chain.
-        this._wasMinChild = false; // Needed for knowing when to continue a refinement chain, gets reset in updateTile in traversal, gets set in updateAndPushChildren in traversal
-        this._loadTimestamp = 0; // Milliseconds since 1970 that this tile was loaded
+        this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
+        this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
+        this._loadTimestamp = new JulianDate();
         this._foveatedSSE = 0; // More relaxed as you get away from screen center
 
         this._commandsLength = 0;
@@ -809,7 +809,7 @@ define([
                 that._selectedFrame = 0;
                 that.lastStyleTime = 0;
 
-                that._loadTimestamp = Date.now();
+                JulianDate.now(that._loadTimestamp);
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
             });
@@ -1270,12 +1270,16 @@ define([
      * Takes a value and maps it down to a 0-1 value given a min and max
      */
     function normalizeValue(value, min, max) {
+        if (max === min) {
+            return 0;
+        }
+
         // Shift min max window to 0
-        var shiftedMax = (max - min) + CesiumMath.EPSILON7; // Prevent divide by zero
+        var shiftedMax = max - min;
         var shiftedValue = value - min;
 
         // Map to [0..1]
-        return Math.min(shiftedValue / shiftedMax, 1);
+        return (CesiumMath.fromSNorm(shiftedValue, shiftedMax) + 1) * 0.5;
     }
 
     /**
