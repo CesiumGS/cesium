@@ -303,7 +303,7 @@ define([
             // ancestorWithContentAvailable is an ancestor that is rendered if a desired tile is not loaded.
             var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber);
             tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
-            tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable; // Links a decendant up to its contentAvailable ancestor as the traversal progresses.
+            tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable; // Links a descendant up to its contentAvailable ancestor as the traversal progresses.
         }
     }
 
@@ -394,7 +394,7 @@ define([
         }
 
         if (minIndex !== -1) {
-            // An ancestor will hold the _priorityDistance for decendants between itself and its highest priority decendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
+            // An ancestor will hold the _priorityDistance for descendants between itself and its highest priority descendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
             // Priority of all tiles that refer to the _priorityDistance stored in the common ancestor will be differentiated based on their _depth.
             var minPriorityChild = children[minIndex];
             minPriorityChild._wasMinPriorityChild = true;
