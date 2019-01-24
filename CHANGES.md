@@ -15,14 +15,19 @@ Change Log
 * Added support for polylines on 3D Tiles. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437)
 * Added `classificationType` property to `PolylineGraphics` and `GroundPolylinePrimitive` which specifies whether a polyline clamped to ground should be clamped to terrain, 3D Tiles, or both. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437)
 * Added the ability to specify the width of the intersection volume for `Scene.sampleHeight`, `Scene.clampToHeight`, `Scene.sampleHeightMostDetailed`, and `Scene.clampToHeightMostDetailed`. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
+* Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Time%20Dynamic%20Wheels.html) on using `nodeTransformations` to rotate a model's wheels based on its velocity. [#7361](https://github.com/AnalyticalGraphicsInc/cesium/pull/7361)
+* Added `EllipsoidRhumbLine` class as a rhumb line counterpart to `EllipsoidGeodesic`. [#7484](https://github.com/AnalyticalGraphicsInc/cesium/pull/7484)
 
 ##### Fixes :wrench:
+* Fixed 3D Tiles performance regression. [#7482](https://github.com/AnalyticalGraphicsInc/cesium/pull/7482)
 * Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
 * Fixed an issue where 3D Tiles would show through the globe. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
 * Fixed crash when entity geometry show value is an interval that only covered part of the entity availability range [#7458](https://github.com/AnalyticalGraphicsInc/cesium/pull/7458)
 * Fix rectangle positions at the north and south poles. [#7451](https://github.com/AnalyticalGraphicsInc/cesium/pull/7451)
 * Fixed image size issue when using multiple particle systems. [#7412](https://github.com/AnalyticalGraphicsInc/cesium/pull/7412)
 * Fixed Sandcastle's "Open in New Window" button not displaying imagery due to blob URI limitations. [#7250](https://github.com/AnalyticalGraphicsInc/cesium/pull/7250)
+* Fixed an issue where setting `scene.globe.cartographicLimitRectangle` to `undefined` would cause a crash. [#7477](https://github.com/AnalyticalGraphicsInc/cesium/issues/7477)
+* Fixed `PrimitiveCollection.removeAll` to no longer `contain` removed primitives. [#7491](https://github.com/AnalyticalGraphicsInc/cesium/pull/7491)
 
 ### 1.53 - 2019-01-02
 
