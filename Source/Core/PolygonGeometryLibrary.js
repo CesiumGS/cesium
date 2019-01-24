@@ -538,8 +538,6 @@ define([
                     tempPositions = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance, computeWallIndicesSubdivided);
                 } else if (arcType === ArcType.RHUMB) {
                     tempPositions = PolygonGeometryLibrary.subdivideRhumbLine(ellipsoid, p1, p2, minDistance, computeWallIndicesSubdivided);
-                } else {
-                    throw new DeveloperError('Unrecognized arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB');
                 }
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j, ++index) {

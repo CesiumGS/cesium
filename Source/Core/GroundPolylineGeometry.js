@@ -220,8 +220,6 @@ define([
             ellipsoidLine = new EllipsoidGeodesic(start, end, ellipsoid);
         } else if (arcType === ArcType.RHUMB) {
             ellipsoidLine = new EllipsoidRhumbLine(start, end, ellipsoid);
-        } else {
-            throw new DeveloperError('Unrecognized arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB');
         }
 
         var surfaceDistance = ellipsoidLine.surfaceDistance;

@@ -28,7 +28,6 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions that define the line strip.
-     * @param {Property} [options.followSurface=true] A boolean Property specifying whether the line segments should be great arcs or linearly connected.
      * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
      * @param {Property} [options.clampToGround=false] A boolean Property specifying whether the Polyline should be clamped to the ground.
      * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
