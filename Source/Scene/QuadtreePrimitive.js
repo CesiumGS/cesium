@@ -8,6 +8,7 @@ define([
         '../Core/Event',
         '../Core/getTimestamp',
         '../Core/Math',
+        '../Core/Matrix4',
         '../Core/OrthographicFrustum',
         '../Core/OrthographicOffCenterFrustum',
         '../Core/Ray',
@@ -29,6 +30,7 @@ define([
         Event,
         getTimestamp,
         CesiumMath,
+        Matrix4,
         OrthographicFrustum,
         OrthographicOffCenterFrustum,
         Ray,
@@ -668,12 +670,12 @@ define([
             //       or any descendants last frame. Such imagery is required because rendering this tile without
             //       it would cause detail to disappear.
             //
-            // Determining condition 4 is more expensive, so we check the others first..
+            // Determining condition 4 is more expensive, so we check the others first.
             //
             // Note that even if we decide to render a tile here, it may later get "kicked" in favor of an ancestor.
 
             var oneRenderedLastFrame = TileSelectionResult.originalResult(lastFrameSelectionResult) === TileSelectionResult.RENDERED;
-            var twoCulledOrNotVisited = lastFrameSelectionResult === TileSelectionResult.CULLED || lastFrameSelectionResult === TileSelectionResult.NONE;
+            var twoCulledOrNotVisited = TileSelectionResult.originalResult(lastFrameSelectionResult) === TileSelectionResult.CULLED || lastFrameSelectionResult === TileSelectionResult.NONE;
             var threeCompletelyLoaded = tile.state === QuadtreeTileLoadState.DONE;
 
             var renderable = oneRenderedLastFrame || twoCulledOrNotVisited || threeCompletelyLoaded;
@@ -890,13 +892,14 @@ define([
         quadDetails.combine(traversalDetails);
     }
 
+    var cameraOriginScratch = new Cartesian3();
+    var cameraOriginCartographicScratch = new Cartographic();
+
     function visitIfVisible(primitive, tile, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse, traversalDetails) {
         if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
             return visitTile(primitive, frameState, tile, nearestRenderableTile, ancestorMeetsSse, traversalDetails);
         }
 
-        tile._lastSelectionResultFrame = frameState.frameNumber;
-        tile._lastSelectionResult = TileSelectionResult.CULLED;
         ++primitive._debug.tilesCulled;
         primitive._tileReplacementQueue.markTileRendered(tile);
 
@@ -904,11 +907,35 @@ define([
         traversalDetails.anyWereRenderedLastFrame = false;
         traversalDetails.notYetRenderableCount = 0;
 
-        // Load culled level zero tiles with low priority.
-        // For all other levels, only load culled tiles if preloadSiblings is enabled.
-        if (primitive.preloadSiblings || tile.level === 0) {
-            queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
+        var camera = frameState.camera;
+        var cameraOrigin = Matrix4.getTranslation(camera.transform, cameraOriginScratch);
+        var cameraOriginCartographic;
+        if (cameraOrigin.x > 1000.0 || cameraOrigin.y > 1000.0 || cameraOrigin.z > 1000.0) {
+            cameraOriginCartographic = primitive.tileProvider.tilingScheme.ellipsoid.cartesianToCartographic(cameraOrigin, cameraOriginCartographicScratch);
         }
+
+        if (Rectangle.contains(tile.rectangle, camera.positionCartographic) || (defined(cameraOriginCartographic) && Rectangle.contains(tile.rectangle, cameraOriginCartographic))) {
+            // Load the tile(s) that contains the camera's position and
+            // the origin of its reference frame with medium priority.
+            queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
+
+            var lastFrame = primitive._lastSelectionFrameNumber;
+            var lastFrameSelectionResult = tile._lastSelectionResultFrame === lastFrame ? tile._lastSelectionResult : TileSelectionResult.NONE;
+            if (lastFrameSelectionResult !== TileSelectionResult.CULLED_BUT_NEEDED && lastFrameSelectionResult !== TileSelectionResult.RENDERED) {
+                primitive._tileToUpdateHeights.push(tile);
+            }
+
+            tile._lastSelectionResult = TileSelectionResult.CULLED_BUT_NEEDED;
+        } else if (primitive.preloadSiblings || tile.level === 0) {
+            // Load culled level zero tiles with low priority.
+            // For all other levels, only load culled tiles if preloadSiblings is enabled.
+            queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
+            tile._lastSelectionResult = TileSelectionResult.CULLED;
+        } else {
+            tile._lastSelectionResult = TileSelectionResult.CULLED;
+        }
+
+        tile._lastSelectionResultFrame = frameState.frameNumber;
     }
 
     function screenSpaceError(primitive, frameState, tile) {
@@ -1027,7 +1054,10 @@ define([
             if (tile.state !== QuadtreeTileLoadState.DONE) {
                 // Tile isn't loaded yet, so try again next frame if this tile is still
                 // being rendered.
-                if (tile._lastSelectionResultFrame === primitive._lastSelectionFrameNumber && tile._lastSelectionResult === TileSelectionResult.RENDERED) {
+                var selectionResult = tile._lastSelectionResultFrame === primitive._lastSelectionFrameNumber
+                    ? tile._lastSelectionResult
+                    : TileSelectionResult.NONE;
+                if (selectionResult === TileSelectionResult.RENDERED || selectionResult === TileSelectionResult.CULLED_BUT_NEEDED) {
                     tryNextFrame.push(tile);
                 }
                 tilesToUpdateHeights.shift();

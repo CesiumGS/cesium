@@ -535,9 +535,13 @@ define([
         var surfaceTile = tile.data;
         var terrainOnly = true;
         var terrainStateBefore;
+        var hadFillBefore = false;
+        var hadVertexArrayBefore = false;
         if (defined(surfaceTile)) {
             terrainOnly = surfaceTile.boundingVolumeSourceTile !== tile;
             terrainStateBefore = surfaceTile.terrainState;
+            hadFillBefore = defined(surfaceTile.fill);
+            hadVertexArrayBefore = defined(surfaceTile.vertexArray);
         }
 
         GlobeSurfaceTile.processStateMachine(tile, frameState, this.terrainProvider, this._imageryLayers, this._vertexArraysToDestroy, terrainOnly);
@@ -552,6 +556,16 @@ define([
                 terrainOnly = false;
                 GlobeSurfaceTile.processStateMachine(tile, frameState, this.terrainProvider, this._imageryLayers, this._vertexArraysToDestroy, terrainOnly);
             }
+        }
+
+        if (hadFillBefore && !define(surfaceTile.fill)) {
+            // Transitioned from a fill to real geometry, so we'll need to update the heights
+            // of things in this tile.
+            this._quadtree._tileToUpdateHeights.push(tile);
+        } else if (tile._lastSelectionResult === TileSelectionResult.CULLED_BUT_NEEDED && !hadVertexArrayBefore && defined(surfaceTile.vertexArray)) {
+            // This tile is not being rendered but IS used for getting heights, and it just acquired some geometry.
+            // So we need to update the heights based on the new geometry.
+            this._quadtree._tileToUpdateHeights.push(tile);
         }
     };
 

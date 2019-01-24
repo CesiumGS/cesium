@@ -597,7 +597,12 @@ define([
                    tile.northeastChild;
         }
 
-        if (tile._lastSelectionResult !== TileSelectionResult.RENDERED) {
+        // This tile was either rendered or culled.
+        // It is sometimes useful to get a height from culled tile,
+        // e.g. when we're getting a height in order to place a billboard
+        // on terrain, and the camera is centered on that same billboard.
+        // The culled tile must have a valid mesh, though.
+        if (!defined(tile.data) || !defined(tile.data.renderedMesh)) {
             // Tile was not rendered (culled).
             return undefined;
         }

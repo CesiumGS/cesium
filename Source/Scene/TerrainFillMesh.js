@@ -149,7 +149,7 @@ define([
         }
 
         var tile = startTile;
-        while (tile && (tile._lastSelectionResultFrame !== currentFrameNumber || TileSelectionResult.wasKicked(tile._lastSelectionResult) || tile._lastSelectionResult === TileSelectionResult.CULLED)) {
+        while (tile && (tile._lastSelectionResultFrame !== currentFrameNumber || TileSelectionResult.wasKicked(tile._lastSelectionResult) || TileSelectionResult.originalResult(tile._lastSelectionResult) === TileSelectionResult.CULLED)) {
             // This tile wasn't visited or it was visited and then kicked, so walk up to find the closest ancestor that was rendered.
             // We also walk up if the tile was culled, because if siblings were kicked an ancestor may have been rendered.
             if (downOnly) {
@@ -192,7 +192,7 @@ define([
             return;
         }
 
-        if (startTile._lastSelectionResult === TileSelectionResult.CULLED) {
+        if (TileSelectionResult.originalResult(startTile._lastSelectionResult) === TileSelectionResult.CULLED) {
             return;
         }
 
