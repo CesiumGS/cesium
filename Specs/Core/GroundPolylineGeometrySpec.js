@@ -6,7 +6,7 @@ defineSuite([
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
-        'Core/LineType',
+        'Core/ArcType',
         'Core/Math',
         'Core/WebMercatorProjection',
         'Specs/createPackableSpecs'
@@ -18,7 +18,7 @@ defineSuite([
         Cartographic,
         Ellipsoid,
         GeographicProjection,
-        LineType,
+        ArcType,
         CesiumMath,
         WebMercatorProjection,
         createPackableSpecs) {
@@ -376,12 +376,12 @@ defineSuite([
         var rhumbGroundPolylineGeometry = new GroundPolylineGeometry({
             positions : positions,
             granularity : 2890.0,
-            lineType: LineType.RHUMB
+            arcType: ArcType.RHUMB
         });
         var geodesicGroundPolylineGeometry = new GroundPolylineGeometry({
             positions : positions,
             granularity : 2890.0,
-            lineType: LineType.GEODESIC
+            arcType: ArcType.GEODESIC
         });
 
         var rhumbGeometry = GroundPolylineGeometry.createGeometry(rhumbGroundPolylineGeometry);
@@ -401,12 +401,12 @@ defineSuite([
         rhumbGroundPolylineGeometry = new GroundPolylineGeometry({
             positions : positions,
             granularity : 2890.0,
-            lineType: LineType.RHUMB
+            arcType: ArcType.RHUMB
         });
         geodesicGroundPolylineGeometry = new GroundPolylineGeometry({
             positions : positions,
             granularity : 2890.0,
-            lineType: LineType.GEODESIC
+            arcType: ArcType.GEODESIC
         });
 
         rhumbGeometry = GroundPolylineGeometry.createGeometry(rhumbGroundPolylineGeometry);
@@ -618,7 +618,7 @@ defineSuite([
     Cartesian3.pack(positions[2], packedInstance, packedInstance.length);
     packedInstance.push(polyline.granularity);
     packedInstance.push(polyline.loop ? 1.0 : 0.0);
-    packedInstance.push(polyline.lineType);
+    packedInstance.push(polyline.arcType);
 
     Ellipsoid.pack(Ellipsoid.WGS84, packedInstance, packedInstance.length);
 

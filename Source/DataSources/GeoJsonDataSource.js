@@ -8,7 +8,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getFilenameFromUri',
-        '../Core/LineType',
+        '../Core/ArcType',
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
         '../Core/Resource',
@@ -37,7 +37,7 @@ define([
         DeveloperError,
         Event,
         getFilenameFromUri,
-        LineType,
+        ArcType,
         PinBuilder,
         PolygonHierarchy,
         Resource,
@@ -367,7 +367,7 @@ define([
         polylineGraphics.material = material;
         polylineGraphics.width = widthProperty;
         polylineGraphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
-        polylineGraphics.lineType = LineType.RHUMB;
+        polylineGraphics.arcType = ArcType.RHUMB;
     }
 
     function processLineString(dataSource, geoJson, geometry, crsFunction, options) {
@@ -437,7 +437,7 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
-        polygon.lineType = LineType.RHUMB;
+        polygon.arcType = ArcType.RHUMB;
 
         var holes = [];
         for (var i = 1, len = coordinates.length; i < len; i++) {

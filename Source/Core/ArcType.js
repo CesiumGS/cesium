@@ -5,18 +5,26 @@ define([
     'use strict';
 
     /**
-     * LineType defines the path that should be taken connecting vertices.
+     * ArcType defines the path that should be taken connecting vertices.
      *
-     * @exports LineType
+     * @exports ArcType
      */
-    var LineType = {
+    var ArcType = {
+        /**
+         * Straight line that does not conform to the surface of the ellipsoid.
+         *
+         * @type {Number}
+         * @constant
+         */
+        NONE : 0,
+
         /**
          * Follow geodesic path.
          *
          * @type {Number}
          * @constant
          */
-        GEODESIC : 0,
+        GEODESIC : 1,
 
         /**
          * Follow rhumb or loxodrome path.
@@ -24,16 +32,8 @@ define([
          * @type {Number}
          * @constant
          */
-        RHUMB : 1,
-
-        /**
-         * Straight line that does not conform to the surface of the ellipsoid.
-         *
-         * @type {Number}
-         * @constant
-         */
-        STRAIGHT : 2
+        RHUMB : 2
     };
 
-    return freezeObject(LineType);
+    return freezeObject(ArcType);
 });

@@ -12,7 +12,7 @@ define([
         './GeometryAttribute',
         './GeometryAttributes',
         './IndexDatatype',
-        './LineType',
+        './ArcType',
         './Math',
         './PolylinePipeline',
         './PrimitiveType'
@@ -30,7 +30,7 @@ define([
         GeometryAttribute,
         GeometryAttributes,
         IndexDatatype,
-        LineType,
+        ArcType,
         CesiumMath,
         PolylinePipeline,
         PrimitiveType) {
@@ -88,8 +88,8 @@ define([
      * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
      * @param {Boolean} [options.followSurface=true] A boolean that determines whether positions will be adjusted to the surface of the ellipsoid via a great arc.
-     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of line the polyline segments must follow.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.lineType is not LineType.STRAIGHT. Determines the number of positions in the buffer.
+     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.arcType is not ArcType.NONE. Determines the number of positions in the buffer.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      *
      * @exception {DeveloperError} At least two positions are required.
@@ -129,11 +129,11 @@ define([
 
         this._followSurface = defaultValue(options.followSurface, true);
         if (defined(options.followSurface)) {
-            deprecationWarning('PolylineGeometry.followSurface', 'PolylineGeometry.followSurface is deprecated and will be removed in Cesium 1.55. Use PolylineGeometry.lineType instead.');
-            options.lineType = options.followSurface ? LineType.GEODESIC : LineType.STRAIGHT;
+            deprecationWarning('PolylineGeometry.followSurface', 'PolylineGeometry.followSurface is deprecated and will be removed in Cesium 1.55. Use PolylineGeometry.arcType instead.');
+            options.arcType = options.followSurface ? ArcType.GEODESIC : ArcType.NONE;
         }
-        this._lineType = defaultValue(options.lineType, LineType.GEODESIC);
-        this._followSurface = this._lineType === LineType.STRAIGHT;
+        this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
+        this._followSurface = this._arcType === ArcType.NONE;
 
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
@@ -192,7 +192,7 @@ define([
         startingIndex += Ellipsoid.packedLength;
 
         array[startingIndex++] = value._colorsPerVertex ? 1.0 : 0.0;
-        array[startingIndex++] = value._lineType;
+        array[startingIndex++] = value._arcType;
         array[startingIndex]   = value._granularity;
 
         return array;
@@ -235,7 +235,7 @@ define([
         startingIndex += Ellipsoid.packedLength;
 
         var colorsPerVertex = array[startingIndex++] === 1.0;
-        var lineType = array[startingIndex++];
+        var arcType = array[startingIndex++];
         var granularity = array[startingIndex];
 
         if (!defined(result)) {
@@ -244,7 +244,7 @@ define([
                 colors : colors,
                 ellipsoid : ellipsoid,
                 colorsPerVertex : colorsPerVertex,
-                lineType : lineType,
+                arcType : arcType,
                 granularity : granularity
             });
         }
@@ -253,7 +253,7 @@ define([
         result._colors = colors;
         result._ellipsoid = ellipsoid;
         result._colorsPerVertex = colorsPerVertex;
-        result._lineType = lineType;
+        result._arcType = arcType;
         result._granularity = granularity;
 
         return result;
@@ -279,7 +279,7 @@ define([
         var positions = simplePolylineGeometry._positions;
         var colors = simplePolylineGeometry._colors;
         var colorsPerVertex = simplePolylineGeometry._colorsPerVertex;
-        var lineType = simplePolylineGeometry._lineType;
+        var arcType = simplePolylineGeometry._arcType;
         var granularity = simplePolylineGeometry._granularity;
         var ellipsoid = simplePolylineGeometry._ellipsoid;
 
@@ -295,11 +295,11 @@ define([
         var color;
         var offset = 0;
 
-        if (lineType === LineType.GEODESIC || lineType === LineType.RHUMB) {
+        if (arcType === ArcType.GEODESIC || arcType === ArcType.RHUMB) {
             var subdivisionSize;
             var numberOfPointsFunction;
             var generateArcFunction;
-            if (lineType === LineType.GEODESIC) {
+            if (arcType === ArcType.GEODESIC) {
                 subdivisionSize = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
                 numberOfPointsFunction = PolylinePipeline.numberOfPoints;
                 generateArcFunction = PolylinePipeline.generateArc;
@@ -312,7 +312,7 @@ define([
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
 
             var generateArcOptions = generateArcOptionsScratch;
-            if (lineType === LineType.GEODESIC) {
+            if (arcType === ArcType.GEODESIC) {
                 generateArcOptions.minDistance = minDistance;
             } else {
                 generateArcOptions.granularity = granularity;

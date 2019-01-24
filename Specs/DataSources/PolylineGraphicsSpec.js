@@ -2,7 +2,7 @@ defineSuite([
         'DataSources/PolylineGraphics',
         'Core/Color',
         'Core/DistanceDisplayCondition',
-        'Core/LineType',
+        'Core/ArcType',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'Scene/ClassificationType',
@@ -13,7 +13,7 @@ defineSuite([
         PolylineGraphics,
         Color,
         DistanceDisplayCondition,
-        LineType,
+        ArcType,
         ColorMaterialProperty,
         ConstantProperty,
         ClassificationType,
@@ -35,7 +35,7 @@ defineSuite([
             shadows : ShadowMode.DISABLED,
             distanceDisplayCondition : new DistanceDisplayCondition(),
             classificationType : ClassificationType.TERRAIN,
-            lineType: LineType.GEODESIC,
+            arcType: ArcType.GEODESIC,
             zIndex : 0
         };
 
@@ -51,7 +51,7 @@ defineSuite([
         expect(polyline.shadows).toBeInstanceOf(ConstantProperty);
         expect(polyline.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
         expect(polyline.classificationType).toBeInstanceOf(ConstantProperty);
-        expect(polyline.lineType).toBeInstanceOf(ConstantProperty);
+        expect(polyline.arcType).toBeInstanceOf(ConstantProperty);
         expect(polyline.zIndex).toBeInstanceOf(ConstantProperty);
 
         expect(polyline.material.color.getValue()).toEqual(options.material);
@@ -65,7 +65,7 @@ defineSuite([
         expect(polyline.shadows.getValue()).toEqual(options.shadows);
         expect(polyline.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
         expect(polyline.classificationType.getValue()).toEqual(options.classificationType);
-        expect(polyline.lineType.getValue()).toEqual(options.lineType);
+        expect(polyline.arcType.getValue()).toEqual(options.arcType);
         expect(polyline.zIndex.getValue()).toEqual(options.zIndex);
     });
 
@@ -82,7 +82,7 @@ defineSuite([
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
         source.classificationType = new ConstantProperty(ClassificationType.TERRAIN);
-        source.lineType = new ConstantProperty(LineType.GEODESIC);
+        source.arcType = new ConstantProperty(ArcType.GEODESIC);
         source.zIndex = new ConstantProperty();
 
         var target = new PolylineGraphics();
@@ -98,7 +98,7 @@ defineSuite([
         expect(target.shadows).toBe(source.shadows);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(target.classificationType).toBe(source.classificationType);
-        expect(target.lineType).toBe(source.lineType);
+        expect(target.arcType).toBe(source.arcType);
         expect(target.zIndex).toBe(source.zIndex);
     });
 
@@ -115,7 +115,7 @@ defineSuite([
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
         source.classificationType = new ConstantProperty();
-        source.lineType = new ConstantProperty();
+        source.arcType = new ConstantProperty();
         source.zIndex = new ConstantProperty();
 
         var color = new ColorMaterialProperty();
@@ -129,7 +129,7 @@ defineSuite([
         var shadows = new ConstantProperty();
         var distanceDisplayCondition = new ConstantProperty();
         var classificationType = new ConstantProperty();
-        var lineType = new ConstantProperty();
+        var arcType = new ConstantProperty();
         var zIndex = new ConstantProperty();
 
         var target = new PolylineGraphics();
@@ -144,7 +144,7 @@ defineSuite([
         target.shadows = shadows;
         target.distanceDisplayCondition = distanceDisplayCondition;
         target.classificationType = classificationType;
-        target.lineType = lineType;
+        target.arcType = arcType;
         target.zIndex = zIndex;
 
         target.merge(source);
@@ -159,7 +159,7 @@ defineSuite([
         expect(target.shadows).toBe(shadows);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
         expect(target.classificationType).toBe(classificationType);
-        expect(target.lineType).toBe(lineType);
+        expect(target.arcType).toBe(arcType);
         expect(target.zIndex).toBe(zIndex);
     });
 
@@ -176,7 +176,7 @@ defineSuite([
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
         source.classificationType = new ConstantProperty();
-        source.lineType = new ConstantProperty();
+        source.arcType = new ConstantProperty();
         source.zIndex = new ConstantProperty();
 
         var result = source.clone();
@@ -191,7 +191,7 @@ defineSuite([
         expect(result.shadows).toBe(source.shadows);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
         expect(result.classificationType).toBe(source.classificationType);
-        expect(result.lineType).toBe(source.lineType);
+        expect(result.arcType).toBe(source.arcType);
         expect(result.zIndex).toBe(source.zIndex);
     });
 
@@ -215,7 +215,7 @@ defineSuite([
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 20.0));
         testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN);
-        testDefinitionChanged(property, 'lineType', LineType.GEODESIC, LineType.RHUMB);
+        testDefinitionChanged(property, 'arcType', ArcType.GEODESIC, ArcType.RHUMB);
         testDefinitionChanged(property, 'zIndex', 20, 5);
     });
 });

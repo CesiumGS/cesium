@@ -19,7 +19,7 @@ define([
         './Geometry',
         './GeometryAttribute',
         './IntersectionTests',
-        './LineType',
+        './ArcType',
         './Matrix3',
         './Plane',
         './Quaternion',
@@ -46,7 +46,7 @@ define([
         Geometry,
         GeometryAttribute,
         IntersectionTests,
-        LineType,
+        ArcType,
         Matrix3,
         Plane,
         Quaternion,
@@ -84,7 +84,7 @@ define([
      * @param {Number} [options.width=1.0] The screen space width in pixels.
      * @param {Number} [options.granularity=9999.0] The distance interval in meters used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
      * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
-     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of line the polyline segments must follow. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
+     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
      *
      * @exception {DeveloperError} At least two positions are required.
      *
@@ -109,8 +109,8 @@ define([
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
         }
-        if (defined(options.lineType) && options.lineType !== LineType.GEODESIC && options.lineType !== LineType.RHUMB) {
-            throw new DeveloperError('Valid options for lineType are LineType.GEODESIC and LineType.RHUMB.');
+        if (defined(options.arcType) && options.arcType !== ArcType.GEODESIC && options.arcType !== ArcType.RHUMB) {
+            throw new DeveloperError('Valid options for arcType are ArcType.GEODESIC and ArcType.RHUMB.');
         }
         //>>includeEnd('debug');
 
@@ -139,11 +139,11 @@ define([
         this.loop = defaultValue(options.loop, false);
 
         /**
-         * The type of path the polyline must follow. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
-         * @type {LineType}
-         * @default LineType.GEODESIC
+         * The type of path the polyline must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
+         * @type {ArcType}
+         * @default ArcType.GEODESIC
          */
-        this.lineType = defaultValue(options.lineType, LineType.GEODESIC);
+        this.arcType = defaultValue(options.arcType, ArcType.GEODESIC);
 
         this._ellipsoid = Ellipsoid.WGS84;
 
@@ -210,18 +210,18 @@ define([
     var interpolatedBottomScratch = new Cartesian3();
     var interpolatedTopScratch = new Cartesian3();
     var interpolatedNormalScratch = new Cartesian3();
-    function interpolateSegment(start, end, minHeight, maxHeight, granularity, lineType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray) {
+    function interpolateSegment(start, end, minHeight, maxHeight, granularity, arcType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray) {
         if (granularity === 0.0) {
             return;
         }
 
         var ellipsoidLine;
-        if (lineType === LineType.GEODESIC) {
+        if (arcType === ArcType.GEODESIC) {
             ellipsoidLine = new EllipsoidGeodesic(start, end, ellipsoid);
-        } else if (lineType === LineType.RHUMB) {
+        } else if (arcType === ArcType.RHUMB) {
             ellipsoidLine = new EllipsoidRhumbLine(start, end, ellipsoid);
         } else {
-            throw new DeveloperError('Unrecognized lineType. Valid options are LineType.GEODESIC and LineType.RHUMB');
+            throw new DeveloperError('Unrecognized arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB');
         }
 
         var surfaceDistance = ellipsoidLine.surfaceDistance;
@@ -290,7 +290,7 @@ define([
 
         array[index++] = value.granularity;
         array[index++] = value.loop ? 1.0 : 0.0;
-        array[index++] = value.lineType;
+        array[index++] = value.arcType;
 
         Ellipsoid.pack(value._ellipsoid, array, index);
         index += Ellipsoid.packedLength;
@@ -324,7 +324,7 @@ define([
 
         var granularity = array[index++];
         var loop = array[index++] === 1.0;
-        var lineType = array[index++];
+        var arcType = array[index++];
 
         var ellipsoid = Ellipsoid.unpack(array, index);
         index += Ellipsoid.packedLength;
@@ -337,7 +337,7 @@ define([
                 positions : positions,
                 granularity : granularity,
                 loop : loop,
-                lineType : lineType,
+                arcType : arcType,
                 ellipsoid : ellipsoid
             });
             geometry._projectionIndex = projectionIndex;
@@ -348,7 +348,7 @@ define([
         result._positions = positions;
         result.granularity = granularity;
         result.loop = loop;
-        result.lineType = lineType;
+        result.arcType = arcType;
         result._ellipsoid = ellipsoid;
         result._projectionIndex = projectionIndex;
         result._scene3DOnly = scene3DOnly;
@@ -428,7 +428,7 @@ define([
         var loop = groundPolylineGeometry.loop;
         var ellipsoid = groundPolylineGeometry._ellipsoid;
         var granularity = groundPolylineGeometry.granularity;
-        var lineType = groundPolylineGeometry.lineType;
+        var arcType = groundPolylineGeometry.arcType;
         var projection = new PROJECTIONS[groundPolylineGeometry._projectionIndex](ellipsoid);
 
         var minHeight = WALL_INITIAL_MIN_HEIGHT;
@@ -463,9 +463,9 @@ define([
             if (defined(intersection) &&
                 !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
                 !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
-                if (groundPolylineGeometry.lineType === LineType.GEODESIC) {
+                if (groundPolylineGeometry.arcType === ArcType.GEODESIC) {
                     splitPositions.push(Cartesian3.clone(intersection));
-                } else if (groundPolylineGeometry.lineType === LineType.RHUMB) {
+                } else if (groundPolylineGeometry.arcType === ArcType.RHUMB) {
                     intersectionLongitude = ellipsoid.cartesianToCartographic(intersection, cartographicScratch0).longitude;
                     c0 = ellipsoid.cartesianToCartographic(p0, cartographicScratch0);
                     c1 = ellipsoid.cartesianToCartographic(p1, cartographicScratch1);
@@ -489,9 +489,9 @@ define([
             if (defined(intersection) &&
                 !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
                 !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
-                if (groundPolylineGeometry.lineType === LineType.GEODESIC) {
+                if (groundPolylineGeometry.arcType === ArcType.GEODESIC) {
                     splitPositions.push(Cartesian3.clone(intersection));
-                } else if (groundPolylineGeometry.lineType === LineType.RHUMB) {
+                } else if (groundPolylineGeometry.arcType === ArcType.RHUMB) {
                     intersectionLongitude = ellipsoid.cartesianToCartographic(intersection, cartographicScratch0).longitude;
                     c0 = ellipsoid.cartesianToCartographic(p0, cartographicScratch0);
                     c1 = ellipsoid.cartesianToCartographic(p1, cartographicScratch1);
@@ -560,7 +560,7 @@ define([
         cartographicsArray.push(startCartographic.latitude);
         cartographicsArray.push(startCartographic.longitude);
 
-        interpolateSegment(startCartographic, nextCartographic, minHeight, maxHeight, granularity, lineType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
+        interpolateSegment(startCartographic, nextCartographic, minHeight, maxHeight, granularity, arcType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
 
         // All inbetween points
         for (i = 1; i < cartographicsLength - 1; ++i) {
@@ -579,7 +579,7 @@ define([
             cartographicsArray.push(vertexCartographic.latitude);
             cartographicsArray.push(vertexCartographic.longitude);
 
-            interpolateSegment(cartographics[i], cartographics[i + 1], minHeight, maxHeight, granularity, lineType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
+            interpolateSegment(cartographics[i], cartographics[i + 1], minHeight, maxHeight, granularity, arcType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
         }
 
         // Last point - either loop or attach a normal "perpendicular" to the wall.
@@ -607,7 +607,7 @@ define([
         cartographicsArray.push(endCartographic.longitude);
 
         if (loop) {
-            interpolateSegment(endCartographic, startCartographic, minHeight, maxHeight, granularity, lineType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
+            interpolateSegment(endCartographic, startCartographic, minHeight, maxHeight, granularity, arcType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
             index = normalsArray.length;
             for (i = 0; i < 3; ++i) {
                 normalsArray[index + i] = normalsArray[i];

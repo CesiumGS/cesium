@@ -15,7 +15,7 @@ define([
         '../Core/GeometryOffsetAttribute',
         '../Core/isArray',
         '../Core/Iso8601',
-        '../Core/LineType',
+        '../Core/ArcType',
         '../Core/oneTimeWarning',
         '../Core/OffsetGeometryInstanceAttribute',
         '../Core/PolygonGeometry',
@@ -49,7 +49,7 @@ define([
         GeometryOffsetAttribute,
         isArray,
         Iso8601,
-        LineType,
+        ArcType,
         oneTimeWarning,
         OffsetGeometryInstanceAttribute,
         PolygonGeometry,
@@ -90,7 +90,7 @@ define([
         this.granularity = undefined;
         this.stRotation = undefined;
         this.offsetAttribute = undefined;
-        this.lineType = undefined;
+        this.arcType = undefined;
     }
 
     /**
@@ -278,7 +278,7 @@ define([
                !Property.isConstant(polygon.closeTop) || //
                !Property.isConstant(polygon.closeBottom) || //
                !Property.isConstant(polygon.zIndex) || //
-               !Property.isConstant(polygon.lineType) || //
+               !Property.isConstant(polygon.arcType) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 
@@ -326,7 +326,7 @@ define([
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, Iso8601.MINIMUM_VALUE, true);
         options.offsetAttribute = offsetAttribute;
         options.height = heightValue;
-        options.lineType = Property.getValueOrDefault(polygon.lineType, Iso8601.MINIMUM_VALUE, LineType.GEODESIC);
+        options.arcType = Property.getValueOrDefault(polygon.arcType, Iso8601.MINIMUM_VALUE, ArcType.GEODESIC);
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
@@ -404,7 +404,7 @@ define([
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, time, true);
         options.offsetAttribute = offsetAttribute;
         options.height = heightValue;
-        options.lineType = Property.getValueOrDefault(polygon.lineType, time, LineType.GEODESIC);
+        options.arcType = Property.getValueOrDefault(polygon.arcType, time, ArcType.GEODESIC);
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {

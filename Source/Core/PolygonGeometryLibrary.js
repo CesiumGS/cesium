@@ -14,7 +14,7 @@ define([
         './GeometryAttributes',
         './GeometryPipeline',
         './IndexDatatype',
-        './LineType',
+        './ArcType',
         './Math',
         './Matrix3',
         './PolygonPipeline',
@@ -38,7 +38,7 @@ define([
         GeometryAttributes,
         GeometryPipeline,
         IndexDatatype,
-        LineType,
+        ArcType,
         CesiumMath,
         Matrix3,
         PolygonPipeline,
@@ -453,7 +453,7 @@ define([
         return result;
     };
 
-    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat, lineType) {
+    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat, arcType) {
         var indices = PolygonPipeline.triangulate(polygon.positions2D, polygon.holes);
 
         /* If polygon is completely unrenderable, just use the first three vertices */
@@ -492,9 +492,9 @@ define([
             return geometry;
         }
 
-        if (lineType === LineType.GEODESIC) {
+        if (arcType === ArcType.GEODESIC) {
             return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
-        } else if (lineType === LineType.RHUMB) {
+        } else if (arcType === ArcType.RHUMB) {
             return PolygonPipeline.computeRhumbLineSubdivision(ellipsoid, positions, indices, granularity);
         }
     };
@@ -503,7 +503,7 @@ define([
     var p1Scratch = new Cartesian3();
     var p2Scratch = new Cartesian3();
 
-    PolygonGeometryLibrary.computeWallGeometry = function(positions, ellipsoid, granularity, perPositionHeight, lineType) {
+    PolygonGeometryLibrary.computeWallGeometry = function(positions, ellipsoid, granularity, perPositionHeight, arcType) {
         var edgePositions;
         var topEdgeLength;
         var i;
@@ -517,11 +517,11 @@ define([
             var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
             var numVertices = 0;
-            if (lineType === LineType.GEODESIC) {
+            if (arcType === ArcType.GEODESIC) {
                 for (i = 0; i < length; i++) {
                     numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
                 }
-            } else if (lineType === LineType.RHUMB) {
+            } else if (arcType === ArcType.RHUMB) {
                 for (i = 0; i < length; i++) {
                     numVertices += PolygonGeometryLibrary.subdivideRhumbLineCount(ellipsoid, positions[i], positions[(i + 1) % length], minDistance);
                 }
@@ -534,12 +534,12 @@ define([
                 p2 = positions[(i + 1) % length];
 
                 var tempPositions;
-                if (lineType === LineType.GEODESIC) {
+                if (arcType === ArcType.GEODESIC) {
                     tempPositions = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance, computeWallIndicesSubdivided);
-                } else if (lineType === LineType.RHUMB) {
+                } else if (arcType === ArcType.RHUMB) {
                     tempPositions = PolygonGeometryLibrary.subdivideRhumbLine(ellipsoid, p1, p2, minDistance, computeWallIndicesSubdivided);
                 } else {
-                    throw new DeveloperError('Unrecognized lineType. Valid options are LineType.GEODESIC and LineType.RHUMB');
+                    throw new DeveloperError('Unrecognized arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB');
                 }
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j, ++index) {

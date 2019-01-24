@@ -10,7 +10,7 @@ defineSuite([
         'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/GroundPolylineGeometry',
         'Core/JulianDate',
-        'Core/LineType',
+        'Core/ArcType',
         'Core/PolylinePipeline',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
@@ -44,7 +44,7 @@ defineSuite([
         DistanceDisplayConditionGeometryInstanceAttribute,
         GroundPolylineGeometry,
         JulianDate,
-        LineType,
+        ArcType,
         PolylinePipeline,
         ShowGeometryInstanceAttribute,
         TimeInterval,
@@ -119,7 +119,7 @@ defineSuite([
         expect(updater.distanceDisplayConditionProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.clampToGround).toBe(false);
-        expect(updater.lineType).toBe(undefined);
+        expect(updater.arcType).toBe(undefined);
         expect(updater.zIndex).toBe(0);
 
         expect(updater.isOutlineVisible(time)).toBe(false);
@@ -164,7 +164,7 @@ defineSuite([
         expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
         expect(updater.isDynamic).toBe(false);
         expect(updater.clampToGround).toBe(false);
-        expect(updater.lineType).toBe(undefined);
+        expect(updater.arcType).toBe(undefined);
         expect(updater.zIndex).toEqual(new ConstantProperty(0));
     });
 
@@ -235,11 +235,11 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying lineType causes geometry to be dynamic', function() {
+    it('A time-varying arcType causes geometry to be dynamic', function() {
         var entity = createBasicPolyline();
         var updater = new PolylineGeometryUpdater(entity, scene);
-        entity.polyline.lineType = new SampledProperty(Number);
-        entity.polyline.lineType.addSample(time, 1);
+        entity.polyline.arcType = new SampledProperty(Number);
+        entity.polyline.arcType.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -265,7 +265,7 @@ defineSuite([
         polyline.granularity = new ConstantProperty(options.granularity);
         polyline.distanceDisplayCondition = options.distanceDisplayCondition;
         polyline.clampToGround = new ConstantProperty(clampToGround);
-        polyline.lineType = new ConstantProperty(options.lineType);
+        polyline.arcType = new ConstantProperty(options.arcType);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
 
@@ -283,8 +283,8 @@ defineSuite([
             if (defined(options.followSurface)) {
                 expect(geometry._followSurface).toEqual(options.followSurface);
             }
-            if (defined(options.lineType)) {
-                expect(geometry._lineType).toEqual(options.lineType);
+            if (defined(options.arcType)) {
+                expect(geometry._arcType).toEqual(options.arcType);
             }
             expect(geometry._granularity).toEqual(options.granularity);
 
@@ -314,7 +314,7 @@ defineSuite([
             followSurface : false,
             clampToGround : false,
             granularity : 1.0,
-            lineType : LineType.STRAIGHT
+            arcType : ArcType.NONE
         });
 
         if (!Entity.supportsPolylinesOnTerrain(scene)) {
@@ -329,7 +329,7 @@ defineSuite([
             followSurface : false,
             clampToGround : true,
             granularity : 1.0,
-            lineType : LineType.GEODESIC
+            arcType : ArcType.GEODESIC
         });
     });
 
@@ -342,7 +342,7 @@ defineSuite([
             followSurface : true,
             clampToGround : false,
             granularity : 1.0,
-            lineType : LineType.GEODESIC
+            arcType : ArcType.GEODESIC
         });
     });
 
@@ -354,7 +354,7 @@ defineSuite([
             width : 3,
             clampToGround : false,
             granularity : 1.0,
-            lineType : LineType.RHUMB
+            arcType : ArcType.RHUMB
         });
     });
 
@@ -366,7 +366,7 @@ defineSuite([
             followSurface : true,
             clampToGround : false,
             granularity : 0.5,
-            lineType: LineType.GEODESIC
+            arcType: ArcType.GEODESIC
         });
 
         if (!Entity.supportsPolylinesOnTerrain(scene)) {
@@ -381,7 +381,7 @@ defineSuite([
             followSurface : true,
             clampToGround : true,
             granularity : 0.5,
-            lineType: LineType.GEODESIC
+            arcType: ArcType.GEODESIC
         });
     });
 
@@ -502,7 +502,7 @@ defineSuite([
         polyline.material = new ColorMaterialProperty(Color.RED);
         polyline.followSurface = new ConstantProperty(false);
         polyline.granularity = new ConstantProperty(0.001);
-        polyline.LineType = new ConstantProperty(LineType.STRAIGHT);
+        polyline.ArcType = new ConstantProperty(ArcType.NONE);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
 
@@ -525,7 +525,7 @@ defineSuite([
         expect(primitive.positions.length).toEqual(2);
 
         polyline.followSurface = new ConstantProperty(true);
-        polyline.lineType = new ConstantProperty(LineType.GEODESIC);
+        polyline.arcType = new ConstantProperty(ArcType.GEODESIC);
         dynamicUpdater.update(time3);
 
         expect(primitive.width).toEqual(3);
@@ -588,16 +588,16 @@ defineSuite([
         updater.destroy();
     });
 
-    it('lineType can be dynamic', function() {
+    it('arcType can be dynamic', function() {
         var entity = new Entity();
         var polyline = new PolylineGraphics();
         entity.polyline = polyline;
 
         var time = new JulianDate(0, 0);
 
-        var lineTypeVar = LineType.GEODESIC;
-        var lineType = new CallbackProperty(function() {
-            return lineTypeVar;
+        var arcTypeVar = ArcType.GEODESIC;
+        var arcType = new CallbackProperty(function() {
+            return arcTypeVar;
         }, false);
 
         polyline.show = new ConstantProperty(true);
@@ -607,7 +607,7 @@ defineSuite([
         polyline.followSurface = new ConstantProperty(true);
         polyline.granularity = new ConstantProperty(0.001);
         polyline.clampToGround = new ConstantProperty(false);
-        polyline.lineType = lineType;
+        polyline.arcType = arcType;
 
         var updater = new PolylineGeometryUpdater(entity, scene);
 
@@ -628,7 +628,7 @@ defineSuite([
 
         var geodesicPolylinePositionsLength = polylineObject.positions.length;
 
-        lineTypeVar = LineType.STRAIGHT;
+        arcTypeVar = ArcType.NONE;
         dynamicUpdater.update(time);
 
         expect(polylineObject.positions.length).not.toEqual(geodesicPolylinePositionsLength);
@@ -868,7 +868,7 @@ defineSuite([
         scene.globe = new Globe();
     });
 
-    it('lineType GEODESIC with undefined globe does not call generateCartesianArc', function() {
+    it('arcType GEODESIC with undefined globe does not call generateCartesianArc', function() {
         if (!Entity.supportsPolylinesOnTerrain(scene)) {
             return;
         }

@@ -19,7 +19,7 @@ define([
         './GeometryOffsetAttribute',
         './GeometryPipeline',
         './IndexDatatype',
-        './LineType',
+        './ArcType',
         './Math',
         './Matrix2',
         './Matrix3',
@@ -50,7 +50,7 @@ define([
         GeometryOffsetAttribute,
         GeometryPipeline,
         IndexDatatype,
-        LineType,
+        ArcType,
         CesiumMath,
         Matrix2,
         Matrix3,
@@ -388,14 +388,14 @@ define([
 
     var createGeometryFromPositionsExtrudedPositions = [];
 
-    function createGeometryFromPositionsExtruded(ellipsoid, polygon, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat, lineType) {
+    function createGeometryFromPositionsExtruded(ellipsoid, polygon, granularity, hierarchy, perPositionHeight, closeTop, closeBottom, vertexFormat, arcType) {
         var geos = {
             walls : []
         };
         var i;
 
         if (closeTop || closeBottom) {
-            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat, lineType);
+            var topGeo = PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat, arcType);
 
             var edgePoints = topGeo.attributes.position.values;
             var indices = topGeo.indices;
@@ -457,7 +457,7 @@ define([
             outerRing = outerRing.slice().reverse();
         }
 
-        var wallGeo = PolygonGeometryLibrary.computeWallGeometry(outerRing, ellipsoid, granularity, perPositionHeight, lineType);
+        var wallGeo = PolygonGeometryLibrary.computeWallGeometry(outerRing, ellipsoid, granularity, perPositionHeight, arcType);
         geos.walls.push(new GeometryInstance({
             geometry : wallGeo
         }));
@@ -474,7 +474,7 @@ define([
                 hole = hole.slice().reverse();
             }
 
-            wallGeo = PolygonGeometryLibrary.computeWallGeometry(hole, ellipsoid, granularity, perPositionHeight, lineType);
+            wallGeo = PolygonGeometryLibrary.computeWallGeometry(hole, ellipsoid, granularity, perPositionHeight, arcType);
             geos.walls.push(new GeometryInstance({
                 geometry : wallGeo
             }));
@@ -500,7 +500,7 @@ define([
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
-     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
+     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
      *
      * @see PolygonGeometry#createGeometry
      * @see PolygonGeometry#fromPositions
@@ -581,8 +581,8 @@ define([
         if (defined(options.perPositionHeight) && options.perPositionHeight && defined(options.height)) {
             throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
         }
-        if (defined(options.lineType) && options.lineType !== LineType.GEODESIC && options.lineType !== LineType.RHUMB) {
-            throw new DeveloperError('Invalid lineType. Valid options are LineType.GEODESIC and LineType.RHUMB.');
+        if (defined(options.arcType) && options.arcType !== ArcType.GEODESIC && options.arcType !== ArcType.RHUMB) {
+            throw new DeveloperError('Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB.');
         }
         //>>includeEnd('debug');
 
@@ -616,7 +616,7 @@ define([
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createPolygonGeometry';
         this._offsetAttribute = options.offsetAttribute;
-        this._lineType = defaultValue(options.lineType, LineType.GEODESIC);
+        this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
 
         this._rectangle = undefined;
         this._textureCoordinateRotationPoints = undefined;
@@ -642,7 +642,7 @@ define([
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
      * @param {Boolean} [options.closeTop=true] When false, leaves off the top of an extruded polygon open.
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
-     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
+     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
      * @returns {PolygonGeometry}
      *
      *
@@ -682,7 +682,7 @@ define([
             closeTop : options.closeTop,
             closeBottom : options.closeBottom,
             offsetAttribute : options.offsetAttribute,
-            lineType : options.lineType
+            arcType : options.arcType
         };
         return new PolygonGeometry(newOptions);
     };
@@ -722,7 +722,7 @@ define([
         array[startingIndex++] = value._closeBottom ? 1.0 : 0.0;
         array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
         array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
-        array[startingIndex++] = value._lineType;
+        array[startingIndex++] = value._arcType;
         array[startingIndex] = value.packedLength;
 
         return array;
@@ -770,7 +770,7 @@ define([
         var closeBottom = array[startingIndex++] === 1.0;
         var shadowVolume = array[startingIndex++] === 1.0;
         var offsetAttribute = array[startingIndex++];
-        var lineType = array[startingIndex++];
+        var arcType = array[startingIndex++];
         var packedLength = array[startingIndex];
 
         if (!defined(result)) {
@@ -790,7 +790,7 @@ define([
         result._closeBottom = closeBottom;
         result._shadowVolume = shadowVolume;
         result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
-        result._lineType = lineType;
+        result._arcType = arcType;
         result.packedLength = packedLength;
         return result;
     };
@@ -832,7 +832,7 @@ define([
         var perPositionHeight = polygonGeometry._perPositionHeight;
         var closeTop = polygonGeometry._closeTop;
         var closeBottom = polygonGeometry._closeBottom;
-        var lineType = polygonGeometry._lineType;
+        var arcType = polygonGeometry._arcType;
 
         var outerPositions = polygonHierarchy.positions;
         if (outerPositions.length < 3) {
@@ -870,7 +870,7 @@ define([
             top: true,
             wall: false,
             extrude: false,
-            lineType: lineType
+            arcType: arcType
         };
 
         var i;
@@ -882,7 +882,7 @@ define([
             options.shadowVolume = polygonGeometry._shadowVolume;
             options.offsetAttribute = polygonGeometry._offsetAttribute;
             for (i = 0; i < polygons.length; i++) {
-                var splitGeometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat, lineType);
+                var splitGeometry = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], granularity, hierarchy[i], perPositionHeight, closeTop, closeBottom, vertexFormat, arcType);
 
                 var topAndBottom;
                 if (closeTop && closeBottom) {
@@ -915,7 +915,7 @@ define([
         } else {
             for (i = 0; i < polygons.length; i++) {
                 var geometryInstance = new GeometryInstance({
-                    geometry : PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight, vertexFormat, lineType)
+                    geometry : PolygonGeometryLibrary.createGeometryFromPositions(ellipsoid, polygons[i], granularity, perPositionHeight, vertexFormat, arcType)
                 });
                 geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
                 options.geometry = geometryInstance.geometry;
@@ -977,7 +977,7 @@ define([
             height : maxHeight,
             vertexFormat : VertexFormat.POSITION_ONLY,
             shadowVolume: true,
-            lineType : polygonGeometry._lineType
+            arcType : polygonGeometry._arcType
         });
     };
 

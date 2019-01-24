@@ -6,7 +6,7 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Core/GeometryPipeline',
-        'Core/LineType',
+        'Core/ArcType',
         'Core/Math',
         'Core/Rectangle',
         'Core/VertexFormat',
@@ -19,7 +19,7 @@ defineSuite([
         Ellipsoid,
         GeometryOffsetAttribute,
         GeometryPipeline,
-        LineType,
+        ArcType,
         CesiumMath,
         Rectangle,
         VertexFormat,
@@ -61,13 +61,13 @@ defineSuite([
         }))).toBeUndefined();
     });
 
-    it('throws if lineType is not valid', function() {
+    it('throws if arcType is not valid', function() {
         expect(function() {
             return new PolygonGeometry({
                 positions : [Cartesian3.fromDegrees(0, 0),
                              Cartesian3.fromDegrees(1, 0),
                              Cartesian3.fromDegrees(1, 1)],
-                lineType: LineType.STRAIGHT
+                arcType: ArcType.NONE
             });
         }).toThrowDeveloperError();
     });
@@ -199,14 +199,14 @@ defineSuite([
                 -1.0, 1.0
             ]),
             granularity : CesiumMath.RADIANS_PER_DEGREE,
-            lineType : LineType.RHUMB
+            arcType : ArcType.RHUMB
         }));
 
         expect(p.attributes.position.values.length).toEqual(13 * 3); // 8 around edge + 5 in the middle
         expect(p.indices.length).toEqual(16 * 3); //4 squares * 4 triangles per square
     });
 
-    it('create geometry throws if lineType is STRAIGHT', function() {
+    it('create geometry throws if arcType is STRAIGHT', function() {
         expect(function() {
             PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
                 vertexFormat: VertexFormat.POSITION_ONLY,
@@ -217,7 +217,7 @@ defineSuite([
                     -1.0, 1.0
                 ]),
                 granularity: CesiumMath.RADIANS_PER_DEGREE,
-                lineType: LineType.STRAIGHT
+                arcType: ArcType.NONE
             }));
         }).toThrowDeveloperError();
     });
@@ -233,13 +233,13 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             positions : positions,
             granularity : CesiumMath.RADIANS_PER_DEGREE,
-            lineType : LineType.GEODESIC
+            arcType : ArcType.GEODESIC
         }));
         var rhumb = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
             vertexFormat : VertexFormat.POSITION_ONLY,
             positions : positions,
             granularity : CesiumMath.RADIANS_PER_DEGREE,
-            lineType : LineType.RHUMB
+            arcType : ArcType.RHUMB
         }));
 
         expect(geodesic.attributes.position.values.length).not.toEqual(rhumb.attributes.position.values.length);
@@ -258,7 +258,7 @@ defineSuite([
         var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
             positions : positions,
             perPositionHeight : true,
-            lineType : LineType.RHUMB
+            arcType : ArcType.RHUMB
         }));
 
         expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 0)).height).toEqualEpsilon(height, CesiumMath.EPSILON6);
@@ -352,7 +352,7 @@ defineSuite([
             vertexFormat : VertexFormat.POSITION_ONLY,
             polygonHierarchy : hierarchy,
             granularity : CesiumMath.PI_OVER_THREE,
-            lineType : LineType.RHUMB
+            arcType : ArcType.RHUMB
         }));
 
         expect(p.attributes.position.values.length).toEqual(12 * 3); // 4 points * 3 rectangles
@@ -1193,6 +1193,6 @@ defineSuite([
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
-    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 0, -1, LineType.GEODESIC, 54);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 0, -1, ArcType.GEODESIC, 54);
     createPackableSpecs(PolygonGeometry, polygon, packedInstance);
 });

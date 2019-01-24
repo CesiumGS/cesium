@@ -14,7 +14,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/GroundPolylineGeometry',
         '../Core/Iso8601',
-        '../Core/LineType',
+        '../Core/ArcType',
         '../Core/oneTimeWarning',
         '../Core/PolylineGeometry',
         '../Core/PolylinePipeline',
@@ -47,7 +47,7 @@ define([
         GeometryInstance,
         GroundPolylineGeometry,
         Iso8601,
-        LineType,
+        ArcType,
         oneTimeWarning,
         PolylineGeometry,
         PolylinePipeline,
@@ -83,14 +83,14 @@ define([
         this.positions = undefined;
         this.width = undefined;
         this.followSurface = undefined;
-        this.lineType = undefined;
+        this.arcType = undefined;
         this.granularity = undefined;
     }
 
     function GroundGeometryOptions() {
         this.positions = undefined;
         this.width = undefined;
-        this.lineType = undefined;
+        this.arcType = undefined;
         this.granularity = undefined;
     }
 
@@ -318,12 +318,12 @@ define([
          * Gets a value indicating if the path of the line.
          * @memberof PolylineGeometryUpdater.prototype
          *
-         * @type {LineType}
+         * @type {ArcType}
          * @readonly
          */
-        lineType : {
+        arcType : {
             get : function() {
-                return this._lineType;
+                return this._arcType;
             }
         },
 
@@ -516,12 +516,12 @@ define([
 
         var width = polyline.width;
         var followSurface = polyline.followSurface;
-        var lineType = polyline.lineType;
+        var arcType = polyline.arcType;
         var clampToGround = polyline.clampToGround;
         var granularity = polyline.granularity;
 
         if (!positionsProperty.isConstant || !Property.isConstant(width) ||
-            !Property.isConstant(followSurface) || !Property.isConstant(lineType) || !Property.isConstant(granularity) ||
+            !Property.isConstant(followSurface) || !Property.isConstant(arcType) || !Property.isConstant(granularity) ||
             !Property.isConstant(clampToGround) || !Property.isConstant(zIndex)) {
             if (!this._dynamic) {
                 this._dynamic = true;
@@ -552,13 +552,13 @@ define([
             geometryOptions.positions = positions;
             geometryOptions.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             geometryOptions.followSurface = defined(followSurface) ? followSurface.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            geometryOptions.lineType = defined(lineType) ? lineType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
+            geometryOptions.arcType = defined(arcType) ? arcType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             geometryOptions.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
             var groundGeometryOptions = this._groundGeometryOptions;
             groundGeometryOptions.positions = positions;
             groundGeometryOptions.width = geometryOptions.width;
-            groundGeometryOptions.lineType = geometryOptions.lineType;
+            groundGeometryOptions.arcType = geometryOptions.arcType;
             groundGeometryOptions.granularity = geometryOptions.granularity;
 
             this._clampToGround = defined(clampToGround) ? clampToGround.getValue(Iso8601.MINIMUM_VALUE) : false;
@@ -648,7 +648,7 @@ define([
         geometryUpdater._clampToGround = Property.getValueOrDefault(polyline._clampToGround, time, false);
         geometryUpdater._groundGeometryOptions.positions = positions;
         geometryUpdater._groundGeometryOptions.width = Property.getValueOrDefault(polyline._width, time, 1);
-        geometryUpdater._groundGeometryOptions.lineType = Property.getValueOrDefault(polyline._lineType, time, LineType.GEODESIC);
+        geometryUpdater._groundGeometryOptions.arcType = Property.getValueOrDefault(polyline._arcType, time, ArcType.GEODESIC);
         geometryUpdater._groundGeometryOptions.granularity = Property.getValueOrDefault(polyline._granularity, time, 9999);
 
         var groundPrimitives = this._groundPrimitives;
@@ -707,14 +707,14 @@ define([
         }
 
         var followSurface = Property.getValueOrUndefined(polyline._followSurface, time);
-        var lineType = LineType.GEODESIC;
+        var arcType = ArcType.GEODESIC;
         if (defined(followSurface)) {
-            lineType = followSurface ? LineType.GEODESIC : LineType.STRAIGHT;
+            arcType = followSurface ? ArcType.GEODESIC : ArcType.NONE;
         }
-        lineType = Property.getValueOrDefault(polyline._lineType, time, lineType);
+        arcType = Property.getValueOrDefault(polyline._arcType, time, arcType);
 
         var globe = geometryUpdater._scene.globe;
-        if (lineType !== LineType.STRAIGHT && defined(globe)) {
+        if (arcType !== ArcType.NONE && defined(globe)) {
             generateCartesianArcOptions.ellipsoid = globe.ellipsoid;
             generateCartesianArcOptions.positions = positions;
             generateCartesianArcOptions.granularity = Property.getValueOrUndefined(polyline._granularity, time);

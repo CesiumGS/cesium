@@ -3,7 +3,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
-        'Core/LineType',
+        'Core/ArcType',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
@@ -11,7 +11,7 @@ defineSuite([
         Cartesian3,
         Color,
         Ellipsoid,
-        LineType,
+        ArcType,
         VertexFormat,
         createPackableSpecs) {
     'use strict';
@@ -39,14 +39,14 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor converts followSurface to lineType', function() {
+    it('constructor converts followSurface to arcType', function() {
         var line = new PolylineGeometry({
             positions: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
             followSurface: false
         });
 
         expect(line._followSurface).toBe(false);
-        expect(line._lineType).toBe(LineType.STRAIGHT);
+        expect(line._arcType).toBe(ArcType.NONE);
 
         line = new PolylineGeometry({
             positions: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
@@ -54,7 +54,7 @@ defineSuite([
         });
 
         expect(line._followSurface).toBe(true);
-        expect(line._lineType).toBe(LineType.GEODESIC);
+        expect(line._arcType).toBe(ArcType.GEODESIC);
     });
 
     it('constructor returns undefined when line width is negative', function() {
@@ -107,7 +107,7 @@ defineSuite([
             vertexFormat : VertexFormat.ALL,
             granularity : Math.PI,
             ellipsoid : Ellipsoid.UNIT_SPHERE,
-            lineType : LineType.RHUMB
+            arcType : ArcType.RHUMB
         }));
 
         expect(line.attributes.position).toBeDefined();
@@ -170,7 +170,7 @@ defineSuite([
             positions : positions,
             width : 10.0,
             vertexFormat : VertexFormat.POSITION_ONLY,
-            lineType : LineType.STRAIGHT
+            arcType : ArcType.NONE
         }));
         expect(geometry).not.toBeDefined();
     });
@@ -181,47 +181,47 @@ defineSuite([
         width : 10.0,
         colors : [Color.RED, Color.LIME, Color.BLUE],
         colorsPerVertex : true,
-        lineType : LineType.STRAIGHT,
+        arcType : ArcType.NONE,
         granularity : 11,
         vertexFormat : VertexFormat.POSITION_ONLY,
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
-    var packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 3, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 1, 2, 11];
+    var packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 3, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 1, 0, 11];
     createPackableSpecs(PolylineGeometry, line, packedInstance, 'per vertex colors');
 
     line = new PolylineGeometry({
         positions : positions,
         width : 10.0,
         colorsPerVertex : false,
-        lineType : LineType.STRAIGHT,
+        arcType : ArcType.NONE,
         granularity : 11,
         vertexFormat : VertexFormat.POSITION_ONLY,
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
-    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 2, 11];
+    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 0, 11];
     createPackableSpecs(PolylineGeometry, line, packedInstance, 'straight line');
 
     line = new PolylineGeometry({
         positions : positions,
         width : 10.0,
         colorsPerVertex : false,
-        lineType : LineType.GEODESIC,
+        arcType : ArcType.GEODESIC,
         granularity : 11,
         vertexFormat : VertexFormat.POSITION_ONLY,
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
-    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 0, 11];
+    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 1, 11];
     createPackableSpecs(PolylineGeometry, line, packedInstance, 'geodesic line');
 
     line = new PolylineGeometry({
         positions : positions,
         width : 10.0,
         colorsPerVertex : false,
-        lineType : LineType.RHUMB,
+        arcType : ArcType.RHUMB,
         granularity : 11,
         vertexFormat : VertexFormat.POSITION_ONLY,
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
-    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 1, 11];
+    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 2, 11];
     createPackableSpecs(PolylineGeometry, line, packedInstance, 'rhumb line');
 });

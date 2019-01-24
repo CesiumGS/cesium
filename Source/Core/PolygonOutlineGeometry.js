@@ -17,7 +17,7 @@ define([
         './GeometryOffsetAttribute',
         './GeometryPipeline',
         './IndexDatatype',
-        './LineType',
+        './ArcType',
         './Math',
         './PolygonGeometryLibrary',
         './PolygonPipeline',
@@ -43,7 +43,7 @@ define([
         GeometryOffsetAttribute,
         GeometryPipeline,
         IndexDatatype,
-        LineType,
+        ArcType,
         CesiumMath,
         PolygonGeometryLibrary,
         PolygonPipeline,
@@ -54,7 +54,7 @@ define([
     var createGeometryFromPositionsPositions = [];
     var createGeometryFromPositionsSubdivided = [];
 
-    function createGeometryFromPositions(ellipsoid, positions, minDistance, perPositionHeight, lineType) {
+    function createGeometryFromPositions(ellipsoid, positions, minDistance, perPositionHeight, arcType) {
         var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
@@ -72,11 +72,11 @@ define([
 
         if (!perPositionHeight) {
             var numVertices = 0;
-            if (lineType === LineType.GEODESIC) {
+            if (arcType === ArcType.GEODESIC) {
                 for (i = 0; i < length; i++) {
                     numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
                 }
-            } else if (lineType === LineType.RHUMB) {
+            } else if (arcType === ArcType.RHUMB) {
                 for (i = 0; i < length; i++) {
                     numVertices += PolygonGeometryLibrary.subdivideRhumbLineCount(ellipsoid, positions[i], positions[(i + 1) % length], minDistance);
                 }
@@ -84,9 +84,9 @@ define([
             subdividedPositions = new Float64Array(numVertices * 3);
             for (i = 0; i < length; i++) {
                 var tempPositions;
-                if (lineType === LineType.GEODESIC) {
+                if (arcType === ArcType.GEODESIC) {
                     tempPositions = PolygonGeometryLibrary.subdivideLine(positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
-                } else if (lineType === LineType.RHUMB) {
+                } else if (arcType === ArcType.RHUMB) {
                     tempPositions = PolygonGeometryLibrary.subdivideRhumbLine(ellipsoid, positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
                 }
                 var tempPositionsLength = tempPositions.length;
@@ -134,7 +134,7 @@ define([
         });
     }
 
-    function createGeometryFromPositionsExtruded(ellipsoid, positions, minDistance, perPositionHeight, lineType) {
+    function createGeometryFromPositionsExtruded(ellipsoid, positions, minDistance, perPositionHeight, arcType) {
         var tangentPlane = EllipsoidTangentPlane.fromPoints(positions, ellipsoid);
         var positions2D = tangentPlane.projectPointsOntoPlane(positions, createGeometryFromPositionsPositions);
 
@@ -153,11 +153,11 @@ define([
 
         if (!perPositionHeight) {
             var numVertices = 0;
-            if (lineType === LineType.GEODESIC) {
+            if (arcType === ArcType.GEODESIC) {
                 for (i = 0; i < length; i++) {
                     numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
                 }
-            } else if (lineType === LineType.RHUMB) {
+            } else if (arcType === ArcType.RHUMB) {
                 for (i = 0; i < length; i++) {
                     numVertices += PolygonGeometryLibrary.subdivideRhumbLineCount(ellipsoid, positions[i], positions[(i + 1) % length], minDistance);
                 }
@@ -167,9 +167,9 @@ define([
             for (i = 0; i < length; ++i) {
                 corners[i] = index / 3;
                 var tempPositions;
-                if (lineType === LineType.GEODESIC) {
+                if (arcType === ArcType.GEODESIC) {
                     tempPositions = PolygonGeometryLibrary.subdivideLine(positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
-                } else if (lineType === LineType.RHUMB) {
+                } else if (arcType === ArcType.RHUMB) {
                     tempPositions = PolygonGeometryLibrary.subdivideRhumbLine(ellipsoid, positions[i], positions[(i + 1) % length], minDistance, createGeometryFromPositionsSubdivided);
                 }
                 var tempPositionsLength = tempPositions.length;
@@ -242,7 +242,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
-     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of path the outline must follow. Valid options are {@link LineType.GEODESIC} and {@link LineType.RHUMB}.
+     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of path the outline must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
      *
      * @see PolygonOutlineGeometry#createGeometry
      * @see PolygonOutlineGeometry#fromPositions
@@ -322,8 +322,8 @@ define([
         if (options.perPositionHeight && defined(options.height)) {
             throw new DeveloperError('Cannot use both options.perPositionHeight and options.height');
         }
-        if (defined(options.lineType) && options.lineType !== LineType.GEODESIC && options.lineType !== LineType.RHUMB) {
-            throw new DeveloperError('Invalid lineType. Valid options are LineType.GEODESIC and LineType.RHUMB.');
+        if (defined(options.arcType) && options.arcType !== ArcType.GEODESIC && options.arcType !== ArcType.RHUMB) {
+            throw new DeveloperError('Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB.');
         }
         //>>includeEnd('debug');
 
@@ -332,7 +332,7 @@ define([
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         var perPositionHeight = defaultValue(options.perPositionHeight, false);
         var perPositionHeightExtrude = perPositionHeight && defined(options.extrudedHeight);
-        var lineType = defaultValue(options.lineType, LineType.GEODESIC);
+        var arcType = defaultValue(options.arcType, ArcType.GEODESIC);
 
         var height = defaultValue(options.height, 0.0);
         var extrudedHeight = defaultValue(options.extrudedHeight, height);
@@ -347,7 +347,7 @@ define([
         this._granularity = granularity;
         this._height = height;
         this._extrudedHeight = extrudedHeight;
-        this._lineType = lineType;
+        this._arcType = arcType;
         this._polygonHierarchy = polygonHierarchy;
         this._perPositionHeight = perPositionHeight;
         this._perPositionHeightExtrude = perPositionHeightExtrude;
@@ -388,7 +388,7 @@ define([
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._perPositionHeightExtrude ? 1.0 : 0.0;
         array[startingIndex++] = value._perPositionHeight ? 1.0 : 0.0;
-        array[startingIndex++] = value._lineType;
+        array[startingIndex++] = value._arcType;
         array[startingIndex++] = defaultValue(value._offsetAttribute, -1);
         array[startingIndex] = value.packedLength;
 
@@ -427,7 +427,7 @@ define([
         var granularity = array[startingIndex++];
         var perPositionHeightExtrude = array[startingIndex++] === 1.0;
         var perPositionHeight = array[startingIndex++] === 1.0;
-        var lineType = array[startingIndex++];
+        var arcType = array[startingIndex++];
         var offsetAttribute = array[startingIndex++];
         var packedLength = array[startingIndex];
 
@@ -442,7 +442,7 @@ define([
         result._granularity = granularity;
         result._perPositionHeight = perPositionHeight;
         result._perPositionHeightExtrude = perPositionHeightExtrude;
-        result._lineType = lineType;
+        result._arcType = arcType;
         result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
         result.packedLength = packedLength;
 
@@ -459,7 +459,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
      * @param {Boolean} [options.perPositionHeight=false] Use the height of options.positions for each position instead of using options.height to determine the height.
-     * @param {LineType} [options.lineType=LineType.GEODESIC] The type of path the outline must follow. Valid options are {@link LinkType.GEODESIC} and {@link LineType.RHUMB}.
+     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of path the outline must follow. Valid options are {@link LinkType.GEODESIC} and {@link ArcType.RHUMB}.
      * @returns {PolygonOutlineGeometry}
      *
      *
@@ -494,7 +494,7 @@ define([
             ellipsoid : options.ellipsoid,
             granularity : options.granularity,
             perPositionHeight : options.perPositionHeight,
-            lineType: options.lineType,
+            arcType: options.arcType,
             offsetAttribute : options.offsetAttribute
         };
         return new PolygonOutlineGeometry(newOptions);
@@ -511,7 +511,7 @@ define([
         var granularity = polygonGeometry._granularity;
         var polygonHierarchy = polygonGeometry._polygonHierarchy;
         var perPositionHeight = polygonGeometry._perPositionHeight;
-        var lineType = polygonGeometry._lineType;
+        var arcType = polygonGeometry._arcType;
 
         var polygons = PolygonGeometryLibrary.polygonOutlinesFromHierarchy(polygonHierarchy, !perPositionHeight, ellipsoid);
 
@@ -530,7 +530,7 @@ define([
         var i;
         if (extrude) {
             for (i = 0; i < polygons.length; i++) {
-                geometryInstance = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], minDistance, perPositionHeight, lineType);
+                geometryInstance = createGeometryFromPositionsExtruded(ellipsoid, polygons[i], minDistance, perPositionHeight, arcType);
                 geometryInstance.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(geometryInstance.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
                 if (defined(polygonGeometry._offsetAttribute)) {
                     var size = geometryInstance.geometry.attributes.position.values.length / 3;
@@ -552,7 +552,7 @@ define([
             }
         } else {
             for (i = 0; i < polygons.length; i++) {
-                geometryInstance = createGeometryFromPositions(ellipsoid, polygons[i], minDistance, perPositionHeight, lineType);
+                geometryInstance = createGeometryFromPositions(ellipsoid, polygons[i], minDistance, perPositionHeight, arcType);
                 geometryInstance.geometry.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(geometryInstance.geometry.attributes.position.values, height, ellipsoid, !perPositionHeight);
 
                 if (defined(polygonGeometry._offsetAttribute)) {

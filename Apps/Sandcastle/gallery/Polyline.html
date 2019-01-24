@@ -46,7 +46,7 @@ var greenRhumbLine = viewer.entities.add({
         positions : Cesium.Cartesian3.fromDegreesArray([-75, 35,
                                                         -125, 35]),
         width : 5,
-        lineType : Cesium.LineType.RHUMB,
+        arcType : Cesium.ArcType.RHUMB,
         material : Cesium.Color.GREEN
     }
 });
@@ -84,7 +84,7 @@ var purpleArrow = viewer.entities.add({
         positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 43, 500000,
                                                                -125, 43, 500000]),
         width : 10,
-        lineType : Cesium.LineType.STRAIGHT,
+        arcType : Cesium.ArcType.NONE,
         material : new Cesium.PolylineArrowMaterialProperty(Cesium.Color.PURPLE)
     }
 });

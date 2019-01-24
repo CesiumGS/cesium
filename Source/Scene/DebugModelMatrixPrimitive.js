@@ -5,7 +5,7 @@ define([
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/GeometryInstance',
-        '../Core/LineType',
+        '../Core/ArcType',
         '../Core/Matrix4',
         '../Core/PolylineGeometry',
         './PolylineColorAppearance',
@@ -17,7 +17,7 @@ define([
         defined,
         destroyObject,
         GeometryInstance,
-        LineType,
+        ArcType,
         Matrix4,
         PolylineGeometry,
         PolylineColorAppearance,
@@ -144,7 +144,7 @@ define([
                         Color.RED,
                         Color.RED
                     ],
-                    lineType: LineType.STRAIGHT
+                    arcType: ArcType.NONE
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,
@@ -162,7 +162,7 @@ define([
                         Color.GREEN,
                         Color.GREEN
                     ],
-                    lineType: LineType.STRAIGHT
+                    arcType: ArcType.NONE
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,
@@ -180,7 +180,7 @@ define([
                         Color.BLUE,
                         Color.BLUE
                     ],
-                    lineType: LineType.STRAIGHT
+                    arcType: ArcType.NONE
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,

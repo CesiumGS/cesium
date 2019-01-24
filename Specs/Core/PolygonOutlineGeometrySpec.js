@@ -5,7 +5,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
-        'Core/LineType',
+        'Core/ArcType',
         'Core/Math',
         'Specs/createPackableSpecs'
     ], function(
@@ -15,7 +15,7 @@ defineSuite([
         Cartesian3,
         Ellipsoid,
         GeometryOffsetAttribute,
-        LineType,
+        ArcType,
         CesiumMath,
         createPackableSpecs) {
     'use strict';
@@ -55,13 +55,13 @@ defineSuite([
         }))).toBeUndefined();
     });
 
-    it('throws if lineType is not valid', function() {
+    it('throws if arcType is not valid', function() {
         expect(function() {
             return new PolygonOutlineGeometry({
                 positions : [Cartesian3.fromDegrees(0, 0),
                              Cartesian3.fromDegrees(1, 0),
                              Cartesian3.fromDegrees(1, 1)],
-                lineType: LineType.STRAIGHT
+                arcType: ArcType.NONE
             });
         }).toThrowDeveloperError();
     });
@@ -190,14 +190,14 @@ defineSuite([
                 -1.0, 1.0
             ]),
             granularity : CesiumMath.RADIANS_PER_DEGREE,
-            lineType : LineType.RHUMB
+            arcType : ArcType.RHUMB
         }));
 
         expect(p.attributes.position.values.length).toEqual(8 * 3); // 8 around edge
         expect(p.indices.length).toEqual(16); // 4 squares
     });
 
-    it('create geometry throws if lineType is STRAIGHT', function() {
+    it('create geometry throws if arcType is STRAIGHT', function() {
         expect(function() {
             PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
                 positions: Cartesian3.fromDegreesArray([
@@ -207,7 +207,7 @@ defineSuite([
                     -1.0, 1.0
                 ]),
                 granularity: CesiumMath.RADIANS_PER_DEGREE,
-                lineType: LineType.STRAIGHT
+                arcType: ArcType.NONE
             }));
         }).toThrowDeveloperError();
     });
@@ -222,12 +222,12 @@ defineSuite([
         var geodesic = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : positions,
             granularity : CesiumMath.RADIANS_PER_DEGREE,
-            lineType : LineType.GEODESIC
+            arcType : ArcType.GEODESIC
         }));
         var rhumb = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : positions,
             granularity : CesiumMath.RADIANS_PER_DEGREE,
-            lineType : LineType.RHUMB
+            arcType : ArcType.RHUMB
         }));
 
         expect(geodesic.attributes.position.values.length).not.toEqual(rhumb.attributes.position.values.length);
@@ -246,7 +246,7 @@ defineSuite([
         var p = PolygonOutlineGeometry.createGeometry(PolygonOutlineGeometry.fromPositions({
             positions : positions,
             perPositionHeight : true,
-            lineType : LineType.RHUMB
+            arcType : ArcType.RHUMB
         }));
 
         expect(ellipsoid.cartesianToCartographic(Cartesian3.fromArray(p.attributes.position.values, 0)).height).toEqualEpsilon(height, CesiumMath.EPSILON6);
@@ -609,6 +609,6 @@ defineSuite([
     packedInstance.push(3.0, 0.0);
     addPositions(packedInstance, holePositions1);
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
-    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 1.0, LineType.GEODESIC, -1, 44);
+    packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 1.0, ArcType.GEODESIC, -1, 44);
     createPackableSpecs(PolygonOutlineGeometry, polygon, packedInstance);
 });

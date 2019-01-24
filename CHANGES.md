@@ -9,8 +9,8 @@ Change Log
 
 ##### Deprecated :hourglass_flowing_sand:
 * `Scene.clampToHeight` now takes an optional `width` argument before the `result` argument.  The previous function definition will no longer work in 1.56. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
-* `PolylineGeometry.followSurface` has been superceded by `PolylineGeometry.lineType`. The previous definition will no longer work in 1.57. Replace `followSurface: false` with `lineType: Cesium.LineType.STRAIGHT` and `followSurface: true` with `lineType: Cesium.LineType.GEODESIC`. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
-* `SimplePolylineGeometry.followSurface` has been superceded by `SimplePolylineGeometry.lineType`. The previous definition will no longer work in 1.57. Replace `followSurface: false` with `lineType: Cesium.LineType.STRAIGHT` and `followSurface: true` with `lineType: Cesium.LineType.GEODESIC`. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
+* `PolylineGeometry.followSurface` has been superceded by `PolylineGeometry.arcType`. The previous definition will no longer work in 1.57. Replace `followSurface: false` with `arcType: Cesium.ArcType.NONE` and `followSurface: true` with `arcType: Cesium.ArcType.GEODESIC`. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
+* `SimplePolylineGeometry.followSurface` has been superceded by `SimplePolylineGeometry.arcType`. The previous definition will no longer work in 1.57. Replace `followSurface: false` with `arcType: Cesium.ArcType.NONE` and `followSurface: true` with `arcType: Cesium.ArcType.GEODESIC`. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
 
 ##### Additions :tada:
 * Added support for textured ground entities (entities with unspecified `height`) and `GroundPrimitives` on 3D Tiles. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
