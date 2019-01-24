@@ -501,17 +501,17 @@ define([
     function isPointInsideUVTriangle(u, v, u0, v0, u1, v1, u2, v2) {
         var inside = false;
 
-        var intersect = ((v0 > v) !== (v1 > v)) && (u < (u1 - u0) * (v - v0) / (v1 - v0) + u0);
+        var intersect = ((v0 > v) !== (v1 >= v)) && (u <= (u1 - u0) * (v - v0) / (v1 - v0) + u0);
         if (intersect) {
             inside = !inside;
         }
 
-        intersect = ((v1 > v) !== (v2 > v)) && (u < (u2 - u1) * (v - v1) / (v2 - v1) + u1);
+        intersect = ((v1 > v) !== (v2 >= v)) && (u <= (u2 - u1) * (v - v1) / (v2 - v1) + u1);
         if (intersect) {
             inside = !inside;
         }
 
-        intersect = ((v2 > v) !== (v0 > v)) && (u < (u0 - u2) * (v - v2) / (v0 - v2) + u2);
+        intersect = ((v2 > v) !== (v0 >= v)) && (u <= (u0 - u2) * (v - v2) / (v0 - v2) + u2);
         if (intersect) {
             inside = !inside;
         }

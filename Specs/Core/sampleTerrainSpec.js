@@ -93,7 +93,7 @@ defineSuite([
     });
 
     it('works for a dodgy point right near the edge of a tile', function() {
-        var positions = [new Cartographic(0.33179290856829535, 0.7363107781851076)];
+        var positions = [new Cartographic(0.33179290856829535, 0.7363107781851078)];
 
         return sampleTerrain(worldTerrain, 12, positions).then(function() {
             expect(positions[0].height).toBeDefined();
