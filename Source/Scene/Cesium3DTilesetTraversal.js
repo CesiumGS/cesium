@@ -58,45 +58,41 @@ define([
             return;
         }
         
-        // TODO: camera percentageChanged threshold is at 50% it seems, record our own changes for now
         var camera = frameState.camera;
         var cameraChanges = camera.cameraChanges;
         if (defined(cameraChanges)) {
 
             Cartesian3.subtract(camera.position, cameraChanges.oldPosition, delta);
-            cameraChanges.positionAmount = Cartesian3.dot(delta, delta);
+            var positionAmount = Cartesian3.dot(delta, delta);
             Cartesian3.clone(camera.position, cameraChanges.oldPosition);
-
-            cameraChanges.directionAmount = 0.5 * (-Cartesian3.dot(camera.direction, cameraChanges.oldDirection) + 1.0);
+            var directionAmount = 0.5 * (-Cartesian3.dot(camera.direction, cameraChanges.oldDirection) + 1.0);
             Cartesian3.clone(camera.direction, cameraChanges.oldDirection);
 
+            // If updating from within camera class, before the last function in update. It does not work for middle mouse click. Also there's a camera bug that toggles flick updates every other frame. Work around this by checking if you were moving last frame.
+            // Cartesian3.subtract(camera.position, camera.oldPosition, delta);
+            // var positionAmount = Cartesian3.dot(delta, delta);
+            // var directionAmount = 0.5 * (-Cartesian3.dot(camera.direction, camera.oldDirection) + 1.0);
+
             var fudgeAmount = 512000000000000;
-            cameraChanges.sseFudge = (cameraChanges.directionAmount + cameraChanges.positionAmount) > 0 ? fudgeAmount : 0;
+            var changed = (directionAmount + positionAmount) > 0;
+            cameraChanges.sseFudge = changed || cameraChanges.changedLastFrame ? fudgeAmount : 0;
+            cameraChanges.changedLastFrame = changed;
             if (cameraChanges.sseFudge > 0) {
                 console.log('moving');
             } else {
                 console.log(delta);
             }
-
-            // as soon as you move the camera it locks to moving(_changedPosition === _position or position), camera._changed is always true
-            // if (!Cartesian3.equals(camera._changedPosition, camera.position)) {
-            //     console.log('moving');
-            // } else {
-            //     console.log(delta);
-            // }
-
         } else {
             camera.cameraChanges = {
-                positionAmount: 0, // squared length
                 oldPosition: new Cartesian3(),
-                directionAmount: 0, // value [0, 1]
                 oldDirection: new Cartesian3(),
-                sseFudge: 0
+                sseFudge: 0,
+                changedLastFrame: false
             };
             cameraChanges = camera.cameraChanges;
 
-            Cartesian3.clone(camera.positionWC, cameraChanges.oldPosition);
-            Cartesian3.clone(camera.directionWC, cameraChanges.oldDirection);
+            Cartesian3.clone(camera._position, cameraChanges.oldPosition);
+            Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
         }
 
 
