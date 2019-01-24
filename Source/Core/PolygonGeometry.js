@@ -1,4 +1,5 @@
 define([
+        './ArcType',
         './arrayFill',
         './BoundingRectangle',
         './BoundingSphere',
@@ -19,7 +20,6 @@ define([
         './GeometryOffsetAttribute',
         './GeometryPipeline',
         './IndexDatatype',
-        './ArcType',
         './Math',
         './Matrix2',
         './Matrix3',
@@ -30,6 +30,7 @@ define([
         './VertexFormat',
         './WindingOrder'
     ], function(
+        ArcType,
         arrayFill,
         BoundingRectangle,
         BoundingSphere,
@@ -50,7 +51,6 @@ define([
         GeometryOffsetAttribute,
         GeometryPipeline,
         IndexDatatype,
-        ArcType,
         CesiumMath,
         Matrix2,
         Matrix3,

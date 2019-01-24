@@ -1,21 +1,21 @@
 defineSuite([
         'Core/PolygonOutlineGeometry',
+        'Core/ArcType',
         'Core/arrayFill',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
-        'Core/ArcType',
         'Core/Math',
         'Specs/createPackableSpecs'
     ], function(
         PolygonOutlineGeometry,
+        ArcType,
         arrayFill,
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
         GeometryOffsetAttribute,
-        ArcType,
         CesiumMath,
         createPackableSpecs) {
     'use strict';

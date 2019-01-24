@@ -1,4 +1,5 @@
 define([
+        './ArcType',
         './BoundingSphere',
         './Cartesian3',
         './Color',
@@ -12,11 +13,11 @@ define([
         './GeometryAttribute',
         './GeometryAttributes',
         './IndexDatatype',
-        './ArcType',
         './Math',
         './PolylinePipeline',
         './PrimitiveType'
     ], function(
+        ArcType,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -30,7 +31,6 @@ define([
         GeometryAttribute,
         GeometryAttributes,
         IndexDatatype,
-        ArcType,
         CesiumMath,
         PolylinePipeline,
         PrimitiveType) {

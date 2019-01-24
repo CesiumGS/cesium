@@ -1,4 +1,5 @@
 define([
+        './ArcType',
         './arrayRemoveDuplicates',
         './Cartesian2',
         './Cartesian3',
@@ -14,7 +15,6 @@ define([
         './GeometryAttributes',
         './GeometryPipeline',
         './IndexDatatype',
-        './ArcType',
         './Math',
         './Matrix3',
         './PolygonPipeline',
@@ -23,6 +23,7 @@ define([
         './Queue',
         './WindingOrder'
     ], function(
+        ArcType,
         arrayRemoveDuplicates,
         Cartesian2,
         Cartesian3,
@@ -38,7 +39,6 @@ define([
         GeometryAttributes,
         GeometryPipeline,
         IndexDatatype,
-        ArcType,
         CesiumMath,
         Matrix3,
         PolygonPipeline,

@@ -1,5 +1,6 @@
 define([
         '../Core/ApproximateTerrainHeights',
+        '../Core/ArcType',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Check',
@@ -15,7 +16,6 @@ define([
         '../Core/GeometryOffsetAttribute',
         '../Core/isArray',
         '../Core/Iso8601',
-        '../Core/ArcType',
         '../Core/oneTimeWarning',
         '../Core/OffsetGeometryInstanceAttribute',
         '../Core/PolygonGeometry',
@@ -34,6 +34,7 @@ define([
         './Property'
     ], function(
         ApproximateTerrainHeights,
+        ArcType,
         Cartesian2,
         Cartesian3,
         Check,
@@ -49,7 +50,6 @@ define([
         GeometryOffsetAttribute,
         isArray,
         Iso8601,
-        ArcType,
         oneTimeWarning,
         OffsetGeometryInstanceAttribute,
         PolygonGeometry,

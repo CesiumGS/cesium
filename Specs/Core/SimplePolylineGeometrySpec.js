@@ -1,20 +1,20 @@
 defineSuite([
         'Core/SimplePolylineGeometry',
+        'Core/ArcType',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
-        'Core/ArcType',
         'Core/Math',
         'Core/PrimitiveType',
         'Specs/createPackableSpecs'
     ], function(
         SimplePolylineGeometry,
+        ArcType,
         BoundingSphere,
         Cartesian3,
         Color,
         Ellipsoid,
-        ArcType,
         CesiumMath,
         PrimitiveType,
         createPackableSpecs) {

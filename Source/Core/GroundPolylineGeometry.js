@@ -1,5 +1,6 @@
 define([
         './ApproximateTerrainHeights',
+        './ArcType',
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
@@ -19,7 +20,6 @@ define([
         './Geometry',
         './GeometryAttribute',
         './IntersectionTests',
-        './ArcType',
         './Matrix3',
         './Plane',
         './Quaternion',
@@ -27,6 +27,7 @@ define([
         './WebMercatorProjection'
     ], function(
         ApproximateTerrainHeights,
+        ArcType,
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
@@ -46,7 +47,6 @@ define([
         Geometry,
         GeometryAttribute,
         IntersectionTests,
-        ArcType,
         Matrix3,
         Plane,
         Quaternion,

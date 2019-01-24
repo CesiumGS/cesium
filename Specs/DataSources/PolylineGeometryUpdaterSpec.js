@@ -1,6 +1,7 @@
 defineSuite([
         'DataSources/PolylineGeometryUpdater',
         'Core/ApproximateTerrainHeights',
+        'Core/ArcType',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -10,7 +11,6 @@ defineSuite([
         'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/GroundPolylineGeometry',
         'Core/JulianDate',
-        'Core/ArcType',
         'Core/PolylinePipeline',
         'Core/ShowGeometryInstanceAttribute',
         'Core/TimeInterval',
@@ -35,6 +35,7 @@ defineSuite([
     ], function(
         PolylineGeometryUpdater,
         ApproximateTerrainHeights,
+        ArcType,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -44,7 +45,6 @@ defineSuite([
         DistanceDisplayConditionGeometryInstanceAttribute,
         GroundPolylineGeometry,
         JulianDate,
-        ArcType,
         PolylinePipeline,
         ShowGeometryInstanceAttribute,
         TimeInterval,

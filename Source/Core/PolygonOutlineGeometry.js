@@ -1,4 +1,5 @@
 define([
+        './ArcType',
         './arrayFill',
         './arrayRemoveDuplicates',
         './BoundingSphere',
@@ -17,7 +18,6 @@ define([
         './GeometryOffsetAttribute',
         './GeometryPipeline',
         './IndexDatatype',
-        './ArcType',
         './Math',
         './PolygonGeometryLibrary',
         './PolygonPipeline',
@@ -25,6 +25,7 @@ define([
         './Queue',
         './WindingOrder'
     ], function(
+        ArcType,
         arrayFill,
         arrayRemoveDuplicates,
         BoundingSphere,
@@ -43,7 +44,6 @@ define([
         GeometryOffsetAttribute,
         GeometryPipeline,
         IndexDatatype,
-        ArcType,
         CesiumMath,
         PolygonGeometryLibrary,
         PolygonPipeline,

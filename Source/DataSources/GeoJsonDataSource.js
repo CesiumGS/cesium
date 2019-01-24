@@ -1,4 +1,5 @@
 define([
+        '../Core/ArcType',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/createGuid',
@@ -8,7 +9,6 @@ define([
         '../Core/DeveloperError',
         '../Core/Event',
         '../Core/getFilenameFromUri',
-        '../Core/ArcType',
         '../Core/PinBuilder',
         '../Core/PolygonHierarchy',
         '../Core/Resource',
@@ -28,6 +28,7 @@ define([
         './PolygonGraphics',
         './PolylineGraphics'
     ], function(
+        ArcType,
         Cartesian3,
         Color,
         createGuid,
@@ -37,7 +38,6 @@ define([
         DeveloperError,
         Event,
         getFilenameFromUri,
-        ArcType,
         PinBuilder,
         PolygonHierarchy,
         Resource,

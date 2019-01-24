@@ -1,8 +1,8 @@
 defineSuite([
         'DataSources/PolylineGraphics',
+        'Core/ArcType',
         'Core/Color',
         'Core/DistanceDisplayCondition',
-        'Core/ArcType',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'Scene/ClassificationType',
@@ -11,9 +11,9 @@ defineSuite([
         'Specs/testMaterialDefinitionChanged'
     ], function(
         PolylineGraphics,
+        ArcType,
         Color,
         DistanceDisplayCondition,
-        ArcType,
         ColorMaterialProperty,
         ConstantProperty,
         ClassificationType,

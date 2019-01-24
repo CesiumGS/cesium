@@ -1,17 +1,17 @@
 defineSuite([
         'Core/PolylineGeometry',
+        'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
-        'Core/ArcType',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
         PolylineGeometry,
+        ArcType,
         Cartesian3,
         Color,
         Ellipsoid,
-        ArcType,
         VertexFormat,
         createPackableSpecs) {
     'use strict';

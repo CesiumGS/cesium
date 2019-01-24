@@ -1,19 +1,19 @@
 define([
+        '../Core/ArcType',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/ArcType',
         './createMaterialPropertyDescriptor',
         './createPropertyDescriptor'
     ], function(
+        ArcType,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
-        ArcType,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
     'use strict';

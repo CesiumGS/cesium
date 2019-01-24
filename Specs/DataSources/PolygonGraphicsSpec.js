@@ -1,8 +1,8 @@
 defineSuite([
         'DataSources/PolygonGraphics',
+        'Core/ArcType',
         'Core/Color',
         'Core/DistanceDisplayCondition',
-        'Core/ArcType',
         'Core/PolygonHierarchy',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
@@ -12,9 +12,9 @@ defineSuite([
         'Specs/testMaterialDefinitionChanged'
     ], function(
         PolygonGraphics,
+        ArcType,
         Color,
         DistanceDisplayCondition,
-        ArcType,
         PolygonHierarchy,
         ColorMaterialProperty,
         ConstantProperty,

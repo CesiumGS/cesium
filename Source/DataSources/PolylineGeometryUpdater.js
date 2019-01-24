@@ -1,4 +1,5 @@
 define([
+        '../Core/ArcType',
         '../Core/BoundingSphere',
         '../Core/Check',
         '../Core/Color',
@@ -14,7 +15,6 @@ define([
         '../Core/GeometryInstance',
         '../Core/GroundPolylineGeometry',
         '../Core/Iso8601',
-        '../Core/ArcType',
         '../Core/oneTimeWarning',
         '../Core/PolylineGeometry',
         '../Core/PolylinePipeline',
@@ -32,6 +32,7 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
+        ArcType,
         BoundingSphere,
         Check,
         Color,
@@ -47,7 +48,6 @@ define([
         GeometryInstance,
         GroundPolylineGeometry,
         Iso8601,
-        ArcType,
         oneTimeWarning,
         PolylineGeometry,
         PolylinePipeline,

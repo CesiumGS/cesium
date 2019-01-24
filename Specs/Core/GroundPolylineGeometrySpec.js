@@ -1,24 +1,24 @@
 defineSuite([
         'Core/GroundPolylineGeometry',
         'Core/ApproximateTerrainHeights',
+        'Core/ArcType',
         'Core/arraySlice',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
-        'Core/ArcType',
         'Core/Math',
         'Core/WebMercatorProjection',
         'Specs/createPackableSpecs'
     ], function(
         GroundPolylineGeometry,
         ApproximateTerrainHeights,
+        ArcType,
         arraySlice,
         Cartesian3,
         Cartographic,
         Ellipsoid,
         GeographicProjection,
-        ArcType,
         CesiumMath,
         WebMercatorProjection,
         createPackableSpecs) {

@@ -1,4 +1,5 @@
 define([
+        './ArcType',
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
@@ -14,12 +15,12 @@ define([
         './GeometryAttributes',
         './GeometryType',
         './IndexDatatype',
-        './ArcType',
         './Math',
         './PolylinePipeline',
         './PrimitiveType',
         './VertexFormat'
     ], function(
+        ArcType,
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
@@ -35,7 +36,6 @@ define([
         GeometryAttributes,
         GeometryType,
         IndexDatatype,
-        ArcType,
         CesiumMath,
         PolylinePipeline,
         PrimitiveType,
