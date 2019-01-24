@@ -480,9 +480,8 @@ defineSuite([
                 return Intersect.INTERSECTING;
             });
 
-            // Look down at the center of the edge between the visible and non-visible tiles.
-            var middle = new Cartographic(visibleTile.rectangle.west, (visibleTile.rectangle.south + visibleTile.rectangle.north) * 0.5, 0.0);
-            setCameraPosition(quadtree, frameState, middle, visibleTile.level);
+            // Look down at the center of the visible tile.
+            setCameraPosition(quadtree, frameState, Rectangle.center(visibleTile.rectangle), visibleTile.level);
 
             spyOn(mockTerrain, 'requestTileGeometry').and.callThrough();
 
