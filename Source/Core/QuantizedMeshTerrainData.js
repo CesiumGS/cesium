@@ -501,17 +501,17 @@ define([
     function isPointInsideUVTriangle(u, v, u0, v0, u1, v1, u2, v2) {
         var inside = false;
 
-        var intersect = ((v0 > v) !== (v1 >= v)) && (u <= (u1 - u0) * (v - v0) / (v1 - v0) + u0);
+        var intersect = ((v0 > v) !== (v1 > v)) && (u < (u1 - u0) * (v - v0) / (v1 - v0) + u0);
         if (intersect) {
             inside = !inside;
         }
 
-        intersect = ((v1 > v) !== (v2 >= v)) && (u <= (u2 - u1) * (v - v1) / (v2 - v1) + u1);
+        intersect = ((v1 > v) !== (v2 > v)) && (u < (u2 - u1) * (v - v1) / (v2 - v1) + u1);
         if (intersect) {
             inside = !inside;
         }
 
-        intersect = ((v2 > v) !== (v0 >= v)) && (u <= (u0 - u2) * (v - v2) / (v0 - v2) + u2);
+        intersect = ((v2 > v) !== (v0 > v)) && (u < (u0 - u2) * (v - v2) / (v0 - v2) + u2);
         if (intersect) {
             inside = !inside;
         }
@@ -570,10 +570,23 @@ define([
             var v1 = vBuffer[i1];
             var v2 = vBuffer[i2];
 
-            if (isPointInsideUVTriangle(u, v, u0, v0, u1, v1, u2, v2)) {
+            var centerU = (u0 + u1 + u2) / 3.0;
+            var centerV = (v0 + v1 + v2) / 3.0;
+
+            var onePlusEpsilon15 = 1.0 + CesiumMath.EPSILON15;
+            var s0 = centerU + (u0 - centerU) * onePlusEpsilon15;
+            var t0 = centerV + (v0 - centerV) * onePlusEpsilon15;
+            var s1 = centerU + (u1 - centerU) * onePlusEpsilon15;
+            var t1 = centerV + (v1 - centerV) * onePlusEpsilon15;
+            var s2 = centerU + (u2 - centerU) * onePlusEpsilon15;
+            var t2 = centerV + (v2 - centerV) * onePlusEpsilon15;
+
+            if (isPointInsideUVTriangle(u, v, s0, t0, s1, t1, s2, t2)) {
                 var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, u0, v0, u1, v1, u2, v2, barycentricCoordinateScratch);
-                var quantizedHeight = barycentric.x * heightBuffer[i0] + barycentric.y * heightBuffer[i1] + barycentric.z * heightBuffer[i2];
-                return CesiumMath.lerp(terrainData._minimumHeight, terrainData._maximumHeight, quantizedHeight / maxShort);
+                if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
+                    var quantizedHeight = barycentric.x * heightBuffer[i0] + barycentric.y * heightBuffer[i1] + barycentric.z * heightBuffer[i2];
+                    return CesiumMath.lerp(terrainData._minimumHeight, terrainData._maximumHeight, quantizedHeight / maxShort);
+                }
             }
         }
 
