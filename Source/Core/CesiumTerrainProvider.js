@@ -999,11 +999,8 @@ define([
         }
 
         var availabilityLevels = layer.availabilityLevels;
-        if (level % availabilityLevels === 0) {
-            level -= availabilityLevels;
-        }
-
-        var parentLevel = ((level / availabilityLevels) | 0) * availabilityLevels;
+        var parentLevel = (level % availabilityLevels === 0) ?
+            (level - availabilityLevels) : ((level / availabilityLevels) | 0) * availabilityLevels;
         var divisor = 1 << (level - parentLevel);
         var parentX = (x / divisor) | 0;
         var parentY = (y / divisor) | 0;
@@ -1030,7 +1027,7 @@ define([
         var availabilityTilesLoaded = layer.availabilityTilesLoaded;
         var availability = layer.availability;
 
-        var tile = getAvailabilityTile(layer, x, y, level);
+        var tile = CesiumTerrainProvider._getAvailabilityTile(layer, x, y, level);
         while(defined(tile)) {
             if (availability.isTileAvailable(tile.level, tile.x, tile.y) &&
                 !availabilityTilesLoaded.isTileAvailable(tile.level, tile.x, tile.y))
@@ -1063,13 +1060,16 @@ define([
                 };
             }
 
-            tile = getAvailabilityTile(layer, tile.x, tile.y, tile.level);
+            tile = CesiumTerrainProvider._getAvailabilityTile(layer, tile.x, tile.y, tile.level);
         }
 
         return {
             result: false
         };
     }
+
+    // Used for testing
+    CesiumTerrainProvider._getAvailabilityTile = getAvailabilityTile;
 
     return CesiumTerrainProvider;
 });
