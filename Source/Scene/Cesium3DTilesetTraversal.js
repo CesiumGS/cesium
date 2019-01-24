@@ -57,7 +57,7 @@ define([
         if (tileset.debugFreezeFrame) {
             return;
         }
-        
+
         var camera = frameState.camera;
         var cameraChanges = camera.cameraChanges;
         if (defined(cameraChanges)) {
@@ -91,11 +91,10 @@ define([
             };
             cameraChanges = camera.cameraChanges;
 
-            Cartesian3.clone(camera._position, cameraChanges.oldPosition);
-            Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
+            Cartesian3.clone(camera.position, cameraChanges.oldPosition);
+            Cartesian3.clone(camera.direction, cameraChanges.oldDirection);
         }
-
-
+        
         tileset._selectedTiles.length = 0;
         tileset._selectedTilesToStyle.length = 0;
         tileset._emptyTiles.length = 0;
@@ -469,6 +468,10 @@ define([
         return tile._screenSpaceError > baseScreenSpaceError;
     }
 
+    function computeFudge(tileset, tile, frameState) {
+        return frameState.camera.cameraChanges.sseFudge;
+    }
+
     function canTraverse(tileset, tile, frameState) {
         if (tile.children.length === 0) {
             return false;
@@ -480,9 +483,10 @@ define([
         }
         // return tile._screenSpaceError > tileset._maximumScreenSpaceError;
 
-        var fudge = frameState.camera.cameraChanges.sseFudge;
-        var threshold = fudge > 0 && !tile.contentReady ? (tileset._maximumScreenSpaceError + fudge) : tileset._maximumScreenSpaceError;
-        return tile._screenSpaceError > threshold;
+        var fudge = computeFudge(tileset, tile, frameState);
+        var normalCheck = tile._screenSpaceError > tileset._maximumScreenSpaceError;
+        var movementCheck = tile._screenSpaceError > (tileset._maximumScreenSpaceError + fudge);
+        return (fudge > 0 && !tile.contentReady) ? movementCheck : normalCheck;
     }
 
     function executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState) {
