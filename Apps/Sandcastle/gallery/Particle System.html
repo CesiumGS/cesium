@@ -195,11 +195,11 @@ var entity = viewer.entities.add({
     })]),
     model : {
         uri : '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck-kmc.glb',
-        minimumPixelSize : 64,
+        minimumPixelSize : 64
     },
     viewFrom: new Cesium.Cartesian3(-100.0, 0.0, 100.0),
     position : position,
-    orientation : new Cesium.VelocityOrientationProperty(position),
+    orientation : new Cesium.VelocityOrientationProperty(position)
 });
 viewer.trackedEntity = entity;
 
