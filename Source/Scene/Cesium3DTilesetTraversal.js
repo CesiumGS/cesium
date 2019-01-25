@@ -82,8 +82,8 @@ define([
                 cameraChanges.zoomed = false;
             }
 
-            Cartesian3.clone(camera._position, cameraChanges.oldPosition);
-            Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
+            // Cartesian3.clone(camera._position, cameraChanges.oldPosition);
+            // Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
 
             // If updating from within camera class, before the last function in update. It does not work for middle mouse click. Also there's a camera bug that toggles flick updates every other frame. Work around this by checking if you were moving last frame.
             // Cartesian3.subtract(camera.position, camera.oldPosition, delta);
@@ -173,8 +173,8 @@ define([
         // } else {
         //     console.log(delta);
         // }
-        // Cartesian3.clone(camera._position, cameraChanges.oldPosition);
-        // Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
+        Cartesian3.clone(camera._position, cameraChanges.oldPosition);
+        Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
 
         return true;
     };
@@ -518,8 +518,12 @@ define([
         return tile._screenSpaceError > baseScreenSpaceError;
     }
 
+    var scratchCurrentViewDirPos = new Cartesian3();
+    var scratchPreviousViewDirPos = new Cartesian3();
     function computeMovementRatio(tileset, tile, frameState) {
-        var cameraChanges = frameState.camera.cameraChanges;
+        var camera = frameState.camera;
+        var cameraChanges = camera.cameraChanges;
+
         // if (cameraChanges.zoomed) {
         //     return true;
         // }
@@ -533,13 +537,21 @@ define([
         }
 
         // Option 1. get ratio of simple sq dist delta to the sq geom err
-        tile._movementRatio = /* 0.016667 * */ cameraChanges.positionAmount / (geometricError * geometricError);
-        // return tile.contentReady || tile._movementRatio < 1
-        return true;
+        // var movement = cameraChanges.positionAmount;
 
         // Option 2. get ratio of radial sq dist for depth in scene to the sq geom err
-        // return tile._movementRatio <= 1;
+        Cartesian3.multiplyByScalar(cameraChanges.oldDirection, tile._centerZDepth, scratchPreviousViewDirPos); // Let's assume roughly the same depth since we ignore zoom cases
+        Cartesian3.add(cameraChanges.oldPosition, scratchPreviousViewDirPos, scratchPreviousViewDirPos);
 
+        Cartesian3.multiplyByScalar(camera.direction, tile._centerZDepth, scratchCurrentViewDirPos);
+        Cartesian3.add(camera.position, scratchCurrentViewDirPos, scratchCurrentViewDirPos);
+
+        Cartesian3.subtract(scratchCurrentViewDirPos, scratchPreviousViewDirPos, scratchCurrentViewDirPos);
+        var movement = Cartesian3.dot(scratchCurrentViewDirPos, scratchCurrentViewDirPos);
+
+        tile._movementRatio = 0.016667 * movement / (geometricError * geometricError);
+        return true;
+        // return tile.contentReady || tile._movementRatio < 1
     }
 
     function canTraverse(tileset, tile, frameState) {
