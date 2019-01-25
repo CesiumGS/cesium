@@ -118,6 +118,12 @@ define([
         this._lastTileIndex = 0;
         this._updateHeightsTimeSlice = 2.0;
 
+        // If a culled tile contains a cartographic positions in this list, it will be marked
+        // TileSelection.CULLED_BUT_NEEDED and added to the list of tiles to update heights,
+        // even though it is not rendered. The first position will be the position of the
+        // camera and the second will be the origin of the camera's reference frame.
+        this._neededPositions = [undefined, undefined];
+
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.
          * A higher maximum error will render fewer tiles and improve performance, while a lower
@@ -495,6 +501,7 @@ define([
         return (alon * alon + alat * alat) - (blon * blon + blat * blat);
     }
 
+    var cameraOriginScratch = new Cartesian3();
     var rootTraversalDetails = [];
 
     function selectTilesForRendering(primitive, frameState) {
@@ -556,6 +563,11 @@ define([
             customDataAdded.length = 0;
             customDataRemoved.length = 0;
         }
+
+        var camera = frameState.camera;
+        primitive._neededPositions[0] = camera.positionCartographic;
+        var cameraFrameOrigin = Matrix4.getTranslation(camera.transform, cameraOriginScratch);
+        primitive._neededPositions[1] = primitive.tileProvider.tilingScheme.ellipsoid.cartesianToCartographic(cameraFrameOrigin, primitive._neededPositions[1]);
 
         // Traverse in depth-first, near-to-far order.
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
@@ -892,8 +904,19 @@ define([
         quadDetails.combine(traversalDetails);
     }
 
-    var cameraOriginScratch = new Cartesian3();
-    var cameraOriginCartographicScratch = new Cartographic();
+    function containsNeededPosition(primitive, tile) {
+        var needed = primitive._neededPositions;
+        var rectangle = tile.rectangle;
+
+        for (var i = 0, len = needed.length; i < len; ++i) {
+            var position = needed[i];
+            if (defined(position) && Rectangle.contains(rectangle, position)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
     function visitIfVisible(primitive, tile, tileProvider, frameState, occluders, nearestRenderableTile, ancestorMeetsSse, traversalDetails) {
         if (tileProvider.computeTileVisibility(tile, frameState, occluders) !== Visibility.NONE) {
@@ -907,14 +930,7 @@ define([
         traversalDetails.anyWereRenderedLastFrame = false;
         traversalDetails.notYetRenderableCount = 0;
 
-        var camera = frameState.camera;
-        var cameraOrigin = Matrix4.getTranslation(camera.transform, cameraOriginScratch);
-        var cameraOriginCartographic;
-        if (cameraOrigin.x > 1000.0 || cameraOrigin.y > 1000.0 || cameraOrigin.z > 1000.0) {
-            cameraOriginCartographic = primitive.tileProvider.tilingScheme.ellipsoid.cartesianToCartographic(cameraOrigin, cameraOriginCartographicScratch);
-        }
-
-        if (Rectangle.contains(tile.rectangle, camera.positionCartographic) || (defined(cameraOriginCartographic) && Rectangle.contains(tile.rectangle, cameraOriginCartographic))) {
+        if (containsNeededPosition(primitive, tile)) {
             // Load the tile(s) that contains the camera's position and
             // the origin of its reference frame with medium priority.
             queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
