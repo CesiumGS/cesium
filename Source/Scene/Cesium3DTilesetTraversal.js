@@ -58,15 +58,32 @@ define([
             return;
         }
 
+        /***************************************************
+         raise sse - set up first time and get the amounts
+         ***************************************************/
         var camera = frameState.camera;
         var cameraChanges = camera.cameraChanges;
-        if (defined(cameraChanges)) {
+        if (defined(cameraChanges) && cameraChanges.updatedFrame !== frameState.frameNumber) {
 
-            Cartesian3.subtract(camera.position, cameraChanges.oldPosition, delta);
-            var positionAmount = Cartesian3.dot(delta, delta);
-            Cartesian3.clone(camera.position, cameraChanges.oldPosition);
-            var directionAmount = 0.5 * (-Cartesian3.dot(camera.direction, cameraChanges.oldDirection) + 1.0);
-            Cartesian3.clone(camera.direction, cameraChanges.oldDirection);
+            cameraChanges.updatedFrame = frameState.frameNumber;
+            Cartesian3.subtract(camera._position, cameraChanges.oldPosition, delta);
+            cameraChanges.positionAmount = Cartesian3.dot(delta, delta);
+            cameraChanges.directionAmount = 0.5 * (-Cartesian3.dot(camera._direction, cameraChanges.oldDirection) + 1.0); // 0 forward, -1 behind, 0.5 to the side
+            cameraChanges.directionAmount = cameraChanges.directionAmount < CesiumMath.EPSILON9 ? 0 : cameraChanges.directionAmount;
+            if (cameraChanges.positionAmount !== 0 && cameraChanges.directionAmount === 0) {
+                Cartesian3.normalize(delta, delta);
+                var movement = Math.abs(Cartesian3.dot(delta, camera._direction));
+                if (movement > (1.0 - CesiumMath.EPSILON9)) {
+                    cameraChanges.zoomed = true;
+                } else {
+                    cameraChanges.zoomed = false;
+                }
+            } else {
+                cameraChanges.zoomed = false;
+            }
+
+            Cartesian3.clone(camera._position, cameraChanges.oldPosition);
+            Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
 
             // If updating from within camera class, before the last function in update. It does not work for middle mouse click. Also there's a camera bug that toggles flick updates every other frame. Work around this by checking if you were moving last frame.
             // Cartesian3.subtract(camera.position, camera.oldPosition, delta);
@@ -74,25 +91,45 @@ define([
             // var directionAmount = 0.5 * (-Cartesian3.dot(camera.direction, camera.oldDirection) + 1.0);
 
             var fudgeAmount = 512000000000000;
-            var changed = (directionAmount + positionAmount) > 0;
+            var changed = (cameraChanges.directionAmount + cameraChanges.positionAmount) > 0;
             cameraChanges.sseFudge = changed || cameraChanges.changedLastFrame ? fudgeAmount : 0;
             cameraChanges.changedLastFrame = changed;
-            if (cameraChanges.sseFudge > 0) {
-                console.log('moving');
-            } else {
-                console.log(delta);
-            }
+
+            // var whatChanged = ''
+            // if (cameraChanges.directionAmount > 0) {
+            //     whatChanged += 'D ';
+            // } else {
+            //     whatChanged += '- ';
+            // }
+            //
+            // if (cameraChanges.positionAmount !== 0) {
+            //     whatChanged += 'P';
+            // } else {
+            //     whatChanged += '-';
+            // }
+            // console.log(whatChanged);
+
+            // cameraChanges.changedLastFrame = cameraChanges.directionAmount !== 0;
+            // console.log(cameraChanges.zoomed); // But prints this frame
+            // if (cameraChanges.sseFudge > 0) {
+            //     console.log('moving'); // But prints this frame
+            // } else {
+            //     console.log(delta);
+            // }
         } else {
             camera.cameraChanges = {
                 oldPosition: new Cartesian3(),
                 oldDirection: new Cartesian3(),
+                positionAmount: 0,
+                directionAmount: 0,
                 sseFudge: 0,
-                changedLastFrame: false
+                changedLastFrame: false,
+                updatedFrame: 0,
+                zoomed: false
             };
             cameraChanges = camera.cameraChanges;
-
-            Cartesian3.clone(camera.position, cameraChanges.oldPosition);
-            Cartesian3.clone(camera.direction, cameraChanges.oldDirection);
+            Cartesian3.clone(camera._position, cameraChanges.oldPosition);
+            Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
         }
         
         tileset._selectedTiles.length = 0;
@@ -126,6 +163,18 @@ define([
         descendantTraversal.stack.trim(descendantTraversal.stackMaximumLength);
         selectionTraversal.stack.trim(selectionTraversal.stackMaximumLength);
         selectionTraversal.ancestorStack.trim(selectionTraversal.ancestorStackMaximumLength);
+
+        /***************************************************
+         raise sse compute changedLastFrame
+         ***************************************************/
+        // cameraChanges.changedLastFrame = cameraChanges.directionAmount !== 0;
+        // if (cameraChanges.changedLastFrame) {
+        //     console.log('moving'); // But prints this frame
+        // } else {
+        //     console.log(delta);
+        // }
+        // Cartesian3.clone(camera._position, cameraChanges.oldPosition);
+        // Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
 
         return true;
     };
@@ -170,6 +219,7 @@ define([
                 // Tile is newly selected; it is selected this frame, but was not selected last frame.
                 tileset._selectedTilesToStyle.push(tile);
             }
+            computeMovementRatio(tileset, tile, frameState);
             tile._selectedFrame = frameState.frameNumber;
             tileset._selectedTiles.push(tile);
         }
@@ -468,8 +518,28 @@ define([
         return tile._screenSpaceError > baseScreenSpaceError;
     }
 
-    function computeFudge(tileset, tile, frameState) {
-        return frameState.camera.cameraChanges.sseFudge;
+    function computeMovementRatio(tileset, tile, frameState) {
+        var cameraChanges = frameState.camera.cameraChanges;
+        // if (cameraChanges.zoomed) {
+        //     return true;
+        // }
+
+        // var parentGeometricError = defined(tile.parent) ? tile.parent.geometricError : tileset._geometricError;
+        // var geometricError = useParentGeometricError ? parentGeometricError : tile.geometricError;
+        var geometricError = tile.geometricError;
+        if (geometricError === 0.0) {
+            // Leaf tiles do not have any error so save the computation
+            geometricError = 1;
+        }
+
+        // Option 1. get ratio of simple sq dist delta to the sq geom err
+        tile._movementRatio = /* 0.016667 * */ cameraChanges.positionAmount / (geometricError * geometricError);
+        // return tile.contentReady || tile._movementRatio < 1
+        return true;
+
+        // Option 2. get ratio of radial sq dist for depth in scene to the sq geom err
+        // return tile._movementRatio <= 1;
+
     }
 
     function canTraverse(tileset, tile, frameState) {
@@ -483,10 +553,19 @@ define([
         }
         // return tile._screenSpaceError > tileset._maximumScreenSpaceError;
 
-        var fudge = computeFudge(tileset, tile, frameState);
-        var normalCheck = tile._screenSpaceError > tileset._maximumScreenSpaceError;
-        var movementCheck = tile._screenSpaceError > (tileset._maximumScreenSpaceError + fudge);
-        return (fudge > 0 && !tile.contentReady) ? movementCheck : normalCheck;
+        // var fudge = computeFudge(tileset, tile, frameState);
+        // var normalCheck = tile._screenSpaceError > tileset._maximumScreenSpaceError;
+        // var movementCheck = tile._screenSpaceError > (tileset._maximumScreenSpaceError + fudge);
+        // return (fudge > 0 && !tile.contentReady) ? movementCheck : normalCheck;
+
+        var passesNormally = tile._screenSpaceError > tileset._maximumScreenSpaceError;
+
+        var passesMovement = true;
+        if (passesNormally) {
+            passesMovement = computeMovementRatio(tileset, tile, frameState);
+        }
+
+        return passesNormally && passesMovement;
     }
 
     function executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState) {

@@ -2080,6 +2080,10 @@ define([
         updateTiles(tileset, frameState);
 
         if (isRender) {
+            // Print the min max heatmap
+            // console.log('minHM: ' + tileset._heatmap._min);
+            // console.log('maxHM: ' + tileset._heatmap._max);
+
             unloadTiles(tileset);
 
             // Events are raised (added to the afterRender queue) here since promises
