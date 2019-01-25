@@ -64,7 +64,6 @@ define([
         var camera = frameState.camera;
         var cameraChanges = camera.cameraChanges;
         if (defined(cameraChanges) && cameraChanges.updatedFrame !== frameState.frameNumber) {
-
             cameraChanges.updatedFrame = frameState.frameNumber;
             Cartesian3.subtract(camera._position, cameraChanges.oldPosition, delta);
             cameraChanges.positionAmount = Cartesian3.dot(delta, delta);
@@ -92,8 +91,7 @@ define([
 
             var fudgeAmount = 512000000000000;
             var changed = (cameraChanges.directionAmount + cameraChanges.positionAmount) > 0;
-            cameraChanges.sseFudge = changed || cameraChanges.changedLastFrame ? fudgeAmount : 0;
-            cameraChanges.changedLastFrame = changed;
+            cameraChanges.sseFudge = changed ? fudgeAmount : 0;
 
             // var whatChanged = ''
             // if (cameraChanges.directionAmount > 0) {
@@ -108,14 +106,6 @@ define([
             //     whatChanged += '-';
             // }
             // console.log(whatChanged);
-
-            // cameraChanges.changedLastFrame = cameraChanges.directionAmount !== 0;
-            // console.log(cameraChanges.zoomed); // But prints this frame
-            // if (cameraChanges.sseFudge > 0) {
-            //     console.log('moving'); // But prints this frame
-            // } else {
-            //     console.log(delta);
-            // }
         } else {
             camera.cameraChanges = {
                 oldPosition: new Cartesian3(),
@@ -166,15 +156,15 @@ define([
         /***************************************************
          raise sse compute changedLastFrame
          ***************************************************/
-        // cameraChanges.changedLastFrame = cameraChanges.directionAmount !== 0;
+        cameraChanges.changedLastFrame = cameraChanges.sseFudge > 0;
+        Cartesian3.clone(camera._position, cameraChanges.oldPosition);
+        Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
+        Cartesian3.clone(camera._right, cameraChanges.oldRight);
         // if (cameraChanges.changedLastFrame) {
         //     console.log('moving'); // But prints this frame
         // } else {
         //     console.log(delta);
         // }
-        Cartesian3.clone(camera._position, cameraChanges.oldPosition);
-        Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
-        Cartesian3.clone(camera._right, cameraChanges.oldRight);
 
         return true;
     };
