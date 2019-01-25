@@ -17,7 +17,6 @@ define([
         '../Core/TerrainMesh',
         '../Core/WebMercatorProjection',
         './GlobeSurfaceTile',
-        './ImageryState',
         './TileSelectionResult'
     ], function(
         AttributeCompression,
@@ -38,7 +37,6 @@ define([
         TerrainMesh,
         WebMercatorProjection,
         GlobeSurfaceTile,
-        ImageryState,
         TileSelectionResult) {
     'use strict';
 
