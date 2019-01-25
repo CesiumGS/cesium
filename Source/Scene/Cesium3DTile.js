@@ -346,7 +346,11 @@ define([
         this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
         this._loadTimestamp = new JulianDate();
+
+        // Raise sse while moving
         this._movementRatio = 0;
+        this._previousToCenter = new Cartesian3();
+        this._toCenter = new Cartesian3();
 
         this._commandsLength = 0;
 
@@ -953,8 +957,6 @@ define([
         return boundingVolume.distanceToCamera(frameState);
     };
 
-    var scratchToTileCenter = new Cartesian3();
-
     /**
      * Computes the distance from the center of the tile's bounding volume to the camera's plane defined by its position and view direction.
      *
@@ -966,7 +968,9 @@ define([
     Cesium3DTile.prototype.distanceToTileCenter = function(frameState) {
         var tileBoundingVolume = getBoundingVolume(this, frameState);
         var boundingVolume = tileBoundingVolume.boundingVolume; // Gets the underlying OrientedBoundingBox or BoundingSphere
-        var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchToTileCenter);
+        var toCenter = this._toCenter;
+        Cartesian3.clone(toCenter, this._previousToCenter);
+        Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, toCenter);
         return Cartesian3.dot(frameState.camera.directionWC, toCenter);
     };
 

@@ -138,6 +138,7 @@ define([
          * @type {Cartesian3}
          */
         this.oldDirection = new Cartesian3();
+        this.oldRight = new Cartesian3();
 
         /**
          * The up direction of the camera.

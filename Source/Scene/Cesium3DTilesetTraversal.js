@@ -120,6 +120,7 @@ define([
             camera.cameraChanges = {
                 oldPosition: new Cartesian3(),
                 oldDirection: new Cartesian3(),
+                oldRight: new Cartesian3(),
                 positionAmount: 0,
                 directionAmount: 0,
                 sseFudge: 0,
@@ -128,8 +129,6 @@ define([
                 zoomed: false
             };
             cameraChanges = camera.cameraChanges;
-            Cartesian3.clone(camera._position, cameraChanges.oldPosition);
-            Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
         }
         
         tileset._selectedTiles.length = 0;
@@ -175,6 +174,7 @@ define([
         // }
         Cartesian3.clone(camera._position, cameraChanges.oldPosition);
         Cartesian3.clone(camera._direction, cameraChanges.oldDirection);
+        Cartesian3.clone(camera._right, cameraChanges.oldRight);
 
         return true;
     };
@@ -519,7 +519,10 @@ define([
     }
 
     var scratchCurrentViewDirPos = new Cartesian3();
+    var scratchCurrentRightDirPos = new Cartesian3();
     var scratchPreviousViewDirPos = new Cartesian3();
+    var scratchPreviousRightDirPos = new Cartesian3();
+    var scratchDelta = new Cartesian3();
     function computeMovementRatio(tileset, tile, frameState) {
         var camera = frameState.camera;
         var cameraChanges = camera.cameraChanges;
@@ -540,14 +543,32 @@ define([
         // var movement = cameraChanges.positionAmount;
 
         // Option 2. get ratio of radial sq dist for depth in scene to the sq geom err
+
+        // prev view add
         Cartesian3.multiplyByScalar(cameraChanges.oldDirection, tile._centerZDepth, scratchPreviousViewDirPos); // Let's assume roughly the same depth since we ignore zoom cases
         Cartesian3.add(cameraChanges.oldPosition, scratchPreviousViewDirPos, scratchPreviousViewDirPos);
 
+        // prev right add
+        var centerPlaneDist = Cartesian3.dot(tile._toCenter, camera.right);
+        Cartesian3.multiplyByScalar(cameraChanges.oldRight, centerPlaneDist, scratchPreviousRightDirPos); // Let's assume roughly the same depth since we ignore zoom cases
+        Cartesian3.add(scratchPreviousViewDirPos, scratchPreviousRightDirPos, scratchPreviousViewDirPos);
+
+        // curr view add
         Cartesian3.multiplyByScalar(camera.direction, tile._centerZDepth, scratchCurrentViewDirPos);
         Cartesian3.add(camera.position, scratchCurrentViewDirPos, scratchCurrentViewDirPos);
 
+        // curr right add
+        Cartesian3.multiplyByScalar(camera.right, centerPlaneDist, scratchCurrentRightDirPos); // Let's assume roughly the same depth since we ignore zoom cases
+        Cartesian3.add(scratchCurrentViewDirPos, scratchCurrentRightDirPos, scratchCurrentViewDirPos);
+
         Cartesian3.subtract(scratchCurrentViewDirPos, scratchPreviousViewDirPos, scratchCurrentViewDirPos);
         var movement = Cartesian3.dot(scratchCurrentViewDirPos, scratchCurrentViewDirPos);
+
+
+
+        // Using PREVIOUS TOCENTER
+        // Cartesian3.subtract(tile._toCenter, tile._previousToCenter, scratchDelta);
+        // var movement = Cartesian3.dot(scratchDelta, scratchDelta) * tile._centerZDepth;
 
         tile._movementRatio = movement;
         // tile._movementRatio = 0.016667 * movement / (geometricError * geometricError);
