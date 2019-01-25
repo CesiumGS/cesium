@@ -542,23 +542,22 @@ define([
         // Option 1. get ratio of simple sq dist delta to the sq geom err
         // var movement = cameraChanges.positionAmount;
 
-        // Option 2. get ratio of radial sq dist for depth in scene to the sq geom err
-
+        // Option 2. get ratio of relative camera screen positions sq dist to the sq geom err
         // prev view add
         Cartesian3.multiplyByScalar(cameraChanges.oldDirection, tile._centerZDepth, scratchPreviousViewDirPos); // Let's assume roughly the same depth since we ignore zoom cases
         Cartesian3.add(cameraChanges.oldPosition, scratchPreviousViewDirPos, scratchPreviousViewDirPos);
 
         // prev right add
-        var centerPlaneDist = Cartesian3.dot(tile._toCenter, camera.right);
+        var centerPlaneDist = Cartesian3.dot(tile._toCenter, camera._right);
         Cartesian3.multiplyByScalar(cameraChanges.oldRight, centerPlaneDist, scratchPreviousRightDirPos); // Let's assume roughly the same depth since we ignore zoom cases
         Cartesian3.add(scratchPreviousViewDirPos, scratchPreviousRightDirPos, scratchPreviousViewDirPos);
 
         // curr view add
-        Cartesian3.multiplyByScalar(camera.direction, tile._centerZDepth, scratchCurrentViewDirPos);
-        Cartesian3.add(camera.position, scratchCurrentViewDirPos, scratchCurrentViewDirPos);
+        Cartesian3.multiplyByScalar(camera._direction, tile._centerZDepth, scratchCurrentViewDirPos);
+        Cartesian3.add(camera._position, scratchCurrentViewDirPos, scratchCurrentViewDirPos);
 
         // curr right add
-        Cartesian3.multiplyByScalar(camera.right, centerPlaneDist, scratchCurrentRightDirPos); // Let's assume roughly the same depth since we ignore zoom cases
+        Cartesian3.multiplyByScalar(camera._right, centerPlaneDist, scratchCurrentRightDirPos); // Let's assume roughly the same depth since we ignore zoom cases
         Cartesian3.add(scratchCurrentViewDirPos, scratchCurrentRightDirPos, scratchCurrentViewDirPos);
 
         // delta dist sq
@@ -567,8 +566,8 @@ define([
 
         // tile._movementRatio = movement;
         tile._movementRatio = 0.1 * movement / (geometricError * geometricError); // How do n frames of this movement compare to the tile's physical size;
-        return true;
-        // return tile.contentReady || tile._movementRatio < 1; // If movement is on the scale of the tile's physical size, don't request.
+        // return true;
+        return tile.contentReady || tile._movementRatio < 1; // If movement is on the scale of the tile's physical size, don't request.
     }
 
     function canTraverse(tileset, tile, frameState) {
