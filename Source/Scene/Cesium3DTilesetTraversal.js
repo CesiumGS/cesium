@@ -549,7 +549,8 @@ define([
         Cartesian3.subtract(scratchCurrentViewDirPos, scratchPreviousViewDirPos, scratchCurrentViewDirPos);
         var movement = Cartesian3.dot(scratchCurrentViewDirPos, scratchCurrentViewDirPos);
 
-        tile._movementRatio = 0.016667 * movement / (geometricError * geometricError);
+        tile._movementRatio = movement;
+        // tile._movementRatio = 0.016667 * movement / (geometricError * geometricError);
         return true;
         // return tile.contentReady || tile._movementRatio < 1
     }
