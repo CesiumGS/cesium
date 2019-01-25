@@ -498,25 +498,12 @@ define([
         return interpolateMeshHeight(this, u, v);
     };
 
-    function isPointInsideUVTriangle(u, v, u0, v0, u1, v1, u2, v2) {
-        var inside = false;
-
-        var intersect = ((v0 > v) !== (v1 > v)) && (u < (u1 - u0) * (v - v0) / (v1 - v0) + u0);
-        if (intersect) {
-            inside = !inside;
-        }
-
-        intersect = ((v1 > v) !== (v2 > v)) && (u < (u2 - u1) * (v - v1) / (v2 - v1) + u1);
-        if (intersect) {
-            inside = !inside;
-        }
-
-        intersect = ((v2 > v) !== (v0 > v)) && (u < (u0 - u2) * (v - v2) / (v0 - v2) + u2);
-        if (intersect) {
-            inside = !inside;
-        }
-
-        return inside;
+    function pointInBoundingBox(u, v, u0, v0, u1, v1, u2, v2) {
+        var minU = Math.min(u0, u1, u2);
+        var maxU = Math.max(u0, u1, u2);
+        var minV = Math.min(v0, v1, v2);
+        var maxV = Math.max(v0, v1, v2);
+        return (u >= minU && u <= maxU && v >= minV && v <= maxV);
     }
 
     var texCoordScratch0 = new Cartesian2();
@@ -538,12 +525,14 @@ define([
             var uv1 = encoding.decodeTextureCoordinates(vertices, i1, texCoordScratch1);
             var uv2 = encoding.decodeTextureCoordinates(vertices, i2, texCoordScratch2);
 
-            if (isPointInsideUVTriangle(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y)) {
+            if (pointInBoundingBox(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y)) {
                 var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y, barycentricCoordinateScratch);
-                var h0 = encoding.decodeHeight(vertices, i0);
-                var h1 = encoding.decodeHeight(vertices, i1);
-                var h2 = encoding.decodeHeight(vertices, i2);
-                return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2;
+                if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
+                    var h0 = encoding.decodeHeight(vertices, i0);
+                    var h1 = encoding.decodeHeight(vertices, i1);
+                    var h2 = encoding.decodeHeight(vertices, i2);
+                    return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2;
+                }
             }
         }
 
@@ -570,21 +559,12 @@ define([
             var v1 = vBuffer[i1];
             var v2 = vBuffer[i2];
 
-            var centerU = (u0 + u1 + u2) / 3.0;
-            var centerV = (v0 + v1 + v2) / 3.0;
-
-            var onePlusEpsilon15 = 1.0 + CesiumMath.EPSILON15;
-            var s0 = centerU + (u0 - centerU) * onePlusEpsilon15;
-            var t0 = centerV + (v0 - centerV) * onePlusEpsilon15;
-            var s1 = centerU + (u1 - centerU) * onePlusEpsilon15;
-            var t1 = centerV + (v1 - centerV) * onePlusEpsilon15;
-            var s2 = centerU + (u2 - centerU) * onePlusEpsilon15;
-            var t2 = centerV + (v2 - centerV) * onePlusEpsilon15;
-
-            if (isPointInsideUVTriangle(u, v, s0, t0, s1, t1, s2, t2)) {
+            if (pointInBoundingBox(u, v, u0, v0, u1, v1, u2, v2)) {
                 var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, u0, v0, u1, v1, u2, v2, barycentricCoordinateScratch);
                 if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
-                    var quantizedHeight = barycentric.x * heightBuffer[i0] + barycentric.y * heightBuffer[i1] + barycentric.z * heightBuffer[i2];
+                    var quantizedHeight = barycentric.x * heightBuffer[i0] +
+                                          barycentric.y * heightBuffer[i1] +
+                                          barycentric.z * heightBuffer[i2];
                     return CesiumMath.lerp(terrainData._minimumHeight, terrainData._maximumHeight, quantizedHeight / maxShort);
                 }
             }
