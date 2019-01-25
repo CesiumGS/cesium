@@ -561,19 +561,14 @@ define([
         Cartesian3.multiplyByScalar(camera.right, centerPlaneDist, scratchCurrentRightDirPos); // Let's assume roughly the same depth since we ignore zoom cases
         Cartesian3.add(scratchCurrentViewDirPos, scratchCurrentRightDirPos, scratchCurrentViewDirPos);
 
+        // delta dist sq
         Cartesian3.subtract(scratchCurrentViewDirPos, scratchPreviousViewDirPos, scratchCurrentViewDirPos);
         var movement = Cartesian3.dot(scratchCurrentViewDirPos, scratchCurrentViewDirPos);
 
-
-
-        // Using PREVIOUS TOCENTER
-        // Cartesian3.subtract(tile._toCenter, tile._previousToCenter, scratchDelta);
-        // var movement = Cartesian3.dot(scratchDelta, scratchDelta) * tile._centerZDepth;
-
-        tile._movementRatio = movement;
-        // tile._movementRatio = 0.016667 * movement / (geometricError * geometricError);
+        // tile._movementRatio = movement;
+        tile._movementRatio = 0.1 * movement / (geometricError * geometricError); // How do n frames of this movement compare to the tile's physical size;
         return true;
-        // return tile.contentReady || tile._movementRatio < 1
+        // return tile.contentReady || tile._movementRatio > 1; // If movement is on the scale of the tile's physical size, don't request.
     }
 
     function canTraverse(tileset, tile, frameState) {
