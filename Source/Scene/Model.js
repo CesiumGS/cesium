@@ -447,8 +447,6 @@ define([
         /**
          * Returns the height reference of the model
          *
-         * @memberof Model.prototype
-         *
          * @type {HeightReference}
          *
          * @default HeightReference.NONE
@@ -1128,6 +1126,10 @@ define([
                 Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.y', value.y, 0.0);
                 Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.y', value.y, 1.0);
                 //>>includeEnd('debug');
+                var imageBasedLightingFactor = this._imageBasedLightingFactor;
+                if ((value === imageBasedLightingFactor) || Cartesian2.equals(value, imageBasedLightingFactor)) {
+                    return;
+                }
                 this._shouldRegenerateShaders = this._shouldRegenerateShaders || (this._imageBasedLightingFactor.x > 0.0 && value.x === 0.0) || (this._imageBasedLightingFactor.x === 0.0 && value.x > 0.0);
                 this._shouldRegenerateShaders = this._shouldRegenerateShaders || (this._imageBasedLightingFactor.y > 0.0 && value.y === 0.0) || (this._imageBasedLightingFactor.y === 0.0 && value.y > 0.0);
                 Cartesian2.clone(value, this._imageBasedLightingFactor);
@@ -1212,6 +1214,9 @@ define([
                     throw new DeveloperError('sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.');
                 }
                 //>>includeEnd('debug');
+                if (value === this._sphericalHarmonicCoefficients) {
+                    return;
+                }
                 this._sphericalHarmonicCoefficients = value;
                 this._shouldRegenerateShaders = true;
             }

@@ -241,7 +241,7 @@ define([
 
     /**
      * Converts a SNORM value in the range [0, rangeMax] to a scalar in the range [-1.0, 1.0].
-     * @param {Number} value SNORM value in the range [0, 255]
+     * @param {Number} value SNORM value in the range [0, rangeMax]
      * @param {Number} [rangeMax=255] The maximum value in the SNORM range, 255 by default.
      * @returns {Number} Scalar in the range [-1.0, 1.0].
      *
@@ -250,6 +250,18 @@ define([
     CesiumMath.fromSNorm = function(value, rangeMax) {
         rangeMax = defaultValue(rangeMax, 255);
         return CesiumMath.clamp(value, 0.0, rangeMax) / rangeMax * 2.0 - 1.0;
+    };
+
+    /**
+     * Converts a scalar value in the range [rangeMin, rangeMax] to a scalar in the range [0.0, 1.0]
+     * @param {Number} value The scalar value in the range [rangeMin, rangeMax]
+     * @param {Number} rangeMin The minimum value in the mapped range.
+     * @param {Number} rangeMax The maximum value in the mapped range.
+     * @returns {Number} A scalar value, where rangeMin maps to 0.0 and rangeMax maps to 1.0.
+     */
+    CesiumMath.normalize = function(value, rangeMin, rangeMax) {
+        rangeMax = Math.max(rangeMax - rangeMin, 0);
+        return rangeMax === 0.0 ? 0.0 : CesiumMath.clamp((value - rangeMin) / rangeMax, 0.0, 1.0);
     };
 
     /**
