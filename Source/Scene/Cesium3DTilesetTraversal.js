@@ -568,7 +568,7 @@ define([
         // tile._movementRatio = movement;
         tile._movementRatio = 0.1 * movement / (geometricError * geometricError); // How do n frames of this movement compare to the tile's physical size;
         return true;
-        // return tile.contentReady || tile._movementRatio > 1; // If movement is on the scale of the tile's physical size, don't request.
+        // return tile.contentReady || tile._movementRatio < 1; // If movement is on the scale of the tile's physical size, don't request.
     }
 
     function canTraverse(tileset, tile, frameState) {
