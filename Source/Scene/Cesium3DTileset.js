@@ -2020,7 +2020,7 @@ define([
    
     var scratchCamera = undefined;
     var scratchCurrentFlight = undefined;
-    function prefetchFlightDestinationTiles(tileset, frameState) {
+    function prefetchTilesAtFlightDestination(tileset, frameState) {
         var camera = frameState.camera;
         var currentFlight = camera._currentFlight;
         if (defined(currentFlight)) {
@@ -2108,7 +2108,7 @@ define([
             ready = Cesium3DTilesetAsyncTraversal.selectTiles(tileset, frameState);
         } else {
             if (isRender) {
-                prefetchFlightDestinationTiles(tileset, frameState);
+                prefetchTilesAtFlightDestination(tileset, frameState);
             }
             ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
         }
