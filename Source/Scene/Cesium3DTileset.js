@@ -2006,9 +2006,11 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-            frameState.afterRender.push(function() {
-                tileset.allTilesLoaded.raiseEvent();
-            });
+            if (!defined(frameState.camera._currentFlight)) { // Only raise if no flight in progress (prefetching can trigger this early). See prefetchTilesAtFlightDestination for handling allTilesLoaded on arrival.
+                frameState.afterRender.push(function() {
+                    tileset.allTilesLoaded.raiseEvent();
+                });
+            }
             if (!tileset._initialTilesLoaded) {
                 tileset._initialTilesLoaded = true;
                 frameState.afterRender.push(function() {
@@ -2036,11 +2038,10 @@ define([
             tileset._prefetchPass = true;
             requestTiles(tileset, false);
             tileset._prefetchPass = false;
-        } else {
-            // if (tileset._tilesLoaded) {
-            //     tileset.flightCompleteAndAllTilesLoaded.raiseEvent(); // This was needed for tours so that they can continue even if the flight dest loaded already but this would be a breaking change just modify all tiles loaded to fire only after reaching the dest
-            // NOTE: can probably just check if current flight is not defined in addition to the other stuff for all tiles loaded
-            // }
+        } else if (tileset._tilesLoaded) {
+            frameState.afterRender.push(function() {
+                tileset.allTilesLoaded.raiseEvent();
+            });
         }
         scratchCurrentFlight = currentFlight;
     }
