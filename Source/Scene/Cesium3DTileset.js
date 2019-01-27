@@ -229,14 +229,9 @@ define([
 
         this._maxPriority = { depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
         this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
-        this._maxPriorityPrefetch = { depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
-        this._minPriorityPrefetch = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
 
-        // TODO: prefetch
-        this._lastFlight = undefined; // Last frame's camera flight info
-        this._prefetchCamera = undefined; // The camera flights final view
-        this._prefetchTraversal = false; // Whether or not to tag tiles that are requested as prefetch
+        this._prefetchPass = false; // Last frame's camera flight info
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -2022,6 +2017,33 @@ define([
             }
         }
     }
+   
+    var scratchCamera = undefined;
+    var scratchCurrentFlight = undefined;
+    function prefetchFlightDestinationTiles(tileset, frameState) {
+        var camera = frameState.camera;
+        var currentFlight = camera._currentFlight;
+        if (defined(currentFlight)) {
+            if (scratchCurrentFlight !== currentFlight) { // Flights have switched
+                scratchCamera = Camera.clone(camera, scratchCamera);
+                scratchCamera.setView(currentFlight.destinationSetViewOptions);
+            }
+
+            frameState.camera = scratchCamera;
+            Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
+            frameState.camera = camera;
+
+            tileset._prefetchPass = true;
+            requestTiles(tileset, false);
+            tileset._prefetchPass = false;
+        } else {
+            // if (tileset._tilesLoaded) {
+            //     tileset.flightCompleteAndAllTilesLoaded.raiseEvent(); // This was needed for tours so that they can continue even if the flight dest loaded already but this would be a breaking change just modify all tiles loaded to fire only after reaching the dest
+            // NOTE: can probably just check if current flight is not defined in addition to the other stuff for all tiles loaded
+            // }
+        }
+        scratchCurrentFlight = currentFlight;
+    }
 
     function resetMinMax(tileset) {
         tileset._heatmap.resetMinMax();
@@ -2029,10 +2051,6 @@ define([
         tileset._maxPriority.depth = -Number.MAX_VALUE;
         tileset._minPriority.distance = Number.MAX_VALUE;
         tileset._maxPriority.distance = -Number.MAX_VALUE;
-        tileset._minPriorityPrefetch.depth = Number.MAX_VALUE;
-        tileset._maxPriorityPrefetch.depth = -Number.MAX_VALUE;
-        tileset._minPriorityPrefetch.distance = Number.MAX_VALUE;
-        tileset._maxPriorityPrefetch.distance = -Number.MAX_VALUE;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2089,32 +2107,8 @@ define([
         if (isAsync) {
             ready = Cesium3DTilesetAsyncTraversal.selectTiles(tileset, frameState);
         } else {
-            /***************************************************
-            TODO: prefetch traversal if in flight
-             ***************************************************/
-            var camera = frameState.camera;
-            var currentFlight = camera._currentFlight;
-            if (defined(currentFlight)) {
-                if (tileset._lastFlight !== currentFlight) {
-                    tileset._prefetchCamera = Camera.clone(camera, tileset._prefetchCamera);
-                    tileset._prefetchCamera.setView(currentFlight.destinationSetViewOptions);
-                    console.log('updating prefetchCamera');
-                    tileset._lastFlight = currentFlight;
-                }
-
-                tileset._prefetchTraversal = true;
-                frameState.camera = tileset._prefetchCamera;
-                Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
-                tileset._prefetchTraversal = false;
-                frameState.camera = camera;
-            } else {
-                tileset._lastFlight = undefined;
-                // console.log('FLIGHT STOPPED OR CANCELED');
-                // need way to check if flight was canceled (so we can cancel prefetches)
-                // _lastFlight.destinationSetViewOptions does not equal current cameras state (or something like that)
-                // if (tileset._tilesLoaded) {
-                //     tileset.flightCompleteAndAllTilesLoaded.raiseEvent();
-                // }
+            if (isRender) {
+                prefetchFlightDestinationTiles(tileset, frameState);
             }
             ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
         }

@@ -1273,25 +1273,27 @@ define([
     Cesium3DTile.prototype.updatePriority = function() {
         var tileset = this.tileset;
 
-        var isPrefetch = this._isPrefetch; // Maybe Won't have to do this (for variables/min/max, but might still need the priority penalization) if you do trav request trav request 
-        var minPriority = isPrefetch ? tileset._minPriorityPrefetch : tileset._minPriority;
-        var maxPriority = isPrefetch ? tileset._maxPriorityPrefetch : tileset._maxPriority;
+        var minPriority = tileset._minPriority;
+        var maxPriority = tileset._maxPriority;
 
         // Mix priorities by mapping them into base 10 numbers
         // Because the mappings are fuzzy you need a digit of separation so priorities don't bleed into each other
         // Maybe this mental model is terrible and just rename to weights?
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
-
-        // Map 0-1 then convert to digit
-        var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
+        var prefetchScale = distanceScale * 10; // On or off so don't need separation to prevent blend
 
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
+        // Map 0-1 then convert to digit
+        var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
+
+        // On-Off values are the digit or 0
+        var prefetchDigit = tileset._prefetchPass ? 0 : prefetchScale; // Penalize non-prefetches
+
         // Get the final base 10 number
-        var number = distanceDigit + depthDigit;
-        number = isPrefetch ? number : number + (distanceScale * 10); // Penalize non-prefetches
+        var number = distanceDigit + depthDigit + prefetchDigit;
         this._priority = number;
     };
 

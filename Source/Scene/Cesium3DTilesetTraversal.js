@@ -49,12 +49,7 @@ define([
     var descendantSelectionDepth = 2;
 
     Cesium3DTilesetTraversal.selectTiles = function(tileset, frameState) {
-        // TODO: not sure why the first one is needed? for when theres no prefetching pass and just a normal pass(currentFlight wont be defined)
-        if (!defined(frameState.camera._currentFlight) || tileset._prefetchTraversal) {
-            // Reset only when there's no prefetching that needs to be done (no camera flight exists)
-            // or when we are doing the prefetch traversal (which is the first traversal when a camera flight exists)
-            tileset._requestedTiles.length = 0;
-        }
+        tileset._requestedTiles.length = 0;
 
         if (tileset.debugFreezeFrame) {
             return;
@@ -200,26 +195,14 @@ define([
     }
 
     function updateMinMaxPriority(tileset, tile) {
-        // TODO: do i need an if isVisible?
-        if (tileset._prefetchTraversal) {
-            // TODO: an idea to test is to have traversal and request go one after the other so there's no need to duplicate or worry about overwriting of prefetch vs non-prefetch
-            tileset._maxPriorityPrefetch.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriorityPrefetch.distance);
-            tileset._minPriorityPrefetch.distance = Math.min(tile._priorityDistanceHolder._priorityDistance, tileset._minPriorityPrefetch.distance);
-            tileset._maxPriorityPrefetch.depth = Math.max(tile._depth, tileset._maxPriorityPrefetch.depth);
-            tileset._minPriorityPrefetch.depth = Math.min(tile._depth, tileset._minPriorityPrefetch.depth);
-        } else {
-            tileset._maxPriority.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriority.distance);
-            tileset._minPriority.distance = Math.min(tile._priorityDistanceHolder._priorityDistance, tileset._minPriority.distance);
-            tileset._maxPriority.depth = Math.max(tile._depth, tileset._maxPriority.depth);
-            tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
-        }
+        // TODO:  if isVisible?
+        tileset._maxPriority.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriority.distance);
+        tileset._minPriority.distance = Math.min(tile._priorityDistanceHolder._priorityDistance, tileset._minPriority.distance);
+        tileset._maxPriority.depth = Math.max(tile._depth, tileset._maxPriority.depth);
+        tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
     }
 
     function loadTile(tileset, tile, frameState) {
-        tile._isPrefetch = tileset._prefetchTraversal ? true : tile._isPrefetch;
-        if (tile._isPrefetch && !tileset._prefetchTraversal /* && defined(frameState.camera._currentFlight) */) {
-            return; // Don't overwrite prefetch version of the priority
-        }
         if (hasUnloadedContent(tile) || tile.contentExpired) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
@@ -304,7 +287,6 @@ define([
         tile._priorityDistance = tile._distanceToCamera;
         tile._priorityDistanceHolder = tile;
         updateMinMaxPriority(tileset, tile);
-        tile._isPrefetch = (!defined(frameState.camera._currentFlight) || tileset._prefetchTraversal) ? false : tile._isPrefetch;
 
         // SkipLOD
         tile._shouldSelect = false;
