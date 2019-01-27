@@ -13,7 +13,6 @@ defineSuite([
         'Scene/SceneMode',
         'Scene/TileBoundingRegion',
         'Scene/TileSelectionResult',
-        'ThirdParty/when',
         '../MockTerrainProvider',
         '../TerrainTileProcessor'
     ], function(
@@ -31,7 +30,6 @@ defineSuite([
         SceneMode,
         TileBoundingRegion,
         TileSelectionResult,
-        when,
         MockTerrainProvider,
         TerrainTileProcessor) {
     'use strict';
