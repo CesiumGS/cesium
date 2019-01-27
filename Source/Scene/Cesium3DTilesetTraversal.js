@@ -49,7 +49,7 @@ define([
     var descendantSelectionDepth = 2;
 
     Cesium3DTilesetTraversal.selectTiles = function(tileset, frameState) {
-        // TODO: not sure why the first one is needed?
+        // TODO: not sure why the first one is needed? for when theres no prefetching pass and just a normal pass(currentFlight wont be defined)
         if (!defined(frameState.camera._currentFlight) || tileset._prefetchTraversal) {
             // Reset only when there's no prefetching that needs to be done (no camera flight exists)
             // or when we are doing the prefetch traversal (which is the first traversal when a camera flight exists)
@@ -200,7 +200,7 @@ define([
     }
 
     function updateMinMaxPriority(tileset, tile) {
-
+        // TODO: do i need an if isVisible?
         if (tileset._prefetchTraversal) {
             // TODO: an idea to test is to have traversal and request go one after the other so there's no need to duplicate or worry about overwriting of prefetch vs non-prefetch
             tileset._maxPriorityPrefetch.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriorityPrefetch.distance);
@@ -216,20 +216,8 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
-
-        // TODO: reset _isPrefetch to false inside updateTile(in the prefetch pass, not the pass after (don't overwrite)) like:
-        // tile._isPrefetch = tileset._prefetchTraversal ? false : tile._isPrefetch;
-        // TODO: how to reset this back to false when tile is canceled by one of the various things that cancels requests
-        // Don't overwrite on second pass
-
-        // Maybe also have a flag for needing to even do prefetch so that as we do traversal we can reset any flags we come across when we're not in flight?
-        // Reseting flag should really be the job of canceling (any tiles that don't get on the active request queue are canceled)
-        // reset flag when arrives?
-        // if (defined(frameState.camera._currentFlight) && !tileset._prefetchTraversal) {
-        //     return;
-        // }
         tile._isPrefetch = tileset._prefetchTraversal ? true : tile._isPrefetch;
-        if (tile._isPrefetch && !tileset._prefetchTraversal && defined(frameState.camera._currentFlight)) { // Do i really need to check for current flight defined?
+        if (tile._isPrefetch && !tileset._prefetchTraversal /* && defined(frameState.camera._currentFlight) */) {
             return; // Don't overwrite prefetch version of the priority
         }
         if (hasUnloadedContent(tile) || tile.contentExpired) {
@@ -316,6 +304,7 @@ define([
         tile._priorityDistance = tile._distanceToCamera;
         tile._priorityDistanceHolder = tile;
         updateMinMaxPriority(tileset, tile);
+        tile._isPrefetch = (!defined(frameState.camera._currentFlight) || tileset._prefetchTraversal) ? false : tile._isPrefetch;
 
         // SkipLOD
         tile._shouldSelect = false;
@@ -484,11 +473,6 @@ define([
             traversal.stackMaximumLength = Math.max(traversal.stackMaximumLength, stack.length);
 
             var tile = stack.pop();
-
-            // TODO: should reall do this in updateTile as described in loadTile
-            if (!defined(frameState.camera._currentFlight) || tileset._prefetchTraversal) {
-                tile._isPrefetch = false;
-            }
 
             updateTileAncestorContentLinks(tile, frameState);
             var baseTraversal = inBaseTraversal(tileset, tile, baseScreenSpaceError);

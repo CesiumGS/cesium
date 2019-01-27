@@ -1273,7 +1273,7 @@ define([
     Cesium3DTile.prototype.updatePriority = function() {
         var tileset = this.tileset;
 
-        var isPrefetch = this._isPrefetch; // Won't have to do this if you do trav request trav request 
+        var isPrefetch = this._isPrefetch; // Maybe Won't have to do this (for variables/min/max, but might still need the priority penalization) if you do trav request trav request 
         var minPriority = isPrefetch ? tileset._minPriorityPrefetch : tileset._minPriority;
         var maxPriority = isPrefetch ? tileset._maxPriorityPrefetch : tileset._maxPriority;
 
