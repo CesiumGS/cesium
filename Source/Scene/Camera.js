@@ -2804,6 +2804,12 @@ define([
             return;
         }
 
+
+        /***************************************************
+          TODO: also cancel any prefetched tiles from previous camera flight in cancelFlight();
+          iterate over tileset._inflightrequests and cancel any with the prefetch tag and undef the tag?
+          actually, should happen naturally since they wont get touched
+         ***************************************************/
         this.cancelFlight();
 
         var orientation = defaultValue(options.orientation, defaultValue.EMPTY_OBJECT);
@@ -2811,20 +2817,36 @@ define([
             orientation = directionUpToHeadingPitchRoll(this, destination, orientation, scratchSetViewOptions.orientation);
         }
 
+        var setViewOptions = scratchSetViewOptions;
+        setViewOptions.destination = options.destination;// can just be destination since it was saved
+        setViewOptions.orientation.heading = orientation.heading;
+        setViewOptions.orientation.pitch = orientation.pitch;
+        setViewOptions.orientation.roll = orientation.roll;
+        setViewOptions.convert = options.convert;
+        setViewOptions.endTransform = options.endTransform;
+
         if (defined(options.duration) && options.duration <= 0.0) {
-            var setViewOptions = scratchSetViewOptions;
-            setViewOptions.destination = options.destination;
-            setViewOptions.orientation.heading = orientation.heading;
-            setViewOptions.orientation.pitch = orientation.pitch;
-            setViewOptions.orientation.roll = orientation.roll;
-            setViewOptions.convert = options.convert;
-            setViewOptions.endTransform = options.endTransform;
             this.setView(setViewOptions);
             if (typeof options.complete === 'function') {
                 options.complete();
             }
             return;
         }
+
+        /***************************************************
+          TODO: Could have a prefetch tag on tileset and tile
+          on tileset it means there are prefetches in flight 
+          so modify the _priority function on tile so that if theres a prefetch tag on the tileset it goes
+          in the higher priority bin vs. the on-the-way bin.
+          to update its prefetch tag tileset update function checks whether camera is in flight or not (defined(camera._currentFlight))
+          or if it changed in order to cancel any inflight requests that are prefetches (defined(camera._currentFlight)) && camera._currentFlight !== lastframeflight
+
+          This can all be done inside tileset probably, _currentFlight probably has the destination view (if not need to save it somewhere)
+          then camera.setView(setViewOptions) with the view options for the dest, do a prefetch traversal (just marks any loadTile() calls with the prefetch tag on the tile)
+          set the camera back to where it was and do a normal traversal.
+
+          Tile's visibility function needs to also check the prefetch tag, so that it doesn't get canceled, or maybe just the tileset canceling function needs to check before it cancels
+         ***************************************************/
 
         var isRectangle = defined(destination.west);
         if (isRectangle) {
@@ -2857,8 +2879,9 @@ define([
         newOptions.easingFunction = options.easingFunction;
 
         var scene = this._scene;
-        flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
+        flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));// TODO: use info from the newOptions that's passed into the creation of flightTween that is camera._currentFlight
         this._currentFlight = flightTween;
+        this._currentFlight.destinationSetViewOptions = setViewOptions; // Tacked on randomly here
     };
 
     function distanceToBoundingSphere3D(camera, radius) {

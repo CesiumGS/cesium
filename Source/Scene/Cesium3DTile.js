@@ -346,6 +346,7 @@ define([
         this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
         this._loadTimestamp = new JulianDate();
+        this._isPrefetch = false; // TODO: this should get reset somehow (updateTile in traversal)
 
         this._commandsLength = 0;
 
@@ -1271,8 +1272,10 @@ define([
      */
     Cesium3DTile.prototype.updatePriority = function() {
         var tileset = this.tileset;
-        var minPriority = tileset._minPriority;
-        var maxPriority = tileset._maxPriority;
+
+        var isPrefetch = this._isPrefetch; // Won't have to do this if you do trav request trav request 
+        var minPriority = isPrefetch ? tileset._minPriorityPrefetch : tileset._minPriority;
+        var maxPriority = isPrefetch ? tileset._maxPriorityPrefetch : tileset._maxPriority;
 
         // Mix priorities by mapping them into base 10 numbers
         // Because the mappings are fuzzy you need a digit of separation so priorities don't bleed into each other
@@ -1288,6 +1291,7 @@ define([
 
         // Get the final base 10 number
         var number = distanceDigit + depthDigit;
+        number = isPrefetch ? number : number + (distanceScale * 10); // Penalize non-prefetches
         this._priority = number;
     };
 
