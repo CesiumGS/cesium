@@ -9,6 +9,7 @@ define([
         '../Core/Math',
         '../Core/PerspectiveFrustum',
         '../Core/PerspectiveOffCenterFrustum',
+        './Camera',
         './SceneMode'
     ], function(
         Cartesian2,
@@ -21,6 +22,7 @@ define([
         CesiumMath,
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
+        Camera,
         SceneMode) {
     'use strict';
 
@@ -424,6 +426,17 @@ define([
             }
         }
 
+        // Why can't it find Camera?
+        // var destinationCamera;
+        // destinationCamera = Camera.clone(camera, destinationCamera);
+        // destinationCamera.setView({
+        //     destination: destination,
+        //     orientation: {
+        //         heading: heading,
+        //         pitch: pitch,
+        //         roll: roll,
+        //     }
+        // });
         return {
             duration : duration,
             easingFunction : easingFunction,
@@ -434,6 +447,7 @@ define([
                 time : duration
             },
             update : update,
+            // destinationCamera: destinationCamera,
             complete : complete,
             cancel: cancel
         };

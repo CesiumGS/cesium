@@ -2031,6 +2031,7 @@ define([
                 scratchCamera.setView(currentFlight.destinationSetViewOptions);
             }
 
+            // frameState.camera = currentFlight.destinationCamera;
             frameState.camera = scratchCamera;
             Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
             frameState.camera = camera;

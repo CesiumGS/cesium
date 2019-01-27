@@ -2874,6 +2874,7 @@ define([
           
           Tile's visibility function needs to also check the prefetch tag, so that it doesn't get canceled, or maybe just the tileset canceling function needs to check before it cancels
          ***************************************************/
+        // TODO: Add destinationCamera on the tween the end of createTween
         this._currentFlight.destinationSetViewOptions = { destination: destination, orientation: orientation }; // Tacked on randomly here, // TODO: is dest or ori info available on flightTween or scene or scene.tweens?
     };
 
