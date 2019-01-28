@@ -2004,7 +2004,7 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-            if (!defined(frameState.camera._currentFlight)) { // Only raise if no flight in progress (prefetching can trigger this early). See prefetchTilesAtFlightDestination for handling allTilesLoaded on arrival.
+            if (!defined(frameState.camera._currentFlight)) { // Only raise if no flight in progress otherwise prefetching may trigger this early.
                 frameState.afterRender.push(function() {
                     tileset.allTilesLoaded.raiseEvent();
                 });
@@ -2033,11 +2033,6 @@ define([
             frameState.camera = camera;
             tileset._prefetchPass = false;
         }
-        // else if (tileset._tilesLoaded) {
-        //     frameState.afterRender.push(function() {
-        //         tileset.allTilesLoaded.raiseEvent();
-        //     });
-        // }
     }
 
     function resetMinMax(tileset) {
