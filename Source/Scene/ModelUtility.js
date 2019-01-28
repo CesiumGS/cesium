@@ -494,7 +494,7 @@ define([
         'KHR_materials_unlit' : true,
         'KHR_materials_pbrSpecularGlossiness' : true,
         'WEB3D_quantized_attributes' : true,
-        'EXT_image_webp' : true
+        'EXT_texture_webp' : true
     };
 
     ModelUtility.checkSupportedExtensions = function(extensionsRequired, browserSupportsWebp) {
@@ -504,7 +504,7 @@ define([
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
                 }
 
-                if (extension === 'EXT_image_webp' && browserSupportsWebp === false) {
+                if (extension === 'EXT_texture_webp' && browserSupportsWebp === false) {
                     throw new RuntimeError('Loaded model requires WebP but browser does not support it.');
                 }
             }

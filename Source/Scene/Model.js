@@ -1660,8 +1660,8 @@ define([
         ForEach.texture(gltf, function(texture, id) {
             var imageId = texture.source;
 
-            if (defined(texture.extensions) && defined(texture.extensions.EXT_image_webp) && model._supportsWebp) {
-                imageId = texture.extensions.EXT_image_webp.source;
+            if (defined(texture.extensions) && defined(texture.extensions.EXT_texture_webp) && model._supportsWebp) {
+                imageId = texture.extensions.EXT_texture_webp.source;
             }
 
             var gltfImage = images[imageId];
