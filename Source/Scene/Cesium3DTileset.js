@@ -2019,9 +2019,9 @@ define([
             }
         }
     }
-   
-    var scratchCamera = undefined;
-    var scratchCurrentFlight = undefined;
+
+    var scratchCamera;
+    var scratchCurrentFlight;
     function prefetchTilesAtFlightDestination(tileset, frameState) {
         var camera = frameState.camera;
         var currentFlight = camera._currentFlight;
