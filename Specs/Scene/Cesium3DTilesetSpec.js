@@ -3569,4 +3569,35 @@ defineSuite([
             expect(lastPriority !== requestedTilesInFlight[0]._priority).toBe(true); // Not all the same value
         });
     });
+
+    it('prefetches tiles', function() {
+        // Flight settings
+        var destination = new Cartesian3();
+        var orientation = {
+            direction : new Cartesian3(),
+            up : new Cartesian3()
+        };
+        var duration = 100000;
+
+        // Record flight settings
+        viewAllTiles();
+        Cartesian3.clone(scene.camera.position, destination);
+        Cartesian3.clone(scene.camera.direction, orientation.direction);
+        Cartesian3.clone(scene.camera.up, orientation.up);
+
+        // Reset view
+        viewNothing();
+
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
+            // Slow flyTo viewAllTiles()
+            scene.camera.flyTo({
+               destination : destination,
+               orientation : orientation,
+               duration : duration
+            });
+
+            scene.renderForSpecs();
+            expect(tileset._requestedTilesInFlight.length).toBeGreaterThan(0);
+        });
+    });
 }, 'WebGL');
