@@ -2020,19 +2020,11 @@ define([
         }
     }
 
-    var scratchCamera;
-    var scratchCurrentFlight;
     function prefetchTilesAtFlightDestination(tileset, frameState) {
         var camera = frameState.camera;
         var currentFlight = camera._currentFlight;
         if (defined(currentFlight)) {
-            if (scratchCurrentFlight !== currentFlight) { // Flights have switched
-                scratchCamera = Camera.clone(camera, scratchCamera);
-                scratchCamera.setView(currentFlight.destinationSetViewOptions);
-            }
-
-            // frameState.camera = currentFlight.destinationCamera;
-            frameState.camera = scratchCamera;
+            frameState.camera = currentFlight.destinationCamera;
             Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
             frameState.camera = camera;
 
@@ -2044,7 +2036,6 @@ define([
                 tileset.allTilesLoaded.raiseEvent();
             });
         }
-        scratchCurrentFlight = currentFlight;
     }
 
     function resetMinMax(tileset) {

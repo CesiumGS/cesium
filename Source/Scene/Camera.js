@@ -2860,21 +2860,10 @@ define([
         flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
         this._currentFlight = flightTween;
 
-        /***************************************************
-          TODO: Could have a prefetch tag on tileset and tile
-          on tileset it means there are prefetches in flight
-          so modify the _priority function on tile so that if theres a prefetch tag on the tileset it goes
-          in the higher priority bin vs. the on-the-way bin.
-          to update its prefetch tag tileset update function checks whether camera is in flight or not (defined(camera._currentFlight))
-          or if it changed in order to cancel any inflight requests that are prefetches (defined(camera._currentFlight)) && camera._currentFlight !== lastframeflight
-
-          This can all be done inside tileset probably, _currentFlight probably has the destination view (if not need to save it somewhere)
-          then camera.setView(setViewOptions) with the view options for the dest, do a prefetch traversal (just marks any loadTile() calls with the prefetch tag on the tile)
-          set the camera back to where it was and do a normal traversal.
-          Tile's visibility function needs to also check the prefetch tag, so that it doesn't get canceled, or maybe just the tileset canceling function needs to check before it cancels
-         ***************************************************/
-        // TODO: Add destinationCamera on the tween the end of createTween
-        this._currentFlight.destinationSetViewOptions = { destination: destination, orientation: orientation }; // Tacked on randomly here, // TODO: is dest or ori info available on flightTween or scene or scene.tweens?
+        var destinationCamera;
+        destinationCamera = Camera.clone(this, destinationCamera);
+        destinationCamera.setView({ destination: destination, orientation: orientation });
+        this._currentFlight.destinationCamera = destinationCamera;
     };
 
     function distanceToBoundingSphere3D(camera, radius) {
