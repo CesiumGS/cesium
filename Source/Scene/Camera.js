@@ -233,6 +233,13 @@ define([
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
         Cartesian3.normalize(this.position, this.position);
         Cartesian3.multiplyByScalar(this.position, mag, this.position);
+
+        /**
+         * The flight destination prefetch camera. Cannot be cloned or new'd here since it will be infinite recursuion and blow the stack. Lazy init at the time it is needed.
+         * @type {Camera}
+         * @default undefined
+         */
+        this._prefetchCamera = undefined;
     }
 
     /**
@@ -2860,10 +2867,10 @@ define([
         flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
         this._currentFlight = flightTween;
 
-        var destinationCamera;
-        destinationCamera = Camera.clone(this, destinationCamera);
-        destinationCamera.setView({ destination: destination, orientation: orientation });
-        this._currentFlight.destinationCamera = destinationCamera;
+        if (!defined(this._prefetchCamera)) {
+            this._prefetchCamera = Camera.clone(this, this._prefetchCamera);
+        }
+        this._prefetchCamera.setView({ destination: destination, orientation: orientation });
     };
 
     function distanceToBoundingSphere3D(camera, radius) {

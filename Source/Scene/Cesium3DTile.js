@@ -346,7 +346,6 @@ define([
         this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
         this._loadTimestamp = new JulianDate();
-        this._isPrefetch = false; // TODO: this should get reset somehow (updateTile in traversal)
 
         this._commandsLength = 0;
 

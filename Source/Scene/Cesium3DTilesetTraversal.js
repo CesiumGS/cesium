@@ -195,7 +195,6 @@ define([
     }
 
     function updateMinMaxPriority(tileset, tile) {
-        // TODO:  if isVisible?
         tileset._maxPriority.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriority.distance);
         tileset._minPriority.distance = Math.min(tile._priorityDistanceHolder._priorityDistance, tileset._minPriority.distance);
         tileset._maxPriority.depth = Math.max(tile._depth, tileset._maxPriority.depth);

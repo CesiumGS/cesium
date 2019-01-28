@@ -2024,7 +2024,7 @@ define([
         var camera = frameState.camera;
         var currentFlight = camera._currentFlight;
         if (defined(currentFlight)) {
-            frameState.camera = currentFlight.destinationCamera;
+            frameState.camera = camera._prefetchCamera;
             Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
             frameState.camera = camera;
 
