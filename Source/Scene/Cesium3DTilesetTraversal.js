@@ -160,6 +160,10 @@ define([
     }
 
     function selectDesiredTile(tileset, tile, frameState) {
+        if (tileset._prefetchPass) {
+            return;
+        }
+
         if (!skipLevelOfDetail(tileset)) {
             if (tile.contentAvailable) {
                 // The tile can be selected right away and does not require traverseAndSelect
@@ -503,6 +507,7 @@ define([
             visitTile(tileset, tile, frameState);
             touchTile(tileset, tile, frameState);
             tile._refines = refines;
+            tile._updatedVisibilityFrame = 0; // Reset so visibility is checked during the next pass which may use a different camera
         }
     }
 

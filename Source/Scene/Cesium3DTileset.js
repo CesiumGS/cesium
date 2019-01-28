@@ -26,7 +26,6 @@ define([
         '../Renderer/RenderState',
         '../ThirdParty/when',
         './Axis',
-        './Camera',
         './Cesium3DTile',
         './Cesium3DTileColorBlendMode',
         './Cesium3DTileContentState',
@@ -76,7 +75,6 @@ define([
         RenderState,
         when,
         Axis,
-        Camera,
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
@@ -231,7 +229,7 @@ define([
         this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
 
-        this._prefetchPass = false; // Priority calcuation uses this to penalize non-prefetch tiles.
+        this._prefetchPass = false; // 'true' tells traversal to skip selectDesiredTile. 'false' tells priority calculation to penalize non-prefetch tiles.
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -2024,18 +2022,22 @@ define([
         var camera = frameState.camera;
         var currentFlight = camera._currentFlight;
         if (defined(currentFlight)) {
-            frameState.camera = camera._prefetchCamera;
-            Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
-            frameState.camera = camera;
-
+            // Configure for prefetch
             tileset._prefetchPass = true;
+            frameState.camera = camera._prefetchCamera;
+
+            Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
             requestTiles(tileset, false);
+
+            // Restore settings
+            frameState.camera = camera;
             tileset._prefetchPass = false;
-        } else if (tileset._tilesLoaded) {
-            frameState.afterRender.push(function() {
-                tileset.allTilesLoaded.raiseEvent();
-            });
         }
+        // else if (tileset._tilesLoaded) {
+        //     frameState.afterRender.push(function() {
+        //         tileset.allTilesLoaded.raiseEvent();
+        //     });
+        // }
     }
 
     function resetMinMax(tileset) {

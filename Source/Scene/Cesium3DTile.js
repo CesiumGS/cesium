@@ -1271,7 +1271,6 @@ define([
      */
     Cesium3DTile.prototype.updatePriority = function() {
         var tileset = this.tileset;
-
         var minPriority = tileset._minPriority;
         var maxPriority = tileset._maxPriority;
 
@@ -1280,7 +1279,7 @@ define([
         // Maybe this mental model is terrible and just rename to weights?
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
-        var prefetchScale = distanceScale * 10; // On or off so don't need separation to prevent blend
+        var prefetchScale = distanceScale * 10; // On or off so don't need an additional digit of separation to prevent blend
 
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);

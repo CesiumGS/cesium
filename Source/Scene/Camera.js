@@ -2820,7 +2820,7 @@ define([
 
         if (defined(options.duration) && options.duration <= 0.0) {
             var setViewOptions = scratchSetViewOptions;
-            setViewOptions.destination = options.destination;// can just be destination since it was saved
+            setViewOptions.destination = options.destination;
             setViewOptions.orientation.heading = orientation.heading;
             setViewOptions.orientation.pitch = orientation.pitch;
             setViewOptions.orientation.roll = orientation.roll;

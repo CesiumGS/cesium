@@ -359,7 +359,6 @@ defineSuite([
     });
 
     it('updates priority', function() {
-        // As digits get added to the priority calculation this will have to get updated.
         var tile1 = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
         tile1._priorityDistanceHolder = tile1;
         tile1._priorityDistance = 0;
