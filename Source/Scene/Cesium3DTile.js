@@ -346,7 +346,8 @@ define([
         this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
         this._loadTimestamp = new JulianDate();
-        this._foveatedSSE = 0; // More relaxed as you get away from screen center
+        this._foveatedScreenSpaceError = 0;
+        this._deferLoadingPriority = false; // True for tiles that should refine but at a lower priority, such as if they are on the edges of the screen.
 
         this._commandsLength = 0;
 
@@ -616,6 +617,7 @@ define([
     });
 
     var scratchJulianDate = new JulianDate();
+    var scratchCartesian = new Cartesian3();
 
     /**
      * Get the tile's screen space error.
@@ -653,6 +655,20 @@ define([
                 var dynamicError = CesiumMath.fog(distance, density) * factor;
                 error -= dynamicError;
             }
+
+            if (tileset.foveatedScreenSpaceError) {
+                var boundingVolume = this._boundingVolume.boundingSphere;
+                var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
+                var toCenterNormalize = Cartesian3.normalize(toCenter, scratchCartesian);
+                var lerpOffCenter = Math.abs(Cartesian3.dot(toCenterNormalize, frameState.camera.directionWC));
+                // var revLerpOffCenter = 1 - lerpOffCenter;
+                // var lerpOffCenter2 = revLerpOffCenter * revLerpOffCenter; // slower fall off in the center faster fall off near the edge, but want the flat part of the curve to be the center of screen so do 1- on the lerp value and then 1- goes on the min
+                // var lerpOffCenter4 = lerpOffCenter2 * lerpOffCenter2; // even slower fall off in the center faster fall off near the edge, but want the flat part of the curve to be the center of screen so do 1- on the lerp value and then 1- goes on the min
+                var min = 0;
+                var max = 128 * 5;
+                this._foveatedScreenSpaceError = lerpOffCenter * min + (1 - lerpOffCenter) * max;
+            }
+
         }
         return error;
     };
@@ -1296,6 +1312,7 @@ define([
         // Maybe this mental model is terrible and just rename to weights?
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
+        var foveatedScale = 10000;
 
         // Map 0-1 then convert to digit
         var distanceDigit = distanceScale * normalizeValue(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
@@ -1303,8 +1320,10 @@ define([
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * normalizeValue(this._depth, minPriority.depth, maxPriority.depth);
 
+        var foveatedDigit = this._deferLoadingPriority ? foveatedScale : 0;
+
         // Get the final base 10 number
-        var number = distanceDigit + depthDigit;
+        var number = foveatedDigit + distanceDigit + depthDigit;
         this._priority = number;
     };
 
