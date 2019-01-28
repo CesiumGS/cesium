@@ -231,7 +231,7 @@ define([
         this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
 
-        this._prefetchPass = false; // Last frame's camera flight info
+        this._prefetchPass = false; // Priority calcuation uses this to penalize non-prefetch tiles.
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
