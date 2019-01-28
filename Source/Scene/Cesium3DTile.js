@@ -346,7 +346,7 @@ define([
         this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
         this._loadTimestamp = new JulianDate();
-        this._foveatedScreenSpaceError = 0;
+        this._foveatedFactor = 0;
         this._deferLoadingPriority = false; // True for tiles that should refine but at a lower priority, such as if they are on the edges of the screen.
 
         this._commandsLength = 0;
@@ -661,12 +661,7 @@ define([
                 var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
                 var toCenterNormalize = Cartesian3.normalize(toCenter, scratchCartesian);
                 var lerpOffCenter = Math.abs(Cartesian3.dot(toCenterNormalize, frameState.camera.directionWC));
-                // var revLerpOffCenter = 1 - lerpOffCenter;
-                // var lerpOffCenter2 = revLerpOffCenter * revLerpOffCenter; // slower fall off in the center faster fall off near the edge, but want the flat part of the curve to be the center of screen so do 1- on the lerp value and then 1- goes on the min
-                // var lerpOffCenter4 = lerpOffCenter2 * lerpOffCenter2; // even slower fall off in the center faster fall off near the edge, but want the flat part of the curve to be the center of screen so do 1- on the lerp value and then 1- goes on the min
-                var min = 0;
-                var max = 128 * 5;
-                this._foveatedScreenSpaceError = lerpOffCenter * min + (1 - lerpOffCenter) * max;
+                this._foveatedFactor = (1 - lerpOffCenter);
             }
 
         }

@@ -116,7 +116,7 @@ define([
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
-     * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Increase the screen space error for tiles that are around the edges of the current view.
+     * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Defer loading tiles that are closer the edges of the current view.
      * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
      * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
      * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
@@ -255,7 +255,7 @@ define([
         this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false);
 
         /**
-         * Optimization option. Whether to prioritize tileset refinement based on a foveated screen space error.
+         * Optimization option. Whether to prioritize tileset refinement based on a foveated metric.
          * Tiles that are at the center of the screen in the current view are loaded first. Tiles around the edges
          * of the view are loaded last.
          *

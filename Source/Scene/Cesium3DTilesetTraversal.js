@@ -205,7 +205,7 @@ define([
 
     function loadTile(tileset, tile, frameState) {
         if ((hasUnloadedContent(tile) || tile.contentExpired)) {
-            tile._deferLoadingPriority = defined(tile.parent) ? tile.parent._screenSpaceError < tile._foveatedScreenSpaceError : true;
+            tile._deferLoadingPriority = tile._foveatedFactor >= 0.2;
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
         }
