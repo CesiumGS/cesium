@@ -552,7 +552,7 @@ define([
             }
         }
 
-        if (hadFillBefore && !define(surfaceTile.fill)) {
+        if (hadFillBefore && !defined(surfaceTile.fill)) {
             // Transitioned from a fill to real geometry, so we'll need to update the heights
             // of things in this tile.
             this._quadtree._tileToUpdateHeights.push(tile);
