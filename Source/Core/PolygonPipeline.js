@@ -8,6 +8,7 @@ define([
         './defaultValue',
         './defined',
         './Ellipsoid',
+        './EllipsoidRhumbLine',
         './Geometry',
         './GeometryAttribute',
         './Math',
@@ -23,6 +24,7 @@ define([
         defaultValue,
         defined,
         Ellipsoid,
+        EllipsoidRhumbLine,
         Geometry,
         GeometryAttribute,
         CesiumMath,
@@ -232,10 +234,7 @@ define([
     var subdivisionC0Scratch = new Cartographic();
     var subdivisionC1Scratch = new Cartographic();
     var subdivisionC2Scratch = new Cartographic();
-    var subdivisionCart2Scratch0 = new Cartesian2();
-    var subdivisionCart2Scratch1 = new Cartesian2();
-    var subdivisionCart2Scratch2 = new Cartesian2();
-    var subdivisionMidCart2Scratch = new Cartesian2();
+    var subdivisionCartographicScratch = new Cartographic();
 
     /**
      * Subdivides positions on rhumb lines and raises points to the surface of the ellipsoid.
@@ -281,7 +280,12 @@ define([
         // Used to make sure shared edges are not split more than once.
         var edges = {};
 
-        var granularitySqrd = granularity * granularity;
+        var radius = ellipsoid.maximumRadius;
+        var minDistance = CesiumMath.chordLength(granularity, radius);
+
+        var rhumb0 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
+        var rhumb1 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
+        var rhumb2 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
 
         while (triangles.length > 0) {
             var i2 = triangles.pop();
@@ -296,13 +300,12 @@ define([
             var c1 = ellipsoid.cartesianToCartographic(v1, subdivisionC1Scratch);
             var c2 = ellipsoid.cartesianToCartographic(v2, subdivisionC2Scratch);
 
-            var c0Cart2 = Cartesian2.fromElements(c0.longitude, c0.latitude, subdivisionCart2Scratch0);
-            var c1Cart2 = Cartesian2.fromElements(c1.longitude, c1.latitude, subdivisionCart2Scratch1);
-            var c2Cart2 = Cartesian2.fromElements(c2.longitude, c2.latitude, subdivisionCart2Scratch2);
-
-            var g0 = Cartesian2.distanceSquared(c0Cart2, c1Cart2);
-            var g1 = Cartesian2.distanceSquared(c1Cart2, c2Cart2);
-            var g2 = Cartesian2.distanceSquared(c2Cart2, c0Cart2);
+            rhumb0.setEndPoints(c0, c1);
+            var g0 = rhumb0.surfaceDistance;
+            rhumb1.setEndPoints(c1, c2);
+            var g1 = rhumb1.surfaceDistance;
+            rhumb2.setEndPoints(c2, c0);
+            var g2 = rhumb2.surfaceDistance;
 
             var max = Math.max(g0, g1, g2);
             var edge;
@@ -310,17 +313,16 @@ define([
             var midHeight;
             var midCartesian3;
 
-            // if the max length squared of a triangle edge is greater than squared granularity, subdivide the triangle
-            if (max > granularitySqrd) {
+            // if the max length squared of a triangle edge is greater than granularity, subdivide the triangle
+            if (max > minDistance) {
                 if (g0 === max) {
                     edge = Math.min(i0, i1) + ' ' + Math.max(i0, i1);
 
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = Cartesian2.add(c0Cart2, c1Cart2, subdivisionMidCart2Scratch);
-                        Cartesian2.multiplyByScalar(mid, 0.5, mid);
+                        mid = rhumb0.interpolateUsingFraction(0.5, subdivisionCartographicScratch);
                         midHeight = (c0.height + c1.height) * 0.5;
-                        midCartesian3 = Cartesian3.fromRadians(mid.x, mid.y, midHeight, ellipsoid, subdivisionMidScratch);
+                        midCartesian3 = Cartesian3.fromRadians(mid.longitude, mid.latitude, midHeight, ellipsoid, subdivisionMidScratch);
                         subdividedPositions.push(midCartesian3.x, midCartesian3.y, midCartesian3.z);
                         i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
@@ -333,10 +335,9 @@ define([
 
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = Cartesian2.add(c1Cart2, c2Cart2, subdivisionMidCart2Scratch);
-                        Cartesian2.multiplyByScalar(mid, 0.5, mid);
+                        mid = rhumb1.interpolateUsingFraction(0.5, subdivisionCartographicScratch);
                         midHeight = (c1.height + c2.height) * 0.5;
-                        midCartesian3 = Cartesian3.fromRadians(mid.x, mid.y, midHeight, ellipsoid, subdivisionMidScratch);
+                        midCartesian3 = Cartesian3.fromRadians(mid.longitude, mid.latitude, midHeight, ellipsoid, subdivisionMidScratch);
                         subdividedPositions.push(midCartesian3.x, midCartesian3.y, midCartesian3.z);
                         i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
@@ -349,10 +350,9 @@ define([
 
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = Cartesian2.add(c2Cart2, c0Cart2, subdivisionMidCart2Scratch);
-                        Cartesian2.multiplyByScalar(mid, 0.5, mid);
+                        mid = rhumb2.interpolateUsingFraction(0.5, subdivisionCartographicScratch);
                         midHeight = (c2.height + c0.height) * 0.5;
-                        midCartesian3 = Cartesian3.fromRadians(mid.x, mid.y, midHeight, ellipsoid, subdivisionMidScratch);
+                        midCartesian3 = Cartesian3.fromRadians(mid.longitude, mid.latitude, midHeight, ellipsoid, subdivisionMidScratch);
                         subdividedPositions.push(midCartesian3.x, midCartesian3.y, midCartesian3.z);
                         i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
