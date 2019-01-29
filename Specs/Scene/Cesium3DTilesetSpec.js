@@ -3571,13 +3571,30 @@ defineSuite([
     });
 
     it('prefetches tiles', function() {
+        // Flight settings
+        var destination = new Cartesian3();
+        var orientation = {
+            direction : new Cartesian3(),
+            up : new Cartesian3()
+        };
+        var duration = 100000;
+
+        // Record flight settings
+        viewAllTiles();
+        Cartesian3.clone(scene.camera.position, destination);
+        Cartesian3.clone(scene.camera.direction, orientation.direction);
+        Cartesian3.clone(scene.camera.up, orientation.up);
+
         // Reset view
         viewNothing();
 
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
-            // Set the prefetch camera to the viewAllTiles location
-            var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
-            scene.camera._prefetchCamera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 15));
+            // Slow flyTo viewAllTiles()
+            scene.camera.flyTo({
+               destination : destination,
+               orientation : orientation,
+               duration : duration
+            });
 
             scene.renderForSpecs();
             expect(tileset._requestedTilesInFlight.length).toBeGreaterThan(0);
