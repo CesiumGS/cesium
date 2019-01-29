@@ -382,6 +382,7 @@ define([
         west : 0.0,
         east : 0.0
     };
+    var ellipsoidGeodesic = new EllipsoidGeodesic();
     function computeRectangle(positions, ellipsoid, arcType, granularity, result) {
         result = defaultValue(result, new Rectangle());
         if (!defined(positions) || positions.length < 3) {
@@ -390,6 +391,14 @@ define([
             result.south = 0.0;
             result.east = 0.0;
             return result;
+        }
+
+        if (arcType === ArcType.RHUMB) {
+            return Rectangle.fromCartesianArray(positions, ellipsoid, result);
+        }
+
+        if (!ellipsoidGeodesic.ellipsoid.equals(ellipsoid)) {
+            ellipsoidGeodesic = new EllipsoidGeodesic(undefined, undefined, ellipsoid);
         }
 
         result.west = Number.POSITIVE_INFINITY;
@@ -410,13 +419,15 @@ define([
             swap = startCartographic;
             startCartographic = endCartographic;
             endCartographic = ellipsoid.cartesianToCartographic(positions[i], swap);
-            interpolateAndGrowRectangle(startCartographic, endCartographic, ellipsoid, arcType, inverseChordLength, result, idlCross);
+            ellipsoidGeodesic.setEndPoints(startCartographic, endCartographic);
+            interpolateAndGrowRectangle(ellipsoidGeodesic, inverseChordLength, result, idlCross);
         }
 
         swap = startCartographic;
         startCartographic = endCartographic;
         endCartographic = ellipsoid.cartesianToCartographic(positions[0], swap);
-        interpolateAndGrowRectangle(startCartographic, endCartographic, ellipsoid, arcType, inverseChordLength, result, idlCross);
+        ellipsoidGeodesic.setEndPoints(startCartographic, endCartographic);
+        interpolateAndGrowRectangle(ellipsoidGeodesic, inverseChordLength, result, idlCross);
 
         if (result.east - result.west > idlCross.west - idlCross.east) {
             result.east = idlCross.east;
@@ -427,21 +438,15 @@ define([
     }
 
     var interpolatedCartographicScratch = new Cartographic();
-    function interpolateAndGrowRectangle(startCartographic, endCartographic, ellipsoid, arcType, inverseChordLength, result, idlCross) {
-        var segmentPath;
-        if (arcType === ArcType.GEODESIC) {
-            segmentPath = new EllipsoidGeodesic(startCartographic, endCartographic, ellipsoid);
-        } else {
-            segmentPath = new EllipsoidRhumbLine(startCartographic, endCartographic, ellipsoid);
-        }
-        var segmentLength = segmentPath.surfaceDistance;
+    function interpolateAndGrowRectangle(ellipsoidGeodesic, inverseChordLength, result, idlCross) {
+        var segmentLength = ellipsoidGeodesic.surfaceDistance;
 
         var numPoints = Math.ceil(segmentLength * inverseChordLength);
         var subsegmentDistance = numPoints > 0 ? segmentLength / (numPoints - 1) : Number.POSITIVE_INFINITY;
         var interpolationDistance = 0.0;
 
         for (var i = 0; i < numPoints; i++) {
-            var interpolatedCartographic = segmentPath.interpolateUsingSurfaceDistance(interpolationDistance, interpolatedCartographicScratch);
+            var interpolatedCartographic = ellipsoidGeodesic.interpolateUsingSurfaceDistance(interpolationDistance, interpolatedCartographicScratch);
             interpolationDistance += subsegmentDistance;
             var longitude = interpolatedCartographic.longitude;
             var latitude = interpolatedCartographic.latitude;
