@@ -202,8 +202,8 @@ defineSuite([
             arcType : ArcType.RHUMB
         }));
 
-        expect(p.attributes.position.values.length).toEqual(13 * 3); // 8 around edge + 5 in the middle
-        expect(p.indices.length).toEqual(16 * 3); //4 squares * 4 triangles per square
+        expect(p.attributes.position.values.length).toEqual(15 * 3); // 8 around edge + 7 in the middle
+        expect(p.indices.length).toEqual(20 * 3); //5 squares * 4 triangles per square
     });
 
     it('create geometry throws if arcType is STRAIGHT', function() {
