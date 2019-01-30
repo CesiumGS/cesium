@@ -33,6 +33,7 @@ Change Log
 * Fixed an issue where setting `scene.globe.cartographicLimitRectangle` to `undefined` would cause a crash. [#7477](https://github.com/AnalyticalGraphicsInc/cesium/issues/7477)
 * Fixed `PrimitiveCollection.removeAll` to no longer `contain` removed primitives. [#7491](https://github.com/AnalyticalGraphicsInc/cesium/pull/7491)
 * Fixed `GeoJsonDataSource` to use polygons and polylines that use rhumb lines. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
+* Fixed an issue where some ground polygons would be cut off along circles of latitude. [#7507](https://github.com/AnalyticalGraphicsInc/cesium/issues/7507)
 
 ### 1.53 - 2019-01-02
 

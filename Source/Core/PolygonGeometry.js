@@ -13,6 +13,8 @@ define([
         './defineProperties',
         './DeveloperError',
         './Ellipsoid',
+        './EllipsoidGeodesic',
+        './EllipsoidRhumbLine',
         './EllipsoidTangentPlane',
         './Geometry',
         './GeometryAttribute',
@@ -44,6 +46,8 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
+        EllipsoidGeodesic,
+        EllipsoidRhumbLine,
         EllipsoidTangentPlane,
         Geometry,
         GeometryAttribute,
@@ -372,18 +376,89 @@ define([
         return geometry;
     }
 
-    function computeRectangle(positions, ellipsoid, result) {
+    var startCartographicScratch = new Cartographic();
+    var endCartographicScratch = new Cartographic();
+    var idlCross = {
+        west : 0.0,
+        east : 0.0
+    };
+    var ellipsoidGeodesic = new EllipsoidGeodesic();
+    function computeRectangle(positions, ellipsoid, arcType, granularity, result) {
+        result = defaultValue(result, new Rectangle());
         if (!defined(positions) || positions.length < 3) {
-            if (!defined(result)) {
-                return new Rectangle();
-            }
             result.west = 0.0;
             result.north = 0.0;
             result.south = 0.0;
             result.east = 0.0;
             return result;
         }
-        return Rectangle.fromCartesianArray(positions, ellipsoid, result);
+
+        if (arcType === ArcType.RHUMB) {
+            return Rectangle.fromCartesianArray(positions, ellipsoid, result);
+        }
+
+        if (!ellipsoidGeodesic.ellipsoid.equals(ellipsoid)) {
+            ellipsoidGeodesic = new EllipsoidGeodesic(undefined, undefined, ellipsoid);
+        }
+
+        result.west = Number.POSITIVE_INFINITY;
+        result.east = Number.NEGATIVE_INFINITY;
+        result.south = Number.POSITIVE_INFINITY;
+        result.north = Number.NEGATIVE_INFINITY;
+
+        idlCross.west = Number.POSITIVE_INFINITY;
+        idlCross.east = Number.NEGATIVE_INFINITY;
+
+        var inverseChordLength = 1.0 / CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
+        var positionsLength = positions.length;
+        var endCartographic = ellipsoid.cartesianToCartographic(positions[0], endCartographicScratch);
+        var startCartographic = startCartographicScratch;
+        var swap;
+
+        for (var i = 1; i < positionsLength; i++) {
+            swap = startCartographic;
+            startCartographic = endCartographic;
+            endCartographic = ellipsoid.cartesianToCartographic(positions[i], swap);
+            ellipsoidGeodesic.setEndPoints(startCartographic, endCartographic);
+            interpolateAndGrowRectangle(ellipsoidGeodesic, inverseChordLength, result, idlCross);
+        }
+
+        swap = startCartographic;
+        startCartographic = endCartographic;
+        endCartographic = ellipsoid.cartesianToCartographic(positions[0], swap);
+        ellipsoidGeodesic.setEndPoints(startCartographic, endCartographic);
+        interpolateAndGrowRectangle(ellipsoidGeodesic, inverseChordLength, result, idlCross);
+
+        if (result.east - result.west > idlCross.west - idlCross.east) {
+            result.east = idlCross.east;
+            result.west = idlCross.west;
+        }
+
+        return result;
+    }
+
+    var interpolatedCartographicScratch = new Cartographic();
+    function interpolateAndGrowRectangle(ellipsoidGeodesic, inverseChordLength, result, idlCross) {
+        var segmentLength = ellipsoidGeodesic.surfaceDistance;
+
+        var numPoints = Math.ceil(segmentLength * inverseChordLength);
+        var subsegmentDistance = numPoints > 0 ? segmentLength / (numPoints - 1) : Number.POSITIVE_INFINITY;
+        var interpolationDistance = 0.0;
+
+        for (var i = 0; i < numPoints; i++) {
+            var interpolatedCartographic = ellipsoidGeodesic.interpolateUsingSurfaceDistance(interpolationDistance, interpolatedCartographicScratch);
+            interpolationDistance += subsegmentDistance;
+            var longitude = interpolatedCartographic.longitude;
+            var latitude = interpolatedCartographic.latitude;
+
+            result.west = Math.min(result.west, longitude);
+            result.east = Math.max(result.east, longitude);
+            result.south = Math.min(result.south, latitude);
+            result.north = Math.max(result.north, latitude);
+
+            idlCross.west = longitude > 0.0 ? Math.min(longitude, idlCross.west) : idlCross.west;
+            idlCross.east = longitude < 0.0 ? Math.max(longitude, idlCross.east) : idlCross.east;
+        }
     }
 
     var createGeometryFromPositionsExtrudedPositions = [];
@@ -800,6 +875,8 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions sampled.
+     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @param {Rectangle} [result] An object in which to store the result.
      *
@@ -811,10 +888,18 @@ define([
         Check.typeOf.object('options.polygonHierarchy', options.polygonHierarchy);
         //>>includeEnd('debug');
 
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var arcType = defaultValue(options.arcType, ArcType.GEODESIC);
+        //>>includeStart('debug', pragmas.debug);
+        if (arcType !== ArcType.GEODESIC && arcType !== ArcType.RHUMB) {
+            throw new DeveloperError('Invalid arcType. Valid options are ArcType.GEODESIC and ArcType.RHUMB.');
+        }
+        //>>includeEnd('debug');
+
         var polygonHierarchy = options.polygonHierarchy;
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
 
-        return computeRectangle(polygonHierarchy.positions, ellipsoid, result);
+        return computeRectangle(polygonHierarchy.positions, ellipsoid, arcType, granularity, result);
     };
 
     /**
@@ -1000,7 +1085,7 @@ define([
             get : function() {
                 if (!defined(this._rectangle)) {
                     var positions = this._polygonHierarchy.positions;
-                    this._rectangle = computeRectangle(positions, this._ellipsoid);
+                    this._rectangle = computeRectangle(positions, this._ellipsoid, this._arcType, this._granularity);
                 }
 
                 return this._rectangle;

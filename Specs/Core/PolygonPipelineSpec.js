@@ -265,7 +265,20 @@ defineSuite([
         var indices = [0, 1, 2];
         var subdivision = PolygonPipeline.computeRhumbLineSubdivision(Ellipsoid.WGS84, positions, indices,  0.5 * CesiumMath.RADIANS_PER_DEGREE);
 
-        expect(subdivision.attributes.position.values.length).toEqual(30); // 10 vertices
-        expect(subdivision.indices.length).toEqual(27); // 9 triangles
+        expect(subdivision.attributes.position.values.length).toEqual(36); // 12 vertices
+        expect(subdivision.indices.length).toEqual(36); // 12 triangles
+    });
+
+    it('computeRhumbLineSubdivision with subdivisions across the IDL', function() {
+        var positions = Cartesian3.fromDegreesArray([
+                        178, 0,
+                        -178, 0,
+                        -178, 1
+                        ]);
+        var indices = [0, 1, 2];
+        var subdivision = PolygonPipeline.computeRhumbLineSubdivision(Ellipsoid.WGS84, positions, indices,  0.5 * CesiumMath.RADIANS_PER_DEGREE);
+
+        expect(subdivision.attributes.position.values.length).toEqual(180); // 60 vertices
+        expect(subdivision.indices.length).toEqual(252); // 84 triangles
     });
 });

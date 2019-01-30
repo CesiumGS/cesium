@@ -202,8 +202,8 @@ defineSuite([
             arcType : ArcType.RHUMB
         }));
 
-        expect(p.attributes.position.values.length).toEqual(13 * 3); // 8 around edge + 5 in the middle
-        expect(p.indices.length).toEqual(16 * 3); //4 squares * 4 triangles per square
+        expect(p.attributes.position.values.length).toEqual(15 * 3); // 8 around edge + 7 in the middle
+        expect(p.indices.length).toEqual(20 * 3); //5 squares * 4 triangles per square
     });
 
     it('create geometry throws if arcType is STRAIGHT', function() {
@@ -1053,6 +1053,67 @@ defineSuite([
         expect(CesiumMath.toDegrees(r.south)).toEqualEpsilon(30.0, CesiumMath.EPSILON13);
         expect(CesiumMath.toDegrees(r.east)).toEqualEpsilon(-100.0, CesiumMath.EPSILON13);
         expect(CesiumMath.toDegrees(r.west)).toEqualEpsilon(-100.5, CesiumMath.EPSILON13);
+    });
+
+    it('computes rectangle according to arctype', function() {
+        var pGeodesic = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -90.0, 30.0, 0,
+                    -80.0, 30.0, 0,
+                    -80.0, 40.0, 0,
+                    -90.0, 40.0, 0
+                ])},
+            granularity: CesiumMath.RADIANS_PER_DEGREE,
+            arcType : ArcType.GEODESIC
+        });
+
+        var boundingGeodesic = pGeodesic.rectangle;
+        expect(CesiumMath.toDegrees(boundingGeodesic.north)).toBeGreaterThan(40.0);
+        expect(CesiumMath.toDegrees(boundingGeodesic.south)).toEqualEpsilon(30.0, CesiumMath.EPSILON10);
+        expect(CesiumMath.toDegrees(boundingGeodesic.east)).toEqualEpsilon(-80.0, CesiumMath.EPSILON10);
+        expect(CesiumMath.toDegrees(boundingGeodesic.west)).toEqualEpsilon(-90.0, CesiumMath.EPSILON10);
+
+        var pRhumb = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArrayHeights([
+                    -90.0, 30.0, 0,
+                    -80.0, 30.0, 0,
+                    -80.0, 40.0, 0,
+                    -90.0, 40.0, 0
+                ])},
+            granularity: CesiumMath.RADIANS_PER_DEGREE,
+            arcType : ArcType.RHUMB
+        });
+
+        var boundingRhumb = pRhumb.rectangle;
+        expect(CesiumMath.toDegrees(boundingRhumb.north)).toEqualEpsilon(40.0, CesiumMath.EPSILON10);
+        expect(CesiumMath.toDegrees(boundingRhumb.south)).toEqualEpsilon(30.0, CesiumMath.EPSILON10);
+        expect(CesiumMath.toDegrees(boundingRhumb.east)).toEqualEpsilon(-80.0, CesiumMath.EPSILON10);
+        expect(CesiumMath.toDegrees(boundingRhumb.west)).toEqualEpsilon(-90.0, CesiumMath.EPSILON10);
+    });
+
+    it('computes rectangles that cross the IDL', function() {
+        var pRhumb = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : Cartesian3.fromDegreesArray([
+                     175, 30,
+                    -170, 30,
+                    -170, 40,
+                     175, 40
+                ])},
+            granularity: CesiumMath.RADIANS_PER_DEGREE,
+            arcType : ArcType.RHUMB
+        });
+
+        var boundingRhumb = pRhumb.rectangle;
+        expect(CesiumMath.toDegrees(boundingRhumb.north)).toEqualEpsilon(40.0, CesiumMath.EPSILON10);
+        expect(CesiumMath.toDegrees(boundingRhumb.south)).toEqualEpsilon(30.0, CesiumMath.EPSILON10);
+        expect(CesiumMath.toDegrees(boundingRhumb.east)).toEqualEpsilon(-170.0, CesiumMath.EPSILON10);
+        expect(CesiumMath.toDegrees(boundingRhumb.west)).toEqualEpsilon(175.0, CesiumMath.EPSILON10);
     });
 
     it('computeRectangle', function() {
