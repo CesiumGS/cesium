@@ -531,7 +531,5 @@ define([
         }
     }
 
-    var worker = createTaskProcessorWorker(upsampleQuantizedTerrainMesh);
-    worker._workerFunction = upsampleQuantizedTerrainMesh;
-    return worker;
+    return createTaskProcessorWorker(upsampleQuantizedTerrainMesh);
 });

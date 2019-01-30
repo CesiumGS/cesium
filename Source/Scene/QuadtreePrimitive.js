@@ -119,7 +119,7 @@ define([
         this._updateHeightsTimeSlice = 2.0;
 
         // If a culled tile contains a cartographic positions in this list, it will be marked
-        // TileSelection.CULLED_BUT_NEEDED and added to the list of tiles to update heights,
+        // TileSelectionResult.CULLED_BUT_NEEDED and added to the list of tiles to update heights,
         // even though it is not rendered. The first position will be the position of the
         // camera and the second will be the origin of the camera's reference frame.
         this._neededPositions = [undefined, undefined];
