@@ -1027,7 +1027,7 @@ define([
         var availabilityTilesLoaded = layer.availabilityTilesLoaded;
         var availability = layer.availability;
 
-        var tile = CesiumTerrainProvider._getAvailabilityTile(layer, x, y, level);
+        var tile = getAvailabilityTile(layer, x, y, level);
         while(defined(tile)) {
             if (availability.isTileAvailable(tile.level, tile.x, tile.y) &&
                 !availabilityTilesLoaded.isTileAvailable(tile.level, tile.x, tile.y))
@@ -1060,7 +1060,7 @@ define([
                 };
             }
 
-            tile = CesiumTerrainProvider._getAvailabilityTile(layer, tile.x, tile.y, tile.level);
+            tile = getAvailabilityTile(layer, tile.x, tile.y, tile.level);
         }
 
         return {
