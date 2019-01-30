@@ -688,13 +688,32 @@ define([
             //     dynamicError = CesiumMath.fog(distance, density) * factor;
             // }
 
-            var boundingVolume = this._boundingVolume.boundingSphere;
-            var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
-            var toCenterNormalize = Cartesian3.normalize(toCenter, scratchCartesian);
-            var lerpOffCenter = Math.abs(Cartesian3.dot(toCenterNormalize, frameState.camera.directionWC));
-            this._foveatedFactor = 1 - lerpOffCenter;
-            this._deferLoadingPriority = this._foveatedFactor >= 0.1;
-            // this._deferLoadingPriority = false;
+            // var boundingVolume = this._boundingVolume.boundingSphere;
+            // var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
+            // var toCenterNormalize = Cartesian3.normalize(toCenter, scratchCartesian);
+            // var lerpOffCenter = Math.abs(Cartesian3.dot(toCenterNormalize, frameState.camera.directionWC));
+            // this._foveatedFactor = 1 - lerpOffCenter;
+            // this._deferLoadingPriority = this._foveatedFactor >= 0.1;
+
+
+            var sphere = this._boundingVolume.boundingSphere;
+            var radius = sphere.radius;
+            var scaledFwd = Cartesian3.multiplyByScalar(frameState.camera.directionWC, this._centerZDepth, scratchCartesian);
+            var closestOnLine = Cartesian3.add(frameState.camera.positionWC, scaledFwd, scratchCartesian);
+            var toLine = Cartesian3.subtract(closestOnLine, sphere.center, scratchCartesian);
+            var distSqrd = Cartesian3.dot(toLine, toLine);
+            var diff = Math.max(distSqrd - radius*radius, 0);
+            if (diff === 0)  {
+                this._foveatedFactor = 0;
+            } else {
+                var toLineNormalize = Cartesian3.normalize(toLine, scratchCartesian);
+                var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalize, radius, scratchCartesian);
+                var closestOnSphere = Cartesian3.add(sphere.center, scaledToLine, scratchCartesian);
+                var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, frameState.camera.positionWC, scratchCartesian);
+                var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
+                this._foveatedFactor = 1 - Math.abs(Cartesian3.dot(frameState.camera.directionWC, toClosestOnSphereNormalize));
+            }
+            this._deferLoadingPriority = this._foveatedFactor >= 0.05;
 
             // var error = this._screenSpaceError;
             // var maxSSE = tileset._maximumScreenSpaceError;
