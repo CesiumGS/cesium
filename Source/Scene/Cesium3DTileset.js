@@ -114,6 +114,7 @@ define([
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
      * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
+     * @param {Boolean} [options.prefetchFlightDestinations=true] Optimization option. Whether or not to fetch tiles at the camera's flight destination while the camera is in flight.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
@@ -230,6 +231,7 @@ define([
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
 
         this._prefetchPass = false; // 'true' tells traversal to skip selectDesiredTile. 'false' tells priority calculation to penalize non-prefetch tiles.
+        this._receivedPrefetches = []; // Need so that we can touch them after selected tiles get touched so that we can keep them in cache
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -245,6 +247,14 @@ define([
         this._initialClippingPlanesOriginMatrix = Matrix4.IDENTITY; // Computed from the tileset JSON.
         this._clippingPlanesOriginMatrix = undefined; // Combines the above with any run-time transforms.
         this._clippingPlanesOriginMatrixDirty = true;
+
+        /**
+         * Optimization option. Whether or not to fetch tiles at the camera's flight destination while the camera is in flight.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.prefetchFlightDestinations = defaultValue(options.prefetchFlightDestinations, true);
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -2029,6 +2039,7 @@ define([
     function prefetchTilesAtFlightDestination(tileset, frameState) {
         var camera = frameState.camera;
         var currentFlight = camera._currentFlight;
+        tileset._receivedPrefetches.length = 0;
         if (defined(currentFlight)) {
             // Configure for prefetch
             tileset._prefetchPass = true;
@@ -2038,10 +2049,20 @@ define([
             requestTiles(tileset, false);
 
             // Restore settings
-            frameState.camera = camera;
             tileset._prefetchPass = false;
+            frameState.camera = camera;
         }
+
         resetMinMax(tileset);
+    }
+
+    function touchReceivedPrefetches(tileset) {
+        // Prevents received prefetches from being unloaded from the cache
+        var prefetches = tileset._receivedPrefetches;
+        var length = prefetches.length;
+        for (var i = 0; i < length; ++i) {
+            tileset._cache.touch(prefetches[i]);
+        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2098,7 +2119,7 @@ define([
         if (isAsync) {
             ready = Cesium3DTilesetAsyncTraversal.selectTiles(tileset, frameState);
         } else {
-            if (isRender) {
+            if (isRender && tileset.prefetchFlightDestinations) {
                 prefetchTilesAtFlightDestination(tileset, frameState);
             }
             ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
@@ -2119,6 +2140,7 @@ define([
         updateTiles(tileset, frameState);
 
         if (isRender) {
+            touchReceivedPrefetches(tileset);
             unloadTiles(tileset);
 
             // Events are raised (added to the afterRender queue) here since promises

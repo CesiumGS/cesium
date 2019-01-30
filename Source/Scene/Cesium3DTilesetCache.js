@@ -45,6 +45,10 @@ define([
             return;
         }
 
+        if (tile._isPrefetch) {
+            console.log('removing prefetch');
+        }
+
         this._list.remove(node);
         tile.cacheNode = undefined;
         unloadCallback(tileset, tile);

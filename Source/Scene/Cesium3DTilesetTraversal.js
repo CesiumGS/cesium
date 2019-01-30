@@ -119,7 +119,15 @@ define([
     }
 
     function selectTile(tileset, tile, frameState) {
-        if (tile.contentVisibility(frameState) !== Intersect.OUTSIDE) {
+        if (tileset._prefetchPass && tile._selectedFrame < (frameState.frameNumber - 1)) {
+            // The prefetch came back (has content to render if it got to this point) but isn't in view yet, i.e. wasn't selected last frame.
+            // We need to make sure it gets on _receivedPrefetches to stay in cache (by touching them after selected tiles are touched)
+            tile._isPrefetch = true;
+            tileset._receivedPrefetches.push(tile);
+            return;
+        }
+
+        if (tile.contentVisibility(frameState) !== Intersect.OUTSIDE ) {
             var tileContent = tile.content;
             if (tileContent.featurePropertiesDirty) {
                 // A feature's property in this tile changed, the tile needs to be re-styled.
@@ -160,9 +168,6 @@ define([
     }
 
     function selectDesiredTile(tileset, tile, frameState) {
-        if (tileset._prefetchPass) {
-            return;
-        }
 
         if (!skipLevelOfDetail(tileset)) {
             if (tile.contentAvailable) {
@@ -290,6 +295,9 @@ define([
         tile._priorityDistance = tile._distanceToCamera;
         tile._priorityDistanceHolder = tile;
         updateMinMaxPriority(tileset, tile);
+
+        // Prefetch flight destinations
+        tile._isPrefetch = false;
 
         // SkipLOD
         tile._shouldSelect = false;
