@@ -504,8 +504,7 @@ define([
 
             var boundingVolume = surfaceTile.pickBoundingSphere;
             if (mode !== SceneMode.SCENE3D) {
-                // TODO: ok to allocate / recreate the bounding sphere every time here?
-                boundingVolume = BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, projection, surfaceTile.tileBoundingRegion.minimumHeight, surfaceTile.tileBoundingRegion.maximumHeight, boundingVolume);
+                surfaceTile.pickBoundingSphere = boundingVolume = BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, projection, surfaceTile.tileBoundingRegion.minimumHeight, surfaceTile.tileBoundingRegion.maximumHeight, boundingVolume);
                 Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
             } else if (defined(surfaceTile.renderedMesh)) {
                 BoundingSphere.clone(surfaceTile.renderedMesh.boundingSphere3D, boundingVolume);

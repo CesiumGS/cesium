@@ -96,7 +96,6 @@ define([
         this.mesh = undefined;
         this.fill = undefined;
 
-        // TODO: probably better to have a bounding sphere for 2D rather than one for picking.
         this.pickBoundingSphere = new BoundingSphere();
 
         this.surfaceShader = undefined;

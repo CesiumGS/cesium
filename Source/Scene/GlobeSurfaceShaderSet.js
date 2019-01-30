@@ -105,7 +105,7 @@ define([
 
         var vertexLogDepth = 0;
         var vertexLogDepthDefine = '';
-        if (surfaceTile.terrainData === undefined || surfaceTile.terrainData._createdByUpsampling) {
+        if (!defined(surfaceTile.vertexArray) || !defined(surfaceTile.terrainData) || surfaceTile.terrainData._createdByUpsampling) {
             vertexLogDepth = 1;
             vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
         }
