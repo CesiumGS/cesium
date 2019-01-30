@@ -638,6 +638,7 @@ define([
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
         var error;
+        var dynamicError = 0;
         if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
             if (defined(frustum._offCenterFrustum)) {
                 frustum = frustum._offCenterFrustum;
@@ -652,18 +653,8 @@ define([
             if (tileset.dynamicScreenSpaceError) {
                 var density = tileset._dynamicScreenSpaceErrorComputedDensity;
                 var factor = tileset.dynamicScreenSpaceErrorFactor;
-                var dynamicError = CesiumMath.fog(distance, density) * factor;
-                error -= dynamicError;
+                dynamicError = CesiumMath.fog(distance, density) * factor;
             }
-
-            if (tileset.foveatedScreenSpaceError) {
-                var boundingVolume = this._boundingVolume.boundingSphere;
-                var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
-                var toCenterNormalize = Cartesian3.normalize(toCenter, scratchCartesian);
-                var lerpOffCenter = Math.abs(Cartesian3.dot(toCenterNormalize, frameState.camera.directionWC));
-                this._foveatedFactor = (1 - lerpOffCenter);
-            }
-
         }
         return error;
     };
@@ -684,6 +675,32 @@ define([
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
+
+
+
+        var tileset = this._tileset;
+        if (tileset.foveatedScreenSpaceError) {
+            // var dynamicError = 0;
+            // if (tileset.dynamicScreenSpaceError) {
+            //     var distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
+            //     var density = tileset._dynamicScreenSpaceErrorComputedDensity;
+            //     var factor = tileset.dynamicScreenSpaceErrorFactor;
+            //     dynamicError = CesiumMath.fog(distance, density) * factor;
+            // }
+
+            var boundingVolume = this._boundingVolume.boundingSphere;
+            var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
+            var toCenterNormalize = Cartesian3.normalize(toCenter, scratchCartesian);
+            var lerpOffCenter = Math.abs(Cartesian3.dot(toCenterNormalize, frameState.camera.directionWC));
+            this._foveatedFactor = 1 - lerpOffCenter;
+            this._deferLoadingPriority = this._foveatedFactor >= 0.1;
+            // this._deferLoadingPriority = false;
+
+            // var error = this._screenSpaceError;
+            // var maxSSE = tileset._maximumScreenSpaceError;
+            // var failsEitherDynamicSSE = maxSSE >= (error - dynamicError) || this._foveatedFactor >= 0.2;
+            // this._deferLoadingPriority = (maxSSE < error) && failsEitherDynamicSSE; // Passes normally but fails either dynamic sse test
+        }
     };
 
     /**
@@ -1307,7 +1324,7 @@ define([
         // Maybe this mental model is terrible and just rename to weights?
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
-        var foveatedScale = 10000;
+        var foveatedScale = distanceScale * 10;
 
         // Map 0-1 then convert to digit
         var distanceDigit = distanceScale * normalizeValue(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);

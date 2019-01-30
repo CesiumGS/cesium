@@ -205,7 +205,6 @@ define([
 
     function loadTile(tileset, tile, frameState) {
         if ((hasUnloadedContent(tile) || tile.contentExpired)) {
-            tile._deferLoadingPriority = tile._foveatedFactor >= 0.2;
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
         }
@@ -281,14 +280,15 @@ define([
 
     function updateTile(tileset, tile, frameState) {
         // Reset some of the tile's flags and re-evaluate visibility
-        updateTileVisibility(tileset, tile, frameState);
+        tile._deferLoadingPriority = false;
+        // updateTileVisibility(tileset, tile, frameState);
+        tile.updateVisibility(frameState);
         tile.updateExpiration();
 
         // Request priority
         tile._wasMinPriorityChild = false;
         tile._priorityDistance = tile._distanceToCamera;
         tile._priorityDistanceHolder = tile;
-        tile._deferLoadingPriority = false;
         updateMinMaxPriority(tileset, tile);
 
         // SkipLOD
