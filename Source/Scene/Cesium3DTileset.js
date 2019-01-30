@@ -1670,7 +1670,11 @@ define([
                 // external tileset when all the tiles are unloaded.
                 tileset._statistics.incrementLoadCounts(tile.content);
                 ++tileset._statistics.numberOfTilesWithContentReady;
-                ++tileset._statistics.numberOfLoadedTilesTotal;
+                if (tile._isPrefetch) {
+                    ++tileset._statistics.numberOfLoadedTilesTotalPrefetch;
+                } else {
+                    ++tileset._statistics.numberOfLoadedTilesTotal;
+                }
 
                 // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
                 tileset._cache.add(tile);
@@ -2141,7 +2145,7 @@ define([
 
         if (isRender) {
             touchReceivedPrefetches(tileset);
-            unloadTiles(tileset);
+            // unloadTiles(tileset);
 
             // Events are raised (added to the afterRender queue) here since promises
             // may resolve outside of the update loop that then raise events, e.g.,

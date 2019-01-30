@@ -122,7 +122,7 @@ define([
         if (tileset._prefetchPass && tile._selectedFrame < (frameState.frameNumber - 1)) {
             // The prefetch came back (has content to render if it got to this point) but isn't in view yet, i.e. wasn't selected last frame.
             // We need to make sure it gets on _receivedPrefetches to stay in cache (by touching them after selected tiles are touched)
-            tile._isPrefetch = true;
+            // tile._isPrefetch = true;
             tileset._receivedPrefetches.push(tile);
             return;
         }
@@ -211,6 +211,12 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
+        if (tileset._prefetchPass) {
+            tile._isPrefetch = true;
+        } 
+        // else if (tile._isPrefetch) {
+        //     return;
+        // }
         if (hasUnloadedContent(tile) || tile.contentExpired) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
@@ -297,7 +303,7 @@ define([
         updateMinMaxPriority(tileset, tile);
 
         // Prefetch flight destinations
-        tile._isPrefetch = false;
+        // tile._isPrefetch = false;
 
         // SkipLOD
         tile._shouldSelect = false;
