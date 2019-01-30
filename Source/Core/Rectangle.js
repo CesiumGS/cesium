@@ -928,6 +928,14 @@ define([
         return result;
     };
 
+    function unprojectAndSetRectangle(mapProjection, projected, unprojected, result) {
+        mapProjection.unproject(projected, unprojected);
+        result.west = Math.min(result.west, unprojected.longitude);
+        result.east = Math.max(result.east, unprojected.longitude);
+        result.south = Math.min(result.south, unprojected.latitude);
+        result.north = Math.max(result.north, unprojected.latitude);
+    }
+
     var northPole = new Cartographic(0, CesiumMath.PI_OVER_TWO);
     var southPole = new Cartographic(0, -CesiumMath.PI_OVER_TWO);
     var projectedPoleScratch = new Cartographic();
@@ -977,11 +985,7 @@ define([
             projected.x = projectedCorner.longitude + projectedWidthStep * longIndex;
             projected.y = projectedCorner.latitude;
 
-            mapProjection.unproject(projected, unprojected);
-            result.west = Math.min(result.west, unprojected.longitude);
-            result.east = Math.max(result.east, unprojected.longitude);
-            result.south = Math.min(result.south, unprojected.latitude);
-            result.north = Math.max(result.north, unprojected.latitude);
+            unprojectAndSetRectangle(mapProjection, projected, unprojected, result);
 
             if (longIndex !== 0 && !CesiumMath.equalsEpsilon(Math.abs(unprojected.longitude), CesiumMath.PI, CesiumMath.EPSILON14)) {
                 crossedIdl = crossedIdl || Math.abs(lastLongitudeTop - unprojected.longitude) > CesiumMath.PI;
@@ -993,11 +997,7 @@ define([
 
             projected.y = projectedCorner.latitude + projectedHeight;
 
-            mapProjection.unproject(projected, unprojected);
-            result.west = Math.min(result.west, unprojected.longitude);
-            result.east = Math.max(result.east, unprojected.longitude);
-            result.south = Math.min(result.south, unprojected.latitude);
-            result.north = Math.max(result.north, unprojected.latitude);
+            unprojectAndSetRectangle(mapProjection, projected, unprojected, result);
 
             if (longIndex !== 0 && !CesiumMath.equalsEpsilon(Math.abs(unprojected.longitude), CesiumMath.PI, CesiumMath.EPSILON14)) {
                 crossedIdl = crossedIdl || Math.abs(lastLongitudeBottom - unprojected.longitude) > CesiumMath.PI;
@@ -1012,22 +1012,14 @@ define([
             projected.y = projectedCorner.latitude + projectedHeightStep * latIndex;
             projected.x = projectedCorner.longitude;
 
-            mapProjection.unproject(projected, unprojected);
-            result.west = Math.min(result.west, unprojected.longitude);
-            result.east = Math.max(result.east, unprojected.longitude);
-            result.south = Math.min(result.south, unprojected.latitude);
-            result.north = Math.max(result.north, unprojected.latitude);
+            unprojectAndSetRectangle(mapProjection, projected, unprojected, result);
 
             idlCrossWest = unprojected.longitude > 0.0 ? Math.min(idlCrossWest, unprojected.longitude) : idlCrossWest;
             idlCrossEast = unprojected.longitude < 0.0 ? Math.max(idlCrossEast, unprojected.longitude) : idlCrossEast;
 
             projected.x = projectedCorner.longitude + projectedWidth;
 
-            mapProjection.unproject(projected, unprojected);
-            result.west = Math.min(result.west, unprojected.longitude);
-            result.east = Math.max(result.east, unprojected.longitude);
-            result.south = Math.min(result.south, unprojected.latitude);
-            result.north = Math.max(result.north, unprojected.latitude);
+            unprojectAndSetRectangle(mapProjection, projected, unprojected, result);
 
             idlCrossWest = unprojected.longitude > 0.0 ? Math.min(idlCrossWest, unprojected.longitude) : idlCrossWest;
             idlCrossEast = unprojected.longitude < 0.0 ? Math.max(idlCrossEast, unprojected.longitude) : idlCrossEast;

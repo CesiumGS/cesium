@@ -38,9 +38,9 @@ define([
      * @alias CustomProjection
      * @constructor
      *
-     * @param {String} options.url The url of the external file.
-     * @param {String} options.projectionName A unique name for this projection.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The MapProjection's ellipsoid.
+     * @param {String} url The url of the external file.
+     * @param {String} projectionName A unique name for this projection.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The MapProjection's ellipsoid.
      */
     function CustomProjection(url, projectionName, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
@@ -76,6 +76,7 @@ define([
                 return this._ellipsoid;
             }
         },
+
         /**
          * Gets whether or not the projection evenly maps meridians to vertical lines.
          * This is not guaranteed for custom projections and is assumed false.
@@ -91,6 +92,7 @@ define([
                 return false;
             }
         },
+
         /**
          * Gets the promise that will be resolved when the CustomProjection's resources are done loading.
          *
@@ -111,6 +113,7 @@ define([
                 return this._readyPromise;
             }
         },
+
         /**
          * Gets a value indicating whether or not the projection is ready for use.
          * @memberof CustomProjection.prototype
@@ -121,6 +124,7 @@ define([
                 return this._ready;
             }
         },
+
         /**
          * Gets the absolute URL for the file that the CustomProjection is loading.
          *
@@ -134,6 +138,7 @@ define([
                 return this._url;
             }
         },
+
         /**
          * Gets the unique name for this projection.
          *

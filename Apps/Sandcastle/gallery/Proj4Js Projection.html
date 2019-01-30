@@ -29,6 +29,7 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+// Create viewer with ESRI:53009 (https://epsg.io/53009) as the mapProjection.
 var viewer = new Cesium.Viewer('cesiumContainer', {
     sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
     mapProjection : new Cesium.Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs')
@@ -47,8 +48,8 @@ function addPoint(longitude, latitude) {
     }));
 }
 
-for (var longitude = -175; longitude < 180; longitude += 10) {
-    for (var latitude = -85; latitude < 90; latitude += 10) {
+for (var longitude = -175; longitude <= 175; longitude += 10) {
+    for (var latitude = -85; latitude <= 95; latitude += 10) {
         addPoint(longitude, latitude);
     }
 }

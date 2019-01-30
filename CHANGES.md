@@ -17,7 +17,7 @@ Change Log
 * Added the ability to specify the width of the intersection volume for `Scene.sampleHeight`, `Scene.clampToHeight`, `Scene.sampleHeightMostDetailed`, and `Scene.clampToHeightMostDetailed`. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
 * Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Time%20Dynamic%20Wheels.html) on using `nodeTransformations` to rotate a model's wheels based on its velocity. [#7361](https://github.com/AnalyticalGraphicsInc/cesium/pull/7361)
 * Added `EllipsoidRhumbLine` class as a rhumb line counterpart to `EllipsoidGeodesic`. [#7484](https://github.com/AnalyticalGraphicsInc/cesium/pull/7484)
-* Added support for `Proj4JS` projections and projections defined by user code in Columbus View and 2D. [#7502](https://github.com/AnalyticalGraphicsInc/cesium/pull/7502)
+* Added support for `Proj4js` projections and projections defined by user code in Columbus View and 2D. [#7502](https://github.com/AnalyticalGraphicsInc/cesium/pull/7502)
 
 ##### Fixes :wrench:
 * Fixed 3D Tiles performance regression. [#7482](https://github.com/AnalyticalGraphicsInc/cesium/pull/7482)

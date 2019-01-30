@@ -71,6 +71,7 @@ define([
                 return this._wkt;
             }
         },
+
         /**
          * The scale for converting from heights in meters to the projection's units.
          * @memberof Proj4Projection.prototype
@@ -82,6 +83,7 @@ define([
                 return this._heightScale;
             }
         },
+
         /**
          * Gets whether or not the projection evenly maps meridians to vertical lines.
          * Not all Proj4 projections are cylindrical about the equator.
@@ -97,6 +99,7 @@ define([
                 return false;
             }
         },
+
         /**
          * The bounds in Cartographic coordinates over which this projection is valid.
          * @memberof Proj4Projection.prototype

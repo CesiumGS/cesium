@@ -120,7 +120,6 @@ define([
      *                  stride property is greater than 1.  If this property is false, the first element is the
      *                  low-order element.  If it is true, the first element is the high-order element.
      * @param {Boolean} [options.includeWebMercatorT=false] Indicates that the vertices should include a T coordinate to compensate for Web Mercator Latitude.
-     *
      * @param {MapProjection} mapProjection MapProjection for projecting terrain positions to the target 2D coordinate system.
      * @example
      * var width = 5;
