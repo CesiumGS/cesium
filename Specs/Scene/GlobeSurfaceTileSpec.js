@@ -530,7 +530,7 @@ defineSuite([
             scene.destroyForSpecs();
         });
 
-        xit('gets correct results even when the mesh includes normals', function() {
+        it('gets correct results even when the mesh includes normals', function() {
             var terrainProvider = createWorldTerrain({
                 requestVertexNormals: true,
                 requestWaterMask: false
@@ -549,6 +549,10 @@ defineSuite([
                 if (!terrainProvider.ready) {
                     return false;
                 }
+
+                // We know this tile is available, so we don't need to load the level 0 and level 10
+                //  tile to compute the availability.
+                terrainProvider._availability.addAvailableTileRange(11, 3788, 1336, 3788, 1336);
 
                 GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, imageryLayerCollection, []);
                 RequestScheduler.update();
