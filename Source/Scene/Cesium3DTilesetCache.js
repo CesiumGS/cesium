@@ -45,11 +45,13 @@ define([
             return;
         }
 
-        if (tile._isPrefetch) {
-            console.log('removing prefetch');
-        } else {
-            console.log('NON');
-        }
+        ++tile._unloadCount;
+        // console.log('UNLOAD');
+        // if (tile._isPrefetch) {
+        //     console.log('removing prefetch');
+        // } else {
+        //     console.log('NON');
+        // }
 
         this._list.remove(node);
         tile.cacheNode = undefined;

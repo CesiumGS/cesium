@@ -2871,6 +2871,7 @@ define([
             this._prefetchCamera = Camera.clone(this, this._prefetchCamera);
         }
         this._prefetchCamera.setView({ destination: destination, orientation: orientation });
+        this._prefetchCamera.cullingVolume = this._prefetchCamera.frustum.computeCullingVolume(this._prefetchCamera.positionWC, this._prefetchCamera.directionWC, this._prefetchCamera.upWC);
     };
 
     function distanceToBoundingSphere3D(camera, radius) {

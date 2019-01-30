@@ -119,13 +119,13 @@ define([
     }
 
     function selectTile(tileset, tile, frameState) {
-        if (tileset._prefetchPass && tile._selectedFrame < (frameState.frameNumber - 1)) {
-            // The prefetch came back (has content to render if it got to this point) but isn't in view yet, i.e. wasn't selected last frame.
-            // We need to make sure it gets on _receivedPrefetches to stay in cache (by touching them after selected tiles are touched)
-            // tile._isPrefetch = true;
-            tileset._receivedPrefetches.push(tile);
-            return;
-        }
+        // if (tileset._prefetchPass && tile._selectedFrame < (frameState.frameNumber - 1)) {
+        //     // The prefetch came back (has content to render if it got to this point) but isn't in view yet, i.e. wasn't selected last frame.
+        //     // We need to make sure it gets on _receivedPrefetches to stay in cache (by touching them after selected tiles are touched)
+        //     // tile._isPrefetch = true;
+            // tileset._receivedPrefetches.push(tile);
+            // return;
+        // }
 
         if (tile.contentVisibility(frameState) !== Intersect.OUTSIDE ) {
             var tileContent = tile.content;
@@ -168,7 +168,6 @@ define([
     }
 
     function selectDesiredTile(tileset, tile, frameState) {
-
         if (!skipLevelOfDetail(tileset)) {
             if (tile.contentAvailable) {
                 // The tile can be selected right away and does not require traverseAndSelect
@@ -211,24 +210,28 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
-        if (tileset._prefetchPass) {
-            tile._isPrefetch = true;
-        } 
+        // if (tileset._prefetchPass) {
+        //     tile._isPrefetch = true;
+        // } 
         // else if (tile._isPrefetch) {
         //     return;
         // }
         if (hasUnloadedContent(tile) || tile.contentExpired) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
-        }
+        } 
+        // else if (tile._isPrefetch) {
+        //     tileset._receivedPrefetches.push(tile);
+        // }
+
     }
 
     function updateVisibility(tileset, tile, frameState) {
-        if (tile._updatedVisibilityFrame === tileset._updatedVisibilityFrame) {
+        // if (tile._updatedVisibilityFrame === tileset._updatedVisibilityFrame) {
             // Return early if visibility has already been checked during the traversal.
             // The visibility may have already been checked if the cullWithChildrenBounds optimization is used.
-            return;
-        }
+            // return;
+        // }
 
         tile.updateVisibility(frameState);
         tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
@@ -303,7 +306,7 @@ define([
         updateMinMaxPriority(tileset, tile);
 
         // Prefetch flight destinations
-        // tile._isPrefetch = false;
+        // tile._isPrefetch = (!defined(frameState.camera._currentFlight) || tileset._prefetchPass) ? false : tile._isPrefetch ;
 
         // SkipLOD
         tile._shouldSelect = false;
@@ -357,6 +360,7 @@ define([
         var length = children.length;
 
         for (i = 0; i < length; ++i) {
+            children[i]._updatedVisibilityFrame = 0; // Did not fully fix this.
             updateTile(tileset, children[i], frameState);
         }
 
@@ -467,6 +471,7 @@ define([
         // and rendering children and parent tiles simultaneously.
         var stack = traversal.stack;
         stack.push(root);
+        var theCount = 0;
 
         while (stack.length > 0) {
             traversal.stackMaximumLength = Math.max(traversal.stackMaximumLength, stack.length);
@@ -480,7 +485,9 @@ define([
             var parent = tile.parent;
             var parentRefines = !defined(parent) || parent._refines;
             var refines = false;
-
+            if (!tileset._prefetchPass && defined(parent) && !defined(parent.parent)) {
+                tile._marked = true;
+            }
             if (canTraverse(tileset, tile)) {
                 refines = updateAndPushChildren(tileset, tile, stack, frameState) && parentRefines;
             }
@@ -523,6 +530,9 @@ define([
             tile._refines = refines;
             tile._updatedVisibilityFrame = 0; // Reset so visibility is checked during the next pass which may use a different camera
         }
+        // if (!tileset._prefetchPass) {
+        //     console.log(theCount);
+        // }
     }
 
     function executeEmptyTraversal(tileset, root, frameState) {

@@ -347,6 +347,8 @@ define([
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
         this._loadTimestamp = new JulianDate();
         this._isPrefetch = false;
+        this._loadCount = 0;
+        this._unloadCount = 0;
 
         this._commandsLength = 0;
 
@@ -1293,6 +1295,7 @@ define([
 
         // Get the final base 10 number
         var number = distanceDigit + depthDigit + prefetchDigit;
+        // var number = distanceDigit + depthDigit;
         this._priority = number;
     };
 

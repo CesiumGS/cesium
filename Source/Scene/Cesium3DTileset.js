@@ -1670,6 +1670,7 @@ define([
                 // external tileset when all the tiles are unloaded.
                 tileset._statistics.incrementLoadCounts(tile.content);
                 ++tileset._statistics.numberOfTilesWithContentReady;
+                ++tile._loadCount;
                 if (tile._isPrefetch) {
                     ++tileset._statistics.numberOfLoadedTilesTotalPrefetch;
                 } else {
@@ -2039,15 +2040,20 @@ define([
         tileset._minPriority.distance = Number.MAX_VALUE;
         tileset._maxPriority.distance = -Number.MAX_VALUE;
     }
-
+    
+        var lastFrameWasFlight = false;
     function prefetchTilesAtFlightDestination(tileset, frameState) {
         var camera = frameState.camera;
+        var cullingVolume = frameState.cullingVolume;
         var currentFlight = camera._currentFlight;
         tileset._receivedPrefetches.length = 0;
         if (defined(currentFlight)) {
+            lastFrameWasFlight = true;
+
             // Configure for prefetch
             tileset._prefetchPass = true;
             frameState.camera = camera._prefetchCamera;
+            frameState.cullingVolume = camera._prefetchCamera.cullingVolume;
 
             Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
             requestTiles(tileset, false);
@@ -2055,6 +2061,12 @@ define([
             // Restore settings
             tileset._prefetchPass = false;
             frameState.camera = camera;
+            frameState.cullingVolume = cullingVolume;
+        } else if (lastFrameWasFlight && tileset._tilesLoaded) {
+            lastFrameWasFlight = false;
+            frameState.afterRender.push(function() {
+                tileset.allTilesLoaded.raiseEvent();
+            });
         }
 
         resetMinMax(tileset);
@@ -2127,6 +2139,7 @@ define([
                 prefetchTilesAtFlightDestination(tileset, frameState);
             }
             ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
+            // console.log(tileset._selectedTiles.length);
         }
 
         if (isRender) {
@@ -2144,8 +2157,8 @@ define([
         updateTiles(tileset, frameState);
 
         if (isRender) {
-            touchReceivedPrefetches(tileset);
-            // unloadTiles(tileset);
+            // touchReceivedPrefetches(tileset);
+            unloadTiles(tileset);
 
             // Events are raised (added to the afterRender queue) here since promises
             // may resolve outside of the update loop that then raise events, e.g.,
