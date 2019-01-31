@@ -128,7 +128,7 @@ define([
     });
 
     OctahedralProjectedCubeMap.isSupported = function(context) {
-        return context.halfFloatingPointTexture || context.floatingPointTexture;
+        return (context.colorBufferHalfFloat && context.halfFloatingPointTexture) || (context.floatingPointTexture && context.colorBufferFloat);
     };
 
     // These vertices are based on figure 1 from "Octahedron Environment Maps".
@@ -256,7 +256,7 @@ define([
      */
     OctahedralProjectedCubeMap.prototype.update = function(frameState) {
         var context = frameState.context;
-        if (!context.halfFloatingPointTexture && !context.floatingPointTexture) {
+        if (!OctahedralProjectedCubeMap.isSupported(context)) {
             return;
         }
 

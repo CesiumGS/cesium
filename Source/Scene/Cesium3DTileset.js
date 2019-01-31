@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Check',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -22,6 +23,7 @@ define([
         '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
+        '../Renderer/RenderState',
         '../ThirdParty/when',
         './Axis',
         './Cesium3DTile',
@@ -40,6 +42,7 @@ define([
         './PointCloudShading',
         './SceneMode',
         './ShadowMode',
+        './StencilConstants',
         './TileBoundingRegion',
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
@@ -49,6 +52,7 @@ define([
         Cartesian3,
         Cartographic,
         Check,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
@@ -67,6 +71,7 @@ define([
         Transforms,
         ClearCommand,
         Pass,
+        RenderState,
         when,
         Axis,
         Cesium3DTile,
@@ -85,6 +90,7 @@ define([
         PointCloudShading,
         SceneMode,
         ShadowMode,
+        StencilConstants,
         TileBoundingRegion,
         TileBoundingSphere,
         TileOrientedBoundingBox) {
@@ -192,12 +198,14 @@ define([
         this._timeSinceLoad = 0.0;
         this._updatedVisibilityFrame = 0;
         this._extras = undefined;
+        this._credits = undefined;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
         this._allTilesAdditive = true;
 
         this._hasMixedContent = false;
 
+        this._stencilClearCommand = undefined;
         this._backfaceCommands = new ManagedArray();
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
@@ -755,7 +763,6 @@ define([
          * @default false
          */
         this.debugShowUrl = defaultValue(options.debugShowUrl, false);
-        this._credits = undefined;
 
         var that = this;
         var resource;
@@ -781,12 +788,28 @@ define([
             .then(function(tilesetJson) {
                 that._root = that.loadTileset(resource, tilesetJson);
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
-                that._asset = tilesetJson.asset;
+                var asset = tilesetJson.asset;
+                that._asset = asset;
                 that._properties = tilesetJson.properties;
                 that._geometricError = tilesetJson.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
+
+                var extras = asset.extras;
+                if (defined(extras) && defined(extras.cesium) && defined(extras.cesium.credits)) {
+                    var extraCredits = extras.cesium.credits;
+                    var credits = that._credits;
+                    if (!defined(credits)) {
+                        credits = [];
+                        that._credits = credits;
+                    }
+                    for (var i = 0; i < extraCredits.length; i++) {
+                        var credit = extraCredits[i];
+                        credits.push(new Credit(credit.html, credit.showOnScreen));
+                    }
+                }
+
                 // Save the original, untransformed bounding volume position so we can apply
                 // the tile transform and model matrix at run time
                 var boundingVolume = that._root.createBoundingVolume(tilesetJson.root.boundingVolume, Matrix4.IDENTITY);
@@ -1744,11 +1767,6 @@ define([
         tileset._tileDebugLabels.update(frameState);
     }
 
-    var stencilClearCommand = new ClearCommand({
-        stencil : 0,
-        pass : Pass.CESIUM_3D_TILE
-    });
-
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
@@ -1770,7 +1788,16 @@ define([
         tileset._backfaceCommands.length = 0;
 
         if (bivariateVisibilityTest) {
-            commandList.push(stencilClearCommand);
+            if (!defined(tileset._stencilClearCommand)) {
+                tileset._stencilClearCommand = new ClearCommand({
+                    stencil : 0,
+                    pass : Pass.CESIUM_3D_TILE,
+                    renderState : RenderState.fromCache({
+                        stencilMask : StencilConstants.SKIP_LOD_MASK
+                    })
+                });
+            }
+            commandList.push(tileset._stencilClearCommand);
         }
 
         var lengthBeforeUpdate = commandList.length;
@@ -1973,7 +2000,7 @@ define([
         var passes = frameState.passes;
         var isRender = passes.render;
         var isPick = passes.pick;
-        var isAsync = passes.async;
+        var isAsync = passes.asynchronous;
 
         var statistics = tileset._statistics;
         statistics.clear();
