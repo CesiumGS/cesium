@@ -144,11 +144,11 @@ function getColorRamp(selectedShading) {
     var ctx = ramp.getContext('2d');
 
     var values;
-    if(selectedShading === 'elevation') {
+    if (selectedShading === 'elevation') {
         values = elevationRamp;
-    } else if(selectedShading === 'slope') {
+    } else if (selectedShading === 'slope') {
         values = slopeRamp;
-    } else if(selectedShading === 'aspect') {
+    } else if (selectedShading === 'aspect') {
         values = aspectRamp;
     }
 
@@ -207,7 +207,7 @@ function updateMaterial() {
             material = getSlopeContourMaterial();
             shadingUniforms = material.materials.slopeRampMaterial.uniforms;
             contourUniforms = material.materials.contourMaterial.uniforms;
-        } else if(selectedShading === 'aspect') {
+        } else if (selectedShading === 'aspect') {
             material = getAspectContourMaterial();
             shadingUniforms = material.materials.aspectRampMaterial.uniforms;
             contourUniforms = material.materials.contourMaterial.uniforms;
@@ -226,7 +226,7 @@ function updateMaterial() {
     } else if (selectedShading === 'slope') {
         material = Cesium.Material.fromType('SlopeRamp');
         shadingUniforms = material.uniforms;
-    } else if(selectedShading === 'aspect') {
+    } else if (selectedShading === 'aspect') {
         material = Cesium.Material.fromType('AspectRamp');
         shadingUniforms = material.uniforms;
     }

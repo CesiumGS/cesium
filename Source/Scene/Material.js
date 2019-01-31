@@ -1560,7 +1560,7 @@ define([
         fabric : {
             type : Material.SlopeRampMaterialType,
             uniforms : {
-                image: Material.DefaultImageId
+                image : Material.DefaultImageId
             },
             source : SlopeRampMaterial
         },
@@ -1575,13 +1575,13 @@ define([
     Material.AspectRampMaterialType = 'AspectRamp';
     Material._materialCache.addMaterial(Material.AspectRampMaterialType, {
         fabric: {
-            type: Material.AspectRampMaterialType,
-            uniforms: {
-                image: Material.DefaultImageId
+            type : Material.AspectRampMaterialType,
+            uniforms : {
+                image : Material.DefaultImageId
             },
-            source: AspectRampMaterial
+            source : AspectRampMaterial
         },
-        translucent: false
+        translucent : false
     });
 
     return Material;
