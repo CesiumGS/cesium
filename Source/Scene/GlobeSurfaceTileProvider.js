@@ -823,9 +823,8 @@ define([
      *
      * @param {QuadtreeTile} tile The tile instance.
      * @param {FrameState} frameState The state information of the current rendering frame.
-     * @param {QuadtreeTile} [nearestRenderableTile] The nearest ancestor tile that is renderable.
      */
-    GlobeSurfaceTileProvider.prototype.showTileThisFrame = function(tile, frameState, nearestRenderableTile) {
+    GlobeSurfaceTileProvider.prototype.showTileThisFrame = function(tile, frameState) {
         var readyTextureCount = 0;
         var tileImageryCollection = tile.data.imagery;
         for (var i = 0, len = tileImageryCollection.length; i < len; ++i) {
@@ -844,17 +843,10 @@ define([
         tileSet.push(tile);
 
         var surfaceTile = tile.data;
-        if (nearestRenderableTile !== undefined && nearestRenderableTile !== tile) {
+        if (!defined(surfaceTile.vertexArray)) {
             this._hasFillTilesThisFrame = true;
-
-            surfaceTile.renderableTile = nearestRenderableTile;
-
-            // The renderable tile may have previously deferred to an ancestor.
-            // But we know it's renderable now, so mark it as such.
-            nearestRenderableTile.data.renderableTile = undefined;
         } else {
             this._hasLoadedTilesThisFrame = true;
-            surfaceTile.renderableTile = undefined;
         }
 
         var debug = this._debug;
@@ -1545,7 +1537,7 @@ define([
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
         var surfaceTile = tile.data;
 
-        if (surfaceTile.renderableTile !== undefined) {
+        if (!defined(surfaceTile.vertexArray)) {
             if (surfaceTile.fill === undefined) {
                 // No fill was created for this tile, probably because this tile is not connected to
                 // any renderable tiles. So create a simple tile in the middle of the tile's possible

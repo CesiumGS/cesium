@@ -80,8 +80,6 @@ define([
         this.orientedBoundingBox = undefined;
         this.boundingVolumeSourceTile = undefined;
 
-        this.renderableTile = undefined;
-
         /**
          * A bounding region used to estimate distance to the tile. The horizontal bounds are always tight-fitting,
          * but the `minimumHeight` and `maximumHeight` properties may be derived from the min/max of an ancestor tile
