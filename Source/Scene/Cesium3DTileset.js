@@ -231,7 +231,6 @@ define([
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
 
         this._prefetchPass = false; // 'true' tells traversal to skip selectDesiredTile. 'false' tells priority calculation to penalize non-prefetch tiles.
-        this._receivedPrefetches = []; // Need so that we can touch them after selected tiles get touched so that we can keep them in cache
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -1670,12 +1669,7 @@ define([
                 // external tileset when all the tiles are unloaded.
                 tileset._statistics.incrementLoadCounts(tile.content);
                 ++tileset._statistics.numberOfTilesWithContentReady;
-                ++tile._loadCount;
-                if (tile._isPrefetch) {
-                    ++tileset._statistics.numberOfLoadedTilesTotalPrefetch;
-                } else {
-                    ++tileset._statistics.numberOfLoadedTilesTotal;
-                }
+                ++tileset._statistics.numberOfLoadedTilesTotal;
 
                 // Add to the tile cache. Previously expired tiles are already in the cache and won't get re-added.
                 tileset._cache.add(tile);
@@ -2046,7 +2040,6 @@ define([
         var camera = frameState.camera;
         var cullingVolume = frameState.cullingVolume;
         var currentFlight = camera._currentFlight;
-        tileset._receivedPrefetches.length = 0;
         if (defined(currentFlight)) {
             lastFrameWasFlight = true;
 
@@ -2070,15 +2063,6 @@ define([
         }
 
         resetMinMax(tileset);
-    }
-
-    function touchReceivedPrefetches(tileset) {
-        // Prevents received prefetches from being unloaded from the cache
-        var prefetches = tileset._receivedPrefetches;
-        var length = prefetches.length;
-        for (var i = 0; i < length; ++i) {
-            tileset._cache.touch(prefetches[i]);
-        }
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2157,7 +2141,6 @@ define([
         updateTiles(tileset, frameState);
 
         if (isRender) {
-            // touchReceivedPrefetches(tileset);
             unloadTiles(tileset);
 
             // Events are raised (added to the afterRender queue) here since promises
