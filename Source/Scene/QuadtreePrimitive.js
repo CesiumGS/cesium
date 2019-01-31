@@ -1058,8 +1058,8 @@ define([
 
         while (tilesToUpdateHeights.length > 0) {
             var tile = tilesToUpdateHeights[0];
-            if (tile.state !== QuadtreeTileLoadState.DONE) {
-                // Tile isn't loaded yet, so try again next frame if this tile is still
+            if (!defined(tile.data) || !defined(tile.data.mesh)) {
+                // Tile isn't loaded enough yet, so try again next frame if this tile is still
                 // being rendered.
                 var selectionResult = tile._lastSelectionResultFrame === primitive._lastSelectionFrameNumber
                     ? tile._lastSelectionResult
