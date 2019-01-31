@@ -977,7 +977,7 @@ defineSuite([
     });
 
     it('Throws for EXT_texture_webp if browser does not support WebP', function() {
-        spyOn(FeatureDetection, 'supportsWebp').and.returnValue(when.resolve(false));
+        spyOn(FeatureDetection, 'supportsWebP').and.returnValue(when.resolve(false));
         return Resource.fetchJson(texturedBoxWebpUrl).then(function(gltf) {
             gltf.extensionsRequired = ['EXT_texture_webp'];
             var model = primitives.add(new Model({

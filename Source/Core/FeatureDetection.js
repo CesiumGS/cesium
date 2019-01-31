@@ -203,33 +203,43 @@ define([
         return supportsImageRenderingPixelated() ? imageRenderingValueResult : undefined;
     }
 
-    var supportsWebpPromise;
-    function supportsWebp() {
+    var supportsWebPResult;
+    var supportsWebPPromise;
+    function supportsWebP() {
         // From https://developers.google.com/speed/webp/faq#how_can_i_detect_browser_support_for_webp
-        if (defined(supportsWebpPromise)) {
-            return supportsWebpPromise.promise;
+        if (defined(supportsWebPPromise)) {
+            return supportsWebPPromise.promise;
         }
 
-        supportsWebpPromise = when.defer();
+        supportsWebPPromise = when.defer();
         if (isEdge()) {
             // Edge's WebP support with WebGL is incomplete.
             // See bug report: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/19221241/
-            supportsWebpPromise.resolve(false);
+            supportsWebPResult = false;
+            supportsWebPPromise.resolve(supportsWebPResult);
         }
 
         var image = new Image();
         image.onload = function () {
-            var success = (image.width > 0) && (image.height > 0);
-            supportsWebpPromise.resolve(success);
+            supportsWebPResult = (image.width > 0) && (image.height > 0);
+            supportsWebPPromise.resolve(supportsWebPResult);
         };
 
         image.onerror = function () {
-            supportsWebpPromise.resolve(false);
+            supportsWebPResult = false;
+            supportsWebPPromise.resolve(supportsWebPResult);
         };
 
         image.src = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
 
-        return supportsWebpPromise.promise;
+        return supportsWebPPromise.promise;
+    }
+
+    function supportsWebPSync() {
+        if (!defined(supportsWebPPromise)) {
+            supportsWebP();
+        }
+        return supportsWebPResult;
     }
 
     var typedArrayTypes = [];
@@ -268,7 +278,8 @@ define([
         hardwareConcurrency : defaultValue(theNavigator.hardwareConcurrency, 3),
         supportsPointerEvents : supportsPointerEvents,
         supportsImageRenderingPixelated: supportsImageRenderingPixelated,
-        supportsWebp: supportsWebp,
+        supportsWebP: supportsWebP,
+        supportsWebPSync: supportsWebPSync,
         imageRenderingValue: imageRenderingValue,
         typedArrayTypes: typedArrayTypes
     };

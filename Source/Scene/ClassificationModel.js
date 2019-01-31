@@ -261,14 +261,6 @@ define([
         this._rtcCenterEye = undefined; // in eye coordinates
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
-
-        this._supportsWebp = undefined;
-
-        var that = this;
-        FeatureDetection.supportsWebp()
-            .then(function(result) {
-                that._supportsWebp = result;
-            });
     }
 
     defineProperties(ClassificationModel.prototype, {
@@ -966,7 +958,8 @@ define([
             return;
         }
 
-        if (!defined(this._supportsWebp)) {
+        var supportsWebP = FeatureDetection.supportsWebPSync();
+        if (!defined(supportsWebP)) {
             return;
         }
 
@@ -1003,7 +996,7 @@ define([
             // Transition from LOADING -> LOADED once resources are downloaded and created.
             // Textures may continue to stream in while in the LOADED state.
             if (loadResources.pendingBufferLoads === 0) {
-                ModelUtility.checkSupportedExtensions(this.extensionsRequired, this._supportsWebp);
+                ModelUtility.checkSupportedExtensions(this.extensionsRequired, supportsWebP);
 
                 addBuffersToLoadResources(this);
                 parseBufferViews(this);
