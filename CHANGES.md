@@ -20,6 +20,7 @@ Change Log
 * Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Time%20Dynamic%20Wheels.html) on using `nodeTransformations` to rotate a model's wheels based on its velocity. [#7361](https://github.com/AnalyticalGraphicsInc/cesium/pull/7361)
 * Added `EllipsoidRhumbLine` class as a rhumb line counterpart to `EllipsoidGeodesic`. [#7484](https://github.com/AnalyticalGraphicsInc/cesium/pull/7484)
 * Added rhumb line support to `PolygonGeometry`, `PolygonOutlineGeometry`, `PolylineGeometry`, `GroundPolylineGeometry`, and `SimplePolylineGeometry`. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
+* When using Cesium in Node.js, we now use the combined and minified version for improved performance unless `NODE_ENV` is specifically set to `development`.
 * Improved the performance of `QuantizedMeshTerrainData.interpolateHeight`.  [#7508](https://github.com/AnalyticalGraphicsInc/cesium/pull/7508)
 
 ##### Fixes :wrench:
@@ -33,6 +34,8 @@ Change Log
 * Fixed an issue where setting `scene.globe.cartographicLimitRectangle` to `undefined` would cause a crash. [#7477](https://github.com/AnalyticalGraphicsInc/cesium/issues/7477)
 * Fixed `PrimitiveCollection.removeAll` to no longer `contain` removed primitives. [#7491](https://github.com/AnalyticalGraphicsInc/cesium/pull/7491)
 * Fixed `GeoJsonDataSource` to use polygons and polylines that use rhumb lines. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
+* Fixed an issue where some ground polygons would be cut off along circles of latitude. [#7507](https://github.com/AnalyticalGraphicsInc/cesium/issues/7507)
+* Fixed an issue that would cause IE 11 to crash when enabling image-based lighting. [#7485](https://github.com/AnalyticalGraphicsInc/cesium/issues/7485)
 
 ### 1.53 - 2019-01-02
 
