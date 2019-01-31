@@ -117,6 +117,9 @@ defineSuite([
     });
 
     it('detects WebP support', function() {
-        return FeatureDetection.supportsWebp();
+        return FeatureDetection.supportsWebp()
+            .then(function(supportsWebp) {
+                expect(typeof supportsWebp).toEqual('boolean');
+            });
     });
 });

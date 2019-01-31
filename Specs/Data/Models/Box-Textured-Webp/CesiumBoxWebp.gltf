@@ -155,8 +155,7 @@
       "source": 0,
       "extensions": {
         "EXT_texture_webp": {
-          "source": 1,
-          "sampler": 1
+          "source": 1
         }
       }
     }

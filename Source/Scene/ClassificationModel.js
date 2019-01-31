@@ -262,6 +262,8 @@ define([
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
 
+        this._supportsWebp = undefined;
+
         var that = this;
         FeatureDetection.supportsWebp()
             .then(function(result) {
@@ -964,7 +966,7 @@ define([
             return;
         }
 
-        if(!defined(this._supportsWebp)) {
+        if (!defined(this._supportsWebp)) {
             return;
         }
 

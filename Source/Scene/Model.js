@@ -4308,7 +4308,7 @@ define([
             return;
         }
 
-        if(!defined(this._supportsWebp)) {
+        if (!defined(this._supportsWebp)) {
             return;
         }
 
