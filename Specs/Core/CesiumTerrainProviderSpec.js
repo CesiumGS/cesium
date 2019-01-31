@@ -864,7 +864,7 @@ defineSuite([
                 var getDerivedResource = spyOn(IonResource.prototype, 'getDerivedResource').and.callThrough();
                 terrainProvider.requestTileGeometry(0, 0, 0);
                 var options = getDerivedResource.calls.argsFor(0)[0];
-                expect(options.queryParameters.extensions).toEqual('octvertexnormals-watermask');
+                expect(options.queryParameters.extensions).toEqual('octvertexnormals-watermask-metadata');
             });
         });
     });
