@@ -35,6 +35,8 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     mapProjection : new Cesium.Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs')
 });
 
+viewer.camera.flyHome(0);
+
 var pointEntities = [];
 function addPoint(longitude, latitude) {
     pointEntities.push(viewer.entities.add({

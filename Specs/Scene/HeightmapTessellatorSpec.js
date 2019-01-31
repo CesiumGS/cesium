@@ -336,7 +336,7 @@ defineSuite([
     it('generates 2D position attributes for projections other than Geographic and Web Mercator', function() {
         var width = 3;
         var height = 3;
-        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection');
+        var projection = new CustomProjection('Data/UserGeographic.js');
 
         return projection.readyPromise.then(function() {
             var options = {
@@ -383,7 +383,7 @@ defineSuite([
     it('generates 2D position attributes with relative-to-center', function() {
         var width = 3;
         var height = 3;
-        var projection = new CustomProjection('Data/UserGeographic.js', 'testProjection');
+        var projection = new CustomProjection('Data/UserGeographic.js');
         return projection.readyPromise.then(function() {
             var rectangle = new Rectangle(
                 CesiumMath.toRadians(10.0),

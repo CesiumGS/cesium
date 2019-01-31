@@ -48,7 +48,6 @@ define([
         var wellKnownText;
         var heightScale;
         var url;
-        var projectionName;
         var wgs84Bounds = Rectangle.MAX_VALUE;
         if (mapProjection instanceof WebMercatorProjection) {
             projectionType = ProjectionType.WEBMERCATOR;
@@ -60,14 +59,12 @@ define([
         } else if (mapProjection instanceof CustomProjection) {
             projectionType = ProjectionType.CUSTOM;
             url = mapProjection.url;
-            projectionName = mapProjection.projectionName;
         }
 
         this.projectionType = projectionType;
         this.wellKnownText = wellKnownText;
         this.heightScale = heightScale;
         this.url = url;
-        this.projectionName = projectionName;
 
         this.packedRectangle = Rectangle.pack(wgs84Bounds, new Array(Rectangle.packedLength));
         this.packedEllipsoid = Ellipsoid.pack(mapProjection.ellipsoid, new Array(Ellipsoid.packedLength));
@@ -96,7 +93,7 @@ define([
             var wgs84Bounds = Rectangle.unpack(serializedMapProjection.packedRectangle);
             projection = new Proj4Projection(serializedMapProjection.wellKnownText, serializedMapProjection.heightScale, wgs84Bounds);
         } else if (projectionType === ProjectionType.CUSTOM) {
-            projection = new CustomProjection(serializedMapProjection.url, serializedMapProjection.projectionName, ellipsoid);
+            projection = new CustomProjection(serializedMapProjection.url, ellipsoid);
             return projection.readyPromise;
         }
 

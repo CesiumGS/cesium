@@ -8,6 +8,7 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './getAbsoluteUri',
+        './isDataUri',
         './loadAndExecuteScript',
         '../ThirdParty/when'
     ], function(
@@ -20,11 +21,10 @@ define([
         DeveloperError,
         Ellipsoid,
         getAbsoluteUri,
+        isDataUri,
         loadAndExecuteScript,
         when) {
     'use strict';
-
-    var loadedProjectionFunctions = {};
 
     /**
      * {@link MapProjection} that uses custom project and unproject functions defined in an external file.
@@ -39,13 +39,11 @@ define([
      * @constructor
      *
      * @param {String} url The url of the external file.
-     * @param {String} projectionName A unique name for this projection.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The MapProjection's ellipsoid.
      */
-    function CustomProjection(url, projectionName, ellipsoid) {
+    function CustomProjection(url, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('url', url);
-        Check.typeOf.string('projectionName', projectionName);
         //>>includeEnd('debug');
 
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -53,13 +51,11 @@ define([
         this._project = undefined;
         this._unproject = undefined;
 
-        this._projectionName = projectionName;
-
         var absoluteUrl = getAbsoluteUri(url);
         this._url = absoluteUrl;
 
         this._ready = false;
-        this._readyPromise = buildCustomProjection(this, absoluteUrl, projectionName);
+        this._readyPromise = buildCustomProjection(this, absoluteUrl);
     }
 
     defineProperties(CustomProjection.prototype, {
@@ -208,11 +204,12 @@ define([
         return result;
     };
 
-    function buildCustomProjection(customProjection, url, projectionName) {
+    function buildCustomProjection(customProjection, url) {
         var fetch;
         var deferred = when.defer();
-        if (defined(loadedProjectionFunctions[projectionName])) {
-            loadedProjectionFunctions[projectionName](function(project, unproject) {
+        var useCache = !isDataUri(url);
+        if (useCache && defined(CustomProjection._loadedProjectionFunctions[url])) {
+            CustomProjection._loadedProjectionFunctions[url](function(project, unproject) {
                 customProjection._project = project;
                 customProjection._unproject = unproject;
                 customProjection._ready = true;
@@ -232,7 +229,9 @@ define([
         fetch = fetch
             .then(function() {
                 var localCreateProjectionFunctions = createProjectionFunctions; // eslint-disable-line no-undef
-                loadedProjectionFunctions[projectionName] = localCreateProjectionFunctions;
+                if (useCache) {
+                    CustomProjection._loadedProjectionFunctions[url] = localCreateProjectionFunctions;
+                }
                 localCreateProjectionFunctions(function(project, unproject) {
                     customProjection._project = project;
                     customProjection._unproject = unproject;
@@ -304,6 +303,9 @@ define([
      *     result.height = cartesian.z;
      * }
      */
+
+    // exposed for testing
+    CustomProjection._loadedProjectionFunctions = {};
 
     return CustomProjection;
 });

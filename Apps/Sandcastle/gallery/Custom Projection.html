@@ -50,7 +50,7 @@ if (Cesium.FeatureDetection.isInternetExplorer()) {
     projectionTextUrl = '../../SampleData/sampleProjection.js';
 }
 
-var customProjection = new Cesium.CustomProjection(projectionTextUrl, 'sample projection');
+var customProjection = new Cesium.CustomProjection(projectionTextUrl);
 customProjection.readyPromise
     .then(function(projection) {
 
@@ -58,6 +58,8 @@ customProjection.readyPromise
         sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
         mapProjection : projection
     });
+
+    viewer.camera.flyHome(0);
 
     var pointEntities = [];
     function addPoint(longitude, latitude) {
