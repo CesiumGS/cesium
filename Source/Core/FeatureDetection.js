@@ -213,6 +213,13 @@ define([
         var webpDataUri = 'UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
         var image = new Image();
         supportsWebpPromise = when.defer();
+
+        if (isEdge()) {
+            // Edge's WebP support with WebGL is incomplete.
+            // See bug report: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/19221241/
+            supportsWebpPromise.resolve(false);
+        }
+
         image.onload = function () {
             var success = (image.width > 0) && (image.height > 0);
             supportsWebpPromise.resolve(success);
