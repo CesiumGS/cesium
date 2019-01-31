@@ -686,13 +686,6 @@ define([
         this._useDefaultSpecularMaps = false;
 
         this._shouldRegenerateShaders = false;
-        this._supportsWebp = undefined;
-
-        var that = this;
-        FeatureDetection.supportsWebp()
-            .then(function(result) {
-                that._supportsWebp = result;
-            });
     }
 
     defineProperties(Model.prototype, {
@@ -1653,14 +1646,14 @@ define([
     var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
     var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
 
-    function parseTextures(model, context) {
+    function parseTextures(model, context, supportsWebP) {
         var gltf = model.gltf;
         var images = gltf.images;
         var uri;
         ForEach.texture(gltf, function(texture, id) {
             var imageId = texture.source;
 
-            if (defined(texture.extensions) && defined(texture.extensions.EXT_texture_webp) && model._supportsWebp) {
+            if (defined(texture.extensions) && defined(texture.extensions.EXT_texture_webp) && supportsWebP) {
                 imageId = texture.extensions.EXT_texture_webp.source;
             }
 
@@ -4308,7 +4301,8 @@ define([
             return;
         }
 
-        if (!defined(this._supportsWebp)) {
+        var supportsWebP = FeatureDetection.supportsWebPSync();
+        if (!defined(supportsWebP)) {
             return;
         }
 
@@ -4386,7 +4380,7 @@ define([
                 if (!loadResources.initialized) {
                     frameState.brdfLutGenerator.update(frameState);
 
-                    ModelUtility.checkSupportedExtensions(this.extensionsRequired, this._supportsWebp);
+                    ModelUtility.checkSupportedExtensions(this.extensionsRequired, supportsWebP);
                     ModelUtility.updateForwardAxis(this);
 
                     // glTF pipeline updates, not needed if loading from cache
@@ -4423,7 +4417,7 @@ define([
                         parseBufferViews(this);
                         parseShaders(this);
                         parsePrograms(this);
-                        parseTextures(this, context);
+                        parseTextures(this, context, supportsWebP);
                     }
                     parseMaterials(this);
                     parseMeshes(this);
