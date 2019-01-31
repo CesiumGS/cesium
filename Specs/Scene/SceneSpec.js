@@ -1099,6 +1099,7 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
         s.camera.moveEnd.addEventListener(spyListener);
 
+        // We use negative time here to ensure the event runs on the next frame.
         s.cameraEventWaitTime = -1.0;
         s.camera.moveLeft();
         // The first render will trigger the moveStart event.

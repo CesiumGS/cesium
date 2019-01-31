@@ -999,11 +999,8 @@ define([
         }
 
         var availabilityLevels = layer.availabilityLevels;
-        if (level % availabilityLevels === 0) {
-            level -= availabilityLevels;
-        }
-
-        var parentLevel = ((level / availabilityLevels) | 0) * availabilityLevels;
+        var parentLevel = (level % availabilityLevels === 0) ?
+            (level - availabilityLevels) : ((level / availabilityLevels) | 0) * availabilityLevels;
         var divisor = 1 << (level - parentLevel);
         var parentX = (x / divisor) | 0;
         var parentY = (y / divisor) | 0;
@@ -1070,6 +1067,9 @@ define([
             result: false
         };
     }
+
+    // Used for testing
+    CesiumTerrainProvider._getAvailabilityTile = getAvailabilityTile;
 
     return CesiumTerrainProvider;
 });
