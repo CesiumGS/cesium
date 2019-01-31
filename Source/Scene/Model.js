@@ -2121,23 +2121,25 @@ define([
                 '} \n';
         }
 
-        var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
-        var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
-        var addMatrix = usesSH || usesSM || useIBL;
-        if (addMatrix) {
-            drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
-        }
+        if (OctahedralProjectedCubeMap.isSupported(context)) {
+            var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
+            var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
+            var addMatrix = usesSH || usesSM || useIBL;
+            if (addMatrix) {
+                drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
+            }
 
-        if (defined(model._sphericalHarmonicCoefficients)) {
-            drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
-        } else if (model._useDefaultSphericalHarmonics) {
-            drawFS = '#define DIFFUSE_IBL \n' + drawFS;
-        }
+            if (defined(model._sphericalHarmonicCoefficients)) {
+                drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+            } else if (model._useDefaultSphericalHarmonics) {
+                drawFS = '#define DIFFUSE_IBL \n' + drawFS;
+            }
 
-        if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
-            drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
-        } else if (model._useDefaultSpecularMaps) {
-            drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
+                drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+            } else if (model._useDefaultSpecularMaps) {
+                drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            }
         }
 
         if (defined(model._luminanceAtZenith)) {
@@ -2206,23 +2208,25 @@ define([
                 '} \n';
         }
 
-        var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
-        var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
-        var addMatrix = !addClippingPlaneCode && (usesSH || usesSM || useIBL);
-        if (addMatrix) {
-            drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
-        }
+        if (OctahedralProjectedCubeMap.isSupported(context)) {
+            var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
+            var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
+            var addMatrix = !addClippingPlaneCode && (usesSH || usesSM || useIBL);
+            if (addMatrix) {
+                drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
+            }
 
-        if (defined(model._sphericalHarmonicCoefficients)) {
-            drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
-        } else if (model._useDefaultSphericalHarmonics) {
-            drawFS = '#define DIFFUSE_IBL \n' + drawFS;
-        }
+            if (defined(model._sphericalHarmonicCoefficients)) {
+                drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+            } else if (model._useDefaultSphericalHarmonics) {
+                drawFS = '#define DIFFUSE_IBL \n' + drawFS;
+            }
 
-        if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
-            drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
-        } else if (model._useDefaultSpecularMaps) {
-            drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
+                drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+            } else if (model._useDefaultSpecularMaps) {
+                drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            }
         }
 
         if (defined(model._luminanceAtZenith)) {
@@ -4482,7 +4486,8 @@ define([
             }
         }
 
-        if (this._shouldUpdateSpecularMapAtlas) {
+        var iblSupported = OctahedralProjectedCubeMap.isSupported(context);
+        if (this._shouldUpdateSpecularMapAtlas && iblSupported) {
             this._shouldUpdateSpecularMapAtlas = false;
             this._specularEnvironmentMapAtlas = this._specularEnvironmentMapAtlas && this._specularEnvironmentMapAtlas.destroy();
             this._specularEnvironmentMapAtlas = undefined;
