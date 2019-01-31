@@ -836,7 +836,8 @@ defineSuite([
                 tile.data = {
                     pick : function() {
                         return currentPosition;
-                    }
+                    },
+                    mesh: {}
                 };
             });
 
