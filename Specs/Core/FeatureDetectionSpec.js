@@ -116,11 +116,7 @@ defineSuite([
         }
     });
 
-    it('detects WebP support', function(done) {
-        FeatureDetection.supportsWebp()
-            .then(function(supportsWebp) {
-                expect(typeof supportsWebp).toEqual('boolean');
-                done();
-            });
+    it('detects WebP support', function() {
+        return FeatureDetection.supportsWebp();
     });
 });

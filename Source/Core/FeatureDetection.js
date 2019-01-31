@@ -207,19 +207,17 @@ define([
     function supportsWebp() {
         // From https://developers.google.com/speed/webp/faq#how_can_i_detect_browser_support_for_webp
         if (defined(supportsWebpPromise)) {
-            return supportsWebpPromise;
+            return supportsWebpPromise.promise;
         }
 
-        var webpDataUri = 'UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
-        var image = new Image();
         supportsWebpPromise = when.defer();
-
         if (isEdge()) {
             // Edge's WebP support with WebGL is incomplete.
             // See bug report: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/19221241/
             supportsWebpPromise.resolve(false);
         }
 
+        var image = new Image();
         image.onload = function () {
             var success = (image.width > 0) && (image.height > 0);
             supportsWebpPromise.resolve(success);
@@ -229,9 +227,9 @@ define([
             supportsWebpPromise.resolve(false);
         };
 
-        image.src = 'data:image/webp;base64,' + webpDataUri;
+        image.src = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
 
-        return supportsWebpPromise;
+        return supportsWebpPromise.promise;
     }
 
     var typedArrayTypes = [];
