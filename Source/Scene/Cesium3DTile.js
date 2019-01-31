@@ -650,11 +650,11 @@ define([
             var distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
             var sseDenominator = camera.frustum.sseDenominator;
             error = (geometricError * height) / (distance * sseDenominator);
-            if (tileset.dynamicScreenSpaceError) {
-                var density = tileset._dynamicScreenSpaceErrorComputedDensity;
-                var factor = tileset.dynamicScreenSpaceErrorFactor;
-                dynamicError = CesiumMath.fog(distance, density) * factor;
-            }
+            // if (tileset.dynamicScreenSpaceError) {
+            //     var density = tileset._dynamicScreenSpaceErrorComputedDensity;
+            //     var factor = tileset.dynamicScreenSpaceErrorFactor;
+            //     dynamicError = CesiumMath.fog(distance, density) * factor;
+            // }
         }
         return error;
     };
@@ -680,13 +680,14 @@ define([
 
         var tileset = this._tileset;
         if (tileset.foveatedScreenSpaceError) {
-            // var dynamicError = 0;
-            // if (tileset.dynamicScreenSpaceError) {
-            //     var distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
-            //     var density = tileset._dynamicScreenSpaceErrorComputedDensity;
-            //     var factor = tileset.dynamicScreenSpaceErrorFactor;
-            //     dynamicError = CesiumMath.fog(distance, density) * factor;
-            // }
+            var dynamicError = 0;
+            var factor = 0;
+            if (tileset.dynamicScreenSpaceError) {
+                var distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
+                var density = tileset._dynamicScreenSpaceErrorComputedDensity;
+                factor = tileset.dynamicScreenSpaceErrorFactor;
+                dynamicError = CesiumMath.fog(distance, density) * factor;
+            }
 
             // var boundingVolume = this._boundingVolume.boundingSphere;
             // var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
@@ -713,12 +714,16 @@ define([
                 var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
                 this._foveatedFactor = 1 - Math.abs(Cartesian3.dot(frameState.camera.directionWC, toClosestOnSphereNormalize));
             }
-            this._deferLoadingPriority = this._foveatedFactor >= 0.05;
 
-            // var error = this._screenSpaceError;
-            // var maxSSE = tileset._maximumScreenSpaceError;
-            // var failsEitherDynamicSSE = maxSSE >= (error - dynamicError) || this._foveatedFactor >= 0.2;
-            // this._deferLoadingPriority = (maxSSE < error) && failsEitherDynamicSSE; // Passes normally but fails either dynamic sse test
+            var error = this._screenSpaceError;
+            var maxSSE = tileset._maximumScreenSpaceError;
+            var fogClose = factor * 0.7;
+            var dontCare = dynamicError <= fogClose; // Somewhere in the distance
+            var fogSSEFail = maxSSE >= (error - dynamicError) && !dontCare; // Not a leaf and fails dynamic sse
+            var foveatedFail = this._foveatedFactor >= tileset.foveaDeferThreshold;
+            this._deferLoadingPriority = fogSSEFail || foveatedFail;
+
+            // this._deferLoadingPriority = this._foveatedFactor >= tileset.foveaDeferThreshold;
         }
     };
 

@@ -109,14 +109,15 @@ define([
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] A 4x4 transformation matrix that transforms the tileset's root tile.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the tileset casts or receives shadows from each light source.
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
-     * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
+     * @param {Number} [options.maximumMemoryUsage=512] The maximum mount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
      * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
-     * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
+     * @param {Boolean} [options.dynamicScreenSpaceError=true] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
-     * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
+     * @param {Number} [options.dynamicScreenSpaceErrorFactor=8.0] A factor used to increase the computed dynamic screen space error.
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
-     * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Defer loading tiles that are closer the edges of the current view.
+     * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Defer loading tiles that are closer to the edges of the current view.
+     * @param {Number} [options.foveaDeferThreshold=0.07] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}. Determines what "close to the edge" means. 0 
      * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
      * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
      * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
@@ -252,7 +253,7 @@ define([
          * @type {Boolean}
          * @default false
          */
-        this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false);
+        this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, true);
 
         /**
          * Optimization option. Whether to prioritize tileset refinement based on a foveated metric.
@@ -263,6 +264,16 @@ define([
          * @default true
          */
         this.foveatedScreenSpaceError = defaultValue(options.foveatedScreenSpaceError, true);
+
+        /**
+         * Optimization option. 
+         * 
+         * 
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.foveaDeferThreshold = defaultValue(options.foveaDeferThreshold, 0.07);
 
         /**
          * A scalar that determines the density used to adjust the dynamic screen space error, similar to {@link Fog}. Increasing this
@@ -291,7 +302,7 @@ define([
          * @type {Number}
          * @default 4.0
          */
-        this.dynamicScreenSpaceErrorFactor = 4.0;
+        this.dynamicScreenSpaceErrorFactor = 8.0;
 
         /**
          * A ratio of the tileset's height at which the density starts to falloff. If the camera is below this height the
