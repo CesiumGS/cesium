@@ -4,7 +4,7 @@
     "version": "2.0"
   },
   "extensionsUsed": [
-    "EXT_image_webp"
+    "EXT_texture_webp"
   ],
   "scene": 0,
   "scenes": [
@@ -154,7 +154,7 @@
       "sampler": 0,
       "source": 0,
       "extensions": {
-        "EXT_image_webp": {
+        "EXT_texture_webp": {
           "source": 1,
           "sampler": 1
         }
