@@ -115,4 +115,11 @@ defineSuite([
             expect(FeatureDetection.imageRenderingValue()).not.toBeDefined();
         }
     });
+
+    it('detects WebP support', function() {
+        return FeatureDetection.supportsWebp()
+            .then(function(supportsWebp) {
+                expect(typeof supportsWebp).toEqual('boolean');
+            });
+    });
 });

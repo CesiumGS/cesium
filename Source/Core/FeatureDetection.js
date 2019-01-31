@@ -1,11 +1,15 @@
 define([
         './defaultValue',
         './defined',
-        './Fullscreen'
+        './Fullscreen',
+        './RuntimeError',
+        '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
-        Fullscreen) {
+        Fullscreen,
+        RuntimeError,
+        when) {
     'use strict';
     /*global CanvasPixelArray*/
 
@@ -199,6 +203,35 @@ define([
         return supportsImageRenderingPixelated() ? imageRenderingValueResult : undefined;
     }
 
+    var supportsWebpPromise;
+    function supportsWebp() {
+        // From https://developers.google.com/speed/webp/faq#how_can_i_detect_browser_support_for_webp
+        if (defined(supportsWebpPromise)) {
+            return supportsWebpPromise.promise;
+        }
+
+        supportsWebpPromise = when.defer();
+        if (isEdge()) {
+            // Edge's WebP support with WebGL is incomplete.
+            // See bug report: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/19221241/
+            supportsWebpPromise.resolve(false);
+        }
+
+        var image = new Image();
+        image.onload = function () {
+            var success = (image.width > 0) && (image.height > 0);
+            supportsWebpPromise.resolve(success);
+        };
+
+        image.onerror = function () {
+            supportsWebpPromise.resolve(false);
+        };
+
+        image.src = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
+
+        return supportsWebpPromise.promise;
+    }
+
     var typedArrayTypes = [];
     if (typeof ArrayBuffer !== 'undefined') {
         typedArrayTypes.push(Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array);
@@ -235,6 +268,7 @@ define([
         hardwareConcurrency : defaultValue(theNavigator.hardwareConcurrency, 3),
         supportsPointerEvents : supportsPointerEvents,
         supportsImageRenderingPixelated: supportsImageRenderingPixelated,
+        supportsWebp: supportsWebp,
         imageRenderingValue: imageRenderingValue,
         typedArrayTypes: typedArrayTypes
     };

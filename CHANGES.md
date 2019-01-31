@@ -22,6 +22,7 @@ Change Log
 * Added rhumb line support to `PolygonGeometry`, `PolygonOutlineGeometry`, `PolylineGeometry`, `GroundPolylineGeometry`, and `SimplePolylineGeometry`. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
 * When using Cesium in Node.js, we now use the combined and minified version for improved performance unless `NODE_ENV` is specifically set to `development`.
 * Improved the performance of `QuantizedMeshTerrainData.interpolateHeight`.  [#7508](https://github.com/AnalyticalGraphicsInc/cesium/pull/7508)
+* Added support for glTF models with WebP textures using the `EXT_texture_webp` extension. [#7486](https://github.com/AnalyticalGraphicsInc/cesium/pull/7486)
 
 ##### Fixes :wrench:
 * Fixed 3D Tiles performance regression. [#7482](https://github.com/AnalyticalGraphicsInc/cesium/pull/7482)
