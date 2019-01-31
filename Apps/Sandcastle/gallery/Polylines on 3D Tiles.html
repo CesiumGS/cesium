@@ -26,50 +26,101 @@
 <div id="loadingOverlay"><h1>Loading...</h1></div>
 <div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
-function startup(Cesium) {
-    'use strict';
+    function startup(Cesium) {
+        'use strict';
 //Sandcastle_Begin
 // Power Plant design model provided by Bentley Systems
-var viewer = new Cesium.Viewer('cesiumContainer');
-var scene = viewer.scene;
+        var viewer = new Cesium.Viewer('cesiumContainer');
+        var scene = viewer.scene;
 
-scene.primitives.add(
-    new Cesium.Cesium3DTileset({
-        url: Cesium.IonResource.fromAssetId(8564)
-    })
-);
-viewer.entities.add({
-    polyline : {
-        positions : Cesium.Cartesian3.fromDegreesArray([
-            -76.36053390920833, 34.949935893493596,
-            -76.36055481641581, 34.94993589886988,
-            -76.36055477047704, 34.94992280693651
-        ]),
-        width : 6,
-        material : new Cesium.PolylineDashMaterialProperty({
-            color : Cesium.Color.YELLOW,
-            dashLength: 20.0
-        }),
-        clampToGround : true,
-        classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
-    }
-});
+        var powerplant = scene.primitives.add(
+            new Cesium.Cesium3DTileset({
+                url: Cesium.IonResource.fromAssetId(8564),
+                show: false
+            })
+        );
+        var pipes = viewer.entities.add({
+            polyline : {
+                positions : Cesium.Cartesian3.fromDegreesArray([
+                    -76.36053390920833, 34.949935893493596,
+                    -76.36055481641581, 34.94993589886988,
+                    -76.36055477047704, 34.94992280693651
+                ]),
+                width : 6,
+                material : new Cesium.PolylineDashMaterialProperty({
+                    color : Cesium.Color.YELLOW,
+                    dashLength: 20.0
+                }),
+                show: false,
+                clampToGround : true,
+                classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
+            }
+        });
 
-scene.camera.setView({
-    destination: new Cesium.Cartesian3(1234151.4883992162, -5086036.79436967, 3633328.4278331124),
-    orientation: {
-        heading: 5.593695742186853,
-        pitch: -1.0786797635545216,
-        roll: 6.27892466154778
+        var building = viewer.scene.primitives.add(
+            new Cesium.Cesium3DTileset({
+                url: Cesium.IonResource.fromAssetId(6074)
+            })
+        );
+        var roof = viewer.entities.add({
+            polyline : {
+                positions : Cesium.Cartesian3.fromDegreesArray([
+                    -75.59623099086708, 40.03869033691377,
+                    -75.59682917632566, 40.038431873194504,
+                    -75.59698436131592, 40.0386422965043,
+                    -75.59638581968323, 40.038909049056166,
+                    -75.59623099086708, 40.03869033691377
+                ]),
+                width : 6,
+                material : new Cesium.PolylineDashMaterialProperty({
+                    color : Cesium.Color.YELLOW
+                }),
+                show: false,
+                clampToGround : true,
+                classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
+            }
+        });
+
+        Sandcastle.addToolbarMenu([{
+            text : 'BIM',
+            onselect : function() {
+                building.show = false;
+                roof.polyline.show = false;
+                powerplant.show = true;
+                pipes.polyline.show = true;
+                scene.camera.setView({
+                    destination: new Cesium.Cartesian3(1234151.4883992162, -5086036.79436967, 3633328.4278331124),
+                    orientation: {
+                        heading: 5.593695742186853,
+                        pitch: -1.0786797635545216,
+                        roll: 6.27892466154778
+                    }
+                });
+            }
+        }, {
+            text : 'Photogrammetry',
+            onselect : function() {
+                building.show = true;
+                roof.polyline.show = true;
+                powerplant.show = false;
+                pipes.polyline.show = false;
+                scene.camera.setView({
+                    destination: new Cesium.Cartesian3(1216296.0941713597, -4736381.187107504, 4081327.7871791944),
+                    orientation: {
+                        heading: 0.5079812744478183,
+                        pitch: -0.673861558345497,
+                        roll: 0.0020628345057520647
+                    }
+                });
+            }
+        }]);//Sandcastle_End
+        Sandcastle.finishedLoading();
     }
-});//Sandcastle_End
-    Sandcastle.finishedLoading();
-}
-if (typeof Cesium !== 'undefined') {
-    startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
-}
+    if (typeof Cesium !== 'undefined') {
+        startup(Cesium);
+    } else if (typeof require === 'function') {
+        require(['Cesium'], startup);
+    }
 </script>
 </body>
 </html>
