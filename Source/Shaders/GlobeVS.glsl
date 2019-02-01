@@ -185,10 +185,8 @@ void main()
     vec3 normalProjected = v_normalMC - normalRejected;
     vec3 aspectVector = normalize(normalProjected);
     v_aspect = acos(dot(aspectVector, vectorEastMC));
-    v_height = height;
-
     float determ = dot(cross(vectorEastMC, aspectVector), ellipsoidNormal);
-    if(determ < 0.0)
-        v_aspect = 2.0 * 3.1415926536 - v_aspect;
+    v_aspect = czm_branchFreeTernary(determ < 0.0 ? 2.0 * czm_pi - v_aspect, v_aspect);
+    v_height = height;
 #endif
 }
