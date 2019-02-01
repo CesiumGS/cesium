@@ -203,8 +203,25 @@ define([
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
     }
 
+    // Prevent unnecessary loads while camera is moving
+    function isOnScreenLongEnough(tile, frameState) {
+        var camera = frameState.camera;
+
+        // Get the ratio of travel distance to tile size
+        var deltaMagnitude = Cartesian3.magnitude(camera._positionWCDelta);
+        if (deltaMagnitude === 0) {
+            deltaMagnitude = Cartesian3.magnitude(camera._positionWCDeltaLastFrame);
+        }
+
+        var sphere = tile.boundingSphere;
+        var diameter = sphere.radius * 2;
+        diameter = diameter === 0 ? 1 : diameter;
+        var movementRatio = 20 * deltaMagnitude / diameter; // How do n frames of this movement compare to the tile's physical size.
+        return movementRatio < 1;
+    }
+
     function loadTile(tileset, tile, frameState) {
-        if (tile._movementRatio < 1 && (hasUnloadedContent(tile) || tile.contentExpired)) {
+        if (isOnScreenLongEnough(tile, frameState) && (hasUnloadedContent(tile) || tile.contentExpired)) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
         }
@@ -278,23 +295,6 @@ define([
         }
     }
 
-    // Prevent unnecessary loads while camera is moving
-    function computeCameraToTileMovementRatio(tile, frameState) {
-        var camera = frameState.camera;
-
-        // Get the ratio of travel distance to geometric error
-        var deltaMagnitude = Cartesian3.magnitude(camera._positionWCDelta);
-        if (deltaMagnitude === 0) {
-            deltaMagnitude = Cartesian3.magnitude(camera._positionWCDeltaLastFrame);
-        }
-
-        var sphere = tile.boundingSphere;
-        var diameter = sphere.radius * 2;
-        diameter = diameter === 0 ? 1 : diameter;
-        tile._movementRatio = 20 * deltaMagnitude / diameter; // How does n frames of this movement compare to the tile's physical size.
-        tile._passMovement = tile._movementRatio < 1;
-    }
-
     function updateTile(tileset, tile, frameState) {
         // Reset some of the tile's flags and re-evaluate visibility
         updateTileVisibility(tileset, tile, frameState);
@@ -305,9 +305,6 @@ define([
         tile._priorityDistance = tile._distanceToCamera;
         tile._priorityDistanceHolder = tile;
         updateMinMaxPriority(tileset, tile);
-
-        // Prevent unnecessary loads while camera is moving
-        computeCameraToTileMovementRatio(tile, frameState);
 
         // SkipLOD
         tile._shouldSelect = false;
