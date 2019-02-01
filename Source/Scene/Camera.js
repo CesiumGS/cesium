@@ -117,12 +117,12 @@ define([
         this._positionCartographic = new Cartographic();
 
         /**
-         * The position delta.
+         * The position delta magnitude.
          *
          * @type {Cartesian3}
          */
-        this._positionWCDelta = new Cartesian3();
-        this._positionWCDeltaLastFrame = new Cartesian3();
+        this._positionWCDeltaMagnitude = 0;
+        this._positionWCDeltaMagnitudeLastFrame = 0;
 
         /**
          * The view direction of the camera.
@@ -288,8 +288,9 @@ define([
         if (!defined(scratchOldPositionWC)) {
             scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
         } else {
-            camera._positionWCDeltaLastFrame = Cartesian3.clone(camera._positionWCDelta, camera._positionWCDeltaLastFrame);
-            camera._positionWCDelta = Cartesian3.subtract(camera.positionWC, scratchOldPositionWC, camera._positionWCDelta);
+            camera._positionWCDeltaMagnitudeLastFrame = camera._positionWCDeltaMagnitude;
+            var delta = Cartesian3.subtract(camera.positionWC, scratchOldPositionWC, scratchOldPositionWC);
+            camera._positionWCDeltaMagnitude = Cartesian3.magnitude(delta);
             scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
         }
     }

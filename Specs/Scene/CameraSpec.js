@@ -3062,17 +3062,17 @@ defineSuite([
 
     it('get camera deltas', function() {
         camera._updateCameraChanged();
-        expect(camera._positionWCDelta).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON10);
-        expect(camera._positionWCDeltaLastFrame).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON10);
+        expect(camera._positionWCDeltaMagnitude).toEqual(0);
+        expect(camera._positionWCDeltaMagnitudeLastFrame).toEqual(0);
 
         camera.moveUp(moveAmount);
 
         camera._updateCameraChanged();
-        expect(camera._positionWCDelta).toEqualEpsilon(new Cartesian3(0.0, moveAmount, 0.0), CesiumMath.EPSILON10);
-        expect(camera._positionWCDeltaLastFrame).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON10);
+        expect(camera._positionWCDeltaMagnitude).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
+        expect(camera._positionWCDeltaMagnitudeLastFrame).toEqual(0);
 
         camera._updateCameraChanged();
-        expect(camera._positionWCDelta).toEqualEpsilon(new Cartesian3(0.0, 0.0, 0.0), CesiumMath.EPSILON10);
-        expect(camera._positionWCDeltaLastFrame).toEqualEpsilon(new Cartesian3(0.0, moveAmount, 0.0), CesiumMath.EPSILON10);
+        expect(camera._positionWCDeltaMagnitude).toEqual(0);
+        expect(camera._positionWCDeltaMagnitudeLastFrame).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
     });
 });

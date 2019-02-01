@@ -203,19 +203,14 @@ define([
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
     }
 
-    // Prevent unnecessary loads while camera is moving
     function isOnScreenLongEnough(tile, frameState) {
-        // Get the ratio of travel distance to tile size
-        var camera = frameState.camera;
-        var deltaMagnitude = Cartesian3.magnitude(camera._positionWCDelta);
-        if (deltaMagnitude === 0) {
-            deltaMagnitude = Cartesian3.magnitude(camera._positionWCDeltaLastFrame);
-        }
-
+        // Prevent unnecessary loads while camera is moving by getting the ratio of travel distance to tile size.
         var sphere = tile.boundingSphere;
         var diameter = sphere.radius * 2;
         diameter = diameter === 0 ? 1 : diameter;
 
+        var camera = frameState.camera;
+        var deltaMagnitude = camera._positionWCDeltaMagnitude !== 0 ? camera._positionWCDeltaMagnitude : camera._positionWCDeltaMagnitudeLastFrame;
         var movementRatio = 20 * deltaMagnitude / diameter; // How do n frames of this movement compare to the tile's physical size.
         return movementRatio < 1;
     }
