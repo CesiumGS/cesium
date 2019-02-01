@@ -789,7 +789,12 @@ define([
 
         var cameraPosition = frameState.camera.positionWC;
         var cameraDirection = frameState.camera.directionWC;
-        var tileDirection = Cartesian3.normalize(Cartesian3.subtract(obb.center, cameraPosition, tileDirectionScratch), tileDirectionScratch);
+        var tileDirection = Cartesian3.subtract(obb.center, cameraPosition, tileDirectionScratch);
+        var magnitude = Cartesian3.magnitude(tileDirection);
+        if (magnitude < CesiumMath.EPSILON5) {
+            return 0.0;
+        }
+        Cartesian3.divideByScalar(tileDirection, magnitude, tileDirection);
         return (1.0 - Cartesian3.dot(tileDirection, cameraDirection)) * tile._distance;
     };
 
