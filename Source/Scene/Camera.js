@@ -283,7 +283,7 @@ define([
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
 
-    var scratchOldPositionWC = undefined;
+    var scratchOldPositionWC;
     function getCameraDeltas(camera) {
         if (!defined(scratchOldPositionWC)) {
             scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);

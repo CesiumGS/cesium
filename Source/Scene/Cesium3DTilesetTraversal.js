@@ -205,9 +205,8 @@ define([
 
     // Prevent unnecessary loads while camera is moving
     function isOnScreenLongEnough(tile, frameState) {
-        var camera = frameState.camera;
-
         // Get the ratio of travel distance to tile size
+        var camera = frameState.camera;
         var deltaMagnitude = Cartesian3.magnitude(camera._positionWCDelta);
         if (deltaMagnitude === 0) {
             deltaMagnitude = Cartesian3.magnitude(camera._positionWCDeltaLastFrame);
@@ -216,6 +215,7 @@ define([
         var sphere = tile.boundingSphere;
         var diameter = sphere.radius * 2;
         diameter = diameter === 0 ? 1 : diameter;
+
         var movementRatio = 20 * deltaMagnitude / diameter; // How do n frames of this movement compare to the tile's physical size.
         return movementRatio < 1;
     }
