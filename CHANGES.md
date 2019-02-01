@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.55 - 2019-03-01
+
+##### Fixes :wrench:
+* Fixed an issue where some ground polygons crossing the Prime Meridian would have incorrect bounding rectangles. [#7533](https://github.com/AnalyticalGraphicsInc/cesium/pull/7533)
+
 ### 1.54 - 2019-02-01
 
 ##### Highlights :sparkler:
