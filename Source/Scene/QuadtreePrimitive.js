@@ -784,6 +784,7 @@ define([
                 var allAreRenderable = traversalDetails.allAreRenderable;
                 var anyWereRenderedLastFrame = traversalDetails.anyWereRenderedLastFrame;
                 var notYetRenderableCount = traversalDetails.notYetRenderableCount;
+                var queuedForLoad = false;
 
                 if (!allAreRenderable && !anyWereRenderedLastFrame) {
                     // Some of our descendants aren't ready to render yet, and none were rendered last frame,
@@ -817,6 +818,7 @@ define([
                         primitive._tileLoadQueueHigh.length = loadIndexHigh;
                         queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
                         traversalDetails.notYetRenderableCount = tile.renderable ? 0 : 1;
+                        queuedForLoad = true;
                     }
 
                     traversalDetails.allAreRenderable = tile.renderable;
@@ -830,8 +832,7 @@ define([
                     ++debug.tilesWaitingForChildren;
                 }
 
-                if (primitive.preloadAncestors) {
-                    // TODO: don't queue here if this tile was queued at medium above.
+                if (primitive.preloadAncestors && !queuedForLoad) {
                     queueTileLoad(primitive, primitive._tileLoadQueueLow, tile, frameState);
                 }
             }
