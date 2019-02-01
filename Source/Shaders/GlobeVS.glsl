@@ -178,9 +178,9 @@ void main()
 #ifdef APPLY_MATERIAL
     float northPoleZ = czm_getWgs84EllipsoidEC().radii.z;
     vec3 northPolePositionMC = vec3(0.0, 0.0, northPoleZ);
-    vec3 ellipsoidNormal = normalize(v_positionMC); // TODO: For a sphere this is correct, but not generally for an ellipsoid!
+    vec3 ellipsoidNormal = normalize(v_positionMC); // For a sphere this is correct, but not generally for an ellipsoid.
     vec3 vectorEastMC = normalize(cross(northPolePositionMC - v_positionMC, ellipsoidNormal));
-    float dotProd = abs(dot(ellipsoidNormal, v_normalMC));      // Why absolute value here?  What about overhanging terrain?  (e.g., an arch.)
+    float dotProd = abs(dot(ellipsoidNormal, v_normalMC));
     v_slope = acos(dotProd);
     vec3 normalRejected = ellipsoidNormal * dotProd;
     vec3 normalProjected = v_normalMC - normalRejected;
