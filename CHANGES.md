@@ -5,7 +5,7 @@ Change Log
 
 ##### Highlights :sparkler:
 * Added support for polylines and textured entities on 3D Tiles. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437) and [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
-* Added support for loading models with WebP images using the [`EXT_texture_webp`](https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Vendor/EXT_texture_webp/README.md) glTF extension. [#7486](https://github.com/AnalyticalGraphicsInc/cesium/pull/7486)
+* Added support for loading models and 3D tilesets with WebP images using the [`EXT_texture_webp`](https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Vendor/EXT_texture_webp/README.md) glTF extension. [#7486](https://github.com/AnalyticalGraphicsInc/cesium/pull/7486)
 * Added support for rhumb lines to polygon and polyline geometries. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
 
 ##### Breaking Changes :mega:
