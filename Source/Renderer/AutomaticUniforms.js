@@ -1595,7 +1595,7 @@ define([
             size : 1,
             datatype : WebGLConstants.FLOAT_VEC2,
             getValue : function(uniformState) {
-                return uniformState.specularEnvironmentMaps.dimensions;
+                return uniformState.specularEnvironmentMapsDimensions;
             }
         }),
 
