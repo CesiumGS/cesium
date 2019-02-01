@@ -117,6 +117,14 @@ define([
         this._positionCartographic = new Cartographic();
 
         /**
+         * The position delta.
+         *
+         * @type {Cartesian3}
+         */
+        this._positionWCDelta = new Cartesian3();
+        this._positionWCDeltaLastFrame = new Cartesian3();
+
+        /**
          * The view direction of the camera.
          *
          * @type {Cartesian3}
@@ -284,6 +292,7 @@ define([
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
 
+    var scratchOldPositionWC = undefined;
     Camera.prototype._updateCameraChanged = function() {
         var camera = this;
 
@@ -362,6 +371,15 @@ define([
             camera._changed.raiseEvent(Math.max(dirPercentage, heightPercentage));
             camera._changedPosition = Cartesian3.clone(camera.positionWC, camera._changedPosition);
             camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
+        }
+
+        // Get camera deltas
+        if (!defined(scratchOldPositionWC)) {
+            scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
+        } else {
+            camera._positionWCDeltaLastFrame = Cartesian3.clone(camera._positionWCDelta, camera._positionWCDeltaLastFrame);
+            camera._positionWCDelta = Cartesian3.subtract(camera.positionWC, scratchOldPositionWC, camera._positionWCDelta);
+            scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
         }
     };
 

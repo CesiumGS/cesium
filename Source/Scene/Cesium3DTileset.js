@@ -2000,10 +2000,10 @@ define([
         }
 
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
-        if (defined(frameState.camera.cameraChanges)) {
-            tileset._tilesLoaded = tileset._tilesLoaded && (frameState.camera.cameraChanges.sseFudge === 0);
+        // if (defined(frameState.camera.cameraChanges)) {
+            // tileset._tilesLoaded = tileset._tilesLoaded && (frameState.camera.cameraChanges.sseFudge === 0);
             // console.log('sse fudge:' + tileset.cameraChanges.sseFudge);
-        }
+        // }
 
         if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
