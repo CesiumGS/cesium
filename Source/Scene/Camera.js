@@ -297,6 +297,8 @@ define([
     Camera.prototype._updateCameraChanged = function() {
         var camera = this;
 
+        getCameraDeltas(camera);
+
         if (camera._changed.numberOfListeners === 0) {
             return;
         }
@@ -373,8 +375,6 @@ define([
             camera._changedPosition = Cartesian3.clone(camera.positionWC, camera._changedPosition);
             camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
         }
-
-        getCameraDeltas(camera);
     };
 
     var scratchAdjustHeightTransform = new Matrix4();

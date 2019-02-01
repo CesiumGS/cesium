@@ -3569,4 +3569,15 @@ defineSuite([
             expect(lastPriority !== requestedTilesInFlight[0]._priority).toBe(true); // Not all the same value
         });
     });
+
+    it('does not fetch tiles while camera is moving', function() {
+        viewNothing();
+        scene.renderForSpecs();
+
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
+            viewAllTiles();
+            scene.renderForSpecs();
+            expect(tileset._requestedTilesInFlight.length).toEqual(0); // Big camera delta so no fetches should occur.
+        });
+    });
 }, 'WebGL');
