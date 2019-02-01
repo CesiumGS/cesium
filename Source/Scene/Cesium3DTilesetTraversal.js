@@ -50,7 +50,6 @@ define([
 
     var descendantSelectionDepth = 2;
 
-    var delta = new Cartesian3();
     Cesium3DTilesetTraversal.selectTiles = function(tileset, frameState) {
         tileset._requestedTiles.length = 0;
 
@@ -279,6 +278,7 @@ define([
         }
     }
 
+    // Prevent unnecessary loads while camera is moving
     function computeCameraToTileMovementRatio(tile, frameState) {
         var camera = frameState.camera;
 

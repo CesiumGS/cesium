@@ -92,8 +92,6 @@ define([
 
     var heatmapColors = [new Color(0.000, 0.000, 0.000, 1),  // Black
                          new Color(1.000, 1, 1, 1)]; // Yellow
-
-
     /**
      * Colorize the tile in heat map style based on where it lies within the min max window.
      * Heatmap colors are black, blue, pink, red, orange, yellow. 'Cold' or low numbers will be black and blue, 'Hot' or high numbers will be orange and yellow,

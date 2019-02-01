@@ -347,9 +347,6 @@ define([
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
         this._loadTimestamp = new JulianDate();
 
-        // Raise sse while moving
-        this._toCenter = new Cartesian3();
-
         this._commandsLength = 0;
 
         this._color = undefined;
@@ -956,6 +953,7 @@ define([
     };
 
     var scratchToTileCenter = new Cartesian3();
+
     /**
      * Computes the distance from the center of the tile's bounding volume to the camera's plane defined by its position and view direction.
      *
