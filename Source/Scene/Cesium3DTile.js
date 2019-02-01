@@ -348,7 +348,6 @@ define([
         this._loadTimestamp = new JulianDate();
 
         // Raise sse while moving
-        this._movementRatio = 0;
         this._toCenter = new Cartesian3();
 
         this._commandsLength = 0;
@@ -956,7 +955,7 @@ define([
         return boundingVolume.distanceToCamera(frameState);
     };
 
-    // var scratchToCenter = new Cartesian3();
+    var scratchToTileCenter = new Cartesian3();
     /**
      * Computes the distance from the center of the tile's bounding volume to the camera's plane defined by its position and view direction.
      *
@@ -968,8 +967,8 @@ define([
     Cesium3DTile.prototype.distanceToTileCenter = function(frameState) {
         var tileBoundingVolume = getBoundingVolume(this, frameState);
         var boundingVolume = tileBoundingVolume.boundingVolume; // Gets the underlying OrientedBoundingBox or BoundingSphere
-        Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, this._toCenter);
-        return Cartesian3.dot(frameState.camera.directionWC, this._toCenter);
+        var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchToTileCenter);
+        return Cartesian3.dot(frameState.camera.directionWC, toCenter);
     };
 
     /**

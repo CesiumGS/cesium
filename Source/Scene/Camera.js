@@ -134,15 +134,6 @@ define([
         this._directionWC = new Cartesian3();
 
         /**
-         * The old view direction of the camera.
-         *
-         * @type {Cartesian3}
-         */
-        this.oldDirection = new Cartesian3();
-        this.oldRight = new Cartesian3();
-        this.oldPosition = new Cartesian3();
-
-        /**
          * The up direction of the camera.
          *
          * @type {Cartesian3}
@@ -293,6 +284,16 @@ define([
     }
 
     var scratchOldPositionWC = undefined;
+    function getCameraDeltas(camera) {
+        if (!defined(scratchOldPositionWC)) {
+            scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
+        } else {
+            camera._positionWCDeltaLastFrame = Cartesian3.clone(camera._positionWCDelta, camera._positionWCDeltaLastFrame);
+            camera._positionWCDelta = Cartesian3.subtract(camera.positionWC, scratchOldPositionWC, camera._positionWCDelta);
+            scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
+        }
+    }
+
     Camera.prototype._updateCameraChanged = function() {
         var camera = this;
 
@@ -373,14 +374,7 @@ define([
             camera._changedDirection = Cartesian3.clone(camera.directionWC, camera._changedDirection);
         }
 
-        // Get camera deltas
-        if (!defined(scratchOldPositionWC)) {
-            scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
-        } else {
-            camera._positionWCDeltaLastFrame = Cartesian3.clone(camera._positionWCDelta, camera._positionWCDeltaLastFrame);
-            camera._positionWCDelta = Cartesian3.subtract(camera.positionWC, scratchOldPositionWC, camera._positionWCDelta);
-            scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
-        }
+        getCameraDeltas(camera);
     };
 
     var scratchAdjustHeightTransform = new Matrix4();

@@ -2000,10 +2000,6 @@ define([
         }
 
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
-        // if (defined(frameState.camera.cameraChanges)) {
-            // tileset._tilesLoaded = tileset._tilesLoaded && (frameState.camera.cameraChanges.sseFudge === 0);
-            // console.log('sse fudge:' + tileset.cameraChanges.sseFudge);
-        // }
 
         if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
@@ -2098,10 +2094,6 @@ define([
         updateTiles(tileset, frameState);
 
         if (isRender) {
-            // Print the min max heatmap
-            // console.log('minHM: ' + tileset._heatmap._min);
-            // console.log('maxHM: ' + tileset._heatmap._max);
-
             unloadTiles(tileset);
 
             // Events are raised (added to the afterRender queue) here since promises

@@ -90,14 +90,8 @@ define([
     //                      new Color(1.000, 0.592, 0.259, 1),  // Orange
     //                      new Color(1.000, 0.843, 0.000, 1)]; // Yellow
 
-    // var heatmapColors = [new Color(0.000, 0.000, 0.000, 1),  // Black
-    //                      new Color(0.000, 0.000, 1.000, 1),  // Blue
-    //                      new Color(0.000, 1.000, 0.000, 1),  // Green
-    //                      new Color(1.000, 0.000, 0.000, 1),  // Red
-    //                      new Color(1.000, 1.000, 1.000, 1)]; // Yellow
-
     var heatmapColors = [new Color(0.000, 0.000, 0.000, 1),  // Black
-                         new Color(1.000, 1.000, 1.000, 1)]; // White
+                         new Color(1.000, 1, 1, 1)]; // Yellow
 
 
     /**
