@@ -3,6 +3,11 @@ Change Log
 
 ### 1.54 - 2019-02-01
 
+##### Highlights :sparkler:
+* Added support for polylines and textured entities on 3D Tiles. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437) and [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
+* Added support for loading models and 3D tilesets with WebP images using the [`EXT_texture_webp`](https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Vendor/EXT_texture_webp/README.md) glTF extension. [#7486](https://github.com/AnalyticalGraphicsInc/cesium/pull/7486)
+* Added support for rhumb lines to polygon and polyline geometries. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
+
 ##### Breaking Changes :mega:
 * Billboards with `HeightReference.CLAMP_TO_GROUND` are now clamped to both terrain and 3D Tiles. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
 * The default `classificationType` for `GroundPrimitive`, `CorridorGraphics`, `EllipseGraphics`, `PolygonGraphics` and `RectangleGraphics` is now `ClassificationType.BOTH`. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
