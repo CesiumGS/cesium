@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.55 - 2019-03-01
+
+##### Fixes :wrench:
+* Fixed an issue where models would cause a crash on load if some primitives were Draco encoded and others were not. [#7383](https://github.com/AnalyticalGraphicsInc/cesium/issues/7383)
+
 ### 1.54 - 2019-02-01
 
 ##### Highlights :sparkler:
