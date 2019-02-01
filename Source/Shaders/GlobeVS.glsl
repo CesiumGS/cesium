@@ -178,18 +178,17 @@ void main()
 #ifdef APPLY_MATERIAL
     vec3 northPolePositionMC = vec3(0.0, 0.0, 6356752.3142451793);
     vec3 ellipsoidNormal = normalize(v_positionMC); // TODO: For a sphere this is correct, but not generally for an ellipsoid!
-    vec3 vectorEastMC = normalize(cross(northPolePositionMC - v_positionMC, ellipsoidNormal)); // Find true east in the tangent plane to the ground point.
+    vec3 vectorEastMC = normalize(cross(northPolePositionMC - v_positionMC, ellipsoidNormal));
     float dotProd = abs(dot(ellipsoidNormal, v_normalMC));
-    v_slope = acos(dotProd);   // Slope is by definition an angle, and we want linear scale between flat and vertical.
-    vec3 normalRejected = ellipsoidNormal * dotProd;  // This is the rejection of the terrain normal from the tangent plane.
-    vec3 normalProjected = v_normalMC - normalRejected; // This is the terrain normal projected onto the tangent plane.
-    vec3 aspectVector = normalize(normalProjected);   // This is our unit-length heading in the tangent space.  (Aspect direction.)
-    v_aspect = acos(dot(aspectVector, vectorEastMC));  // Finally, here is the aspect angle.
-    v_height = height;  // Store height.
+    v_slope = acos(dotProd);
+    vec3 normalRejected = ellipsoidNormal * dotProd;
+    vec3 normalProjected = v_normalMC - normalRejected;
+    vec3 aspectVector = normalize(normalProjected);
+    v_aspect = acos(dot(aspectVector, vectorEastMC));
+    v_height = height;
 
-    // There is one final matter to clear up.  Our aspect is in [0,pi), but we need it to be in [0,2pi).
-    float determ = dot(cross(vectorEastMC, aspectVector), ellipsoidNormal); // Calculate a 3x3 determinant.
-    if(determ < 0.0)        // GLSL shouldn't actually have to do a branching operation here.
+    float determ = dot(cross(vectorEastMC, aspectVector), ellipsoidNormal);
+    if(determ < 0.0)
         v_aspect = 2.0 * 3.1415926536 - v_aspect;
 #endif
 }
