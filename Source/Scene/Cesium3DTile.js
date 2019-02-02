@@ -621,42 +621,42 @@ define([
     function isPriorityDeferred(tile, frameState) {
         var tileset = tile._tileset;
 
-        if (!tileset.foveatedScreenSpaceError) {
-            return false;
-        }
-
         var fogSSEFail = false;
         if (tileset.dynamicScreenSpaceError) {
             var distance = Math.max(tile._distanceToCamera, CesiumMath.EPSILON7);
             var density = tileset._dynamicScreenSpaceErrorComputedDensity;
             var factor = tileset.dynamicScreenSpaceErrorFactor;
             var dynamicError = CesiumMath.fog(distance, density) * factor;
-            var fogClose = factor * 0.7;
-            var inBackground = dynamicError > fogClose; // Somewhere in the distance
-            fogSSEFail = (tileset._maximumScreenSpaceError >= (tile._screenSpaceError - dynamicError)) && inBackground; // Need to make sure it's in backgound otherwise leaves would get deferred as well
+            var fogClose = factor * 0.9;
+            var inBackground = dynamicError > fogClose;
+            var streetView = density > 0.5 * tileset.dynamicScreenSpaceErrorDensity;
+            fogSSEFail = (tileset._maximumScreenSpaceError >= (tile._screenSpaceError - dynamicError)) && inBackground && streetView; // Need to make sure it's in backgound otherwise leaves would get deferred as well
         }
 
         // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
         // TODO: find closest swept point on sphere from cam forward vector.
-        var sphere = tile._boundingVolume.boundingSphere;
-        var radius = sphere.radius;
-        var scaledFwd = Cartesian3.multiplyByScalar(frameState.camera.directionWC, tile._centerZDepth, scratchCartesian);
-        var closestOnLine = Cartesian3.add(frameState.camera.positionWC, scaledFwd, scratchCartesian);
-        var toLine = Cartesian3.subtract(closestOnLine, sphere.center, scratchCartesian);
-        var distSqrd = Cartesian3.dot(toLine, toLine);
-        var diff = Math.max(distSqrd - radius * radius, 0);
-        tile._foveatedFactor = 0;
+        var foveatedFail = false;
+        if (tileset.foveatedScreenSpaceError) {
+            var sphere = tile._boundingVolume.boundingSphere;
+            var radius = sphere.radius;
+            var scaledFwd = Cartesian3.multiplyByScalar(frameState.camera.directionWC, tile._centerZDepth, scratchCartesian);
+            var closestOnLine = Cartesian3.add(frameState.camera.positionWC, scaledFwd, scratchCartesian);
+            var toLine = Cartesian3.subtract(closestOnLine, sphere.center, scratchCartesian);
+            var distSqrd = Cartesian3.dot(toLine, toLine);
+            var diff = Math.max(distSqrd - radius * radius, 0);
+            tile._foveatedFactor = 0;
 
-        if (diff !== 0)  {
-            var toLineNormalize = Cartesian3.normalize(toLine, scratchCartesian);
-            var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalize, radius, scratchCartesian);
-            var closestOnSphere = Cartesian3.add(sphere.center, scaledToLine, scratchCartesian);
-            var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, frameState.camera.positionWC, scratchCartesian);
-            var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
-            tile._foveatedFactor = 1 - Math.abs(Cartesian3.dot(frameState.camera.directionWC, toClosestOnSphereNormalize));
+            if (diff !== 0)  {
+                var toLineNormalize = Cartesian3.normalize(toLine, scratchCartesian);
+                var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalize, radius, scratchCartesian);
+                var closestOnSphere = Cartesian3.add(sphere.center, scaledToLine, scratchCartesian);
+                var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, frameState.camera.positionWC, scratchCartesian);
+                var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
+                tile._foveatedFactor = 1 - Math.abs(Cartesian3.dot(frameState.camera.directionWC, toClosestOnSphereNormalize));
+            }
+            foveatedFail = tile._foveatedFactor >= tileset.foveaDeferThreshold;
         }
 
-        var foveatedFail = tile._foveatedFactor >= tileset.foveaDeferThreshold;
         return fogSSEFail || foveatedFail;
     }
 
