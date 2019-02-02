@@ -281,7 +281,6 @@ define([
     function updateTile(tileset, tile, frameState) {
         // Reset some of the tile's flags and re-evaluate visibility
         updateTileVisibility(tileset, tile, frameState);
-        // tile.updateVisibility(frameState);
         tile.updateExpiration();
 
         // Request priority

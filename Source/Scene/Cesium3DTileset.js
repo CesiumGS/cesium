@@ -117,7 +117,7 @@ define([
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=8.0] A factor used to increase the computed dynamic screen space error.
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
      * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Defer loading tiles that are closer to the edges of the current view.
-     * @param {Number} [options.foveaDeferThreshold=0.07] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}. Determines what "close to the edge" means. 0 
+     * @param {Number} [options.foveaDeferThreshold=0.07] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}.
      * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
      * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
      * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
@@ -266,9 +266,7 @@ define([
         this.foveatedScreenSpaceError = defaultValue(options.foveatedScreenSpaceError, true);
 
         /**
-         * Optimization option. 
-         * 
-         * 
+         * Optimization option.
          *
          * @type {Boolean}
          * @default true
@@ -2005,9 +2003,11 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-            frameState.afterRender.push(function() {
-                tileset.allTilesLoaded.raiseEvent();
-            });
+            if (!defined(frameState.camera._currentFlight)) {
+                frameState.afterRender.push(function() {
+                    tileset.allTilesLoaded.raiseEvent();
+                });
+            }
             if (!tileset._initialTilesLoaded) {
                 tileset._initialTilesLoaded = true;
                 frameState.afterRender.push(function() {

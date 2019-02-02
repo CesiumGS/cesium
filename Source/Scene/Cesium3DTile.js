@@ -344,10 +344,11 @@ define([
         this._priority = 0.0; // The priority used for request sorting
         this._priorityDistance = Number.MAX_VALUE; // The value to update in the priority refinement chain
         this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
-        this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
-        this._loadTimestamp = new JulianDate();
+        this._priorityDeferred = false;
         this._foveatedFactor = 0;
-        this._deferLoadingPriority = false; // True for tiles that should refine but at a lower priority, such as if they are on the edges of the screen.
+        this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
+
+        this._loadTimestamp = new JulianDate();
 
         this._commandsLength = 0;
 
@@ -616,8 +617,50 @@ define([
         }
     });
 
-    var scratchJulianDate = new JulianDate();
     var scratchCartesian = new Cartesian3();
+    function isPriorityDeferred(tile, frameState) {
+        var tileset = tile._tileset;
+
+        if (!tileset.foveatedScreenSpaceError) {
+            return false;
+        }
+
+        var fogSSEFail = false;
+        if (tileset.dynamicScreenSpaceError) {
+            var distance = Math.max(tile._distanceToCamera, CesiumMath.EPSILON7);
+            var density = tileset._dynamicScreenSpaceErrorComputedDensity;
+            var factor = tileset.dynamicScreenSpaceErrorFactor;
+            var dynamicError = CesiumMath.fog(distance, density) * factor;
+            var fogClose = factor * 0.7;
+            var inBackground = dynamicError > fogClose; // Somewhere in the distance
+            fogSSEFail = (tileset._maximumScreenSpaceError >= (tile._screenSpaceError - dynamicError)) && inBackground; // Need to make sure it's in backgound otherwise leaves would get deferred as well
+        }
+
+        // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
+        // TODO: find closest swept point on sphere from cam forward vector.
+        var sphere = tile._boundingVolume.boundingSphere;
+        var radius = sphere.radius;
+        var scaledFwd = Cartesian3.multiplyByScalar(frameState.camera.directionWC, tile._centerZDepth, scratchCartesian);
+        var closestOnLine = Cartesian3.add(frameState.camera.positionWC, scaledFwd, scratchCartesian);
+        var toLine = Cartesian3.subtract(closestOnLine, sphere.center, scratchCartesian);
+        var distSqrd = Cartesian3.dot(toLine, toLine);
+        var diff = Math.max(distSqrd - radius * radius, 0);
+        tile._foveatedFactor = 0;
+
+        if (diff !== 0)  {
+            var toLineNormalize = Cartesian3.normalize(toLine, scratchCartesian);
+            var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalize, radius, scratchCartesian);
+            var closestOnSphere = Cartesian3.add(sphere.center, scaledToLine, scratchCartesian);
+            var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, frameState.camera.positionWC, scratchCartesian);
+            var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
+            tile._foveatedFactor = 1 - Math.abs(Cartesian3.dot(frameState.camera.directionWC, toClosestOnSphereNormalize));
+        }
+
+        var foveatedFail = tile._foveatedFactor >= tileset.foveaDeferThreshold;
+        return fogSSEFail || foveatedFail;
+    }
+
+    var scratchJulianDate = new JulianDate();
 
     /**
      * Get the tile's screen space error.
@@ -638,7 +681,6 @@ define([
         var width = context.drawingBufferWidth;
         var height = context.drawingBufferHeight;
         var error;
-        var dynamicError = 0;
         if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
             if (defined(frustum._offCenterFrustum)) {
                 frustum = frustum._offCenterFrustum;
@@ -650,11 +692,6 @@ define([
             var distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
             var sseDenominator = camera.frustum.sseDenominator;
             error = (geometricError * height) / (distance * sseDenominator);
-            // if (tileset.dynamicScreenSpaceError) {
-            //     var density = tileset._dynamicScreenSpaceErrorComputedDensity;
-            //     var factor = tileset.dynamicScreenSpaceErrorFactor;
-            //     dynamicError = CesiumMath.fog(distance, density) * factor;
-            // }
         }
         return error;
     };
@@ -675,56 +712,8 @@ define([
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
+        this._priorityDeferred = isPriorityDeferred(this, frameState);
 
-
-
-        var tileset = this._tileset;
-        if (tileset.foveatedScreenSpaceError) {
-            var dynamicError = 0;
-            var factor = 0;
-            if (tileset.dynamicScreenSpaceError) {
-                var distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
-                var density = tileset._dynamicScreenSpaceErrorComputedDensity;
-                factor = tileset.dynamicScreenSpaceErrorFactor;
-                dynamicError = CesiumMath.fog(distance, density) * factor;
-            }
-
-            // var boundingVolume = this._boundingVolume.boundingSphere;
-            // var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchCartesian);
-            // var toCenterNormalize = Cartesian3.normalize(toCenter, scratchCartesian);
-            // var lerpOffCenter = Math.abs(Cartesian3.dot(toCenterNormalize, frameState.camera.directionWC));
-            // this._foveatedFactor = 1 - lerpOffCenter;
-            // this._deferLoadingPriority = this._foveatedFactor >= 0.1;
-
-
-            var sphere = this._boundingVolume.boundingSphere;
-            var radius = sphere.radius;
-            var scaledFwd = Cartesian3.multiplyByScalar(frameState.camera.directionWC, this._centerZDepth, scratchCartesian);
-            var closestOnLine = Cartesian3.add(frameState.camera.positionWC, scaledFwd, scratchCartesian);
-            var toLine = Cartesian3.subtract(closestOnLine, sphere.center, scratchCartesian);
-            var distSqrd = Cartesian3.dot(toLine, toLine);
-            var diff = Math.max(distSqrd - radius*radius, 0);
-            if (diff === 0)  {
-                this._foveatedFactor = 0;
-            } else {
-                var toLineNormalize = Cartesian3.normalize(toLine, scratchCartesian);
-                var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalize, radius, scratchCartesian);
-                var closestOnSphere = Cartesian3.add(sphere.center, scaledToLine, scratchCartesian);
-                var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, frameState.camera.positionWC, scratchCartesian);
-                var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
-                this._foveatedFactor = 1 - Math.abs(Cartesian3.dot(frameState.camera.directionWC, toClosestOnSphereNormalize));
-            }
-
-            var error = this._screenSpaceError;
-            var maxSSE = tileset._maximumScreenSpaceError;
-            var fogClose = factor * 0.7;
-            var dontCare = dynamicError <= fogClose; // Somewhere in the distance
-            var fogSSEFail = maxSSE >= (error - dynamicError) && !dontCare; // Not a leaf and fails dynamic sse
-            var foveatedFail = this._foveatedFactor >= tileset.foveaDeferThreshold;
-            this._deferLoadingPriority = fogSSEFail || foveatedFail;
-
-            // this._deferLoadingPriority = this._foveatedFactor >= tileset.foveaDeferThreshold;
-        }
     };
 
     /**
@@ -1356,7 +1345,7 @@ define([
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * normalizeValue(this._depth, minPriority.depth, maxPriority.depth);
 
-        var foveatedDigit = this._deferLoadingPriority ? foveatedScale : 0;
+        var foveatedDigit = this._priorityDeferred ? foveatedScale : 0;
 
         // Get the final base 10 number
         var number = foveatedDigit + distanceDigit + depthDigit;
