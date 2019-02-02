@@ -621,18 +621,6 @@ define([
     function isPriorityDeferred(tile, frameState) {
         var tileset = tile._tileset;
 
-        var fogSSEFail = false;
-        if (tileset.dynamicScreenSpaceError) {
-            var distance = Math.max(tile._distanceToCamera, CesiumMath.EPSILON7);
-            var density = tileset._dynamicScreenSpaceErrorComputedDensity;
-            var factor = tileset.dynamicScreenSpaceErrorFactor;
-            var dynamicError = CesiumMath.fog(distance, density) * factor;
-            var fogClose = factor * 0.9;
-            var inBackground = dynamicError > fogClose;
-            var streetView = density > 0.5 * tileset.dynamicScreenSpaceErrorDensity;
-            fogSSEFail = (tileset._maximumScreenSpaceError >= (tile._screenSpaceError - dynamicError)) && inBackground && streetView; // Need to make sure it's in backgound otherwise leaves would get deferred as well
-        }
-
         // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
         // TODO: find closest swept point on sphere from cam forward vector.
         var foveatedFail = false;
@@ -657,7 +645,7 @@ define([
             foveatedFail = tile._foveatedFactor >= tileset.foveaDeferThreshold;
         }
 
-        return fogSSEFail || foveatedFail;
+        return foveatedFail;
     }
 
     var scratchJulianDate = new JulianDate();
@@ -692,6 +680,12 @@ define([
             var distance = Math.max(this._distanceToCamera, CesiumMath.EPSILON7);
             var sseDenominator = camera.frustum.sseDenominator;
             error = (geometricError * height) / (distance * sseDenominator);
+            if (tileset.dynamicScreenSpaceError) {
+                var density = tileset._dynamicScreenSpaceErrorComputedDensity;
+                var factor = tileset.dynamicScreenSpaceErrorFactor;
+                var dynamicError = CesiumMath.fog(distance, density) * factor;
+                error -= dynamicError;
+            }
         }
         return error;
     };
@@ -713,7 +707,6 @@ define([
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
         this._priorityDeferred = isPriorityDeferred(this, frameState);
-
     };
 
     /**

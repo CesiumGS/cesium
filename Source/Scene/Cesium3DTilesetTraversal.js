@@ -204,7 +204,7 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
-        if ((hasUnloadedContent(tile) || tile.contentExpired)) {
+        if (hasUnloadedContent(tile) || tile.contentExpired) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
         }

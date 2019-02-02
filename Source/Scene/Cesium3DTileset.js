@@ -1853,7 +1853,6 @@ define([
             if (isRender) {
                 tileVisible.raiseEvent(tile);
             }
-            // console.log(tile._deferLoadingPriority);
             tile.update(tileset, frameState);
             statistics.incrementSelectionCounts(tile.content);
             ++statistics.selected;
