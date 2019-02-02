@@ -203,7 +203,7 @@ define([
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
     }
 
-    function isOnScreenLongEnough(tile, frameState) {
+    function isOnScreenLongEnough(tileset, tile, frameState) {
         // Prevent unnecessary loads while camera is moving by getting the ratio of travel distance to tile size.
         var sphere = tile.boundingSphere;
         var diameter = sphere.radius * 2;
@@ -211,12 +211,12 @@ define([
 
         var camera = frameState.camera;
         var deltaMagnitude = camera._positionWCDeltaMagnitude !== 0 ? camera._positionWCDeltaMagnitude : camera._positionWCDeltaMagnitudeLastFrame;
-        var movementRatio = 20 * deltaMagnitude / diameter; // How do n frames of this movement compare to the tile's physical size.
+        var movementRatio = tileset.cullRequestsWhileMovingMultiplier * deltaMagnitude / diameter; // How do n frames of this movement compare to the tile's physical size.
         return movementRatio < 1;
     }
 
     function loadTile(tileset, tile, frameState) {
-        if (isOnScreenLongEnough(tile, frameState) && (hasUnloadedContent(tile) || tile.contentExpired)) {
+        if (isOnScreenLongEnough(tileset, tile, frameState) && (hasUnloadedContent(tile) || tile.contentExpired)) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
         }
