@@ -1552,6 +1552,12 @@ define([
         var maxTextures = ContextLimits.maximumTextureImageUnits;
 
         var waterMaskTexture = surfaceTile.waterMaskTexture;
+        var waterMaskTranslationAndScale = surfaceTile.waterMaskTranslationAndScale;
+        if (!defined(waterMaskTexture) && defined(surfaceTile.fill)) {
+            waterMaskTexture = surfaceTile.fill.waterMaskTexture;
+            waterMaskTranslationAndScale = surfaceTile.fill.waterMaskTranslationAndScale;
+        }
+
         var showReflectiveOcean = tileProvider.hasWaterMask && defined(waterMaskTexture);
         var oceanNormalMap = tileProvider.oceanNormalMap;
         var showOceanWaves = showReflectiveOcean && defined(oceanNormalMap);
@@ -1865,7 +1871,7 @@ define([
             // which might get destroyed eventually
             uniformMapProperties.dayTextures.length = numberOfDayTextures;
             uniformMapProperties.waterMask = waterMaskTexture;
-            Cartesian4.clone(surfaceTile.waterMaskTranslationAndScale, uniformMapProperties.waterMaskTranslationAndScale);
+            Cartesian4.clone(waterMaskTranslationAndScale, uniformMapProperties.waterMaskTranslationAndScale);
 
             uniformMapProperties.minMaxHeight.x = encoding.minimumHeight;
             uniformMapProperties.minMaxHeight.y = encoding.maximumHeight;

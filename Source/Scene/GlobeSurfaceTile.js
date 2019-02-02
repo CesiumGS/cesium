@@ -396,7 +396,12 @@ define([
             if (terrainData.waterMask !== undefined) {
                 createWaterMaskTextureIfNeeded(frameState.context, surfaceTile);
             } else {
-                upsampleWaterMask(tile);
+                var sourceTile = surfaceTile._findAncestorTileWithTerrainData(tile);
+                if (defined(sourceTile) && defined(sourceTile.data.waterMaskTexture)) {
+                    surfaceTile.waterMaskTexture = sourceTile.data.waterMaskTexture;
+                    ++surfaceTile.waterMaskTexture.referenceCount;
+                    surfaceTile._computeWaterMaskTranslationAndScale(tile, sourceTile, surfaceTile.waterMaskTranslationAndScale);
+                }
             }
         }
     }
@@ -644,24 +649,17 @@ define([
         Cartesian4.fromElements(0.0, 0.0, 1.0, 1.0, surfaceTile.waterMaskTranslationAndScale);
     }
 
-    function upsampleWaterMask(tile) {
-        var surfaceTile = tile.data;
-
-        // Find the nearest ancestor with loaded terrain.
+    GlobeSurfaceTile.prototype._findAncestorTileWithTerrainData = function(tile) {
         var sourceTile = tile.parent;
+
         while (defined(sourceTile) && (!defined(sourceTile.data) || !defined(sourceTile.data.terrainData) || sourceTile.data.terrainData.wasCreatedByUpsampling())) {
             sourceTile = sourceTile.parent;
         }
 
-        if (!defined(sourceTile) || !defined(sourceTile.data.waterMaskTexture)) {
-            // No ancestors have a water mask texture - try again later.
-            return;
-        }
+        return sourceTile;
+    };
 
-        surfaceTile.waterMaskTexture = sourceTile.data.waterMaskTexture;
-        ++surfaceTile.waterMaskTexture.referenceCount;
-
-        // Compute the water mask translation and scale
+    GlobeSurfaceTile.prototype._computeWaterMaskTranslationAndScale = function(tile, sourceTile, result) {
         var sourceTileRectangle = sourceTile.rectangle;
         var tileRectangle = tile.rectangle;
         var tileWidth = tileRectangle.width;
@@ -669,11 +667,13 @@ define([
 
         var scaleX = tileWidth / sourceTileRectangle.width;
         var scaleY = tileHeight / sourceTileRectangle.height;
-        surfaceTile.waterMaskTranslationAndScale.x = scaleX * (tileRectangle.west - sourceTileRectangle.west) / tileWidth;
-        surfaceTile.waterMaskTranslationAndScale.y = scaleY * (tileRectangle.south - sourceTileRectangle.south) / tileHeight;
-        surfaceTile.waterMaskTranslationAndScale.z = scaleX;
-        surfaceTile.waterMaskTranslationAndScale.w = scaleY;
-    }
+        result.x = scaleX * (tileRectangle.west - sourceTileRectangle.west) / tileWidth;
+        result.y = scaleY * (tileRectangle.south - sourceTileRectangle.south) / tileHeight;
+        result.z = scaleX;
+        result.w = scaleY;
+
+        return result;
+    };
 
     return GlobeSurfaceTile;
 });

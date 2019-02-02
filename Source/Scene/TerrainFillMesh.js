@@ -4,6 +4,7 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/defined',
         '../Core/HeightmapTerrainData',
@@ -24,6 +25,7 @@ define([
         BoundingSphere,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         Cartographic,
         defined,
         HeightmapTerrainData,
@@ -64,6 +66,8 @@ define([
         this.enqueuedFrame = undefined;
         this.mesh = undefined;
         this.vertexArray = undefined;
+        this.waterMaskTexture = undefined;
+        this.waterMaskTranslationAndScale = new Cartesian4();
     }
 
     TerrainFillMesh.prototype.update = function(tileProvider, frameState, vertexArraysToDestroy) {
@@ -82,6 +86,15 @@ define([
             }
             this.vertexArray = undefined;
         }
+
+        if (defined(this.waterMaskTexture)) {
+            --this.waterMaskTexture.referenceCount;
+            if (this.waterMaskTexture.referenceCount === 0) {
+                this.waterMaskTexture.destroy();
+            }
+            this.waterMaskTexture = undefined;
+        }
+
         return undefined;
     };
 
@@ -689,6 +702,24 @@ define([
 
         fill.vertexArray = GlobeSurfaceTile._createVertexArrayForMesh(context, fill.mesh);
         surfaceTile.processImagery(tile, tileProvider.terrainProvider, frameState, true);
+
+        var oldTexture = fill.waterMaskTexture;
+
+        if (tileProvider.terrainProvider.hasWaterMask) {
+            var waterSourceTile = surfaceTile._findAncestorTileWithTerrainData(tile);
+            if (defined(waterSourceTile) && defined(waterSourceTile.data.waterMaskTexture)) {
+                fill.waterMaskTexture = waterSourceTile.data.waterMaskTexture;
+                ++fill.waterMaskTexture.referenceCount;
+                surfaceTile._computeWaterMaskTranslationAndScale(tile, waterSourceTile, fill.waterMaskTranslationAndScale);
+            }
+        }
+
+        if (defined(oldTexture)) {
+            --oldTexture.referenceCount;
+            if (oldTexture.referenceCount === 0) {
+                oldTexture.destroy();
+            }
+        }
     }
 
     function addVertexWithComputedPosition(ellipsoid, rectangle, encoding, buffer, index, u, v, height, encodedNormal, webMercatorT, heightRange) {
