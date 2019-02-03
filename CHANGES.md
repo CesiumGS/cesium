@@ -1,11 +1,22 @@
 Change Log
 ==========
 
+### 1.55 - 2019-03-01
+
+##### Fixes :wrench:
+* Fixed an issue where models would cause a crash on load if some primitives were Draco encoded and others were not. [#7383](https://github.com/AnalyticalGraphicsInc/cesium/issues/7383)
+
 ### 1.54 - 2019-02-01
+
+##### Highlights :sparkler:
+* Added support for polylines and textured entities on 3D Tiles. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437) and [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
+* Added support for loading models and 3D tilesets with WebP images using the [`EXT_texture_webp`](https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Vendor/EXT_texture_webp/README.md) glTF extension. [#7486](https://github.com/AnalyticalGraphicsInc/cesium/pull/7486)
+* Added support for rhumb lines to polygon and polyline geometries. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
 
 ##### Breaking Changes :mega:
 * Billboards with `HeightReference.CLAMP_TO_GROUND` are now clamped to both terrain and 3D Tiles. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
 * The default `classificationType` for `GroundPrimitive`, `CorridorGraphics`, `EllipseGraphics`, `PolygonGraphics` and `RectangleGraphics` is now `ClassificationType.BOTH`. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
+* The properties `ModelAnimation.speedup` and `ModelAnimationCollection.speedup` have been removed. Use `ModelAnimation.multiplier` and `ModelAnimationCollection.multiplier` respectively instead. [#7494](https://github.com/AnalyticalGraphicsInc/cesium/issues/7394)
 
 ##### Deprecated :hourglass_flowing_sand:
 * `Scene.clampToHeight` now takes an optional `width` argument before the `result` argument.  The previous function definition will no longer work in 1.56. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
@@ -18,6 +29,7 @@ Change Log
 * Added `classificationType` property to `PolylineGraphics` and `GroundPolylinePrimitive` which specifies whether a polyline clamped to ground should be clamped to terrain, 3D Tiles, or both. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437)
 * Added the ability to specify the width of the intersection volume for `Scene.sampleHeight`, `Scene.clampToHeight`, `Scene.sampleHeightMostDetailed`, and `Scene.clampToHeightMostDetailed`. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
 * Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Time%20Dynamic%20Wheels.html) on using `nodeTransformations` to rotate a model's wheels based on its velocity. [#7361](https://github.com/AnalyticalGraphicsInc/cesium/pull/7361)
+* Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Polylines%20on%203D%20Tiles.html) for drawing polylines on 3D Tiles [#7522](https://github.com/AnalyticalGraphicsInc/cesium/pull/7522)
 * Added `EllipsoidRhumbLine` class as a rhumb line counterpart to `EllipsoidGeodesic`. [#7484](https://github.com/AnalyticalGraphicsInc/cesium/pull/7484)
 * Added rhumb line support to `PolygonGeometry`, `PolygonOutlineGeometry`, `PolylineGeometry`, `GroundPolylineGeometry`, and `SimplePolylineGeometry`. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
 * When using Cesium in Node.js, we now use the combined and minified version for improved performance unless `NODE_ENV` is specifically set to `development`.
