@@ -116,8 +116,9 @@ define([
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
-     * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Defer loading tiles that are closer to the edges of the current view.
-     * @param {Number} [options.foveaDeferThreshold=0.07] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}.
+     * @param {Boolean} [options.foveatedScreenSpaceError=false] Optimization option. Defer loading tiles that are closer to the edges of the current view.
+     * @param {Number} [options.foveaDeferThreshold=0.04] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}. The size of the fovea cone where largest practical cone size is 1-cos(fov/2). Tiles touching this cone are not deferred. When setting to 0 the cone will be the camera view line.
+     * @param {Number} [options.foveaOuterMaxSSE=1024] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}. Most outer tiles will have this relaxation on their sse when considering their deferred status.
      * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
      * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
      * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
@@ -272,6 +273,14 @@ define([
          * @default true
          */
         this.foveaDeferThreshold = defaultValue(options.foveaDeferThreshold, 0.07);
+
+        /**
+         * Optimization option.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.foveaOuterMaxSSE = defaultValue(options.foveaOuterMaxSSE, 1024);
 
         /**
          * A scalar that determines the density used to adjust the dynamic screen space error, similar to {@link Fog}. Increasing this
