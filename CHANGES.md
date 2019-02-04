@@ -3,6 +3,12 @@ Change Log
 
 ### 1.55 - 2019-03-01
 
+##### Breaking Changes :mega:
+* `czm_materialInput.slope` is now an angle in radians between 0 and pi/2 (flat to vertical), rather than a projected length 1 to 0 (flat to vertical).
+
+##### Additions :tada:
+* `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
+
 ##### Fixes :wrench:
 * Fixed an issue where models would cause a crash on load if some primitives were Draco encoded and others were not. [#7383](https://github.com/AnalyticalGraphicsInc/cesium/issues/7383)
 
