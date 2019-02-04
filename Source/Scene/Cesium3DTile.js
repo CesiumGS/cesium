@@ -647,7 +647,7 @@ define([
             return true; // If parent is deferred so is the child.
         }
         // Touches specified view cone, don't defer.
-        if (tile._foveatedFactor < tileset.foveaDeferThreshold) {
+        if (tile._foveatedFactor <= tileset.foveaDeferThreshold) {
             return false;
         }
 

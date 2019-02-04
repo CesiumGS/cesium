@@ -3573,13 +3573,15 @@ defineSuite([
     it('deferrs some requests based on foveation', function() {
         viewNothing();
 
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetRefinementMix).then(function(tileset) {
             tileset.foveatedScreenSpaceError = true; // Turn on foveated request deferring.
             tileset.foveaDeferThreshold = 0; // Fovea cone is just view line. Anything touching this isn't deferred.
             tileset.foveaOuterMaxSSE = 1000000000000000000000000000; // Just trying to get something deferred.
 
             // Make requests
             viewAllTiles();
+            scene.camera.moveLeft(50.0);
+            scene.camera.moveDown(50.0);
             scene.renderForSpecs();
             var requestedTilesInFlight = tileset._requestedTilesInFlight;
             var requestedTilesInFlightLength = requestedTilesInFlight.length;
