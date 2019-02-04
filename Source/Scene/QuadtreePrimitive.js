@@ -1009,28 +1009,28 @@ define([
         var endTime = getTimestamp() + primitive._loadQueueTimeSlice;
         var tileProvider = primitive._tileProvider;
 
-        var didSomething = processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueHigh, false);
-        didSomething = processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueMedium, didSomething);
-        processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueLow, didSomething);
+        var didSomeLoading = processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueHigh, false);
+        didSomeLoading = processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueMedium, didSomeLoading);
+        processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, tileLoadQueueLow, didSomeLoading);
     }
 
     function sortByLoadPriority(a, b) {
         return a._loadPriority - b._loadPriority;
     }
 
-    function processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, loadQueue, didSomething) {
+    function processSinglePriorityLoadQueue(primitive, frameState, tileProvider, endTime, loadQueue, didSomeLoading) {
         if (tileProvider.computeTileLoadPriority !== undefined) {
             loadQueue.sort(sortByLoadPriority);
         }
 
-        for (var i = 0, len = loadQueue.length; i < len && (getTimestamp() < endTime || !didSomething); ++i) {
+        for (var i = 0, len = loadQueue.length; i < len && (getTimestamp() < endTime || !didSomeLoading); ++i) {
             var tile = loadQueue[i];
             primitive._tileReplacementQueue.markTileRendered(tile);
             tileProvider.loadTile(frameState, tile);
-            didSomething = true;
+            didSomeLoading = true;
         }
 
-        return didSomething;
+        return didSomeLoading;
     }
 
     var scratchRay = new Ray();
