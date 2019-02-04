@@ -593,9 +593,43 @@ define([
         queue.push(tile);
     }
 
+    /**
+     * Tracks details of traversing a tile while selecting tiles for rendering.
+     * @alias TraversalDetails
+     * @constructor
+     * @private
+     */
     function TraversalDetails() {
+        /**
+         * True if all selected (i.e. not culled or refined) tiles in this tile's subtree
+         * are renderable. If the subtree is renderable, we'll render it; no drama.
+         */
         this.allAreRenderable = true;
+
+        /**
+         * True if any tiles in this tile's subtree were rendered last frame. If any
+         * were, we must render the subtree rather than this tile, because rendering
+         * this tile would cause detail to vanish that was visible last frame, and
+         * that's no good.
+         */
         this.anyWereRenderedLastFrame = false;
+
+        /**
+         * Counts the number of selected tiles in this tile's subtree that are
+         * not yet ready to be rendered because they need more loading. Note that
+         * this value will _not_ necessarily be zero when
+         * {@link TraversalDetails#allAreRenderable} is true, for subtle reasons.
+         * When {@link TraversalDetails#allAreRenderable} and
+         * {@link TraversalDetails#anyWereRenderedLastFrame} are both false, we
+         * will render this tile instead of any tiles in its subtree and
+         * the `allAreRenderable` value for this tile will reflect only whether _this_
+         * tile is renderable. The `notYetRenderableCount` value, however, will still
+         * reflect the total number of tiles that we are waiting on, including the
+         * ones that we're not rendering. `notYetRenderableCount` is only reset
+         * when a subtree is removed from the render queue because the
+         * `notYetRenderableCount` exceeds the
+         * {@link QuadtreePrimitive#loadingDescendantLimit}.
+         */
         this.notYetRenderableCount = 0;
     }
 
