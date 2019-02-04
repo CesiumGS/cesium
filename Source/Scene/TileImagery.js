@@ -43,7 +43,9 @@ define([
      *
      * @param {Tile} tile The tile to which this instance belongs.
      * @param {FrameState} frameState The frameState.
-     * @param {Boolean} skipLoading True to skip loading, but synchronously process imagery that's already mostly ready to go.
+     * @param {Boolean} skipLoading True to skip loading, e.g. new requests, creating textures. This function will
+     *                  still synchronously process imagery that's already mostly ready to go, e.g. use textures
+     *                  already loaded on ancestor tiles.
      * @returns {Boolean} True if this instance is done loading; otherwise, false.
      */
     TileImagery.prototype.processStateMachine = function(tile, frameState, skipLoading) {

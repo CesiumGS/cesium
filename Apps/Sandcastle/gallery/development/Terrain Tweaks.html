@@ -72,11 +72,11 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var viewModel = {
-    loadingDescendantLimit: viewer.scene.globe._surface.loadingDescendantLimit,
-    preloadAncestors: viewer.scene.globe._surface.preloadAncestors,
-    preloadSiblings: viewer.scene.globe._surface.preloadSiblings,
-    fillHighlightColor: Cesium.defined(viewer.scene.globe._surface._tileProvider.fillHighlightColor) ? viewer.scene.globe._surface._tileProvider.fillHighlightColor.toCssColorString() : 'rgba(255, 255, 0, 0.5)',
-    fillHighlightEnabled: Cesium.defined(viewer.scene.globe._surface._tileProvider.fillHighlightColor)
+    loadingDescendantLimit: viewer.scene.globe.loadingDescendantLimit,
+    preloadAncestors: viewer.scene.globe.preloadAncestors,
+    preloadSiblings: viewer.scene.globe.preloadSiblings,
+    fillHighlightColor: Cesium.defined(viewer.scene.globe.fillHighlightColor) ? viewer.scene.globe.fillHighlightColor.toCssColorString() : 'rgba(255, 255, 0, 0.5)',
+    fillHighlightEnabled: Cesium.defined(viewer.scene.globe.fillHighlightColor)
 };
 
 Cesium.knockout.track(viewModel);
@@ -85,20 +85,20 @@ var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
 Cesium.knockout.getObservable(viewModel, 'loadingDescendantLimit').subscribe(function(newValue) {
-    viewer.scene.globe._surface.loadingDescendantLimit = parseInt(newValue, 10);
+    viewer.scene.globe.loadingDescendantLimit = parseInt(newValue, 10);
 });
 Cesium.knockout.getObservable(viewModel, 'preloadAncestors').subscribe(function(newValue) {
-    viewer.scene.globe._surface.preloadAncestors = newValue;
+    viewer.scene.globe.preloadAncestors = newValue;
 });
 Cesium.knockout.getObservable(viewModel, 'preloadSiblings').subscribe(function(newValue) {
-    viewer.scene.globe._surface.preloadSiblings = newValue;
+    viewer.scene.globe.preloadSiblings = newValue;
 });
 
 function updateFillHighlight() {
     if (viewModel.fillHighlightEnabled) {
-        viewer.scene.globe._surface._tileProvider.fillHighlightColor = Cesium.Color.fromCssColorString(viewModel.fillHighlightColor);
+        viewer.scene.globe.fillHighlightColor = Cesium.Color.fromCssColorString(viewModel.fillHighlightColor);
     } else {
-        viewer.scene.globe._surface._tileProvider.fillHighlightColor = undefined;
+        viewer.scene.globe.fillHighlightColor = undefined;
     }
 }
 

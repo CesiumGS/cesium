@@ -143,9 +143,10 @@ define([
         this.shadows = ShadowMode.RECEIVE_ONLY;
 
         /**
-         * The color to use to highlight fill tiles. If undefined, fill tiles are not
+         * The color to use to highlight terrain fill tiles. If undefined, fill tiles are not
          * highlighted at all. The alpha value is used to alpha blend with the tile's
-         * actual color.
+         * actual color. Because terrain fill tiles do not represent the actual terrain surface,
+         * it may be useful in some applications to indicate visually that they are not to be trusted.
          */
         this.fillHighlightColor = undefined;
 

@@ -130,6 +130,44 @@ define([
         this.tileCacheSize = 100;
 
         /**
+         * Gets or sets the number of loading descendant tiles that is considered "too many".
+         * If a tile has too many loading descendants, that tile will be loaded and rendered before any of
+         * its descendants are loaded and rendered. This means more feedback for the user that something
+         * is happening at the cost of a longer overall load time. Setting this to 0 will cause each
+         * tile level to be loaded successively, significantly increasing load time. Setting it to a large
+         * number (e.g. 1000) will minimize the number of tiles that are loaded but tend to make
+         * detail appear all at once after a long wait.
+         * @type {Number}
+         * @default 20
+         */
+        this.loadingDescendantLimit = 20;
+
+        /**
+         * Gets or sets a value indicating whether the ancestors of rendered tiles should be preloaded.
+         * Setting this to true optimizes the zoom-out experience and provides more detail in
+         * newly-exposed areas when panning. The down side is that it requires loading more tiles.
+         * @type {Boolean}
+         * @default true
+         */
+        this.preloadAncestors = true;
+
+        /**
+         * Gets or sets a value indicating whether the siblings of rendered tiles should be preloaded.
+         * Setting this to true causes tiles with the same parent as a rendered tile to be loaded, even
+         * if they are culled. Setting this to true may provide a better panning experience at the
+         * cost of loading more tiles.
+         */
+        this.preloadSiblings = false;
+
+        /**
+         * The color to use to highlight terrain fill tiles. If undefined, fill tiles are not
+         * highlighted at all. The alpha value is used to alpha blend with the tile's
+         * actual color. Because terrain fill tiles do not represent the actual terrain surface,
+         * it may be useful in some applications to indicate visually that they are not to be trusted.
+         */
+        this.fillHighlightColor = undefined;
+
+        /**
          * Enable lighting the globe with the sun as a light source.
          *
          * @type {Boolean}
@@ -713,6 +751,9 @@ define([
 
             surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
             surface.tileCacheSize = this.tileCacheSize;
+            surface.loadingDescendantLimit = this.loadingDescendantLimit;
+            surface.preloadAncestors = this.preloadAncestors;
+            surface.preloadSiblings = this.preloadSiblings;
 
             tileProvider.terrainProvider = this.terrainProvider;
             tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
@@ -728,6 +769,7 @@ define([
             tileProvider.hueShift = this.atmosphereHueShift;
             tileProvider.saturationShift = this.atmosphereSaturationShift;
             tileProvider.brightnessShift = this.atmosphereBrightnessShift;
+            tileProvider.fillHighlightColor = this.fillHighlightColor;
 
             surface.beginFrame(frameState);
         }
