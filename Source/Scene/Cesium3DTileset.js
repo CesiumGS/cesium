@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Check',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -52,6 +53,7 @@ define([
         Cartesian3,
         Cartographic,
         Check,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
@@ -202,6 +204,7 @@ define([
         this._timeSinceLoad = 0.0;
         this._updatedVisibilityFrame = 0;
         this._extras = undefined;
+        this._credits = undefined;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
         this._allTilesAdditive = true;
@@ -798,7 +801,6 @@ define([
          * @default false
          */
         this.debugShowUrl = defaultValue(options.debugShowUrl, false);
-        this._credits = undefined;
 
         var that = this;
         var resource;
@@ -824,12 +826,28 @@ define([
             .then(function(tilesetJson) {
                 that._root = that.loadTileset(resource, tilesetJson);
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
-                that._asset = tilesetJson.asset;
+                var asset = tilesetJson.asset;
+                that._asset = asset;
                 that._properties = tilesetJson.properties;
                 that._geometricError = tilesetJson.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
+
+                var extras = asset.extras;
+                if (defined(extras) && defined(extras.cesium) && defined(extras.cesium.credits)) {
+                    var extraCredits = extras.cesium.credits;
+                    var credits = that._credits;
+                    if (!defined(credits)) {
+                        credits = [];
+                        that._credits = credits;
+                    }
+                    for (var i = 0; i < extraCredits.length; i++) {
+                        var credit = extraCredits[i];
+                        credits.push(new Credit(credit.html, credit.showOnScreen));
+                    }
+                }
+
                 // Save the original, untransformed bounding volume position so we can apply
                 // the tile transform and model matrix at run time
                 var boundingVolume = that._root.createBoundingVolume(tilesetJson.root.boundingVolume, Matrix4.IDENTITY);
@@ -1610,14 +1628,16 @@ define([
         requestedTilesInFlight.length -= removeCount;
     }
 
-    function requestTiles(tileset) {
+    function requestTiles(tileset, isAsync) {
         // Sort requests by priority before making any requests.
         // This makes it less likely that requests will be cancelled after being issued.
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
         var i;
-        for (i = 0; i < length; ++i) {
-            requestedTiles[i].updatePriority();
+        if (!isAsync) { // Prevent async picks from having their priorities overwritten
+            for (i = 0; i < length; ++i) {
+                requestedTiles[i].updatePriority();
+            }
         }
         requestedTiles.sort(sortRequestByPriority);
         for (i = 0; i < length; ++i) {
@@ -2095,7 +2115,7 @@ define([
         }
 
         if (isRender || isAsync) {
-            requestTiles(tileset);
+            requestTiles(tileset, isAsync);
         }
 
         if (isRender) {

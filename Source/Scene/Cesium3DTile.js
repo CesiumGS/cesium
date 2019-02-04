@@ -1313,22 +1313,6 @@ define([
     };
 
     /**
-     * Takes a value and maps it down to a 0-1 value given a min and max
-     */
-    function normalizeValue(value, min, max) {
-        if (max === min) {
-            return 0;
-        }
-
-        // Shift min max window to 0
-        var shiftedMax = max - min;
-        var shiftedValue = value - min;
-
-        // Map to [0..1]
-        return (CesiumMath.fromSNorm(shiftedValue, shiftedMax) + 1) * 0.5;
-    }
-
-    /**
      * Sets the priority of the tile based on distance and depth
      * @private
      */
@@ -1345,10 +1329,10 @@ define([
         var foveatedScale = distanceScale * 10;
 
         // Map 0-1 then convert to digit
-        var distanceDigit = distanceScale * normalizeValue(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
+        var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
 
         // Map 0-1 then convert to digit
-        var depthDigit = depthScale * normalizeValue(this._depth, minPriority.depth, maxPriority.depth);
+        var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
         var foveatedDigit = this._priorityDeferred ? foveatedScale : 0;
 

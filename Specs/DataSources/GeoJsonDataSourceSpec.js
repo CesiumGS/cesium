@@ -761,7 +761,6 @@ defineSuite([
             expect(entity.polygon.outlineWidth.getValue(time)).toEqual(GeoJsonDataSource.strokeWidth);
             expect(entity.polygon.outlineColor.getValue(time)).toEqual(GeoJsonDataSource.stroke);
             expect(entity.polygon.height).toBeUndefined();
-
         });
     });
 
