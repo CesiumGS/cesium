@@ -3,18 +3,19 @@
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport"
-          content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
     <meta name="description" content="Particle systems.">
     <meta name="cesium-sandcastle-labels" content="Beginner, Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        require.config({
-            baseUrl : '../../../Source',
-            waitSeconds : 60
-        });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -113,32 +114,13 @@
                 <input type="text" size="5" data-bind="value: gravity">
             </td>
         </tr>
-
-        <tr>
-            <td>Translation</td>
-            <td>
-                X <input type="text" size="5" data-bind="value: transX">
-                Y <input type="text" size="5" data-bind="value: transY">
-                Z <input type="text" size="5" data-bind="value: transZ">
-            </td>
-        </tr>
-
-        <tr>
-            <td>Rotation</td>
-            <td>
-                H <input type="text" size="5" data-bind="value: heading">
-                P <input type="text" size="5" data-bind="value: pitch">
-                R <input type="text" size="5" data-bind="value: roll">
-            </td>
-        </tr>
-
         </tbody>
     </table>
 </div>
 
 <script id="cesium_sandcastle_script">
-    function startup(Cesium) {
-        'use strict';
+function startup(Cesium) {
+    'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
@@ -147,7 +129,7 @@ Cesium.Math.setRandomNumberSeed(3);
 
 //Set bounds of our simulation time
 var start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
-var stop = Cesium.JulianDate.addSeconds(start, 360, new Cesium.JulianDate());
+var stop = Cesium.JulianDate.addSeconds(start, 120, new Cesium.JulianDate());
 
 //Make sure viewer is at the desired time.
 viewer.clock.startTime = start.clone();
@@ -163,22 +145,13 @@ viewer.timeline.zoomTo(start, stop);
 var viewModel = {
     emissionRate : 5.0,
     gravity : 0.0,
-    minimumParticleLife : 1.0,
-    maximumParticleLife : 1.0,
+    minimumParticleLife : 1.2,
+    maximumParticleLife : 1.2,
     minimumSpeed : 1.0,
     maximumSpeed : 4.0,
     startScale : 1.0,
     endScale : 5.0,
-    particleSize : 25.0,
-    transX : 2.5,
-    transY : 4.0,
-    transZ : 1.0,
-    heading : 0.0,
-    pitch : 0.0,
-    roll : 0.0,
-    fly : true,
-    spin : true,
-    show : true
+    particleSize : 25.0
 };
 
 Cesium.knockout.track(viewModel);
@@ -191,17 +164,7 @@ var rotationMatrix = new Cesium.Matrix3();
 var modelMatrix = new Cesium.Matrix4();
 
 function computeModelMatrix(entity, time) {
-    var position = Cesium.Property.getValueOrUndefined(entity.position, time, entityPosition);
-    if (!Cesium.defined(position)) {
-        return undefined;
-    }
-    var orientation = Cesium.Property.getValueOrUndefined(entity.orientation, time, entityOrientation);
-    if (!Cesium.defined(orientation)) {
-        modelMatrix = Cesium.Transforms.eastNorthUpToFixedFrame(position, undefined, modelMatrix);
-    } else {
-        modelMatrix = Cesium.Matrix4.fromRotationTranslation(Cesium.Matrix3.fromQuaternion(orientation, rotationMatrix), position, modelMatrix);
-    }
-    return modelMatrix;
+    return entity.computeModelMatrix(time, new Cesium.Matrix4());
 }
 
 var emitterModelMatrix = new Cesium.Matrix4();
@@ -211,54 +174,41 @@ var hpr = new Cesium.HeadingPitchRoll();
 var trs = new Cesium.TranslationRotationScale();
 
 function computeEmitterModelMatrix() {
-    hpr = Cesium.HeadingPitchRoll.fromDegrees(viewModel.heading, viewModel.pitch, viewModel.roll, hpr);
-
-    trs.translation = Cesium.Cartesian3.fromElements(viewModel.transX, viewModel.transY, viewModel.transZ, translation);
+    hpr = Cesium.HeadingPitchRoll.fromDegrees(0.0, 0.0, 0.0, hpr);
+    trs.translation = Cesium.Cartesian3.fromElements(-4.0, 0.0, 1.4, translation);
     trs.rotation = Cesium.Quaternion.fromHeadingPitchRoll(hpr, rotation);
 
     return Cesium.Matrix4.fromTranslationRotationScale(trs, emitterModelMatrix);
 }
 
-//Generate a random circular pattern with varying heights.
-function computeCirclularFlight(lon, lat, radius) {
-    var property = new Cesium.SampledPositionProperty();
-    for (var i = 0; i <= 360; i += 45) {
-        var radians = Cesium.Math.toRadians(i);
-        var time = Cesium.JulianDate.addSeconds(start, i, new Cesium.JulianDate());
-        var position = Cesium.Cartesian3.fromDegrees(lon + (radius * 1.5 * Math.cos(radians)), lat + (radius * Math.sin(radians)), Cesium.Math.nextRandomNumber() * 500 + 1750);
-        property.addSample(time, position);
-    }
-    return property;
-}
+var pos1 = Cesium.Cartesian3.fromDegrees(-75.15787310614596, 39.97862668312678);
+var pos2 = Cesium.Cartesian3.fromDegrees(-75.1633691390455, 39.95355089912078);
+var position = new Cesium.SampledPositionProperty();
 
-//Compute the entity position property.
-var circularPosition = computeCirclularFlight(-112.110693, 36.0994841, 0.03);
-var staticPosition = Cesium.Cartesian3.fromDegrees(-112.110693, 36.0994841, 1000);
+position.addSample(start, pos1);
+position.addSample(stop, pos2);
 
 var entity = viewer.entities.add({
-
-    //Set the entity availability to the same interval as the simulation time.
     availability : new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
         start : start,
         stop : stop
     })]),
-
-    //Load the Cesium plane model to represent the entity
     model : {
-        uri : '../../SampleData/models/CesiumAir/Cesium_Air.gltf',
+        uri : '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck-kmc.glb',
         minimumPixelSize : 64
     },
-
-    position : staticPosition
+    viewFrom: new Cesium.Cartesian3(-100.0, 0.0, 100.0),
+    position : position,
+    orientation : new Cesium.VelocityOrientationProperty(position)
 });
 viewer.trackedEntity = entity;
 
 var scene = viewer.scene;
 var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
-    image : '../../SampleData/fire.png',
+    image : '../../SampleData/smoke.png',
 
-    startColor : Cesium.Color.RED.withAlpha(0.7),
-    endColor : Cesium.Color.YELLOW.withAlpha(0.3),
+    startColor : Cesium.Color.LIGHTSEAGREEN.withAlpha(0.7),
+    endColor : Cesium.Color.WHITE.withAlpha(0.0),
 
     startScale : viewModel.startScale,
     endScale : viewModel.endScale,
@@ -271,7 +221,6 @@ var particleSystem = scene.primitives.add(new Cesium.ParticleSystem({
 
     imageSize : new Cesium.Cartesian2(viewModel.particleSize, viewModel.particleSize),
 
-    // Particles per second.
     emissionRate : viewModel.emissionRate,
 
     bursts : [
@@ -368,50 +317,23 @@ Cesium.knockout.getObservable(viewModel, 'endScale').subscribe(
     }
 );
 
-Cesium.knockout.getObservable(viewModel, 'fly').subscribe(
-    function(newValue) {
-        if (newValue) {
-            entity.position = circularPosition;
-            //Automatically compute orientation based on position movement.
-            entity.orientation = new Cesium.VelocityOrientationProperty(circularPosition);
-        }
-        else {
-            entity.position = staticPosition;
-            entity.orientation = undefined;
-        }
-    }
-);
-
-Sandcastle.addToggleButton('Spin', viewModel.spin, function(checked) {
-    viewModel.spin = checked;
-});
-
-Sandcastle.addToggleButton('Fly', viewModel.fly, function(checked) {
-    viewModel.fly = checked;
-});
-
-Sandcastle.addToggleButton('Show', viewModel.show, function(checked) {
-    entity.show = checked;
-    particleSystem.show = checked;
-});
-
 var options = [{
-    text : 'Circle',
+    text : 'Circle Emitter',
     onselect : function() {
         particleSystem.emitter = new Cesium.CircleEmitter(2.0);
     }
 }, {
-    text : 'Sphere',
+    text : 'Sphere Emitter',
     onselect : function() {
         particleSystem.emitter = new Cesium.SphereEmitter(2.5);
     }
 }, {
-    text : 'Cone',
+    text : 'Cone Emitter',
     onselect : function() {
         particleSystem.emitter = new Cesium.ConeEmitter(Cesium.Math.toRadians(45.0));
     }
 }, {
-    text : 'Box',
+    text : 'Box Emitter',
     onselect : function() {
         particleSystem.emitter = new Cesium.BoxEmitter(new Cesium.Cartesian3(10.0, 10.0, 10.0));
     }
@@ -420,14 +342,12 @@ var options = [{
 Sandcastle.addToolbarMenu(options);
         //Sandcastle_End
     Sandcastle.finishedLoading();
-    }
-
-    if (typeof Cesium !== 'undefined') {
+}
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-    } else if (typeof require === 'function') {
+} else if (typeof require === 'function') {
     require(['Cesium'], startup);
-    }
+}
 </script>
-
 </body>
 </html>
