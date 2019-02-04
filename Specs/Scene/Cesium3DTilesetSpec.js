@@ -3574,29 +3574,23 @@ defineSuite([
         viewNothing();
 
         return Cesium3DTilesTester.loadTileset(scene, tilesetRefinementMix).then(function(tileset) {
+            // Config tileset params
             tileset.foveatedScreenSpaceError = true; // Turn on foveated request deferring.
-            tileset.foveaDeferThreshold = 0; // Fovea cone is just view line. Anything touching this isn't deferred.
+            tileset.foveaDeferThreshold = 0; // Fovea cone is just view line. Anything not touching this is deferred.
             tileset.foveaOuterMaxSSE = 1000000000000000000000000000; // Just trying to get something deferred.
+            tileset._maximumScreenSpaceError = 8;
 
-            // Make requests
+            // Position camera
             viewAllTiles();
-            scene.camera.moveLeft(50.0);
-            scene.camera.moveDown(50.0);
+            scene.camera.moveLeft(205.0);
+            scene.camera.moveDown(205.0);
+
             scene.renderForSpecs();
+
+            // Verify deferred
             var requestedTilesInFlight = tileset._requestedTilesInFlight;
-            var requestedTilesInFlightLength = requestedTilesInFlight.length;
-            expect(requestedTilesInFlightLength).toBeGreaterThan(0);
-
-            // Verify some deferred, some not
-            var anyDeferred = false;
-            var anyNotDeferred = false;
-            for (var i = 0; i < requestedTilesInFlightLength; i++) {
-                anyDeferred = anyDeferred || requestedTilesInFlight[i]._priorityDeferred;
-                anyNotDeferred = anyNotDeferred || !requestedTilesInFlight[i]._priorityDeferred;
-            }
-
-            expect(anyDeferred).toBe(true);
-            expect(anyNotDeferred).toBe(true);
+            expect(requestedTilesInFlight.length).toBe(1);
+            expect(requestedTilesInFlight[0]._priorityDeferred).toBe(true);
         });
     });
 }, 'WebGL');
