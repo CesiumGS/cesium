@@ -385,5 +385,4 @@ defineSuite([
         tile2.updatePriority();
         expect(tile2._priority).toBeGreaterThan(1000);
     });
-
 }, 'WebGL');

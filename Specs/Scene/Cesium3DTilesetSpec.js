@@ -3569,4 +3569,32 @@ defineSuite([
             expect(lastPriority !== requestedTilesInFlight[0]._priority).toBe(true); // Not all the same value
         });
     });
+
+    it('deferrs some requests based on foveation', function() {
+        viewNothing();
+
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
+            tileset.foveatedScreenSpaceError = true; // Turn on foveated request deferring.
+            tileset.foveaDeferThreshold = 0; // Fovea cone is just view line. Anything touching this isn't deferred.
+            tileset.foveaOuterMaxSSE = 1000000000000000000000000000; // Just trying to get something deferred.
+
+            // Make requests
+            viewAllTiles();
+            scene.renderForSpecs();
+            var requestedTilesInFlight = tileset._requestedTilesInFlight;
+            var requestedTilesInFlightLength = requestedTilesInFlight.length;
+            expect(requestedTilesInFlightLength).toBeGreaterThan(0);
+
+            // Verify some deferred, some not
+            var anyDeferred = false;
+            var anyNotDeferred = false;
+            for (var i = 0; i < requestedTilesInFlightLength; i++) {
+                anyDeferred = anyDeferred || requestedTilesInFlight[i]._priorityDeferred;
+                anyNotDeferred = anyNotDeferred || !requestedTilesInFlight[i]._priorityDeferred;
+            }
+
+            expect(anyDeferred).toBe(true);
+            expect(anyNotDeferred).toBe(true);
+        });
+    });
 }, 'WebGL');
