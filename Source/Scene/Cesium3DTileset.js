@@ -113,7 +113,7 @@ define([
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
-     * @param {Boolean} [options.cullRequestsWhileMovingMultiplier=60] Optimization option. Multiplier used in culling requests while moving. Setting to 0 will turn this feature off. 60 default.
+     * @param {Number} [options.cullRequestsWhileMovingMultiplier=60] Optimization option. Multiplier used in culling requests while moving. Setting to 0 will turn this feature off. 60 default.
      * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
