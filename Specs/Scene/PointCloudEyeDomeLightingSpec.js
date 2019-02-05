@@ -29,6 +29,7 @@ defineSuite([
     var scene;
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
+    var options;
 
     var pointCloudNoColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNoColor/tileset.json';
 
@@ -53,6 +54,9 @@ defineSuite([
         camera.frustum.fov = CesiumMath.toRadians(60.0);
 
         setCamera(centerLongitude, centerLatitude);
+        options = {
+            cullRequestsWhileMoving: false
+        };
     });
 
     afterEach(function() {
@@ -60,7 +64,7 @@ defineSuite([
     });
 
     it('adds a clear command and a post-processing draw call', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl, options).then(function(tileset) {
             if (!PointCloudEyeDomeLighting.isSupported(scene.frameState.context)) {
                 return;
             }
@@ -78,7 +82,7 @@ defineSuite([
     });
 
     it('does not change commands for pick calls', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl, options).then(function(tileset) {
             tileset.pointCloudShading.eyeDomeLighting = true;
 
             scene.pickForSpecs();

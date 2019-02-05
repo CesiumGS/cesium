@@ -84,6 +84,7 @@ defineSuite([
     var reusableGlobePrimitive;
     var reusableTilesetPrimitive;
     var depthColor;
+    var options;
 
     var ellipsoid = Ellipsoid.WGS84;
 
@@ -167,6 +168,9 @@ defineSuite([
         // wrap rectangle primitive so it gets executed during the globe pass and 3D Tiles pass to lay down depth
         globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
         tilesetPrimitive = new MockPrimitive(reusableTilesetPrimitive, Pass.CESIUM_3D_TILE);
+        options = {
+            cullRequestsWhileMoving: false
+        };
     });
 
     afterEach(function() {
@@ -443,9 +447,8 @@ defineSuite([
     }
 
     it('renders points', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPoints
-        }));
+        options.url = vectorPoints;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPoints(tileset, scene);
             verifyPickPoints(scene);
@@ -453,9 +456,8 @@ defineSuite([
     });
 
     it('renders batched points', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPointsBatchedChildren
-        }));
+        options.url = vectorPointsBatchedChildren;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPoints(tileset, scene);
             verifyPickPoints(scene);
@@ -463,9 +465,8 @@ defineSuite([
     });
 
     it('renders points with a batch table', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPointsWithBatchTable
-        }));
+        options.url = vectorPointsWithBatchTable;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPoints(tileset, scene);
             verifyPickPoints(scene);
@@ -473,9 +474,8 @@ defineSuite([
     });
 
     it('renders batched points with a batch table', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPointsBatchedChildrenWithBatchTable
-        }));
+        options.url = vectorPointsBatchedChildrenWithBatchTable;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPoints(tileset, scene);
             verifyPickPoints(scene);
@@ -483,9 +483,8 @@ defineSuite([
     });
 
     it('renders points with batch ids', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPointsWithBatchIds
-        }));
+        options.url = vectorPointsWithBatchIds;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPoints(tileset, scene);
             verifyPickPoints(scene);
@@ -494,9 +493,8 @@ defineSuite([
 
     it('renders polygons', function() {
         scene.primitives.add(globePrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygons
-        }));
+        options.url = vectorPolygons;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRender(tileset, scene);
             verifyPick(scene);
@@ -505,9 +503,8 @@ defineSuite([
 
     it('renders batched polygons', function() {
         scene.primitives.add(globePrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsBatchedChildren
-        }));
+        options.url = vectorPolygonsBatchedChildren;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRender(tileset, scene);
             verifyPick(scene);
@@ -516,9 +513,8 @@ defineSuite([
 
     it('renders polygons with a batch table', function() {
         scene.primitives.add(globePrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsWithBatchTable
-        }));
+        options.url = vectorPolygonsWithBatchTable;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRender(tileset, scene);
             verifyPick(scene);
@@ -527,9 +523,8 @@ defineSuite([
 
     it('renders batched polygons with a batch table', function() {
         scene.primitives.add(globePrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsBatchedChildrenWithBatchTable
-        }));
+        options.url = vectorPolygonsBatchedChildrenWithBatchTable;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRender(tileset, scene);
             verifyPick(scene);
@@ -538,9 +533,8 @@ defineSuite([
 
     it('renders polygons with batch ids', function() {
         scene.primitives.add(globePrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsWithBatchIds
-        }));
+        options.url = vectorPolygonsWithBatchIds;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRender(tileset, scene);
             verifyPick(scene);
@@ -548,45 +542,40 @@ defineSuite([
     });
 
     it('renders polylines', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolylines
-        }));
+        options.url = vectorPolylines;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
         });
     });
 
     it('renders batched polylines', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolylinesBatchedChildren
-        }));
+        options.url = vectorPolylinesBatchedChildren;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
         });
     });
 
     it('renders polylines with a batch table', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolylinesWithBatchTable
-        }));
+        options.url = vectorPolylinesWithBatchTable;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
         });
     });
 
     it('renders batched polylines with a batch table', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolylinesBatchedChildrenWithBatchTable
-        }));
+        options.url = vectorPolylinesBatchedChildrenWithBatchTable;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
         });
     });
 
     it('renders polylines with batch ids', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolylinesWithBatchIds
-        }));
+        options.url = vectorPolylinesWithBatchIds;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
         });
@@ -594,9 +583,8 @@ defineSuite([
 
     it('renders combined tile', function() {
         scene.primitives.add(globePrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorCombined
-        }));
+        options.url = vectorCombined;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderCombined(tileset, scene);
         });
@@ -604,9 +592,8 @@ defineSuite([
 
     it('renders combined tile with batch ids', function() {
         scene.primitives.add(globePrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorCombinedWithBatchIds
-        }));
+        options.url = vectorCombinedWithBatchIds;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             verifyRenderCombined(tileset, scene);
         });
@@ -614,10 +601,9 @@ defineSuite([
 
     it('renders with debug color', function() {
         scene.primitives.add(globePrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorCombined,
-            debugColorizeTiles : true
-        }));
+        options.url = vectorCombined;
+        options.debugColorizeTiles = true;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function() {
             var width = combinedRectangle.width;
             var step = width / 3;
@@ -638,10 +624,9 @@ defineSuite([
     it('renders on 3D Tiles', function() {
         scene.primitives.add(globePrimitive);
         scene.primitives.add(tilesetPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsBatchedChildren,
-            classificationType : ClassificationType.CESIUM_3D_TILE
-        }));
+        options.url = vectorPolygonsBatchedChildren;
+        options.classificationType = ClassificationType.CESIUM_3D_TILE;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             globePrimitive.show = false;
             tilesetPrimitive.show = true;
@@ -658,10 +643,9 @@ defineSuite([
     it('renders on globe', function() {
         scene.primitives.add(globePrimitive);
         scene.primitives.add(tilesetPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsBatchedChildren,
-            classificationType : ClassificationType.TERRAIN
-        }));
+        options.url = vectorPolygonsBatchedChildren;
+        options.classificationType = ClassificationType.TERRAIN;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             globePrimitive.show = false;
             tilesetPrimitive.show = true;
@@ -678,10 +662,9 @@ defineSuite([
     it('renders on 3D Tiles and globe', function() {
         scene.primitives.add(globePrimitive);
         scene.primitives.add(tilesetPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsBatchedChildren,
-            classificationType : ClassificationType.BOTH
-        }));
+        options.url = vectorPolygonsBatchedChildren;
+        options.classificationType = ClassificationType.BOTH;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             globePrimitive.show = false;
             tilesetPrimitive.show = true;
@@ -697,9 +680,8 @@ defineSuite([
     });
 
     it('can get features and properties', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsWithBatchTable
-        }));
+        options.url = vectorPolygonsWithBatchTable;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             var content = tileset.root.content;
             expect(content.featuresLength).toBe(1);
@@ -710,9 +692,8 @@ defineSuite([
     });
 
     it('throws when calling getFeature with invalid index', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsWithBatchTable
-        }));
+        options.url = vectorPolygonsWithBatchTable;
+        tileset = scene.primitives.add(new Cesium3DTileset(options));
         return loadTileset(tileset).then(function(tileset) {
             var content = tileset.root.content;
             expect(function(){
