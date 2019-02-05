@@ -205,6 +205,10 @@ define([
 
     function isOnScreenLongEnough(tileset, tile, frameState) {
         // Prevent unnecessary loads while camera is moving by getting the ratio of travel distance to tile size.
+        if (!tileset.cullRequestsWhileMoving) {
+            return true;
+        }
+
         var sphere = tile.boundingSphere;
         var diameter = sphere.radius * 2;
         diameter = diameter === 0 ? 1 : diameter;
