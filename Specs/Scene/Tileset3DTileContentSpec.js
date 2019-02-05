@@ -37,7 +37,7 @@ defineSuite([
     });
 
     it('resolves readyPromise', function() {
-        return Cesium3DTilesTester.resolvesReadyPromise(scene, tilesetOfTilesetsUrl);
+        return Cesium3DTilesTester.resolvesReadyPromise(scene, tilesetOfTilesetsUrl, options);
     });
 
     it('destroys', function() {

@@ -3550,9 +3550,8 @@ defineSuite([
 
     it('does not fetch tiles while camera is moving', function() {
         viewNothing();
-
-        options.cullRequestsWhileMoving = true;
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform, options).then(function(tileset) {
+            tileset.cullRequestsWhileMoving = true;
             viewAllTiles();
             scene.renderForSpecs();
             expect(tileset._requestedTilesInFlight.length).toEqual(0); // Big camera delta so no fetches should occur.

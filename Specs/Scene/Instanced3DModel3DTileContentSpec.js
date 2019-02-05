@@ -91,7 +91,7 @@ defineSuite([
     });
 
     it('resolves readyPromise', function() {
-        return Cesium3DTilesTester.resolvesReadyPromise(scene, withoutBatchTableUrl);
+        return Cesium3DTilesTester.resolvesReadyPromise(scene, withoutBatchTableUrl, options);
     });
 
     it('rejects readyPromise on error', function() {

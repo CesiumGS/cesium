@@ -379,7 +379,7 @@ defineSuite([
     });
 
     it('destroys', function() {
-        return Cesium3DTilesTester.tileDestroys(scene, withoutBatchTableUrl);
+        return Cesium3DTilesTester.tileDestroys(scene, withoutBatchTableUrl, options);
     });
 
 }, 'WebGL');
