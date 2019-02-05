@@ -168,9 +168,9 @@ defineSuite([
         camera.frustum.fov = CesiumMath.toRadians(60.0);
 
         viewAllTiles();
-        
+
         options = {
-            cullRequestsWhileMoving: false,
+            cullRequestsWhileMoving: false
         };
     });
 
