@@ -29,6 +29,7 @@ defineSuite([
     var scene;
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
+    var options;
 
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
     var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json';
@@ -62,6 +63,9 @@ defineSuite([
 
     beforeEach(function() {
         setCamera(centerLongitude, centerLatitude);
+        options = {
+            cullRequestsWhileMoving: false
+        };
     });
 
     afterEach(function() {
@@ -76,7 +80,7 @@ defineSuite([
     });
 
     it('recognizes the legacy 20-byte header', function() {
-        return Cesium3DTilesTester.loadTileset(scene, deprecated1Url)
+        return Cesium3DTilesTester.loadTileset(scene, deprecated1Url, options)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
@@ -86,7 +90,7 @@ defineSuite([
     });
 
     it('recognizes the legacy 24-byte header', function() {
-        return Cesium3DTilesTester.loadTileset(scene, deprecated2Url)
+        return Cesium3DTilesTester.loadTileset(scene, deprecated2Url, options)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
@@ -96,7 +100,7 @@ defineSuite([
     });
 
     it('logs deprecation warning for use of BATCHID without prefixed underscore', function() {
-        return Cesium3DTilesTester.loadTileset(scene, deprecated1Url)
+        return Cesium3DTilesTester.loadTileset(scene, deprecated1Url, options)
             .then(function(tileset) {
                 expect(Batched3DModel3DTileContent._deprecationWarning).toHaveBeenCalled();
                 Cesium3DTilesTester.expectRenderTileset(scene, tileset);
@@ -114,43 +118,43 @@ defineSuite([
     });
 
     it('renders with batch table', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, options).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('renders with batch table binary', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableBinaryUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableBinaryUrl, options).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('renders without batch table', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl, options).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('renders with all features translucent', function() {
-        return Cesium3DTilesTester.loadTileset(scene, translucentUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, translucentUrl, options).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('renders with a mix of opaque and translucent features', function() {
-        return Cesium3DTilesTester.loadTileset(scene, translucentOpaqueMixUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, translucentOpaqueMixUrl, options).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('renders with textures', function() {
-        return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, texturedUrl, options).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     function expectRenderWithTransform(url) {
-        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, url, options).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
             var newLongitude = -1.31962;
@@ -182,7 +186,7 @@ defineSuite([
     });
 
     it('picks with batch table', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, options).then(function(tileset) {
             var content = tileset.root.content;
             tileset.show = false;
             expect(scene).toPickPrimitive(undefined);
@@ -196,7 +200,7 @@ defineSuite([
     });
 
     it('picks without batch table', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl, options).then(function(tileset) {
             var content = tileset.root.content;
             tileset.show = false;
             expect(scene).toPickPrimitive(undefined);
@@ -210,7 +214,7 @@ defineSuite([
     });
 
     it('can get features and properties', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, options).then(function(tileset) {
             var content = tileset.root.content;
             expect(content.featuresLength).toBe(10);
             expect(content.innerContents).toBeUndefined();
@@ -220,7 +224,7 @@ defineSuite([
     });
 
     it('throws when calling getFeature with invalid index', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl, options).then(function(tileset) {
             var content = tileset.root.content;
             expect(function(){
                 content.getFeature(-1);
@@ -235,7 +239,7 @@ defineSuite([
     });
 
     it('gets memory usage', function() {
-        return Cesium3DTilesTester.loadTileset(scene, texturedUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, texturedUrl, options).then(function(tileset) {
             var content = tileset.root.content;
 
             // 10 buildings, 36 ushort indices and 24 vertices per building, 8 float components (position, normal, uv) and 1 uint component (batchId) per vertex.
@@ -270,7 +274,7 @@ defineSuite([
     });
 
     it('Links model to tileset clipping planes based on bounding volume clipping', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, options).then(function(tileset) {
             var tile = tileset.root;
             var content = tile.content;
             var model = content._model;
@@ -297,7 +301,7 @@ defineSuite([
     });
 
     it('Links model to tileset clipping planes if tileset clipping planes are reassigned', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, options).then(function(tileset) {
             var tile = tileset.root;
             var model = tile.content._model;
 
@@ -332,7 +336,7 @@ defineSuite([
     it('rebuilds Model shaders when clipping planes change', function() {
         spyOn(Model, '_getClippingFunction').and.callThrough();
 
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, options).then(function(tileset) {
             var tile = tileset.root;
 
             var clippingPlaneCollection = new ClippingPlaneCollection({
@@ -349,7 +353,7 @@ defineSuite([
     });
 
     it('transforms model positions by RTC_CENTER property in the features table', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withRtcCenterUrl).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withRtcCenterUrl, options).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
             var rtcTransform = tileset.root.content._rtcCenterTransform;
