@@ -7,9 +7,11 @@ define([
         './defineProperties',
         './DeveloperError',
         './Ellipsoid',
+        './FeatureDetection',
         './getAbsoluteUri',
         './isDataUri',
         './loadAndExecuteScript',
+        './RuntimeError',
         '../ThirdParty/when'
     ], function(
         Cartesian3,
@@ -20,16 +22,20 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
+        FeatureDetection,
         getAbsoluteUri,
         isDataUri,
         loadAndExecuteScript,
+        RuntimeError,
         when) {
     'use strict';
 
     /**
-     * {@link MapProjection} that uses custom project and unproject functions defined in an external file.
+     * {@link MapProjection} that uses custom project and unproject functions defined in user code.
      *
-     * The external file must contain a function named <code>createProjectionFunctions</code> that implements the
+     * User code may be provided via a URL to an external JavaScript source or via data URI on supported platforms.
+     *
+     * The user code must contain a function named <code>createProjectionFunctions</code> that implements the
      * <code>CustomProjection~factory</code> interface to provide <code>CustomProjection~project</code> and
      * <code>CustomProjection~unproject</code> functions to a callback.
      *
@@ -38,12 +44,18 @@ define([
      * @alias CustomProjection
      * @constructor
      *
-     * @param {String} url The url of the external file.
+     * @param {String} url The url of the custom code.
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The MapProjection's ellipsoid.
+     *
+     * @see MapProjection
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Projections.html|Map Projections Demo}
      */
     function CustomProjection(url, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('url', url);
+        if (FeatureDetection.isInternetExplorer() && isDataUri(url)) {
+            throw new DeveloperError('data URI projection code is not supported in Internet Explorer');
+        }
         //>>includeEnd('debug');
 
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -122,7 +134,7 @@ define([
         },
 
         /**
-         * Gets the absolute URL for the file that the CustomProjection is loading.
+         * Gets the absolute URL for the JavaScript source that the CustomProjection is loading.
          *
          * @memberOf CustomProjection.prototype
          *
@@ -132,20 +144,6 @@ define([
         url : {
             get : function() {
                 return this._url;
-            }
-        },
-
-        /**
-         * Gets the unique name for this projection.
-         *
-         * @memberOf CustomProjection.prototype
-         *
-         * @type {String}
-         * @readonly
-         */
-        projectionName : {
-            get : function() {
-                return this._projectionName;
             }
         }
     });
@@ -216,26 +214,52 @@ define([
                 deferred.resolve(customProjection);
             });
 
-            return deferred;
+            return deferred.promise;
         }
 
         if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) { // eslint-disable-line no-undef
             importScripts(url); // eslint-disable-line no-undef
             fetch = when.resolve();
         } else {
-            fetch = loadAndExecuteScript(url);
+            fetch = loadAndExecuteScript(url)
+                .otherwise(function() {
+                    return when.reject(new RuntimeError('Unable to load projection source from ' + url));
+                });
         }
+
+        // Clear createProjectionFunctions, if it already exists
+        try {
+            createProjectionFunctions = undefined; // eslint-disable-line no-undef
+        } catch(e) {} // eslint-disable-line no-empty
 
         fetch = fetch
             .then(function() {
+                try {
+                    if (!defined(createProjectionFunctions)) { // eslint-disable-line no-undef
+                        throw new Error();
+                    }
+                } catch(e) {
+                    return deferred.reject(new RuntimeError('projection code missing createProjectionFunctions function'));
+                }
                 var localCreateProjectionFunctions = createProjectionFunctions; // eslint-disable-line no-undef
+                createProjectionFunctions = undefined; // eslint-disable-line no-undef
                 if (useCache) {
                     CustomProjection._loadedProjectionFunctions[url] = localCreateProjectionFunctions;
                 }
                 localCreateProjectionFunctions(function(project, unproject) {
+                    var ready = true;
+                    if (!defined(project)) {
+                        ready = false;
+                        deferred.reject(new RuntimeError('projection code missing project function'));
+                    }
+                    if (!defined(unproject)) {
+                        ready = false;
+                        deferred.reject(new RuntimeError('projection code missing unproject function'));
+                    }
+
                     customProjection._project = project;
                     customProjection._unproject = unproject;
-                    customProjection._ready = true;
+                    customProjection._ready = ready;
                     deferred.resolve();
                 });
 

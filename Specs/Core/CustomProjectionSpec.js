@@ -137,4 +137,45 @@ defineSuite([
             projection.project(cartographic);
         }).toThrowDeveloperError();
     });
+
+    it('rejects readyPromise when custom projection cannot be loaded', function() {
+        var projection = new CustomProjection('fake/path');
+        return projection.readyPromise.then(function() {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(projection.ready).toBe(false);
+            expect(e.message).toContain('Unable to load projection source from');
+            expect(e.message).toContain('fake/path');
+        });
+    });
+
+    it('rejects readyPromise when custom projection is missing createProjectionFunction', function() {
+        var projection = new CustomProjection('Data/UserProjectionNoCreateProjectionFunctions.js');
+        return projection.readyPromise.then(function() {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(projection.ready).toBe(false);
+            expect(e.message).toEqual('projection code missing createProjectionFunctions function');
+        });
+    });
+
+    it('rejects readyPromise when custom projection is missing project', function() {
+        var projection = new CustomProjection('Data/UserProjectionNoProject.js');
+        return projection.readyPromise.then(function() {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(projection.ready).toBe(false);
+            expect(e.message).toEqual('projection code missing project function');
+        });
+    });
+
+    it('rejects readyPromise when custom projection is missing unproject', function() {
+        var projection = new CustomProjection('Data/UserProjectionNoUnproject.js');
+        return projection.readyPromise.then(function() {
+            fail('should not resolve');
+        }).otherwise(function (e) {
+            expect(projection.ready).toBe(false);
+            expect(e.message).toEqual('projection code missing unproject function');
+        });
+    });
 });

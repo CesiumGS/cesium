@@ -41,6 +41,9 @@ define([
      * @param {String} [wellKnownText] proj4js well known text specifying the projection. Defaults to EPSG:3857, web mercator.
      * @param {Number} [heightScale=1.0] Scale to convert from heights in meters to the projection's units.
      * @param {Rectangle} [wgs84Bounds] Cartographic bounds over which the projection is valid. Cartographic points will be clamped to these bounds prior to projection.
+     *
+     * @see MapProjection
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Projections.html|Map Projections Demo}
      */
     function Proj4Projection(wellKnownText, heightScale, wgs84Bounds) {
         this.ellipsoid = Ellipsoid.WGS84;
