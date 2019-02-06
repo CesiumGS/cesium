@@ -169,6 +169,8 @@ define([
          * Setting this to true causes tiles with the same parent as a rendered tile to be loaded, even
          * if they are culled. Setting this to true may provide a better panning experience at the
          * cost of loading more tiles.
+         * @type {Boolean}
+         * @default false
          */
         this.preloadSiblings = false;
 

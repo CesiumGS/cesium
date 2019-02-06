@@ -156,6 +156,8 @@ define([
          * Setting this to true causes tiles with the same parent as a rendered tile to be loaded, even
          * if they are culled. Setting this to true may provide a better panning experience at the
          * cost of loading more tiles.
+         * @type {Boolean}
+         * @default false
          */
         this.preloadSiblings = false;
 
@@ -164,6 +166,8 @@ define([
          * highlighted at all. The alpha value is used to alpha blend with the tile's
          * actual color. Because terrain fill tiles do not represent the actual terrain surface,
          * it may be useful in some applications to indicate visually that they are not to be trusted.
+         * @type {Color}
+         * @default undefined
          */
         this.fillHighlightColor = undefined;
 
