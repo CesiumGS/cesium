@@ -118,7 +118,7 @@ define([
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
-     * @param {Boolean} [options.foveatedScreenSpaceError=false] Optimization option. Defer loading tiles that are closer to the edges of the current view.
+     * @param {Boolean} [options.foveatedScreenSpaceError=false] Optimization option. Delay loading tiles that are closer to the edges of screen.
      * @param {Number} [options.foveaDeferThreshold=0.04] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}. The size of the fovea cone where largest practical cone size is 1-cos(fov/2). Tiles touching this cone are not deferred in terms of load priority. When setting to 0 the cone will be the line formed by the camera position and its view direction.
      * @param {Number} [options.foveaOuterMaxSSE=1024] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}. Tiles outside the fovea cone will have a linear relaxation on their sse requirement from 0 to options.foveaOuterMaxSSE.
      * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
@@ -260,9 +260,7 @@ define([
         this.dynamicScreenSpaceError = defaultValue(options.dynamicScreenSpaceError, false);
 
         /**
-         * Optimization option. Whether to prioritize tileset refinement based on a foveated metric.
-         * Tiles that are at the center of the screen in the current view are loaded first. Tiles around the edges
-         * of the view are loaded last.
+         * Optimization option. Delay loading tiles that are closer to the edges of screen.
          *
          * @type {Boolean}
          * @default true
