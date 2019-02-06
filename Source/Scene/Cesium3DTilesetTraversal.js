@@ -220,7 +220,7 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
-        if (isOnScreenLongEnough(tileset, tile, frameState) && (hasUnloadedContent(tile) || tile.contentExpired)) {
+        if ((hasUnloadedContent(tile) || tile.contentExpired) && isOnScreenLongEnough(tileset, tile, frameState)) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
         }
