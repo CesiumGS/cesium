@@ -687,14 +687,7 @@ define([
             return undefined;
         }
 
-        var height = ellipsoid.cartesianToCartographic(intersection, scratchGetHeightCartographic).height;
-
-        // For low-detail tiles, large triangles often cut the the globe and appear to be at a much
-        // lower height than actually makes any sense. So clamp the height to the actual height range
-        // of the tile.
-        height = Math.max(height, tile.data.tileBoundingRegion.minimumHeight);
-        height = Math.min(height, tile.data.tileBoundingRegion.maximumHeight);
-        return height;
+        return ellipsoid.cartesianToCartographic(intersection, scratchGetHeightCartographic).height;
     };
 
     /**
