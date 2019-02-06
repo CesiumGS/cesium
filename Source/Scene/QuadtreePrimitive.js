@@ -117,11 +117,12 @@ define([
         this._lastTileIndex = 0;
         this._updateHeightsTimeSlice = 2.0;
 
-        // If a culled tile contains a cartographic positions in this list, it will be marked
+        // If a culled tile contains _cameraPositionCartographic or _cameraReferenceFrameOriginCartographic, it will be marked
         // TileSelectionResult.CULLED_BUT_NEEDED and added to the list of tiles to update heights,
-        // even though it is not rendered. The first position will be the position of the
-        // camera and the second will be the origin of the camera's reference frame.
-        this._neededPositions = [undefined, undefined];
+        // even though it is not rendered.
+        // These are updated each frame in `selectTilesForRendering`.
+        this._cameraPositionCartographic = undefined;
+        this._cameraReferenceFrameOriginCartographic = undefined;
 
         /**
          * Gets or sets the maximum screen-space error, in pixels, that is allowed.
@@ -565,9 +566,10 @@ define([
         }
 
         var camera = frameState.camera;
-        primitive._neededPositions[0] = camera.positionCartographic;
+
+        primitive._cameraPositionCartographic = camera.positionCartographic;
         var cameraFrameOrigin = Matrix4.getTranslation(camera.transform, cameraOriginScratch);
-        primitive._neededPositions[1] = primitive.tileProvider.tilingScheme.ellipsoid.cartesianToCartographic(cameraFrameOrigin, primitive._neededPositions[1]);
+        primitive._cameraReferenceFrameOriginCartographic = primitive.tileProvider.tilingScheme.ellipsoid.cartesianToCartographic(cameraFrameOrigin, primitive._cameraReferenceFrameOriginCartographic);
 
         // Traverse in depth-first, near-to-far order.
         for (i = 0, len = levelZeroTiles.length; i < len; ++i) {
@@ -934,17 +936,9 @@ define([
     }
 
     function containsNeededPosition(primitive, tile) {
-        var needed = primitive._neededPositions;
         var rectangle = tile.rectangle;
-
-        for (var i = 0, len = needed.length; i < len; ++i) {
-            var position = needed[i];
-            if (defined(position) && Rectangle.contains(rectangle, position)) {
-                return true;
-            }
-        }
-
-        return false;
+        return (defined(primitive._cameraPositionCartographic) && Rectangle.contains(rectangle, primitive._cameraPositionCartographic)) ||
+               (defined(primitive._cameraReferenceFrameOriginCartographic) && Rectangle.contains(rectangle, primitive._cameraReferenceFrameOriginCartographic));
     }
 
     function visitIfVisible(primitive, tile, tileProvider, frameState, occluders, ancestorMeetsSse, traversalDetails) {
