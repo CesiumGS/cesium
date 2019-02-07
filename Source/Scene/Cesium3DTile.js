@@ -646,6 +646,7 @@ define([
         if (defined(tile.parent) && tile.parent._priorityDeferred) {
             return true; // If parent is deferred so is the child.
         }
+
         // Touches specified view cone, don't defer.
         if (tile._foveatedFactor <= tileset.foveaDeferThreshold) {
             return false;
@@ -655,9 +656,8 @@ define([
         var maxFoveatedFactor = 0.14; // 1-cos(fov/2); fov = 60, 1-cos( 60 / 2) = ~0.14
         var range = maxFoveatedFactor - tileset.foveaDeferThreshold;
         var renormalizeFactor = CesiumMath.clamp((tile._foveatedFactor - tileset.foveaDeferThreshold) / range, 0, 1);
-        var sseRelaxation = CesiumMath.lerp(0, tileset.foveaOuterMaxSSE, renormalizeFactor);
-        var notSSELeaf = tileset._maximumScreenSpaceError < tile._screenSpaceError;
-        return tileset._maximumScreenSpaceError >= (tile._screenSpaceError - sseRelaxation) && notSSELeaf;
+        var sseRelaxation = tileset._foveatedInterpolationFunction(0, tileset.foveaOuterMaxSSE, renormalizeFactor);
+        return (tileset._maximumScreenSpaceError - sseRelaxation) < tile._screenSpaceError; // Will defer any parent and ancestors outside the cone. Will possibly defer sse leaves depending on the foveaOuterMaxSSE and how far away it is from the fovea cone.
     }
 
     var scratchJulianDate = new JulianDate();
