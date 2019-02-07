@@ -87,7 +87,7 @@ define([
         },
 
         /**
-         * The well-known-text string used to initialize proj4js.
+         * The well-known-text string for the projection.
          * @memberof Proj4Projection.prototype
          * @type {String}
          * @readonly

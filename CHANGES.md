@@ -7,7 +7,7 @@ Change Log
 * `czm_materialInput.slope` is now an angle in radians between 0 and pi/2 (flat to vertical), rather than a projected length 1 to 0 (flat to vertical).
 
 ##### Additions :tada:
-* Added support for `Proj4js` projections and projections defined by user code in Columbus View and 2D. [#7502](https://github.com/AnalyticalGraphicsInc/cesium/pull/7502)
+* Added support for projections defined using Proj4-style well-known-text and projections defined by user code in Columbus View and 2D. [#7502](https://github.com/AnalyticalGraphicsInc/cesium/pull/7502)
 * `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
 
 ##### Fixes :wrench:

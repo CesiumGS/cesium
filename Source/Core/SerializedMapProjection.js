@@ -27,7 +27,7 @@ define([
     var ProjectionType = freezeObject({
         GEOGRAPHIC : 0,
         WEBMERCATOR : 1,
-        PROJ4JS : 2,
+        WELLKNOWNTEXT : 2,
         CUSTOM : 3
     });
 
@@ -53,7 +53,7 @@ define([
         if (mapProjection instanceof WebMercatorProjection) {
             projectionType = ProjectionType.WEBMERCATOR;
         } else if (mapProjection instanceof Proj4Projection) {
-            projectionType = ProjectionType.PROJ4JS;
+            projectionType = ProjectionType.WELLKNOWNTEXT;
             wellKnownText = mapProjection.wellKnownText;
             heightScale = mapProjection.heightScale;
             wgs84Bounds = mapProjection.wgs84Bounds;
@@ -92,7 +92,7 @@ define([
             projection = new GeographicProjection(ellipsoid);
         } else if (projectionType === ProjectionType.WEBMERCATOR) {
             projection = new WebMercatorProjection(ellipsoid);
-        } else if (projectionType === ProjectionType.PROJ4JS) {
+        } else if (projectionType === ProjectionType.WELLKNOWNTEXT) {
             var wgs84Bounds = Rectangle.unpack(serializedMapProjection.packedWgs84Bounds);
             var projectedBounds = Rectangle.unpack(serializedMapProjection.packedProjectedBounds);
             projection = new Proj4Projection({
