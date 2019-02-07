@@ -554,7 +554,7 @@ define([
             '       -sin(rotation), cos(rotation), 0.0, \n' +
             '        0.0, 0.0, 1.0); \n' +
             '    mat3 scaleMatrix = mat3(scale.x, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, 1.0); \n' +
-            '    vec2 transformedTexCoords = ((translationMatrix * rotationMatrix * scaleMatrix) * vec3(texCoords, 1.0)).xy; \n' +
+            '    vec2 transformedTexCoords = ((translationMatrix * rotationMatrix * scaleMatrix) * vec3(fract(texCoords), 1.0)).xy; \n' +
             '    transformedTexCoords.x = repeatS ? fract(transformedTexCoords.x) : clamp(transformedTexCoords.x, 0.0, 1.0); \n' +
             '    transformedTexCoords.y = repeatT ? fract(transformedTexCoords.y) : clamp(transformedTexCoords.y, 0.0, 1.0); \n' +
             '    return transformedTexCoords; \n' +
