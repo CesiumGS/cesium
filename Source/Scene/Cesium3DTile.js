@@ -666,7 +666,7 @@ define([
 
         // Relax SSE based on how big the angle is between the tile and the camera's direction vector.
         var range = maxFoveatedFactor - foveatedConeFactor;
-        var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - tileset.foveatedConeSize) / range, 0, 1);
+        var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0, 1);
         var sseRelaxation = tileset.foveatedInterpolationFunction(tileset.foveatedMinimumScreenSpaceError, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
 
         return (tileset.maximumScreenSpaceError - sseRelaxation) < tile._screenSpaceError;
