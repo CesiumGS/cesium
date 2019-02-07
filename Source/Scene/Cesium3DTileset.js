@@ -120,7 +120,7 @@ define([
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
      * @param {Boolean} [options.foveatedScreenSpaceError=false] Optimization option. Delay loading tiles that are closer to the edges of screen.
      * @param {Number} [options.foveaDeferThreshold=0.04] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}. The size of the fovea cone where largest practical cone size is 1-cos(fov/2). Tiles touching this cone are not deferred in terms of load priority. When setting to 0 the cone will be the line formed by the camera position and its view direction.
-     * @param {Number} [options.foveaOuterMaxSSE=1024] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}. Tiles outside the fovea cone will have a linear relaxation on their sse requirement from 0 to options.foveaOuterMaxSSE.
+     * @param {Number} [options.foveaOuterMaxSSE=16] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}. Tiles outside the fovea cone will have a linear relaxation on their sse requirement from 0 to options.foveaOuterMaxSSE.
      * @param {Number} [options.foveatedInterpolationFunction=CesiumMath.lerp] Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}. The interpolation function to use for interpolating between 0 and {@link Cesium3DTileset#foveaOuterMaxSSE} when a tile is outside the fovea cone.
      * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
      * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
@@ -282,9 +282,9 @@ define([
          * Tiles outside the fovea cone will have a linear relaxation on their sse requirement from 0 to options.foveaOuterMaxSSE.
          *
          * @type {Number}
-         * @default 1024
+         * @default 16
          */
-        this.foveaOuterMaxSSE = defaultValue(options.foveaOuterMaxSSE, 1024);
+        this.foveaOuterMaxSSE = defaultValue(options.foveaOuterMaxSSE, 16);
 
         /**
          * Optimization option. Works alongside {@link Cesium3DTileset#foveatedScreenSpaceError}.

@@ -3577,7 +3577,6 @@ defineSuite([
             // Config tileset params
             tileset.foveatedScreenSpaceError = true; // Turn on foveated request deferring.
             tileset.foveaDeferThreshold = 0; // Fovea cone is just view line. Anything not touching this is deferred.
-            tileset.foveaOuterMaxSSE = 1000000000000000000000000000; // Just trying to get something deferred.
             tileset._maximumScreenSpaceError = 8;
 
             // Position camera
