@@ -3570,16 +3570,15 @@ defineSuite([
         });
     });
 
-    it('deferrs some requests based on foveation', function() {
+    it('defers requests when foveatedScreenSpaceError is true', function() {
         viewNothing();
 
         return Cesium3DTilesTester.loadTileset(scene, tilesetRefinementMix).then(function(tileset) {
-            // Config tileset params
-            tileset.foveatedScreenSpaceError = true; // Turn on foveated request deferring.
-            tileset.foveaDeferThreshold = 0; // Fovea cone is just view line. Anything not touching this is deferred.
-            tileset._maximumScreenSpaceError = 8;
+            tileset.foveatedScreenSpaceError = true;
+            tileset.foveatedConeSize = 0;
+            tileset.maximumScreenSpaceError = 8;
 
-            // Position camera
+            // Position camera such that some tiles are outside the foveated cone but still on screen.
             viewAllTiles();
             scene.camera.moveLeft(205.0);
             scene.camera.moveDown(205.0);

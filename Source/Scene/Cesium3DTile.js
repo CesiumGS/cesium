@@ -620,44 +620,56 @@ define([
     var scratchCartesian = new Cartesian3();
     function isPriorityDeferred(tile, frameState) {
         var tileset = tile._tileset;
-        if (!tileset.foveatedScreenSpaceError) {
+        if (!tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
             return false;
         }
+
         // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
         tile._foveatedFactor = 0;
         var camera = frameState.camera;
-        var sphere = tile._boundingVolume.boundingSphere;
-        var radius = sphere.radius;
-        var scaledFwd = Cartesian3.multiplyByScalar(camera.directionWC, tile._centerZDepth, scratchCartesian);
-        var closestOnLine = Cartesian3.add(camera.positionWC, scaledFwd, scratchCartesian);
-        var toLine = Cartesian3.subtract(closestOnLine, sphere.center, scratchCartesian);
-        var distSqrd = Cartesian3.dot(toLine, toLine);
-        var diff = Math.max(distSqrd - radius * radius, 0);
+        var boundingSphere = tile.boundingSphere;
+        var radius = boundingSphere.radius;
+        var scaledCameraDirection = Cartesian3.multiplyByScalar(camera.directionWC, tile._centerZDepth, scratchCartesian);
+        var closestPointOnLine = Cartesian3.add(camera.positionWC, scaledCameraDirection, scratchCartesian);
+        // The distance from the camera's view direction to the tile.
+        var distanceToLine = Cartesian3.subtract(closestPointOnLine, boundingSphere.center, scratchCartesian);
+        var distanceSquared = Cartesian3.dot(distanceToLine, distanceToLine);
 
-        if (diff !== 0)  {
-            var toLineNormalize = Cartesian3.normalize(toLine, scratchCartesian);
-            var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalize, radius, scratchCartesian);
-            var closestOnSphere = Cartesian3.add(sphere.center, scaledToLine, scratchCartesian);
+        // If camera's direction vector is inside the bounding sphere then consider
+        // this tile right along the line of sight and set _foveatedFactor to 0.
+        // Otherwise, _foveatedFactor is the dot product of the camera's direction
+        // and the vector between the camera and the closest point on the bounding sphere.
+        if (distanceSquared > radius * radius) {
+            var toLineNormalized = Cartesian3.normalize(distanceToLine, scratchCartesian);
+            var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalized, radius, scratchCartesian);
+            var closestOnSphere = Cartesian3.add(boundingSphere.center, scaledToLine, scratchCartesian);
             var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, camera.positionWC, scratchCartesian);
             var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
             tile._foveatedFactor = 1 - Math.abs(Cartesian3.dot(camera.directionWC, toClosestOnSphereNormalize));
+        } else {
+            tile._foveatedFactor = 0;
         }
 
+        // If parent is deferred so is the child.
         if (defined(tile.parent) && tile.parent._priorityDeferred) {
-            return true; // If parent is deferred so is the child.
+            return true;
         }
 
-        // Touches specified view cone, don't defer.
-        if (tile._foveatedFactor <= tileset.foveaDeferThreshold) {
+        // The max foveated factor is 1 - cos(fieldOfView/2), where the fieldOfView is 60 degrees.
+        var maxFoveatedFactor = 0.14;
+        var foveatedConeFactor = tileset.foveatedConeSize * maxFoveatedFactor;
+
+        // If it's inside the user-defined view cone, then it should not be deferred.
+        if (tile._foveatedFactor <= foveatedConeFactor) {
             return false;
         }
 
-        // Relax SSE the further away from edge of view cone the tile is.
-        var maxFoveatedFactor = 0.14; // 1-cos(fov/2); fov = 60, 1-cos( 60 / 2) = ~0.14
-        var range = maxFoveatedFactor - tileset.foveaDeferThreshold;
-        var renormalizeFactor = CesiumMath.clamp((tile._foveatedFactor - tileset.foveaDeferThreshold) / range, 0, 1);
-        var sseRelaxation = tileset._foveatedInterpolationFunction(0, tileset.foveaOuterMaxSSE, renormalizeFactor);
-        return (tileset._maximumScreenSpaceError - sseRelaxation) < tile._screenSpaceError; // Will defer any parent and ancestors outside the cone. Will possibly defer sse leaves depending on the foveaOuterMaxSSE and how far away it is from the fovea cone.
+        // Relax SSE based on how big the angle is between the tile and the camera's direction vector.
+        var range = maxFoveatedFactor - foveatedConeFactor;
+        var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - tileset.foveatedConeSize) / range, 0, 1);
+        var sseRelaxation = tileset.foveatedInterpolationFunction(tileset.foveatedMinimumScreenSpaceError, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
+
+        return (tileset.maximumScreenSpaceError - sseRelaxation) < tile._screenSpaceError;
     }
 
     var scratchJulianDate = new JulianDate();
