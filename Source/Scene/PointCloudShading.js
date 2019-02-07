@@ -78,8 +78,8 @@ define([
         this.eyeDomeLightingRadius = defaultValue(pointCloudShading.eyeDomeLightingRadius, 1.0);
 
         /**
-         * Determines whether backfaces of points / mesh are hidden.
-         * For point cloud this option works only, if data has normals.
+         * Determines whether backfaces of points are hidden.
+         * This option works only if data has normals included.
          *
          * @type {Boolean}
          * @default false
