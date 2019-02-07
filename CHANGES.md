@@ -8,6 +8,7 @@ Change Log
 
 ##### Additions :tada:
 * `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
+* Added support for the `KHR_texture_transform` glTF extension. [#7549](https://github.com/AnalyticalGraphicsInc/cesium/pull/7549)
 
 ##### Fixes :wrench:
 * Fixed an issue where models would cause a crash on load if some primitives were Draco encoded and others were not. [#7383](https://github.com/AnalyticalGraphicsInc/cesium/issues/7383)
