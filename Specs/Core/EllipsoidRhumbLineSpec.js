@@ -547,6 +547,25 @@ defineSuite([
         expect(Cartographic.equalsEpsilon(pointUsingInterpolation, pointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
     });
 
+    it('finds correct intersection with IDL', function() {
+        var start = Cartographic.fromDegrees(170, 10);
+        var end = Cartographic.fromDegrees(-170, 23);
+
+        var rhumb = new EllipsoidRhumbLine(start, end);
+
+        var idlIntersection1 = rhumb.findIntersectionWithLongitude(-Math.PI);
+        var idlIntersection2 = rhumb.findIntersectionWithLongitude(Math.PI);
+
+        expect(Cartographic.equalsEpsilon(idlIntersection1, idlIntersection2, CesiumMath.EPSILON12)).toBe(true);
+
+        rhumb.setEndPoints(end, start);
+
+        idlIntersection1 = rhumb.findIntersectionWithLongitude(-Math.PI);
+        idlIntersection2 = rhumb.findIntersectionWithLongitude(Math.PI);
+
+        expect(Cartographic.equalsEpsilon(idlIntersection1, idlIntersection2, CesiumMath.EPSILON12)).toBe(true);
+    });
+
     it('intersection with longitude handles E-W lines', function() {
         var start = new Cartographic(fifteenDegrees, 0.0);
         var end = new Cartographic(fortyfiveDegrees, 0.0);
