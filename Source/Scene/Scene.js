@@ -449,7 +449,7 @@ define([
         var mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
         this._mapProjection = mapProjection;
         this._serializedMapProjection = new SerializedMapProjection(mapProjection);
-        this._maxCoord2D = MapProjection.approximateMaximumCoordinate(mapProjection);
+        this._maxCoord2D = MapProjection.approximateMaximumCoordinate(mapProjection, new Cartesian2());
 
         /**
          * The current morph transition time between 2D/Columbus View and 3D,
@@ -2651,7 +2651,7 @@ define([
         Camera.clone(savedCamera, camera);
     }
 
-    var scratch2DViewportMaxCoord = new Cartesian3();
+    var scratch2DViewportMaxCoord = new Cartesian2();
     var scratch2DViewportSavedPosition = new Cartesian3();
     var scratch2DViewportTransform = new Matrix4();
     var scratch2DViewportCameraTransform = new Matrix4();
@@ -2670,7 +2670,7 @@ define([
 
         var maxCoord = scratch2DViewportMaxCoord;
 
-        Cartesian3.clone(scene._maxCoord2D, maxCoord);
+        Cartesian2.clone(scene._maxCoord2D, maxCoord);
 
         var position = Cartesian3.clone(camera.position, scratch2DViewportSavedPosition);
         var transform = Matrix4.clone(camera.transform, scratch2DViewportCameraTransform);

@@ -3,18 +3,14 @@ define([
         './Cartesian3',
         './Check',
         './defineProperties',
-        './defaultValue',
         './DeveloperError',
-        './Math',
         './Rectangle'
     ], function(
         Cartographic,
         Cartesian3,
         Check,
         defineProperties,
-        defaultValue,
         DeveloperError,
-        CesiumMath,
         Rectangle) {
     'use strict';
 
@@ -94,25 +90,27 @@ define([
     var maxcoordRectangleScratch = new Rectangle();
     var rectangleCenterScratch = new Cartographic();
     /**
-     * Approximates the extents of a map projection in 2D.
+     * Approximates the X/Y extents of a map projection in 2D.
      *
      * @function
      *
      * @param {MapProjection} mapProjection A map projection from cartographic coordinates to 2D space.
-     * @param {Cartesian3} [result] Optional result parameter.
+     * @param {Cartesian2} result result parameter.
      * @private
      */
     MapProjection.approximateMaximumCoordinate = function(mapProjection, result) {
+        //>>includeStart('debug', pragmas.debug);
         Check.defined('mapProjection', mapProjection);
+        Check.defined('result', result);
+        //>>includeEnd('debug');
 
-        var maxCoord = defaultValue(result, new Cartesian3());
         var projectedExtents = Rectangle.approximateProjectedExtents(Rectangle.MAX_VALUE, mapProjection, maxcoordRectangleScratch);
         var projectedCenter = Rectangle.center(projectedExtents, rectangleCenterScratch);
 
-        maxCoord.x = projectedCenter.longitude + projectedExtents.width * 0.5;
-        maxCoord.y = projectedCenter.latitude + projectedExtents.height * 0.5;
+        result.x = projectedCenter.longitude + projectedExtents.width * 0.5;
+        result.y = projectedCenter.latitude + projectedExtents.height * 0.5;
 
-        return maxCoord;
+        return result;
     };
 
     return MapProjection;

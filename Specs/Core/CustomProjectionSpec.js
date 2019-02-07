@@ -3,12 +3,14 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
+        'Core/FeatureDetection',
         'Core/Math'
     ], function(
         CustomProjection,
         Cartesian3,
         Cartographic,
         Ellipsoid,
+        FeatureDetection,
         CesiumMath) {
     'use strict';
 
@@ -29,23 +31,29 @@ defineSuite([
 
     it('caches by url', function() {
         var cache = CustomProjection._loadedProjectionFunctions;
+        var cachedCallback;
         var projection1 = new CustomProjection('Data/UserGeographic.js');
         return projection1.readyPromise.then(function() {
             expect(Object.keys(cache).length).toEqual(1);
+            cachedCallback = cache[Object.keys(cache)[0]];
 
             var projection2 = new CustomProjection('Data/UserGeographic.js');
             return projection2.readyPromise;
         }).then(function() {
             expect(Object.keys(cache).length).toEqual(1);
+            expect(cache[Object.keys(cache)[0]]).toBe(cachedCallback);
         });
     });
 
     it('does not cache by data URIs', function() {
+        if (FeatureDetection.isInternetExplorer()) {
+            return;
+        }
         var dataUri = 'data:text/javascript;base64,ZnVuY3Rpb24gY3JlYXRlUHJvamVjdGlvbkZ1bmN0aW9ucyhjYWxsYmFjayl7ZnVuY3Rpb24gcHJvamVjdChjYXJ0b2dyYXBoaWMscmVzdWx0KXtyZXN1bHQueD1jYXJ0b2dyYXBoaWMubG9uZ2l0dWRlKjYzNzgxMzcuMDtyZXN1bHQueT1jYXJ0b2dyYXBoaWMubGF0aXR1ZGUqNjM3ODEzNy4wO3Jlc3VsdC56PWNhcnRvZ3JhcGhpYy5oZWlnaHQ7fWZ1bmN0aW9uIHVucHJvamVjdChjYXJ0ZXNpYW4scmVzdWx0KXtyZXN1bHQubG9uZ2l0dWRlPWNhcnRlc2lhbi54LzYzNzgxMzcuMDtyZXN1bHQubGF0aXR1ZGU9Y2FydGVzaWFuLnkvNjM3ODEzNy4wO3Jlc3VsdC5oZWlnaHQ9Y2FydGVzaWFuLno7fWNhbGxiYWNrKHByb2plY3QsdW5wcm9qZWN0KTt9';
         var cache = CustomProjection._loadedProjectionFunctions;
         var projection1 = new CustomProjection(dataUri);
         return projection1.readyPromise.then(function() {
-            expect(Object.keys(cache).length).toEqual(0);
+            expect(cache[dataUri]).not.toBeDefined();
         });
     });
 

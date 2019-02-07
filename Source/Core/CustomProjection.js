@@ -53,6 +53,7 @@ define([
     function CustomProjection(url, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('url', url);
+        // importScripts does not work with data URIs in Internet Explorer
         if (FeatureDetection.isInternetExplorer() && isDataUri(url)) {
             throw new DeveloperError('data URI projection code is not supported in Internet Explorer');
         }
@@ -217,6 +218,11 @@ define([
             return deferred.promise;
         }
 
+        // Clear createProjectionFunctions, if it already exists
+        try {
+            createProjectionFunctions = undefined; // eslint-disable-line no-undef
+        } catch(e) {} // eslint-disable-line no-empty
+
         if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) { // eslint-disable-line no-undef
             importScripts(url); // eslint-disable-line no-undef
             fetch = when.resolve();
@@ -226,11 +232,6 @@ define([
                     return when.reject(new RuntimeError('Unable to load projection source from ' + url));
                 });
         }
-
-        // Clear createProjectionFunctions, if it already exists
-        try {
-            createProjectionFunctions = undefined; // eslint-disable-line no-undef
-        } catch(e) {} // eslint-disable-line no-empty
 
         fetch = fetch
             .then(function() {
