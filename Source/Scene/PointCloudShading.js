@@ -78,17 +78,18 @@ define([
         this.eyeDomeLightingRadius = defaultValue(pointCloudShading.eyeDomeLightingRadius, 1.0);
 
         /**
-         * Determines whether backfaces of points / mesh are hidden
+         * Determines whether backfaces of points / mesh are hidden.
+         * For point cloud this option works only, if data has normals.
          *
-         * @type {boolean}
+         * @type {Boolean}
          * @default false
          */
         this.backFaceCulling = defaultValue(pointCloudShading.backFaceCulling, false);
 
         /**
-         * Determines whether the tileset is lighted by the sun
+         * Determines whether a point cloud that contains normals is shaded based on the sun direction.
          *
-         * @type {boolean}
+         * @type {Boolean}
          * @default true
          */
         this.normalShading = defaultValue(pointCloudShading.normalShading, true);

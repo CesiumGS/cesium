@@ -145,10 +145,7 @@ define([
         this._quantizedRange = 0.0;
         this._octEncodedRange = 0.0;
 
-        this._pointCloudShading = defaultValue(options.shading, {
-            backFaceCulling : false,
-            normalShading : true
-        });
+        this._pointCloudShading = defined(options.shading) ? options.shading : new PointCloudShading();
 
         // Use per-point normals to hide back-facing points.
         this._backFaceCulling = this.backFaceCulling;
@@ -1143,7 +1140,7 @@ define([
             } else {
                 vs += '    vec3 normal = a_normal; \n';
             }
-            vs += '    vec3 view_normal = czm_normal * normal; \n';
+            vs += '    vec3 normalEC = czm_normal * normal; \n';
         } else {
             vs += '    vec3 normal = vec3(1.0); \n';
         }
@@ -1170,7 +1167,7 @@ define([
         vs += '    color = color * u_highlightColor; \n';
 
         if (usesNormals && normalShading) {
-            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, view_normal); \n' +
+            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
                   '    color.xyz *= diffuseStrength; \n';
         }
@@ -1179,7 +1176,7 @@ define([
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
         if (usesNormals && backFaceCulling) {
-            vs += '    float visible = step(-view_normal.z, 0.0); \n' +
+            vs += '    float visible = step(-normalEC.z, 0.0); \n' +
                   '    gl_Position *= visible; \n' +
                   '    gl_PointSize *= visible; \n';
         }
