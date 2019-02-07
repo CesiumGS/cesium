@@ -30,11 +30,17 @@ defineSuite([
     beforeAll(function() {
         var epsg3411bounds = Rectangle.fromDegrees(-180.0000, 30.0000, 180.0000, 90.0000);
         var epsg3411wkt = '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs';
-        arcticProjection = new Proj4Projection(epsg3411wkt, 1.0, epsg3411bounds);
+        arcticProjection = new Proj4Projection({
+            wellKnownText : epsg3411wkt,
+            wgs84Bounds : epsg3411bounds
+        });
 
         var epsg3031Bounds = Rectangle.fromDegrees(-180.0000, -90.0000, 180.0000, -60.0000);
         var epsg3031wkt = '+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs';
-        antarcticProjection = new Proj4Projection(epsg3031wkt, 1.0, epsg3031Bounds);
+        antarcticProjection = new Proj4Projection({
+            wellKnownText : epsg3031wkt,
+            wgs84Bounds : epsg3031Bounds
+        });
     });
 
     it('default constructor sets expected values.', function() {

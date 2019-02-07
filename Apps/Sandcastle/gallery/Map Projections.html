@@ -117,7 +117,10 @@ function launchFromWellKnownText() {
     var epsg3411Bounds = Cesium.Rectangle.fromDegrees(-180.0000, 30.0000, 180.0000, 90.0000);
     viewer = new Cesium.Viewer('cesiumContainer', {
         sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
-        mapProjection : new Cesium.Proj4Projection(wellKnownText, 1.0, epsg3411Bounds)
+        mapProjection : new Cesium.Proj4Projection({
+            wellKnownText : wellKnownText,
+            wgs84Bounds : epsg3411Bounds
+        })
     });
     addPolylines();
     // Fly to a view covering the whole projection
