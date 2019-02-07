@@ -704,6 +704,7 @@ define([
         surfaceTile.processImagery(tile, tileProvider.terrainProvider, frameState, true);
 
         var oldTexture = fill.waterMaskTexture;
+        fill.waterMaskTexture = undefined;
 
         if (tileProvider.terrainProvider.hasWaterMask) {
             var waterSourceTile = surfaceTile._findAncestorTileWithTerrainData(tile);
