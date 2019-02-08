@@ -14,6 +14,7 @@ Change Log
 * Fixed Node.js support for the `Resource` class and any functionality using it internally.
 * Fixed an issue where some ground polygons crossing the Prime Meridian would have incorrect bounding rectangles. [#7533](https://github.com/AnalyticalGraphicsInc/cesium/pull/7533)
 * Fixed an issue where polygons on terrain using rhumb lines where being rendered incorrectly. [#7538](https://github.com/AnalyticalGraphicsInc/cesium/pulls/7538)
+* Fixed an issue with `EllipsoidRhumbLines.findIntersectionWithLongitude` when longitude was IDL. [#7551](https://github.com/AnalyticalGraphicsInc/cesium/issues/7551)
 
 ### 1.54 - 2019-02-01
 
