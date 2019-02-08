@@ -169,7 +169,9 @@ defineSuite([
 
         viewAllTiles();
 
-        options = { cullRequestsWhileMoving : false};
+        options = {
+            cullRequestsWhileMoving : false
+        };
     });
 
     afterEach(function() {
