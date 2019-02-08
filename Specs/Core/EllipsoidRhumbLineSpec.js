@@ -557,6 +557,8 @@ defineSuite([
         var idlIntersection2 = rhumb.findIntersectionWithLongitude(Math.PI);
 
         expect(Cartographic.equalsEpsilon(idlIntersection1, idlIntersection2, CesiumMath.EPSILON12)).toBe(true);
+        expect(idlIntersection1.longitude).toEqualEpsilon(Math.PI, CesiumMath.EPSILON14);
+        expect(idlIntersection2.longitude).toEqualEpsilon(Math.PI, CesiumMath.EPSILON14);
 
         rhumb.setEndPoints(end, start);
 
@@ -564,6 +566,8 @@ defineSuite([
         idlIntersection2 = rhumb.findIntersectionWithLongitude(Math.PI);
 
         expect(Cartographic.equalsEpsilon(idlIntersection1, idlIntersection2, CesiumMath.EPSILON12)).toBe(true);
+        expect(idlIntersection1.longitude).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON14);
+        expect(idlIntersection2.longitude).toEqualEpsilon(-Math.PI, CesiumMath.EPSILON14);
     });
 
     it('intersection with longitude handles E-W lines', function() {
