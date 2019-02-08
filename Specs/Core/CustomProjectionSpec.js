@@ -186,4 +186,16 @@ defineSuite([
             expect(e.message).toEqual('projection code missing unproject function');
         });
     });
+
+    it('serializes and deserializes', function() {
+        var projection = new CustomProjection('Data/UserGeographic.js');
+        var serialized = projection.serialize();
+
+        return CustomProjection.deserialize(serialized).then(function(deserializedProjection) {
+            expect(projection.ellipsoid.equals(deserializedProjection.ellipsoid)).toBe(true);
+            expect(projection.url).toEqual(deserializedProjection.url);
+
+            expect(deserializedProjection.ready).toBe(true);
+        });
+    });
 });

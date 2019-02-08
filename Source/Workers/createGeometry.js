@@ -1,13 +1,13 @@
 define([
         '../Core/defined',
-        '../Core/SerializedMapProjection',
+        '../Core/deserializeMapProjection',
         '../Scene/PrimitivePipeline',
         '../ThirdParty/when',
         './createTaskProcessorWorker',
         'require'
     ], function(
         defined,
-        SerializedMapProjection,
+        deserializeMapProjection,
         PrimitivePipeline,
         when,
         createTaskProcessorWorker,
@@ -37,7 +37,7 @@ define([
     function createGeometry(parameters, transferableObjects) {
         var subTasks = parameters.subTasks;
         var length = subTasks.length;
-        return SerializedMapProjection.deserialize(parameters.serializedMapProjection)
+        return deserializeMapProjection(parameters.serializedMapProjection)
             .then(function(mapProjection) {
                 var resultsOrPromises = new Array(length);
 

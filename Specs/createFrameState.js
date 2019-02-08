@@ -2,7 +2,6 @@ define([
         'Core/defaultValue',
         'Core/GeographicProjection',
         'Core/JulianDate',
-        'Core/SerializedMapProjection',
         'Scene/Camera',
         'Scene/CreditDisplay',
         'Scene/FrameState',
@@ -11,7 +10,6 @@ define([
         defaultValue,
         GeographicProjection,
         JulianDate,
-        SerializedMapProjection,
         Camera,
         CreditDisplay,
         FrameState,
@@ -24,7 +22,7 @@ define([
 
         var projection = new GeographicProjection();
         frameState.mapProjection = projection;
-        frameState.serializedMapProjection = new SerializedMapProjection(projection);
+        frameState.serializedMapProjection = projection.serialize();
 
         frameState.frameNumber = defaultValue(frameNumber, 1.0);
         frameState.time = defaultValue(time, JulianDate.fromDate(new Date('January 1, 2011 12:00:00 EST')));

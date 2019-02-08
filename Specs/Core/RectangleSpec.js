@@ -899,7 +899,10 @@ defineSuite([
     it('approximates the projected extents of a cartographic Rectangle', function() {
         var projection = new GeographicProjection();
         var cartographicRectangle = Rectangle.fromDegrees(-90, -45, 90, 45);
-        var projectedRectangle = Rectangle.approximateProjectedExtents(cartographicRectangle, projection);
+        var projectedRectangle = Rectangle.approximateProjectedExtents({
+            cartographicRectangle : cartographicRectangle,
+            mapProjection : projection
+        });
         expect(projectedRectangle.west).toEqualEpsilon(-CesiumMath.PI_OVER_TWO * Ellipsoid.WGS84.maximumRadius, CesiumMath.EPSILON7);
         expect(projectedRectangle.east).toEqualEpsilon(CesiumMath.PI_OVER_TWO * Ellipsoid.WGS84.maximumRadius, CesiumMath.EPSILON7);
         expect(projectedRectangle.south).toEqualEpsilon(-CesiumMath.PI_OVER_FOUR * Ellipsoid.WGS84.maximumRadius, CesiumMath.EPSILON7);
@@ -915,7 +918,10 @@ defineSuite([
         var north = CesiumMath.PI_OVER_FOUR * Ellipsoid.WGS84.maximumRadius;
 
         var projectedRectangle = new Rectangle(west, south, east, north);
-        var cartographicRectangle = Rectangle.approximateCartographicExtents(projectedRectangle, projection);
+        var cartographicRectangle = Rectangle.approximateCartographicExtents({
+            projectedRectangle : projectedRectangle,
+            mapProjection : projection
+        });
         expect(cartographicRectangle.west).toEqualEpsilon(-CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON7);
         expect(cartographicRectangle.east).toEqualEpsilon(CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON7);
         expect(cartographicRectangle.south).toEqualEpsilon(-CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON7);
@@ -930,12 +936,18 @@ defineSuite([
         var north = 300000;
         var projectedRectangle = new Rectangle(west, south, east, north);
 
-        var cartographicRectangleArctic = Rectangle.approximateCartographicExtents(projectedRectangle, arcticProjection);
+        var cartographicRectangleArctic = Rectangle.approximateCartographicExtents({
+            projectedRectangle : projectedRectangle,
+            mapProjection : arcticProjection
+        });
         expect(cartographicRectangleArctic.north).toEqual(CesiumMath.PI_OVER_TWO);
         expect(cartographicRectangleArctic.east).toEqual(CesiumMath.PI);
         expect(cartographicRectangleArctic.west).toEqual(-CesiumMath.PI);
 
-        var cartographicRectangleAntarctic = Rectangle.approximateCartographicExtents(projectedRectangle, antarcticProjection);
+        var cartographicRectangleAntarctic = Rectangle.approximateCartographicExtents({
+            projectedRectangle : projectedRectangle,
+            mapProjection : antarcticProjection
+        });
         expect(cartographicRectangleAntarctic.south).toEqual(-CesiumMath.PI_OVER_TWO);
         expect(cartographicRectangleAntarctic.east).toEqual(CesiumMath.PI);
         expect(cartographicRectangleAntarctic.west).toEqual(-CesiumMath.PI);
@@ -950,7 +962,10 @@ defineSuite([
         var north = 1300000;
         var projectedRectangle = new Rectangle(west, south, east, north);
 
-        var cartographicRectangle = Rectangle.approximateCartographicExtents(projectedRectangle, arcticProjection);
+        var cartographicRectangle = Rectangle.approximateCartographicExtents({
+            projectedRectangle : projectedRectangle,
+            mapProjection : arcticProjection
+        });
         expect(cartographicRectangle.west > cartographicRectangle.east).toBe(true);
         expect(cartographicRectangle.width < CesiumMath.PI).toBe(true);
     });

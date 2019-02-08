@@ -5,7 +5,10 @@ define([
         './defined',
         './defineProperties',
         './DeveloperError',
-        './Ellipsoid'
+        './Ellipsoid',
+        './MapProjectionType',
+        './SerializedMapProjection',
+        '../ThirdParty/when'
     ], function(
         Cartesian3,
         Cartographic,
@@ -13,7 +16,10 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        Ellipsoid) {
+        Ellipsoid,
+        MapProjectionType,
+        SerializedMapProjection,
+        when) {
     'use strict';
 
     /**
@@ -65,6 +71,27 @@ define([
             }
         }
     });
+
+    /**
+     * Returns a JSON object that can be messaged to a web worker.
+     *
+     * @private
+     * @returns {SerializedMapProjection} A JSON object from which the MapProjection can be rebuilt.
+     */
+    GeographicProjection.prototype.serialize = function() {
+        return new SerializedMapProjection(MapProjectionType.GEOGRAPHIC, Ellipsoid.pack(this.ellipsoid, []));
+    };
+
+    /**
+     * Reconstructs a <code>GeographicProjection</object> object from the input JSON.
+     *
+     * @private
+     * @param {SerializedMapProjection} serializedMapProjection A JSON object from which the MapProjection can be rebuilt.
+     * @returns {Promise.<GeographicProjection>} A Promise that resolves to a MapProjection that is ready for use, or rejects if the SerializedMapProjection is malformed.
+     */
+    GeographicProjection.deserialize = function(serializedMapProjection) {
+        return when.resolve(new GeographicProjection(Ellipsoid.unpack(serializedMapProjection.json)));
+    };
 
     /**
      * Projects a set of {@link Cartographic} coordinates, in radians, to map coordinates, in meters.

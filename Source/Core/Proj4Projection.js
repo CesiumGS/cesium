@@ -7,7 +7,10 @@ define([
         './defined',
         './defineProperties',
         './Ellipsoid',
+        './MapProjectionType',
         './Rectangle',
+        './SerializedMapProjection',
+        '../ThirdParty/when',
         '../ThirdParty/proj4-2.5.0'
     ], function(
         Cartesian3,
@@ -18,7 +21,10 @@ define([
         defined,
         defineProperties,
         Ellipsoid,
+        MapProjectionType,
         Rectangle,
+        SerializedMapProjection,
+        when,
         proj4) {
     'use strict';
 
@@ -70,6 +76,45 @@ define([
         this._wgs84Bounds = Rectangle.clone(wgs84Bounds);
         this._projectedBounds = Rectangle.clone(projectedBounds);
     }
+
+    /**
+     * Returns a JSON object that can be messaged to a web worker.
+     *
+     * @private
+     * @returns {SerializedMapProjection} A JSON object from which the MapProjection can be rebuilt.
+     */
+    Proj4Projection.prototype.serialize = function() {
+        var json = {
+            wellKnownText : this.wellKnownText,
+            ellipsoid : Ellipsoid.pack(this.ellipsoid, []),
+            wgs84Bounds : Rectangle.pack(this.wgs84Bounds, []),
+            projectedBounds : Rectangle.pack(this.projectedBounds, []),
+            heightScale : this.heightScale
+        };
+
+        return new SerializedMapProjection(MapProjectionType.PROJ4, json);
+    };
+
+    /**
+     * Reconstructs a <code>Proj4Projection</object> from the input JSON.
+     *
+     * @private
+     * @param {SerializedMapProjection} serializedMapProjection A JSON object from which the MapProjection can be rebuilt.
+     * @returns {Promise.<Proj4Projection>} A Promise that resolves to a MapProjection that is ready for use, or rejects if the SerializedMapProjection is malformed.
+     */
+    Proj4Projection.deserialize = function(serializedMapProjection) {
+        var json = serializedMapProjection.json;
+        var ellipsoid = Ellipsoid.unpack(json.ellipsoid);
+        var wgs84Bounds = Rectangle.unpack(json.wgs84Bounds);
+        var projectedBounds = Rectangle.unpack(json.projectedBounds);
+        return when.resolve(new Proj4Projection({
+            wellKnownText : json.wellKnownText,
+            ellipsoid : ellipsoid,
+            wgs84Bounds : wgs84Bounds,
+            projectedBounds : projectedBounds,
+            heightScale : json.heightScale
+        }));
+    };
 
     defineProperties(Proj4Projection.prototype, {
         /**

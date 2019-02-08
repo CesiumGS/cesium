@@ -23,6 +23,8 @@ define([
      *
      * @see GeographicProjection
      * @see WebMercatorProjection
+     * @see CustomProjection
+     * @see Proj4Projection
      */
     function MapProjection() {
         DeveloperError.throwInstantiationError();
@@ -72,6 +74,27 @@ define([
     MapProjection.prototype.project = DeveloperError.throwInstantiationError;
 
     /**
+     * Returns a JSON object that can be messaged to a web worker.
+     *
+     * @memberof MapProjection
+     * @function
+     * @private
+     * @returns {SerializedMapProjection} A JSON object from which the MapProjection can be rebuilt.
+     */
+    MapProjection.prototype.serialize = DeveloperError.throwInstantiationError;
+
+    /**
+     * Reconstructs a <code>MapProjection</object> object from the input JSON.
+     *
+     * @function
+     * @private
+     *
+     * @param {SerializedMapProjection} serializedMapProjection A JSON object from which the MapProjection can be rebuilt.
+     * @returns {Promise.<MapProjection>} A Promise that resolves to a MapProjection that is ready for use, or rejects if the SerializedMapProjection is malformed.
+     */
+    MapProjection.deserialize = DeveloperError.throwInstantiationError;
+
+    /**
      * Unprojects projection-specific map {@link Cartesian3} coordinates, in meters, to {@link Cartographic}
      * coordinates, in radians.
      *
@@ -104,7 +127,10 @@ define([
         Check.defined('result', result);
         //>>includeEnd('debug');
 
-        var projectedExtents = Rectangle.approximateProjectedExtents(Rectangle.MAX_VALUE, mapProjection, maxcoordRectangleScratch);
+        var projectedExtents = Rectangle.approximateProjectedExtents({
+            cartographicRectangle : Rectangle.MAX_VALUE,
+            mapProjection : mapProjection
+        }, maxcoordRectangleScratch);
         var projectedCenter = Rectangle.center(projectedExtents, rectangleCenterScratch);
 
         result.x = projectedCenter.longitude + projectedExtents.width * 0.5;

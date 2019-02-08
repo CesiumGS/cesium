@@ -6,12 +6,12 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/defined',
+        '../Core/deserializeMapProjection',
         '../Core/Ellipsoid',
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
-        '../Core/SerializedMapProjection',
         '../Core/TerrainEncoding',
         '../Core/Transforms',
         '../Core/WebMercatorProjection',
@@ -24,12 +24,12 @@ define([
         Cartesian3,
         Cartographic,
         defined,
+        deserializeMapProjection,
         Ellipsoid,
         IndexDatatype,
         CesiumMath,
         Matrix4,
         OrientedBoundingBox,
-        SerializedMapProjection,
         TerrainEncoding,
         Transforms,
         WebMercatorProjection,
@@ -39,7 +39,7 @@ define([
     var maxShort = 32767;
 
     function createVerticesFromQuantizedTerrainMesh(parameters, transferableObjects) {
-        return SerializedMapProjection.deserialize(parameters.serializedMapProjection).then(function(mapProjection) {
+        return deserializeMapProjection(parameters.serializedMapProjection).then(function(mapProjection) {
             return implementation(parameters, transferableObjects, mapProjection);
         });
     }

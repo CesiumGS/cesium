@@ -5,7 +5,6 @@ defineSuite([
         'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
         'Core/Math',
-        'Core/SerializedMapProjection',
         'Core/TerrainData',
         'Core/TerrainMesh',
         'ThirdParty/when'
@@ -16,7 +15,6 @@ defineSuite([
         GeographicProjection,
         GeographicTilingScheme,
         CesiumMath,
-        SerializedMapProjection,
         TerrainData,
         TerrainMesh,
         when) {
@@ -27,7 +25,8 @@ defineSuite([
      });
 
      describe('upsample', function() {
-        var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
+        var geographicProjection = new GeographicProjection();
+        var serializedMapProjection = geographicProjection.serialize();
 
          function findVertexWithCoordinates(uBuffer, vBuffer, u, v) {
              u *= 32767;
@@ -368,7 +367,8 @@ defineSuite([
      describe('createMesh', function() {
          var data;
          var tilingScheme;
-         var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
+         var geographicProjection = new GeographicProjection();
+         var serializedMapProjection = geographicProjection.serialize();
 
          beforeEach(function() {
              tilingScheme = new GeographicTilingScheme();

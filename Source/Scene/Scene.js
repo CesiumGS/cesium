@@ -36,7 +36,6 @@ define([
         '../Core/PixelFormat',
         '../Core/Ray',
         '../Core/RequestScheduler',
-        '../Core/SerializedMapProjection',
         '../Core/ShowGeometryInstanceAttribute',
         '../Core/TaskProcessor',
         '../Core/Transforms',
@@ -122,7 +121,6 @@ define([
         PixelFormat,
         Ray,
         RequestScheduler,
-        SerializedMapProjection,
         ShowGeometryInstanceAttribute,
         TaskProcessor,
         Transforms,
@@ -448,7 +446,7 @@ define([
 
         var mapProjection = defined(options.mapProjection) ? options.mapProjection : new GeographicProjection();
         this._mapProjection = mapProjection;
-        this._serializedMapProjection = new SerializedMapProjection(mapProjection);
+        this._serializedMapProjection = mapProjection.serialize();
         this._maxCoord2D = MapProjection.approximateMaximumCoordinate(mapProjection, new Cartesian2());
 
         /**

@@ -11,7 +11,9 @@ define([
         './getAbsoluteUri',
         './isDataUri',
         './loadAndExecuteScript',
+        './MapProjectionType',
         './RuntimeError',
+        './SerializedMapProjection',
         '../ThirdParty/when'
     ], function(
         Cartesian3,
@@ -26,7 +28,9 @@ define([
         getAbsoluteUri,
         isDataUri,
         loadAndExecuteScript,
+        MapProjectionType,
         RuntimeError,
+        SerializedMapProjection,
         when) {
     'use strict';
 
@@ -70,6 +74,33 @@ define([
         this._ready = false;
         this._readyPromise = buildCustomProjection(this, absoluteUrl);
     }
+
+    /**
+     * Returns a JSON object that can be messaged to a web worker.
+     *
+     * @private
+     * @returns {SerializedMapProjection} A JSON object from which the MapProjection can be rebuilt.
+     */
+    CustomProjection.prototype.serialize = function() {
+        var json = {
+            url : this.url,
+            ellipsoid : Ellipsoid.pack(this.ellipsoid, [])
+        };
+        return new SerializedMapProjection(MapProjectionType.CUSTOM, json);
+    };
+
+    /**
+     * Reconstructs a <code>CustomProjection</object> from the input JSON.
+     *
+     * @private
+     * @param {SerializedMapProjection} serializedMapProjection A JSON object from which the MapProjection can be rebuilt.
+     * @returns {Promise.<CustomProjection>} A Promise that resolves to a MapProjection that is ready for use, or rejects if the SerializedMapProjection is malformed.
+     */
+    CustomProjection.deserialize = function(serializedMapProjection) {
+        var json = serializedMapProjection.json;
+        var projection = new CustomProjection(json.url, Ellipsoid.unpack(json.ellipsoid));
+        return projection.readyPromise;
+    };
 
     defineProperties(CustomProjection.prototype, {
         /**

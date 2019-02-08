@@ -212,4 +212,22 @@ defineSuite([
             return projection.unproject();
         }).toThrowDeveloperError();
     });
+
+    it('serializes and deserializes', function() {
+        var projection = new Proj4Projection({
+            wellKnownText : webMercatorWellKnownText,
+            heightScale : 0.5,
+            projectedBounds : webMercatorProjectedBounds
+        });
+        var serialized = projection.serialize();
+
+        return Proj4Projection.deserialize(serialized)
+            .then(function(deserializedProjection) {
+                expect(projection.ellipsoid.equals(deserializedProjection.ellipsoid)).toBe(true);
+                expect(projection.wellKnownText).toEqual(deserializedProjection.wellKnownText);
+                expect(projection.heightScale).toEqual(deserializedProjection.heightScale);
+                expect(projection.wgs84Bounds.equals(deserializedProjection.wgs84Bounds)).toBe(true);
+                expect(projection.projectedBounds.equals(deserializedProjection.projectedBounds)).toBe(true);
+            });
+    });
 });
