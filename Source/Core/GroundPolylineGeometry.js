@@ -85,6 +85,7 @@ define([
      * @param {Number} [options.granularity=9999.0] The distance interval in meters used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
      * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
      * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference
      *
      * @exception {DeveloperError} At least two positions are required.
      *
@@ -145,7 +146,12 @@ define([
          */
         this.arcType = defaultValue(options.arcType, ArcType.GEODESIC);
 
-        this._ellipsoid = Ellipsoid.WGS84;
+        /**
+         * The ellipsoid to be used as a reference
+         * @type {Ellipsoid}
+         * @default Ellipsoid.WGS84
+         */
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
 
         // MapProjections can't be packed, so store the index to a known MapProjection.
         this._projectionIndex = 0;
