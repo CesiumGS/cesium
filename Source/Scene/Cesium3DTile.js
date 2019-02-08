@@ -637,8 +637,8 @@ define([
 
         // If camera's direction vector is inside the bounding sphere then consider
         // this tile right along the line of sight and set _foveatedFactor to 0.
-        // Otherwise, _foveatedFactor is the dot product of the camera's direction
-        // and the vector between the camera and the closest point on the bounding sphere.
+        // Otherwise,_foveatedFactor is one minus the dot product of the camera's direction
+        // and the vector between the camera and the point on the bounding sphere closest to the view line.
         if (distanceSquared > radius * radius) {
             var toLineNormalized = Cartesian3.normalize(distanceToLine, scratchCartesian);
             var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalized, radius, scratchCartesian);
@@ -650,13 +650,7 @@ define([
             tile._foveatedFactor = 0;
         }
 
-        // If parent is deferred so is the child.
-        if (defined(tile.parent) && tile.parent._priorityDeferred) {
-            return true;
-        }
-
-        // The max foveated factor is 1 - cos(fieldOfView/2), where the fieldOfView is 60 degrees.
-        var maxFoveatedFactor = 0.14;
+        var maxFoveatedFactor = 1 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60
         var foveatedConeFactor = tileset.foveatedConeSize * maxFoveatedFactor;
 
         // If it's inside the user-defined view cone, then it should not be deferred.
@@ -664,10 +658,10 @@ define([
             return false;
         }
 
-        // Relax SSE based on how big the angle is between the tile and the camera's direction vector.
+        // Relax SSE based on how big the angle is between the tile and the edge of the fovea cone.
         var range = maxFoveatedFactor - foveatedConeFactor;
         var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0, 1);
-        var sseRelaxation = tileset.foveatedInterpolationFunction(tileset.foveatedMinimumScreenSpaceError, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
+        var sseRelaxation = tileset.foveatedInterpolationFunction(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
 
         return (tileset.maximumScreenSpaceError - sseRelaxation) < tile._screenSpaceError;
     }
