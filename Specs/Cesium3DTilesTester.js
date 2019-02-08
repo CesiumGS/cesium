@@ -114,6 +114,7 @@ define([
     Cesium3DTilesTester.loadTileset = function(scene, url, options) {
         options = defaultValue(options, {});
         options.url = url;
+        options.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, false);
         // Load all visible tiles
         var tileset = scene.primitives.add(new Cesium3DTileset(options));
 
