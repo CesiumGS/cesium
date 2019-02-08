@@ -156,9 +156,7 @@ defineSuite([
         scene.primitives.add(globePrimitive);
         scene.primitives.add(tilesetPrimitive);
 
-        options = {
-            cullRequestsWhileMoving: false
-        };
+        options = {};
     });
 
     afterEach(function() {
@@ -168,9 +166,10 @@ defineSuite([
     });
 
     it('classifies 3D Tiles', function() {
-        options.classificationType = ClassificationType.CESIUM_3D_TILE;
-        options.modelMatrix = modelMatrix;
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {
+            classificationType : ClassificationType.CESIUM_3D_TILE,
+            modelMatrix : modelMatrix
+        }).then(function(tileset) {
             globePrimitive.show = false;
             tilesetPrimitive.show = true;
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
@@ -183,10 +182,10 @@ defineSuite([
     });
 
     it('classifies globe', function() {
-        options.classificationType = ClassificationType.TERRAIN;
-        options.modelMatrix = modelMatrix;
-        options.cullRequestsWhileMoving = false;
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {
+            classificationType : ClassificationType.TERRAIN,
+            modelMatrix : modelMatrix
+        }).then(function(tileset) {
             globePrimitive.show = false;
             tilesetPrimitive.show = true;
             Cesium3DTilesTester.expectRenderBlank(scene, tileset);
@@ -199,10 +198,10 @@ defineSuite([
     });
 
     it('classifies both 3D Tiles and globe', function() {
-        options.classificationType = ClassificationType.BOTH;
-        options.modelMatrix = modelMatrix;
-        options.cullRequestsWhileMoving = false;
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {
+            classificationType : ClassificationType.BOTH,
+            modelMatrix : modelMatrix
+        }).then(function(tileset) {
             globePrimitive.show = false;
             tilesetPrimitive.show = true;
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
@@ -215,19 +214,19 @@ defineSuite([
     });
 
     it('renders with batch table', function() {
-        options.classificationType = ClassificationType.BOTH;
-        options.modelMatrix = modelMatrix;
-        options.cullRequestsWhileMoving = false;
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, {
+            classificationType : ClassificationType.BOTH,
+            modelMatrix : modelMatrix
+        }).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
 
     it('renders with binary batch table', function() {
-        options.classificationType = ClassificationType.BOTH;
-        options.modelMatrix = modelMatrix;
-        options.cullRequestsWhileMoving = false;
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableBinaryUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableBinaryUrl, {
+            classificationType : ClassificationType.BOTH,
+            modelMatrix : modelMatrix
+        }).then(function(tileset) {
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
         });
     });
