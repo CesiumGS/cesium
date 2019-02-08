@@ -15,7 +15,6 @@ defineSuite([
     var scene;
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
-    var options;
 
     var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/tileset.json';
     var compositeOfComposite = './Data/Cesium3DTiles/Composite/CompositeOfComposite/tileset.json';
@@ -34,12 +33,6 @@ defineSuite([
 
     afterEach(function() {
         scene.primitives.removeAll();
-    });
-
-    beforeEach(function() {
-        options = {
-            cullRequestsWhileMoving: false
-        };
     });
 
     function expectRenderComposite(tileset) {
@@ -103,7 +96,7 @@ defineSuite([
     });
 
     it('resolves readyPromise', function() {
-        return Cesium3DTilesTester.resolvesReadyPromise(scene, compositeUrl, options);
+        return Cesium3DTilesTester.resolvesReadyPromise(scene, compositeUrl);
     });
 
     it('rejects readyPromise on error', function() {
