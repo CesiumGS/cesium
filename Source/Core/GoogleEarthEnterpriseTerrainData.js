@@ -204,7 +204,11 @@ define([
                     result.numberOfAttributes,
                     result.orientedBoundingBox,
                     TerrainEncoding.clone(result.encoding),
-                    exaggeration);
+                    exaggeration,
+                    result.westIndicesSouthToNorth,
+                    result.southIndicesEastToWest,
+                    result.eastIndicesNorthToSouth,
+                    result.northIndicesWestToEast);
 
                 that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
                 that._skirtIndex = result.skirtIndex;
