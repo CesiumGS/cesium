@@ -44,6 +44,7 @@ define([
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the ellipse.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipse casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipse will be displayed.
+     * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this ellipse will classify terrain, 3D Tiles, or both when on the ground.
      * @param {ConstantProperty} [options.zIndex=0] A property specifying the zIndex of the Ellipse.  Used for ordering ground geometry.  Only has an effect if the ellipse is constant and neither height or exturdedHeight are specified.
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
@@ -254,7 +255,7 @@ define([
          * Gets or sets the {@link ClassificationType} Property specifying whether this ellipse will classify terrain, 3D Tiles, or both when on the ground.
          * @memberof EllipseGraphics.prototype
          * @type {Property}
-         * @default ClassificationType.TERRAIN
+         * @default ClassificationType.BOTH
          */
         classificationType : createPropertyDescriptor('classificationType'),
 

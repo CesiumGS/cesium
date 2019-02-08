@@ -16,7 +16,10 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Shaders/PostProcessStages/DepthViewPacked',
         '../Shaders/PostProcessStages/PassThrough',
-        '../Shaders/PostProcessStages/PassThroughDepth'
+        '../Shaders/PostProcessStages/PassThroughDepth',
+        './StencilConstants',
+        './StencilFunction',
+        './StencilOperation'
     ], function(
         BoundingRectangle,
         Color,
@@ -35,7 +38,10 @@ define([
         TextureMinificationFilter,
         DepthViewPacked,
         PassThrough,
-        PassThroughDepth) {
+        PassThroughDepth,
+        StencilConstants,
+        StencilFunction,
+        StencilOperation) {
     'use strict';
 
     /**
@@ -45,16 +51,23 @@ define([
         this._colorTexture = undefined;
         this._depthStencilTexture = undefined;
         this._globeDepthTexture = undefined;
+        this._tempGlobeDepthTexture = undefined;
+        this._tempCopyDepthTexture = undefined;
 
         this.framebuffer = undefined;
         this._copyDepthFramebuffer = undefined;
+        this._tempCopyDepthFramebuffer = undefined;
+        this._updateDepthFramebuffer = undefined;
 
         this._clearColorCommand = undefined;
         this._copyColorCommand = undefined;
         this._copyDepthCommand = undefined;
+        this._tempCopyDepthCommand = undefined;
+        this._updateDepthCommand = undefined;
 
         this._viewport = new BoundingRectangle();
         this._rs = undefined;
+        this._rsUpdate = undefined;
 
         this._useScissorTest = false;
         this._scissorRectangle = undefined;
@@ -109,6 +122,39 @@ define([
     function destroyFramebuffers(globeDepth) {
         globeDepth.framebuffer = globeDepth.framebuffer && !globeDepth.framebuffer.isDestroyed() && globeDepth.framebuffer.destroy();
         globeDepth._copyDepthFramebuffer = globeDepth._copyDepthFramebuffer && !globeDepth._copyDepthFramebuffer.isDestroyed() && globeDepth._copyDepthFramebuffer.destroy();
+    }
+
+    function destroyUpdateDepthResources(globeDepth) {
+        globeDepth._tempCopyDepthFramebuffer = globeDepth._tempCopyDepthFramebuffer && !globeDepth._tempCopyDepthFramebuffer.isDestroyed() && globeDepth._tempCopyDepthFramebuffer.destroy();
+        globeDepth._updateDepthFramebuffer = globeDepth._updateDepthFramebuffer && !globeDepth._updateDepthFramebuffer.isDestroyed() && globeDepth._updateDepthFramebuffer.destroy();
+        globeDepth._tempGlobeDepthTexture = globeDepth._tempGlobeDepthTexture && !globeDepth._tempGlobeDepthTexture.isDestroyed() && globeDepth._tempGlobeDepthTexture.destroy();
+    }
+
+    function createUpdateDepthResources(globeDepth, context, width, height, passState) {
+        globeDepth._tempGlobeDepthTexture = new Texture({
+            context : context,
+            width : width,
+            height : height,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.NEAREST,
+                magnificationFilter : TextureMagnificationFilter.NEAREST
+            })
+        });
+        globeDepth._tempCopyDepthFramebuffer = new Framebuffer({
+            context : context,
+            colorTextures : [globeDepth._tempGlobeDepthTexture],
+            destroyAttachments : false
+        });
+        globeDepth._updateDepthFramebuffer = new Framebuffer({
+            context : context,
+            colorTextures : [globeDepth._globeDepthTexture],
+            depthStencilTexture : passState.framebuffer.depthStencilTexture,
+            destroyAttachments : false
+        });
     }
 
     function createTextures(globeDepth, context, width, height, hdr) {
@@ -197,6 +243,26 @@ define([
                     rectangle : globeDepth._scissorRectangle
                 }
             });
+            // Copy packed depth only if the 3D Tiles bit is set
+            globeDepth._rsUpdate = RenderState.fromCache({
+                viewport : globeDepth._viewport,
+                scissorTest : {
+                    enabled : globeDepth._useScissorTest,
+                    rectangle : globeDepth._scissorRectangle
+                },
+                stencilTest : {
+                    enabled : true,
+                    frontFunction : StencilFunction.EQUAL,
+                    frontOperation : {
+                        fail : StencilOperation.KEEP,
+                        zFail : StencilOperation.KEEP,
+                        zPass : StencilOperation.KEEP
+                    },
+                    backFunction : StencilFunction.NEVER,
+                    reference : StencilConstants.CESIUM_3D_TILE_MASK,
+                    mask : StencilConstants.CESIUM_3D_TILE_MASK
+                }
+            });
         }
 
         if (!defined(globeDepth._copyDepthCommand)) {
@@ -211,6 +277,7 @@ define([
         }
 
         globeDepth._copyDepthCommand.framebuffer = globeDepth._copyDepthFramebuffer;
+        globeDepth._copyDepthCommand.renderState = globeDepth._rs;
 
         if (!defined(globeDepth._copyColorCommand)) {
             globeDepth._copyColorCommand = context.createViewportQuadCommand(PassThrough, {
@@ -223,8 +290,33 @@ define([
             });
         }
 
-        globeDepth._copyDepthCommand.renderState = globeDepth._rs;
-        globeDepth._copyColorCommand.renderState = globeDepth._rs;
+        if (!defined(globeDepth._tempCopyDepthCommand)) {
+            globeDepth._tempCopyDepthCommand = context.createViewportQuadCommand(PassThroughDepth, {
+                uniformMap : {
+                    u_depthTexture : function() {
+                        return globeDepth._tempCopyDepthTexture;
+                    }
+                },
+                owner : globeDepth
+            });
+        }
+
+        globeDepth._tempCopyDepthCommand.framebuffer = globeDepth._tempCopyDepthFramebuffer;
+        globeDepth._tempCopyDepthCommand.renderState = globeDepth._rs;
+
+        if (!defined(globeDepth._updateDepthCommand)) {
+            globeDepth._updateDepthCommand = context.createViewportQuadCommand(PassThrough, {
+                uniformMap : {
+                    colorTexture : function() {
+                        return globeDepth._tempGlobeDepthTexture;
+                    }
+                },
+                owner : globeDepth
+            });
+        }
+
+        globeDepth._updateDepthCommand.framebuffer = globeDepth._updateDepthFramebuffer;
+        globeDepth._updateDepthCommand.renderState = globeDepth._rsUpdate;
 
         if (!defined(globeDepth._clearColorCommand)) {
             globeDepth._clearColorCommand = new ClearCommand({
@@ -259,6 +351,36 @@ define([
         }
     };
 
+    GlobeDepth.prototype.executeUpdateDepth = function(context, passState, clearGlobeDepth) {
+        var depthTextureToCopy = passState.framebuffer.depthStencilTexture;
+        if (clearGlobeDepth || (depthTextureToCopy !== this._depthStencilTexture)) {
+            // First copy the depth to a temporary globe depth texture, then update the
+            // main globe depth texture where the stencil bit for 3D Tiles is set.
+            // This preserves the original globe depth except where 3D Tiles is rendered.
+            // The additional texture and framebuffer resources are created on demand.
+            if (defined(this._updateDepthCommand)) {
+                if (!defined(this._updateDepthFramebuffer) ||
+                    (this._updateDepthFramebuffer.depthStencilTexture !== depthTextureToCopy) ||
+                    (this._updateDepthFramebuffer.getColorTexture(0) !== this._globeDepthTexture)) {
+                    var width = this._globeDepthTexture.width;
+                    var height = this._globeDepthTexture.height;
+                    destroyUpdateDepthResources(this);
+                    createUpdateDepthResources(this, context, width, height, passState);
+                    updateCopyCommands(this, context, width, height, passState);
+                }
+                this._tempCopyDepthTexture = depthTextureToCopy;
+                this._tempCopyDepthCommand.execute(context, passState);
+                this._updateDepthCommand.execute(context, passState);
+            }
+            return;
+        }
+
+        // Fast path - the depth texture can be copied normally.
+        if (defined(this._copyDepthCommand)) {
+            this._copyDepthCommand.execute(context, passState);
+        }
+    };
+
     GlobeDepth.prototype.executeCopyColor = function(context, passState) {
         if (defined(this._copyColorCommand)) {
             this._copyColorCommand.execute(context, passState);
@@ -280,6 +402,7 @@ define([
     GlobeDepth.prototype.destroy = function() {
         destroyTextures(this);
         destroyFramebuffers(this);
+        destroyUpdateDepthResources(this);
 
         if (defined(this._copyColorCommand)) {
             this._copyColorCommand.shaderProgram = this._copyColorCommand.shaderProgram.destroy();

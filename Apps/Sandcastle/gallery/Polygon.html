@@ -125,6 +125,21 @@ var cyanPolygon = viewer.entities.add({
     }
 });
 
+var purplePolygonUsingRhumbLines = viewer.entities.add({
+    name : 'Purple polygon using rhumb lines with outline',
+    polygon : {
+        hierarchy : Cesium.Cartesian3.fromDegreesArray([-120.0, 45.0,
+                                                        -80.0, 45.0,
+                                                        -80.0, 55.0,
+                                                        -120.0, 55.0]),
+        extrudedHeight: 50000,
+        material : Cesium.Color.PURPLE,
+        outline : true,
+        outlineColor : Cesium.Color.MAGENTA,
+        arcType : Cesium.ArcType.RHUMB
+    }
+});
+
 viewer.zoomTo(viewer.entities);//Sandcastle_End
     Sandcastle.finishedLoading();
 }

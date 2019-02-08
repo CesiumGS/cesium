@@ -550,6 +550,10 @@ defineSuite([
                     return false;
                 }
 
+                // We know this tile is available, so we don't need to load the level 0 and level 10
+                //  tile to compute the availability.
+                terrainProvider._availability.addAvailableTileRange(11, 3788, 1336, 3788, 1336);
+
                 GlobeSurfaceTile.processStateMachine(tile, scene.frameState, terrainProvider, imageryLayerCollection, []);
                 RequestScheduler.update();
                 return tile.state === QuadtreeTileLoadState.DONE;
