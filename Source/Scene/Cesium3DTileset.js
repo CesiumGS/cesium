@@ -269,25 +269,8 @@ define([
          * @default true
          */
         this.foveatedScreenSpaceError = defaultValue(options.foveatedScreenSpaceError, false);
-
-        /**
-         * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred.
-         * Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and {@link Cesium3DTileset#foveatedInterpolationFunction} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}.
-         * Setting this to 0 means the cone will be the line formed by the camera position and its view direction. Setting it 1 means the cone encompasses the entire field of view of the camera, essentially disabling the effect.
-         *
-         * @type {Number}
-         * @default 0.3
-         */
-        this.foveatedConeSize = defaultValue(options.foveatedConeSize, 0.3);
-
-        /**
-         * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone.
-         * The screen space error will be raised starting with this value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationFunction}.
-         *
-         * @type {Number}
-         * @default 0
-         */
-        this.foveatedMinimumScreenSpaceErrorRelaxation = defaultValue(options.foveatedMinimumScreenSpaceErrorRelaxation, 0);
+        this._foveatedConeSize = defaultValue(options.foveatedConeSize, 0.3);
+        this._foveatedMinimumScreenSpaceErrorRelaxation = defaultValue(options.foveatedMinimumScreenSpaceErrorRelaxation, 0);
 
         /**
          * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone,
@@ -1364,6 +1347,49 @@ define([
         ellipsoid : {
             get : function() {
                 return this._ellipsoid;
+            }
+        },
+
+        /**
+         * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred.
+         * Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and {@link Cesium3DTileset#foveatedInterpolationFunction} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}.
+         * Setting this to 0 means the cone will be the line formed by the camera position and its view direction. Setting it 1 means the cone encompasses the entire field of view of the camera, essentially disabling the effect.
+         *
+         * @type {Number}
+         * @default 0.3
+         */
+        foveatedConeSize : {
+            get : function() {
+                return this._foveatedConeSize;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
+                Check.typeOf.number.lessThanOrEquals('value', value, 1.0);
+                //>>includeEnd('debug');
+
+                this._foveatedConeSize = value;
+            }
+        },
+
+        /**
+         * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone.
+         * The screen space error will be raised starting with this value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationFunction}.
+         *
+         * @type {Number}
+         * @default 0
+         */
+        foveatedMinimumScreenSpaceErrorRelaxation : {
+            get : function() {
+                return this._foveatedMinimumScreenSpaceErrorRelaxation;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number.greaterThanOrEquals('value', value, 0);
+                Check.typeOf.number.lessThanOrEquals('value', value, this.maximumScreenSpaceError);
+                //>>includeEnd('debug');
+
+                this._foveatedMinimumScreenSpaceErrorRelaxation = value;
             }
         },
 
