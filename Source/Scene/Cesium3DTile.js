@@ -662,8 +662,9 @@ define([
         var range = maxFoveatedFactor - foveatedConeFactor;
         var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0, 1);
         var sseRelaxation = tileset.foveatedInterpolationFunction(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
+        var sse = tile._screenSpaceError === 0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
 
-        return (tileset.maximumScreenSpaceError - sseRelaxation) < tile._screenSpaceError;
+        return (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
     }
 
     var scratchJulianDate = new JulianDate();
