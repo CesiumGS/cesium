@@ -13,7 +13,6 @@ defineSuite([
     var scene;
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
-    var options;
 
     var tilesetOfTilesetsUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
 
@@ -23,9 +22,6 @@ defineSuite([
         // Point the camera at the center and far enough way to only load the root tile
         var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 100.0));
-        options = {
-            cullRequestsWhileMoving: false
-        };
     });
 
     afterAll(function() {
@@ -37,7 +33,7 @@ defineSuite([
     });
 
     it('resolves readyPromise', function() {
-        return Cesium3DTilesTester.resolvesReadyPromise(scene, tilesetOfTilesetsUrl, options);
+        return Cesium3DTilesTester.resolvesReadyPromise(scene, tilesetOfTilesetsUrl);
     });
 
     it('destroys', function() {
@@ -45,7 +41,7 @@ defineSuite([
     });
 
     it('gets properties', function() {
-        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
             var tile = tileset.root;
             var content = tile.content;
             expect(content.featuresLength).toBe(0);
