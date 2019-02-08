@@ -46,7 +46,7 @@ defineSuite([
             .then(function(deserializedProjection) {
                 expect(deserializedProjection instanceof CustomProjection).toBe(true);
                 expect(projection.ellipsoid.equals(deserializedProjection.ellipsoid)).toBe(true);
-                expect(deserializedProjection.url).toEqual(serialized.url);
+                expect(projection.url).toEqual(deserializedProjection.url);
             });
     });
 
@@ -75,8 +75,11 @@ defineSuite([
     });
 
     it('throws an error for unrecognized serializations', function() {
-        expect(function() {
-            return deserializeMapProjection({});
-        }).toThrowError();
+        return deserializeMapProjection({})
+            .then(function() {
+                fail('should not resolve');
+            }).otherwise(function(error) {
+                expect(error).toBeDefined();
+            });
     });
 });
