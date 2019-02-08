@@ -51,7 +51,6 @@ defineSuite([
     var scene;
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
-    var options;
 
     var pointCloudRGBUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGB/tileset.json';
     var pointCloudRGBAUrl = './Data/Cesium3DTiles/PointCloud/PointCloudRGBA/tileset.json';
@@ -95,9 +94,6 @@ defineSuite([
         camera.frustum.fov = CesiumMath.toRadians(60.0);
 
         setCamera(centerLongitude, centerLatitude);
-        options = {
-            cullRequestsWhileMoving: false
-        };
     });
 
     afterEach(function() {
@@ -189,7 +185,7 @@ defineSuite([
     });
 
     it('gets tileset properties', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var root = tileset.root;
             var content = root.content;
             expect(content.tileset).toBe(tileset);
@@ -203,61 +199,61 @@ defineSuite([
     });
 
     it('renders point cloud with rgb colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with rgba colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBAUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBAUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with rgb565 colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGB565Url, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGB565Url).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with no colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with constant colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudConstantColorUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudConstantColorUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with oct encoded normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsOctEncodedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsOctEncodedUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with quantized positions', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with quantized positions and oct-encoded normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with draco encoded positions, normals, colors, and batch table properties', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
             // Test that Draco-encoded batch table properties are functioning correctly
             tileset.style = new Cesium3DTileStyle({
@@ -272,13 +268,13 @@ defineSuite([
     });
 
     it('renders point cloud with draco encoded positions and uncompressed normals and colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoPartialUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoPartialUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with draco encoded positions, colors, and batch ids', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoBatchedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoBatchedUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
@@ -289,7 +285,7 @@ defineSuite([
         }).then(function() {
             var decoder = DracoLoader._getDecoderTaskProcessor();
             spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
-            return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl, options).then(function(tileset) {
+            return Cesium3DTilesTester.loadTileset(scene, pointCloudDracoUrl).then(function(tileset) {
                 var root = tileset.root;
                 return root.contentReadyPromise.then(function() {
                     fail('should not resolve');
@@ -301,25 +297,25 @@ defineSuite([
     });
 
     it('renders point cloud that are not defined relative to center', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudWGS84Url, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWGS84Url).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with batch table', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with per-point properties', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
         });
     });
 
     it('renders point cloud with tile transform', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithTransformUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithTransformUrl).then(function(tileset) {
             Cesium3DTilesTester.expectRender(scene, tileset);
 
             var newLongitude = -1.31962;
@@ -339,7 +335,7 @@ defineSuite([
 
     it('renders with debug color', function() {
         CesiumMath.setRandomNumberSeed(0);
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
                 color = rgba;
@@ -352,7 +348,7 @@ defineSuite([
     });
 
     it('renders in CV', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             scene.morphToColumbusView(0.0);
             setCamera(centerLongitude, centerLatitude);
             Cesium3DTilesTester.expectRender(scene, tileset);
@@ -360,7 +356,7 @@ defineSuite([
     });
 
     it('renders in 2D', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             scene.morphTo2D(0.0);
             setCamera(centerLongitude, centerLatitude);
             tileset.maximumScreenSpaceError = 3;
@@ -369,7 +365,7 @@ defineSuite([
     });
 
     it('picks', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var content = tileset.root.content;
             tileset.show = false;
             expect(scene).toPickPrimitive(undefined);
@@ -383,7 +379,7 @@ defineSuite([
     });
 
     it('picks based on batchId', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             // Get the original color
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
@@ -410,7 +406,7 @@ defineSuite([
     });
 
     it('point cloud without batch table works', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var content = tileset.root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
@@ -420,7 +416,7 @@ defineSuite([
     });
 
     it('batched point cloud works', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             var content = tileset.root.content;
             expect(content.featuresLength).toBe(8);
             expect(content.innerContents).toBeUndefined();
@@ -433,7 +429,7 @@ defineSuite([
         // When the batch table contains per-point properties, aka no batching, then a Cesium3DTileBatchTable is not
         // created. There is no per-point show/color/pickId because the overhead is too high. Instead points are styled
         // based on their properties, and these are not accessible from the API.
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
             var content = tileset.root.content;
             expect(content.featuresLength).toBe(0);
             expect(content.innerContents).toBeUndefined();
@@ -443,7 +439,7 @@ defineSuite([
     });
 
     it('throws when calling getFeature with invalid index', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             var content = tileset.root.content;
             expect(function(){
                 content.getFeature(-1);
@@ -458,7 +454,7 @@ defineSuite([
     });
 
     it('Supports back face culling when there are per-point normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             var content = tileset.root.content;
 
             // Get the number of picked sections with back face culling on
@@ -522,7 +518,7 @@ defineSuite([
         scene.postProcessStages.fxaa.enabled = false;
         scene.camera.zoomIn(6);
 
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             tileset.pointCloudShading.eyeDomeLighting = false;
             tileset.root.refine = Cesium3DTileRefine.REPLACE;
             postLoadCallback(scene, tileset);
@@ -612,7 +608,7 @@ defineSuite([
     });
 
     it('applies shader style', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
             var content = tileset.root.content;
 
             // Solid red color
@@ -714,7 +710,7 @@ defineSuite([
     });
 
     it('rebuilds shader style when expression changes', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudTilesetUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudTilesetUrl).then(function(tileset) {
             // Solid red color
             tileset.style = new Cesium3DTileStyle({
                 color : 'color("red")'
@@ -752,7 +748,7 @@ defineSuite([
     });
 
     it('applies shader style to point cloud with normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({
                 color : 'color("red")'
             });
@@ -764,7 +760,7 @@ defineSuite([
     });
 
     it('applies shader style to point cloud with normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({
                 color : 'color("red")'
             });
@@ -775,7 +771,7 @@ defineSuite([
     });
 
     it('applies shader style to point cloud without colors', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({
                 color : 'color("red")'
             });
@@ -784,7 +780,7 @@ defineSuite([
     });
 
     it('throws if style references the NORMAL semantic but the point cloud does not have per-point normals', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({
                 color : '${NORMAL}[0] > 0.5'
             });
@@ -795,7 +791,7 @@ defineSuite([
     });
 
     it('throws when shader style reference a non-existent property', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudWithPerPointPropertiesUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({
                 color : 'color() * ${non_existent_property}'
             });
@@ -806,7 +802,7 @@ defineSuite([
     });
 
     it('does not apply shader style if the point cloud has a batch table', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             var content = tileset.root.content;
             var shaderProgram = content._pointCloud._drawCommand.shaderProgram;
             tileset.style = new Cesium3DTileStyle({
@@ -821,7 +817,7 @@ defineSuite([
     });
 
     it('throws when shader style is invalid', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({
                 show : '1 < "2"'
             });
@@ -833,10 +829,10 @@ defineSuite([
 
     it('gets memory usage', function() {
         var promises = [
-            Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl, options),
-            Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options),
-            Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl, options),
-            Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl, options)
+            Cesium3DTilesTester.loadTileset(scene, pointCloudNoColorUrl),
+            Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl),
+            Cesium3DTilesTester.loadTileset(scene, pointCloudNormalsUrl),
+            Cesium3DTilesTester.loadTileset(scene, pointCloudQuantizedOctEncodedUrl)
         ];
 
         // 1000 points
@@ -858,7 +854,7 @@ defineSuite([
     });
 
     it('gets memory usage for batch point cloud', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudBatchedUrl).then(function(tileset) {
             var content = tileset.root.content;
 
             // Point cloud consists of positions, colors, normals, and batchIds
@@ -890,7 +886,7 @@ defineSuite([
     });
 
     it('rebuilds shaders when clipping planes are enabled, change between union and intersection, or change count', function () {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var tile = tileset.root;
             tile._isClipped = true;
             var content = tile.content;
@@ -934,7 +930,7 @@ defineSuite([
     });
 
     it('clipping planes selectively disable rendering', function () {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
                 color = rgba;
@@ -956,7 +952,7 @@ defineSuite([
     });
 
     it('clipping planes apply edge styling', function() {
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
                 color = rgba;
@@ -980,7 +976,7 @@ defineSuite([
         // Force uint8 mode - there's a slight rendering difference between
         // float and packed uint8 clipping planes for this test due to the small context
         spyOn(ClippingPlaneCollection, 'useFloatTexture').and.returnValue(false);
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
                 color = rgba;
@@ -1008,7 +1004,7 @@ defineSuite([
             // This configuration for the test fails in uint8 mode due to the small context
             return;
         }
-        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
                 color = rgba;
