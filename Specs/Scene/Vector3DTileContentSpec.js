@@ -168,9 +168,7 @@ defineSuite([
         // wrap rectangle primitive so it gets executed during the globe pass and 3D Tiles pass to lay down depth
         globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
         tilesetPrimitive = new MockPrimitive(reusableTilesetPrimitive, Pass.CESIUM_3D_TILE);
-        options = {
-            cullRequestsWhileMoving: false
-        };
+        options = {};
     });
 
     afterEach(function() {
@@ -181,8 +179,13 @@ defineSuite([
     });
 
     function loadTileset(tileset) {
+        tileset.cullRequestsWhileMoving = false;
         scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)), new Cartesian3(0.0, 0.0, 0.01));
         return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
+    }
+
+    function setupCamera() {
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)), new Cartesian3(0.0, 0.0, 0.01));
     }
 
     function expectPick(scene) {
@@ -447,9 +450,8 @@ defineSuite([
     }
 
     it('renders points', function() {
-        options.url = vectorPoints;
-        tileset = scene.primitives.add(new Cesium3DTileset(options));
-        return loadTileset(tileset).then(function(tileset) {
+        setupCamera();
+        return Cesium3DTilesTester.loadTileset(scene, vectorPoints).then(function(tileset) {
             verifyRenderPoints(tileset, scene);
             verifyPickPoints(scene);
         });
