@@ -80,7 +80,7 @@ define([
      *
      * @param {JulianDate} date The date to evaluate the matrix.
      * @param {Matrix3} result The object onto which to store the result.
-     * @returns {Matrix} The modified result parameter or a new instance of the rotation from ICRF to Fixed.
+     * @returns {Matrix3} The modified result parameter or a new instance of the rotation from ICRF to Fixed.
      */
     IauOrientationAxes.prototype.evaluate = function(date, result) {
         if (!defined(date)) {

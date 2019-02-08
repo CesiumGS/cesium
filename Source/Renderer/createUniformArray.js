@@ -61,10 +61,14 @@ define([
         }
     }
 
+    /**
+     * @private
+     */
     function UniformArrayFloat(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
-        /**
+          /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -98,10 +102,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformArrayFloatVec2(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
-        /**
+          /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -137,10 +145,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformArrayFloatVec3(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
-        /**
+          /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -193,10 +205,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformArrayFloatVec4(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
-        /**
+          /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -255,10 +271,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformArraySampler(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -300,10 +320,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformArrayInt(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -337,10 +361,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformArrayIntVec2(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -376,10 +404,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformArrayIntVec3(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -415,10 +447,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformArrayIntVec4(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -454,10 +490,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformArrayMat2(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -493,10 +533,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformArrayMat3(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;
@@ -532,10 +576,14 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
+    /**
+     * @private
+     */
     function UniformArrayMat4(gl, activeUniform, uniformName, locations) {
         var length = locations.length;
 
         /**
+         * @type {String}
          * @readonly
          */
         this.name = uniformName;

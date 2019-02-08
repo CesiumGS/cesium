@@ -162,8 +162,13 @@ define([
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
 
-        this._brdfLut = new Sampler();
-        this._environmentMap = new Sampler();
+        this._brdfLut = undefined;
+        this._environmentMap = undefined;
+
+        this._sphericalHarmonicCoefficients = undefined;
+        this._specularEnvironmentMaps = undefined;
+        this._specularEnvironmentMapsDimensions = new Cartesian2();
+        this._specularEnvironmentMapsMaximumLOD = undefined;
 
         this._fogDensity = undefined;
 
@@ -860,7 +865,7 @@ define([
         /**
          * The look up texture used to find the BRDF for a material
          * @memberof UniformState.prototype
-         * @type {Sampler}
+         * @type {Texture}
          */
         brdfLut : {
             get : function() {
@@ -871,11 +876,55 @@ define([
         /**
          * The environment map of the scene
          * @memberof UniformState.prototype
-         * @type {Sampler}
+         * @type {CubeMap}
          */
         environmentMap : {
             get : function() {
                 return this._environmentMap;
+            }
+        },
+
+        /**
+         * The spherical harmonic coefficients of the scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3[]}
+         */
+        sphericalHarmonicCoefficients : {
+            get : function() {
+                return this._sphericalHarmonicCoefficients;
+            }
+        },
+
+        /**
+         * The specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Texture}
+         */
+        specularEnvironmentMaps : {
+            get : function() {
+                return this._specularEnvironmentMaps;
+            }
+        },
+
+        /**
+         * The dimensions of the specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian2}
+         */
+        specularEnvironmentMapsDimensions : {
+            get : function() {
+                return this._specularEnvironmentMapsDimensions;
+            }
+        },
+
+        /**
+         * The maximum level-of-detail of the specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        specularEnvironmentMapsMaximumLOD : {
+            get : function() {
+                return this._specularEnvironmentMapsMaximumLOD;
             }
         },
 
@@ -1057,6 +1106,8 @@ define([
         this._pass = pass;
     };
 
+    var EMPTY_ARRAY = [];
+
     /**
      * Synchronizes frame state with the uniform state.  This is called
      * by the {@link Scene} when rendering to ensure that automatic GLSL uniforms
@@ -1092,6 +1143,16 @@ define([
         this._brdfLut = brdfLut;
 
         this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
+
+        // IE 11 doesn't optimize out uniforms that are #ifdef'd out. So undefined values for the spherical harmonic
+        // coefficients and specular environment map atlas dimensions cause a crash.
+        this._sphericalHarmonicCoefficients = defaultValue(frameState.sphericalHarmonicCoefficients, EMPTY_ARRAY);
+        this._specularEnvironmentMaps = frameState.specularEnvironmentMaps;
+        this._specularEnvironmentMapsMaximumLOD = frameState.specularEnvironmentMapsMaximumLOD;
+
+        if (defined(this._specularEnvironmentMaps)) {
+            Cartesian2.clone(this._specularEnvironmentMaps.dimensions, this._specularEnvironmentMapsDimensions);
+        }
 
         this._fogDensity = frameState.fog.density;
 
