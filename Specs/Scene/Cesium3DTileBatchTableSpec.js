@@ -33,7 +33,6 @@ defineSuite([
     var scene;
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
-    var options;
 
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
     var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json';
@@ -70,12 +69,6 @@ defineSuite([
 
     afterAll(function() {
         scene.destroyForSpecs();
-    });
-
-    beforeEach(function() {
-        options = {
-            cullRequestsWhileMoving: false
-        };
     });
 
     afterEach(function() {
@@ -556,7 +549,7 @@ defineSuite([
     });
 
     it('renders tileset with batch table', function() {
-        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl, options).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             var content = tileset.root.content;
 
             // Each feature in the b3dm file has an id property from 0 to 9,
