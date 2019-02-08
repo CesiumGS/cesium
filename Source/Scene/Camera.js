@@ -120,9 +120,17 @@ define([
          * The position delta magnitude.
          *
          * @type {Cartesian3}
+         * @private
          */
-        this._positionWCDeltaMagnitude = 0;
-        this._positionWCDeltaMagnitudeLastFrame = 0;
+        this.positionWCDeltaMagnitude = 0;
+
+        /**
+         * The position delta magnitude last frame.
+         *
+         * @type {Cartesian3}
+         * @private
+         */
+        this.positionWCDeltaMagnitudeLastFrame = 0;
 
         /**
          * The view direction of the camera.
@@ -288,9 +296,9 @@ define([
         if (!defined(scratchOldPositionWC)) {
             scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
         } else {
-            camera._positionWCDeltaMagnitudeLastFrame = camera._positionWCDeltaMagnitude;
+            camera.positionWCDeltaMagnitudeLastFrame = camera.positionWCDeltaMagnitude;
             var delta = Cartesian3.subtract(camera.positionWC, scratchOldPositionWC, scratchOldPositionWC);
-            camera._positionWCDeltaMagnitude = Cartesian3.magnitude(delta);
+            camera.positionWCDeltaMagnitude = Cartesian3.magnitude(delta);
             scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
         }
     }

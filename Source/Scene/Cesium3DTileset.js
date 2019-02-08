@@ -113,8 +113,8 @@ define([
      * @param {Number} [options.maximumScreenSpaceError=16] The maximum screen space error used to drive level of detail refinement.
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
-     * @param {Number} [options.cullRequestsWhileMovingMultiplier=60] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling. 60 default.
      * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
+     * @param {Number} [options.cullRequestsWhileMovingMultiplier=60] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
      * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
@@ -230,8 +230,8 @@ define([
         this._maxPriority = { depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
         this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
-        this.cullRequestsWhileMovingMultiplier = defaultValue(options.cullRequestsWhileMovingMultiplier, 60);
         this.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, true);
+        this.cullRequestsWhileMovingMultiplier = defaultValue(options.cullRequestsWhileMovingMultiplier, 60);
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -2006,11 +2006,9 @@ define([
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         if (progressChanged && tileset._tilesLoaded) {
-            if (!defined(frameState.camera._currentFlight)) {
-                frameState.afterRender.push(function() {
-                    tileset.allTilesLoaded.raiseEvent();
-                });
-            }
+            frameState.afterRender.push(function() {
+                tileset.allTilesLoaded.raiseEvent();
+            });
             if (!tileset._initialTilesLoaded) {
                 tileset._initialTilesLoaded = true;
                 frameState.afterRender.push(function() {

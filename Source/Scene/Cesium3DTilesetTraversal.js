@@ -210,11 +210,10 @@ define([
         }
 
         var sphere = tile.boundingSphere;
-        var diameter = sphere.radius * 2;
-        diameter = diameter === 0 ? 1 : diameter;
+        var diameter = Math.max(sphere.radius * 2.0, 1.0);
 
         var camera = frameState.camera;
-        var deltaMagnitude = camera._positionWCDeltaMagnitude !== 0 ? camera._positionWCDeltaMagnitude : camera._positionWCDeltaMagnitudeLastFrame;
+        var deltaMagnitude = camera.positionWCDeltaMagnitude !== 0 ? camera.positionWCDeltaMagnitude : camera.positionWCDeltaMagnitudeLastFrame;
         var movementRatio = tileset.cullRequestsWhileMovingMultiplier * deltaMagnitude / diameter; // How do n frames of this movement compare to the tile's physical size.
         return movementRatio < 1;
     }
