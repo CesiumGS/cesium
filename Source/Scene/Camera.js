@@ -139,7 +139,7 @@ define([
         this._direction = new Cartesian3();
         this._directionWC = new Cartesian3();
 
-        /*
+        /**
          * The up direction of the camera.
          *
          * @type {Cartesian3}

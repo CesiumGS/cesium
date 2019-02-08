@@ -50,7 +50,6 @@ defineSuite([
     var modelMatrix;
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
-    var options;
 
     var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
     var withBatchTableBinaryUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTableBinary/tileset.json';
@@ -155,8 +154,6 @@ defineSuite([
 
         scene.primitives.add(globePrimitive);
         scene.primitives.add(tilesetPrimitive);
-
-        options = {};
     });
 
     afterEach(function() {
