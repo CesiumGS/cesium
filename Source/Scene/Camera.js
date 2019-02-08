@@ -119,7 +119,6 @@ define([
         /**
          * The position delta magnitude.
          *
-         * @type {Cartesian3}
          * @private
          */
         this.positionWCDeltaMagnitude = 0;
@@ -127,7 +126,6 @@ define([
         /**
          * The position delta magnitude last frame.
          *
-         * @type {Cartesian3}
          * @private
          */
         this.positionWCDeltaMagnitudeLastFrame = 0;
