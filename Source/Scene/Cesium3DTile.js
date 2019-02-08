@@ -658,7 +658,7 @@ define([
             return false;
         }
 
-        // Relax SSE based on how big the angle is between the tile and the edge of the fovea cone.
+        // Relax SSE based on how big the angle is between the tile and the edge of the foveated cone.
         var range = maxFoveatedFactor - foveatedConeFactor;
         var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0, 1);
         var sseRelaxation = tileset.foveatedInterpolationFunction(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
