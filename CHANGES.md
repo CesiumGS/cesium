@@ -8,6 +8,7 @@ Change Log
 
 ##### Additions :tada:
 * `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
+* Added support for touch and hold gesture. The touch and hold delay can be customized by updating `ScreenSpaceEventHandler.touchHoldDelayMilliseconds`. [#7286](https://github.com/AnalyticalGraphicsInc/cesium/pull/7286)
 
 ##### Fixes :wrench:
 * Fixed an issue where models would cause a crash on load if some primitives were Draco encoded and others were not. [#7383](https://github.com/AnalyticalGraphicsInc/cesium/issues/7383)
