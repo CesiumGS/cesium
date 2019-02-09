@@ -956,7 +956,10 @@ define([
         if (containsNeededPosition(primitive, tile)) {
             // Load the tile(s) that contains the camera's position and
             // the origin of its reference frame with medium priority.
-            queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
+            // But we only need to load until the terrain is available, no need to load imagery.
+            if (!defined(tile.data) || !defined(tile.data.vertexArray)) {
+                queueTileLoad(primitive, primitive._tileLoadQueueMedium, tile, frameState);
+            }
 
             var lastFrame = primitive._lastSelectionFrameNumber;
             var lastFrameSelectionResult = tile._lastSelectionResultFrame === lastFrame ? tile._lastSelectionResult : TileSelectionResult.NONE;
