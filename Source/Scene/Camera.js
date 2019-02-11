@@ -121,7 +121,7 @@ define([
          *
          * @private
          */
-        this._oldPositionWC;
+        this._oldPositionWC = undefined;
 
         /**
          * The position delta magnitude.
