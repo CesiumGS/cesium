@@ -274,7 +274,7 @@ define([
 
         /**
          * Optimization option. Used as a callback when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone,
-         * interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
+         * interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}.
          *
          * @callback Cesium3DTileset~foveatedInterpolationCallback
          * @default Math.lerp
@@ -283,6 +283,12 @@ define([
          * @param {Number} q The end value to interpolate.
          * @param {Number} time The time of interpolation generally in the range <code>[0.0, 1.0]</code>.
          * @returns {Number} The interpolated value.
+         */
+
+        /**
+         * Gets a function that will update the foveated screen space error for a tile.
+         *
+         * @returns {Cesium3DTileset~foveatedInterpolationCallback} A callback to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}.
          */
         this.foveatedInterpolationCallback = defaultValue(options.foveatedInterpolationCallback, CesiumMath.lerp);
 
