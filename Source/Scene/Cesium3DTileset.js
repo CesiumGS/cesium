@@ -1353,6 +1353,8 @@ define([
          * Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}.
          * Setting this to 0 means the cone will be the line formed by the camera position and its view direction. Setting it 1 means the cone encompasses the entire field of view of the camera, essentially disabling the effect.
          *
+         * @memberof Cesium3DTileset.prototype
+         *
          * @type {Number}
          * @default 0.3
          */
@@ -1373,6 +1375,8 @@ define([
         /**
          * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone.
          * The screen space error will be raised starting with this value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationCallback}.
+         *
+         * @memberof Cesium3DTileset.prototype
          *
          * @type {Number}
          * @default 0
