@@ -115,12 +115,6 @@ define([
         this._position = new Cartesian3();
         this._positionWC = new Cartesian3();
         this._positionCartographic = new Cartographic();
-
-        /**
-         * The positionWC last frame.
-         *
-         * @private
-         */
         this._oldPositionWC = undefined;
 
         /**
