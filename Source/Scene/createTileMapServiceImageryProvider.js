@@ -191,7 +191,11 @@ define([
                     });
 
                     if (!defined(options.rectangle)) {
-                        options.rectangle = Rectangle.approximateCartographicExtents(projectedRectangle, options.mapProjection, new Rectangle(), Math.max(width, height));
+                        options.rectangle = Rectangle.approximateCartographicExtents({
+                            projectedRectangle : projectedRectangle,
+                            mapProjection : options.mapProjection,
+                            steps : Math.max(width, height)
+                        });
                     }
 
                 } else {

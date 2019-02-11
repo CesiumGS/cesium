@@ -51,7 +51,10 @@ define([
         var mapProjection = options.mapProjection;
         var projectedRectangle = options.projectedRectangle;
 
-        var cartographicRectangle = Rectangle.approximateCartographicExtents(projectedRectangle, mapProjection, new Rectangle());
+        var cartographicRectangle = Rectangle.approximateCartographicExtents({
+            projectedRectangle : projectedRectangle,
+            mapProjection : mapProjection
+        });
 
         var numberOfLevelZeroTilesX = defaultValue(options.numberOfLevelZeroTilesX, 1);
         var numberOfLevelZeroTilesY = defaultValue(options.numberOfLevelZeroTilesY, 1);
@@ -136,7 +139,10 @@ define([
      */
     ProjectedImageryTilingScheme.prototype.getProjectedTilesForNativeTile = function(x, y, level) {
         var tileRectangle = this.tileXYToRectangle(x, y, level, tileRectangleScratch);
-        var tileProjectedRectangle = Rectangle.approximateProjectedExtents(tileRectangle, this._projection, tileProjectedRectangleScratch);
+        var tileProjectedRectangle = Rectangle.approximateProjectedExtents({
+            cartographicRectangle : tileRectangle,
+            mapProjection : this._projection
+        }, tileProjectedRectangleScratch);
 
         // Figure out which tiles at this level the projected rectangle covers.
         // March over to get a list.

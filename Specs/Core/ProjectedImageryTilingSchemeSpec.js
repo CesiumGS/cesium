@@ -13,8 +13,13 @@ defineSuite([
     'use strict';
 
     var mollweideWellKnownText = '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs';
-    var mollweideProjection = new Proj4Projection(mollweideWellKnownText);
-    var mollweideProjectedRectangle = Rectangle.approximateProjectedExtents(Rectangle.MAX_VALUE, mollweideProjection);
+    var mollweideProjection = new Proj4Projection({
+        wellKnownText : mollweideWellKnownText
+    });
+    var mollweideProjectedRectangle = Rectangle.approximateProjectedExtents({
+        cartographicRectangle : Rectangle.MAX_VALUE,
+        mapProjection : mollweideProjection
+    });
     var mollweideProjectedCenter = Rectangle.center(mollweideProjectedRectangle);
 
     it('conforms to TilingScheme interface.', function() {

@@ -30,7 +30,9 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var esri53028wkt = '+proj=cass +lat_0=0 +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs';
-var cassini = new Cesium.Proj4Projection(esri53028wkt);
+var cassini = new Cesium.Proj4Projection({
+    wellKnownText : esri53028wkt
+});
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     mapProjection : cassini,
@@ -38,7 +40,10 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var epsg3411wkt = '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs';
 var epsg3411bounds = Cesium.Rectangle.fromDegrees(-180.0000, 30.0000, 180.0000, 90.0000);
-var epsg3411mapProjection = new Cesium.Proj4Projection(epsg3411wkt, 1.0, epsg3411bounds);
+var epsg3411mapProjection = new Cesium.Proj4Projection({
+    wellKnownText : epsg3411wkt,
+    wgs84Bounds : epsg3411bounds
+});
 
 var tilingScheme = new Cesium.ProjectedImageryTilingScheme({
     mapProjection : epsg3411mapProjection,
@@ -65,7 +70,10 @@ arcticImageryLayer.brightness = 1.8;
 
 var epsg3031wkt = '+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 +x_0=0 +y_0=0 +ellps=WGS84 +datum=WGS84 +units=m +no_defs';
 var epsg3031Bounds = Cesium.Rectangle.fromDegrees(-180.0000, -90.0000, 180.0000, -60.0000);
-var epsg3031mapProjection = new Cesium.Proj4Projection(epsg3031wkt, 1.0, epsg3031Bounds);
+var epsg3031mapProjection = new Cesium.Proj4Projection({
+    wellKnownText : epsg3031wkt,
+    wgs84Bounds : epsg3031Bounds
+});
 
 // Add TMS layer derived from Landsat Imagery Mosaic of Antarctica (LIMA)
 var limaProvider = Cesium.createTileMapServiceImageryProvider({
