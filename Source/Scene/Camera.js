@@ -117,6 +117,13 @@ define([
         this._positionCartographic = new Cartographic();
 
         /**
+         * The positionWC last frame.
+         *
+         * @private
+         */
+        this._oldPositionWC;
+
+        /**
          * The position delta magnitude.
          *
          * @private
@@ -289,15 +296,14 @@ define([
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
 
-    var scratchOldPositionWC;
     function getCameraDeltas(camera) {
-        if (!defined(scratchOldPositionWC)) {
-            scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
+        if (!defined(camera._oldPositionWC)) {
+            camera._oldPositionWC = Cartesian3.clone(camera.positionWC, camera._oldPositionWC);
         } else {
             camera.positionWCDeltaMagnitudeLastFrame = camera.positionWCDeltaMagnitude;
-            var delta = Cartesian3.subtract(camera.positionWC, scratchOldPositionWC, scratchOldPositionWC);
+            var delta = Cartesian3.subtract(camera.positionWC, camera._oldPositionWC, camera._oldPositionWC);
             camera.positionWCDeltaMagnitude = Cartesian3.magnitude(delta);
-            scratchOldPositionWC = Cartesian3.clone(camera.positionWC, scratchOldPositionWC);
+            camera._oldPositionWC = Cartesian3.clone(camera.positionWC, camera._oldPositionWC);
         }
     }
 
