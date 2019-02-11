@@ -297,7 +297,7 @@ define([
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
-     * @param {MapMode2D} [options.mapMode2D] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction. MapMode2D.INFINITE_SCROLL is default for scenes using GeographicProjection or WebMercatorProjection.
+     * @param {MapMode2D} [options.mapMode2D] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction. <code>MapMode2D.INFINITE_SCROLL</code> is default for scenes using {@link GeographicProjection} or {@link WebMercatorProjection}.
      * @param {Boolean} [options.projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
      * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
@@ -750,6 +750,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 } else {
                     that.zoomTo(entity);
                 }
+            } else if (defined(that.trackedEntity)) {
+                that.trackedEntity = undefined;
             }
         }
 

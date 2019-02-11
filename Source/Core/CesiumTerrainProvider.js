@@ -9,7 +9,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './deprecationWarning',
         './DeveloperError',
         './Event',
         './GeographicTilingScheme',
@@ -37,7 +36,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         Event,
         GeographicTilingScheme,
@@ -177,19 +175,8 @@ define([
                     url: 'layer.json'
                 });
 
-                var uri = new Uri(layerJsonResource.url);
-                if (uri.authority === 'assets.agi.com') {
-                    var deprecationText = 'STK World Terrain at assets.agi.com was shut down on October 1, 2018.';
-                    var deprecationLinkText = 'Check out the new high-resolution Cesium World Terrain for migration instructions.';
-                    var deprecationLink = 'https://cesium.com/blog/2018/03/01/introducing-cesium-world-terrain/';
-                    that._tileCredits = [
-                        new Credit('<span><b>' + deprecationText + '</b></span> <a href="' + deprecationLink + '">' + deprecationLinkText + '</a>', true)
-                    ];
-                    deprecationWarning('assets.agi.com', deprecationText + ' ' + deprecationLinkText + ' ' + deprecationLink);
-                } else {
-                    // ion resources have a credits property we can use for additional attribution.
-                    that._tileCredits = resource.credits;
-                }
+                // ion resources have a credits property we can use for additional attribution.
+                that._tileCredits = resource.credits;
 
                 requestLayerJson();
             })
@@ -1012,11 +999,8 @@ define([
         }
 
         var availabilityLevels = layer.availabilityLevels;
-        if (level % availabilityLevels === 0) {
-            level -= availabilityLevels;
-        }
-
-        var parentLevel = ((level / availabilityLevels) | 0) * availabilityLevels;
+        var parentLevel = (level % availabilityLevels === 0) ?
+            (level - availabilityLevels) : ((level / availabilityLevels) | 0) * availabilityLevels;
         var divisor = 1 << (level - parentLevel);
         var parentX = (x / divisor) | 0;
         var parentY = (y / divisor) | 0;
@@ -1083,6 +1067,9 @@ define([
             result: false
         };
     }
+
+    // Used for testing
+    CesiumTerrainProvider._getAvailabilityTile = getAvailabilityTile;
 
     return CesiumTerrainProvider;
 });

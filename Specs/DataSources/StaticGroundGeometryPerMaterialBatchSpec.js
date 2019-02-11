@@ -21,6 +21,7 @@ defineSuite([
         'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
         'DataSources/TimeIntervalCollectionProperty',
+        'Scene/ClassificationType',
         'Scene/GroundPrimitive',
         'Scene/MaterialAppearance',
         'Scene/PolylineColorAppearance',
@@ -50,6 +51,7 @@ defineSuite([
         PolylineGeometryUpdater,
         PolylineGraphics,
         TimeIntervalCollectionProperty,
+        ClassificationType,
         GroundPrimitive,
         MaterialAppearance,
         PolylineColorAppearance,
@@ -82,7 +84,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance, new GeographicProjection());
 
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
@@ -137,6 +139,7 @@ defineSuite([
         }
 
         var validTime = JulianDate.fromIso8601('2018-02-14T04:10:00+1100');
+        var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
         var ddc = new TimeIntervalCollectionProperty();
         ddc.intervals.addInterval(TimeInterval.fromIso8601({
             iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
@@ -153,7 +156,7 @@ defineSuite([
             }
         });
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance, new GeographicProjection());
 
         var updater = new EllipseGeometryUpdater(entity, scene);
         batch.add(validTime, updater);
@@ -169,12 +172,63 @@ defineSuite([
             var attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes.distanceDisplayCondition).toEqualEpsilon([1.0, 2.0], CesiumMath.EPSILON6);
 
-            batch.update(time);
-            scene.render(time);
+            batch.update(outOfRangeTime);
+            scene.render(outOfRangeTime);
 
             primitive = scene.primitives.get(0);
             attributes = primitive.getGeometryInstanceAttributes(entity);
             expect(attributes.distanceDisplayCondition).toEqual([0.0, Infinity]);
+
+            batch.removeAllPrimitives();
+        });
+    });
+
+    it('updates with sampled show out of range', function() {
+        if (!GroundPrimitive.isSupported(scene) || !GroundPrimitive.supportsMaterials(scene)) {
+            // Don't fail if materials on GroundPrimitive not supported
+            return;
+        }
+
+        var validTime = JulianDate.fromIso8601('2018-02-14T04:10:00+1100');
+        var outOfRangeTime = JulianDate.fromIso8601('2018-02-14T04:20:00+1100');
+        var show = new TimeIntervalCollectionProperty();
+        show.intervals.addInterval(TimeInterval.fromIso8601({
+            iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:15:00+1100',
+            data: true
+        }));
+        var entity = new Entity({
+            availability: new TimeIntervalCollection([TimeInterval.fromIso8601({iso8601: '2018-02-14T04:00:00+1100/2018-02-14T04:30:00+1100'})]),
+            position : new Cartesian3(1234, 5678, 9101112),
+            ellipse: {
+                semiMajorAxis : 2,
+                semiMinorAxis : 1,
+                material : new GridMaterialProperty(),
+                show: show
+            }
+        });
+
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance, new GeographicProjection());
+
+        var updater = new EllipseGeometryUpdater(entity, scene);
+        batch.add(validTime, updater);
+
+        return pollToPromise(function() {
+            scene.initializeFrame();
+            var isUpdated = batch.update(validTime);
+            scene.render(validTime);
+            return isUpdated;
+        }).then(function() {
+            expect(scene.primitives.length).toEqual(1);
+            var primitive = scene.primitives.get(0);
+            var attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes.show).toEqual([1]);
+
+            batch.update(outOfRangeTime);
+            scene.render(outOfRangeTime);
+
+            primitive = scene.primitives.get(0);
+            attributes = primitive.getGeometryInstanceAttributes(entity);
+            expect(attributes.show).toEqual([0]);
 
             batch.removeAllPrimitives();
         });
@@ -186,7 +240,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance, new GeographicProjection());
 
         function buildEntity(x, y, z) {
             var material = new GridMaterialProperty({
@@ -260,7 +314,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance, new GeographicProjection());
 
         var ellipse = new EllipseGraphics();
         ellipse.semiMajorAxis = new ConstantProperty(2);
@@ -305,7 +359,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance, new GeographicProjection());
         var entity = new Entity({
             position : new Cartesian3(1234, 5678, 9101112),
             ellipse : {
@@ -351,7 +405,7 @@ defineSuite([
             return;
         }
 
-        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, MaterialAppearance, new GeographicProjection());
+        var batch = new StaticGroundGeometryPerMaterialBatch(scene.primitives, ClassificationType.BOTH, MaterialAppearance, new GeographicProjection());
 
         function buildEntity(x, y, z) {
             var material = new GridMaterialProperty({

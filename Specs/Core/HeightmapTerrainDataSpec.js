@@ -2,13 +2,11 @@ defineSuite([
         'Core/HeightmapTerrainData',
         'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
-        'Core/SerializedMapProjection',
         'Core/TerrainData'
     ], function(
         HeightmapTerrainData,
         GeographicProjection,
         GeographicTilingScheme,
-        SerializedMapProjection,
         TerrainData) {
      'use strict';
 
@@ -52,7 +50,8 @@ defineSuite([
      describe('createMesh', function() {
          var data;
          var tilingScheme;
-         var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
+         var geographicProjection = new GeographicProjection();
+         var serializedMapProjection = geographicProjection.serialize();
 
          beforeEach(function() {
              tilingScheme = new GeographicTilingScheme();
@@ -97,7 +96,9 @@ defineSuite([
      describe('upsample', function() {
          var data;
          var tilingScheme;
-         var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
+
+         var geographicProjection = new GeographicProjection();
+         var serializedMapProjection = geographicProjection.serialize();
 
          beforeEach(function() {
              tilingScheme = new GeographicTilingScheme();

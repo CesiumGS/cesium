@@ -300,7 +300,7 @@ define([
         this._rotatingZoom = false;
 
         var projection = scene.mapProjection;
-        this._maxCoord = MapProjection.approximateMaximumCoordinate(projection);
+        this._maxCoord = MapProjection.approximateMaximumCoordinate(projection, new Cartesian2());
 
         // Constants, Make any of these public?
         this._zoomFactor = 5.0;

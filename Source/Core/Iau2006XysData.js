@@ -96,7 +96,7 @@ define([
      *                 the Terrestrial Time (TT) time standard.
      * @param {Number} stopSecondTT The seconds past noon of the end of the interval to preload, expressed in
      *                 the Terrestrial Time (TT) time standard.
-     * @returns {Promise.<undefined>} A promise that, when resolved, indicates that the requested interval has been
+     * @returns {Promise} A promise that, when resolved, indicates that the requested interval has been
      *                    preloaded.
      */
     Iau2006XysData.prototype.preload = function(startDayTT, startSecondTT, stopDayTT, stopSecondTT) {

@@ -336,89 +336,98 @@ defineSuite([
     it('generates 2D position attributes for projections other than Geographic and Web Mercator', function() {
         var width = 3;
         var height = 3;
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection');
+        var projection = new CustomProjection('Data/UserGeographic.js');
 
-        var options = {
-            heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
-            width : width,
-            height : height,
-            skirtHeight : 0.0,
-            nativeRectangle : {
-                west : 10.0,
-                south : 30.0,
-                east : 20.0,
-                north : 40.0
-            },
-            rectangle : new Rectangle(
-                CesiumMath.toRadians(10.0),
-                CesiumMath.toRadians(30.0),
-                CesiumMath.toRadians(20.0),
-                CesiumMath.toRadians(40.0))
-        };
-        var results = HeightmapTessellator.computeVertices(options, projection);
-        var vertices = results.vertices;
+        return projection.readyPromise.then(function() {
+            var options = {
+                heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
+                width : width,
+                height : height,
+                skirtHeight : 0.0,
+                nativeRectangle : {
+                    west : 10.0,
+                    south : 30.0,
+                    east : 20.0,
+                    north : 40.0
+                },
+                rectangle : new Rectangle(
+                    CesiumMath.toRadians(10.0),
+                    CesiumMath.toRadians(30.0),
+                    CesiumMath.toRadians(20.0),
+                    CesiumMath.toRadians(40.0))
+            };
+            var results = HeightmapTessellator.computeVertices(options, projection);
+            var vertices = results.vertices;
 
-        var rectangle = options.rectangle;
+            var rectangle = options.rectangle;
 
-        for (var j = 0; j < height; ++j) {
-            var latitude = CesiumMath.lerp(rectangle.north, rectangle.south, j / (height - 1));
-            for (var i = 0; i < width; ++i) {
-                var longitude = CesiumMath.lerp(rectangle.west, rectangle.east, i / (width - 1));
+            for (var j = 0; j < height; ++j) {
+                var latitude = CesiumMath.lerp(rectangle.north, rectangle.south, j / (height - 1));
+                for (var i = 0; i < width; ++i) {
+                    var longitude = CesiumMath.lerp(rectangle.west, rectangle.east, i / (width - 1));
 
-                var expectedVertexPosition2d = projection.project(new Cartographic(longitude, latitude));
+                    var expectedVertexPosition2d = projection.project(new Cartographic(longitude, latitude));
 
-                var index = (j * width + i) * 9 + 6;
-                var vertexPosition2d = new Cartesian3(vertices[index], vertices[index + 1], 0.0);
+                    var index = (j * width + i) * 9 + 6;
+                    var vertexPosition2d = new Cartesian3(vertices[index], vertices[index + 1], 0.0);
 
-                expect(Cartesian3.equalsEpsilon(vertexPosition2d, expectedVertexPosition2d, CesiumMath.EPSILON7)).toBe(true);
+                    expect(Cartesian3.equalsEpsilon(vertexPosition2d, expectedVertexPosition2d, CesiumMath.EPSILON7)).toBe(true);
+
+                    var heightSample = vertices[index + 2];
+                    expect(1.0 <= heightSample && heightSample <= 9.0).toBe(true);
+                }
             }
-        }
+        });
     });
 
     it('generates 2D position attributes with relative-to-center', function() {
         var width = 3;
         var height = 3;
-        var projection = new CustomProjection('Data/UserGeographic.txt', 'testProjection');
+        var projection = new CustomProjection('Data/UserGeographic.js');
+        return projection.readyPromise.then(function() {
+            var rectangle = new Rectangle(
+                CesiumMath.toRadians(10.0),
+                CesiumMath.toRadians(30.0),
+                CesiumMath.toRadians(20.0),
+                CesiumMath.toRadians(40.0));
 
-        var rectangle = new Rectangle(
-            CesiumMath.toRadians(10.0),
-            CesiumMath.toRadians(30.0),
-            CesiumMath.toRadians(20.0),
-            CesiumMath.toRadians(40.0));
+            var options = {
+                heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
+                width : width,
+                height : height,
+                skirtHeight : 0.0,
+                nativeRectangle : {
+                    west : 10.0,
+                    south : 30.0,
+                    east : 20.0,
+                    north : 40.0
+                },
+                rectangle : rectangle,
+                relativeToCenter : projection.ellipsoid.cartographicToCartesian(Rectangle.center(rectangle))
+            };
+            var results = HeightmapTessellator.computeVertices(options, projection);
+            var vertices = results.vertices;
+            var center2D = results.encoding.center2D;
 
-        var options = {
-            heightmap : [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0],
-            width : width,
-            height : height,
-            skirtHeight : 0.0,
-            nativeRectangle : {
-                west : 10.0,
-                south : 30.0,
-                east : 20.0,
-                north : 40.0
-            },
-            rectangle : rectangle,
-            relativeToCenter : projection.ellipsoid.cartographicToCartesian(Rectangle.center(rectangle))
-        };
-        var results = HeightmapTessellator.computeVertices(options, projection);
-        var vertices = results.vertices;
-        var center2D = results.encoding.center2D;
+            for (var j = 0; j < height; ++j) {
+                var latitude = CesiumMath.lerp(rectangle.north, rectangle.south, j / (height - 1));
+                for (var i = 0; i < width; ++i) {
+                    var longitude = CesiumMath.lerp(rectangle.west, rectangle.east, i / (width - 1));
 
-        for (var j = 0; j < height; ++j) {
-            var latitude = CesiumMath.lerp(rectangle.north, rectangle.south, j / (height - 1));
-            for (var i = 0; i < width; ++i) {
-                var longitude = CesiumMath.lerp(rectangle.west, rectangle.east, i / (width - 1));
+                    var expectedVertexPosition2d = projection.project(new Cartographic(longitude, latitude));
 
-                var expectedVertexPosition2d = projection.project(new Cartographic(longitude, latitude));
+                    var index = (j * width + i) * 9 + 6;
+                    var vertexPosition2d = new Cartesian3(vertices[index], vertices[index + 1], 0.0);
+                    vertexPosition2d.x += center2D.x;
+                    vertexPosition2d.y += center2D.y;
 
-                var index = (j * width + i) * 9 + 6;
-                var vertexPosition2d = new Cartesian3(vertices[index], vertices[index + 1], 0.0);
-                vertexPosition2d.x += center2D.x;
-                vertexPosition2d.y += center2D.y;
+                    expect(Cartesian3.equalsEpsilon(vertexPosition2d, expectedVertexPosition2d, CesiumMath.EPSILON7)).toBe(true);
 
-                expect(Cartesian3.equalsEpsilon(vertexPosition2d, expectedVertexPosition2d, CesiumMath.EPSILON7)).toBe(true);
+                    var heightSample = Math.floor(vertices[index + 2] + center2D.z);
+                    expect(1.0 <= heightSample && heightSample <= 9.0).toBe(true);
+                }
             }
-        }
+        });
     });
 
     it('supports multi-element little endian heights', function() {

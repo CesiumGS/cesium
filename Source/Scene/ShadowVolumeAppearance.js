@@ -410,7 +410,10 @@ define([
     var highLowScratch = {high : 0.0, low : 0.0};
     function add2DTextureCoordinateAttributes(rectangle, projection, attributes) {
         // Compute corner positions in double precision
-        var projectedExtents = Rectangle.approximateProjectedExtents(rectangle, projection, projectedExtentsScratch);
+        var projectedExtents = Rectangle.approximateProjectedExtents({
+            cartographicRectangle : rectangle,
+            mapProjection : projection
+        }, projectedExtentsScratch);
 
         var bottomLeftCorner = Rectangle.southwest(projectedExtents, cornerScratch);
         var topLeft = Rectangle.northwest(projectedExtents, topLeftScratch);

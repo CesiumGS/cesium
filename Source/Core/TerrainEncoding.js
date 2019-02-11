@@ -41,7 +41,7 @@ define([
      * @param {Matrix4} fromENU The east-north-up to fixed frame matrix at the center of the terrain mesh.
      * @param {Boolean} hasVertexNormals If the mesh has vertex normals.
      * @param {Boolean} [hasWebMercatorT=false] true if the terrain data includes a Web Mercator texture coordinate; otherwise, false.
-     * @param {Cartesian3} [center2D] Center in the projected space.
+     * @param {Cartesian3} [center2D] Center in the projected space. If defined, it is assumed that the projection requires 2D vertex attributes.
      *
      * @private
      */
@@ -146,7 +146,7 @@ define([
         this.hasWebMercatorT = defaultValue(hasWebMercatorT, false);
 
         /**
-         * Center of the 2.5D projected space. If defined, it is assumed that the projection requires 2D vertex attributes.
+         * Center of the 2.5D projected space.
          * @type {Cartesian3}
          */
         this.center2D = Cartesian3.clone(center2D);

@@ -85,6 +85,7 @@ varying vec3 v_normalEC;
 #ifdef APPLY_MATERIAL
 varying float v_height;
 varying float v_slope;
+varying float v_aspect;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
@@ -132,7 +133,11 @@ vec4 sampleAndBlend(
     vec3 color = value.rgb;
     float alpha = value.a;
 
-#ifdef APPLY_GAMMA
+#if !defined(APPLY_GAMMA)
+    vec4 tempColor = czm_gammaCorrect(vec4(color, alpha));
+    color = tempColor.rgb;
+    alpha = tempColor.a;
+#else
     color = pow(color, vec3(textureOneOverGamma));
 #endif
 
@@ -163,10 +168,6 @@ vec4 sampleAndBlend(
 #ifdef APPLY_SATURATION
     color = czm_saturation(color, textureSaturation);
 #endif
-
-    vec4 tempColor = czm_gammaCorrect(vec4(color, alpha));
-    color = tempColor.rgb;
-    alpha = tempColor.a;
 
     float sourceAlpha = alpha * textureAlpha;
     float outAlpha = mix(previousColor.a, 1.0, sourceAlpha);
@@ -279,6 +280,7 @@ void main()
     materialInput.normalEC = normalize(v_normalEC);
     materialInput.slope = v_slope;
     materialInput.height = v_height;
+    materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif

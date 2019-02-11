@@ -3,18 +3,14 @@ define([
         './Cartesian3',
         './Check',
         './defineProperties',
-        './defaultValue',
         './DeveloperError',
-        './Math',
         './Rectangle'
     ], function(
         Cartographic,
         Cartesian3,
         Check,
         defineProperties,
-        defaultValue,
         DeveloperError,
-        CesiumMath,
         Rectangle) {
     'use strict';
 
@@ -27,6 +23,8 @@ define([
      *
      * @see GeographicProjection
      * @see WebMercatorProjection
+     * @see CustomProjection
+     * @see Proj4Projection
      */
     function MapProjection() {
         DeveloperError.throwInstantiationError();
@@ -76,6 +74,27 @@ define([
     MapProjection.prototype.project = DeveloperError.throwInstantiationError;
 
     /**
+     * Returns a JSON object that can be messaged to a web worker.
+     *
+     * @memberof MapProjection
+     * @function
+     * @private
+     * @returns {SerializedMapProjection} A JSON object from which the MapProjection can be rebuilt.
+     */
+    MapProjection.prototype.serialize = DeveloperError.throwInstantiationError;
+
+    /**
+     * Reconstructs a <code>MapProjection</object> object from the input JSON.
+     *
+     * @function
+     * @private
+     *
+     * @param {SerializedMapProjection} serializedMapProjection A JSON object from which the MapProjection can be rebuilt.
+     * @returns {Promise.<MapProjection>} A Promise that resolves to a MapProjection that is ready for use, or rejects if the SerializedMapProjection is malformed.
+     */
+    MapProjection.deserialize = DeveloperError.throwInstantiationError;
+
+    /**
      * Unprojects projection-specific map {@link Cartesian3} coordinates, in meters, to {@link Cartographic}
      * coordinates, in radians.
      *
@@ -92,25 +111,32 @@ define([
     MapProjection.prototype.unproject = DeveloperError.throwInstantiationError;
 
     var maxcoordRectangleScratch = new Rectangle();
+    var rectangleCenterScratch = new Cartographic();
     /**
-     * Approximates the extents of a map projection in 2D.
+     * Approximates the X/Y extents of a map projection in 2D.
      *
      * @function
      *
      * @param {MapProjection} mapProjection A map projection from cartographic coordinates to 2D space.
-     * @param {Cartesian3} [result] Optional result parameter.
+     * @param {Cartesian2} result result parameter.
      * @private
      */
     MapProjection.approximateMaximumCoordinate = function(mapProjection, result) {
+        //>>includeStart('debug', pragmas.debug);
         Check.defined('mapProjection', mapProjection);
+        Check.defined('result', result);
+        //>>includeEnd('debug');
 
-        var maxCoord = defaultValue(result, new Cartesian3());
-        var projectedExtents = Rectangle.approximateProjectedExtents(Rectangle.MAX_VALUE, mapProjection, maxcoordRectangleScratch);
+        var projectedExtents = Rectangle.approximateProjectedExtents({
+            cartographicRectangle : Rectangle.MAX_VALUE,
+            mapProjection : mapProjection
+        }, maxcoordRectangleScratch);
+        var projectedCenter = Rectangle.center(projectedExtents, rectangleCenterScratch);
 
-        maxCoord.x = projectedExtents.width * 0.5;
-        maxCoord.y = projectedExtents.height * 0.5;
+        result.x = projectedCenter.longitude + projectedExtents.width * 0.5;
+        result.y = projectedCenter.latitude + projectedExtents.height * 0.5;
 
-        return maxCoord;
+        return result;
     };
 
     return MapProjection;

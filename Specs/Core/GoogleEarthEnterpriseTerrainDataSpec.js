@@ -7,7 +7,6 @@ defineSuite([
         'Core/GeographicTilingScheme',
         'Core/Math',
         'Core/Rectangle',
-        'Core/SerializedMapProjection',
         'Core/TerrainData',
         'Core/TerrainMesh',
         'ThirdParty/when'
@@ -20,7 +19,6 @@ defineSuite([
         GeographicTilingScheme,
         CesiumMath,
         Rectangle,
-        SerializedMapProjection,
         TerrainData,
         TerrainMesh,
         when) {
@@ -158,7 +156,8 @@ defineSuite([
                 tilingScheme.tileXYToRectangle(1, 1, 1)
             ];
 
-            var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
+            var geographicProjection = new GeographicProjection();
+            var serializedMapProjection = geographicProjection.serialize();
 
             return when(data.createMesh(tilingScheme, 0, 0, 0, serializedMapProjection, 1)).then(function() {
                 var swPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
@@ -226,7 +225,8 @@ defineSuite([
         var data;
         var tilingScheme;
         var buffer;
-        var serializedMapProjection = new SerializedMapProjection(new GeographicProjection());
+        var geographicProjection = new GeographicProjection();
+        var serializedMapProjection = geographicProjection.serialize();
 
         beforeEach(function() {
             tilingScheme = new GeographicTilingScheme();

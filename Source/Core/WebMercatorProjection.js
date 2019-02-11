@@ -6,7 +6,10 @@ define([
         './defineProperties',
         './DeveloperError',
         './Ellipsoid',
-        './Math'
+        './MapProjectionType',
+        './Math',
+        './SerializedMapProjection',
+        '../ThirdParty/when'
     ], function(
         Cartesian3,
         Cartographic,
@@ -15,7 +18,10 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
-        CesiumMath) {
+        MapProjectionType,
+        CesiumMath,
+        SerializedMapProjection,
+        when) {
     'use strict';
 
     /**
@@ -66,6 +72,27 @@ define([
             }
         }
     });
+
+    /**
+     * Returns a JSON object that can be messaged to a web worker.
+     *
+     * @private
+     * @returns {SerializedMapProjection} A JSON object from which the MapProjection can be rebuilt.
+     */
+    WebMercatorProjection.prototype.serialize = function() {
+        return new SerializedMapProjection(MapProjectionType.WEBMERCATOR, Ellipsoid.pack(this.ellipsoid, []));
+    };
+
+    /**
+     * Reconstructs a <code>WebMercatorProjection</object> object from the input JSON.
+     *
+     * @private
+     * @param {SerializedMapProjection} serializedMapProjection A JSON object from which the MapProjection can be rebuilt.
+     * @returns {Promise.<WebMercatorProjection>} A Promise that resolves to a MapProjection that is ready for use, or rejects if the SerializedMapProjection is malformed.
+     */
+    WebMercatorProjection.deserialize = function(serializedMapProjection) {
+        return when.resolve(new WebMercatorProjection(Ellipsoid.unpack(serializedMapProjection.json)));
+    };
 
     /**
      * Converts a Mercator angle, in the range -PI to PI, to a geodetic latitude

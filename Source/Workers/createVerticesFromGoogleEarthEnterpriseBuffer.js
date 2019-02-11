@@ -6,6 +6,7 @@ define([
         '../Core/Cartographic',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/deserializeMapProjection',
         '../Core/Ellipsoid',
         '../Core/EllipsoidalOccluder',
         '../Core/Math',
@@ -13,7 +14,6 @@ define([
         '../Core/OrientedBoundingBox',
         '../Core/Rectangle',
         '../Core/RuntimeError',
-        '../Core/SerializedMapProjection',
         '../Core/TerrainEncoding',
         '../Core/Transforms',
         '../Core/WebMercatorProjection',
@@ -26,6 +26,7 @@ define([
         Cartographic,
         defaultValue,
         defined,
+        deserializeMapProjection,
         Ellipsoid,
         EllipsoidalOccluder,
         CesiumMath,
@@ -33,7 +34,6 @@ define([
         OrientedBoundingBox,
         Rectangle,
         RuntimeError,
-        SerializedMapProjection,
         TerrainEncoding,
         Transforms,
         WebMercatorProjection,
@@ -62,7 +62,7 @@ define([
         parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
         parameters.rectangle = Rectangle.clone(parameters.rectangle);
 
-        return SerializedMapProjection.deserialize(parameters.serializedMapProjection).then(function(mapProjection) {
+        return deserializeMapProjection(parameters.serializedMapProjection).then(function(mapProjection) {
             var statistics = processBuffer(parameters.buffer, parameters.relativeToCenter, parameters.ellipsoid,
                 parameters.rectangle, parameters.nativeRectangle, parameters.exaggeration, parameters.skirtHeight,
                 parameters.includeWebMercatorT, parameters.negativeAltitudeExponentBias, parameters.negativeElevationThreshold,

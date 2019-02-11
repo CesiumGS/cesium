@@ -224,7 +224,7 @@ define([
         this._modeChanged = true;
         var projection = scene.mapProjection;
         this._projection = projection;
-        this._maxCoord = MapProjection.approximateMaximumCoordinate(projection);
+        this._maxCoord = MapProjection.approximateMaximumCoordinate(projection, new Cartesian2());
         this._max2Dfrustum = undefined;
         this._suspendTerrainAdjustment = false;
 

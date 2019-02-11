@@ -7,8 +7,13 @@ define([
         './defineProperties',
         './DeveloperError',
         './Ellipsoid',
+        './FeatureDetection',
         './getAbsoluteUri',
+        './isDataUri',
         './loadAndExecuteScript',
+        './MapProjectionType',
+        './RuntimeError',
+        './SerializedMapProjection',
         '../ThirdParty/when'
     ], function(
         Cartesian3,
@@ -19,33 +24,43 @@ define([
         defineProperties,
         DeveloperError,
         Ellipsoid,
+        FeatureDetection,
         getAbsoluteUri,
+        isDataUri,
         loadAndExecuteScript,
+        MapProjectionType,
+        RuntimeError,
+        SerializedMapProjection,
         when) {
     'use strict';
 
-    var loadedProjectionFunctions = {};
-
     /**
-     * MapProjection that uses custom project and unproject functions defined in an external file.
+     * {@link MapProjection} that uses custom project and unproject functions defined in user code.
      *
-     * The external file must contain a function named <code>createProjectionFunctions</code> that implements the
+     * User code may be provided via a URL to an external JavaScript source or via data URI on supported platforms.
+     *
+     * The user code must contain a function named <code>createProjectionFunctions</code> that implements the
      * <code>CustomProjection~factory</code> interface to provide <code>CustomProjection~project</code> and
      * <code>CustomProjection~unproject</code> functions to a callback.
      *
-     * Scenes using CustomProjection will default to MapMode2D.ROTATE instead of MapMode2D.INFINITE_SCROLL.
+     * Scenes using CustomProjection will default to <code>MapMode2D.ROTATE</code> instead of <code>MapMode2D.INFINITE_SCROLL</code>.
      *
      * @alias CustomProjection
      * @constructor
      *
-     * @param {String} options.url The url of the external file.
-     * @param {String} options.projectionName A name for this projection.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The MapProjection's ellipsoid.
+     * @param {String} url The url of the custom code.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The MapProjection's ellipsoid.
+     *
+     * @see MapProjection
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Map%20Projections.html|Map Projections Demo}
      */
-    function CustomProjection(url, projectionName, ellipsoid) {
+    function CustomProjection(url, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('url', url);
-        Check.typeOf.string('projectionName', projectionName);
+        // importScripts does not work with data URIs in Internet Explorer
+        if (FeatureDetection.isInternetExplorer() && isDataUri(url)) {
+            throw new DeveloperError('data URI projection code is not supported in Internet Explorer');
+        }
         //>>includeEnd('debug');
 
         this._ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -53,14 +68,39 @@ define([
         this._project = undefined;
         this._unproject = undefined;
 
-        this._projectionName = projectionName;
-
         var absoluteUrl = getAbsoluteUri(url);
         this._url = absoluteUrl;
 
         this._ready = false;
-        this._readyPromise = buildCustomProjection(this, absoluteUrl, projectionName);
+        this._readyPromise = buildCustomProjection(this, absoluteUrl);
     }
+
+    /**
+     * Returns a JSON object that can be messaged to a web worker.
+     *
+     * @private
+     * @returns {SerializedMapProjection} A JSON object from which the MapProjection can be rebuilt.
+     */
+    CustomProjection.prototype.serialize = function() {
+        var json = {
+            url : this.url,
+            ellipsoid : Ellipsoid.pack(this.ellipsoid, [])
+        };
+        return new SerializedMapProjection(MapProjectionType.CUSTOM, json);
+    };
+
+    /**
+     * Reconstructs a <code>CustomProjection</object> from the input JSON.
+     *
+     * @private
+     * @param {SerializedMapProjection} serializedMapProjection A JSON object from which the MapProjection can be rebuilt.
+     * @returns {Promise.<CustomProjection>} A Promise that resolves to a MapProjection that is ready for use, or rejects if the SerializedMapProjection is malformed.
+     */
+    CustomProjection.deserialize = function(serializedMapProjection) {
+        var json = serializedMapProjection.json;
+        var projection = new CustomProjection(json.url, Ellipsoid.unpack(json.ellipsoid));
+        return projection.readyPromise;
+    };
 
     defineProperties(CustomProjection.prototype, {
         /**
@@ -76,9 +116,10 @@ define([
                 return this._ellipsoid;
             }
         },
+
         /**
          * Gets whether or not the projection evenly maps meridians to vertical lines.
-         * No guarantee that a custom projection will be cylindrical about the equator.
+         * This is not guaranteed for custom projections and is assumed false.
          *
          * @memberof CustomProjection.prototype
          *
@@ -91,6 +132,7 @@ define([
                 return false;
             }
         },
+
         /**
          * Gets the promise that will be resolved when the CustomProjection's resources are done loading.
          *
@@ -101,9 +143,9 @@ define([
          *
          * @example
          * customProjection.readyPromise.then(function(projection) {
-         *  var viewer = new Cesium.Viewer('cesiumContainer', {
-         *      mapProjection : projection
-         *   });
+         *     var viewer = new Cesium.Viewer('cesiumContainer', {
+         *         mapProjection : projection
+         *     });
          * });
          */
         readyPromise : {
@@ -111,8 +153,20 @@ define([
                 return this._readyPromise;
             }
         },
+
         /**
-         * Gets the absolute URL for the file that the CustomProjection is loading.
+         * Gets a value indicating whether or not the projection is ready for use.
+         * @memberof CustomProjection.prototype
+         * @type {Boolean}
+         */
+        ready : {
+            get : function() {
+                return this._ready;
+            }
+        },
+
+        /**
+         * Gets the absolute URL for the JavaScript source that the CustomProjection is loading.
          *
          * @memberOf CustomProjection.prototype
          *
@@ -122,19 +176,6 @@ define([
         url : {
             get : function() {
                 return this._url;
-            }
-        },
-        /**
-         * Gets the name for this projection.
-         *
-         * @memberOf CustomProjection.prototype
-         *
-         * @type {String}
-         * @readonly
-         */
-        projectionName : {
-            get : function() {
-                return this._projectionName;
             }
         }
     });
@@ -153,7 +194,7 @@ define([
     CustomProjection.prototype.project = function(cartographic, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
-            throw new DeveloperError('CustomProjection is not loaded. User CustomProjection.readyPromise or wait for CustomProjection.ready to be true.');
+            throw new DeveloperError('CustomProjection is not loaded. Use CustomProjection.readyPromise or wait for CustomProjection.ready to be true.');
         }
         Check.defined('cartographic', cartographic);
         //>>includeEnd('debug');
@@ -180,7 +221,7 @@ define([
     CustomProjection.prototype.unproject = function(cartesian, result) {
         //>>includeStart('debug', pragmas.debug);
         if (!this._ready) {
-            throw new DeveloperError('CustomProjection is not loaded. User CustomProjection.readyPromise or wait for CustomProjection.ready to be true.');
+            throw new DeveloperError('CustomProjection is not loaded. Use CustomProjection.readyPromise or wait for CustomProjection.ready to be true.');
         }
         Check.defined('cartesian', cartesian);
         //>>includeEnd('debug');
@@ -193,35 +234,64 @@ define([
         return result;
     };
 
-    function buildCustomProjection(customProjection, url, projectionName) {
+    function buildCustomProjection(customProjection, url) {
         var fetch;
         var deferred = when.defer();
-        if (defined(loadedProjectionFunctions[projectionName])) {
-            loadedProjectionFunctions[projectionName](function(project, unproject) {
+        var useCache = !isDataUri(url);
+        if (useCache && defined(CustomProjection._loadedProjectionFunctions[url])) {
+            CustomProjection._loadedProjectionFunctions[url](function(project, unproject) {
                 customProjection._project = project;
                 customProjection._unproject = unproject;
                 customProjection._ready = true;
                 deferred.resolve(customProjection);
             });
 
-            return deferred;
+            return deferred.promise;
         }
+
+        // Clear createProjectionFunctions, if it already exists
+        try {
+            createProjectionFunctions = undefined; // eslint-disable-line no-undef
+        } catch(e) {} // eslint-disable-line no-empty
 
         if (typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope) { // eslint-disable-line no-undef
             importScripts(url); // eslint-disable-line no-undef
             fetch = when.resolve();
         } else {
-            fetch = loadAndExecuteScript(url);
+            fetch = loadAndExecuteScript(url)
+                .otherwise(function() {
+                    return when.reject(new RuntimeError('Unable to load projection source from ' + url));
+                });
         }
 
         fetch = fetch
             .then(function() {
+                try {
+                    if (!defined(createProjectionFunctions)) { // eslint-disable-line no-undef
+                        throw new Error();
+                    }
+                } catch(e) {
+                    return deferred.reject(new RuntimeError('projection code missing createProjectionFunctions function'));
+                }
                 var localCreateProjectionFunctions = createProjectionFunctions; // eslint-disable-line no-undef
-                loadedProjectionFunctions[projectionName] = localCreateProjectionFunctions;
+                createProjectionFunctions = undefined; // eslint-disable-line no-undef
+                if (useCache) {
+                    CustomProjection._loadedProjectionFunctions[url] = localCreateProjectionFunctions;
+                }
                 localCreateProjectionFunctions(function(project, unproject) {
+                    var ready = true;
+                    if (!defined(project)) {
+                        ready = false;
+                        deferred.reject(new RuntimeError('projection code missing project function'));
+                    }
+                    if (!defined(unproject)) {
+                        ready = false;
+                        deferred.reject(new RuntimeError('projection code missing unproject function'));
+                    }
+
                     customProjection._project = project;
                     customProjection._unproject = unproject;
-                    customProjection._ready = true;
+                    customProjection._ready = ready;
                     deferred.resolve();
                 });
 
@@ -243,15 +313,15 @@ define([
      * @example
      * function createProjectionFunctions(callback) {
      *     function project(cartographic, result) {
-     *          result.x = cartographic.longitude * 6378137.0;
-     *          result.y = cartographic.latitude * 6378137.0;
-     *          result.z = cartographic.height;
+     *         result.x = cartographic.longitude * 6378137.0;
+     *         result.y = cartographic.latitude * 6378137.0;
+     *         result.z = cartographic.height;
      *     }
      *
      *     function unproject(cartesian, result) {
-     *          result.longitude = cartesian.x / 6378137.0;
-     *          result.latitude = cartesian.y / 6378137.0;
-     *          result.height = cartesian.z;
+     *         result.longitude = cartesian.x / 6378137.0;
+     *         result.latitude = cartesian.y / 6378137.0;
+     *         result.height = cartesian.z;
      *     }
      *
      *     callback(project, unproject);
@@ -263,30 +333,35 @@ define([
      * For example, a Geographic projection would project latitude and longitude to the X/Y plane and the altitude to Z.
      * @callback CustomProjection~project
      *
-     * @param {Cartographic} cartographic A Cesium Cartographic type providing the latitude and longitude in radians and the height in meters.
-     * @param {Cartesian3} result A Cesium Cartesian3 type onto which the projected x/y/z coordinate should be placed.
+     * @param {Cartographic} cartographic A Cesium {@link Cartographic} type providing the latitude and longitude in radians and the height in meters.
+     * @param {Cartesian3} result A Cesium {@link Cartesian3} type onto which the projected x/y/z coordinates should be placed.
      * @example
      * function project(cartographic, result) {
-     *      result.x = cartographic.longitude * 6378137.0;
-     *      result.y = cartographic.latitude * 6378137.0;
-     *      result.z = cartographic.height;
+     *     result.x = cartographic.longitude * 6378137.0;
+     *     result.y = cartographic.latitude * 6378137.0;
+     *     result.z = cartographic.height;
      * }
      */
 
     /**
+     * A function that unprojects x/y/z meter coordinates in 2.5D space to cartographic coordinates.
+     *
      * Coordinates come from a Z-up space, so for example, a Geographic projection would unproject x/y coordinates in meters
      * to latitude and longitude, and z coordinates to altitudes in meters over the x/y plane.
      * @callback CustomProjection~unproject
      *
-     * @param {Cartesian3} cartesian A x/y/z coordinate in projected space space.
-     * @param {Cartographic} result A cartographic array onto which unprojected longitude and latitude in radians and height in meters coordinates should be placed.
+     * @param {Cartesian3} cartesian A Cesium {@link Cartesian3} type containing a x/y/z coordinates in projected space.
+     * @param {Cartographic} result A Cesium {@link Cartographic} type onto which unprojected longitude and latitude in radians and height in meters should be placed.
      * @example
      * function unproject(cartesian, result) {
-     *      result.longitude = cartesian.x / 6378137.0;
-     *      result.latitude = cartesian.y / 6378137.0;
-     *      result.height = cartesian.z;
+     *     result.longitude = cartesian.x / 6378137.0;
+     *     result.latitude = cartesian.y / 6378137.0;
+     *     result.height = cartesian.z;
      * }
      */
+
+    // exposed for testing
+    CustomProjection._loadedProjectionFunctions = {};
 
     return CustomProjection;
 });
