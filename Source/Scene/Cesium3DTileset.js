@@ -120,8 +120,8 @@ define([
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
      * @param {Boolean} [options.foveatedScreenSpaceError=false] Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the {@link Cesium3DTileset#foveatedConeSize} are loaded.
      * @param {Number} [options.foveatedConeSize=0.3] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and {@link Cesium3DTileset#foveatedInterpolationFunction} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0 means the cone will be the line formed by the camera position and its view direction. Setting it 1 means the cone encompasses the entire field of view of the camera, essentially disabling the effect.
-     * @param {Number} [options.foveatedMinimumScreenSpaceErrorRelaxation=0] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with this value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationFunction}.
-     * @param {Number} [options.foveatedInterpolationFunction=Math.lerp] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceError} and {@link Cesium3DTileset#maximumScreenSpaceError}
+     * @param {Number} [options.foveatedMinimumScreenSpaceErrorRelaxation=0] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationFunction}.
+     * @param {Number} [options.foveatedInterpolationFunction=Math.lerp] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
      * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
      * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
      * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
@@ -273,13 +273,18 @@ define([
         this._foveatedMinimumScreenSpaceErrorRelaxation = defaultValue(options.foveatedMinimumScreenSpaceErrorRelaxation, 0);
 
         /**
-         * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone,
-         * interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceError} and {@link Cesium3DTileset#maximumScreenSpaceError}
+         * Optimization option. Used as a callback when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone,
+         * interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
          *
-         * @type {Function}
+         * @callback Cesium3DTileset~foveatedInterpolationCallback
          * @default Math.lerp
+         *
+         * @param {Number} p The start value to interpolate.
+         * @param {Number} q The end value to interpolate.
+         * @param {Number} time The time of interpolation generally in the range <code>[0.0, 1.0]</code>.
+         * @returns {Number} The interpolated value.
          */
-        this.foveatedInterpolationFunction = defaultValue(options.foveatedInterpolationFunction, CesiumMath.lerp);
+        this.foveatedInterpolationCallback = defaultValue(options.foveatedInterpolationCallback, CesiumMath.lerp);
 
         /**
          * A scalar that determines the density used to adjust the dynamic screen space error, similar to {@link Fog}. Increasing this
@@ -1364,8 +1369,8 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
-                Check.typeOf.number.lessThanOrEquals('value', value, 1.0);
+                Check.typeOf.number.greaterThanOrEquals('foveatedConeSize', value, 0.0);
+                Check.typeOf.number.lessThanOrEquals('foveatedConeSize', value, 1.0);
                 //>>includeEnd('debug');
 
                 this._foveatedConeSize = value;
@@ -1385,8 +1390,8 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                Check.typeOf.number.greaterThanOrEquals('value', value, 0);
-                Check.typeOf.number.lessThanOrEquals('value', value, this.maximumScreenSpaceError);
+                Check.typeOf.number.greaterThanOrEquals('foveatedMinimumScreenSpaceErrorRelaxation', value, 0);
+                Check.typeOf.number.lessThanOrEquals('foveatedMinimumScreenSpaceErrorRelaxation', value, this.maximumScreenSpaceError);
                 //>>includeEnd('debug');
 
                 this._foveatedMinimumScreenSpaceErrorRelaxation = value;

@@ -617,6 +617,43 @@ define([
         }
     });
 
+    function isPriorityDeferredNonSkipLODCheck(tile, tileset, result) {
+        // Prevent a mix of deferred and non-deferred children in non-skipLOD. Will hold up the refinement of parent.
+        // If we just return false if parent is not deferred it would essentially turn off foveated deferral for non-skipLOD since false would trickle down the tree.
+        var parent = tile.parent;
+        var overwrite = false;
+        if (!tile.tileset._skipLevelOfDetail && defined(parent) && !parent._priorityDeferred && result)
+        {
+            var siblings = parent.children;
+            var siblingsLength = siblings.length;
+            var someDeferred = tile._priorityDeferred;
+            var someNotDeferred = !tile._priorityDeferred;
+            var sibling = tile;
+            var checkCount = 0;
+            var i;
+            for (i = 0; i < siblingsLength; ++i) {
+                sibling = siblings[i];
+                if (sibling._updatedVisibilityFrame === tileset._updatedVisibilityFrame) {
+                    ++checkCount;
+                    someDeferred = someDeferred || sibling._priorityDeferred;
+                    someNotDeferred = someNotDeferred || !sibling._priorityDeferred;
+                    if (someDeferred && someNotDeferred && checkCount > 1) {
+                        overwrite = true;
+                        break;
+                    }
+                }
+            }
+
+            if (overwrite) {
+                for (i = 0; i < siblingsLength; ++i) {
+                    siblings[i]._priorityDeferred = false;
+                }
+            }
+        }
+
+        return overwrite;
+    }
+
     var scratchCartesian = new Cartesian3();
     function isPriorityDeferred(tile, frameState) {
         var tileset = tile._tileset;
@@ -661,10 +698,18 @@ define([
         // Relax SSE based on how big the angle is between the tile and the edge of the foveated cone.
         var range = maxFoveatedFactor - foveatedConeFactor;
         var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0, 1);
-        var sseRelaxation = tileset.foveatedInterpolationFunction(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
+        var sseRelaxation = tileset.foveatedInterpolationCallback(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
         var sse = tile._screenSpaceError === 0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
 
-        return (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
+        var result = (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
+
+        // Prevent a mix of deferred and non-deferred children in non-skipLOD. Will hold up the refinement of parent.
+        // If we just return false if parent is not deferred it would essentially turn off foveated deferral for non-skipLOD since false would trickle down the tree.
+        if (isPriorityDeferredNonSkipLODCheck(tile, tileset, result)) {
+            return false;
+        }
+
+        return result;
     }
 
     var scratchJulianDate = new JulianDate();
