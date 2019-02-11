@@ -217,8 +217,8 @@ define([
             return;
         }
 
-        tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
         tile.updateVisibility(frameState);
+        tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
     }
 
     function anyChildrenVisible(tileset, tile, frameState) {
