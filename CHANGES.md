@@ -3,8 +3,18 @@ Change Log
 
 ### 1.55 - 2019-03-01
 
+##### Breaking Changes :mega:
+* `czm_materialInput.slope` is now an angle in radians between 0 and pi/2 (flat to vertical), rather than a projected length 1 to 0 (flat to vertical).
+
+##### Additions :tada:
+* `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
+
 ##### Fixes :wrench:
 * Fixed an issue where models would cause a crash on load if some primitives were Draco encoded and others were not. [#7383](https://github.com/AnalyticalGraphicsInc/cesium/issues/7383)
+* Fixed Node.js support for the `Resource` class and any functionality using it internally.
+* Fixed an issue where some ground polygons crossing the Prime Meridian would have incorrect bounding rectangles. [#7533](https://github.com/AnalyticalGraphicsInc/cesium/pull/7533)
+* Fixed an issue where polygons on terrain using rhumb lines where being rendered incorrectly. [#7538](https://github.com/AnalyticalGraphicsInc/cesium/pulls/7538)
+* Fixed an issue with `EllipsoidRhumbLines.findIntersectionWithLongitude` when longitude was IDL. [#7551](https://github.com/AnalyticalGraphicsInc/cesium/issues/7551)
 
 ### 1.54 - 2019-02-01
 

@@ -24,6 +24,7 @@ varying vec3 v_normalEC;
 
 #ifdef APPLY_MATERIAL
 varying float v_slope;
+varying float v_aspect;
 varying float v_height;
 #endif
 
@@ -175,9 +176,18 @@ void main()
 #endif
 
 #ifdef APPLY_MATERIAL
-    vec3 finalNormal = normalMC;
-    vec3 ellipsoidNormal = normalize(position3DWC.xyz);
-    v_slope = abs(dot(ellipsoidNormal, finalNormal));
+    float northPoleZ = czm_getWgs84EllipsoidEC().radii.z;
+    vec3 northPolePositionMC = vec3(0.0, 0.0, northPoleZ);
+    vec3 ellipsoidNormal = normalize(v_positionMC); // For a sphere this is correct, but not generally for an ellipsoid.
+    vec3 vectorEastMC = normalize(cross(northPolePositionMC - v_positionMC, ellipsoidNormal));
+    float dotProd = abs(dot(ellipsoidNormal, v_normalMC));
+    v_slope = acos(dotProd);
+    vec3 normalRejected = ellipsoidNormal * dotProd;
+    vec3 normalProjected = v_normalMC - normalRejected;
+    vec3 aspectVector = normalize(normalProjected);
+    v_aspect = acos(dot(aspectVector, vectorEastMC));
+    float determ = dot(cross(vectorEastMC, aspectVector), ellipsoidNormal);
+    v_aspect = czm_branchFreeTernary(determ < 0.0, 2.0 * czm_pi - v_aspect, v_aspect);
     v_height = height;
 #endif
 }

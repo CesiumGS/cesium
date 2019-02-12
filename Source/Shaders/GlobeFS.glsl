@@ -89,6 +89,7 @@ varying vec3 v_normalEC;
 #ifdef APPLY_MATERIAL
 varying float v_height;
 varying float v_slope;
+varying float v_aspect;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
@@ -282,6 +283,7 @@ void main()
     materialInput.normalEC = normalize(v_normalEC);
     materialInput.slope = v_slope;
     materialInput.height = v_height;
+    materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif

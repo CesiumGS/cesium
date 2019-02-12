@@ -4,6 +4,7 @@ defineSuite([
         'Core/arrayFill',
         'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Core/GeometryPipeline',
@@ -17,6 +18,7 @@ defineSuite([
         arrayFill,
         BoundingSphere,
         Cartesian3,
+        Cartographic,
         Ellipsoid,
         GeometryOffsetAttribute,
         GeometryPipeline,
@@ -1095,7 +1097,7 @@ defineSuite([
         expect(CesiumMath.toDegrees(boundingRhumb.west)).toEqualEpsilon(-90.0, CesiumMath.EPSILON10);
     });
 
-    it('computes rectangles that cross the IDL', function() {
+    it('computes rectangles for rhumbline polygons that cross the IDL', function() {
         var pRhumb = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
             polygonHierarchy: {
@@ -1114,6 +1116,29 @@ defineSuite([
         expect(CesiumMath.toDegrees(boundingRhumb.south)).toEqualEpsilon(30.0, CesiumMath.EPSILON10);
         expect(CesiumMath.toDegrees(boundingRhumb.east)).toEqualEpsilon(-170.0, CesiumMath.EPSILON10);
         expect(CesiumMath.toDegrees(boundingRhumb.west)).toEqualEpsilon(175.0, CesiumMath.EPSILON10);
+    });
+
+    it('computes rectangles for geodesic polygons that cross the IDL', function() {
+        var minLon = Cartographic.fromDegrees(-178, 3);
+        var minLat = Cartographic.fromDegrees(-179, -4);
+        var maxLon = Cartographic.fromDegrees(178, 3);
+        var maxLat = Cartographic.fromDegrees(179, 4);
+        var cartesianArray = Ellipsoid.WGS84.cartographicArrayToCartesianArray([minLat, minLon, maxLat, maxLon]);
+
+        var pGeodesic = new PolygonGeometry({
+            vertexFormat : VertexFormat.POSITION_AND_ST,
+            polygonHierarchy: {
+                positions : cartesianArray
+            },
+            granularity: CesiumMath.RADIANS_PER_DEGREE,
+            arcType : ArcType.GEODESIC
+        });
+
+        var boundingGeodesic = pGeodesic.rectangle;
+        expect(boundingGeodesic.east).toEqualEpsilon(minLon.longitude, CesiumMath.EPSILON10);
+        expect(boundingGeodesic.south).toEqualEpsilon(minLat.latitude, CesiumMath.EPSILON10);
+        expect(boundingGeodesic.west).toEqualEpsilon(maxLon.longitude, CesiumMath.EPSILON10);
+        expect(boundingGeodesic.north).toEqualEpsilon(maxLat.latitude, CesiumMath.EPSILON10);
     });
 
     it('computeRectangle', function() {

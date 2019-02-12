@@ -591,7 +591,7 @@ define([
 
             p1 = Cartesian3.fromArray(edgePositions, UL * 3, p1Scratch);
             p2 = Cartesian3.fromArray(edgePositions, UR * 3, p2Scratch);
-            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON14)) {
+            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON14, CesiumMath.EPSILON6)) {
                 continue;
             }
 
