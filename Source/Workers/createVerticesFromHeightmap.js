@@ -1,14 +1,14 @@
 define([
         '../Core/Ellipsoid',
+        '../Core/deserializeMapProjection',
         '../Core/HeightmapTessellator',
         '../Core/Rectangle',
-        '../Core/SerializedMapProjection',
         './createTaskProcessorWorker'
     ], function(
         Ellipsoid,
+        deserializeMapProjection,
         HeightmapTessellator,
         Rectangle,
-        SerializedMapProjection,
         createTaskProcessorWorker) {
     'use strict';
 
@@ -24,7 +24,7 @@ define([
         parameters.ellipsoid = Ellipsoid.clone(parameters.ellipsoid);
         parameters.rectangle = Rectangle.clone(parameters.rectangle);
 
-        return SerializedMapProjection.deserialize(parameters.serializedMapProjection)
+        return deserializeMapProjection(parameters.serializedMapProjection)
             .then(function(mapProjection) {
                 var statistics = HeightmapTessellator.computeVertices(parameters, mapProjection);
                 var vertices = statistics.vertices;

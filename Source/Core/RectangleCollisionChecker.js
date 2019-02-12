@@ -28,7 +28,10 @@ define([
 
     var projectedExtentsScratch = new Rectangle();
     RectangleWithId.fromRectangleAndId = function(id, rectangle, result, mapProjection) {
-        var projectedExtents = Rectangle.approximateProjectedExtents(rectangle, mapProjection, projectedExtentsScratch);
+        var projectedExtents = Rectangle.approximateProjectedExtents({
+            cartographicRectangle : rectangle,
+            mapProjection : mapProjection
+        }, projectedExtentsScratch);
 
         result.minX = projectedExtents.west;
         result.minY = projectedExtents.south;

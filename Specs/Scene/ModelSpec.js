@@ -90,6 +90,7 @@ defineSuite([
     var texturedBoxCRNEmbeddedUrl = './Data/Models/Box-Textured-CRN-Embedded/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
+    var texturedBoxWebpUrl = './Data/Models/Box-Textured-Webp/CesiumBoxWebp.gltf';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var boxEcefUrl = './Data/Models/Box-ECEF/ecef.gltf';
     var boxWithUnusedMaterial = './Data/Models/BoxWithUnusedMaterial/Box.gltf';
@@ -135,6 +136,7 @@ defineSuite([
     var emissiveUrl = './Data/Models/PBR/BoxEmissive/BoxEmissive.gltf';
     var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
     var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
+    var dracoCompressedModelWithLinesUrl = './Data/Models/DracoCompression/BoxWithLines/BoxWithLines.gltf';
 
     var boxGltf2Url = './Data/Models/Box-Gltf-2/Box.gltf';
     var boxGltf2WithTechniquesUrl = './Data/Models/Box-Gltf-2-Techniques/Box.gltf';
@@ -975,6 +977,21 @@ defineSuite([
         });
     });
 
+    it('Throws for EXT_texture_webp if browser does not support WebP', function() {
+        spyOn(FeatureDetection, 'supportsWebPSync').and.returnValue(false);
+        return Resource.fetchJson(texturedBoxWebpUrl).then(function(gltf) {
+            gltf.extensionsRequired = ['EXT_texture_webp'];
+            var model = primitives.add(new Model({
+                gltf : gltf
+            }));
+
+            expect(function() {
+                scene.renderForSpecs();
+            }).toThrowRuntimeError();
+            primitives.remove(model);
+        });
+    });
+
     it('loads a glTF v0.8 model', function() {
         return loadModel(cesiumAir_0_8Url, {
             minimumPixelSize : 1
@@ -1178,6 +1195,16 @@ defineSuite([
             return;
         }
         return loadModel(texturedBoxCRNEmbeddedUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
+            verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with WebP texture', function() {
+        return loadModel(texturedBoxWebpUrl, {
             incrementallyLoadTextures : false
         }).then(function(m) {
             verifyRender(m);
@@ -2572,6 +2599,13 @@ defineSuite([
             dequantizeInShader : false,
             forwardAxis : Axis.X
         }).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF with KHR_draco_mesh_compression extension and LINES attributes', function() {
+        return loadModel(dracoCompressedModelWithLinesUrl).then(function(m) {
             verifyRender(m);
             primitives.remove(m);
         });

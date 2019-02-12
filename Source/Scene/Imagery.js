@@ -91,13 +91,13 @@ define([
     };
 
     Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, priorityFunction) {
-        if (!this.imageryLayer.imageryProvider.ready || this.state === ImageryState.EMPTY) {
+        var imageryLayer = this.imageryLayer;
+        if (!imageryLayer.imageryProvider.ready) {
             return;
         }
 
-        var tilingScheme = this.imageryLayer.imageryProvider.tilingScheme;
+        var tilingScheme = imageryLayer.imageryProvider.tilingScheme;
         var singleSource = !(tilingScheme instanceof ProjectedImageryTilingScheme);
-        var imageryLayer = this.imageryLayer;
 
         if (this.state === ImageryState.UNLOADED) {
             this.state = ImageryState.TRANSITIONING;
@@ -109,7 +109,8 @@ define([
                 var projectedIndices = tilingScheme.getProjectedTilesForNativeTile(this.x, this.y, level);
                 var projectedTilesLength = projectedIndices.length * 0.5;
 
-                this.projectedRectangles.length = projectedTilesLength;
+                var projectedRectangles = this.projectedRectangles;
+                projectedRectangles.length = projectedTilesLength;
                 this.projectedImages.length = projectedTilesLength;
                 this.projectedTextures.length = projectedTilesLength;
 
@@ -117,11 +118,11 @@ define([
                     var index = i * 2;
                     var x = projectedIndices[index];
                     var y = projectedIndices[index + 1];
-                    this.projectedRectangles[i] = tilingScheme.getProjectedTileProjectedRectangle(x, y, level);
+                    projectedRectangles[i] = tilingScheme.getProjectedTileProjectedRectangle(x, y, level, projectedRectangles[i]);
                 }
 
                 if (projectedTilesLength === 0) {
-                    this.state = ImageryState.EMPTY;
+                    this.state = ImageryState.INVALID;
                     return;
                 }
 

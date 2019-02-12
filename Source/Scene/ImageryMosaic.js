@@ -105,9 +105,12 @@ define([
         for (i = 0; i < imagesLength; i++) {
             var projection = projections[i];
             absoluteUrls[i] = getAbsoluteUri(urls[i]);
-            serializedMapProjections[i] = new SerializedMapProjection(projection);
+            serializedMapProjections[i] = projection.serialize();
 
-            var unprojectedRectangle = Rectangle.approximateCartographicExtents(projectedRectangles[i], projection);
+            var unprojectedRectangle = Rectangle.approximateCartographicExtents({
+                projectedRectangle : projectedRectangles[i],
+                mapProjection : projection
+            });
             rectangleCollisionChecker.insert(i, unprojectedRectangle);
         }
 

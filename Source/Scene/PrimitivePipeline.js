@@ -3,6 +3,7 @@ define([
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/deserializeMapProjection',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/FeatureDetection',
@@ -12,13 +13,13 @@ define([
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
-        '../Core/OffsetGeometryInstanceAttribute',
-        '../Core/SerializedMapProjection'
+        '../Core/OffsetGeometryInstanceAttribute'
     ], function(
         BoundingSphere,
         ComponentDatatype,
         defaultValue,
         defined,
+        deserializeMapProjection,
         DeveloperError,
         Ellipsoid,
         FeatureDetection,
@@ -28,8 +29,7 @@ define([
         GeometryPipeline,
         IndexDatatype,
         Matrix4,
-        OffsetGeometryInstanceAttribute,
-        SerializedMapProjection) {
+        OffsetGeometryInstanceAttribute) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -650,7 +650,7 @@ define([
 
         var ellipsoid = Ellipsoid.clone(packedParameters.ellipsoid);
 
-        return SerializedMapProjection.deserialize(packedParameters.serializedMapProjection).then(function(projection) {
+        return deserializeMapProjection(packedParameters.serializedMapProjection).then(function(projection) {
             return {
                 instances : instances,
                 ellipsoid : ellipsoid,

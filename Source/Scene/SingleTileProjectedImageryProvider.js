@@ -4,7 +4,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
-        '../Core/SingleTileProjectedTilingScheme',
+        '../Core/ProjectedImageryTilingScheme',
         '../Core/Rectangle',
         '../Core/Resource',
         '../Core/RuntimeError',
@@ -16,7 +16,7 @@ define([
         defineProperties,
         DeveloperError,
         Event,
-        SingleTileProjectedTilingScheme,
+        ProjectedImageryTilingScheme,
         Rectangle,
         Resource,
         RuntimeError,
@@ -25,15 +25,16 @@ define([
     'use strict';
 
     /**
-     * Provides a single, top-level imagery tile in any projection.
+     * Provides a single, top-level imagery tile.  The single image may be in any projection.
      *
      * @alias SingleTileProjectedImageryProvider
      * @constructor
      *
      * @param {Object} options Object with the following properties:
      * @param {Resource|String} options.url The url for the tile.
-     * @param {Rectangle} options.rectangle The rectangle covered by the image in the source SRS.
-     * @param {MapProjection} options.projection The map projection for the source SRS.
+     * @param {Rectangle} options.projectedRectangle The rectangle covered by the image in the source SRS.
+     * @param {MapProjection} options.mapProjection The map projection for the source SRS.
+     * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see ArcGisMapServerImageryProvider
@@ -41,6 +42,7 @@ define([
      * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see createTileMapServiceImageryProvider
+     * @see SingleTileImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
@@ -48,19 +50,22 @@ define([
     function SingleTileProjectedImageryProvider(options) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('options', options);
-        Check.typeOf.string('options.url', options.url);
-        Check.defined('options.rectangle', options.rectangle);
-        Check.defined('options.projection', options.projection);
+        Check.defined('options.url', options.url);
+        Check.defined('options.projectedRectangle', options.projectedRectangle);
+        Check.defined('options.mapProjection', options.mapProjection);
         //>>includeEnd('debug');
 
         var resource = Resource.createIfNeeded(options.url);
 
-        var rectangle = Rectangle.clone(options.rectangle);
-        this._tilingScheme = new SingleTileProjectedTilingScheme({
+        var rectangle = Rectangle.clone(options.projectedRectangle);
+        this._tilingScheme = new ProjectedImageryTilingScheme({
             projectedRectangle : rectangle,
-            projection : options.projection
+            mapProjection : options.mapProjection,
+            numberOfLevelZeroTilesX : 1,
+            numberOfLevelZeroTilesY : 1,
+            ellipsoid : options.ellipsoid
         });
-        this._projection = options.projection;
+
         this._resource = resource;
         this._image = undefined;
         this._texture = undefined;

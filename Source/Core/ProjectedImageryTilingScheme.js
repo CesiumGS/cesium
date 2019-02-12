@@ -27,6 +27,9 @@ define([
      * ProjectedImageryTilingScheme is intended for generating geographic {@link Imagery} tiles that draw from
      * multiple source images.
      *
+     * Geographic tiles are not generated if any of their source images should be discarded according to the
+     * ImageryProvider's {@link TileDiscardPolicy}.
+     *
      * @param {Object} options Object with the following properties:
      * @param {MapProjection} options.mapProjection MapProjection to the imagery's CRS.
      * @param {Rectangle} options.projectedRectangle Rectangle covered by the imagery in its CRS.
@@ -48,7 +51,10 @@ define([
         var mapProjection = options.mapProjection;
         var projectedRectangle = options.projectedRectangle;
 
-        var cartographicRectangle = Rectangle.approximateCartographicExtents(projectedRectangle, mapProjection, new Rectangle());
+        var cartographicRectangle = Rectangle.approximateCartographicExtents({
+            projectedRectangle : projectedRectangle,
+            mapProjection : mapProjection
+        });
 
         var numberOfLevelZeroTilesX = defaultValue(options.numberOfLevelZeroTilesX, 1);
         var numberOfLevelZeroTilesY = defaultValue(options.numberOfLevelZeroTilesY, 1);
@@ -120,6 +126,8 @@ define([
         }
     });
 
+    var tileRectangleScratch = new Rectangle();
+    var tileProjectedRectangleScratch = new Rectangle();
     /**
      * Utility function that gets all the tile indices (x, y) at the requested level for the
      * native imagery tiles needed to generate the given projected tile.
@@ -130,8 +138,11 @@ define([
      * @returns {Number[]} Array of numbers containing x and y for the native imagery tiles at the same level
      */
     ProjectedImageryTilingScheme.prototype.getProjectedTilesForNativeTile = function(x, y, level) {
-        var tileRectangle = this.tileXYToRectangle(x, y, level, new Rectangle());
-        var tileProjectedRectangle = Rectangle.approximateProjectedExtents(tileRectangle, this._projection, new Rectangle());
+        var tileRectangle = this.tileXYToRectangle(x, y, level, tileRectangleScratch);
+        var tileProjectedRectangle = Rectangle.approximateProjectedExtents({
+            cartographicRectangle : tileRectangle,
+            mapProjection : this._projection
+        }, tileProjectedRectangleScratch);
 
         // Figure out which tiles at this level the projected rectangle covers.
         // March over to get a list.

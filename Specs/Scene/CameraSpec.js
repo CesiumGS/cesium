@@ -65,7 +65,10 @@ defineSuite([
 
     var epsg3411polarWkt = '+proj=stere +lat_0=90 +lat_ts=70 +lon_0=-45 +k=1 +x_0=0 +y_0=0 +a=6378273 +b=6356889.449 +units=m +no_defs';
     var epsg3411polarBounds = Rectangle.fromDegrees(-180.0000, 30.0000, 180.0000, 90.0000);
-    var polarProjection = new Proj4Projection(epsg3411polarWkt, 1.0, epsg3411polarBounds);
+    var polarProjection = new Proj4Projection({
+        wellKnownText : epsg3411polarWkt,
+        wgs84Bounds : epsg3411polarBounds
+    });
 
     function FakeScene(projection) {
         this.canvas = {

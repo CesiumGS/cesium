@@ -269,50 +269,50 @@ define([
 
         projection = defaultValue(projection, defaultProjection);
 
-        if (projection.isNormalCylindrical) {
-            Rectangle.southwest(rectangle, fromRectangle2DSouthwest);
-            fromRectangle2DSouthwest.height = minimumHeight;
-            Rectangle.northeast(rectangle, fromRectangle2DNortheast);
-            fromRectangle2DNortheast.height = maximumHeight;
+        if (!projection.isNormalCylindrical) {
+            var southwest = Rectangle.southwest(rectangle, cornerScratch);
+            var widthStep = rectangle.width / (INTERVAL_COUNT - 1);
+            var heightStep = rectangle.height / (INTERVAL_COUNT - 1);
+            var sample = sampleScratch;
+            var index = 0;
 
-            var lowerLeft = projection.project(fromRectangle2DSouthwest, fromRectangle2DLowerLeft);
-            var upperRight = projection.project(fromRectangle2DNortheast, fromRectangle2DUpperRight);
+            // Project points in a grid over the Rectangle
+            for (var x = 0; x < INTERVAL_COUNT; x++) {
+                for (var y = 0; y < INTERVAL_COUNT; y++) {
+                    sample.longitude = southwest.longitude + x * widthStep;
+                    sample.latitude = southwest.latitude + y * heightStep;
+                    sample.height = minimumHeight;
 
-            var width = upperRight.x - lowerLeft.x;
-            var height = upperRight.y - lowerLeft.y;
-            var elevation = upperRight.z - lowerLeft.z;
+                    projection.project(sample, projectedPointsScratch[index]);
 
-            result.radius = Math.sqrt(width * width + height * height + elevation * elevation) * 0.5;
-            var center = result.center;
-            center.x = lowerLeft.x + width * 0.5;
-            center.y = lowerLeft.y + height * 0.5;
-            center.z = lowerLeft.z + elevation * 0.5;
-            return result;
-        }
+                    sample.height = maximumHeight;
+                    projection.project(sample, projectedPointsScratch[index + HALF_PROJECTED_POINTS_COUNT]);
 
-        var southwest = Rectangle.southwest(rectangle, cornerScratch);
-        var widthStep = rectangle.width / (INTERVAL_COUNT - 1);
-        var heightStep = rectangle.height / (INTERVAL_COUNT - 1);
-        var sample = sampleScratch;
-        var index = 0;
-
-        // Project points in a grid over the Rectangle
-        for (var x = 0; x < INTERVAL_COUNT; x++) {
-            for (var y = 0; y < INTERVAL_COUNT; y++) {
-                sample.longitude = southwest.longitude + x * widthStep;
-                sample.latitude = southwest.latitude + y * heightStep;
-                sample.height = minimumHeight;
-
-                projection.project(sample, projectedPointsScratch[index]);
-
-                sample.height = maximumHeight;
-                projection.project(sample, projectedPointsScratch[index + HALF_PROJECTED_POINTS_COUNT]);
-
-                index++;
+                    index++;
+                }
             }
+
+            return BoundingSphere.fromPoints(projectedPointsScratch, result);
         }
 
-        return BoundingSphere.fromPoints(projectedPointsScratch, result);
+        Rectangle.southwest(rectangle, fromRectangle2DSouthwest);
+        fromRectangle2DSouthwest.height = minimumHeight;
+        Rectangle.northeast(rectangle, fromRectangle2DNortheast);
+        fromRectangle2DNortheast.height = maximumHeight;
+
+        var lowerLeft = projection.project(fromRectangle2DSouthwest, fromRectangle2DLowerLeft);
+        var upperRight = projection.project(fromRectangle2DNortheast, fromRectangle2DUpperRight);
+
+        var width = upperRight.x - lowerLeft.x;
+        var height = upperRight.y - lowerLeft.y;
+        var elevation = upperRight.z - lowerLeft.z;
+
+        result.radius = Math.sqrt(width * width + height * height + elevation * elevation) * 0.5;
+        var center = result.center;
+        center.x = lowerLeft.x + width * 0.5;
+        center.y = lowerLeft.y + height * 0.5;
+        center.z = lowerLeft.z + elevation * 0.5;
+        return result;
     };
 
     var fromRectangle3DScratch = [];

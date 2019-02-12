@@ -13,6 +13,7 @@ define([
         '../Core/GeographicTilingScheme',
         '../Core/IndexDatatype',
         '../Core/Math',
+        '../Core/oneTimeWarning',
         '../Core/PixelFormat',
         '../Core/Rectangle',
         '../Core/Request',
@@ -60,6 +61,7 @@ define([
         GeographicTilingScheme,
         IndexDatatype,
         CesiumMath,
+        oneTimeWarning,
         PixelFormat,
         Rectangle,
         Request,
@@ -93,9 +95,6 @@ define([
         TileImagery,
         SingleTileProjectedImageryProvider) {
     'use strict';
-
-    var ARBITRARY_PROJECTION_VERTICES_WIDTH = 128;
-    var ARBITRARY_PROJECTION_VERTICES_HEIGHT = 128;
 
     /**
      * An imagery layer that displays tiled image data from a single imagery provider
@@ -171,6 +170,7 @@ define([
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      * @param {Rectangle} [options.cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
+     * @param {Number} [options.projectedImageryReprojectionWidth=128] Width of the grid for reprojecting imagery that uses a {@link ProjectedImageryTilingScheme}. Clamps between 2-255 (inclusive).
      */
     function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
@@ -294,6 +294,9 @@ define([
 
         this._reprojectComputeCommands = [];
 
+        var reprojectionVertexWidth = defaultValue(options.projectedImageryReprojectionWidth, ImageryLayer.DEFAULT_PROJECTED_IMAGERY_REPROJECTION_WIDTH);
+        this._arbitraryReprojectionWidth = CesiumMath.clamp(reprojectionVertexWidth, 2, 255);
+
         /**
          * Rectangle cutout in this layer of imagery.
          *
@@ -389,6 +392,13 @@ define([
      * @default TextureMagnificationFilter.LINEAR
      */
     ImageryLayer.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
+
+    /**
+     * This value is used as the default grid width when reprojecting imagery that uses a {@link ProjectedImageryTilingScheme}.
+     * @type {Number}
+     * @default 128
+     */
+    ImageryLayer.DEFAULT_PROJECTED_IMAGERY_REPROJECTION_WIDTH = 128;
 
     /**
      * Gets a value indicating whether this layer is the base layer in the
@@ -979,14 +989,15 @@ define([
      *
      * @param {Context} context The rendered context to use to create textures.
      * @param {Imagery} imagery The imagery for which to create a texture.
-     * @param
      */
     ImageryLayer.prototype._createMultipleTextures = function(context, imagery) {
         var imageryProvider = this._imageryProvider;
         var projectedImages = imagery.projectedImages;
+        var projectedImagesLength = projectedImages.length;
+        var i;
 
-        // If this imagery provider has a discard policy, use it to check if this
-        // image should be discarded.
+        // If this imagery provider has a discard policy, use it to check if the
+        // images should be discarded.
         if (defined(imageryProvider.tileDiscardPolicy)) {
             var discardPolicy = imageryProvider.tileDiscardPolicy;
             if (defined(discardPolicy)) {
@@ -997,10 +1008,18 @@ define([
                     return;
                 }
 
-                // Mark discarded imagery tiles invalid.  Parent imagery will be used instead.
-                if (discardPolicy.shouldDiscardImage(projectedImages[0])) {
-                    imagery.state = ImageryState.INVALID;
-                    return;
+                // If any imagery tiles are invalid, mark the generated imagery tile as invalid.
+                // Parent imagery will be used instead.
+                for (i = 0; i < projectedImagesLength; i++) {
+                    if (discardPolicy.shouldDiscardImage(projectedImages[i])) {
+
+                        //>>includeStart('debug', pragmas.debug);
+                        oneTimeWarning('Discarding images from an imagery tileset in this projection may cause portions of other images to also be discarded.');
+                        //>>includeEnd('debug');
+
+                        imagery.state = ImageryState.INVALID;
+                        return;
+                    }
                 }
             }
         }
@@ -1017,9 +1036,7 @@ define([
             magnificationFilter : this.magnificationFilter
         });
 
-        var projectedImagesLength = projectedImages.length;
-
-        for (var i = 0; i < projectedImagesLength; i++) {
+        for (i = 0; i < projectedImagesLength; i++) {
             var image = projectedImages[i];
 
             var texture;
@@ -1042,6 +1059,10 @@ define([
                     sampler : sampler
                 });
             }
+            if (defined(image.destroy)) {
+                image.destroy();
+            }
+
             imagery.projectedTextures[i] = texture;
         }
         imagery.projectedImages.length = 0;
@@ -1157,17 +1178,26 @@ define([
         }
     };
 
-    var uniformMap = {
-        u_textureDimensions : function() {
-            return this.textureDimensions;
-        },
-        u_texture : function() {
-            return this.texture;
-        },
+    function MakeCommandOptions() {
+        this.projectedCoordinates = undefined;
+        this.shaderProgram = undefined;
+        this.context = undefined;
+        this.outputTexture = undefined;
+        this.imagery = undefined;
+        this.imageryLayer = undefined;
+        this.vertexArray = undefined;
+        this.projectedRectangle = undefined;
+        this.projectedTexture = undefined;
+        this.final = undefined;
+    }
 
-        textureDimensions : new Cartesian2(),
-        texture : undefined
+    var arbitraryReprojectAttributeIndices = {
+        position : 0,
+        projectedCoordinates : 1
     };
+
+    var geographicCartographicScratch = new Cartographic();
+    var projectedScratch = new Cartesian3();
 
     /**
      * Enqueues commands re-projecting multiple textures to a {@link GeographicProjection} on the next update
@@ -1191,54 +1221,154 @@ define([
             preMultiplyAlpha : someTexture.preMultiplyAlpha
         });
 
+        // Allocate memory for the mipmaps.  Failure to do this before rendering
+        // to the texture via the FBO, and calling generateMipmap later,
+        // will result in the texture appearing blank.  I can't pretend to
+        // understand exactly why this is.
         if (CesiumMath.isPowerOfTwo(width) && CesiumMath.isPowerOfTwo(height)) {
             outputTexture.generateMipmap(MipmapHint.NICEST);
         }
-
-        var projection = this._imageryProvider.tilingScheme.sourceProjection;
-        var rectangle = imagery.rectangle;
-        var context = frameState.context;
-
-        // Create reusable positions buffer
-        var positions = new Float32Array(ARBITRARY_PROJECTION_VERTICES_WIDTH * ARBITRARY_PROJECTION_VERTICES_HEIGHT * 2);
-        var index = 0;
-        var widthIncrement = 1.0 / (ARBITRARY_PROJECTION_VERTICES_WIDTH - 1);
-        var heightIncrement = 1.0 / (ARBITRARY_PROJECTION_VERTICES_HEIGHT - 1);
+        var index;
         var w;
         var h;
-        for (w = 0; w < ARBITRARY_PROJECTION_VERTICES_WIDTH; w++) {
-            for (h = 0; h < ARBITRARY_PROJECTION_VERTICES_HEIGHT; h++) {
-                positions[index++] = w * widthIncrement;
-                positions[index++] = h * heightIncrement;
+
+        var projection = this._imageryProvider.tilingScheme.sourceProjection;
+        var context = frameState.context;
+        var verticesWidth = this._arbitraryReprojectionWidth;
+        var contextCache = context.cache;
+
+        var sampler = contextCache.imageryLayer_arbitraryReprojectionSampler;
+        if (!defined(sampler)) {
+            sampler = contextCache.imageryLayer_arbitraryReprojectionSampler = new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
+            });
+        }
+
+        var shaderProgram = contextCache.imageryLayer_arbitraryReprojectionShader;
+        if (!defined(shaderProgram)) {
+            shaderProgram = contextCache.imageryLayer_arbitraryReprojectionShader = ShaderProgram.fromCache({
+                context : context,
+                vertexShaderSource : ReprojectArbitraryVS,
+                fragmentShaderSource : ReprojectArbitraryFS,
+                attributeLocations : arbitraryReprojectAttributeIndices
+            });
+        }
+
+        var cachedVertexArrayKey = 'imageryLayer_reproject' + verticesWidth + '_vertexArray';
+        var vertexArray = contextCache[cachedVertexArrayKey];
+        if (!defined(vertexArray)) {
+            // Create reuseable position and index buffers
+            var positions = new Float32Array(verticesWidth * verticesWidth * 2);
+            index = 0;
+            var widthIncrement = 1.0 / (verticesWidth - 1);
+            var heightIncrement = 1.0 / (verticesWidth - 1);
+            for (w = 0; w < verticesWidth; w++) {
+                for (h = 0; h < verticesWidth; h++) {
+                    positions[index++] = w * widthIncrement;
+                    positions[index++] = h * heightIncrement;
+                }
+            }
+
+            var positionsBuffer = Buffer.createVertexBuffer({
+                context : context,
+                typedArray : positions,
+                usage : BufferUsage.STATIC_DRAW
+            });
+
+            var indexBuffer = Buffer.createIndexBuffer({
+                context : context,
+                typedArray : TerrainProvider.getRegularGridIndices(verticesWidth, verticesWidth),
+                usage : BufferUsage.STATIC_DRAW,
+                indexDatatype : IndexDatatype.UNSIGNED_SHORT
+            });
+
+            vertexArray = contextCache[cachedVertexArrayKey] = new VertexArray({
+                context: context,
+                attributes: [{
+                    index: arbitraryReprojectAttributeIndices.position,
+                    vertexBuffer: positionsBuffer,
+                    componentsPerAttribute: 2
+                }, {
+                    index: arbitraryReprojectAttributeIndices.projectedCoordinates,
+                    vertexBuffer : Buffer.createVertexBuffer({
+                        context : context,
+                        sizeInBytes : verticesWidth * verticesWidth * 2 * 4,
+                        usage : BufferUsage.STREAM_DRAW
+                    }),
+                    componentsPerAttribute: 2
+                }],
+                indexBuffer: indexBuffer
+            });
+        }
+
+        // For each vertex in the target grid, project into the projection
+        var cartographicRectangle = imagery.rectangle;
+        var south = cartographicRectangle.south;
+        var west = cartographicRectangle.west;
+
+        var unprojectedWidthIncrement = cartographicRectangle.width / (verticesWidth - 1);
+        var unprojectedHeightIncrement = cartographicRectangle.height / (verticesWidth - 1);
+        var geographicCartographic = geographicCartographicScratch;
+        var projected = projectedScratch;
+
+        var projectedCoordinates = new Float32Array(verticesWidth * verticesWidth * 2);
+        index = 0;
+        for (w = 0; w < verticesWidth; w++) {
+            for (h = 0; h < verticesWidth; h++) {
+                geographicCartographic.longitude = west + w * unprojectedWidthIncrement;
+                geographicCartographic.latitude = south + h * unprojectedHeightIncrement;
+
+                projection.project(geographicCartographic, projected);
+
+                projectedCoordinates[index++] = projected.x;
+                projectedCoordinates[index++] = projected.y;
             }
         }
 
-        var positionsBuffer = Buffer.createVertexBuffer({
-            context : context,
-            typedArray : positions,
-            usage : BufferUsage.STATIC_DRAW
-        });
-
         for (var i = 0; i < projectedTexturesLength; i++) {
             imagery.addReference();
-            var final = (i === projectedTexturesLength - 1);
-            var computeCommand = makeCommand(context, projectedTextures[i], outputTexture, rectangle, projectedRectangles[i], projection, imagery, this, final, positionsBuffer);
+            var projectedTexture = projectedTextures[i];
+            projectedTexture.sampler = sampler;
+
+            var makeCommandOptions = new MakeCommandOptions();
+            makeCommandOptions.shaderProgram = shaderProgram;
+            makeCommandOptions.projectedCoordinates = projectedCoordinates;
+            makeCommandOptions.context = context;
+            makeCommandOptions.outputTexture = outputTexture;
+            makeCommandOptions.imagery = imagery;
+            makeCommandOptions.imageryLayer = this;
+            makeCommandOptions.vertexArray = vertexArray;
+            makeCommandOptions.projectedTexture = projectedTexture;
+            makeCommandOptions.projectedRectangle = projectedRectangles[i];
+            makeCommandOptions.final = (i === projectedTexturesLength - 1);
+
+            var computeCommand = makeCommand(makeCommandOptions);
             this._reprojectComputeCommands.push(computeCommand);
         }
     };
 
-    function makeCommand(context, projectedTexture, outputTexture, rectangle, projectedRectangle, projection, imagery, that, final, positionsBuffer) {
+    function makeCommand(makeCommandOptions) {
+        var imagery = makeCommandOptions.imagery;
         return new ComputeCommand({
             persists : true,
             owner : this,
             // Update render resources right before execution instead of now.
             // This allows different ImageryLayers to share the same vao and buffers.
             preExecute : function(command) {
-                reprojectFromArbitrary(command, context, projectedTexture, outputTexture, rectangle, projectedRectangle, projection, positionsBuffer);
+                reprojectFromArbitrary(command, makeCommandOptions);
             },
             postExecute : function(outputTexture) {
-                if (final) {
-                    finalizeReprojectTexture(that, context, imagery, outputTexture);
+                if (makeCommandOptions.final) {
+                    var projectedTextures = imagery.projectedTextures;
+                    var projectedTexturesLength = projectedTextures.length;
+                    for (var i = 0; i < projectedTexturesLength; i++) {
+                        projectedTextures[i].destroy();
+                    }
+
+                    finalizeReprojectTexture(makeCommandOptions.imageryLayer, makeCommandOptions.context, imagery, outputTexture);
                     imagery.projectedTextures.length = 0;
                 }
                 imagery.releaseReference();
@@ -1246,106 +1376,42 @@ define([
         });
     }
 
-    var geographicCartographicScratch = new Cartographic();
-    var projectedScratch = new Cartesian3();
-    function reprojectFromArbitrary(command, context, texture, outputTexture, cartographicRectangle, projectedRectangle, projection, positionsBuffer) {
-        var reproject = {
-            vertexArray : undefined,
-            shaderProgram : undefined,
-            sampler : undefined,
-            destroy : function() {
-                if (defined(this.framebuffer)) {
-                    this.framebuffer.destroy();
-                }
-                if (defined(this.vertexArray)) {
-                    this.vertexArray.destroy();
-                }
-                if (defined(this.shaderProgram)) {
-                    this.shaderProgram.destroy();
-                }
-            }
-        };
+    var arbitraryUniformMap = {
+        u_textureDimensions : function() {
+            return this.textureDimensions;
+        },
+        u_texture : function() {
+            return this.texture;
+        },
+        u_westSouthInverseWidthHeight : function() {
+            return this.westSouthInverseWidthHeight;
+        },
+        westSouthInverseWidthHeight : new Cartesian4(),
+        textureDimensions : new Cartesian2(),
+        texture : undefined
+    };
 
-        // For each vertex in the target grid, project into the projection
-        var south = cartographicRectangle.south;
-        var west = cartographicRectangle.west;
+    function reprojectFromArbitrary(command, makeCommandOptions) {
+        var vertexArray = makeCommandOptions.vertexArray;
+        vertexArray.getAttribute(arbitraryReprojectAttributeIndices.projectedCoordinates).vertexBuffer.copyFromArrayView(makeCommandOptions.projectedCoordinates);
 
-        var unprojectedWidthIncrement = cartographicRectangle.width / (ARBITRARY_PROJECTION_VERTICES_WIDTH - 1);
-        var unprojectedHeightIncrement = cartographicRectangle.height / (ARBITRARY_PROJECTION_VERTICES_HEIGHT - 1);
-        var geographicCartographic = geographicCartographicScratch;
-        var projected = projectedScratch;
+        var texture = makeCommandOptions.projectedTexture;
+        var projectedRectangle = makeCommandOptions.projectedRectangle;
 
-        var projectedSouth = projectedRectangle.south;
-        var projectedWest = projectedRectangle.west;
+        arbitraryUniformMap.textureDimensions.x = texture.width;
+        arbitraryUniformMap.textureDimensions.y = texture.height;
+        arbitraryUniformMap.texture = texture;
 
-        var texcoords = new Float32Array(ARBITRARY_PROJECTION_VERTICES_WIDTH * ARBITRARY_PROJECTION_VERTICES_HEIGHT * 2);
-        var index = 0;
-        for (var w = 0; w < ARBITRARY_PROJECTION_VERTICES_WIDTH; w++) {
-            for (var h = 0; h < ARBITRARY_PROJECTION_VERTICES_HEIGHT; h++) {
-                geographicCartographic.longitude = west + w * unprojectedWidthIncrement;
-                geographicCartographic.latitude = south + h * unprojectedHeightIncrement;
-
-                projection.project(geographicCartographic, projected);
-
-                texcoords[index++] = (projected.x - projectedWest) / projectedRectangle.width;
-                texcoords[index++] = (projected.y - projectedSouth) / projectedRectangle.height;
-            }
-        }
-
-        var reprojectAttributeIndices = {
-            position : 0,
-            textureCoordinates : 1
-        };
-
-        var indices = TerrainProvider.getRegularGridIndices(ARBITRARY_PROJECTION_VERTICES_WIDTH, ARBITRARY_PROJECTION_VERTICES_HEIGHT);
-        var indexBuffer = Buffer.createIndexBuffer({
-            context : context,
-            typedArray : indices,
-            usage : BufferUsage.STATIC_DRAW,
-            indexDatatype : IndexDatatype.UNSIGNED_SHORT
-        });
-
-        reproject.vertexArray = new VertexArray({
-            context : context,
-            attributes : [{
-                index : reprojectAttributeIndices.position,
-                vertexBuffer : positionsBuffer,
-                componentsPerAttribute : 2
-            },{
-                index : reprojectAttributeIndices.textureCoordinates,
-                vertexBuffer : Buffer.createVertexBuffer({
-                    context : context,
-                    typedArray : texcoords,
-                    usage : BufferUsage.STATIC_DRAW
-                }),
-                componentsPerAttribute : 2
-            }],
-            indexBuffer : indexBuffer
-        });
-
-        reproject.shaderProgram = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : ReprojectArbitraryVS,
-            fragmentShaderSource : ReprojectArbitraryFS,
-            attributeLocations : reprojectAttributeIndices
-        });
-
-        reproject.sampler = new Sampler({
-            wrapS : TextureWrap.CLAMP_TO_EDGE,
-            wrapT : TextureWrap.CLAMP_TO_EDGE,
-            minificationFilter : TextureMinificationFilter.LINEAR,
-            magnificationFilter : TextureMagnificationFilter.LINEAR
-        });
-
-        uniformMap.textureDimensions.x = texture.width;
-        uniformMap.textureDimensions.y = texture.height;
-        uniformMap.texture = texture;
+        arbitraryUniformMap.westSouthInverseWidthHeight.x = projectedRectangle.west;
+        arbitraryUniformMap.westSouthInverseWidthHeight.y = projectedRectangle.south;
+        arbitraryUniformMap.westSouthInverseWidthHeight.z = 1.0 / projectedRectangle.width;
+        arbitraryUniformMap.westSouthInverseWidthHeight.w = 1.0 / projectedRectangle.height;
 
         command.clear = false;
-        command.shaderProgram = reproject.shaderProgram;
-        command.outputTexture = outputTexture;
-        command.uniformMap = uniformMap;
-        command.vertexArray = reproject.vertexArray;
+        command.shaderProgram = makeCommandOptions.shaderProgram;
+        command.outputTexture = makeCommandOptions.outputTexture;
+        command.uniformMap = arbitraryUniformMap;
+        command.vertexArray = vertexArray;
     }
 
     /**
@@ -1394,6 +1460,18 @@ define([
     function getImageryCacheKey(x, y, level) {
         return JSON.stringify([x, y, level]);
     }
+
+    var uniformMap = {
+        u_textureDimensions : function() {
+            return this.textureDimensions;
+        },
+        u_texture : function() {
+            return this.texture;
+        },
+
+        textureDimensions : new Cartesian2(),
+        texture : undefined
+    };
 
     var float32ArrayScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(2 * 64) : undefined;
 

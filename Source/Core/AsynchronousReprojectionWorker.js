@@ -6,7 +6,7 @@ define([
         './Rectangle',
         './RectangleCollisionChecker',
         './Resource',
-        './SerializedMapProjection',
+        './deserializeMapProjection',
         '../ThirdParty/lru',
         '../ThirdParty/when'
     ], function(
@@ -17,7 +17,7 @@ define([
         Rectangle,
         RectangleCollisionChecker,
         Resource,
-        SerializedMapProjection,
+        deserializeMapProjection,
         LRUMap,
         when
     ) {
@@ -101,7 +101,10 @@ define([
 
                 for (var i = 0; i < imagesLength; i++) {
                     var projectedRectangle = projectedRectangles[i] = Rectangle.clone(projectedRectangles[i]);
-                    var unprojected = Rectangle.approximateCartographicExtents(projectedRectangle, projections[i]);
+                    var unprojected = Rectangle.approximateCartographicExtents({
+                        projectedRectangle : projectedRectangle,
+                        mapProjection : projections[i]
+                    });
                     north = Math.max(north, unprojected.north);
                     south = Math.min(south, unprojected.south);
                     east = Math.max(east, unprojected.east);
@@ -224,7 +227,7 @@ define([
         if (index === serializedMapProjections.length) {
             return when.resolve();
         }
-        return SerializedMapProjection.deserialize(serializedMapProjections[index])
+        return deserializeMapProjection(serializedMapProjections[index])
             .then(function(projection) {
                 projectionsArray[index] = projection;
 

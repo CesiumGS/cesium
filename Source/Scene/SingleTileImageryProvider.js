@@ -44,6 +44,7 @@ define([
      * @see GoogleEarthEnterpriseMapsProvider
      * @see createOpenStreetMapImageryProvider
      * @see createTileMapServiceImageryProvider
+     * @see SingleTileProjectedImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider

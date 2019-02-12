@@ -1,3 +1,7 @@
+/**
+ * JavaScript code for a user-defined map projection. See <code>CustomProjection</code> for details.
+ */
+
 function createProjectionFunctions(callback) {
     function project(cartographic, result) {
          result.x = cartographic.longitude * 6378137.0;
