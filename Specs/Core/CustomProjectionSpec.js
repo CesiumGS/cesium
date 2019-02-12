@@ -120,7 +120,16 @@ defineSuite([
         });
     });
 
-    it('project throws without cartesian', function() {
+    it('project throws without cartographic', function() {
+        var projection = new CustomProjection('Data/UserGeographic.js');
+        return projection.readyPromise.then(function() {
+            expect(function() {
+                return projection.project();
+            }).toThrowDeveloperError();
+        });
+    });
+
+    it('unproject throws without cartesian', function() {
         var projection = new CustomProjection('Data/UserGeographic.js');
         return projection.readyPromise.then(function() {
             expect(function() {

@@ -41,7 +41,15 @@ define([
          * @type {Number}
          * @constant
          */
-        CUSTOM : 3
+        CUSTOM : 3,
+
+        /**
+         * Corresponds with Matrix4Projection
+         *
+         * @type {Number}
+         * @constant
+         */
+        MATRIX4 : 4
     };
 
     return freezeObject(MapProjectionType);

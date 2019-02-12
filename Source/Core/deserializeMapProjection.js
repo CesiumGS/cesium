@@ -5,6 +5,7 @@ define([
     './DeveloperError',
     './GeographicProjection',
     './MapProjectionType',
+    './Matrix4Projection',
     './Proj4Projection',
     './WebMercatorProjection'
 ], function(
@@ -14,6 +15,7 @@ define([
     DeveloperError,
     GeographicProjection,
     MapProjectionType,
+    Matrix4Projection,
     Proj4Projection,
     WebMercatorProjection) {
     'use strict';
@@ -47,6 +49,8 @@ define([
             return Proj4Projection.deserialize(serializedMapProjection);
         } else if (mapProjectionType === MapProjectionType.CUSTOM) {
             return CustomProjection.deserialize(serializedMapProjection);
+        } else if (mapProjectionType === MapProjectionType.MATRIX4) {
+            return Matrix4Projection.deserialize(serializedMapProjection);
         }
 
         return when.reject(new DeveloperError('unknown projection'));
