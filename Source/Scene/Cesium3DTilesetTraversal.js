@@ -203,8 +203,23 @@ define([
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
     }
 
+    function isOnScreenLongEnough(tileset, tile, frameState) {
+        // Prevent unnecessary loads while camera is moving by getting the ratio of travel distance to tile size.
+        if (!tileset.cullRequestsWhileMoving) {
+            return true;
+        }
+
+        var sphere = tile.boundingSphere;
+        var diameter = Math.max(sphere.radius * 2.0, 1.0);
+
+        var camera = frameState.camera;
+        var deltaMagnitude = camera.positionWCDeltaMagnitude !== 0 ? camera.positionWCDeltaMagnitude : camera.positionWCDeltaMagnitudeLastFrame;
+        var movementRatio = tileset.cullRequestsWhileMovingMultiplier * deltaMagnitude / diameter; // How do n frames of this movement compare to the tile's physical size.
+        return movementRatio < 1;
+    }
+
     function loadTile(tileset, tile, frameState) {
-        if (hasUnloadedContent(tile) || tile.contentExpired) {
+        if ((hasUnloadedContent(tile) || tile.contentExpired) && isOnScreenLongEnough(tileset, tile, frameState)) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
         }

@@ -114,6 +114,7 @@ define([
     Cesium3DTilesTester.loadTileset = function(scene, url, options) {
         options = defaultValue(options, {});
         options.url = url;
+        options.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, false);
         // Load all visible tiles
         var tileset = scene.primitives.add(new Cesium3DTileset(options));
 
@@ -162,8 +163,8 @@ define([
         });
     };
 
-    Cesium3DTilesTester.resolvesReadyPromise = function(scene, url) {
-        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+    Cesium3DTilesTester.resolvesReadyPromise = function(scene, url, options) {
+        return Cesium3DTilesTester.loadTileset(scene, url, options).then(function(tileset) {
             var content = tileset.root.content;
             return content.readyPromise.then(function(content) {
                 expect(content).toBeDefined();
@@ -171,8 +172,8 @@ define([
         });
     };
 
-    Cesium3DTilesTester.tileDestroys = function(scene, url) {
-        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+    Cesium3DTilesTester.tileDestroys = function(scene, url, options) {
+        return Cesium3DTilesTester.loadTileset(scene, url, options).then(function(tileset) {
             var content = tileset.root.content;
             expect(content.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
