@@ -3553,6 +3553,27 @@ defineSuite([
         });
     });
 
+    it('defers requests when foveatedScreenSpaceError is true', function() {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetRefinementMix).then(function(tileset) {
+            tileset.foveatedScreenSpaceError = true;
+            tileset.foveatedConeSize = 0;
+            tileset.maximumScreenSpaceError = 8;
+
+            // Position camera such that some tiles are outside the foveated cone but still on screen.
+            viewAllTiles();
+            scene.camera.moveLeft(205.0);
+            scene.camera.moveDown(205.0);
+
+            scene.renderForSpecs();
+
+            // Verify deferred
+            var requestedTilesInFlight = tileset._requestedTilesInFlight;
+            expect(requestedTilesInFlight.length).toBe(1);
+            expect(requestedTilesInFlight[0]._priorityDeferred).toBe(true);
+        });
+    });
+
     it('does not fetch tiles while camera is moving', function() {
         viewNothing();
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
