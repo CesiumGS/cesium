@@ -25,6 +25,7 @@ define([
      * @see WebMercatorProjection
      * @see CustomProjection
      * @see Proj4Projection
+     * @see Matrix4Projection
      */
     function MapProjection() {
         DeveloperError.throwInstantiationError();
