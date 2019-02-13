@@ -1448,7 +1448,7 @@ define([
         /**
          * Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
          * @memberof Scene.prototype
-         * @type {Boolean}
+         * @type {MapMode2D}
          */
         mapMode2D : {
             get : function() {
