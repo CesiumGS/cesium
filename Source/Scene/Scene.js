@@ -3268,6 +3268,7 @@ define([
         this._jobScheduler.resetBudgets();
 
         var cameraChanged = this._view.checkForCameraUpdates(this);
+        this._timeSinceCameraMoved = this._view.getTimeSinceCameraMoved();
         var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || this._hdrDirty || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));

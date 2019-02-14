@@ -78,7 +78,7 @@ define([
         this.camera = camera;
         this._cameraClone = Camera.clone(camera);
         this._cameraStartFired = false;
-        this._cameraMovedTime = undefined;
+        this._cameraMovedTime = getTimestamp();
 
         this.viewport = viewport;
         this.passState = passState;
@@ -113,6 +113,10 @@ define([
                Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
                Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon) &&
                camera0.frustum.equalsEpsilon(camera1.frustum, epsilon);
+    }
+
+    View.prototype.getTimeSinceCameraMoved = function(scene) {
+        return getTimestamp() - this._cameraMovedTime;
     }
 
     View.prototype.checkForCameraUpdates = function(scene) {
