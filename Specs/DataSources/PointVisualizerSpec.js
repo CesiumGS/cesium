@@ -51,7 +51,6 @@ defineSuite([
         scene.globe = {
             ellipsoid : Ellipsoid.WGS84,
             _surface : {},
-            tileLoadedEvent : new Event(),
             imageryLayersUpdatedEvent : new Event(),
             terrainProviderChanged : new Event()
         };
