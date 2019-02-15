@@ -161,6 +161,9 @@ define([
 
     function getExpression(tileStyle, value, key) {
         var defines = defaultValue(tileStyle._style, defaultValue.EMPTY_OBJECT).defines;
+        if (!defined(tileStyle._style)) {
+            tileStyle._style = {};
+        }
         if (!defined(value)) {
             delete tileStyle._style[key];
             return undefined;
