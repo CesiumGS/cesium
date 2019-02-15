@@ -167,14 +167,21 @@ define([
         if (!defined(value)) {
             delete tileStyle._style[key];
             return undefined;
-        }
-        tileStyle._style[key] = value;
-        if (typeof value === 'boolean' || typeof value === 'number') {
+        } else if (typeof value === 'boolean' || typeof value === 'number') {
+            tileStyle._style[key] = value;
             return new Expression(String(value));
         } else if (typeof value === 'string') {
+            tileStyle._style[key] = value;
             return new Expression(value, defines);
         } else if (defined(value.conditions)) {
+            tileStyle._style[key] = clone(value, true);
             return new ConditionsExpression(value, defines);
+        } else if (defined(value.expression)) {
+            tileStyle._style[key] = value.expression;
+            return value;
+        } else if (defined(value.conditionsExpression)) {
+            tileStyle._style[key] = value.conditionsExpression;
+            return value;
         }
         return value;
     }
