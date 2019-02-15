@@ -36,7 +36,11 @@ define([
             boundingSphere3D : statistics.boundingSphere3D,
             orientedBoundingBox : statistics.orientedBoundingBox,
             occludeePointInScaledSpace : statistics.occludeePointInScaledSpace,
-            encoding : statistics.encoding
+            encoding : statistics.encoding,
+            westIndicesSouthToNorth : statistics.westIndicesSouthToNorth,
+            southIndicesEastToWest : statistics.southIndicesEastToWest,
+            eastIndicesNorthToSouth : statistics.eastIndicesNorthToSouth,
+            northIndicesWestToEast : statistics.northIndicesWestToEast
         };
     }
 
