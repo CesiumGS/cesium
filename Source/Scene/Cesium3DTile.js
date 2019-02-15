@@ -311,6 +311,16 @@ define([
          */
         this.clippingPlanesDirty = false;
 
+        /**
+         * Tracks if the tile's request should be deferred until all non-deferred
+         * tiles load.
+         *
+         * @type {Boolean}
+         *
+         * @private
+         */
+        this.priorityDeferred = false;
+
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
         this._centerZDepth = 0;
@@ -1289,8 +1299,10 @@ define([
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
+        var foveatedDigit = this.priorityDeferred ? foveatedScale : 0;
+
         // Get the final base 10 number
-        var number = distanceDigit + depthDigit;
+        var number = foveatedDigit + distanceDigit + depthDigit;
         this._priority = number;
     };
 

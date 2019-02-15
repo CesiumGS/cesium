@@ -117,7 +117,7 @@ define([
 
     View.prototype.getTimeSinceCameraMoved = function(scene) {
         return getTimestamp() - this._cameraMovedTime;
-    }
+    };
 
     View.prototype.checkForCameraUpdates = function(scene) {
         var camera = this.camera;

@@ -269,7 +269,11 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
-        if(isPriorityDeferred(tile, frameState) && frameState.camera._scene._timeSinceCameraMoved < 5000) return;
+        tile.priorityDeferred = isPriorityDeferred(tile, frameState);
+        // If a tile is deferred and the camera has moved recently, don't load this tile.
+        if(tile.priorityDeferred && frameState.camera._scene._timeSinceCameraMoved < tileset.foveatedTimeDelay * 1000) {
+            return;
+        }
 
         if ((hasUnloadedContent(tile) || tile.contentExpired) && isOnScreenLongEnough(tileset, tile, frameState)) {
             tile._requestedFrame = frameState.frameNumber;
