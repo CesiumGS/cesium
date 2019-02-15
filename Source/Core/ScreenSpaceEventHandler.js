@@ -133,14 +133,12 @@ define([
         return (getTimestamp() - screenSpaceEventHandler._lastSeenTouchEvent) > ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
     }
 
-    function checkClickPixelTolerance(screenSpaceEventHandler) {
-        var startPosition = screenSpaceEventHandler._primaryStartPosition;
-        var endPosition = screenSpaceEventHandler._previousPositions.values[0];
+    function checkPixelTolerance(startPosition, endPosition, pixelTolerance) {
         var xDiff = startPosition.x - endPosition.x;
         var yDiff = startPosition.y - endPosition.y;
         var totalPixels = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
 
-        return totalPixels < screenSpaceEventHandler._clickPixelTolerance;
+        return totalPixels < pixelTolerance;
     }
 
     function handleMouseDown(screenSpaceEventHandler, event) {
@@ -203,11 +201,7 @@ define([
 
             if (defined(clickAction)) {
                 var startPosition = screenSpaceEventHandler._primaryStartPosition;
-                var xDiff = startPosition.x - position.x;
-                var yDiff = startPosition.y - position.y;
-                var totalPixels = Math.sqrt(xDiff * xDiff + yDiff * yDiff);
-
-                if (totalPixels < screenSpaceEventHandler._clickPixelTolerance) {
+                if (checkPixelTolerance(startPosition, position, screenSpaceEventHandler._clickPixelTolerance)) {
                     Cartesian2.clone(position, mouseClickEvent.position);
 
                     clickAction(mouseClickEvent);
@@ -442,7 +436,9 @@ define([
                 clickAction = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_CLICK, modifier);
 
                 if (defined(clickAction)) {
-                    if(checkClickPixelTolerance(screenSpaceEventHandler)) {
+                    var startPosition = screenSpaceEventHandler._primaryStartPosition;
+                    var endPosition = screenSpaceEventHandler._previousPositions.values[0];
+                    if(checkPixelTolerance(startPosition, endPosition, screenSpaceEventHandler._clickPixelTolerance)) {
                         Cartesian2.clone(screenSpaceEventHandler._primaryPosition, touchClickEvent.position);
 
                         clickAction(touchClickEvent);
@@ -491,7 +487,9 @@ define([
                     clickAction = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.RIGHT_CLICK, modifier);
 
                     if (defined(clickAction)) {
-                        if(checkClickPixelTolerance(screenSpaceEventHandler)) {
+                        var startPosition = screenSpaceEventHandler._primaryStartPosition;
+                        var endPosition = screenSpaceEventHandler._previousPositions.values[0];
+                        if(checkPixelTolerance(startPosition, endPosition, screenSpaceEventHandler._holdPixelTolerance)) {
                             Cartesian2.clone(screenSpaceEventHandler._primaryPosition, touchHoldEvent.position);
 
                             clickAction(touchHoldEvent);
@@ -717,6 +715,7 @@ define([
         // TODO: Revisit when doing mobile development. May need to be configurable
         // or determined based on the platform?
         this._clickPixelTolerance = 5;
+        this._holdPixelTolerance = 25;
 
         this._element = defaultValue(element, document);
 
