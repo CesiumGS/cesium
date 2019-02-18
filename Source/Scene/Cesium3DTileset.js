@@ -2082,12 +2082,13 @@ define([
         tilesetPassState.ready = false;
 
         var commandList = tilesetPassState.ignoreCommands ? scratchCommandList : tilesetPassState.commandList;
+        commandList = defaultValue(commandList, originalCommandList);
 
-        frameState.commandList = defaultValue(commandList, originalCommandList);
+        frameState.commandList = commandList;
         frameState.camera = defaultValue(tilesetPassState.camera, originalCamera);
         frameState.cullingVolume = defaultValue(tilesetPassState.cullingVolume, originalCullingVolume);
 
-        var commandStart = frameState.commandList.length;
+        var commandStart = commandList.length;
 
         var pass = tilesetPassState.pass;
         if (!defined(pass)) {
