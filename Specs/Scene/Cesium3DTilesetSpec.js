@@ -21,10 +21,12 @@ defineSuite([
         'Core/Transforms',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
+        'Scene/Camera',
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileColorBlendMode',
         'Scene/Cesium3DTileContentState',
         'Scene/Cesium3DTilePass',
+        'Scene/Cesium3DTilePassState',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
         'Scene/ClippingPlane',
@@ -57,10 +59,12 @@ defineSuite([
         Transforms,
         ClearCommand,
         ContextLimits,
+        Camera,
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
         Cesium3DTilePass,
+        Cesium3DTilePassState,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
         ClippingPlane,
@@ -3328,6 +3332,63 @@ defineSuite([
             boundingSphereEastNorthUp = Transforms.eastNorthUpToFixedFrame(tileset.root.boundingSphere.center);
             offsetMatrix = tileset.clippingPlanesOriginMatrix;
             expect(offsetMatrix).toEqualEpsilon(boundingSphereEastNorthUp, CesiumMath.EPSILON3);
+        });
+    });
+
+    describe('updateForPass', function() {
+        it('updates for pass', function() {
+            viewAllTiles();
+            var passCamera = Camera.clone(scene.camera);
+            var passCullingVolume = passCamera.frustum.computeCullingVolume(passCamera.positionWC, passCamera.directionWC, passCamera.upWC);
+            viewNothing(); // Main camera views nothing, pass camera views all tiles
+
+            var prefetchPassState = new Cesium3DTilePassState({
+                pass : Cesium3DTilePass.PREFETCH,
+                camera : passCamera,
+                cullingVolume : passCullingVolume
+            });
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+                expect(tileset.statistics.selected).toBe(0);
+                tileset.updateForPass(scene.frameState, prefetchPassState);
+                expect(tileset._requestedTiles.length).toBe(5);
+            });
+        });
+
+        it('uses custom command list', function() {
+            var passCommandList = [];
+
+            var renderPassState = new Cesium3DTilePassState({
+                pass : Cesium3DTilePass.RENDER,
+                commandList : passCommandList
+            });
+
+            viewAllTiles();
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+                tileset.updateForPass(scene.frameState, renderPassState);
+                expect(passCommandList.length).toBe(5);
+            });
+        });
+
+        it('throws if frameState is undefined', function() {
+            var tileset = new Cesium3DTileset({
+                url : tilesetUrl
+            });
+
+            expect(function() {
+                tileset.updateForPass();
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if tilesetPassState is undefined', function() {
+            var tileset = new Cesium3DTileset({
+                url : tilesetUrl
+            });
+
+            expect(function() {
+                tileset.updateForPass(scene.frameState);
+            }).toThrowDeveloperError();
         });
     });
 

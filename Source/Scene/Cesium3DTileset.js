@@ -2058,9 +2058,6 @@ define([
         this.updateForPass(frameState, frameState.tilesetPassState);
     };
 
-    var scratchCommandList = [];
-    var defaultTilesetPassState = new Cesium3DTilePassState();
-
     /**
      * @private
      */
@@ -2070,7 +2067,6 @@ define([
         Check.typeOf.object('tilesetPassState', tilesetPassState);
         //>>includeEnd('debug');
 
-        tilesetPassState = defaultValue(tilesetPassState, defaultTilesetPassState);
         var originalCommandList = frameState.commandList;
         var originalCamera = frameState.camera;
         var originalCullingVolume = frameState.cullingVolume;
@@ -2081,8 +2077,7 @@ define([
         var passOptions = Cesium3DTilePass.getPassOptions(pass);
         var ignoreCommands = passOptions.ignoreCommands;
 
-        var commandList = ignoreCommands ? scratchCommandList : tilesetPassState.commandList;
-        commandList = defaultValue(commandList, originalCommandList);
+        var commandList = defaultValue(tilesetPassState.commandList, originalCommandList);
         var commandStart = commandList.length;
 
         frameState.commandList = commandList;
