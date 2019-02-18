@@ -1978,13 +1978,13 @@ define([
         frameState : undefined,
         traversal : undefined,
         statisticsLast : undefined,
-        pass : undefined,
+        isRender : undefined,
         requestTiles : false
     };
 
     function update(tileset, options) {
         var frameState = options.frameState;
-        var isRender = options.pass === Cesium3DTilePass.RENDER; // Do out-of-core operations (cache removal, process new tiles) only during the render pass.
+        var isRender = options.isRender; // Do out-of-core operations (cache removal, process new tiles) only during the render pass.
 
         if (frameState.mode === SceneMode.MORPHING) {
             return false;
@@ -2104,7 +2104,7 @@ define([
         updateOptions.frameState = frameState;
         updateOptions.traversal = traversal;
         updateOptions.statisticsLast = this._statisticsLastPerPass[pass];
-        updateOptions.pass = pass;
+        updateOptions.isRender = pass === Cesium3DTilePass.RENDER;
         updateOptions.requestTiles = pass === Cesium3DTilePass.RENDER ||
                                      pass === Cesium3DTilePass.MOST_DETAILED_PREFETCH ||
                                      pass === Cesium3DTilePass.SHADOW ||
