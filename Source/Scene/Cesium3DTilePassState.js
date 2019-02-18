@@ -41,15 +41,6 @@ define([
         this.pass = options.pass;
 
         /**
-         * Whether commands inserted during the pass should be ignored. Used for passes that prefetch tiles rather
-         * than render them.
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.ignoreCommands = options.ignoreCommands;
-
-        /**
          * A read-only property that indicates whether the pass is ready, i.e. all tiles needed by the pass are loaded.
          *
          * @type {Boolean}

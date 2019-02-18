@@ -3821,8 +3821,7 @@ define([
     }
 
     var mostDetailedPrefetchPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.MOST_DETAILED_PREFETCH,
-        ignoreCommands : true
+        pass : Cesium3DTilePass.MOST_DETAILED_PREFETCH
     });
 
     var mostDetailedPickPassState = new Cesium3DTilePassState({

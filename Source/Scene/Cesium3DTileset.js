@@ -1974,18 +1974,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    var updateOptions = {
-        frameState : undefined,
-        traversal : undefined,
-        statisticsLast : undefined,
-        isRender : undefined,
-        requestTiles : false
-    };
-
-    function update(tileset, options) {
-        var frameState = options.frameState;
-        var isRender = options.isRender; // Do out-of-core operations (cache removal, process new tiles) only during the render pass.
-
+    function update(tileset, frameState, statisticsLast, passOptions) {
         if (frameState.mode === SceneMode.MORPHING) {
             return false;
         }
@@ -2016,6 +2005,8 @@ define([
             updateDynamicScreenSpaceError(tileset, frameState);
         }
 
+        var isRender = passOptions.isRender;
+
         if (isRender) {
             tileset._cache.reset();
         }
@@ -2023,9 +2014,9 @@ define([
         // Resets the visibility check for each pass
         ++tileset._updatedVisibilityFrame;
 
-        var ready = options.traversal.selectTiles(tileset, frameState);
+        var ready = passOptions.traversal.selectTiles(tileset, frameState);
 
-        if (options.requestTiles) {
+        if (passOptions.requestTiles) {
             requestTiles(tileset);
         }
 
@@ -2041,7 +2032,7 @@ define([
             // Events are raised (added to the afterRender queue) here since promises
             // may resolve outside of the update loop that then raise events, e.g.,
             // model's readyPromise.
-            raiseLoadProgressEvent(tileset, frameState, options.statisticsLast);
+            raiseLoadProgressEvent(tileset, frameState, statisticsLast);
 
             if (statistics.selected !== 0) {
                 var credits = tileset._credits;
@@ -2055,7 +2046,7 @@ define([
         }
 
         // Update last statistics
-        Cesium3DTilesetStatistics.clone(statistics, options.statisticsLast);
+        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
 
         return ready;
     }
@@ -2081,38 +2072,27 @@ define([
 
         tilesetPassState.ready = false;
 
-        var commandList = tilesetPassState.ignoreCommands ? scratchCommandList : tilesetPassState.commandList;
-        commandList = defaultValue(commandList, originalCommandList);
-
-        frameState.commandList = commandList;
-        frameState.camera = defaultValue(tilesetPassState.camera, originalCamera);
-        frameState.cullingVolume = defaultValue(tilesetPassState.cullingVolume, originalCullingVolume);
-
-        var commandStart = commandList.length;
-
         var pass = tilesetPassState.pass;
         if (!defined(pass)) {
             pass = frameState.passes.pick ? Cesium3DTilePass.PICK : Cesium3DTilePass.RENDER;
         }
 
-        var traversal = Cesium3DTilesetTraversal;
+        var passOptions = Cesium3DTilePass.getPassOptions(pass);
+        var ignoreCommands = passOptions.ignoreCommands;
 
-        if (pass === Cesium3DTilePass.MOST_DETAILED_PREFETCH || pass === Cesium3DTilePass.MOST_DETAILED_PICK) {
-            traversal = Cesium3DTilesetMostDetailedTraversal;
-        }
+        var commandList = ignoreCommands ? scratchCommandList : tilesetPassState.commandList;
+        commandList = defaultValue(commandList, originalCommandList);
+        var commandStart = commandList.length;
 
-        updateOptions.frameState = frameState;
-        updateOptions.traversal = traversal;
-        updateOptions.statisticsLast = this._statisticsLastPerPass[pass];
-        updateOptions.isRender = pass === Cesium3DTilePass.RENDER;
-        updateOptions.requestTiles = pass === Cesium3DTilePass.RENDER ||
-                                     pass === Cesium3DTilePass.MOST_DETAILED_PREFETCH ||
-                                     pass === Cesium3DTilePass.SHADOW ||
-                                     pass === Cesium3DTilePass.PREFETCH;
+        frameState.commandList = commandList;
+        frameState.camera = defaultValue(tilesetPassState.camera, originalCamera);
+        frameState.cullingVolume = defaultValue(tilesetPassState.cullingVolume, originalCullingVolume);
 
-        tilesetPassState.ready = update(this, updateOptions);
+        var statisticsLast = this._statisticsLastPerPass[pass];
 
-        if (tilesetPassState.ignoreCommands) {
+        tilesetPassState.ready = update(this, frameState, statisticsLast, passOptions);
+
+        if (ignoreCommands) {
             commandList.length = commandStart;
         }
 
