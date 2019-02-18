@@ -1691,6 +1691,22 @@ define([
         }
     };
 
+    var mostDetailedPrefetchTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.MOST_DETAILED_PREFETCH
+    });
+
+    var mostDetailedPickTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.MOST_DETAILED_PICK
+    });
+
+    var renderTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.RENDER
+    });
+
+    var pickTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.PICK
+    });
+
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
 
@@ -3184,6 +3200,7 @@ define([
         updateFrameState(scene);
         frameState.passes.render = true;
         frameState.passes.postProcess = scene.postProcessStages.hasSelected;
+        frameState.tilesetPassState = renderTilesetPassState;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
         if (scene._hdr) {
@@ -3487,6 +3504,7 @@ define([
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight, viewport);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
+        frameState.tilesetPassState = pickTilesetPassState;
 
         us.update(frameState);
 
@@ -3528,6 +3546,7 @@ define([
         frameState.passes.pick = true;
         frameState.passes.depth = true;
         frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1, viewport);
+        frameState.tilesetPassState = pickTilesetPassState;
 
         updateEnvironment(scene);
         environmentState.renderTranslucentDepthForPick = true;
@@ -3820,14 +3839,6 @@ define([
         return camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
     }
 
-    var mostDetailedPrefetchPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.MOST_DETAILED_PREFETCH
-    });
-
-    var mostDetailedPickPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.MOST_DETAILED_PICK
-    });
-
     function updateMostDetailedRayPick(scene, rayPick) {
         var frameState = scene._frameState;
 
@@ -3839,7 +3850,7 @@ define([
         var camera = view.camera;
         var cullingVolume = updateOffscreenCameraFromRay(scene, ray, width, view.camera);
 
-        var tilesetPassState = mostDetailedPrefetchPassState;
+        var tilesetPassState = mostDetailedPrefetchTilesetPassState;
         tilesetPassState.camera = camera;
         tilesetPassState.cullingVolume = cullingVolume;
 
@@ -3926,7 +3937,9 @@ define([
         frameState.passes.offscreen = true;
 
         if (mostDetailed) {
-            frameState.tilesetPassState = mostDetailedPickPassState;
+            frameState.tilesetPassState = mostDetailedPickTilesetPassState;
+        } else {
+            frameState.tilesetPassState = pickTilesetPassState;
         }
 
         uniformState.update(frameState);

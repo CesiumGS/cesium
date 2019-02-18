@@ -1,7 +1,7 @@
 define([
-        '../Core/defaultValue'
+        '../Core/Check'
     ], function(
-        defaultValue) {
+        Check) {
     'use strict';
 
     /**
@@ -10,7 +10,18 @@ define([
      * @private
      */
     function Cesium3DTilePassState(options) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('options', options);
+        Check.typeOf.number('options.pass', options.pass);
+        //>>includeEnd('debug');
+
+        /**
+         * The pass.
+         *
+         * @type {Cesium3DTilePass}
+         */
+        this.pass = options.pass;
+
         /**
          * An array of rendering commands to use instead of {@link FrameState.commandList} for the current pass.
          *
@@ -31,14 +42,6 @@ define([
          * @type {CullingVolume}
          */
         this.cullingVolume = options.cullingVolume;
-
-        /**
-         * The pass. If undefined, the pass is set to {@link Cesium3DTilePass.RENDER} or {@link Cesium3DTilePass.PICK} depending
-         * on the pass in {@link FrameState}.
-         *
-         * @type {Cesium3DTilePass}
-         */
-        this.pass = options.pass;
 
         /**
          * A read-only property that indicates whether the pass is ready, i.e. all tiles needed by the pass are loaded.

@@ -2065,6 +2065,11 @@ define([
      * @private
      */
     Cesium3DTileset.prototype.updateForPass = function(frameState, tilesetPassState) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('frameState', frameState);
+        Check.typeOf.object('tilesetPassState', tilesetPassState);
+        //>>includeEnd('debug');
+
         tilesetPassState = defaultValue(tilesetPassState, defaultTilesetPassState);
         var originalCommandList = frameState.commandList;
         var originalCamera = frameState.camera;
@@ -2073,10 +2078,6 @@ define([
         tilesetPassState.ready = false;
 
         var pass = tilesetPassState.pass;
-        if (!defined(pass)) {
-            pass = frameState.passes.pick ? Cesium3DTilePass.PICK : Cesium3DTilePass.RENDER;
-        }
-
         var passOptions = Cesium3DTilePass.getPassOptions(pass);
         var ignoreCommands = passOptions.ignoreCommands;
 
