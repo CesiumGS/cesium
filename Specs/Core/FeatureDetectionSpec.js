@@ -135,10 +135,6 @@ defineSuite([
     });
 
     it('detects ImageBitmapOptions support', function() {
-        if (FeatureDetection.supportsCreateImageBitmap()) {
-            expect(FeatureDetection.supportsImageBitmapOptionsSync()).not.toBeDefined();
-        }
-
         return FeatureDetection.supportsImageBitmapOptions()
             .then(function(supportsImageBitmapOptions) {
                 expect(typeof supportsImageBitmapOptions).toEqual('boolean');
