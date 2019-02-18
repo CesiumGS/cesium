@@ -30,9 +30,11 @@ define([
         './Cesium3DTileColorBlendMode',
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizations',
+        './Cesium3DTilePass',
+        './Cesium3DTilePassState',
         './Cesium3DTileRefine',
-        './Cesium3DTilesetAsyncTraversal',
         './Cesium3DTilesetCache',
+        './Cesium3DTilesetMostDetailedTraversal',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
         './Cesium3DTileStyleEngine',
@@ -78,9 +80,11 @@ define([
         Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
         Cesium3DTileOptimizations,
+        Cesium3DTilePass,
+        Cesium3DTilePassState,
         Cesium3DTileRefine,
-        Cesium3DTilesetAsyncTraversal,
         Cesium3DTilesetCache,
+        Cesium3DTilesetMostDetailedTraversal,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
         Cesium3DTileStyleEngine,
@@ -216,9 +220,11 @@ define([
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
         this._statistics = new Cesium3DTilesetStatistics();
-        this._statisticsLastRender = new Cesium3DTilesetStatistics();
-        this._statisticsLastPick = new Cesium3DTilesetStatistics();
-        this._statisticsLastAsync = new Cesium3DTilesetStatistics();
+        this._statisticsLastPerPass = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
+
+        for (var i = 0; i < Cesium3DTilePass.NUMBER_OF_PASSES; ++i) {
+            this._statisticsLastPerPass[i] = new Cesium3DTilesetStatistics();
+        }
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -1767,12 +1773,10 @@ define([
         tileset._tileDebugLabels.update(frameState);
     }
 
-    function updateTiles(tileset, frameState) {
+    function updateTiles(tileset, frameState, isRender) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
         var statistics = tileset._statistics;
-        var passes = frameState.passes;
-        var isRender = passes.render;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
         var selectedTiles = tileset._selectedTiles;
@@ -1938,9 +1942,8 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function raiseLoadProgressEvent(tileset, frameState) {
+    function raiseLoadProgressEvent(tileset, frameState, statisticsLast) {
         var statistics = tileset._statistics;
-        var statisticsLast = tileset._statisticsLastRender;
         var numberOfPendingRequests = statistics.numberOfPendingRequests;
         var numberOfTilesProcessing = statistics.numberOfTilesProcessing;
         var lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
@@ -1971,7 +1974,18 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function update(tileset, frameState) {
+    var updateOptions = {
+        frameState : undefined,
+        traversal : undefined,
+        statisticsLast : undefined,
+        pass : undefined,
+        requestTiles : false
+    };
+
+    function update(tileset, options) {
+        var frameState = options.frameState;
+        var isRender = options.pass === Cesium3DTilePass.RENDER;
+
         if (frameState.mode === SceneMode.MORPHING) {
             return false;
         }
@@ -1995,13 +2009,6 @@ define([
 
         tileset._skipLevelOfDetail = tileset.skipLevelOfDetail && !defined(tileset._classificationType) && !tileset._disableSkipLevelOfDetail && !tileset._allTilesAdditive;
 
-        // Do out-of-core operations (new content requests, cache removal,
-        // process new tiles) only during the render pass.
-        var passes = frameState.passes;
-        var isRender = passes.render;
-        var isPick = passes.pick;
-        var isAsync = passes.asynchronous;
-
         var statistics = tileset._statistics;
         statistics.clear();
 
@@ -2013,17 +2020,12 @@ define([
             tileset._cache.reset();
         }
 
+        // Resets the visibility check for each pass
         ++tileset._updatedVisibilityFrame;
 
-        var ready;
+        var ready = options.traversal.selectTiles(tileset, frameState);
 
-        if (isAsync) {
-            ready = Cesium3DTilesetAsyncTraversal.selectTiles(tileset, frameState);
-        } else {
-            ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
-        }
-
-        if (isRender || isAsync) {
+        if (options.requestTiles) {
             requestTiles(tileset);
         }
 
@@ -2031,7 +2033,7 @@ define([
             processTiles(tileset, frameState);
         }
 
-        updateTiles(tileset, frameState);
+        updateTiles(tileset, frameState, isRender);
 
         if (isRender) {
             unloadTiles(tileset);
@@ -2039,7 +2041,7 @@ define([
             // Events are raised (added to the afterRender queue) here since promises
             // may resolve outside of the update loop that then raise events, e.g.,
             // model's readyPromise.
-            raiseLoadProgressEvent(tileset, frameState);
+            raiseLoadProgressEvent(tileset, frameState, options.statisticsLast);
 
             if (statistics.selected !== 0) {
                 var credits = tileset._credits;
@@ -2053,8 +2055,7 @@ define([
         }
 
         // Update last statistics
-        var statisticsLast = isAsync ? tileset._statisticsLastAsync : (isPick ? tileset._statisticsLastPick : tileset._statisticsLastRender);
-        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
+        Cesium3DTilesetStatistics.clone(statistics, options.statisticsLast);
 
         return ready;
     }
@@ -2063,14 +2064,61 @@ define([
      * @private
      */
     Cesium3DTileset.prototype.update = function(frameState) {
-        update(this, frameState);
+        this.updateForPass(frameState, frameState.tilesetPassState);
     };
+
+    var scratchCommandList = [];
+    var defaultTilesetPassState = new Cesium3DTilePassState();
 
     /**
      * @private
      */
-    Cesium3DTileset.prototype.updateAsync = function(frameState) {
-        return update(this, frameState);
+    Cesium3DTileset.prototype.updateForPass = function(frameState, tilesetPassState) {
+        tilesetPassState = defaultValue(tilesetPassState, defaultTilesetPassState);
+        var originalCommandList = frameState.commandList;
+        var originalCamera = frameState.camera;
+        var originalCullingVolume = frameState.cullingVolume;
+
+        tilesetPassState.ready = false;
+
+        var commandList = tilesetPassState.ignoreCommands ? scratchCommandList : tilesetPassState.commandList;
+
+        frameState.commandList = defaultValue(commandList, originalCommandList);
+        frameState.camera = defaultValue(tilesetPassState.camera, originalCamera);
+        frameState.cullingVolume = defaultValue(tilesetPassState.cullingVolume, originalCullingVolume);
+
+        var commandStart = frameState.commandList.length;
+
+        var pass = tilesetPassState.pass;
+        if (!defined(pass)) {
+            pass = frameState.passes.pick ? Cesium3DTilePass.PICK : Cesium3DTilePass.RENDER;
+        }
+
+        var traversal = Cesium3DTilesetTraversal;
+
+        if (pass === Cesium3DTilePass.MOST_DETAILED_PREFETCH || pass === Cesium3DTilePass.MOST_DETAILED_PICK) {
+            traversal = Cesium3DTilesetMostDetailedTraversal;
+        }
+
+        updateOptions.frameState = frameState;
+        updateOptions.traversal = traversal;
+        updateOptions.statisticsLast = this._statisticsLastPerPass[pass];
+        updateOptions.pass = pass;
+        updateOptions.outOfCore = pass === Cesium3DTilePass.RENDER; // Do out-of-core operations (cache removal, process new tiles) only during the render pass.
+        updateOptions.requestTiles = pass === Cesium3DTilePass.RENDER ||
+                                     pass === Cesium3DTilePass.MOST_DETAILED_PREFETCH ||
+                                     pass === Cesium3DTilePass.SHADOW ||
+                                     pass === Cesium3DTilePass.PREFETCH;
+
+        tilesetPassState.ready = update(this, updateOptions);
+
+        if (tilesetPassState.ignoreCommands) {
+            commandList.length = commandStart;
+        }
+
+        frameState.commandList = originalCommandList;
+        frameState.camera = originalCamera;
+        frameState.cullingVolume = originalCullingVolume;
     };
 
     /**
