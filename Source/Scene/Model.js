@@ -1714,7 +1714,8 @@ define([
                 ++model._loadResources.pendingTextureLoads;
 
                 var imageResource = model._resource.getDerivedResource({
-                    url : uri
+                    url : uri,
+                    flipImage : false
                 });
 
                 var promise;
@@ -2325,7 +2326,11 @@ define([
                 ++model._loadResources.pendingTextureLoads;
             } else {
                 var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
-                loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType)
+                loadImageFromTypedArray({
+                    uint8Array: loadResources.getBuffer(bufferView),
+                    format: gltfTexture.mimeType,
+                    flipY: false
+                })
                     .then(onload).otherwise(onerror);
                 ++loadResources.pendingBufferViewToImage;
             }

@@ -10,6 +10,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/EventHelper',
+        '../../Core/FeatureDetection',
         '../../Core/HeadingPitchRange',
         '../../Core/isArray',
         '../../Core/Matrix4',
@@ -60,6 +61,7 @@ define([
         DeveloperError,
         Event,
         EventHelper,
+        FeatureDetection,
         HeadingPitchRange,
         isArray,
         Matrix4,
@@ -360,6 +362,10 @@ define([
             throw new DeveloperError('container is required.');
         }
         //>>includeEnd('debug');
+
+        // We kick off this asynchronous test here so we can start using
+        // createImageBitmap if it's supported as soon as possible.
+        FeatureDetection.supportsImageBitmapOptions();
 
         container = getElement(container);
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
