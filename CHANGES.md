@@ -8,6 +8,7 @@ Change Log
 
 ##### Additions :tada:
 * `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
+* Add support for decoding images while fetching using `createImageBitmap` to greatly speed up texture upload and decrease frame drops when loading models with large textures. `Resource` now has a `flipImage` option to vertically flip an image during fetch & decode when `ImageBitmapOptions` are supported. [#7579](https://github.com/AnalyticalGraphicsInc/cesium/pull/7579)
 
 ##### Fixes :wrench:
 * Fixed an issue where models would cause a crash on load if some primitives were Draco encoded and others were not. [#7383](https://github.com/AnalyticalGraphicsInc/cesium/issues/7383)
