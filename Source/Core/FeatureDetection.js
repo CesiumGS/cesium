@@ -2,13 +2,11 @@ define([
         './defaultValue',
         './defined',
         './Fullscreen',
-        './RuntimeError',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
         Fullscreen,
-        RuntimeError,
         when) {
     'use strict';
     /*global CanvasPixelArray*/
@@ -255,6 +253,71 @@ define([
         }
     }
 
+    var supportsCreateImageBitmapResult;
+    function supportsCreateImageBitmap() {
+        if (!defined(supportsCreateImageBitmapResult)) {
+            supportsCreateImageBitmapResult = defined(window.createImageBitmap);
+        }
+
+        return supportsCreateImageBitmapResult;
+    }
+
+    var supportsImageBitmapOptionsResult;
+    var supportsImageBitmapOptionsPromise;
+    function supportsImageBitmapOptions() {
+        // Until the HTML folks figure out what to do about this, we need to actually try loading an image to
+        // know if this browser supports passing options to the createImageBitmap function.
+        // https://github.com/whatwg/html/pull/4248
+        if (defined(supportsImageBitmapOptionsPromise)) {
+            return supportsImageBitmapOptionsPromise.promise;
+        }
+
+        supportsImageBitmapOptionsPromise = when.defer();
+
+        if (!supportsCreateImageBitmap()) {
+            supportsImageBitmapOptionsResult = false;
+            supportsImageBitmapOptionsPromise.resolve(supportsImageBitmapOptionsResult);
+            return supportsImageBitmapOptionsPromise.promise;
+        }
+
+        var imageDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4////fwAJ+wP9CNHoHgAAAABJRU5ErkJggg==';
+        fetch(imageDataUri)
+            .then(function(response) {
+                return response.blob();
+            })
+            .then(function(blob) {
+                return createImageBitmap(blob, {
+                    imageOrientation: 'flipY'
+                });
+            })
+            .then(function(imageBitmap) {
+                supportsImageBitmapOptionsResult = true;
+                supportsImageBitmapOptionsPromise.resolve(supportsImageBitmapOptionsResult);
+            })
+            .catch(function() {
+                supportsImageBitmapOptionsResult = false;
+                supportsImageBitmapOptionsPromise.resolve(supportsImageBitmapOptionsResult);
+            });
+
+        return supportsImageBitmapOptionsPromise.promise;
+    }
+
+    function supportsImageBitmapOptionsSync() {
+        if (!defined(supportsImageBitmapOptionsPromise)) {
+            supportsImageBitmapOptions();
+        }
+
+        return supportsImageBitmapOptionsResult;
+    }
+
+    var supportsFetchApiResult;
+    function supportsFetchApi() {
+        if (!defined(supportsFetchApiResult)) {
+            supportsFetchApiResult = defined(window.fetch);
+        }
+        return supportsFetchApiResult;
+    }
+
     /**
      * A set of functions to detect whether the current browser supports
      * various features.
@@ -280,6 +343,10 @@ define([
         supportsImageRenderingPixelated: supportsImageRenderingPixelated,
         supportsWebP: supportsWebP,
         supportsWebPSync: supportsWebPSync,
+        supportsCreateImageBitmap: supportsCreateImageBitmap,
+        supportsImageBitmapOptions: supportsImageBitmapOptions,
+        supportsImageBitmapOptionsSync: supportsImageBitmapOptionsSync,
+        supportsFetchApi : supportsFetchApi,
         imageRenderingValue: imageRenderingValue,
         typedArrayTypes: typedArrayTypes
     };

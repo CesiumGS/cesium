@@ -123,4 +123,26 @@ defineSuite([
                 expect(FeatureDetection.supportsWebPSync()).toEqual(supportsWebP);
             });
     });
+
+    it('detects fetch API support', function() {
+        var supportsFetchApi = FeatureDetection.supportsFetchApi();
+        expect(typeof supportsFetchApi).toEqual('boolean');
+    });
+
+    it('detects createImageBitmap support', function() {
+        var supportsCreateImageBitmap = FeatureDetection.supportsCreateImageBitmap();
+        expect(typeof supportsCreateImageBitmap).toEqual('boolean');
+    });
+
+    it('detects ImageBitmapOptions support', function() {
+        if (FeatureDetection.supportsCreateImageBitmap()) {
+            expect(FeatureDetection.supportsImageBitmapOptionsSync()).not.toBeDefined();
+        }
+
+        return FeatureDetection.supportsImageBitmapOptions()
+            .then(function(supportsImageBitmapOptions) {
+                expect(typeof supportsImageBitmapOptions).toEqual('boolean');
+                expect(FeatureDetection.supportsImageBitmapOptionsSync()).toEqual(supportsImageBitmapOptions);
+            });
+    });
 });
