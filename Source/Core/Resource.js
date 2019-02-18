@@ -1786,7 +1786,6 @@ define([
                 credentials: (crossOrigin && TrustedServers.contains(url)) ? 'include' : 'same-origin'
             })
                 .then(function(response) {
-                    // Catch error here https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch#Checking_that_the_fetch_was_successful
                     return response.blob();
                 })
                 .then(function(blob) {
