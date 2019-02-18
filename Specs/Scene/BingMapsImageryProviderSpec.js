@@ -3,6 +3,7 @@ defineSuite([
         'Core/appendForwardSlash',
         'Core/DefaultProxy',
         'Core/defined',
+        'Core/FeatureDetection',
         'Core/queryToObject',
         'Core/RequestScheduler',
         'Core/Resource',
@@ -14,12 +15,14 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
+        'Specs/isImageOrImageBitmap',
         'ThirdParty/Uri'
     ], function(
         BingMapsImageryProvider,
         appendForwardSlash,
         DefaultProxy,
         defined,
+        FeatureDetection,
         queryToObject,
         RequestScheduler,
         Resource,
@@ -31,8 +34,13 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
+        isImageOrImageBitmap,
         Uri) {
     'use strict';
+
+    beforeAll(function() {
+        return FeatureDetection.supportsImageBitmapOptions();
+    });
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -362,7 +370,7 @@ defineSuite([
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(image)).toBe(true);
             });
         });
     });
@@ -393,7 +401,7 @@ defineSuite([
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(image)).toBe(true);
             });
         });
     });
@@ -482,7 +490,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(imagery.image)).toBe(true);
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

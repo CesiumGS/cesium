@@ -2,6 +2,7 @@ defineSuite([
         'Scene/SingleTileImageryProvider',
         'Core/DefaultProxy',
         'Core/Ellipsoid',
+        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/Rectangle',
         'Core/Resource',
@@ -10,11 +11,13 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
+        'Specs/isImageOrImageBitmap',
         'ThirdParty/when'
     ], function(
         SingleTileImageryProvider,
         DefaultProxy,
         Ellipsoid,
+        FeatureDetection,
         GeographicTilingScheme,
         Rectangle,
         Resource,
@@ -23,8 +26,13 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
+        isImageOrImageBitmap,
         when) {
     'use strict';
+
+    beforeAll(function() {
+        return FeatureDetection.supportsImageBitmapOptions();
+    });
 
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
@@ -150,7 +158,7 @@ defineSuite([
             return provider.ready;
         }).then(function() {
             return when(provider.requestImage(0, 0, 0), function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(image)).toBe(true);
             });
         });
     });
@@ -216,7 +224,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(imagery.image)).toBe(true);
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

@@ -4,6 +4,7 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/defined',
+        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/GoogleEarthEnterpriseMetadata',
         'Core/GoogleEarthEnterpriseTileInformation',
@@ -16,6 +17,7 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
+        'Specs/isImageOrImageBitmap',
         'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
@@ -24,6 +26,7 @@ defineSuite([
         DefaultProxy,
         defaultValue,
         defined,
+        FeatureDetection,
         GeographicTilingScheme,
         GoogleEarthEnterpriseMetadata,
         GoogleEarthEnterpriseTileInformation,
@@ -36,6 +39,7 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
+        isImageOrImageBitmap,
         Uri,
         when) {
     'use strict';
@@ -46,6 +50,7 @@ defineSuite([
 
     beforeAll(function() {
         decodeGoogleEarthEnterpriseData.passThroughDataForTesting = true;
+        return FeatureDetection.supportsImageBitmapOptions();
     });
 
     afterAll(function() {
@@ -224,7 +229,7 @@ defineSuite([
             installFakeImageRequest('http://fake.fake.invalid/flatfile?f1-03-i.1');
 
             return imageryProvider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(image)).toBe(true);
             });
         });
     });
@@ -294,7 +299,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(imagery.image)).toBe(true);
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

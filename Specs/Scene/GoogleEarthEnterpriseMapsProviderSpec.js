@@ -1,6 +1,7 @@
 defineSuite([
         'Scene/GoogleEarthEnterpriseMapsProvider',
         'Core/DefaultProxy',
+        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/Rectangle',
         'Core/RequestScheduler',
@@ -10,10 +11,12 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'Specs/isImageOrImageBitmap'
     ], function(
         GoogleEarthEnterpriseMapsProvider,
         DefaultProxy,
+        FeatureDetection,
         GeographicTilingScheme,
         Rectangle,
         RequestScheduler,
@@ -23,8 +26,13 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        pollToPromise) {
+        pollToPromise,
+        isImageOrImageBitmap) {
     'use strict';
+
+    beforeAll(function() {
+        return FeatureDetection.supportsImageBitmapOptions();
+    });
 
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
@@ -191,7 +199,7 @@ defineSuite([
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(image)).toBe(true);
             });
         });
     });
@@ -327,7 +335,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(imagery.image)).toBe(true);
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
