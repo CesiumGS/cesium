@@ -28,7 +28,9 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 
-var mollweideProjection = new Cesium.Proj4Projection('+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs');
+var mollweideProjection = new Cesium.Proj4Projection({
+    wellKnownText : '+proj=moll +lon_0=0 +x_0=0 +y_0=0 +a=6371000 +b=6371000 +units=m +no_defs'
+});
 var geographicProjection = new Cesium.GeographicProjection();
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
