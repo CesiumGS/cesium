@@ -51,7 +51,6 @@ Change Log
 * Added support for glTF models with WebP textures using the `EXT_texture_webp` extension. [#7486](https://github.com/AnalyticalGraphicsInc/cesium/pull/7486)
 
 ##### Fixes :wrench:
-* Fixed an issue where RTL labels not reversing correctly non alphabetic characters [#7501](https://github.com/AnalyticalGraphicsInc/cesium/pull/7501)
 * Fixed 3D Tiles performance regression. [#7482](https://github.com/AnalyticalGraphicsInc/cesium/pull/7482)
 * Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
 * Fixed an issue where 3D Tiles would show through the globe. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
