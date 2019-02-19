@@ -45,7 +45,7 @@ define([
      * @private
      */
     function TerrainEncoding(axisAlignedBoundingBox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, hasWebMercatorT) {
-        var quantization;
+        var quantization = TerrainQuantization.NONE;
         var center;
         var toENU;
         var matrix;
@@ -246,6 +246,16 @@ define([
         }
 
         return buffer[index + 3];
+    };
+
+    TerrainEncoding.prototype.decodeWebMercatorT = function(buffer, index) {
+        index *= this.getStride();
+
+        if (this.quantization === TerrainQuantization.BITS12) {
+            return AttributeCompression.decompressTextureCoordinates(buffer[index + 3], cartesian2Scratch).x;
+        }
+
+        return buffer[index + 6];
     };
 
     TerrainEncoding.prototype.getOctEncodedNormal = function(buffer, index, result) {
