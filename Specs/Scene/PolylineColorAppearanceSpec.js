@@ -11,6 +11,7 @@ defineSuite([
         'Specs/createScene'
     ], function(
         PolylineColorAppearance,
+        ArcType,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
