@@ -128,12 +128,4 @@ defineSuite([
         var supportsCreateImageBitmap = FeatureDetection.supportsCreateImageBitmap();
         expect(typeof supportsCreateImageBitmap).toEqual('boolean');
     });
-
-    it('detects ImageBitmapOptions support', function() {
-        return FeatureDetection.supportsImageBitmapOptions()
-            .then(function(supportsImageBitmapOptions) {
-                expect(typeof supportsImageBitmapOptions).toEqual('boolean');
-                expect(FeatureDetection.supportsImageBitmapOptionsSync()).toEqual(supportsImageBitmapOptions);
-            });
-    });
 });

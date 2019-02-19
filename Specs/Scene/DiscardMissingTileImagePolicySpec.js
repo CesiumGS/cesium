@@ -14,13 +14,15 @@ defineSuite([
         when) {
     'use strict';
 
+    beforeAll(function() {
+        // This suite spies on requests. The test below needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions();
+    });
+
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
-    });
-
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
     });
 
     describe('construction', function() {
@@ -45,9 +47,9 @@ defineSuite([
         it('requests the missing image url', function() {
             var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
+            spyOn(Resource._Implementations, 'createImageBitmapFromBlob').and.callThrough();
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url) || FeatureDetection.supportsCreateImageBitmap()) {
-                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+                if (/^blob:/.test(url)) {
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(missingImageUrl);
@@ -68,7 +70,12 @@ defineSuite([
             return pollToPromise(function() {
                 return policy.isReady();
             }).then(function() {
-                expect(Resource._Implementations.createImage).toHaveBeenCalled();
+                if (FeatureDetection.supportsCreateImageBitmap()) {
+                    expect(Resource._Implementations.createImageBitmapFromBlob).toHaveBeenCalled();
+                } else {
+                    expect(Resource._Implementations.createImage).toHaveBeenCalled();
+                }
+
             });
         });
     });

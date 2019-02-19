@@ -8,7 +8,6 @@ defineSuite([
         'Core/Color',
         'Core/createGuid',
         'Core/DistanceDisplayCondition',
-        'Core/FeatureDetection',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/OrthographicOffCenterFrustum',
@@ -35,7 +34,6 @@ defineSuite([
         Color,
         createGuid,
         DistanceDisplayCondition,
-        FeatureDetection,
         CesiumMath,
         NearFarScalar,
         OrthographicOffCenterFrustum,
@@ -69,23 +67,20 @@ defineSuite([
         context = scene.context;
         camera = scene.camera;
 
-        return FeatureDetection.supportsImageBitmapOptions()
-            .then(function() {
-                return when.join(
-                    Resource.fetchImage('./Data/Images/Green2x2.png').then(function(result) {
-                        greenImage = result;
-                    }),
-                    Resource.fetchImage('./Data/Images/Blue2x2.png').then(function(result) {
-                        blueImage = result;
-                    }),
-                    Resource.fetchImage('./Data/Images/White2x2.png').then(function(result) {
-                        whiteImage = result;
-                    }),
-                    Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(result) {
-                        largeBlueImage = result;
-                    })
-                );
-            });
+        return when.join(
+            Resource.fetchImage('./Data/Images/Green2x2.png').then(function(result) {
+                greenImage = result;
+            }),
+            Resource.fetchImage('./Data/Images/Blue2x2.png').then(function(result) {
+                blueImage = result;
+            }),
+            Resource.fetchImage('./Data/Images/White2x2.png').then(function(result) {
+                whiteImage = result;
+            }),
+            Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(result) {
+                largeBlueImage = result;
+            })
+        );
     });
 
     afterAll(function() {

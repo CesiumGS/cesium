@@ -38,10 +38,6 @@ defineSuite([
         Uri) {
     'use strict';
 
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
-    });
-
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
     });

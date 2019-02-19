@@ -58,43 +58,40 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
-        return FeatureDetection.supportsImageBitmapOptions()
-            .then(function() {
-                var promises = [];
-                promises.push(Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
-                    greenImage = image;
-                }));
-                promises.push(Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
-                    blueImage = image;
-                }));
-                promises.push(Resource.fetchImage('./Data/Images/BlueAlpha.png').then(function(image) {
-                    blueAlphaImage = image;
-                }));
-                promises.push(Resource.fetchImage('./Data/Images/BlueOverRed.png').then(function(image) {
-                    blueOverRedImage = image;
-                }));
-                // Turn off the default flipping.
-                promises.push(Resource.fetchImage({
-                    url: './Data/Images/BlueOverRed.png',
-                    flipY: false
-                }).then(function(image) {
-                    blueOverRedUnflippedImage = image;
-                }));
-                promises.push(Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
-                    red16x16Image = image;
-                }));
-                promises.push(loadKTX('./Data/Images/Green4x4DXT1.ktx').then(function(image) {
-                    greenDXTImage = image;
-                }));
-                promises.push(loadKTX('./Data/Images/Green4x4PVR.ktx').then(function(image) {
-                    greenPVRImage = image;
-                }));
-                promises.push(loadKTX('./Data/Images/Green4x4ETC1.ktx').then(function(image) {
-                    greenETC1Image = image;
-                }));
+        var promises = [];
+        promises.push(Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
+            greenImage = image;
+        }));
+        promises.push(Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
+            blueImage = image;
+        }));
+        promises.push(Resource.fetchImage('./Data/Images/BlueAlpha.png').then(function(image) {
+            blueAlphaImage = image;
+        }));
+        promises.push(Resource.fetchImage('./Data/Images/BlueOverRed.png').then(function(image) {
+            blueOverRedImage = image;
+        }));
+        // Turn off the default flipping.
+        promises.push(Resource.fetchImage({
+            url: './Data/Images/BlueOverRed.png',
+            flipY: false
+        }).then(function(image) {
+            blueOverRedUnflippedImage = image;
+        }));
+        promises.push(Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
+            red16x16Image = image;
+        }));
+        promises.push(loadKTX('./Data/Images/Green4x4DXT1.ktx').then(function(image) {
+            greenDXTImage = image;
+        }));
+        promises.push(loadKTX('./Data/Images/Green4x4PVR.ktx').then(function(image) {
+            greenPVRImage = image;
+        }));
+        promises.push(loadKTX('./Data/Images/Green4x4ETC1.ktx').then(function(image) {
+            greenETC1Image = image;
+        }));
 
-                return when.all(promises);
-            });
+        return when.all(promises);
     });
 
     afterAll(function() {
@@ -202,37 +199,41 @@ defineSuite([
     it('can flip texture only if ImageBitmapOptions is not supported', function() {
         var topColor = new Color(0.0, 0.0, 1.0, 1.0);
         var bottomColor = new Color(1.0, 0.0, 0.0, 1.0);
-        if (FeatureDetection.supportsImageBitmapOptionsSync()) {
-            // When imageBitmapOptions is supported, flipY on texture upload is ignored.
-            bottomColor = topColor;
-        }
 
-        texture = new Texture({
-            context : context,
-            source : blueOverRedUnflippedImage,
-            pixelFormat : PixelFormat.RGBA,
-            flipY : false
-        });
+        return Resource.supportsImageBitmapOptions()
+            .then(function(supportsImageBitmapOptions) {
+                if (supportsImageBitmapOptions) {
+                    // When imageBitmapOptions is supported, flipY on texture upload is ignored.
+                    bottomColor = topColor;
+                }
 
-        expect({
-            context : context,
-            fragmentShader : fs,
-            uniformMap : uniformMap
-        }).contextToRender(topColor.toBytes());
+                texture = new Texture({
+                    context : context,
+                    source : blueOverRedUnflippedImage,
+                    pixelFormat : PixelFormat.RGBA,
+                    flipY : false
+                });
 
-        // Flip the texture.
-        texture = new Texture({
-            context : context,
-            source : blueOverRedUnflippedImage,
-            pixelFormat : PixelFormat.RGBA,
-            flipY : true
-        });
+                expect({
+                    context : context,
+                    fragmentShader : fs,
+                    uniformMap : uniformMap
+                }).contextToRender(topColor.toBytes());
 
-        expect({
-            context : context,
-            fragmentShader : fs,
-            uniformMap : uniformMap
-        }).contextToRender(bottomColor.toBytes());
+                // Flip the texture.
+                texture = new Texture({
+                    context : context,
+                    source : blueOverRedUnflippedImage,
+                    pixelFormat : PixelFormat.RGBA,
+                    flipY : true
+                });
+
+                expect({
+                    context : context,
+                    fragmentShader : fs,
+                    uniformMap : uniformMap
+                }).contextToRender(bottomColor.toBytes());
+            });
     });
 
     it('draws the expected floating-point texture color', function() {

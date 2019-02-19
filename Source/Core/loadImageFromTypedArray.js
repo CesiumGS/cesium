@@ -31,17 +31,19 @@ define([
             type : format
         });
 
-        // We can avoid the extra fetch when createImageBitmap is supported.
-        var supportsBitmapOptions = FeatureDetection.supportsImageBitmapOptionsSync();
+        // Avoid an extra fetch by just calling createImageBitmap here directly on the blob
+        // instead of sending it to Resource as a blob URL.
+        if (FeatureDetection.supportsCreateImageBitmap()) {
+            return Resource.supportsImageBitmapOptions()
+                .then(function(supportsBitmapOptions) {
+                    if (supportsBitmapOptions) {
+                        return when(createImageBitmap(blob, {
+                            imageOrientation: flipY ? 'flipY' : 'none'
+                        }));
+                    }
 
-        if (FeatureDetection.supportsCreateImageBitmap() && defined(supportsBitmapOptions)) {
-            if (supportsBitmapOptions) {
-                return when(createImageBitmap(blob, {
-                    imageOrientation: flipY ? 'flipY' : 'none'
-                }));
-            }
-
-            return when(createImageBitmap(blob));
+                    return when(createImageBitmap(blob));
+                });
         }
 
         var blobUrl = window.URL.createObjectURL(blob);

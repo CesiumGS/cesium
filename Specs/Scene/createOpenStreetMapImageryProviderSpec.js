@@ -1,7 +1,6 @@
 defineSuite([
         'Scene/createOpenStreetMapImageryProvider',
         'Core/DefaultProxy',
-        'Core/FeatureDetection',
         'Core/Math',
         'Core/Rectangle',
         'Core/RequestScheduler',
@@ -16,7 +15,6 @@ defineSuite([
     ], function(
         createOpenStreetMapImageryProvider,
         DefaultProxy,
-        FeatureDetection,
         CesiumMath,
         Rectangle,
         RequestScheduler,
@@ -29,10 +27,6 @@ defineSuite([
         pollToPromise,
         isImageOrImageBitmap) {
     'use strict';
-
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
-    });
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();

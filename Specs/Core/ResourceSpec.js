@@ -28,10 +28,6 @@ defineSuite([
 
     var dataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2Nk+M/wHwAEBgIA5agATwAAAABJRU5ErkJggg==';
 
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
-    });
-
     it('Constructor sets correct properties', function() {
         var proxy = new DefaultProxy('/proxy/');
         var request = new Request();
@@ -1177,23 +1173,17 @@ defineSuite([
             });
         });
 
-        it('does not call createImageBitmap when ImageBitmapOptions support is not ready', function() {
-            spyOn(FeatureDetection, 'supportsImageBitmapOptionsSync').and.returnValue(undefined);
-            spyOn(window, 'createImageBitmap').and.callThrough();
-
-            return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
-                expect(loadedImage.width).toEqual(1);
-                expect(loadedImage.height).toEqual(1);
-                expect(window.createImageBitmap).not.toHaveBeenCalled();
-            });
-        });
-
         it('correctly flips image when ImageBitmapOptions are supported', function() {
+            var loadedImage;
+
             return Resource.fetchImage({
                 url: './Data/Images/BlueOverRed.png',
                 flipY: true
-            }).then(function(loadedImage) {
-                if (FeatureDetection.supportsImageBitmapOptionsSync()) {
+            }).then(function(image) {
+                loadedImage = image;
+                return Resource.supportsImageBitmapOptions();
+            }).then(function(supportsImageBitmapOptions) {
+                if (supportsImageBitmapOptions) {
                     expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([255, 0, 0, 255]);
                 } else {
                     expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 0, 255, 255]);
@@ -1202,11 +1192,16 @@ defineSuite([
         });
 
         it('correctly loads image without flip when ImageBitmapOptions are supported', function() {
+            var loadedImage;
+
             return Resource.fetchImage({
                 url: './Data/Images/BlueOverRed.png',
                 flipY: false
-            }).then(function(loadedImage) {
-                if (FeatureDetection.supportsImageBitmapOptionsSync()) {
+             }).then(function(image) {
+                loadedImage = image;
+                return Resource.supportsImageBitmapOptions();
+            }).then(function(supportsImageBitmapOptions) {
+                if (supportsImageBitmapOptions) {
                     expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 0, 255, 255]);
                 } else {
                     expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 0, 255, 255]);
@@ -1215,7 +1210,7 @@ defineSuite([
         });
 
         it('does not pass options when ImageBitmapOptions are not supported', function() {
-            spyOn(FeatureDetection, 'supportsImageBitmapOptionsSync').and.returnValue(false);
+            spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
             spyOn(window, 'createImageBitmap').and.callThrough();
 
             return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {

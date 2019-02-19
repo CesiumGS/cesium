@@ -55,7 +55,9 @@ defineSuite([
     'use strict';
 
     beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
+        // This suite spies on requests. The test below needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions();
     });
 
     beforeEach(function() {
@@ -214,8 +216,7 @@ defineSuite([
             expect(provider.hasAlphaChannel).toBeDefined();
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url) || FeatureDetection.supportsCreateImageBitmap()) {
-                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+                if (/^blob:/.test(url)) {
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));

@@ -2,7 +2,6 @@ defineSuite([
         'Scene/UrlTemplateImageryProvider',
         'Core/DefaultProxy',
         'Core/Ellipsoid',
-        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/Math',
         'Core/Rectangle',
@@ -22,7 +21,6 @@ defineSuite([
         UrlTemplateImageryProvider,
         DefaultProxy,
         Ellipsoid,
-        FeatureDetection,
         GeographicTilingScheme,
         CesiumMath,
         Rectangle,
@@ -39,10 +37,6 @@ defineSuite([
         isImageOrImageBitmap,
         when) {
     'use strict';
-
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
-    });
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();

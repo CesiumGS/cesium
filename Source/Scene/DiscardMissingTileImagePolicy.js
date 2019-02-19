@@ -89,7 +89,9 @@ define([
             that._isReady = true;
         }
 
-        when(resource.fetchImage(true), success, failure);
+        when(resource.fetchImage({
+            preferBlob : true
+        }), success, failure);
     }
 
     /**

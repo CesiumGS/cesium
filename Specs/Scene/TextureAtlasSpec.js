@@ -3,7 +3,6 @@ defineSuite([
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/createGuid',
-        'Core/FeatureDetection',
         'Core/Math',
         'Core/PixelFormat',
         'Core/Resource',
@@ -14,7 +13,6 @@ defineSuite([
         BoundingRectangle,
         Cartesian2,
         createGuid,
-        FeatureDetection,
         CesiumMath,
         PixelFormat,
         Resource,
@@ -40,29 +38,26 @@ defineSuite([
             guidArray.push(createGuid());
         }
 
-        return FeatureDetection.supportsImageBitmapOptions()
-            .then(function() {
-                return when.join(
-                    Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
-                        greenImage = image;
-                    }),
-                    Resource.fetchImage('./Data/Images/Green1x4.png').then(function(image) {
-                        tallGreenImage = image;
-                    }),
-                    Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
-                        blueImage = image;
-                    }),
-                    Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
-                        bigRedImage = image;
-                    }),
-                    Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(image) {
-                        bigBlueImage = image;
-                    }),
-                    Resource.fetchImage('./Data/Images/Green4x4.png').then(function(image) {
-                        bigGreenImage = image;
-                    })
-                );
-            });
+        return when.join(
+            Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
+                greenImage = image;
+            }),
+            Resource.fetchImage('./Data/Images/Green1x4.png').then(function(image) {
+                tallGreenImage = image;
+            }),
+            Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
+                blueImage = image;
+            }),
+            Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
+                bigRedImage = image;
+            }),
+            Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(image) {
+                bigBlueImage = image;
+            }),
+            Resource.fetchImage('./Data/Images/Green4x4.png').then(function(image) {
+                bigGreenImage = image;
+            })
+        );
     });
 
     afterAll(function() {

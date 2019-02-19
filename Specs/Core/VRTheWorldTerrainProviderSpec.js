@@ -1,7 +1,6 @@
 defineSuite([
         'Core/VRTheWorldTerrainProvider',
         'Core/DefaultProxy',
-        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/HeightmapTerrainData',
         'Core/Math',
@@ -14,7 +13,6 @@ defineSuite([
     ], function(
         VRTheWorldTerrainProvider,
         DefaultProxy,
-        FeatureDetection,
         GeographicTilingScheme,
         HeightmapTerrainData,
         CesiumMath,
@@ -67,10 +65,6 @@ defineSuite([
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
-    });
-
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
     });
 
     function createRequest() {

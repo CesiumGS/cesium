@@ -4,7 +4,6 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/defined',
-        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/GoogleEarthEnterpriseMetadata',
         'Core/GoogleEarthEnterpriseTileInformation',
@@ -26,7 +25,6 @@ defineSuite([
         DefaultProxy,
         defaultValue,
         defined,
-        FeatureDetection,
         GeographicTilingScheme,
         GoogleEarthEnterpriseMetadata,
         GoogleEarthEnterpriseTileInformation,
@@ -50,7 +48,6 @@ defineSuite([
 
     beforeAll(function() {
         decodeGoogleEarthEnterpriseData.passThroughDataForTesting = true;
-        return FeatureDetection.supportsImageBitmapOptions();
     });
 
     afterAll(function() {

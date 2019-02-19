@@ -30,10 +30,6 @@ defineSuite([
         isImageOrImageBitmap) {
     'use strict';
 
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
-    });
-
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;

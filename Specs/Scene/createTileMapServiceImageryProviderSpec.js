@@ -3,7 +3,6 @@ defineSuite([
         'Core/Cartesian2',
         'Core/Cartographic',
         'Core/DefaultProxy',
-        'Core/FeatureDetection',
         'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
@@ -25,7 +24,6 @@ defineSuite([
         Cartesian2,
         Cartographic,
         DefaultProxy,
-        FeatureDetection,
         GeographicProjection,
         GeographicTilingScheme,
         getAbsoluteUri,
@@ -43,10 +41,6 @@ defineSuite([
         isImageOrImageBitmap,
         when) {
     'use strict';
-
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
-    });
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();

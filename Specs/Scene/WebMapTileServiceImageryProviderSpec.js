@@ -4,7 +4,6 @@ defineSuite([
         'Core/ClockStep',
         'Core/Credit',
         'Core/DefaultProxy',
-        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/JulianDate',
         'Core/objectToQuery',
@@ -28,7 +27,6 @@ defineSuite([
         ClockStep,
         Credit,
         DefaultProxy,
-        FeatureDetection,
         GeographicTilingScheme,
         JulianDate,
         objectToQuery,
@@ -47,10 +45,6 @@ defineSuite([
         isImageOrImageBitmap,
         Uri) {
     'use strict';
-
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
-    });
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();

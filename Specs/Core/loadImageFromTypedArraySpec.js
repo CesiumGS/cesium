@@ -8,10 +8,6 @@ defineSuite([
         Resource) {
     'use strict';
 
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
-    });
-
     it('can load an image', function() {
         return Resource.fetchArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {
             var options = {
@@ -36,29 +32,33 @@ defineSuite([
         var blob = new Blob([options.uint8Array], {
             type : options.format
         });
+        var supportsImageBitmapOptions;
 
-        return loadImageFromTypedArray(options).then(function() {
-            if (FeatureDetection.supportsImageBitmapOptionsSync()) {
-                expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-                    imageOrientation: 'flipY'
-                });
-            } else {
-                expect(window.createImageBitmap).toHaveBeenCalledWith(blob);
-            }
+        return loadImageFromTypedArray(options)
+            .then(Resource.supportsImageBitmapOptions)
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+                if (supportsImageBitmapOptions) {
+                    expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
+                        imageOrientation: 'flipY'
+                    });
+                } else {
+                    expect(window.createImageBitmap).toHaveBeenCalledWith(blob);
+                }
 
-            options.flipY = false;
-            window.createImageBitmap.calls.reset();
-            return loadImageFromTypedArray(options);
-        })
-        .then(function() {
-            if (FeatureDetection.supportsImageBitmapOptionsSync()) {
-                expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-                    imageOrientation: 'none'
-                });
-            } else {
-                expect(window.createImageBitmap).toHaveBeenCalledWith(blob);
-            }
-        });
+                options.flipY = false;
+                window.createImageBitmap.calls.reset();
+                return loadImageFromTypedArray(options);
+            })
+            .then(function() {
+                if (supportsImageBitmapOptions) {
+                    expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
+                        imageOrientation: 'none'
+                    });
+                } else {
+                    expect(window.createImageBitmap).toHaveBeenCalledWith(blob);
+                }
+            });
     });
 
     it('can load an image when ImageBitmap is not supported', function() {

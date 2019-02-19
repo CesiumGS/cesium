@@ -5,7 +5,6 @@ defineSuite([
         'Core/ClockStep',
         'Core/DefaultProxy',
         'Core/Ellipsoid',
-        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/JulianDate',
         'Core/Math',
@@ -33,7 +32,6 @@ defineSuite([
         ClockStep,
         DefaultProxy,
         Ellipsoid,
-        FeatureDetection,
         GeographicTilingScheme,
         JulianDate,
         CesiumMath,
@@ -55,10 +53,6 @@ defineSuite([
         isImageOrImageBitmap,
         Uri) {
     'use strict';
-
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
-    });
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();

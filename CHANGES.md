@@ -10,6 +10,9 @@ Change Log
 * `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
 * Add support for decoding images while fetching using `createImageBitmap` to greatly speed up texture upload and decrease frame drops when loading models with large textures. `Resource.fetchImage` now has a `flipY` option to vertically flip an image during fetch & decode when `ImageBitmapOptions` are supported since an `ImageBitmap` cannot be vertically flipped during texture upload. [#7579](https://github.com/AnalyticalGraphicsInc/cesium/pull/7579)
 
+##### Deprecated :hourglass_flowing_sand:
+* `Resource.fetchImage` now takes an options object. Use `resource.fetchImage({ preferBlob: true })` instead of `resource.fetchImage(true)`. The previous function definition will no longer work in 1.56. [#7579](https://github.com/AnalyticalGraphicsInc/cesium/pull/7579)
+
 ##### Fixes :wrench:
 * Fixed an issue where models would cause a crash on load if some primitives were Draco encoded and others were not. [#7383](https://github.com/AnalyticalGraphicsInc/cesium/issues/7383)
 * Fixed Node.js support for the `Resource` class and any functionality using it internally.

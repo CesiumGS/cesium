@@ -2,7 +2,6 @@ defineSuite([
         'Scene/SingleTileImageryProvider',
         'Core/DefaultProxy',
         'Core/Ellipsoid',
-        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/Rectangle',
         'Core/Resource',
@@ -17,7 +16,6 @@ defineSuite([
         SingleTileImageryProvider,
         DefaultProxy,
         Ellipsoid,
-        FeatureDetection,
         GeographicTilingScheme,
         Rectangle,
         Resource,
@@ -29,10 +27,6 @@ defineSuite([
         isImageOrImageBitmap,
         when) {
     'use strict';
-
-    beforeAll(function() {
-        return FeatureDetection.supportsImageBitmapOptions();
-    });
 
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
