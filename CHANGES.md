@@ -8,6 +8,7 @@ Change Log
 
 ##### Additions :tada:
 * `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
+* Added support for `arcType` to CZML Data Source. [#7582](https://github.com/AnalyticalGraphicsInc/cesium/issues/7582)
 
 ##### Fixes :wrench:
 * Fixed an issue where models would cause a crash on load if some primitives were Draco encoded and others were not. [#7383](https://github.com/AnalyticalGraphicsInc/cesium/issues/7383)
@@ -19,6 +20,7 @@ Change Log
 * Fixed model silhouette colors when rendering with high dynamic range. [#7563](https://github.com/AnalyticalGraphicsInc/cesium/pull/7563)
 * Fixed an issue with ground polylines on globes that use ellipsoids other than WGS84. [#7552](https://github.com/AnalyticalGraphicsInc/cesium/issues/7552)
 * Fixed an issue where Draco compressed models with RGB per-vertex color would not load in Cesium. [#7576](https://github.com/AnalyticalGraphicsInc/cesium/issues/7576)
+* Changed usage of deprecated property `followSurface` to use `arcType`. [#7572](https://github.com/AnalyticalGraphicsInc/cesium/issues/7572)
 
 ### 1.54 - 2019-02-01
 
