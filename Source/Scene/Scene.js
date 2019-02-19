@@ -54,6 +54,8 @@ define([
         './BrdfLutGenerator',
         './Camera',
         './Cesium3DTileFeature',
+        './Cesium3DTilePass',
+        './Cesium3DTilePassState',
         './Cesium3DTileset',
         './CreditDisplay',
         './DebugCameraPrimitive',
@@ -138,6 +140,8 @@ define([
         BrdfLutGenerator,
         Camera,
         Cesium3DTileFeature,
+        Cesium3DTilePass,
+        Cesium3DTilePassState,
         Cesium3DTileset,
         CreditDisplay,
         DebugCameraPrimitive,
@@ -176,10 +180,10 @@ define([
         };
     };
 
-    function AsyncRayPick(ray, width, primitives) {
+    function MostDetailedRayPick(ray, width, tilesets) {
         this.ray = ray;
         this.width = width;
-        this.primitives = primitives;
+        this.tilesets = tilesets;
         this.ready = false;
         this.deferred = when.defer();
         this.promise = this.deferred.promise;
@@ -298,7 +302,7 @@ define([
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
 
-        this._asyncRayPicks = [];
+        this._mostDetailedRayPicks = [];
 
         this._logDepthBuffer = context.fragmentDepth;
         this._logDepthBufferDirty = true;
@@ -797,7 +801,6 @@ define([
             near: 0.1
         });
 
-        this._view = new View(this, camera, viewport);
         this._pickOffscreenView = new View(this, pickOffscreenCamera, pickOffscreenViewport);
 
         /**
@@ -1448,7 +1451,7 @@ define([
         /**
          * Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
          * @memberof Scene.prototype
-         * @type {Boolean}
+         * @type {MapMode2D}
          */
         mapMode2D : {
             get : function() {
@@ -1688,6 +1691,22 @@ define([
         }
     };
 
+    var mostDetailedPrefetchTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.MOST_DETAILED_PREFETCH
+    });
+
+    var mostDetailedPickTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.MOST_DETAILED_PICK
+    });
+
+    var renderTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.RENDER
+    });
+
+    var pickTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.PICK
+    });
+
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
 
@@ -1711,7 +1730,6 @@ define([
         passes.depth = false;
         passes.postProcess = false;
         passes.offscreen = false;
-        passes.asynchronous = false;
     }
 
     function updateFrameNumber(scene, frameNumber, time) {
@@ -1764,6 +1782,8 @@ define([
         }
 
         clearPasses(frameState.passes);
+
+        frameState.tilesetPassState = undefined;
     }
 
     var scratchCullingVolume = new CullingVolume();
@@ -3160,7 +3180,7 @@ define([
             scene.globe.update(frameState);
         }
 
-        updateAsyncRayPicks(scene);
+        updateMostDetailedRayPicks(scene);
 
         frameState.creditDisplay.update();
     }
@@ -3180,6 +3200,7 @@ define([
         updateFrameState(scene);
         frameState.passes.render = true;
         frameState.passes.postProcess = scene.postProcessStages.hasSelected;
+        frameState.tilesetPassState = renderTilesetPassState;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
         if (scene._hdr) {
@@ -3483,6 +3504,7 @@ define([
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight, viewport);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
+        frameState.tilesetPassState = pickTilesetPassState;
 
         us.update(frameState);
 
@@ -3524,6 +3546,7 @@ define([
         frameState.passes.pick = true;
         frameState.passes.depth = true;
         frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1, viewport);
+        frameState.tilesetPassState = pickTilesetPassState;
 
         updateEnvironment(scene);
         environmentState.renderTranslucentDepthForPick = true;
@@ -3813,84 +3836,72 @@ define([
         camera.right = right;
 
         camera.frustum.width = defaultValue(width, scene.pickOffscreenDefaultWidth);
+        return camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
     }
 
-    function updateAsyncRayPick(scene, asyncRayPick) {
-        var context = scene._context;
-        var uniformState = context.uniformState;
+    function updateMostDetailedRayPick(scene, rayPick) {
         var frameState = scene._frameState;
 
+        var ray = rayPick.ray;
+        var width = rayPick.width;
+        var tilesets = rayPick.tilesets;
+
         var view = scene._pickOffscreenView;
-        scene._view = view;
+        var camera = view.camera;
+        var cullingVolume = updateOffscreenCameraFromRay(scene, ray, width, view.camera);
 
-        var ray = asyncRayPick.ray;
-        var width = asyncRayPick.width;
-        var primitives = asyncRayPick.primitives;
-
-        updateOffscreenCameraFromRay(scene, ray, width, view.camera);
-
-        updateFrameState(scene);
-        frameState.passes.offscreen = true;
-        frameState.passes.asynchronous = true;
-
-        uniformState.update(frameState);
-
-        var commandList = frameState.commandList;
-        var commandsLength = commandList.length;
+        var tilesetPassState = mostDetailedPrefetchTilesetPassState;
+        tilesetPassState.camera = camera;
+        tilesetPassState.cullingVolume = cullingVolume;
 
         var ready = true;
-        var primitivesLength = primitives.length;
-        for (var i = 0; i < primitivesLength; ++i) {
-            var primitive = primitives[i];
-            if (primitive.show && scene.primitives.contains(primitive)) {
-                // Only update primitives that are still contained in the scene's primitive collection and are still visible
-                // Update primitives continually until all primitives are ready. This way tiles are never removed from the cache.
-                var primitiveReady = primitive.updateAsync(frameState);
-                ready = (ready && primitiveReady);
+        var tilesetsLength = tilesets.length;
+        for (var i = 0; i < tilesetsLength; ++i) {
+            var tileset = tilesets[i];
+            if (tileset.show && scene.primitives.contains(tileset)) {
+                // Only update tilesets that are still contained in the scene's primitive collection and are still visible
+                // Update tilesets continually until all tilesets are ready. This way tiles are never removed from the cache.
+                tileset.updateForPass(frameState, tilesetPassState);
+                ready = (ready && tilesetPassState.ready);
             }
         }
 
-        // Ignore commands pushed during asynchronous pass
-        commandList.length = commandsLength;
-
-        scene._view = scene._defaultView;
-
         if (ready) {
-            asyncRayPick.deferred.resolve();
+            rayPick.deferred.resolve();
         }
 
         return ready;
     }
 
-    function updateAsyncRayPicks(scene) {
+    function updateMostDetailedRayPicks(scene) {
         // Modifies array during iteration
-        var asyncRayPicks = scene._asyncRayPicks;
-        for (var i = 0; i < asyncRayPicks.length; ++i) {
-            if (updateAsyncRayPick(scene, asyncRayPicks[i])) {
-                asyncRayPicks.splice(i--, 1);
+        var rayPicks = scene._mostDetailedRayPicks;
+        for (var i = 0; i < rayPicks.length; ++i) {
+            if (updateMostDetailedRayPick(scene, rayPicks[i])) {
+                rayPicks.splice(i--, 1);
             }
         }
     }
 
-    function launchAsyncRayPick(scene, ray, objectsToExclude, width, callback) {
-        var asyncPrimitives = [];
+    function launchMostDetailedRayPick(scene, ray, objectsToExclude, width, callback) {
+        var tilesets = [];
         var primitives = scene.primitives;
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
             if ((primitive instanceof Cesium3DTileset) && primitive.show) {
                 if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
-                    asyncPrimitives.push(primitive);
+                    tilesets.push(primitive);
                 }
             }
         }
-        if (asyncPrimitives.length === 0) {
+        if (tilesets.length === 0) {
             return when.resolve(callback());
         }
 
-        var asyncRayPick = new AsyncRayPick(ray, width, asyncPrimitives);
-        scene._asyncRayPicks.push(asyncRayPick);
-        return asyncRayPick.promise.then(function() {
+        var rayPick = new MostDetailedRayPick(ray, width, tilesets);
+        scene._mostDetailedRayPicks.push(rayPick);
+        return rayPick.promise.then(function() {
             return callback();
         });
     }
@@ -3904,7 +3915,7 @@ define([
                (objectsToExclude.indexOf(object.id) > -1);
     }
 
-    function getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, asynchronous) {
+    function getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, mostDetailed) {
         var context = scene._context;
         var uniformState = context.uniformState;
         var frameState = scene._frameState;
@@ -3924,7 +3935,12 @@ define([
         frameState.invertClassification = false;
         frameState.passes.pick = true;
         frameState.passes.offscreen = true;
-        frameState.passes.asynchronous = asynchronous;
+
+        if (mostDetailed) {
+            frameState.tilesetPassState = mostDetailedPickTilesetPassState;
+        } else {
+            frameState.tilesetPassState = pickTilesetPassState;
+        }
 
         uniformState.update(frameState);
 
@@ -3963,22 +3979,22 @@ define([
         }
     }
 
-    function getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, asynchronous) {
+    function getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, mostDetailed) {
         var pickCallback = function() {
-            return getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, asynchronous);
+            return getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, mostDetailed);
         };
         return drillPick(limit, pickCallback);
     }
 
-    function pickFromRay(scene, ray, objectsToExclude, width, requirePosition, asynchronous) {
-        var results = getRayIntersections(scene, ray, 1, objectsToExclude, width, requirePosition, asynchronous);
+    function pickFromRay(scene, ray, objectsToExclude, width, requirePosition, mostDetailed) {
+        var results = getRayIntersections(scene, ray, 1, objectsToExclude, width, requirePosition, mostDetailed);
         if (results.length > 0) {
             return results[0];
         }
     }
 
-    function drillPickFromRay(scene, ray, limit, objectsToExclude, width, requirePosition, asynchronous) {
-        return getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, asynchronous);
+    function drillPickFromRay(scene, ray, limit, objectsToExclude, width, requirePosition, mostDetailed) {
+        return getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, mostDetailed);
     }
 
     /**
@@ -4064,7 +4080,7 @@ define([
         var that = this;
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return launchAsyncRayPick(this, ray, objectsToExclude, width, function() {
+        return launchMostDetailedRayPick(this, ray, objectsToExclude, width, function() {
             return pickFromRay(that, ray, objectsToExclude, width, false, true);
         });
     };
@@ -4093,7 +4109,7 @@ define([
         var that = this;
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return launchAsyncRayPick(this, ray, objectsToExclude, width, function() {
+        return launchMostDetailedRayPick(this, ray, objectsToExclude, width, function() {
             return drillPickFromRay(that, ray, limit, objectsToExclude, width, false, true);
         });
     };
@@ -4134,7 +4150,7 @@ define([
 
     function sampleHeightMostDetailed(scene, cartographic, objectsToExclude, width) {
         var ray = getRayForSampleHeight(scene, cartographic);
-        return launchAsyncRayPick(scene, ray, objectsToExclude, width, function() {
+        return launchMostDetailedRayPick(scene, ray, objectsToExclude, width, function() {
             var pickResult = pickFromRay(scene, ray, objectsToExclude, width, true, true);
             if (defined(pickResult)) {
                 return getHeightFromCartesian(scene, pickResult.position);
@@ -4144,7 +4160,7 @@ define([
 
     function clampToHeightMostDetailed(scene, cartesian, objectsToExclude, width, result) {
         var ray = getRayForClampToHeight(scene, cartesian);
-        return launchAsyncRayPick(scene, ray, objectsToExclude, width, function() {
+        return launchMostDetailedRayPick(scene, ray, objectsToExclude, width, function() {
             var pickResult = pickFromRay(scene, ray, objectsToExclude, width, true, true);
             if (defined(pickResult)) {
                 return Cartesian3.clone(pickResult.position, result);

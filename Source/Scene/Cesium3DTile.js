@@ -344,7 +344,10 @@ define([
         this._priority = 0.0; // The priority used for request sorting
         this._priorityDistance = Number.MAX_VALUE; // The value to update in the priority refinement chain
         this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
+        this._priorityDeferred = false;
+        this._foveatedFactor = 0;
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
+
         this._loadTimestamp = new JulianDate();
         this._isPrefetch = false;
         this._loadCount = 0;
@@ -617,6 +620,56 @@ define([
         }
     });
 
+    var scratchCartesian = new Cartesian3();
+    function isPriorityDeferred(tile, frameState) {
+        var tileset = tile._tileset;
+        if (!tileset._skipLevelOfDetail || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
+            return false;
+        }
+
+        // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
+        tile._foveatedFactor = 0;
+        var camera = frameState.camera;
+        var boundingSphere = tile.boundingSphere;
+        var radius = boundingSphere.radius;
+        var scaledCameraDirection = Cartesian3.multiplyByScalar(camera.directionWC, tile._centerZDepth, scratchCartesian);
+        var closestPointOnLine = Cartesian3.add(camera.positionWC, scaledCameraDirection, scratchCartesian);
+        // The distance from the camera's view direction to the tile.
+        var distanceToLine = Cartesian3.subtract(closestPointOnLine, boundingSphere.center, scratchCartesian);
+        var distanceSquared = Cartesian3.dot(distanceToLine, distanceToLine);
+
+        // If camera's direction vector is inside the bounding sphere then consider
+        // this tile right along the line of sight and set _foveatedFactor to 0.
+        // Otherwise,_foveatedFactor is one minus the dot product of the camera's direction
+        // and the vector between the camera and the point on the bounding sphere closest to the view line.
+        if (distanceSquared > radius * radius) {
+            var toLineNormalized = Cartesian3.normalize(distanceToLine, scratchCartesian);
+            var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalized, radius, scratchCartesian);
+            var closestOnSphere = Cartesian3.add(boundingSphere.center, scaledToLine, scratchCartesian);
+            var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, camera.positionWC, scratchCartesian);
+            var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
+            tile._foveatedFactor = 1 - Math.abs(Cartesian3.dot(camera.directionWC, toClosestOnSphereNormalize));
+        } else {
+            tile._foveatedFactor = 0;
+        }
+
+        var maxFoveatedFactor = 1 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60
+        var foveatedConeFactor = tileset.foveatedConeSize * maxFoveatedFactor;
+
+        // If it's inside the user-defined view cone, then it should not be deferred.
+        if (tile._foveatedFactor <= foveatedConeFactor) {
+            return false;
+        }
+
+        // Relax SSE based on how big the angle is between the tile and the edge of the foveated cone.
+        var range = maxFoveatedFactor - foveatedConeFactor;
+        var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0, 1);
+        var sseRelaxation = tileset.foveatedInterpolationCallback(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
+        var sse = tile._screenSpaceError === 0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
+
+        return (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
+    }
+
     var scratchJulianDate = new JulianDate();
 
     /**
@@ -675,6 +728,7 @@ define([
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
+        this._priorityDeferred = isPriorityDeferred(this, frameState);
     };
 
     /**
@@ -1282,7 +1336,8 @@ define([
         // Maybe this mental model is terrible and just rename to weights?
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
-        var prefetchScale = distanceScale * 10; // On or off so don't need an additional digit of separation to prevent blend
+        var foveatedScale = distanceScale * 10;
+        var prefetchScale = foveatedScale * 10; // On or off so don't need an additional digit of separation to prevent blend
 
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
@@ -1293,9 +1348,10 @@ define([
         // On-Off values are the digit or 0
         var prefetchDigit = tileset._prefetchPass ? 0 : prefetchScale; // Penalize non-prefetches
 
+        var foveatedDigit = this._priorityDeferred ? foveatedScale : 0;
+
         // Get the final base 10 number
-        var number = distanceDigit + depthDigit + prefetchDigit;
-        // var number = distanceDigit + depthDigit;
+        var number = foveatedDigit + distanceDigit + depthDigit + prefetchDigit;
         this._priority = number;
     };
 

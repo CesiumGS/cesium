@@ -3059,4 +3059,20 @@ defineSuite([
         expect(Cartesian3.magnitude(camera.rightWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
         expect(Cartesian3.magnitude(camera.upWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
     });
+
+    it('get camera deltas', function() {
+        camera._updateCameraChanged();
+        expect(camera.positionWCDeltaMagnitude).toEqual(0);
+        expect(camera.positionWCDeltaMagnitudeLastFrame).toEqual(0);
+
+        camera.moveUp(moveAmount);
+
+        camera._updateCameraChanged();
+        expect(camera.positionWCDeltaMagnitude).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
+        expect(camera.positionWCDeltaMagnitudeLastFrame).toEqual(0);
+
+        camera._updateCameraChanged();
+        expect(camera.positionWCDeltaMagnitude).toEqual(0);
+        expect(camera.positionWCDeltaMagnitudeLastFrame).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
+    });
 });

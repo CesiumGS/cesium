@@ -1646,12 +1646,17 @@ define([
     var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
     var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
 
-    function parseTextures(model, context) {
+    function parseTextures(model, context, supportsWebP) {
         var gltf = model.gltf;
         var images = gltf.images;
         var uri;
         ForEach.texture(gltf, function(texture, id) {
             var imageId = texture.source;
+
+            if (defined(texture.extensions) && defined(texture.extensions.EXT_texture_webp) && supportsWebP) {
+                imageId = texture.extensions.EXT_texture_webp.source;
+            }
+
             var gltfImage = images[imageId];
             var extras = gltfImage.extras;
 
@@ -2004,7 +2009,10 @@ define([
             }
         }
 
-        var result = shader;
+        // This is not needed after the program is processed, free the memory
+        model._programPrimitives[programName] = undefined;
+
+        var result;
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
             result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
             model._quantizedUniforms[programName] = result.uniforms;
@@ -2012,11 +2020,10 @@ define([
             var decodedData = model._decodedData[primitiveId];
             if (defined(decodedData)) {
                 result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
+            } else {
+                return shader;
             }
         }
-
-        // This is not needed after the program is processed, free the memory
-        model._programPrimitives[programName] = undefined;
 
         return result.shader;
     }
@@ -2121,23 +2128,25 @@ define([
                 '} \n';
         }
 
-        var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
-        var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
-        var addMatrix = usesSH || usesSM || useIBL;
-        if (addMatrix) {
-            drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
-        }
+        if (OctahedralProjectedCubeMap.isSupported(context)) {
+            var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
+            var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
+            var addMatrix = usesSH || usesSM || useIBL;
+            if (addMatrix) {
+                drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
+            }
 
-        if (defined(model._sphericalHarmonicCoefficients)) {
-            drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
-        } else if (model._useDefaultSphericalHarmonics) {
-            drawFS = '#define DIFFUSE_IBL \n' + drawFS;
-        }
+            if (defined(model._sphericalHarmonicCoefficients)) {
+                drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+            } else if (model._useDefaultSphericalHarmonics) {
+                drawFS = '#define DIFFUSE_IBL \n' + drawFS;
+            }
 
-        if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
-            drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
-        } else if (model._useDefaultSpecularMaps) {
-            drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
+                drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+            } else if (model._useDefaultSpecularMaps) {
+                drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            }
         }
 
         if (defined(model._luminanceAtZenith)) {
@@ -2206,23 +2215,25 @@ define([
                 '} \n';
         }
 
-        var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
-        var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
-        var addMatrix = !addClippingPlaneCode && (usesSH || usesSM || useIBL);
-        if (addMatrix) {
-            drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
-        }
+        if (OctahedralProjectedCubeMap.isSupported(context)) {
+            var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
+            var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
+            var addMatrix = !addClippingPlaneCode && (usesSH || usesSM || useIBL);
+            if (addMatrix) {
+                drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
+            }
 
-        if (defined(model._sphericalHarmonicCoefficients)) {
-            drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
-        } else if (model._useDefaultSphericalHarmonics) {
-            drawFS = '#define DIFFUSE_IBL \n' + drawFS;
-        }
+            if (defined(model._sphericalHarmonicCoefficients)) {
+                drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+            } else if (model._useDefaultSphericalHarmonics) {
+                drawFS = '#define DIFFUSE_IBL \n' + drawFS;
+            }
 
-        if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
-            drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
-        } else if (model._useDefaultSpecularMaps) {
-            drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
+                drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+            } else if (model._useDefaultSpecularMaps) {
+                drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            }
         }
 
         if (defined(model._luminanceAtZenith)) {
@@ -3863,7 +3874,7 @@ define([
             'uniform vec4 gltf_silhouetteColor; \n' +
             'void main() \n' +
             '{ \n' +
-            '    gl_FragColor = gltf_silhouetteColor; \n' +
+            '    gl_FragColor = czm_gammaCorrect(gltf_silhouetteColor); \n' +
             '}';
 
         return ShaderProgram.fromCache({
@@ -4292,6 +4303,11 @@ define([
             return;
         }
 
+        var supportsWebP = FeatureDetection.supportsWebPSync();
+        if (!defined(supportsWebP)) {
+            return;
+        }
+
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 
@@ -4366,7 +4382,7 @@ define([
                 if (!loadResources.initialized) {
                     frameState.brdfLutGenerator.update(frameState);
 
-                    ModelUtility.checkSupportedExtensions(this.extensionsRequired);
+                    ModelUtility.checkSupportedExtensions(this.extensionsRequired, supportsWebP);
                     ModelUtility.updateForwardAxis(this);
 
                     // glTF pipeline updates, not needed if loading from cache
@@ -4403,7 +4419,7 @@ define([
                         parseBufferViews(this);
                         parseShaders(this);
                         parsePrograms(this);
-                        parseTextures(this, context);
+                        parseTextures(this, context, supportsWebP);
                     }
                     parseMaterials(this);
                     parseMeshes(this);
@@ -4482,7 +4498,8 @@ define([
             }
         }
 
-        if (this._shouldUpdateSpecularMapAtlas) {
+        var iblSupported = OctahedralProjectedCubeMap.isSupported(context);
+        if (this._shouldUpdateSpecularMapAtlas && iblSupported) {
             this._shouldUpdateSpecularMapAtlas = false;
             this._specularEnvironmentMapAtlas = this._specularEnvironmentMapAtlas && this._specularEnvironmentMapAtlas.destroy();
             this._specularEnvironmentMapAtlas = undefined;

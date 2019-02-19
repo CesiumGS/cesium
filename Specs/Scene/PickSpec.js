@@ -58,7 +58,7 @@ defineSuite([
         when) {
     'use strict';
 
-    // It's not easily possible to mock the asynchronous pick functions
+    // It's not easily possible to mock the most detailed pick functions
     // so don't run those tests when using the WebGL stub
     var webglStub = !!window.webglStub;
 

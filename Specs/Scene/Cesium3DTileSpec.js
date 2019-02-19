@@ -383,6 +383,10 @@ defineSuite([
         var tile2ExpectedPriority = 0*prefetchDigitPenalty + 1;
         expect(CesiumMath.equalsEpsilon(tile1._priority, tile1ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
         expect(CesiumMath.equalsEpsilon(tile2._priority, tile2ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
-    });
 
+        // Priority deferral penalty
+        tile2._priorityDeferred = true;
+        tile2.updatePriority();
+        expect(tile2._priority).toBeGreaterThan(1000);
+    });
 }, 'WebGL');

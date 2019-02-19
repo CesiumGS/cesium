@@ -278,7 +278,9 @@ defineSuite([
 
         scene.postProcessStages.tonemapper = Tonemapper.MODIFIED_REINHARD;
 
-        expect(scene).toRender([127, 0, 0, 255]);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba).toEqualEpsilon([127, 0, 0, 255], 5);
+        });
         scene.highDynamicRange = true;
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);

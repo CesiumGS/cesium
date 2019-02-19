@@ -610,6 +610,7 @@ defineSuite([
             return new Request({
                 url : 'http://test.invalid/1',
                 requestFunction : requestFunction,
+                throttle : throttleByServer,
                 throttleByServer : throttleByServer
             });
         }
