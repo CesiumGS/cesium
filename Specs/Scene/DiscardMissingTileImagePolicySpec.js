@@ -46,7 +46,7 @@ defineSuite([
             var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url) || FeatureDetection.supportsImageBitmapOptionsSync()) {
+                if (/^blob:/.test(url) || FeatureDetection.supportsCreateImageBitmap()) {
                     // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
