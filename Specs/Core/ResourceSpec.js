@@ -1191,7 +1191,7 @@ defineSuite([
         it('correctly flips image when ImageBitmapOptions are supported', function() {
             return Resource.fetchImage({
                 url: './Data/Images/BlueOverRed.png',
-                flipImage: true
+                flipY: true
             }).then(function(loadedImage) {
                 if (FeatureDetection.supportsImageBitmapOptionsSync()) {
                     expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([255, 0, 0, 255]);
@@ -1204,7 +1204,7 @@ defineSuite([
         it('correctly loads image without flip when ImageBitmapOptions are supported', function() {
             return Resource.fetchImage({
                 url: './Data/Images/BlueOverRed.png',
-                flipImage: false
+                flipY: false
             }).then(function(loadedImage) {
                 if (FeatureDetection.supportsImageBitmapOptionsSync()) {
                     expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 0, 255, 255]);
@@ -1229,32 +1229,7 @@ defineSuite([
                     fail('expected promise to reject');
                 })
                 .otherwise(function(error) {
-                   expect(error).toBeInstanceOf(TypeError);
-                });
-        });
-
-        it('does not set credentials for untrusted cross-origin images using fetch API', function() {
-            var fetchSpy = spyOn(window, 'fetch').and.callThrough();
-            var url = './Data/Images/Green.png';
-
-            return Resource.fetchImage(url)
-                .then(function() {
-                    expect(fetchSpy).toHaveBeenCalledWith(url, {
-                        credentials: 'same-origin'
-                    });
-                });
-        });
-
-        it('sets credentials for trusted cross-origin images using fetch API', function() {
-            var fetchSpy = spyOn(window, 'fetch').and.callThrough();
-            spyOn(TrustedServers, 'contains').and.returnValue(true);
-            var url = 'http://example.invalid/testuri.png';
-
-            return Resource.fetchImage(url)
-                .otherwise(function() {
-                    expect(fetchSpy).toHaveBeenCalledWith(url, {
-                        credentials: 'include'
-                    });
+                   expect(error).toBeInstanceOf(RequestErrorEvent);
                 });
         });
     });

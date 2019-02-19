@@ -76,7 +76,7 @@ defineSuite([
                 // Turn off the default flipping.
                 promises.push(Resource.fetchImage({
                     url: './Data/Images/BlueOverRed.png',
-                    flipImage: false
+                    flipY: false
                 }).then(function(image) {
                     blueOverRedUnflippedImage = image;
                 }));
@@ -199,7 +199,7 @@ defineSuite([
         }).contextToRender([0, 0, 255, 255]);
     });
 
-    it('can set flip texture only if ImageBitmapOptions is not supported', function() {
+    it('can flip texture only if ImageBitmapOptions is not supported', function() {
         var topColor = new Color(0.0, 0.0, 1.0, 1.0);
         var bottomColor = new Color(1.0, 0.0, 0.0, 1.0);
         if (FeatureDetection.supportsImageBitmapOptionsSync()) {

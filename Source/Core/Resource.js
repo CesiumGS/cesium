@@ -252,7 +252,6 @@ define([
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.flipImage] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports createImageBitmap.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -338,14 +337,6 @@ define([
          */
         this.retryAttempts = defaultValue(options.retryAttempts, 0);
         this._retryCount = 0;
-
-        /**
-         * Whether to vertically flip the image during fetch and decode. Only applies when requesting
-         * an image and the browser supports createImageBitmap.
-         *
-         * @type {Boolean}
-         */
-        this.flipImage = defaultValue(options.flipImage, true);
 
         var uri = new Uri(options.url);
         parseQuery(uri, this, true, true);
@@ -631,7 +622,6 @@ define([
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}). These will be combined with those of the current instance.
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.flipImage] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports createImageBitmap.
      * @param {Resource~RetryCallback} [options.retryCallback] The function to call when loading the resource fails.
      * @param {Number} [options.retryAttempts] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -675,9 +665,6 @@ define([
         }
         if (defined(options.retryAttempts)) {
             resource.retryAttempts = options.retryAttempts;
-        }
-        if (defined(options.flipImage)) {
-            resource.flipImage = options.flipImage;
         }
 
         return resource;
@@ -729,7 +716,6 @@ define([
         result.retryCallback = this.retryCallback;
         result.retryAttempts = this.retryAttempts;
         result._retryCount = 0;
-        result.flipImage = this.flipImage;
         result.request = this.request.clone();
 
         return result;
@@ -787,7 +773,6 @@ define([
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.flipImage] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports createImageBitmap.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -832,7 +817,6 @@ define([
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.flipImage] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports createImageBitmap.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -845,10 +829,13 @@ define([
 
     /**
      * Asynchronously loads the given image resource.  Returns a promise that will resolve to
-     * an {@link Image} once loaded, or reject if the image failed to load.
+     * an {@link https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap|ImageBitmap} if the browser supports `createImageBitmap` or otherwise an
+     * {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement|Image} once loaded, or reject if the image failed to load.
      *
-     * @param {Boolean} [preferBlob = false]  If true, we will load the image via a blob.
-     * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     * @param {String|Object} options An object with the following properties.
+     * @param {Boolean} [options.preferBlob=false] If true, we will load the image via a blob.
+     * @param {Boolean} [options.flipY=true] If true, image will be vertially flipped during decode. Only applies if the browser supports `createImageBitmap`.
+     * @returns {Promise.<Image>|Promise.<ImageBitmap>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
      * @example
@@ -867,9 +854,10 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    Resource.prototype.fetchImage = function (preferBlob) {
-        preferBlob = defaultValue(preferBlob, false);
-        var flipImage = this.flipImage;
+    Resource.prototype.fetchImage = function (options) {
+        options = defaultValue(options, {});
+        var preferBlob = defaultValue(options.preferBlob, false);
+        var flipY = defaultValue(options.flipY, true);
 
         checkAndResetRequest(this.request);
 
@@ -879,7 +867,7 @@ define([
         // 3. It's a blob URI
         // 4. It doesn't have request headers and we preferBlob is false
         if (!xhrBlobSupported || this.isDataUri || this.isBlobUri || (!this.hasHeaders && !preferBlob)) {
-            return fetchImage(this);
+            return fetchImage(this, flipY);
         }
 
         var blobPromise = this.fetchBlob();
@@ -897,11 +885,10 @@ define([
                 generatedBlob = blob;
                 var blobUrl = window.URL.createObjectURL(blob);
                 generatedBlobResource = new Resource({
-                    url: blobUrl,
-                    flipImage: flipImage
+                    url: blobUrl
                 });
 
-                return fetchImage(generatedBlobResource);
+                return fetchImage(generatedBlobResource, flipY);
             })
             .then(function(image) {
                 if (!defined(image)) {
@@ -923,12 +910,11 @@ define([
             });
     };
 
-    function fetchImage(resource) {
+    function fetchImage(resource, flipY) {
         var request = resource.request;
         request.url = resource.url;
         request.requestFunction = function() {
             var url = resource.url;
-            var flipImage = resource.flipImage;
             var crossOrigin = false;
 
             // data URIs can't have crossorigin set.
@@ -938,7 +924,7 @@ define([
 
             var deferred = when.defer();
 
-            Resource._Implementations.createImage(url, crossOrigin, deferred, flipImage);
+            Resource._Implementations.createImage(url, crossOrigin, deferred, flipY);
 
             return deferred.promise;
         };
@@ -962,7 +948,7 @@ define([
                             request.state = RequestState.UNISSUED;
                             request.deferred = undefined;
 
-                            return fetchImage(resource);
+                            return fetchImage(resource, flipY);
                         }
 
                         return when.reject(e);
@@ -979,7 +965,7 @@ define([
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.flipImage] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports createImageBitmap.
+     * @param {Boolean} [options.flipY = true] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports createImageBitmap.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -988,7 +974,10 @@ define([
      */
     Resource.fetchImage = function (options) {
         var resource = new Resource(options);
-        return resource.fetchImage(options.preferBlob);
+        return resource.fetchImage({
+            flipY: options.flipY,
+            preferBlob: options.preferBlob
+        });
     };
 
     /**
@@ -1400,7 +1389,6 @@ define([
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.flipImage] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports createImageBitmap.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
@@ -1778,29 +1766,24 @@ define([
      */
     Resource._Implementations = {};
 
-    Resource._Implementations.createImage = function(url, crossOrigin, deferred, flipImage) {
+    Resource._Implementations.createImage = function(url, crossOrigin, deferred, flipY) {
         var supportsBitmapOptions = FeatureDetection.supportsImageBitmapOptionsSync();
 
-        if (FeatureDetection.supportsFetchApi() && FeatureDetection.supportsCreateImageBitmap() && defined(supportsBitmapOptions)) {
-            fetch(url, {
-                credentials: (crossOrigin && TrustedServers.contains(url)) ? 'include' : 'same-origin'
+        if (FeatureDetection.supportsCreateImageBitmap() && defined(supportsBitmapOptions)) {
+            Resource.fetchBlob({
+                url: url
             })
-                .then(function(response) {
-                    return response.blob();
-                })
                 .then(function(blob) {
                     if (!supportsBitmapOptions) {
-                        return createImageBitmap(blob);
+                        return when(createImageBitmap(blob));
                     }
 
-                    return createImageBitmap(blob, {
-                        imageOrientation: flipImage ? 'flipY' : 'none'
-                    });
+                    return when(createImageBitmap(blob, {
+                        imageOrientation: flipY ? 'flipY' : 'none'
+                    }));
                 })
-                .then(function (imageBitmap) {
-                    deferred.resolve(imageBitmap);
-                })
-                .catch(deferred.reject);
+                .then(deferred.resolve)
+                .otherwise(deferred.reject);
         } else {
             var image = new Image();
 

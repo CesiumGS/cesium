@@ -1,6 +1,7 @@
 defineSuite([
         'Core/VRTheWorldTerrainProvider',
         'Core/DefaultProxy',
+        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/HeightmapTerrainData',
         'Core/Math',
@@ -13,6 +14,7 @@ defineSuite([
     ], function(
         VRTheWorldTerrainProvider,
         DefaultProxy,
+        FeatureDetection,
         GeographicTilingScheme,
         HeightmapTerrainData,
         CesiumMath,
@@ -24,9 +26,16 @@ defineSuite([
         when) {
     'use strict';
 
+    var imageUrl = 'Data/Images/Red16x16.png';
+
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            if (url === imageUrl) {
+                Resource._DefaultImplementations.loadWithXhr(url, responseType, method, data, headers, deferred, overrideMimeType);
+                return;
+            }
+
             setTimeout(function() {
                 var parser = new DOMParser();
                 var xmlString =
@@ -58,6 +67,10 @@ defineSuite([
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
+    });
+
+    beforeAll(function() {
+        return FeatureDetection.supportsImageBitmapOptions();
     });
 
     function createRequest() {
@@ -239,7 +252,7 @@ defineSuite([
                 expect(url.indexOf('.tif?cesium=true')).toBeGreaterThanOrEqualTo(0);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(imageUrl, crossOrigin, deferred);
             };
 
             var terrainProvider = new VRTheWorldTerrainProvider({

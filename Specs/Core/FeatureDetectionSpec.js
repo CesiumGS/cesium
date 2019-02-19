@@ -124,11 +124,6 @@ defineSuite([
             });
     });
 
-    it('detects fetch API support', function() {
-        var supportsFetchApi = FeatureDetection.supportsFetchApi();
-        expect(typeof supportsFetchApi).toEqual('boolean');
-    });
-
     it('detects createImageBitmap support', function() {
         var supportsCreateImageBitmap = FeatureDetection.supportsCreateImageBitmap();
         expect(typeof supportsCreateImageBitmap).toEqual('boolean');

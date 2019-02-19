@@ -214,8 +214,8 @@ defineSuite([
             expect(provider.hasAlphaChannel).toBeDefined();
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url)) {
-                    // load blob url normally
+                if (/^blob:/.test(url) || FeatureDetection.supportsImageBitmapOptionsSync()) {
+                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
@@ -291,8 +291,8 @@ defineSuite([
             expect(provider.usingPrecachedTiles).toEqual(true);
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url)) {
-                    // load blob url normally
+                if (/^blob:/.test(url) || FeatureDetection.supportsImageBitmapOptionsSync()) {
+                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
@@ -464,8 +464,8 @@ defineSuite([
             expect(provider.hasAlphaChannel).toBeDefined();
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url)) {
-                    // load blob url normally
+                if (/^blob:/.test(url) || FeatureDetection.supportsImageBitmapOptionsSync()) {
+                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(expectedTileUrl);

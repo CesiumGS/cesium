@@ -1,12 +1,14 @@
 defineSuite([
         'Scene/DiscardMissingTileImagePolicy',
         'Core/Cartesian2',
+        'Core/FeatureDetection',
         'Core/Resource',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         DiscardMissingTileImagePolicy,
         Cartesian2,
+        FeatureDetection,
         Resource,
         pollToPromise,
         when) {
@@ -15,6 +17,10 @@ defineSuite([
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
+    });
+
+    beforeAll(function() {
+        return FeatureDetection.supportsImageBitmapOptions();
     });
 
     describe('construction', function() {
@@ -40,8 +46,8 @@ defineSuite([
             var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url)) {
-                    // load blob url normally
+                if (/^blob:/.test(url) || FeatureDetection.supportsImageBitmapOptionsSync()) {
+                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(missingImageUrl);

@@ -281,6 +281,8 @@ define([
         }
 
         var imageDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4////fwAJ+wP9CNHoHgAAAABJRU5ErkJggg==';
+        // Use the fetch API here to avoid a circular dependency from including Resource here.
+        // `fetch` is supported everywhere createImageBitmap is.
         fetch(imageDataUri)
             .then(function(response) {
                 return response.blob();
@@ -308,14 +310,6 @@ define([
         }
 
         return supportsImageBitmapOptionsResult;
-    }
-
-    var supportsFetchApiResult;
-    function supportsFetchApi() {
-        if (!defined(supportsFetchApiResult)) {
-            supportsFetchApiResult = defined(window.fetch);
-        }
-        return supportsFetchApiResult;
     }
 
     /**
@@ -346,7 +340,6 @@ define([
         supportsCreateImageBitmap: supportsCreateImageBitmap,
         supportsImageBitmapOptions: supportsImageBitmapOptions,
         supportsImageBitmapOptionsSync: supportsImageBitmapOptionsSync,
-        supportsFetchApi : supportsFetchApi,
         imageRenderingValue: imageRenderingValue,
         typedArrayTypes: typedArrayTypes
     };
