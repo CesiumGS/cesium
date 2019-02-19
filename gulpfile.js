@@ -123,7 +123,7 @@ gulp.task('clean', function(done) {
 });
 
 gulp.task('requirejs', function(done) {
-    var config = JSON.parse(new Buffer(process.argv[3].substring(2), 'base64').toString('utf8'));
+    var config = JSON.parse(Buffer.from(process.argv[3].substring(2), 'base64').toString('utf8'));
 
     // Disable module load timeout
     config.waitSeconds = 0;
@@ -1197,7 +1197,7 @@ var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;') + '\n
     }, function() {
         var data = fs.readFileSync(outputFile); //read existing contents into data
         var fd = fs.openSync(outputFile, 'w+');
-        var buffer = new Buffer('/* This file is automatically rebuilt by the Cesium build process. */\n');
+        var buffer = Buffer.from('/* This file is automatically rebuilt by the Cesium build process. */\n');
 
         fs.writeSync(fd, buffer, 0, buffer.length, 0); //write new data
         fs.writeSync(fd, data, 0, data.length, buffer.length); //append old data
@@ -1348,7 +1348,7 @@ function requirejsOptimize(name, config) {
         console.log('Building ' + name);
     }
     return new Promise(function(resolve, reject) {
-        var cmd = 'npm run requirejs -- --' + new Buffer(JSON.stringify(config)).toString('base64') + ' --silent';
+        var cmd = 'npm run requirejs -- --' + Buffer.from(JSON.stringify(config)).toString('base64') + ' --silent';
         child_process.exec(cmd, function(e) {
             if (e) {
                 console.log('Error ' + name);

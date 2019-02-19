@@ -38,7 +38,7 @@ defineSuite([
 
     it('default constructs', function() {
         var encoding = new TerrainEncoding();
-        expect(encoding.quantization).not.toBeDefined();
+        expect(encoding.quantization).toBe(TerrainQuantization.NONE);
         expect(encoding.minimumHeight).not.toBeDefined();
         expect(encoding.maximumHeight).not.toBeDefined();
         expect(encoding.center).not.toBeDefined();

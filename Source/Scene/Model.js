@@ -3874,7 +3874,7 @@ define([
             'uniform vec4 gltf_silhouetteColor; \n' +
             'void main() \n' +
             '{ \n' +
-            '    gl_FragColor = gltf_silhouetteColor; \n' +
+            '    gl_FragColor = czm_gammaCorrect(gltf_silhouetteColor); \n' +
             '}';
 
         return ShaderProgram.fromCache({

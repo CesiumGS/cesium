@@ -551,6 +551,31 @@ defineSuite([
         expect(scratch._scene3DOnly).toBe(true);
     });
 
+    it('can unpack onto a new instance', function() {
+        var groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, 0.0,
+                1.0, 0.0
+            ]),
+            loop : true,
+            granularity : 10.0 // no interpolative subdivision
+        });
+        groundPolylineGeometry._scene3DOnly = true;
+        GroundPolylineGeometry.setProjection(groundPolylineGeometry, new WebMercatorProjection(Ellipsoid.UNIT_SPHERE));
+
+        var packedArray = [0];
+        GroundPolylineGeometry.pack(groundPolylineGeometry, packedArray, 1);
+        var result = GroundPolylineGeometry.unpack(packedArray, 1);
+
+        var scratchPositions = result._positions;
+        expect(scratchPositions.length).toEqual(2);
+        expect(Cartesian3.equals(scratchPositions[0], groundPolylineGeometry._positions[0])).toBe(true);
+        expect(Cartesian3.equals(scratchPositions[1], groundPolylineGeometry._positions[1])).toBe(true);
+        expect(result.loop).toBe(true);
+        expect(result.granularity).toEqual(10.0);
+        expect(result._scene3DOnly).toBe(true);
+    });
+
     it('provides a method for setting projection', function() {
         var groundPolylineGeometry = new GroundPolylineGeometry({
             positions : Cartesian3.fromDegreesArray([
