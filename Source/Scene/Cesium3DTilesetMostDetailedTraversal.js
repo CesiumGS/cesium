@@ -14,15 +14,15 @@ define([
      *
      * @private
      */
-    function Cesium3DTilesetAsyncTraversal() {
+    function Cesium3DTilesetMostDetailedTraversal() {
     }
 
-    var asyncTraversal = {
+    var traversal = {
         stack : new ManagedArray(),
         stackMaximumLength : 0
     };
 
-    Cesium3DTilesetAsyncTraversal.selectTiles = function(tileset, frameState) {
+    Cesium3DTilesetMostDetailedTraversal.selectTiles = function(tileset, frameState) {
         tileset._selectedTiles.length = 0;
         tileset._requestedTiles.length = 0;
         tileset._hasMixedContent = false;
@@ -36,11 +36,11 @@ define([
             return ready;
         }
 
-        var stack = asyncTraversal.stack;
+        var stack = traversal.stack;
         stack.push(tileset.root);
 
         while (stack.length > 0) {
-            asyncTraversal.stackMaximumLength = Math.max(asyncTraversal.stackMaximumLength, stack.length);
+            traversal.stackMaximumLength = Math.max(traversal.stackMaximumLength, stack.length);
 
             var tile = stack.pop();
             var add = (tile.refine === Cesium3DTileRefine.ADD);
@@ -64,7 +64,7 @@ define([
             touchTile(tileset, tile);
         }
 
-        asyncTraversal.stack.trim(asyncTraversal.stackMaximumLength);
+        traversal.stack.trim(traversal.stackMaximumLength);
 
         return ready;
     };
@@ -133,5 +133,5 @@ define([
         }
     }
 
-    return Cesium3DTilesetAsyncTraversal;
+    return Cesium3DTilesetMostDetailedTraversal;
 });
