@@ -244,8 +244,6 @@ define([
         this.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, true);
         this.cullRequestsWhileMovingMultiplier = defaultValue(options.cullRequestsWhileMovingMultiplier, 60);
 
-        this._prefetchPass = false; // 'true' tells traversal to skip selectDesiredTile. 'false' tells priority calculation to penalize non-prefetch tiles.
-
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
 
@@ -1662,8 +1660,11 @@ define([
         return a._priority - b._priority;
     }
 
-    function cancelOutOfViewRequestedTiles(tileset, frameState) {
-        var requestedTilesInFlight = tileset._requestedTilesInFlight;
+    /**
+     * @private
+     */
+    Cesium3DTileset.prototype.cancelOutOfViewRequests = function(frameState) {
+        var requestedTilesInFlight = this._requestedTilesInFlight;
         var removeCount = 0;
         var length = requestedTilesInFlight.length;
         for (var i = 0; i < length; ++i) {
@@ -1688,7 +1689,7 @@ define([
         }
 
         requestedTilesInFlight.length -= removeCount;
-    }
+    };
 
     function requestTiles(tileset, isAsync) {
         // Sort requests by priority before making any requests.
@@ -2053,9 +2054,12 @@ define([
         tile.destroy();
     }
 
-    function unloadTiles(tileset) {
-        tileset._cache.unloadTiles(tileset, unloadTile);
-    }
+    /**
+     * @private
+     */
+    Cesium3DTileset.prototype.unloadTiles = function() {
+        this._cache.unloadTiles(this, unloadTile);
+    };
 
     /**
      * Unloads all tiles that weren't selected the previous frame.  This can be used to
@@ -2112,38 +2116,6 @@ define([
         tileset._maxPriority.distance = -Number.MAX_VALUE;
     }
 
-    var lastFrameWasFlight = false;
-    function prefetchTilesAtFlightDestination(tileset, frameState) {
-        var camera = frameState.camera;
-        var cullingVolume = frameState.cullingVolume;
-        var currentFlight = camera._currentFlight;
-        if (defined(currentFlight)) {
-            lastFrameWasFlight = true;
-
-            // Configure for prefetch
-            tileset._prefetchPass = true;
-            frameState.camera = camera._prefetchCamera;
-            frameState.cullingVolume = camera._prefetchCamera.cullingVolume;
-
-            Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
-            cancelOutOfViewRequestedTiles(tileset, frameState);
-            requestTiles(tileset, false);
-
-            // Restore settings
-            tileset._prefetchPass = false;
-            frameState.camera = camera;
-            frameState.cullingVolume = cullingVolume;
-            ++tileset._updatedVisibilityFrame;
-        } else if (lastFrameWasFlight && tileset._tilesLoaded) {
-            lastFrameWasFlight = false;
-            frameState.afterRender.push(function() {
-                tileset.allTilesLoaded.raiseEvent();
-            });
-        }
-
-        resetMinMax(tileset);
-    }
-
     ///////////////////////////////////////////////////////////////////////////
 
     function update(tileset, frameState, statisticsLast, passOptions) {
@@ -2179,27 +2151,13 @@ define([
 
         var isRender = passOptions.isRender;
 
-        // THIS
-        if (isRender) {
-            tileset._cache.reset();
-        }
-
         // Resets the visibility check for each pass
         ++tileset._updatedVisibilityFrame;
 
         // Update any tracked min max values
         resetMinMax(tileset);
 
-                // if (isRender && tileset.prefetchFlightDestinations) {
-                //     prefetchTilesAtFlightDestination(tileset, frameState);
-                // }
-
         var ready = passOptions.traversal.selectTiles(tileset, frameState);
-
-        // THIS
-        if (isRender) {
-            cancelOutOfViewRequestedTiles(tileset, frameState);
-        }
 
         if (passOptions.requestTiles) {
             requestTiles(tileset);
@@ -2212,9 +2170,6 @@ define([
         updateTiles(tileset, frameState, isRender);
 
         if (isRender) {
-            // THIS
-            unloadTiles(tileset);
-
             // Events are raised (added to the afterRender queue) here since promises
             // may resolve outside of the update loop that then raise events, e.g.,
             // model's readyPromise.

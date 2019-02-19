@@ -349,7 +349,6 @@ define([
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
 
         this._loadTimestamp = new JulianDate();
-        this._isPrefetch = false;
         this._loadCount = 0;
         this._unloadCount = 0;
 
@@ -1337,7 +1336,6 @@ define([
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
         var foveatedScale = distanceScale * 10;
-        var prefetchScale = foveatedScale * 10; // On or off so don't need an additional digit of separation to prevent blend
 
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
@@ -1345,13 +1343,10 @@ define([
         // Map 0-1 then convert to digit
         var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
 
-        // On-Off values are the digit or 0
-        var prefetchDigit = tileset._prefetchPass ? 0 : prefetchScale; // Penalize non-prefetches
-
         var foveatedDigit = this._priorityDeferred ? foveatedScale : 0;
 
         // Get the final base 10 number
-        var number = foveatedDigit + distanceDigit + depthDigit + prefetchDigit;
+        var number = foveatedDigit + distanceDigit + depthDigit;
         this._priority = number;
     };
 
