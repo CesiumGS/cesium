@@ -119,7 +119,7 @@ define([
     }
 
     function selectTile(tileset, tile, frameState) {
-        if (tile.contentVisibility(frameState) !== Intersect.OUTSIDE ) {
+        if (tile.contentAvailable && tile.contentVisibility(frameState) !== Intersect.OUTSIDE ) {
             var tileContent = tile.content;
             if (tileContent.featurePropertiesDirty) {
                 // A feature's property in this tile changed, the tile needs to be re-styled.
@@ -224,11 +224,11 @@ define([
     }
 
     function updateVisibility(tileset, tile, frameState) {
-        // if (tile._updatedVisibilityFrame === tileset._updatedVisibilityFrame) {
+        if (tile._updatedVisibilityFrame === tileset._updatedVisibilityFrame) {
             // Return early if visibility has already been checked during the traversal.
             // The visibility may have already been checked if the cullWithChildrenBounds optimization is used.
-            // return;
-        // }
+            return;
+        }
 
         tile.updateVisibility(frameState);
         tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
@@ -354,7 +354,6 @@ define([
         var length = children.length;
 
         for (i = 0; i < length; ++i) {
-            children[i]._updatedVisibilityFrame = 0; // Did not fully fix this.
             updateTile(tileset, children[i], frameState);
         }
 
@@ -519,7 +518,6 @@ define([
             visitTile(tileset, tile, frameState);
             touchTile(tileset, tile, frameState);
             tile._refines = refines;
-            tile._updatedVisibilityFrame = 0; // Reset so visibility is checked during the next pass which may use a different camera
         }
     }
 

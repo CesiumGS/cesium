@@ -2112,35 +2112,37 @@ define([
         tileset._maxPriority.distance = -Number.MAX_VALUE;
     }
 
-    //     var lastFrameWasFlight = false;
-    // function prefetchTilesAtFlightDestination(tileset, frameState) {
-    //     var camera = frameState.camera;
-    //     var cullingVolume = frameState.cullingVolume;
-    //     var currentFlight = camera._currentFlight;
-    //     if (defined(currentFlight)) {
-    //         lastFrameWasFlight = true;
-    //
-    //         // Configure for prefetch
-    //         tileset._prefetchPass = true;
-    //         frameState.camera = camera._prefetchCamera;
-    //         frameState.cullingVolume = camera._prefetchCamera.cullingVolume;
-    //
-    //         Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
-    //         requestTiles(tileset, false);
-    //
-    //         // Restore settings
-    //         tileset._prefetchPass = false;
-    //         frameState.camera = camera;
-    //         frameState.cullingVolume = cullingVolume;
-    //     } else if (lastFrameWasFlight && tileset._tilesLoaded) {
-    //         lastFrameWasFlight = false;
-    //         frameState.afterRender.push(function() {
-    //             tileset.allTilesLoaded.raiseEvent();
-    //         });
-    //     }
-    //
-    //     resetMinMax(tileset);
-    // }
+    var lastFrameWasFlight = false;
+    function prefetchTilesAtFlightDestination(tileset, frameState) {
+        var camera = frameState.camera;
+        var cullingVolume = frameState.cullingVolume;
+        var currentFlight = camera._currentFlight;
+        if (defined(currentFlight)) {
+            lastFrameWasFlight = true;
+
+            // Configure for prefetch
+            tileset._prefetchPass = true;
+            frameState.camera = camera._prefetchCamera;
+            frameState.cullingVolume = camera._prefetchCamera.cullingVolume;
+
+            Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
+            cancelOutOfViewRequestedTiles(tileset, frameState);
+            requestTiles(tileset, false);
+
+            // Restore settings
+            tileset._prefetchPass = false;
+            frameState.camera = camera;
+            frameState.cullingVolume = cullingVolume;
+            ++tileset._updatedVisibilityFrame;
+        } else if (lastFrameWasFlight && tileset._tilesLoaded) {
+            lastFrameWasFlight = false;
+            frameState.afterRender.push(function() {
+                tileset.allTilesLoaded.raiseEvent();
+            });
+        }
+
+        resetMinMax(tileset);
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -2177,6 +2179,7 @@ define([
 
         var isRender = passOptions.isRender;
 
+        // THIS
         if (isRender) {
             tileset._cache.reset();
         }
@@ -2187,14 +2190,13 @@ define([
         // Update any tracked min max values
         resetMinMax(tileset);
 
-            // if (isRender && tileset.prefetchFlightDestinations) {
-            //     prefetchTilesAtFlightDestination(tileset, frameState);
-            // }
-            // ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
-            // console.log(tileset._selectedTiles.length);
+                // if (isRender && tileset.prefetchFlightDestinations) {
+                //     prefetchTilesAtFlightDestination(tileset, frameState);
+                // }
 
         var ready = passOptions.traversal.selectTiles(tileset, frameState);
 
+        // THIS
         if (isRender) {
             cancelOutOfViewRequestedTiles(tileset, frameState);
         }
@@ -2210,6 +2212,7 @@ define([
         updateTiles(tileset, frameState, isRender);
 
         if (isRender) {
+            // THIS
             unloadTiles(tileset);
 
             // Events are raised (added to the afterRender queue) here since promises

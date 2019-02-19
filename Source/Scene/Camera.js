@@ -2895,11 +2895,14 @@ define([
         flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
         this._currentFlight = flightTween;
 
-        if (!defined(this._prefetchCamera)) {
-            this._prefetchCamera = Camera.clone(this, this._prefetchCamera);
-        }
-        this._prefetchCamera.setView({ destination: destination, orientation: orientation });
-        this._prefetchCamera.cullingVolume = this._prefetchCamera.frustum.computeCullingVolume(this._prefetchCamera.positionWC, this._prefetchCamera.directionWC, this._prefetchCamera.upWC);
+        // if (!defined(this._prefetchCamera)) {
+        //     this._prefetchCamera = Camera.clone(this, this._prefetchCamera);
+        // }
+        // this._prefetchCamera.setView({ destination: destination, orientation: orientation });
+        // this._prefetchCamera.cullingVolume = this._prefetchCamera.frustum.computeCullingVolume(this._prefetchCamera.positionWC, this._prefetchCamera.directionWC, this._prefetchCamera.upWC);
+
+        this._scene._prefetchCamera.setView({ destination: destination, orientation: orientation });
+        this._scene._prefetchCullingVolume = this._scene._prefetchCamera.frustum.computeCullingVolume(this._scene._prefetchCamera.positionWC, this._scene._prefetchCamera.directionWC, this._scene._prefetchCamera.upWC);
     };
 
     function distanceToBoundingSphere3D(camera, radius) {

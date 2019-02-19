@@ -803,6 +803,9 @@ define([
 
         this._pickOffscreenView = new View(this, pickOffscreenCamera, pickOffscreenViewport);
 
+        this._prefetchCamera = new Camera(this);
+        this._prefetchCullingVolume = undefined;
+
         /**
          * @private
          */
@@ -1705,6 +1708,10 @@ define([
 
     var pickTilesetPassState = new Cesium3DTilePassState({
         pass : Cesium3DTilePass.PICK
+    });
+
+    var prefetchTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.PREFETCH
     });
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
@@ -3176,11 +3183,14 @@ define([
     function update(scene) {
         var frameState = scene._frameState;
 
+        // update cache and cancel out of view
+
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
         }
 
         updateMostDetailedRayPicks(scene);
+        updatePrefetchPass(scene);
 
         frameState.creditDisplay.update();
     }
@@ -3821,6 +3831,24 @@ define([
         });
     };
 
+    function updatePrefetchPass(scene) {
+        if (!defined(scene.camera._currentFlight)) {
+            return;
+        }
+
+        prefetchTilesetPassState.camera = scene._prefetchCamera;
+        prefetchTilesetPassState.cullingVolume = scene._prefetchCullingVolume;
+
+        var primitives = scene.primitives;
+        var length = primitives.length;
+        for (var i = 0; i < length; ++i) {
+            var primitive = primitives.get(i);
+            if ((primitive instanceof Cesium3DTileset) && primitive.show) {
+                primitive.updateForPass(scene._frameState, prefetchTilesetPassState);
+            }
+        }
+    }
+
     var scratchRight = new Cartesian3();
     var scratchUp = new Cartesian3();
 
@@ -3848,7 +3876,7 @@ define([
 
         var view = scene._pickOffscreenView;
         var camera = view.camera;
-        var cullingVolume = updateOffscreenCameraFromRay(scene, ray, width, view.camera);
+        var cullingVolume = updateOffscreenCameraFromRay(scene, ray, width, camera);
 
         var tilesetPassState = mostDetailedPrefetchTilesetPassState;
         tilesetPassState.camera = camera;

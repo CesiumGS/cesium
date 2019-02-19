@@ -53,6 +53,9 @@ define([
         isRender : false,
         requestTiles : true,
         ignoreCommands : true
+        // isRender : false,
+        // requestTiles : true,
+        // ignoreCommands : false
     });
 
     passOptions[Cesium3DTilePass.MOST_DETAILED_PREFETCH] = freezeObject({
