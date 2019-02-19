@@ -474,7 +474,7 @@
           }
         }
       },
-      "followSurface":true,
+      "arcType":"GEODESIC",
       "shadows":"CAST_ONLY",
       "depthFailMaterial":{
         "solidColor":{
@@ -6312,6 +6312,9 @@
       },
       "followSurface":{
         "reference":"Constant#polyline.followSurface"
+      },
+      "arcType":{
+        "reference":"Constant#polyline.arcType"
       },
       "shadows":{
         "reference":"Constant#polyline.shadows"

@@ -1,4 +1,5 @@
 define([
+        '../Core/ArcType',
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -86,6 +87,7 @@ define([
         './VelocityVectorProperty',
         './WallGraphics'
     ], function(
+        ArcType,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -501,6 +503,8 @@ define([
         } else if (czmlInterval.hasOwnProperty('rgba') ||
                    czmlInterval.hasOwnProperty('rgbaf')) {
             return Color;
+        } else if (czmlInterval.hasOwnProperty('arcType')) {
+            return ArcType;
         } else if (czmlInterval.hasOwnProperty('colorBlendMode')) {
             return ColorBlendMode;
         } else if (czmlInterval.hasOwnProperty('cornerType')) {
@@ -546,6 +550,8 @@ define([
         // The associations in this function need to be kept in sync with the
         // associations in getPropertyType
         switch (type) {
+            case ArcType:
+                return ArcType[defaultValue(czmlInterval.arcType, czmlInterval)];
             case Array:
                 return czmlInterval.array;
             case Boolean:
@@ -1795,6 +1801,7 @@ define([
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'depthFailMaterial', polylineData.depthFailMaterial, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+        processPacketData(ArcType, polyline, 'arcType', polylineData.arcType, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polyline, 'clampToGround', polylineData.clampToGround, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polyline, 'shadows', polylineData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polyline, 'distanceDisplayCondition', polylineData.distanceDisplayCondition, interval, sourceUri, entityCollection);
