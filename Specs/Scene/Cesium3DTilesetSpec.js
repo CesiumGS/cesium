@@ -21,9 +21,12 @@ defineSuite([
         'Core/Transforms',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
+        'Scene/Camera',
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileColorBlendMode',
         'Scene/Cesium3DTileContentState',
+        'Scene/Cesium3DTilePass',
+        'Scene/Cesium3DTilePassState',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTileStyle',
         'Scene/ClippingPlane',
@@ -56,9 +59,12 @@ defineSuite([
         Transforms,
         ClearCommand,
         ContextLimits,
+        Camera,
         Cesium3DTile,
         Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
+        Cesium3DTilePass,
+        Cesium3DTilePassState,
         Cesium3DTileRefine,
         Cesium3DTileStyle,
         ClippingPlane,
@@ -70,7 +76,7 @@ defineSuite([
         when) {
     'use strict';
 
-    // It's not easily possible to mock the asynchronous pick functions
+    // It's not easily possible to mock the most detailed pick functions
     // so don't run those tests when using the WebGL stub
     var webglStub = !!window.webglStub;
 
@@ -2109,9 +2115,9 @@ defineSuite([
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
             tileset.style = new Cesium3DTileStyle({color: 'color("red")'});
             scene.renderForSpecs();
-            expect(tileset._statisticsLastRender.numberOfTilesStyled).toBe(1);
+            expect(tileset._statisticsLastPerPass[Cesium3DTilePass.RENDER].numberOfTilesStyled).toBe(1);
             scene.pickForSpecs();
-            expect(tileset._statisticsLastPick.numberOfTilesStyled).toBe(0);
+            expect(tileset._statisticsLastPerPass[Cesium3DTilePass.PICK].numberOfTilesStyled).toBe(0);
         });
     });
 
@@ -3313,6 +3319,63 @@ defineSuite([
         });
     });
 
+    describe('updateForPass', function() {
+        it('updates for pass', function() {
+            viewAllTiles();
+            var passCamera = Camera.clone(scene.camera);
+            var passCullingVolume = passCamera.frustum.computeCullingVolume(passCamera.positionWC, passCamera.directionWC, passCamera.upWC);
+            viewNothing(); // Main camera views nothing, pass camera views all tiles
+
+            var prefetchPassState = new Cesium3DTilePassState({
+                pass : Cesium3DTilePass.PREFETCH,
+                camera : passCamera,
+                cullingVolume : passCullingVolume
+            });
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+                expect(tileset.statistics.selected).toBe(0);
+                tileset.updateForPass(scene.frameState, prefetchPassState);
+                expect(tileset._requestedTiles.length).toBe(5);
+            });
+        });
+
+        it('uses custom command list', function() {
+            var passCommandList = [];
+
+            var renderPassState = new Cesium3DTilePassState({
+                pass : Cesium3DTilePass.RENDER,
+                commandList : passCommandList
+            });
+
+            viewAllTiles();
+
+            return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
+                tileset.updateForPass(scene.frameState, renderPassState);
+                expect(passCommandList.length).toBe(5);
+            });
+        });
+
+        it('throws if frameState is undefined', function() {
+            var tileset = new Cesium3DTileset({
+                url : tilesetUrl
+            });
+
+            expect(function() {
+                tileset.updateForPass();
+            }).toThrowDeveloperError();
+        });
+
+        it('throws if tilesetPassState is undefined', function() {
+            var tileset = new Cesium3DTileset({
+                url : tilesetUrl
+            });
+
+            expect(function() {
+                tileset.updateForPass(scene.frameState);
+            }).toThrowDeveloperError();
+        });
+    });
+
     function sampleHeightMostDetailed(cartographics, objectsToExclude) {
         var result;
         var completed = false;
@@ -3360,13 +3423,13 @@ defineSuite([
             return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
                 return sampleHeightMostDetailed(cartographics).then(function() {
                     expect(centerCartographic.height).toEqualEpsilon(2.47, CesiumMath.EPSILON1);
-                    var statisticsAsync = tileset._statisticsLastAsync;
-                    var statisticsRender = tileset._statisticsLastRender;
-                    expect(statisticsAsync.numberOfCommands).toBe(1);
-                    expect(statisticsAsync.numberOfTilesWithContentReady).toBe(1);
-                    expect(statisticsAsync.selected).toBe(1);
-                    expect(statisticsAsync.visited).toBeGreaterThan(1);
-                    expect(statisticsAsync.numberOfTilesTotal).toBe(21);
+                    var statisticsMostDetailedPick = tileset._statisticsLastPerPass[Cesium3DTilePass.MOST_DETAILED_PICK];
+                    var statisticsRender = tileset._statisticsLastPerPass[Cesium3DTilePass.RENDER];
+                    expect(statisticsMostDetailedPick.numberOfCommands).toBe(1);
+                    expect(statisticsMostDetailedPick.numberOfTilesWithContentReady).toBe(1);
+                    expect(statisticsMostDetailedPick.selected).toBe(1);
+                    expect(statisticsMostDetailedPick.visited).toBeGreaterThan(1);
+                    expect(statisticsMostDetailedPick.numberOfTilesTotal).toBe(21);
                     expect(statisticsRender.selected).toBe(0);
                 });
             });
@@ -3386,13 +3449,13 @@ defineSuite([
             return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
                 return sampleHeightMostDetailed(cartographics).then(function() {
                     expect(centerCartographic.height).toEqualEpsilon(2.47, CesiumMath.EPSILON1);
-                    var statisticsAsync = tileset._statisticsLastAsync;
-                    var statisticsRender = tileset._statisticsLastRender;
-                    expect(statisticsAsync.numberOfCommands).toBe(1);
-                    expect(statisticsAsync.numberOfTilesWithContentReady).toBeGreaterThan(1);
-                    expect(statisticsAsync.selected).toBe(1);
-                    expect(statisticsAsync.visited).toBeGreaterThan(1);
-                    expect(statisticsAsync.numberOfTilesTotal).toBe(21);
+                    var statisticsMostDetailedPick = tileset._statisticsLastPerPass[Cesium3DTilePass.MOST_DETAILED_PICK];
+                    var statisticsRender = tileset._statisticsLastPerPass[Cesium3DTilePass.RENDER];
+                    expect(statisticsMostDetailedPick.numberOfCommands).toBe(1);
+                    expect(statisticsMostDetailedPick.numberOfTilesWithContentReady).toBeGreaterThan(1);
+                    expect(statisticsMostDetailedPick.selected).toBe(1);
+                    expect(statisticsMostDetailedPick.visited).toBeGreaterThan(1);
+                    expect(statisticsMostDetailedPick.numberOfTilesTotal).toBe(21);
                     expect(statisticsRender.selected).toBeGreaterThan(0);
                 });
             });
@@ -3418,7 +3481,7 @@ defineSuite([
 
             return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
                 return sampleHeightMostDetailed(cartographics).then(function() {
-                    var statistics = tileset._statisticsLastAsync;
+                    var statistics = tileset._statisticsLastPerPass[Cesium3DTilePass.MOST_DETAILED_PICK];
                     expect(offcenterCartographic.height).toEqualEpsilon(7.407, CesiumMath.EPSILON1);
                     expect(statistics.numberOfCommands).toBe(3); // One for each level of the tree
                     expect(statistics.numberOfTilesWithContentReady).toBeGreaterThanOrEqualTo(3);
@@ -3488,7 +3551,9 @@ defineSuite([
                     expect(centerCartographic.height).toEqualEpsilon(2.47, CesiumMath.EPSILON1);
                     expect(offcenterCartographic.height).toEqualEpsilon(2.47, CesiumMath.EPSILON1);
                     expect(missCartographic.height).toBeUndefined();
-                    expect(tileset._statisticsLastAsync.numberOfTilesWithContentReady).toBe(2);
+
+                    var statistics = tileset._statisticsLastPerPass[Cesium3DTilePass.MOST_DETAILED_PICK];
+                    expect(statistics.numberOfTilesWithContentReady).toBe(2);
                 });
             });
         });

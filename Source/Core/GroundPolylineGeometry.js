@@ -331,16 +331,9 @@ define([
         var scene3DOnly = (array[index++] === 1.0);
 
         if (!defined(result)) {
-            var geometry = new GroundPolylineGeometry({
-                positions : positions,
-                granularity : granularity,
-                loop : loop,
-                arcType : arcType,
-                ellipsoid : ellipsoid
+            result = new GroundPolylineGeometry({
+                positions : positions
             });
-            geometry._projectionIndex = projectionIndex;
-            geometry._scene3DOnly = scene3DOnly;
-            return geometry;
         }
 
         result._positions = positions;

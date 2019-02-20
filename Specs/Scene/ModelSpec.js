@@ -3231,7 +3231,6 @@ defineSuite([
                         tilesWaitingForChildren : 0
                     }
                 },
-                tileLoadedEvent : new Event(),
                 imageryLayersUpdatedEvent : new Event(),
                 destroy : function() {}
             };
