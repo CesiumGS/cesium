@@ -1,12 +1,20 @@
 defineSuite([
         'Scene/QuadtreeTile',
+        'Core/BoundingSphere',
+        'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/GeographicTilingScheme',
+        'Core/GeographicProjection',
         'Core/Math',
         'Core/Rectangle',
         'Core/WebMercatorTilingScheme'
     ], function(
         QuadtreeTile,
+        BoundingSphere,
+        Cartesian3,
+        Cartographic,
         GeographicTilingScheme,
+        GeographicProjection,
         CesiumMath,
         Rectangle,
         WebMercatorTilingScheme) {
@@ -107,6 +115,54 @@ defineSuite([
                 level : 0
             });
         }).toThrowDeveloperError();
+    });
+
+    it('caches a 2D bounding sphere', function() {
+        var tilingScheme = new GeographicTilingScheme({
+            numberOfLevelZeroTilesX : 1,
+            numberOfLevelZeroTilesY : 1
+        });
+        var levelZeroTile = QuadtreeTile.createLevelZeroTiles(tilingScheme)[0];
+        var mapProjection = new GeographicProjection();
+        var minimumHeight = 0.0;
+        var maximumHeight = 1000.0;
+
+        var expectedBoundingSphere = BoundingSphere.fromRectangleWithHeights2D(Rectangle.MAX_VALUE, mapProjection, minimumHeight, maximumHeight);
+
+        var boundingSphere2D = levelZeroTile.getBoundingSphere2D(mapProjection, minimumHeight, maximumHeight);
+        expect(boundingSphere2D).toEqual(expectedBoundingSphere);
+
+        var boundingSphere2D2 = levelZeroTile.getBoundingSphere2D(mapProjection, minimumHeight, maximumHeight);
+        expect(boundingSphere2D2).toBe(boundingSphere2D);
+    });
+
+    it('caches projected corners', function() {
+        var tilingScheme = new GeographicTilingScheme({
+            numberOfLevelZeroTilesX : 1,
+            numberOfLevelZeroTilesY : 1
+        });
+        var levelZeroTile = QuadtreeTile.createLevelZeroTiles(tilingScheme)[0];
+        var mapProjection = new GeographicProjection();
+
+        var southwest = new Cartesian3();
+        var northeast = new Cartesian3();
+
+        var southwestExpected = mapProjection.project(Cartographic.fromDegrees(-180.0, -90.0));
+        var northeastExpected = mapProjection.project(Cartographic.fromDegrees(180.0, 90.0));
+
+        spyOn(GeographicProjection.prototype, 'project').and.callThrough();
+
+        levelZeroTile.getProjectedCorners(mapProjection, southwest, northeast);
+        expect(southwest).toEqual(southwestExpected);
+        expect(northeast).toEqual(northeastExpected);
+
+        expect(GeographicProjection.prototype.project.calls.count()).toEqual(2);
+
+        levelZeroTile.getProjectedCorners(mapProjection, southwest, northeast);
+        expect(southwest).toEqual(southwestExpected);
+        expect(northeast).toEqual(northeastExpected);
+
+        expect(GeographicProjection.prototype.project.calls.count()).toEqual(2);
     });
 
     it('can get tiles around a root tile', function() {

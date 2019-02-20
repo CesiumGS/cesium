@@ -546,7 +546,9 @@ define([
 
             var boundingVolume = surfaceTile.pickBoundingSphere;
             if (mode !== SceneMode.SCENE3D) {
-                surfaceTile.pickBoundingSphere = boundingVolume = BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, projection, surfaceTile.tileBoundingRegion.minimumHeight, surfaceTile.tileBoundingRegion.maximumHeight, boundingVolume);
+                var tileBoundingSphere2D = tile.getBoundingSphere2D(projection, surfaceTile.tileBoundingRegion.minimumHeight, surfaceTile.tileBoundingRegion.maximumHeight);
+                BoundingSphere.clone(tileBoundingSphere2D, boundingVolume);
+                surfaceTile.pickBoundingSphere = boundingVolume;
                 Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
             } else if (defined(surfaceTile.renderedMesh)) {
                 BoundingSphere.clone(surfaceTile.renderedMesh.boundingSphere3D, boundingVolume);

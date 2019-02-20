@@ -1,7 +1,9 @@
 define([
+        './BoundingSphere',
         './Cartesian3',
         './defaultValue'
     ], function(
+        BoundingSphere,
         Cartesian3,
         defaultValue) {
     'use strict';
@@ -88,7 +90,7 @@ define([
          * A bounding sphere that completely contains the tile.
          * @type {BoundingSphere}
          */
-        this.boundingSphere3D = boundingSphere3D;
+        this.boundingSphere3D = BoundingSphere.clone(boundingSphere3D);
 
         /**
          * The occludee point of the tile, represented in ellipsoid-

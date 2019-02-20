@@ -618,7 +618,8 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             boundingVolume = boundingSphereScratch;
-            BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, tileBoundingRegion.minimumHeight, tileBoundingRegion.maximumHeight, boundingVolume);
+            var tileBoundingSphere2D = tile.getBoundingSphere2D(frameState.mapProjection, tileBoundingRegion.minimumHeight, tileBoundingRegion.maximumHeight);
+            BoundingSphere.clone(tileBoundingSphere2D, boundingVolume);
             Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
             if (frameState.mode === SceneMode.MORPHING && defined(surfaceTile.renderedMesh)) {
@@ -1623,8 +1624,9 @@ define([
 
         if (frameState.mode !== SceneMode.SCENE3D) {
             var projection = frameState.mapProjection;
-            var southwest = projection.project(Rectangle.southwest(tile.rectangle), southwestScratch);
-            var northeast = projection.project(Rectangle.northeast(tile.rectangle), northeastScratch);
+            var southwest = southwestScratch;
+            var northeast = northeastScratch;
+            tile.getProjectedCorners(projection, southwest, northeast);
 
             tileRectangle.x = southwest.x;
             tileRectangle.y = southwest.y;
@@ -1635,7 +1637,7 @@ define([
             if (frameState.mode !== SceneMode.MORPHING) {
                 // If using a custom projection, project the existing tile center instead.
                 rtc = rtcScratch;
-                if (frameState.mapProjection.isNormalCylindrical) {
+                if (projection.isNormalCylindrical) {
                     rtc.x = 0.0;
                     rtc.y = (tileRectangle.z + tileRectangle.x) * 0.5;
                     rtc.z = (tileRectangle.w + tileRectangle.y) * 0.5;
@@ -1943,7 +1945,8 @@ define([
 
             if (frameState.mode !== SceneMode.SCENE3D) {
                 var tileBoundingRegion = surfaceTile.tileBoundingRegion;
-                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, frameState.mapProjection, tileBoundingRegion.minimumHeight, tileBoundingRegion.maximumHeight, boundingVolume);
+                var tileBoundingSphere2D = tile.getBoundingSphere2D(frameState.mapProjection, tileBoundingRegion.minimumHeight, tileBoundingRegion.maximumHeight);
+                BoundingSphere.clone(tileBoundingSphere2D, boundingVolume);
                 Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
 
                 if (frameState.mode === SceneMode.MORPHING) {
