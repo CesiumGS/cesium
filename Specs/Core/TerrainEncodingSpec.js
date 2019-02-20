@@ -233,10 +233,11 @@ defineSuite([
     it('encodes with 2D positions', function() {
         var center2D = new Cartesian3(center.x, center.y, 0.0);
         var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, false, false, center2D);
+        var position2D = new Cartesian3(center.x, center.y, 1.0);
 
         var buffer = [];
         var height = (maximumHeight + minimumHeight) * 0.5;
-        encoding.encode(buffer, 0, center, Cartesian2.ZERO, height, Cartesian3.UNIT_X, 0.0, new Cartesian3(center.x, center.y, 1.0));
+        encoding.encode(buffer, 0, center, Cartesian2.ZERO, height, Cartesian3.UNIT_X, 0.0, position2D);
 
         expect(encoding.getStride()).toEqual(6);
         expect(buffer.length).toEqual(encoding.getStride());
@@ -244,6 +245,8 @@ defineSuite([
         expect(buffer[3]).toEqual(0.0);
         expect(buffer[4]).toEqual(0.0);
         expect(buffer[5]).toEqual(1.0);
+
+        expect(encoding.decodePosition2D(buffer, 0)).toEqual(position2D);
     });
 
     it('gets oct-encoded normal', function() {
@@ -258,6 +261,23 @@ defineSuite([
         encoding.encode(buffer, 0, center, Cartesian2.ZERO, minimumHeight, octNormal);
 
         expect(encoding.getStride()).toEqual(4);
+        expect(buffer.length).toEqual(encoding.getStride());
+
+        expect(encoding.getOctEncodedNormal(buffer, 0)).toEqual(octNormal);
+    });
+
+    it('gets oct-encoded normal when encoding includes 2D positions', function() {
+        var hasVertexNormals = true;
+        var encoding = new TerrainEncoding(aabox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, false, new Cartesian3(0.0, 0.0, 0.0));
+
+        var normal = new Cartesian3(1.0, 1.0, 1.0);
+        Cartesian3.normalize(normal, normal);
+        var octNormal = AttributeCompression.octEncode(normal, new Cartesian2());
+
+        var buffer = [];
+        encoding.encode(buffer, 0, center, Cartesian2.ZERO, minimumHeight, octNormal, undefined, new Cartesian3(1.0, 1.0, 1.0));
+
+        expect(encoding.getStride()).toEqual(7);
         expect(buffer.length).toEqual(encoding.getStride());
 
         expect(encoding.getOctEncodedNormal(buffer, 0)).toEqual(octNormal);

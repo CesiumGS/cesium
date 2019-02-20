@@ -628,13 +628,13 @@ define([
             var centerEncodedNormal = AttributeCompression.octEncode(normalScratch, octEncodedNormalScratch);
 
             var centerIndex = nextIndex;
+            var obbCenter = obb.center;
             if (hasCustomProjection) {
-                var obbCenter = obb.center;
                 var obbCenterCartographic = ellipsoid.cartesianToCartographic(obbCenter, obbCenterCartographicScratch);
                 var obbCenter2D = mapProjection.project(obbCenterCartographic, obbCenter2dScratch);
                 encoding.encode(typedArray, nextIndex * stride, obbCenter, Cartesian2.fromElements(0.5, 0.5, uvScratch), middleHeight, centerEncodedNormal, centerWebMercatorT, obbCenter2D);
             } else {
-                encoding.encode(typedArray, nextIndex * stride, obb.center, Cartesian2.fromElements(0.5, 0.5, uvScratch), middleHeight, centerEncodedNormal, centerWebMercatorT);
+                encoding.encode(typedArray, nextIndex * stride, obbCenter, Cartesian2.fromElements(0.5, 0.5, uvScratch), middleHeight, centerEncodedNormal, centerWebMercatorT);
             }
             ++nextIndex;
 
