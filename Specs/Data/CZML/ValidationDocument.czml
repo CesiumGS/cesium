@@ -449,6 +449,7 @@
       "perPositionHeight":true,
       "closeTop":true,
       "closeBottom":true,
+      "arcType":"GEODESIC",
       "shadows":"CAST_ONLY",
       "distanceDisplayCondition":{
         "distanceDisplayCondition":[
@@ -6280,6 +6281,9 @@
       },
       "closeBottom":{
         "reference":"Constant#polygon.closeBottom"
+      },
+      "arcType":{
+        "reference":"Constant#polygon.arcType"
       },
       "shadows":{
         "reference":"Constant#polygon.shadows"
