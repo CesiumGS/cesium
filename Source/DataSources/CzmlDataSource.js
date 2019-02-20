@@ -1800,8 +1800,17 @@ define([
         processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'depthFailMaterial', polylineData.depthFailMaterial, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
-        processPacketData(ArcType, polyline, 'arcType', polylineData.arcType, interval, sourceUri, entityCollection);
+        // Don't want to break CZML spec to keep this workaround even after followSurface has been deprecated from geometry.
+        // See https://github.com/AnalyticalGraphicsInc/cesium/pull/7582#discussion_r258695385
+        if (defined(polylineData.followSurface) && !defined(polylineData.arcType)) {
+            if (polyline.followSurface) {
+                processPacketData(ArcType, polyline, 'arcType', ArcType.GEODESIC, interval, sourceUri, entityCollection);
+            } else {
+                processPacketData(ArcType, polyline, 'arcType', ArcType.NONE, interval, sourceUri, entityCollection);
+            }
+        } else {
+            processPacketData(ArcType, polyline, 'arcType', polylineData.arcType, interval, sourceUri, entityCollection);
+        }
         processPacketData(Boolean, polyline, 'clampToGround', polylineData.clampToGround, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polyline, 'shadows', polylineData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polyline, 'distanceDisplayCondition', polylineData.distanceDisplayCondition, interval, sourceUri, entityCollection);
