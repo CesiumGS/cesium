@@ -372,15 +372,11 @@ defineSuite([
         mockTileset._minPriority = { depth: 0, distance: 0 };
         mockTileset._maxPriority = { depth: 1, distance: 1 };
 
-        mockTileset._prefetchPass = true;
         tile2.updatePriority();
-        mockTileset._prefetchPass = false;
-
         tile1.updatePriority();
 
-        var prefetchDigitPenalty = 1000; // Prefetches don't get penalized.
-        var tile1ExpectedPriority = 1*prefetchDigitPenalty + 0;
-        var tile2ExpectedPriority = 0*prefetchDigitPenalty + 1;
+        var tile1ExpectedPriority = 0;
+        var tile2ExpectedPriority = 1;
         expect(CesiumMath.equalsEpsilon(tile1._priority, tile1ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
         expect(CesiumMath.equalsEpsilon(tile2._priority, tile2ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
 
