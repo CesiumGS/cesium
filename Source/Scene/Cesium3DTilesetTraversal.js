@@ -270,10 +270,7 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
-        var needsLoad = (hasUnloadedContent(tile) || tile.contentExpired);
-        var isWorthLoading = isOnScreenLongEnough(tileset, tile, frameState) && (tile.priorityDeferred = isPriorityDeferred(tile, frameState));
-        
-        if (needsLoad && isWorthLoading) {
+        if ((hasUnloadedContent(tile) || tile.contentExpired) && isOnScreenLongEnough(tileset, tile, frameState) && !(tile.priorityDeferred = isPriorityDeferred(tile, frameState))) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
         }
