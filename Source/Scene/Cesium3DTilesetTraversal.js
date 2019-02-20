@@ -263,17 +263,27 @@ define([
         var sseRelaxation = tileset.foveatedInterpolationCallback(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
         var sse = tile._screenSpaceError === 0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
 
-        var shouldDefer = (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
-        var cameraMovedRecently = frameState.camera._scene._timeSinceCameraMoved < tileset.foveatedTimeDelay * 1000;
-
-        return shouldDefer && cameraMovedRecently;
+        return (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
     }
 
     function loadTile(tileset, tile, frameState) {
-        if ((hasUnloadedContent(tile) || tile.contentExpired) && isOnScreenLongEnough(tileset, tile, frameState) && !(tile.priorityDeferred = isPriorityDeferred(tile, frameState))) {
-            tile._requestedFrame = frameState.frameNumber;
-            tileset._requestedTiles.push(tile);
+       if (!hasUnloadedContent(tile) && !tile.contentExpired) {
+            return;
         }
+
+        if (!isOnScreenLongEnough(tileset, tile, frameState)) {
+            return;
+        }
+
+        var cameraStoppedMoving = frameState.camera._scene._timeSinceCameraMoved >= tileset.foveatedTimeDelay * 1000;
+
+        tile.priorityDeferred = isPriorityDeferred(tile, frameState);
+        if (tile.priorityDeferred && !cameraStoppedMoving) {
+            return;
+        }
+
+        tile._requestedFrame = frameState.frameNumber;
+        tileset._requestedTiles.push(tile);
     }
 
     function updateVisibility(tileset, tile, frameState) {
