@@ -263,17 +263,17 @@ define([
         var sseRelaxation = tileset.foveatedInterpolationCallback(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
         var sse = tile._screenSpaceError === 0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
 
-        return (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
+        var shouldDefer = (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
+        var cameraMovedRecently = frameState.camera._scene._timeSinceCameraMoved < tileset.foveatedTimeDelay * 1000;
+
+        return shouldDefer && cameraMovedRecently;
     }
 
     function loadTile(tileset, tile, frameState) {
-        tile.priorityDeferred = isPriorityDeferred(tile, frameState);
-        // If a tile is deferred and the camera has moved recently, don't load this tile.
-        if(tile.priorityDeferred && frameState.camera._scene._timeSinceCameraMoved < tileset.foveatedTimeDelay * 1000) {
-            return;
-        }
-
-        if ((hasUnloadedContent(tile) || tile.contentExpired) && isOnScreenLongEnough(tileset, tile, frameState)) {
+        var needsLoad = (hasUnloadedContent(tile) || tile.contentExpired);
+        var isWorthLoading = isOnScreenLongEnough(tileset, tile, frameState) && (tile.priorityDeferred = isPriorityDeferred(tile, frameState));
+        
+        if (needsLoad && isWorthLoading) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
         }
