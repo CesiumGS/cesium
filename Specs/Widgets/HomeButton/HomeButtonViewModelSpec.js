@@ -1,11 +1,13 @@
 defineSuite([
         'Widgets/HomeButton/HomeButtonViewModel',
         'Core/Ellipsoid',
+        'Scene/Camera',
         'Scene/Globe',
         'Specs/createScene'
     ], function(
         HomeButtonViewModel,
         Ellipsoid,
+        Camera,
         Globe,
         createScene) {
     'use strict';
@@ -13,8 +15,10 @@ defineSuite([
     var scene;
     var ellipsoid = Ellipsoid.WGS84;
     var globe = new Globe(ellipsoid);
+
     beforeAll(function() {
         scene = createScene();
+        scene._prefetchCamera = new Camera(scene);
         scene.globe = globe;
     });
 

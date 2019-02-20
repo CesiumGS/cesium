@@ -3187,6 +3187,8 @@ define([
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
             if ((primitive instanceof Cesium3DTileset) && primitive.show) {
+                primitive.unloadTiles(frameState);
+                primitive._cache.reset();
                 primitive.cancelOutOfViewRequests(frameState);
             }
         }
@@ -3194,17 +3196,6 @@ define([
 
     function update(scene) {
         var frameState = scene._frameState;
-
-        // update caches
-        var primitives = scene.primitives;
-        var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            var primitive = primitives.get(i);
-            if ((primitive instanceof Cesium3DTileset) && primitive.show) {
-                primitive.unloadTiles(frameState);
-                primitive._cache.reset();
-            }
-        }
 
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
@@ -3346,10 +3337,10 @@ define([
             this._preRender.raiseEvent(this, time);
             tryAndCatchError(this, render);
 
+            postRenderUpdate(this);
             RequestScheduler.update();
         }
 
-        postRenderUpdate(this);
         updateDebugShowFramesPerSecond(this, shouldRender);
         callAfterRenderFunctions(this);
 
