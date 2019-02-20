@@ -42,6 +42,28 @@ var minFrameRate = 1000;
 var maxFrameRate = 0;
 var sumFrameRate = 0.0;
 var frameRateSamples = 0;
+var doAlert = false;
+var tileset;
+
+viewer.scene.debugShowFramesPerSecond = true;
+/*
+This Sandcastle makes it easy to test streaming performance for 3D Tiles & terrain. `startTest()` will begin a
+counter, and end once both the globe and the tileset finish resolving. If a tileset is not defined, it will
+only check the globe, and vice versa.
+
+Set `doAlert = true` above to make it report the timings in an alert window instead of the console.
+
+To test flythroughs do:
+
+- Set the camera's position
+- startTest()
+- start flythrough
+
+To test how long just teleporting to a particular view takes:
+
+- startTest()
+- Set the camera's position
+*/
 
 function startTest() {
     flightComplete = false;
@@ -80,32 +102,51 @@ function measureFrameRate() {
 function viewReady(scene, time) {
     var globeReady = true;
     var tilesetReady = true;
-    if (globe != undefined) {
+    if (globe !== undefined) {
         globeReady = globe._surface.tileProvider.ready && globe._surface._tileLoadQueueHigh.length === 0 && globe._surface._tileLoadQueueMedium.length === 0 && globe._surface._tileLoadQueueLow.length === 0 && globe._surface._debug.tilesWaitingForChildren === 0;
     }
-    if (tileset != undefined) {
+    if (tileset !== undefined) {
         tilesetReady = tileset.tilesLoaded;
     }
 
     if (flightComplete && globeReady && tilesetReady) {
         var endTime = window.performance.now();
         var duration = endTime - startTime;
+        var message = '';
         if (isNaN(sumFrameRate / frameRateSamples)) {
             // We should really just be computing a running average of FPS instead of "samples".
-            alert((duration / 1000).toFixed(2) + ' seconds ' + statistics.numberOfActiveRequestsEver + ' requests. Not enough time for FPS average');
+            message = (duration / 1000).toFixed(2) + ' seconds ' + statistics.numberOfActiveRequestsEver + ' requests. Not enough time for FPS average';
+            if (doAlert) {
+                alert(message);
+            } else {
+                console.log(message);
+            }
+
         } else {
-            alert((duration / 1000).toFixed(2) + ' seconds ' + statistics.numberOfActiveRequestsEver + ' requests, min/max/avg frame FPS ' + minFrameRate.toFixed(0) + '/' + maxFrameRate.toFixed(0) + '/' + (sumFrameRate / frameRateSamples).toFixed(0));
+            message = (duration / 1000).toFixed(2) + ' seconds ' + statistics.numberOfActiveRequestsEver + ' requests, min/max/avg frame FPS ' + minFrameRate.toFixed(0) + '/' + maxFrameRate.toFixed(0) + '/' + (sumFrameRate / frameRateSamples).toFixed(0);
+            if (doAlert) {
+                alert(message);
+            } else {
+                console.log(message);
+            }
+
         }
-        
+
         scene.postRender.removeEventListener(viewReady);
         scene.preUpdate.removeEventListener(measureFrameRate);
     }
 }
 
-Sandcastle.addToolbarButton('0', function() {
-    // Paste camera position here
+Sandcastle.addToolbarButton('View NYC', function() {
+    // Start counting. This will automatically finish once the scene resolves.
     startTest();
-    // Paste camera fly to here
+    // Set the camera's positon
+    camera.position = new Cesium.Cartesian3(1333659.545421253, -4655803.231585404, 4137013.427090627);
+    camera.direction = new Cesium.Cartesian3(0.0016392394248821367, 0.8493471478486977, 0.5278321090416825);
+    camera.right = new Cesium.Cartesian3(0.9758518210834544, 0.11393464773820028, -0.18636555296748974);
+    camera.up = new Cesium.Cartesian3(0.2184274162787582, -0.5153914225965105, 0.8286501947937569);
+    flightComplete = true;
+
 });
 
 Sandcastle.addToolbarButton('Print flyto', function() {
@@ -122,8 +163,7 @@ Sandcastle.addToolbarButton('Print flyto', function() {
         duration : 1,\n\
         complete : function() {\n\
             flightComplete = true;\n\
-        },\n\
-        easingFunction: Cesium.EasingFunction.LINEAR_NONE,\n\
+        }\n\
     });';
     console.log(cameraString);
 });
@@ -132,7 +172,8 @@ Sandcastle.addToolbarButton('Print view', function() {
     var cameraString = 'camera.position = new Cesium.Cartesian3(' + camera.positionWC.x + ', ' + camera.positionWC.y + ', ' + camera.positionWC.z + ');\n'+
                        'camera.direction = new Cesium.Cartesian3(' + camera.directionWC.x + ', ' + camera.directionWC.y + ', ' + camera.directionWC.z + ');\n'+
                        'camera.right = new Cesium.Cartesian3(' + camera.rightWC.x + ', ' + camera.rightWC.y + ', ' + camera.rightWC.z + ');\n'+
-                       'camera.up = new Cesium.Cartesian3(' + camera.upWC.x + ', ' + camera.upWC.y + ', ' + camera.upWC.z + ');\n';
+                       'camera.up = new Cesium.Cartesian3(' + camera.upWC.x + ', ' + camera.upWC.y + ', ' + camera.upWC.z + ');\n' +
+                       'flightComplete = true;\n';
     console.log(cameraString);
 });//Sandcastle_End
     Sandcastle.finishedLoading();
