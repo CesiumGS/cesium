@@ -1,8 +1,8 @@
 /*! NoSleep.js v0.7.0 - git.io/vfn01 - Rich Tibbett - MIT license */
 (function webpackUniversalModuleDefinition(root, factory) {
-	if(typeof exports === 'object' && typeof module === 'object')
+	/* if(typeof exports === 'object' && typeof module === 'object')
 		module.exports = factory();
-	else if(typeof define === 'function' && define.amd)
+	else */ if(typeof define === 'function' && define.amd)
 		define([], factory);
 	else if(typeof exports === 'object')
 		exports["NoSleep"] = factory();

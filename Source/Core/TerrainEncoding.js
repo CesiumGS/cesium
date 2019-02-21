@@ -46,7 +46,7 @@ define([
      * @private
      */
     function TerrainEncoding(axisAlignedBoundingBox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, hasWebMercatorT, center2D) {
-        var quantization;
+        var quantization = TerrainQuantization.NONE;
         var center;
         var toENU;
         var matrix;
@@ -244,6 +244,19 @@ define([
         return Cartesian3.add(result, this.center, result);
     };
 
+    // Only for use when encoding hasPositions2D
+    TerrainEncoding.prototype.decodePosition2D = function(buffer, index, result) {
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+        index = (index + 1) * this.getStride() - 3;
+
+        result.x = buffer[index];
+        result.y = buffer[index + 1];
+        result.z = buffer[index + 2];
+        return Cartesian3.add(result, this.center2D, result);
+    };
+
     TerrainEncoding.prototype.decodeTextureCoordinates = function(buffer, index, result) {
         if (!defined(result)) {
             result = new Cartesian2();
@@ -269,9 +282,19 @@ define([
         return buffer[index + 3];
     };
 
+    TerrainEncoding.prototype.decodeWebMercatorT = function(buffer, index) {
+        index *= this.getStride();
+
+        if (this.quantization === TerrainQuantization.BITS12) {
+            return AttributeCompression.decompressTextureCoordinates(buffer[index + 3], cartesian2Scratch).x;
+        }
+
+        return buffer[index + 6];
+    };
+
     TerrainEncoding.prototype.getOctEncodedNormal = function(buffer, index, result) {
         var stride = this.getStride();
-        index = (index + 1) * stride - (this.hasPositions2D ? 3 : 1);
+        index = (index + 1) * stride - (this.hasPositions2D ? 4 : 1);
 
         var temp = buffer[index] / 256.0;
         var x = Math.floor(temp);

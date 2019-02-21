@@ -5,6 +5,7 @@ define([
         '../Core/Check',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/defineProperties',
         '../Core/Ellipsoid',
         '../Core/GeometryInstance',
@@ -25,6 +26,7 @@ define([
         Check,
         ColorGeometryInstanceAttribute,
         defaultValue,
+        defined,
         defineProperties,
         Ellipsoid,
         GeometryInstance,
@@ -50,6 +52,8 @@ define([
      * @param {Number} [options.minimumHeight=0.0] The minimum height of the region.
      * @param {Number} [options.maximumHeight=0.0] The maximum height of the region.
      * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84] The ellipsoid.
+     * @param {Boolean} [options.computeBoundingVolumes=true] True to compute the {@link TileBoundingRegion#boundingVolume} and
+     *                  {@link TileBoundingVolume#boundingSphere}. If false, these properties will be undefined.
      *
      * @private
      */
@@ -119,13 +123,18 @@ define([
          */
         this.northNormal = new Cartesian3();
 
+        this._projectedSouthWestCornerCartesian = undefined;
+        this._projectedNorthEastCornerCartesian = undefined;
+
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         computeBox(this, options.rectangle, ellipsoid);
 
-        // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
-        this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
+        if (defaultValue(options.computeBoundingVolumes, true)) {
+            // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
+            this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
 
-        this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
+            this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
+        }
     }
 
     defineProperties(TileBoundingRegion.prototype, {
@@ -156,6 +165,22 @@ define([
             }
         }
     });
+
+    function getProjectedCorners(tile, mapProjection, southwestResult, northeastResult) {
+        var projectedSouthwestCorner = tile._projectedSouthWestCornerCartesian;
+        var projectedNortheastCorner = tile._projectedNorthEastCornerCartesian;
+
+        if (!defined(projectedSouthwestCorner)) {
+            projectedSouthwestCorner = mapProjection.project(Rectangle.southwest(tile.rectangle));
+            projectedNortheastCorner = mapProjection.project(Rectangle.northeast(tile.rectangle));
+
+            tile._projectedSouthWestCornerCartesian = projectedSouthwestCorner;
+            tile._projectedNorthEastCornerCartesian = projectedNortheastCorner;
+        }
+
+        Cartesian3.clone(projectedSouthwestCorner, southwestResult);
+        Cartesian3.clone(projectedNortheastCorner, northeastResult);
+    }
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3Scratch2 = new Cartesian3();
@@ -264,11 +289,13 @@ define([
             var northNormal = this.northNormal;
 
             if (frameState.mode !== SceneMode.SCENE3D) {
-                southwestCornerCartesian = frameState.mapProjection.project(Rectangle.southwest(this.rectangle), southwestCornerScratch);
+                southwestCornerCartesian = southwestCornerScratch;
+                northeastCornerCartesian = northeastCornerScratch;
+                getProjectedCorners(this, frameState.mapProjection, southwestCornerCartesian, northeastCornerCartesian);
+
                 southwestCornerCartesian.z = southwestCornerCartesian.y;
                 southwestCornerCartesian.y = southwestCornerCartesian.x;
                 southwestCornerCartesian.x = 0.0;
-                northeastCornerCartesian = frameState.mapProjection.project(Rectangle.northeast(this.rectangle), northeastCornerScratch);
                 northeastCornerCartesian.z = northeastCornerCartesian.y;
                 northeastCornerCartesian.y = northeastCornerCartesian.x;
                 northeastCornerCartesian.x = 0.0;
@@ -300,16 +327,24 @@ define([
         }
 
         var cameraHeight;
+        var minimumHeight;
+        var maximumHeight;
         if (frameState.mode === SceneMode.SCENE3D) {
             cameraHeight = cameraCartographicPosition.height;
+            minimumHeight = this.minimumHeight;
+            maximumHeight = this.maximumHeight;
         } else {
             cameraHeight = cameraCartesianPosition.x;
+            minimumHeight = 0.0;
+            maximumHeight = 0.0;
         }
 
-        var maximumHeight = frameState.mode === SceneMode.SCENE3D ? this.maximumHeight : 0.0;
-        var distanceFromTop = cameraHeight - maximumHeight;
-        if (distanceFromTop > 0.0) {
-            result += distanceFromTop * distanceFromTop;
+        if (cameraHeight > maximumHeight) {
+            var distanceAboveTop = cameraHeight - maximumHeight;
+            result += distanceAboveTop * distanceAboveTop;
+        } else if (cameraHeight < minimumHeight) {
+            var distanceBelowBottom = minimumHeight - cameraHeight;
+            result += distanceBelowBottom * distanceBelowBottom;
         }
 
         return Math.sqrt(result);
