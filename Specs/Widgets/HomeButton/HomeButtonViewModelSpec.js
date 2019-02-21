@@ -13,7 +13,6 @@ defineSuite([
     var scene;
     var ellipsoid = Ellipsoid.WGS84;
     var globe = new Globe(ellipsoid);
-
     beforeAll(function() {
         scene = createScene();
         scene.globe = globe;

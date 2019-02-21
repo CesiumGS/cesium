@@ -45,8 +45,6 @@ define([
             return;
         }
 
-        ++tile._unloadCount;
-
         this._list.remove(node);
         tile.cacheNode = undefined;
         unloadCallback(tileset, tile);
