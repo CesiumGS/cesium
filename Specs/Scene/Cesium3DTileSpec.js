@@ -372,8 +372,8 @@ defineSuite([
         mockTileset._minPriority = { depth: 0, distance: 0 };
         mockTileset._maxPriority = { depth: 1, distance: 1 };
 
-        tile2.updatePriority();
         tile1.updatePriority();
+        tile2.updatePriority();
 
         var tile1ExpectedPriority = 0;
         var tile2ExpectedPriority = 1;

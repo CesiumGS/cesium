@@ -119,7 +119,7 @@ define([
     }
 
     function selectTile(tileset, tile, frameState) {
-        if (tile.contentVisibility(frameState) !== Intersect.OUTSIDE ) {
+        if (tile.contentVisibility(frameState) !== Intersect.OUTSIDE) {
             var tileContent = tile.content;
             if (tileContent.featurePropertiesDirty) {
                 // A feature's property in this tile changed, the tile needs to be re-styled.

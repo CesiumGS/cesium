@@ -1,13 +1,11 @@
 defineSuite([
         'Widgets/HomeButton/HomeButtonViewModel',
         'Core/Ellipsoid',
-        'Scene/Camera',
         'Scene/Globe',
         'Specs/createScene'
     ], function(
         HomeButtonViewModel,
         Ellipsoid,
-        Camera,
         Globe,
         createScene) {
     'use strict';

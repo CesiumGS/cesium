@@ -120,7 +120,7 @@ define([
      * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
      * @param {Number} [options.cullRequestsWhileMovingMultiplier=60] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
      * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
-     * @param {Boolean} [options.prefetchFlightDestinations=true] Optimization option. Whether or not to fetch tiles at the camera's flight destination while the camera is in flight.
+     * @param {Boolean} [options.prefetchFlightDestinations=true] Optimization option. Fetch tiles at the camera's flight destination while the camera is in flight.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
@@ -260,7 +260,7 @@ define([
         this._clippingPlanesOriginMatrixDirty = true;
 
         /**
-         * Optimization option. Whether or not to fetch tiles at the camera's flight destination while the camera is in flight.
+         * Optimization option. Fetch tiles at the camera's flight destination while the camera is in flight.
          *
          * @type {Boolean}
          * @default true

@@ -3887,8 +3887,7 @@ define([
         var width = rayPick.width;
         var tilesets = rayPick.tilesets;
 
-        var view = scene._pickOffscreenView;
-        var camera = view.camera;
+        var camera = scene._pickOffscreenView.camera;
         var cullingVolume = updateOffscreenCameraFromRay(scene, ray, width, camera);
 
         var tilesetPassState = mostDetailedPrefetchTilesetPassState;

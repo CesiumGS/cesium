@@ -349,8 +349,6 @@ define([
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
 
         this._loadTimestamp = new JulianDate();
-        this._loadCount = 0;
-        this._unloadCount = 0;
 
         this._commandsLength = 0;
 
@@ -1338,10 +1336,10 @@ define([
         var foveatedScale = distanceScale * 10;
 
         // Map 0-1 then convert to digit
-        var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
+        var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
 
         // Map 0-1 then convert to digit
-        var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
+        var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
         var foveatedDigit = this._priorityDeferred ? foveatedScale : 0;
 
