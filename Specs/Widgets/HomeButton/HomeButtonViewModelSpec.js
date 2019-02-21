@@ -18,7 +18,6 @@ defineSuite([
 
     beforeAll(function() {
         scene = createScene();
-        scene._prefetchCamera = new Camera(scene);
         scene.globe = globe;
     });
 

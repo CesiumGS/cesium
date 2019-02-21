@@ -248,13 +248,6 @@ define([
         mag += mag * Camera.DEFAULT_VIEW_FACTOR;
         Cartesian3.normalize(this.position, this.position);
         Cartesian3.multiplyByScalar(this.position, mag, this.position);
-
-        /**
-         * The flight destination prefetch camera. Cannot be cloned or new'd here since it will be infinite recursuion and blow the stack. Lazy init at the time it is needed.
-         * @type {Camera}
-         * @default undefined
-         */
-        this._prefetchCamera = undefined;
     }
 
     /**
@@ -2895,14 +2888,15 @@ define([
         flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
         this._currentFlight = flightTween;
 
-        // if (!defined(this._prefetchCamera)) {
-        //     this._prefetchCamera = Camera.clone(this, this._prefetchCamera);
-        // }
-        // this._prefetchCamera.setView({ destination: destination, orientation: orientation });
-        // this._prefetchCamera.cullingVolume = this._prefetchCamera.frustum.computeCullingVolume(this._prefetchCamera.positionWC, this._prefetchCamera.directionWC, this._prefetchCamera.upWC);
-
-        this._scene._prefetchCamera.setView({ destination: destination, orientation: orientation });
-        this._scene._prefetchCullingVolume = this._scene._prefetchCamera.frustum.computeCullingVolume(this._scene._prefetchCamera.positionWC, this._scene._prefetchCamera.directionWC, this._scene._prefetchCamera.upWC);
+        if (this._mode === SceneMode.SCENE3D) {
+            if (!defined(this._scene._prefetchCamera)) {
+                this._scene._prefetchCamera = Camera.clone(this);
+            }
+            this._scene._prefetchCamera.setView({ destination: destination, orientation: orientation });
+            this._scene._prefetchCullingVolume = this._scene._prefetchCamera.frustum.computeCullingVolume(this._scene._prefetchCamera.positionWC, this._scene._prefetchCamera.directionWC, this._scene._prefetchCamera.upWC);
+        } else {
+            this._scene._prefetchCamera = undefined;
+        }
     };
 
     function distanceToBoundingSphere3D(camera, radius) {

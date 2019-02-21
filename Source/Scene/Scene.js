@@ -3845,7 +3845,7 @@ define([
     };
 
     function updatePrefetchPass(scene) {
-        if (!defined(scene.camera._currentFlight)) {
+        if (!defined(scene.camera._currentFlight) || !defined(scene._prefetchCamera)) {
             return;
         }
 

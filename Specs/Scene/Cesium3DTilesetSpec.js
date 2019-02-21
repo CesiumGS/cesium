@@ -3618,37 +3618,6 @@ defineSuite([
         });
     });
 
-    it('prefetches tiles', function() {
-        // Flight settings
-        var destination = new Cartesian3();
-        var orientation = {
-            direction : new Cartesian3(),
-            up : new Cartesian3()
-        };
-        var duration = 100000;
-
-        // Record flight settings
-        viewAllTiles();
-        Cartesian3.clone(scene.camera.position, destination);
-        Cartesian3.clone(scene.camera.direction, orientation.direction);
-        Cartesian3.clone(scene.camera.up, orientation.up);
-
-        // Reset view
-        viewNothing();
-
-        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
-            // Slow flyTo viewAllTiles()
-            scene.camera.flyTo({
-               destination : destination,
-               orientation : orientation,
-               duration : duration
-            });
-
-            scene.renderForSpecs();
-            expect(tileset._requestedTilesInFlight.length).toBeGreaterThan(0);
-        });
-    });
-
     it('defers requests when foveatedScreenSpaceError is true', function() {
         viewNothing();
         return Cesium3DTilesTester.loadTileset(scene, tilesetRefinementMix).then(function(tileset) {
@@ -3667,6 +3636,22 @@ defineSuite([
             var requestedTilesInFlight = tileset._requestedTilesInFlight;
             expect(requestedTilesInFlight.length).toBe(1);
             expect(requestedTilesInFlight[0]._priorityDeferred).toBe(true);
+        });
+    });
+
+    it('prefetches tiles', function() {
+        // Flight destination
+        viewAllTiles();
+        scene._prefetchCamera = Camera.clone(scene.camera);
+        scene._prefetchCullingVolume = scene.camera.frustum.computeCullingVolume(scene.camera.positionWC, scene.camera.directionWC, scene.camera.upWC);
+
+        // Reset view
+        viewNothing();
+
+        return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
+            scene.camera._currentFlight = 'something';
+            scene.renderForSpecs();
+            expect(tileset._requestedTilesInFlight.length).toBeGreaterThan(0);
         });
     });
 
