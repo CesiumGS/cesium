@@ -268,6 +268,15 @@ define([
     }
 
     /**
+     * This function is identical to using the Texture constructor except that it can be
+     * replaced with a mock/spy in tests.
+     * @private
+     */
+    Texture.create = function(options) {
+        return new Texture(options);
+    };
+
+    /**
      * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
      * the texture is the same width and height as the framebuffer and contains its contents.
      *

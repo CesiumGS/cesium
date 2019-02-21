@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/KmlDataSource',
+        'Core/ArcType',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -38,6 +39,7 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         KmlDataSource,
+        ArcType,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -2161,7 +2163,7 @@ defineSuite([
             expect(polyline).toBeDefined();
 
             expect(polyline.positions).toBeUndefined();
-            expect(polyline.followSurface).toBeUndefined();
+            expect(polyline.arcType).toBeUndefined();
             expect(polyline.width).toBeUndefined();
             expect(polyline.show).toBeUndefined();
             expect(polyline.material).toBeUndefined();
@@ -2899,7 +2901,7 @@ defineSuite([
             var entity = entities[0];
             expect(entity.wall).toBeUndefined();
             expect(entity.polyline).toBeDefined();
-            expect(entity.polyline.followSurface.getValue()).toEqual(false);
+            expect(entity.polyline.arcType.getValue()).toEqual(ArcType.NONE);
         });
     });
 
@@ -2923,7 +2925,7 @@ defineSuite([
 
             var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
             expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
-            expect(entity.polyline.followSurface.getValue()).toEqual(false);
+            expect(entity.polyline.arcType.getValue()).toEqual(ArcType.NONE);
         });
     });
 
@@ -2968,7 +2970,7 @@ defineSuite([
             expect(entities.length).toEqual(1);
 
             var entity = entities[0];
-            expect(entity.polyline.followSurface).toBeUndefined();
+            expect(entity.polyline.arcType).toBeUndefined();
             var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
             expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
         });
@@ -2991,7 +2993,7 @@ defineSuite([
             expect(entities.length).toEqual(1);
 
             var entity = entities[0];
-            expect(entity.polyline.followSurface).toBeUndefined();
+            expect(entity.polyline.arcType).toBeUndefined();
             var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
             expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
         });

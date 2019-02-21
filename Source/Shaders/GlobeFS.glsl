@@ -76,6 +76,10 @@ uniform float u_minimumBrightness;
 uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
+#ifdef HIGHLIGHT_FILL_TILE
+uniform vec4 u_fillHighlightColor;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
@@ -85,6 +89,7 @@ varying vec3 v_normalEC;
 #ifdef APPLY_MATERIAL
 varying float v_height;
 varying float v_slope;
+varying float v_aspect;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
@@ -193,7 +198,6 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
 void main()
 {
-
 #ifdef TILE_LIMIT_RECTANGLE
     if (v_textureCoordinates.x < u_cartographicLimitRectangle.x || u_cartographicLimitRectangle.z < v_textureCoordinates.x ||
         v_textureCoordinates.y < u_cartographicLimitRectangle.y || u_cartographicLimitRectangle.w < v_textureCoordinates.y)
@@ -279,6 +283,7 @@ void main()
     materialInput.normalEC = normalize(v_normalEC);
     materialInput.slope = v_slope;
     materialInput.height = v_height;
+    materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
@@ -303,6 +308,10 @@ void main()
     {
         finalColor = clippingPlanesEdgeColor;
     }
+#endif
+
+#ifdef HIGHLIGHT_FILL_TILE
+    finalColor = vec4(mix(finalColor.rgb, u_fillHighlightColor.rgb, u_fillHighlightColor.a), finalColor.a);
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)

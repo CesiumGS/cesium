@@ -26,7 +26,8 @@ define([
         './ImageryLayerCollection',
         './QuadtreePrimitive',
         './SceneMode',
-        './ShadowMode'
+        './ShadowMode',
+        './TileSelectionResult'
     ], function(
         BoundingSphere,
         buildModuleUrl,
@@ -55,7 +56,8 @@ define([
         ImageryLayerCollection,
         QuadtreePrimitive,
         SceneMode,
-        ShadowMode) {
+        ShadowMode,
+        TileSelectionResult) {
     'use strict';
 
     /**
@@ -126,6 +128,48 @@ define([
          * @default 100
          */
         this.tileCacheSize = 100;
+
+        /**
+         * Gets or sets the number of loading descendant tiles that is considered "too many".
+         * If a tile has too many loading descendants, that tile will be loaded and rendered before any of
+         * its descendants are loaded and rendered. This means more feedback for the user that something
+         * is happening at the cost of a longer overall load time. Setting this to 0 will cause each
+         * tile level to be loaded successively, significantly increasing load time. Setting it to a large
+         * number (e.g. 1000) will minimize the number of tiles that are loaded but tend to make
+         * detail appear all at once after a long wait.
+         * @type {Number}
+         * @default 20
+         */
+        this.loadingDescendantLimit = 20;
+
+        /**
+         * Gets or sets a value indicating whether the ancestors of rendered tiles should be preloaded.
+         * Setting this to true optimizes the zoom-out experience and provides more detail in
+         * newly-exposed areas when panning. The down side is that it requires loading more tiles.
+         * @type {Boolean}
+         * @default true
+         */
+        this.preloadAncestors = true;
+
+        /**
+         * Gets or sets a value indicating whether the siblings of rendered tiles should be preloaded.
+         * Setting this to true causes tiles with the same parent as a rendered tile to be loaded, even
+         * if they are culled. Setting this to true may provide a better panning experience at the
+         * cost of loading more tiles.
+         * @type {Boolean}
+         * @default false
+         */
+        this.preloadSiblings = false;
+
+        /**
+         * The color to use to highlight terrain fill tiles. If undefined, fill tiles are not
+         * highlighted at all. The alpha value is used to alpha blend with the tile's
+         * actual color. Because terrain fill tiles do not represent the actual terrain surface,
+         * it may be useful in some applications to indicate visually that they are not to be trusted.
+         * @type {Color}
+         * @default undefined
+         */
+        this.fillHighlightColor = undefined;
 
         /**
          * Enable lighting the globe with the sun as a light source.
@@ -276,18 +320,6 @@ define([
             }
         },
         /**
-         * Gets an event that's raised when a surface tile is loaded and ready to be rendered.
-         *
-         * @memberof Globe.prototype
-         * @type {Event}
-         * @readonly
-         */
-        tileLoadedEvent : {
-            get : function() {
-                return this._surface.tileProvider.tileLoadedEvent;
-            }
-        },
-        /**
          * Returns <code>true</code> when the tile load queue is empty, <code>false</code> otherwise.  When the load queue is empty,
          * all terrain and imagery for the current view have been loaded.
          * @memberof Globe.prototype
@@ -329,11 +361,22 @@ define([
                 this._surface.tileProvider.clippingPlanes = value;
             }
         },
+        /**
+         * A property specifying a {@link Rectangle} used to limit globe rendering to a cartographic area.
+         * Defaults to the maximum extent of cartographic coordinates.
+         *
+         * @member Globe.prototype
+         * @type {Rectangle}
+         * @default Rectangle.MAX_VALUE
+         */
         cartographicLimitRectangle : {
             get : function() {
                 return this._surface.tileProvider.cartographicLimitRectangle;
             },
             set : function(value) {
+                if (!defined(value)) {
+                    value = Rectangle.clone(Rectangle.MAX_VALUE);
+                }
                 this._surface.tileProvider.cartographicLimitRectangle = value;
             }
         },
@@ -495,23 +538,26 @@ define([
 
         for (i = 0; i < length; ++i) {
             tile = tilesToRender[i];
-            var tileData = tile.data;
+            var surfaceTile = tile.data;
 
-            if (!defined(tileData)) {
+            if (!defined(surfaceTile)) {
                 continue;
             }
 
-            var boundingVolume = tileData.pickBoundingSphere;
+            var boundingVolume = surfaceTile.pickBoundingSphere;
             if (mode !== SceneMode.SCENE3D) {
-                BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, projection, tileData.minimumHeight, tileData.maximumHeight, boundingVolume);
+                surfaceTile.pickBoundingSphere = boundingVolume = BoundingSphere.fromRectangleWithHeights2D(tile.rectangle, projection, surfaceTile.tileBoundingRegion.minimumHeight, surfaceTile.tileBoundingRegion.maximumHeight, boundingVolume);
                 Cartesian3.fromElements(boundingVolume.center.z, boundingVolume.center.x, boundingVolume.center.y, boundingVolume.center);
+            } else if (defined(surfaceTile.renderedMesh)) {
+                BoundingSphere.clone(surfaceTile.renderedMesh.boundingSphere3D, boundingVolume);
             } else {
-                BoundingSphere.clone(tileData.boundingSphere3D, boundingVolume);
+                // So wait how did we render this thing then? It shouldn't be possible to get here.
+                continue;
             }
 
             var boundingSphereIntersection = IntersectionTests.raySphere(ray, boundingVolume, scratchSphereIntersectionResult);
             if (defined(boundingSphereIntersection)) {
-                sphereIntersections.push(tileData);
+                sphereIntersections.push(surfaceTile);
             }
         }
 
@@ -592,22 +638,24 @@ define([
             }
         }
 
-        if (!defined(tile) || !Rectangle.contains(tile.rectangle, cartographic)) {
+        if (i >= length) {
             return undefined;
         }
 
-        while (tile.renderable) {
+        while (tile._lastSelectionResult === TileSelectionResult.REFINED) {
             tile = tileIfContainsCartographic(tile.southwestChild, cartographic) ||
                    tileIfContainsCartographic(tile.southeastChild, cartographic) ||
                    tileIfContainsCartographic(tile.northwestChild, cartographic) ||
                    tile.northeastChild;
         }
 
-        while (defined(tile) && (!defined(tile.data) || !defined(tile.data.pickTerrain))) {
-            tile = tile.parent;
-        }
-
-        if (!defined(tile)) {
+        // This tile was either rendered or culled.
+        // It is sometimes useful to get a height from a culled tile,
+        // e.g. when we're getting a height in order to place a billboard
+        // on terrain, and the camera is looking at that same billboard.
+        // The culled tile must have a valid mesh, though.
+        if (!defined(tile.data) || !defined(tile.data.renderedMesh)) {
+            // Tile was not rendered (culled).
             return undefined;
         }
 
@@ -627,7 +675,7 @@ define([
         if (!defined(rayOrigin)) {
             // intersection point is outside the ellipsoid, try other value
             // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
-            var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0),-11500.0);
+            var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0), -11500.0);
 
             // multiply by the *positive* value of the magnitude
             var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchGetHeightIntersection);
@@ -700,6 +748,9 @@ define([
 
             surface.maximumScreenSpaceError = this.maximumScreenSpaceError;
             surface.tileCacheSize = this.tileCacheSize;
+            surface.loadingDescendantLimit = this.loadingDescendantLimit;
+            surface.preloadAncestors = this.preloadAncestors;
+            surface.preloadSiblings = this.preloadSiblings;
 
             tileProvider.terrainProvider = this.terrainProvider;
             tileProvider.lightingFadeOutDistance = this.lightingFadeOutDistance;
@@ -715,6 +766,7 @@ define([
             tileProvider.hueShift = this.atmosphereHueShift;
             tileProvider.saturationShift = this.atmosphereSaturationShift;
             tileProvider.brightnessShift = this.atmosphereBrightnessShift;
+            tileProvider.fillHighlightColor = this.fillHighlightColor;
 
             surface.beginFrame(frameState);
         }

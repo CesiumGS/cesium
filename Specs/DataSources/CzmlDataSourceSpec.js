@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/CzmlDataSource',
+        'Core/ArcType',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -38,6 +39,7 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         CzmlDataSource,
+        ArcType,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -3775,7 +3777,7 @@ defineSuite([
             expect(e.polyline.width.getValue(date)).toEqual(14667.0);
             expect(e.polyline.granularity.getValue(date)).toEqual(53395.0);
             expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(88, 0, 232, 230));
-            expect(e.polyline.followSurface.getValue(date)).toEqual(true);
+            expect(e.polyline.arcType.getValue(date)).toEqual(ArcType.GEODESIC);
             expect(e.polyline.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(Color.fromBytes(197, 195, 115, 198));
             expect(e.polyline.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(5807, 30486));
@@ -4584,7 +4586,7 @@ defineSuite([
             expect(e.polyline.width.getValue(date)).toEqual(constant.polyline.width.getValue(date));
             expect(e.polyline.granularity.getValue(date)).toEqual(constant.polyline.granularity.getValue(date));
             expect(e.polyline.material.color.getValue(date)).toEqual(constant.polyline.material.color.getValue(date));
-            expect(e.polyline.followSurface.getValue(date)).toEqual(constant.polyline.followSurface.getValue(date));
+            expect(e.polyline.arcType.getValue(date)).toEqual(constant.polyline.arcType.getValue(date));
             expect(e.polyline.shadows.getValue(date)).toEqual(constant.polyline.shadows.getValue(date));
             expect(e.polyline.depthFailMaterial.color.getValue(date)).toEqual(constant.polyline.depthFailMaterial.color.getValue(date));
             expect(e.polyline.distanceDisplayCondition.getValue(date)).toEqual(constant.polyline.distanceDisplayCondition.getValue(date));

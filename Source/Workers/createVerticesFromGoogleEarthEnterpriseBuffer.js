@@ -79,7 +79,11 @@ define([
             occludeePointInScaledSpace : statistics.occludeePointInScaledSpace,
             encoding : statistics.encoding,
             vertexCountWithoutSkirts : statistics.vertexCountWithoutSkirts,
-            skirtIndex : statistics.skirtIndex
+            skirtIndex : statistics.skirtIndex,
+            westIndicesSouthToNorth : statistics.westIndicesSouthToNorth,
+            southIndicesEastToWest : statistics.southIndicesEastToWest,
+            eastIndicesNorthToSouth : statistics.eastIndicesNorthToSouth,
+            northIndicesWestToEast : statistics.northIndicesWestToEast
         };
     }
 
@@ -398,6 +402,17 @@ define([
             bufferIndex = encoding.encode(vertices, bufferIndex, positions[k], uvs[k], heights[k], undefined, webMercatorTs[k]);
         }
 
+        var westIndicesSouthToNorth = westBorder.map(function(vertex) { return vertex.index; }).reverse();
+        var southIndicesEastToWest = southBorder.map(function(vertex) { return vertex.index; }).reverse();
+        var eastIndicesNorthToSouth = eastBorder.map(function(vertex) { return vertex.index; }).reverse();
+        var northIndicesWestToEast = northBorder.map(function(vertex) { return vertex.index; }).reverse();
+
+        southIndicesEastToWest.unshift(eastIndicesNorthToSouth[eastIndicesNorthToSouth.length - 1]);
+        southIndicesEastToWest.push(westIndicesSouthToNorth[0]);
+
+        northIndicesWestToEast.unshift(westIndicesSouthToNorth[westIndicesSouthToNorth.length - 1]);
+        northIndicesWestToEast.push(eastIndicesNorthToSouth[0]);
+
         return {
             vertices : vertices,
             indices : new Uint16Array(indices),
@@ -408,7 +423,11 @@ define([
             orientedBoundingBox : orientedBoundingBox,
             occludeePointInScaledSpace : occludeePointInScaledSpace,
             vertexCountWithoutSkirts : vertexCountWithoutSkirts,
-            skirtIndex : skirtIndex
+            skirtIndex : skirtIndex,
+            westIndicesSouthToNorth : westIndicesSouthToNorth,
+            southIndicesEastToWest : southIndicesEastToWest,
+            eastIndicesNorthToSouth : eastIndicesNorthToSouth,
+            northIndicesWestToEast : northIndicesWestToEast
         };
     }
 
