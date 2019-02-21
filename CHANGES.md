@@ -5,10 +5,10 @@ Change Log
 
 ##### Breaking Changes :mega:
 * `czm_materialInput.slope` is now an angle in radians between 0 and pi/2 (flat to vertical), rather than a projected length 1 to 0 (flat to vertical).
+* `Resource.fetchImage` now returns an `ImageBitmap` instead of `Image` when supported. This allows for decoding images while fetching using `createImageBitmap` to greatly speed up texture upload and decrease frame drops when loading models with large textures. `Resource.fetchImage` now has a `flipY` option to vertically flip an image during fetch & decode when `ImageBitmapOptions` are supported since an `ImageBitmap` cannot be vertically flipped during texture upload. [#7579](https://github.com/AnalyticalGraphicsInc/cesium/pull/7579)
 
 ##### Additions :tada:
 * `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
-* Add support for decoding images while fetching using `createImageBitmap` to greatly speed up texture upload and decrease frame drops when loading models with large textures. `Resource.fetchImage` now has a `flipY` option to vertically flip an image during fetch & decode when `ImageBitmapOptions` are supported since an `ImageBitmap` cannot be vertically flipped during texture upload. [#7579](https://github.com/AnalyticalGraphicsInc/cesium/pull/7579)
 
 ##### Deprecated :hourglass_flowing_sand:
 * `Resource.fetchImage` now takes an options object. Use `resource.fetchImage({ preferBlob: true })` instead of `resource.fetchImage(true)`. The previous function definition will no longer work in 1.56. [#7579](https://github.com/AnalyticalGraphicsInc/cesium/pull/7579)

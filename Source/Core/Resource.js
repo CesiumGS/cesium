@@ -389,34 +389,32 @@ define([
         // know if this browser supports passing options to the createImageBitmap function.
         // https://github.com/whatwg/html/pull/4248
         if (defined(supportsImageBitmapOptionsPromise)) {
-            return supportsImageBitmapOptionsPromise.promise;
+            return supportsImageBitmapOptionsPromise;
         }
 
-        supportsImageBitmapOptionsPromise = when.defer();
-
         if (!FeatureDetection.supportsCreateImageBitmap()) {
-            supportsImageBitmapOptionsPromise.resolve(false);
-            return supportsImageBitmapOptionsPromise.promise;
+            supportsImageBitmapOptionsPromise = when.resolve(false);
+            return supportsImageBitmapOptionsPromise;
         }
 
         var imageDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4////fwAJ+wP9CNHoHgAAAABJRU5ErkJggg==';
 
-        Resource.fetchBlob({
+        supportsImageBitmapOptionsPromise = Resource.fetchBlob({
             url : imageDataUri
         })
             .then(function(blob) {
-                return when(createImageBitmap(blob, {
+                return createImageBitmap(blob, {
                     imageOrientation: 'flipY'
-                }));
+                });
             })
             .then(function(imageBitmap) {
-                supportsImageBitmapOptionsPromise.resolve(true);
+                return true;
             })
             .otherwise(function() {
-                supportsImageBitmapOptionsPromise.resolve(false);
+                return false;
             });
 
-        return supportsImageBitmapOptionsPromise.promise;
+        return supportsImageBitmapOptionsPromise;
     };
 
     defineProperties(Resource, {
@@ -875,10 +873,10 @@ define([
      * an {@link https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap|ImageBitmap} if the browser supports `createImageBitmap` or otherwise an
      * {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement|Image} once loaded, or reject if the image failed to load.
      *
-     * @param {String|Object} options An object with the following properties.
+     * @param {Object} [options] An object with the following properties.
      * @param {Boolean} [options.preferBlob=false] If true, we will load the image via a blob.
      * @param {Boolean} [options.flipY=true] If true, image will be vertially flipped during decode. Only applies if the browser supports `createImageBitmap`.
-     * @returns {Promise.<Image>|Promise.<ImageBitmap>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     * @returns {Promise.<ImageBitmap>|Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
      * @example
@@ -898,13 +896,13 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     Resource.prototype.fetchImage = function (options) {
-        if (defined(options) && typeof options === 'boolean') {
+        if (typeof options === 'boolean') {
             deprecationWarning('fetchImage-parameter-change', 'fetchImage now takes an options object in CesiumJS 1.55. Use resource.fetchImage({ preferBlob: true }) instead of resource.fetchImage(true).');
             options = {
                 preferBlob : options
             };
         }
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var preferBlob = defaultValue(options.preferBlob, false);
         var flipY = defaultValue(options.flipY, true);
 
@@ -927,9 +925,7 @@ define([
         if (FeatureDetection.supportsCreateImageBitmap()) {
             return blobPromise
                 .then(function(blob) {
-                    var deferred = when.defer();
-                    Resource._Implementations.createImageBitmapFromBlob(blob, deferred, flipY);
-                    return deferred;
+                    return Resource._Implementations.createImageBitmapFromBlob(blob, flipY);
                 });
         }
 
@@ -1029,7 +1025,7 @@ define([
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
      * @param {Boolean} [options.preferBlob = false]  If true, we will load the image via a blob.
-     * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     * @returns {Promise.<ImageBitmap>|Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     Resource.fetchImage = function (options) {
         var resource = new Resource(options);
@@ -1847,28 +1843,30 @@ define([
 
             image.src = url;
         } else {
-            // createImageBitmap will block the main thread during decode if a blob is not supplied.
+            // Passing an Image to createImageBitmap will force it to run on the main thread
+            // since DOM elements don't exist on workers. We convert it to a blob so it's non-blocking.
+            // See:
+            //    https://bugzilla.mozilla.org/show_bug.cgi?id=1044102#c38
+            //    https://bugs.chromium.org/p/chromium/issues/detail?id=580202#c10
             Resource.fetchBlob({
                 url: url
             }).then(function(blob) {
-                Resource._Implementations.createImageBitmapFromBlob(blob, deferred, flipY);
-            }).otherwise(deferred.reject);
+                return Resource._Implementations.createImageBitmapFromBlob(blob, flipY);
+            }).then(deferred.resolve).otherwise(deferred.reject);
         }
     };
 
-    Resource._Implementations.createImageBitmapFromBlob = function(blob, deferred, flipY) {
-        Resource.supportsImageBitmapOptions()
+    Resource._Implementations.createImageBitmapFromBlob = function(blob, flipY) {
+        return Resource.supportsImageBitmapOptions()
             .then(function(supportsBitmapOptions) {
                 if (!supportsBitmapOptions) {
-                    return when(createImageBitmap(blob));
+                    return createImageBitmap(blob);
                 }
 
-                return when(createImageBitmap(blob, {
+                return createImageBitmap(blob, {
                     imageOrientation: flipY ? 'flipY' : 'none'
-                }));
-            })
-            .then(deferred.resolve)
-            .otherwise(deferred.reject);
+                });
+            });
     };
 
     function decodeResponse(loadWithHttpResponse, responseType) {

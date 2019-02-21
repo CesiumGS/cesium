@@ -75,7 +75,6 @@ defineSuite([
                 } else {
                     expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 }
-
             });
         });
     });

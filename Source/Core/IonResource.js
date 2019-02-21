@@ -166,8 +166,13 @@ define([
 
     IonResource.prototype.fetchImage = function (options) {
         if (!this._isExternal) {
-            options = defaultValue(options, {});
-            options.preferBlob = true;
+            var userOptions = options;
+            options = {
+                preferBlob : true
+            };
+            if (defined(userOptions)) {
+                options.flipY = userOptions.flipY;
+            }
         }
 
         return Resource.prototype.fetchImage.call(this, options);

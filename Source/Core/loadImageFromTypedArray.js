@@ -37,12 +37,12 @@ define([
             return Resource.supportsImageBitmapOptions()
                 .then(function(supportsBitmapOptions) {
                     if (supportsBitmapOptions) {
-                        return when(createImageBitmap(blob, {
+                        return createImageBitmap(blob, {
                             imageOrientation: flipY ? 'flipY' : 'none'
-                        }));
+                        });
                     }
 
-                    return when(createImageBitmap(blob));
+                    return createImageBitmap(blob);
                 });
         }
 

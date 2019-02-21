@@ -253,13 +253,8 @@ define([
         }
     }
 
-    var supportsCreateImageBitmapResult;
     function supportsCreateImageBitmap() {
-        if (!defined(supportsCreateImageBitmapResult)) {
-            supportsCreateImageBitmapResult = defined(window.createImageBitmap);
-        }
-
-        return supportsCreateImageBitmapResult;
+        return typeof createImageBitmap === 'function';
     }
 
     /**
