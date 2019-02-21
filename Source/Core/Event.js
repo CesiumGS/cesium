@@ -15,7 +15,6 @@ define([
      *
      * @alias Event
      * @constructor
-     *
      * @example
      * MyObject.prototype.myListener = function(arg1, arg2) {
      *     this.myArg1Copy = arg1;

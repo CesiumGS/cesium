@@ -449,6 +449,7 @@
       "perPositionHeight":true,
       "closeTop":true,
       "closeBottom":true,
+      "arcType":"GEODESIC",
       "shadows":"CAST_ONLY",
       "distanceDisplayCondition":{
         "distanceDisplayCondition":[
@@ -474,7 +475,7 @@
           }
         }
       },
-      "followSurface":true,
+      "arcType":"GEODESIC",
       "shadows":"CAST_ONLY",
       "depthFailMaterial":{
         "solidColor":{
@@ -6281,6 +6282,9 @@
       "closeBottom":{
         "reference":"Constant#polygon.closeBottom"
       },
+      "arcType":{
+        "reference":"Constant#polygon.arcType"
+      },
       "shadows":{
         "reference":"Constant#polygon.shadows"
       },
@@ -6312,6 +6316,9 @@
       },
       "followSurface":{
         "reference":"Constant#polyline.followSurface"
+      },
+      "arcType":{
+        "reference":"Constant#polyline.arcType"
       },
       "shadows":{
         "reference":"Constant#polyline.shadows"

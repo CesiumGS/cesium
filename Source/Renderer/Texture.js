@@ -36,6 +36,9 @@ define([
         TextureMinificationFilter) {
     'use strict';
 
+    /**
+     * @private
+    */
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -263,6 +266,15 @@ define([
 
         this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
     }
+
+    /**
+     * This function is identical to using the Texture constructor except that it can be
+     * replaced with a mock/spy in tests.
+     * @private
+     */
+    Texture.create = function(options) {
+        return new Texture(options);
+    };
 
     /**
      * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,

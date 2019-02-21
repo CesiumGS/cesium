@@ -107,7 +107,7 @@ define([
             if (isColorAppearance) {
                 appearance = new PerInstanceColorAppearance({
                     closed: closed,
-                    flat : !(onTerrain && geometryUpdater._supportsMaterialsforEntitiesOnTerrain)
+                    flat : onTerrain && !geometryUpdater._supportsMaterialsforEntitiesOnTerrain
                 });
             } else {
                 var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
