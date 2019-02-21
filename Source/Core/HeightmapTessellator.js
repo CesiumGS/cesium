@@ -269,8 +269,8 @@ define([
 
         var hMin = Number.POSITIVE_INFINITY;
 
-        var arrayWidth = width + (skirtHeight > 0.0 ? 2.0 : 0.0);
-        var arrayHeight = height + (skirtHeight > 0.0 ? 2.0 : 0.0);
+        var arrayWidth = width + (skirtHeight > 0.0 ? 2 : 0);
+        var arrayHeight = height + (skirtHeight > 0.0 ? 2 : 0);
         var size = arrayWidth * arrayHeight;
         var positions = new Array(size);
         var heights = new Array(size);
@@ -287,7 +287,7 @@ define([
         var startCol = 0;
         var endCol = width;
 
-        if (skirtHeight > 0) {
+        if (skirtHeight > 0.0) {
             --startRow;
             ++endRow;
             --startCol;
@@ -463,6 +463,41 @@ define([
             }
         }
 
+        var westIndicesSouthToNorth;
+        var southIndicesEastToWest;
+        var eastIndicesNorthToSouth;
+        var northIndicesWestToEast;
+
+        if (skirtHeight > 0.0) {
+            northIndicesWestToEast = [];
+            southIndicesEastToWest = [];
+            for (var i1 = 0; i1 < width; ++i1) {
+                northIndicesWestToEast.push(arrayWidth + 1 + i1);
+                southIndicesEastToWest.push(arrayWidth * (arrayHeight - 1) - 2 - i1);
+            }
+
+            westIndicesSouthToNorth = [];
+            eastIndicesNorthToSouth = [];
+            for (var i2 = 0; i2 < height; ++i2) {
+                eastIndicesNorthToSouth.push((i2 + 1) * arrayWidth + width);
+                westIndicesSouthToNorth.push((height - i2) * arrayWidth + 1);
+            }
+        } else {
+            northIndicesWestToEast = [];
+            southIndicesEastToWest = [];
+            for (var i3 = 0; i3 < width; ++i3) {
+                northIndicesWestToEast.push(i3);
+                southIndicesEastToWest.push(width * height - 1 - i3);
+            }
+
+            westIndicesSouthToNorth = [];
+            eastIndicesNorthToSouth = [];
+            for (var i4 = 0; i4 < height; ++i4) {
+                eastIndicesNorthToSouth.push((i4 + 1) * width - 1);
+                westIndicesSouthToNorth.push((height - i4 - 1) * width );
+            }
+        }
+
         return {
             vertices : vertices,
             maximumHeight : maximumHeight,
@@ -470,7 +505,11 @@ define([
             encoding : encoding,
             boundingSphere3D : boundingSphere3D,
             orientedBoundingBox : orientedBoundingBox,
-            occludeePointInScaledSpace : occludeePointInScaledSpace
+            occludeePointInScaledSpace : occludeePointInScaledSpace,
+            westIndicesSouthToNorth : westIndicesSouthToNorth,
+            southIndicesEastToWest : southIndicesEastToWest,
+            eastIndicesNorthToSouth : eastIndicesNorthToSouth,
+            northIndicesWestToEast : northIndicesWestToEast
         };
     };
 

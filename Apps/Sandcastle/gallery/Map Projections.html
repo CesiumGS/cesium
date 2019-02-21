@@ -33,7 +33,7 @@ function startup(Cesium) {
 var viewer;
 var showLines = true;
 
-var projectionTypes = ['geographic', 'web mercator', 'from well-known-text', 'from data URI', 'from external code file'];
+var projectionTypes = ['geographic', 'web mercator', 'from well-known-text', 'from data URI', 'from external code file', 'from Matrix4'];
 var viewModel = {
     projectionTypes : projectionTypes,
     currentProjectionType : projectionTypes[0]
@@ -175,6 +175,25 @@ function launchFromFile() {
         });
 }
 
+function launchFromMatrix4() {
+    var array = [
+        1e5, 0.0, 0.0, 0.0,
+        0.0, 2e5, 0.0, 0.0,
+        0.0, 0.0, 3.0, 0.0,
+        0.0, 0.0, 0.0, 1.0
+    ];
+    var matrix = Cesium.Matrix4.fromColumnMajorArray(array);
+    viewer = new Cesium.Viewer('cesiumContainer', {
+        sceneMode : Cesium.SceneMode.COLUMBUS_VIEW,
+        mapProjection : new Cesium.Matrix4Projection({
+            matrix : matrix
+        })
+    });
+    addPolylines();
+    // Fly to a view covering the whole projection
+    viewer.camera.flyHome(0);
+}
+
 Cesium.knockout.getObservable(viewModel, 'currentProjectionType').subscribe(function(newValue) {
     reset();
 
@@ -194,6 +213,8 @@ Cesium.knockout.getObservable(viewModel, 'currentProjectionType').subscribe(func
         }
     } else if (newValue === projectionTypes[4]) {
         launchFromFile();
+    } else if (newValue === projectionTypes[5]) {
+        launchFromMatrix4();
     }
 });
 

@@ -379,8 +379,8 @@ define([
     var startCartographicScratch = new Cartographic();
     var endCartographicScratch = new Cartographic();
     var idlCross = {
-        west : 0.0,
-        east : 0.0
+        westOverIDL : 0.0,
+        eastOverIDL : 0.0
     };
     var ellipsoidGeodesic = new EllipsoidGeodesic();
     function computeRectangle(positions, ellipsoid, arcType, granularity, result) {
@@ -406,8 +406,8 @@ define([
         result.south = Number.POSITIVE_INFINITY;
         result.north = Number.NEGATIVE_INFINITY;
 
-        idlCross.west = Number.POSITIVE_INFINITY;
-        idlCross.east = Number.NEGATIVE_INFINITY;
+        idlCross.westOverIDL = Number.POSITIVE_INFINITY;
+        idlCross.eastOverIDL = Number.NEGATIVE_INFINITY;
 
         var inverseChordLength = 1.0 / CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
         var positionsLength = positions.length;
@@ -429,9 +429,16 @@ define([
         ellipsoidGeodesic.setEndPoints(startCartographic, endCartographic);
         interpolateAndGrowRectangle(ellipsoidGeodesic, inverseChordLength, result, idlCross);
 
-        if (result.east - result.west > idlCross.west - idlCross.east) {
-            result.east = idlCross.east;
-            result.west = idlCross.west;
+        if (result.east - result.west > idlCross.eastOverIDL - idlCross.westOverIDL) {
+            result.west = idlCross.westOverIDL;
+            result.east = idlCross.eastOverIDL;
+
+            if (result.east > CesiumMath.PI) {
+                result.east = result.east - CesiumMath.TWO_PI;
+            }
+            if (result.west > CesiumMath.PI) {
+                result.west = result.west - CesiumMath.TWO_PI;
+            }
         }
 
         return result;
@@ -456,8 +463,9 @@ define([
             result.south = Math.min(result.south, latitude);
             result.north = Math.max(result.north, latitude);
 
-            idlCross.west = longitude > 0.0 ? Math.min(longitude, idlCross.west) : idlCross.west;
-            idlCross.east = longitude < 0.0 ? Math.max(longitude, idlCross.east) : idlCross.east;
+            var lonAdjusted = longitude >= 0 ?  longitude : longitude +  CesiumMath.TWO_PI;
+            idlCross.westOverIDL = Math.min(idlCross.westOverIDL, lonAdjusted);
+            idlCross.eastOverIDL = Math.max(idlCross.eastOverIDL, lonAdjusted);
         }
     }
 

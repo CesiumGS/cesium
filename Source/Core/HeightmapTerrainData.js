@@ -32,7 +32,7 @@ define([
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
-     * is a rectangular array of heights in row-major order from south to north and west to east.
+     * is a rectangular array of heights in row-major order from north to south and west to east.
      *
      * @alias HeightmapTerrainData
      * @constructor
@@ -52,6 +52,9 @@ define([
      *                  <tr><td>2</td><td>4</td><td>Northwest</td></tr>
      *                  <tr><td>3</td><td>8</td><td>Northeast</td></tr>
      *                 </table>
+     * @param {Uint8Array} [options.waterMask] The water mask included in this terrain data, if any.  A water mask is a square
+     *                     Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
+     *                     Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
      * @param {Object} [options.structure] An object describing the structure of the height data.
      * @param {Number} [options.structure.heightScale=1.0] The factor by which to multiply height samples in order to obtain
      *                 the height above the heightOffset, in meters.  The heightOffset is added to the resulting
@@ -154,7 +157,7 @@ define([
             }
         },
         /**
-         * The water mask included in this terrain data, if any.  A water mask is a rectangular
+         * The water mask included in this terrain data, if any.  A water mask is a square
          * Uint8Array or image where a value of 255 indicates water and a value of 0 indicates land.
          * Values in between 0 and 255 are allowed as well to smoothly blend between land and water.
          * @memberof HeightmapTerrainData.prototype
@@ -163,6 +166,12 @@ define([
         waterMask : {
             get : function() {
                 return this._waterMask;
+            }
+        },
+
+        childTileMask : {
+            get : function() {
+                return this._childTileMask;
             }
         }
     });
@@ -241,12 +250,93 @@ define([
                     result.numberOfAttributes,
                     result.orientedBoundingBox,
                     TerrainEncoding.clone(result.encoding),
-                    exaggeration);
+                    exaggeration,
+                    result.westIndicesSouthToNorth,
+                    result.southIndicesEastToWest,
+                    result.eastIndicesNorthToSouth,
+                    result.northIndicesWestToEast);
 
             // Free memory received from server after mesh is created.
             that._buffer = undefined;
             return that._mesh;
         });
+    };
+
+    /**
+     * @private
+     */
+    HeightmapTerrainData.prototype._createMeshSync = function(tilingScheme, x, y, level, exaggeration, mapProjection) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(tilingScheme)) {
+            throw new DeveloperError('tilingScheme is required.');
+        }
+        if (!defined(x)) {
+            throw new DeveloperError('x is required.');
+        }
+        if (!defined(y)) {
+            throw new DeveloperError('y is required.');
+        }
+        if (!defined(level)) {
+            throw new DeveloperError('level is required.');
+        }
+        //>>includeEnd('debug');
+
+        var ellipsoid = tilingScheme.ellipsoid;
+        var nativeRectangle = tilingScheme.tileXYToNativeRectangle(x, y, level);
+        var rectangle = tilingScheme.tileXYToRectangle(x, y, level);
+        exaggeration = defaultValue(exaggeration, 1.0);
+
+        // Compute the center of the tile for RTC rendering.
+        var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
+
+        var structure = this._structure;
+
+        var levelZeroMaxError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(ellipsoid, this._width, tilingScheme.getNumberOfXTilesAtLevel(0));
+        var thisLevelMaxError = levelZeroMaxError / (1 << level);
+        this._skirtHeight = Math.min(thisLevelMaxError * 4.0, 1000.0);
+
+        var result = HeightmapTessellator.computeVertices({
+            heightmap : this._buffer,
+            structure : structure,
+            includeWebMercatorT : true,
+            width : this._width,
+            height : this._height,
+            nativeRectangle : nativeRectangle,
+            rectangle : rectangle,
+            relativeToCenter : center,
+            ellipsoid : ellipsoid,
+            skirtHeight : this._skirtHeight,
+            isGeographic : tilingScheme.projection instanceof GeographicProjection,
+            exaggeration : exaggeration
+        }, mapProjection);
+
+        // Free memory received from server after mesh is created.
+        this._buffer = undefined;
+
+        var arrayWidth = this._width;
+        var arrayHeight = this._height;
+
+        if (this._skirtHeight > 0.0) {
+            arrayWidth += 2;
+            arrayHeight += 2;
+        }
+
+        return new TerrainMesh(
+            center,
+            result.vertices,
+            TerrainProvider.getRegularGridIndices(arrayWidth, arrayHeight),
+            result.minimumHeight,
+            result.maximumHeight,
+            result.boundingSphere3D,
+            result.occludeePointInScaledSpace,
+            result.encoding.getStride(),
+            result.orientedBoundingBox,
+            TerrainEncoding.clone(result.encoding),
+            exaggeration,
+            result.westIndicesSouthToNorth,
+            result.southIndicesEastToWest,
+            result.eastIndicesNorthToSouth,
+            result.northIndicesWestToEast);
     };
 
     /**
@@ -330,6 +420,11 @@ define([
         }
         //>>includeEnd('debug');
 
+        var meshData = this._mesh;
+        if (!defined(meshData)) {
+            return undefined;
+        }
+
         var width = this._width;
         var height = this._height;
         var structure = this._structure;
@@ -337,10 +432,6 @@ define([
         var stride = structure.stride;
 
         var heights = new this._bufferType(width * height * stride);
-        var meshData = this._mesh;
-        if (!defined(meshData)) {
-            return undefined;
-        }
 
         var buffer = meshData.vertices;
         var encoding = meshData.encoding;

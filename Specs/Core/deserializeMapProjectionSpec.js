@@ -3,6 +3,8 @@ defineSuite([
         'Core/CustomProjection',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
+        'Core/Matrix4',
+        'Core/Matrix4Projection',
         'Core/Proj4Projection',
         'Core/Rectangle',
         'Core/WebMercatorProjection'
@@ -11,6 +13,8 @@ defineSuite([
         CustomProjection,
         Ellipsoid,
         GeographicProjection,
+        Matrix4,
+        Matrix4Projection,
         Proj4Projection,
         Rectangle,
         WebMercatorProjection) {
@@ -71,6 +75,24 @@ defineSuite([
                 expect(deserializedProjection.heightScale).toEqual(0.5);
                 expect(wgs84Bounds.equals(deserializedProjection.wgs84Bounds)).toBe(true);
                 expect(projectedBounds.equals(deserializedProjection.projectedBounds)).toBe(true);
+            });
+    });
+
+    it('deserializes to Matrix4Projection', function() {
+        var projection = new Matrix4Projection({
+            matrix : Matrix4.IDENTITY,
+            ellipsoid : Ellipsoid.UNIT_SPHERE,
+            degrees : false
+        });
+
+        var serialized = projection.serialize();
+
+        return deserializeMapProjection(serialized)
+            .then(function(deserializedProjection) {
+                expect(deserializedProjection instanceof Matrix4Projection).toBe(true);
+                expect(Ellipsoid.UNIT_SPHERE.equals(deserializedProjection.ellipsoid)).toBe(true);
+                expect(deserializedProjection.matrix).toEqual(Matrix4.IDENTITY);
+                expect(deserializedProjection.degrees).toEqual(false);
             });
     });
 

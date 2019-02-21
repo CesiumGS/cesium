@@ -223,6 +223,18 @@ define([
             get : function() {
                 return this._waterMask;
             }
+        },
+
+        childTileMask : {
+            get : function() {
+                return this._childTileMask;
+            }
+        },
+
+        canUpsample : {
+            get : function() {
+                return defined(this._mesh);
+            }
         }
     });
 
@@ -331,7 +343,11 @@ define([
                     stride,
                     obb,
                     terrainEncoding,
-                    exaggeration);
+                    exaggeration,
+                    result.westIndicesSouthToNorth,
+                    result.southIndicesEastToWest,
+                    result.eastIndicesNorthToSouth,
+                    result.northIndicesWestToEast);
 
             // Free memory received from server after mesh is created.
             that._quantizedVertices = undefined;

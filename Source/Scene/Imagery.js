@@ -90,7 +90,7 @@ define([
         return this.referenceCount;
     };
 
-    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, priorityFunction) {
+    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, skipLoading) {
         var imageryLayer = this.imageryLayer;
         if (!imageryLayer.imageryProvider.ready) {
             return;
@@ -99,11 +99,11 @@ define([
         var tilingScheme = imageryLayer.imageryProvider.tilingScheme;
         var singleSource = !(tilingScheme instanceof ProjectedImageryTilingScheme);
 
-        if (this.state === ImageryState.UNLOADED) {
+        if (this.state === ImageryState.UNLOADED && !skipLoading) {
             this.state = ImageryState.TRANSITIONING;
 
             if (singleSource) {
-                imageryLayer._requestImagery(this, priorityFunction);
+                imageryLayer._requestImagery(this);
             } else {
                 var level = this.level;
                 var projectedIndices = tilingScheme.getProjectedTilesForNativeTile(this.x, this.y, level);
@@ -126,7 +126,7 @@ define([
                     return;
                 }
 
-                imageryLayer._requestProjectedImages(this, projectedIndices, level, 0, priorityFunction);
+                imageryLayer._requestProjectedImages(this, projectedIndices, level, 0);
             }
         }
 
