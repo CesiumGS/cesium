@@ -10,6 +10,7 @@ define([
         './Ellipsoid',
         './MapProjectionType',
         './Matrix4',
+        './Rectangle',
         './SerializedMapProjection',
         '../ThirdParty/when'
     ], function(
@@ -24,9 +25,12 @@ define([
         Ellipsoid,
         MapProjectionType,
         Matrix4,
+        Rectangle,
         SerializedMapProjection,
         when) {
     'use strict';
+
+    var UNBOUNDED = new Rectangle(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY);
 
     /**
      * MapProjection that uses a {@link Matrix4} to map from longitude/latitude/altitude to projected coordinates.
@@ -46,6 +50,8 @@ define([
      *
      * @param {Object} options Object with the following properties:
      * @param {Matrix4} options.matrix A 4x4 matrix.
+     * @param {Rectangle} [options.wgs84Bounds] Cartographic bounds over which the projection is valid. Cartographic points will be clamped to these bounds prior to projection.
+     * @param {Rectangle} [options.projectedBounds] Projected bounds over which the inverse projection is valid. Projected points will be clamped to these bounds prior to unprojection.
      * @param {Boolean} [options.degrees=true] When true, the matrix is assumed to operate on longitude/latitude in degrees
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.
      *
@@ -59,11 +65,17 @@ define([
         Check.typeOf.object('options.matrix', options.matrix);
         //>>includeEnd('debug');
 
+        var wgs84Bounds = defaultValue(options.wgs84Bounds, Rectangle.MAX_VALUE);
+        var projectedBounds = defaultValue(options.projectedBounds, UNBOUNDED);
+
         this._matrix = Matrix4.clone(options.matrix);
         this._inverse = Matrix4.inverse(options.matrix, new Matrix4());
         this._degrees = defaultValue(options.degrees, true);
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._radiansMultiplier = this._degrees ? CesiumMath.DEGREES_PER_RADIAN : 1.0;
+
+        this._projectedBounds = Rectangle.clone(projectedBounds);
+        this._wgs84Bounds = Rectangle.clone(wgs84Bounds);
     }
 
     defineProperties(Matrix4Projection.prototype, {
@@ -119,6 +131,30 @@ define([
             get : function() {
                 return false;
             }
+        },
+
+        /**
+         * The bounds in Cartographic coordinates over which this projection is valid.
+         * @memberof Matrix4Projection.prototype
+         * @type {Rectangle}
+         * @readonly
+         */
+        wgs84Bounds : {
+            get : function() {
+                return this._wgs84Bounds;
+            }
+        },
+
+        /**
+         * The bounds in projected coordinates over which this projection is valid.
+         * @memberof Matrix4Projection.prototype
+         * @type {Rectangle}
+         * @readonly
+         */
+        projectedBounds : {
+            get : function() {
+                return this._projectedBounds;
+            }
         }
     });
 
@@ -132,7 +168,9 @@ define([
         var json = {
             packedMatrix : Matrix4.pack(this.matrix, []),
             degrees : this.degrees,
-            packedEllipsoid : Ellipsoid.pack(this.ellipsoid, [])
+            packedEllipsoid : Ellipsoid.pack(this.ellipsoid, []),
+            wgs84Bounds : Rectangle.pack(this.wgs84Bounds, []),
+            projectedBounds : Rectangle.pack(this.projectedBounds, [])
         };
 
         return new SerializedMapProjection(MapProjectionType.MATRIX4, json);
@@ -147,10 +185,14 @@ define([
      */
     Matrix4Projection.deserialize = function(serializedMapProjection) {
         var json = serializedMapProjection.json;
+        var wgs84Bounds = Rectangle.unpack(json.wgs84Bounds);
+        var projectedBounds = Rectangle.unpack(json.projectedBounds);
         return when.resolve(new Matrix4Projection({
             matrix : Matrix4.unpack(json.packedMatrix),
             degrees: json.degrees,
-            ellipsoid : Ellipsoid.unpack(json.packedEllipsoid)
+            ellipsoid : Ellipsoid.unpack(json.packedEllipsoid),
+            wgs84Bounds : wgs84Bounds,
+            projectedBounds : projectedBounds
         }));
     };
 
@@ -175,10 +217,14 @@ define([
             result = new Cartesian3();
         }
 
+        var wgs84Bounds = this._wgs84Bounds;
+        var longitude = CesiumMath.clamp(cartographic.longitude, wgs84Bounds.west, wgs84Bounds.east);
+        var latitude = CesiumMath.clamp(cartographic.latitude, wgs84Bounds.south, wgs84Bounds.north);
+
         var vec4 = projectionCartesian4Scratch;
         var multiplier = this._radiansMultiplier;
-        vec4.x = cartographic.longitude * multiplier;
-        vec4.y = cartographic.latitude * multiplier;
+        vec4.x = longitude * multiplier;
+        vec4.y = latitude * multiplier;
         vec4.z = cartographic.height;
         vec4.w = 1.0;
 
@@ -210,7 +256,11 @@ define([
             result = new Cartographic();
         }
 
-        var vec4 = Cartesian4.fromElements(cartesian.x, cartesian.y, cartesian.z, 1.0, projectionCartesian4Scratch);
+        var projectedBounds = this.projectedBounds;
+        var cartesianX = CesiumMath.clamp(cartesian.x, projectedBounds.west, projectedBounds.east);
+        var cartesianY = CesiumMath.clamp(cartesian.y, projectedBounds.south, projectedBounds.north);
+
+        var vec4 = Cartesian4.fromElements(cartesianX, cartesianY, cartesian.z, 1.0, projectionCartesian4Scratch);
         vec4 = Matrix4.multiplyByVector(this._inverse, vec4, vec4);
 
         var multiplier = 1.0 / (this._radiansMultiplier * vec4.w);
