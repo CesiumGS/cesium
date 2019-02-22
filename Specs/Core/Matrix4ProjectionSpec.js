@@ -1,17 +1,19 @@
 defineSuite([
         'Core/Matrix4Projection',
-        'Core/Matrix4',
         'Core/Cartesian3',
         'Core/Cartographic',
+        'Core/Math',
         'Core/Ellipsoid',
-        'Core/Math'
+        'Core/Matrix4',
+        'Core/Rectangle'
     ], function(
         Matrix4Projection,
-        Matrix4,
         Cartesian3,
         Cartographic,
+        CesiumMath,
         Ellipsoid,
-        CesiumMath) {
+        Matrix4,
+        Rectangle) {
     'use strict';
 
     it('construct0', function() {
@@ -127,6 +129,30 @@ defineSuite([
         expect(Cartographic.equalsEpsilon(result, cartographic, CesiumMath.EPSILON10)).toBe(true);
     });
 
+    it('clamps cartographic coordinates to the specified wgs84 bounds', function() {
+        var projection = new Matrix4Projection({
+            matrix : Matrix4.IDENTITY,
+            wgs84Bounds : Rectangle.fromDegrees(-180, -90, 180, 45)
+        });
+
+        var edgeProjected = projection.project(Cartographic.fromDegrees(0, 45, 0));
+        var clampedProjected = projection.project(Cartographic.fromDegrees(0, 50, 0));
+
+        expect(edgeProjected).toEqualEpsilon(clampedProjected, CesiumMath.EPSILON8);
+    });
+
+    it('clamps projected coordinates to the specified projected bounds', function() {
+        var projection = new Matrix4Projection({
+            matrix : Matrix4.IDENTITY,
+            projectedBounds : new Rectangle(-180, -90, 180, 45)
+        });
+
+        var unprojected = projection.unproject(new Cartesian3(-180, 0.0, 0.0));
+        var clampedUnprojected = projection.unproject(new Cartesian3(-190, 0.0, 0.0));
+
+        expect(clampedUnprojected).toEqualEpsilon(unprojected, CesiumMath.EPSILON8);
+    });
+
     it('project throws without cartographic', function() {
         var projection = new Matrix4Projection({
             matrix : Matrix4.IDENTITY
@@ -149,7 +175,9 @@ defineSuite([
         var projection = new Matrix4Projection({
             matrix : Matrix4.IDENTITY,
             ellipsoid : Ellipsoid.UNIT_SPHERE,
-            degrees : false
+            degrees : false,
+            projectedBounds : new Rectangle(-180, -90, 180, 45),
+            wgs84Bounds : Rectangle.fromDegrees(-180, -90, 180, 45)
         });
         var serialized = projection.serialize();
 
@@ -157,6 +185,8 @@ defineSuite([
             expect(projection.matrix).toEqual(deserializedProjection.matrix);
             expect(projection.ellipsoid.equals(deserializedProjection.ellipsoid)).toBe(true);
             expect(projection.degrees).toEqual(deserializedProjection.degrees);
+            expect(projection.projectedBounds).toEqual(deserializedProjection.projectedBounds);
+            expect(projection.wgs84Bounds).toEqual(deserializedProjection.wgs84Bounds);
         });
     });
 });
