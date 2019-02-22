@@ -3,8 +3,8 @@
 
 var path = require('path');
 
-// If not explicitly in development mode, use the combined/minified/optimized version of Cesium
-if (process.env.NODE_ENV !== 'development') {
+// If not explicitly in development or test mode, use the combined/minified/optimized version of Cesium
+if (process.env.NODE_ENV !== 'development' && process.env.NODE_ENV !== 'test') {
     module.exports = require(path.join(__dirname, 'Build/Cesium/Cesium'));
     return;
 }
