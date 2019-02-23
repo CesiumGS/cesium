@@ -90,11 +90,13 @@ define([
         var clippedByBoundaries = options.clippedByBoundaries;
         var hasImageryLayerCutout = options.hasImageryLayerCutout;
         var colorCorrect = options.colorCorrect;
+        var highlightFillTile = options.highlightFillTile;
 
         var quantization = 0;
         var quantizationDefine = '';
 
-        var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
+        var mesh = surfaceTile.renderedMesh;
+        var terrainEncoding = mesh.encoding;
         var quantizationMode = terrainEncoding.quantization;
         if (quantizationMode === TerrainQuantization.BITS12) {
             quantization = 1;
@@ -103,7 +105,7 @@ define([
 
         var vertexLogDepth = 0;
         var vertexLogDepthDefine = '';
-        if (surfaceTile.terrainData._createdByUpsampling) {
+        if (!defined(surfaceTile.vertexArray) || !defined(surfaceTile.terrainData) || surfaceTile.terrainData._createdByUpsampling) {
             vertexLogDepth = 1;
             vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
         }
@@ -144,7 +146,8 @@ define([
                     (vertexLogDepth << 19) |
                     (cartographicLimitRectangleFlag << 20) |
                     (imageryCutoutFlag << 21) |
-                    (colorCorrect << 22);
+                    (colorCorrect << 22) |
+                    (highlightFillTile << 23);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -241,6 +244,10 @@ define([
 
             if (colorCorrect) {
                 fs.defines.push('COLOR_CORRECT');
+            }
+
+            if (highlightFillTile) {
+                fs.defines.push('HIGHLIGHT_FILL_TILE');
             }
 
             var computeDayColor = '\

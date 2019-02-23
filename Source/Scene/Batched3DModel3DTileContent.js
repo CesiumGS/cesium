@@ -386,7 +386,10 @@ define([
                 addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
                 pickObject : pickObject,
                 imageBasedLightingFactor : tileset.imageBasedLightingFactor,
-                lightColor : tileset.lightColor
+                lightColor : tileset.lightColor,
+                luminanceAtZenith : tileset.luminanceAtZenith,
+                sphericalHarmonicCoefficients : tileset.sphericalHarmonicCoefficients,
+                specularEnvironmentMaps : tileset.specularEnvironmentMaps
             });
         } else {
             // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
@@ -473,18 +476,19 @@ define([
         this._model.shadows = this._tileset.shadows;
         this._model.imageBasedLightingFactor = this._tileset.imageBasedLightingFactor;
         this._model.lightColor = this._tileset.lightColor;
+        this._model.luminanceAtZenith = this._tileset.luminanceAtZenith;
+        this._model.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
+        this._model.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
         this._model.debugWireframe = this._tileset.debugWireframe;
 
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
-        if (defined(tilesetClippingPlanes)) {
-            this._model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
-            if (this._tile.clippingPlanesDirty) {
-                // Dereference the clipping planes from the model if they are irrelevant.
-                // Link/Dereference directly to avoid ownership checks.
-                // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
-                this._model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
-            }
+        this._model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
+        if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
+            // Dereference the clipping planes from the model if they are irrelevant.
+            // Link/Dereference directly to avoid ownership checks.
+            // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.
+            this._model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
         }
 
         // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a

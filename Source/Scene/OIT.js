@@ -89,6 +89,8 @@ define([
 
         this._useScissorTest = false;
         this._scissorRectangle = undefined;
+
+        this._useHDR = false;
     }
 
     function destroyTextures(oit) {
@@ -200,7 +202,7 @@ define([
         return supported;
     }
 
-    OIT.prototype.update = function(context, passState, framebuffer) {
+    OIT.prototype.update = function(context, passState, framebuffer, useHDR) {
         if (!this.isSupported()) {
             return;
         }
@@ -213,7 +215,7 @@ define([
         var height = this._opaqueTexture.height;
 
         var accumulationTexture = this._accumulationTexture;
-        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height;
+        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height || useHDR !== this._useHDR;
         if (textureChanged) {
             updateTextures(this, context, width, height);
         }
@@ -224,6 +226,8 @@ define([
                 return;
             }
         }
+
+        this._useHDR = useHDR;
 
         var that = this;
         var fs;
