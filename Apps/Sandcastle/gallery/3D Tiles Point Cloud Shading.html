@@ -95,6 +95,10 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var viewModelTileset;
 
+if (!Cesium.PointCloudShading.isSupported(scene)) {
+    console.log('This browser does not support point cloud shading');
+}
+
 function reset() {
     viewer.scene.primitives.remove(viewModelTileset);
     viewModelTileset = undefined;

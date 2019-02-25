@@ -334,6 +334,7 @@ defineSuite([
     });
 
     it('renders with debug color', function() {
+        CesiumMath.setRandomNumberSeed(0);
         return Cesium3DTilesTester.loadTileset(scene, pointCloudRGBUrl).then(function(tileset) {
             var color;
             expect(scene).toRenderAndCall(function(rgba) {
@@ -571,7 +572,7 @@ defineSuite([
             tileset.pointCloudShading.attenuation = true;
             tileset.pointCloudShading.geometricErrorScale = 1.0;
             tileset.pointCloudShading.maximumAttenuation = undefined;
-            tileset.pointCloudShading.baseResolution = CesiumMath.EPSILON20;
+            tileset.pointCloudShading.baseResolution = 0.20;
             tileset.maximumScreenSpaceError = 16;
             expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
                 expect(pixelCount).toEqual(noAttenuationPixelCount);
@@ -582,9 +583,9 @@ defineSuite([
     it('modulates attenuation using the geometricErrorScale parameter', function() {
         return attenuationTest(function(scene, tileset) {
             tileset.pointCloudShading.attenuation = true;
-            tileset.pointCloudShading.geometricErrorScale = 0.0;
+            tileset.pointCloudShading.geometricErrorScale = 0.2;
             tileset.pointCloudShading.maximumAttenuation = undefined;
-            tileset.pointCloudShading.baseResolution = undefined;
+            tileset.pointCloudShading.baseResolution = 1.0;
             tileset.maximumScreenSpaceError = 1;
             expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
                 expect(pixelCount).toEqual(noAttenuationPixelCount);

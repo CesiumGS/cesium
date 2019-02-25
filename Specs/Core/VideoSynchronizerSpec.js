@@ -24,17 +24,17 @@ defineSuite([
     function loadVideo() {
         var element = document.createElement('video');
         var source = document.createElement('source');
-        source.setAttribute('src', 'http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.webm');
+        source.setAttribute('src', 'Data/Videos/big-buck-bunny-trailer-small.webm');
         source.setAttribute('type', 'video/webm');
         element.appendChild(source);
 
         source = document.createElement('source');
-        source.setAttribute('src', 'http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.mp4');
+        source.setAttribute('src', 'Data/Videos/big-buck-bunny-trailer-small.mp4');
         source.setAttribute('type', 'video/mp4');
         element.appendChild(source);
 
         source = document.createElement('source');
-        source.setAttribute('src', 'http://cesiumjs.org/videos/Sandcastle/big-buck-bunny_trailer.mov');
+        source.setAttribute('src', 'Data/Videos/big-buck-bunny-trailer-small.mov');
         source.setAttribute('type', 'video/quicktime');
         element.appendChild(source);
 
@@ -160,7 +160,16 @@ defineSuite([
         var epoch = JulianDate.fromIso8601('2015-11-01T00:00:00Z');
         var clock = new Clock();
 
-        var element = loadVideo();
+        // Since Chrome doesn't allow video playback without user
+        // interaction, we use a mock element.
+        var element = jasmine.createSpyObj('MockVideoElement', ['addEventListener', 'removeEventListener', 'play', 'pause']);
+        element.paused = false;
+        element.play.and.callFake(function() {
+            this.paused = false;
+        });
+        element.pause.and.callFake(function() {
+            this.paused = true;
+        });
 
         var videoSynchronizer = new VideoSynchronizer({
             clock : clock,
@@ -168,20 +177,18 @@ defineSuite([
             epoch : epoch
         });
 
-        return pollToPromise(function() {
-            clock.shouldAnimate = false;
-            clock.tick();
-            return element.paused === true;
-        }).then(function() {
-            clock.shouldAnimate = true;
-            clock.tick();
-            return element.paused === false;
-        }).then(function() {
-            clock.shouldAnimate = false;
-            clock.tick();
-            return element.paused === true;
-        }).then(function() {
-            videoSynchronizer.destroy();
-        });
+        clock.shouldAnimate = false;
+        clock.tick();
+        expect(element.pause.calls.count()).toEqual(1);
+
+        clock.shouldAnimate = true;
+        clock.tick();
+        expect(element.play.calls.count()).toEqual(1);
+
+        clock.shouldAnimate = false;
+        clock.tick();
+        expect(element.pause.calls.count()).toEqual(2);
+
+        videoSynchronizer.destroy();
     });
 });

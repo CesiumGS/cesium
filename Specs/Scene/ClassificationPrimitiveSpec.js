@@ -13,11 +13,14 @@ defineSuite([
         'Core/ShowGeometryInstanceAttribute',
         'Core/Transforms',
         'Renderer/Pass',
+        'Renderer/RenderState',
+        'Scene/ClassificationType',
         'Scene/InvertClassification',
         'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Scene/ShadowVolumeAppearance',
+        'Scene/StencilConstants',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -35,11 +38,14 @@ defineSuite([
         ShowGeometryInstanceAttribute,
         Transforms,
         Pass,
+        RenderState,
+        ClassificationType,
         InvertClassification,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
         ShadowVolumeAppearance,
+        StencilConstants,
         createScene,
         pollToPromise) {
     'use strict';
@@ -54,56 +60,28 @@ defineSuite([
 
     var boxInstance;
     var primitive;
-    var depthPrimitive;
+    var globePrimitive;
+    var tilesetPrimitive;
+    var reusableGlobePrimitive;
+    var reusableTilesetPrimitive;
 
-    beforeAll(function() {
-        scene = createScene();
-        scene.postProcessStages.fxaa.enabled = false;
-
-        ellipsoid = Ellipsoid.WGS84;
-    });
-
-    afterAll(function() {
-        scene.destroyForSpecs();
-    });
-
-    function MockGlobePrimitive(primitive) {
-        this._primitive = primitive;
-        this.pass = Pass.GLOBE;
-    }
-
-    MockGlobePrimitive.prototype.update = function(frameState) {
-        var commandList = frameState.commandList;
-        var startLength = commandList.length;
-        this._primitive.update(frameState);
-
-        for (var i = startLength; i < commandList.length; ++i) {
-            var command = commandList[i];
-            command.pass = this.pass;
+    function createPrimitive(rectangle, pass) {
+        var renderState;
+        if (pass === Pass.CESIUM_3D_TILE) {
+            renderState = RenderState.fromCache({
+                stencilTest : StencilConstants.setCesium3DTileBit(),
+                stencilMask : StencilConstants.CESIUM_3D_TILE_MASK,
+                depthTest : {
+                    enabled : true
+                }
+            });
         }
-    };
-
-    MockGlobePrimitive.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    MockGlobePrimitive.prototype.destroy = function() {
-        this._primitive.destroy();
-        return destroyObject(this);
-    };
-
-    beforeEach(function() {
-        scene.morphTo3D(0);
-        scene.render(); // clear any afterRender commands
-
-        rectangle = Rectangle.fromDegrees(-75.0, 25.0, -70.0, 30.0);
-
         var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
         depthColor = depthColorAttribute.value;
-        var primitive = new Primitive({
+        return new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new RectangleGeometry({
-                    ellipsoid : ellipsoid,
+                    ellipsoid : Ellipsoid.WGS84,
                     rectangle : rectangle
                 }),
                 id : 'depth rectangle',
@@ -113,13 +91,66 @@ defineSuite([
             }),
             appearance : new PerInstanceColorAppearance({
                 translucent : false,
-                flat : true
+                flat : true,
+                renderState : renderState
             }),
             asynchronous : false
         });
+    }
 
-        // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
-        depthPrimitive = new MockGlobePrimitive(primitive);
+    function MockPrimitive(primitive, pass) {
+        this._primitive = primitive;
+        this._pass = pass;
+        this.show = true;
+    }
+
+    MockPrimitive.prototype.update = function(frameState) {
+        if (!this.show) {
+            return;
+        }
+
+        var commandList = frameState.commandList;
+        var startLength = commandList.length;
+        this._primitive.update(frameState);
+
+        for (var i = startLength; i < commandList.length; ++i) {
+            var command = commandList[i];
+            command.pass = this._pass;
+        }
+    };
+
+    MockPrimitive.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    MockPrimitive.prototype.destroy = function() {
+        return destroyObject(this);
+    };
+
+    beforeAll(function() {
+        scene = createScene();
+        scene.postProcessStages.fxaa.enabled = false;
+
+        ellipsoid = Ellipsoid.WGS84;
+
+        rectangle = Rectangle.fromDegrees(-75.0, 25.0, -70.0, 30.0);
+        reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
+        reusableTilesetPrimitive = createPrimitive(rectangle, Pass.CESIUM_3D_TILE);
+    });
+
+    afterAll(function() {
+        reusableGlobePrimitive.destroy();
+        reusableTilesetPrimitive.destroy();
+        scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        scene.morphTo3D(0);
+        scene.render(); // clear any afterRender commands
+
+        // wrap rectangle primitive so it gets executed during the globe pass and 3D Tiles pass to lay down depth
+        globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
+        tilesetPrimitive = new MockPrimitive(reusableTilesetPrimitive, Pass.CESIUM_3D_TILE);
 
         var center = Rectangle.center(rectangle);
         var origin = ellipsoid.cartographicToCartesian(center);
@@ -142,9 +173,11 @@ defineSuite([
     });
 
     afterEach(function() {
+        scene.primitives.removeAll();
         scene.groundPrimitives.removeAll();
         primitive = primitive && !primitive.isDestroyed() && primitive.destroy();
-        depthPrimitive = depthPrimitive && !depthPrimitive.isDestroyed() && depthPrimitive.destroy();
+        globePrimitive = globePrimitive && !globePrimitive.isDestroyed() && globePrimitive.destroy();
+        tilesetPrimitive = tilesetPrimitive && !tilesetPrimitive.isDestroyed() && tilesetPrimitive.destroy();
     });
 
     it('default constructs', function() {
@@ -328,17 +361,53 @@ defineSuite([
         expect(frameState.commandList.length).toEqual(0);
     });
 
-    function verifyClassificationPrimitiveRender(primitive, color) {
-        scene.camera.setView({ destination : rectangle });
+    function expectRender(color) {
+        expect(scene).toRender(color);
+    }
 
-        scene.groundPrimitives.add(depthPrimitive);
+    function expectRenderBlank() {
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);
             expect(rgba[0]).toEqual(0);
         });
+    }
+
+    function verifyClassificationPrimitiveRender(primitive, color) {
+        scene.camera.setView({ destination : rectangle });
+
+        scene.primitives.add(globePrimitive);
+        scene.primitives.add(tilesetPrimitive);
+
+        expectRenderBlank();
 
         scene.groundPrimitives.add(primitive);
-        expect(scene).toRender(color);
+
+        primitive.classificationType = ClassificationType.BOTH;
+        globePrimitive.show = false;
+        tilesetPrimitive.show = true;
+        expectRender(color);
+        globePrimitive.show = true;
+        tilesetPrimitive.show = false;
+        expectRender(color);
+
+        primitive.classificationType = ClassificationType.CESIUM_3D_TILE;
+        globePrimitive.show = false;
+        tilesetPrimitive.show = true;
+        expectRender(color);
+        globePrimitive.show = true;
+        tilesetPrimitive.show = false;
+        expectRenderBlank();
+
+        primitive.classificationType = ClassificationType.TERRAIN;
+        globePrimitive.show = false;
+        tilesetPrimitive.show = true;
+        expectRenderBlank();
+        globePrimitive.show = true;
+        tilesetPrimitive.show = false;
+        expectRender(color);
+
+        globePrimitive.show = true;
+        tilesetPrimitive.show = true;
     }
 
     it('renders in 3D', function() {
@@ -450,7 +519,6 @@ defineSuite([
         scene.invertClassification = true;
         scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 1.0);
 
-        depthPrimitive.pass = Pass.CESIUM_3D_TILE;
         boxInstance.attributes.show = new ShowGeometryInstanceAttribute(true);
 
         primitive = new ClassificationPrimitive({
@@ -466,7 +534,7 @@ defineSuite([
         invertedColor[2] = Color.floatToByte(Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue);
         invertedColor[3] = 255;
 
-        scene.groundPrimitives.add(depthPrimitive);
+        scene.primitives.add(tilesetPrimitive);
         expect(scene).toRender(invertedColor);
 
         scene.groundPrimitives.add(primitive);
@@ -490,7 +558,6 @@ defineSuite([
         scene.invertClassification = true;
         scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 0.25);
 
-        depthPrimitive.pass = Pass.CESIUM_3D_TILE;
         boxInstance.attributes.show = new ShowGeometryInstanceAttribute(true);
 
         primitive = new ClassificationPrimitive({
@@ -506,7 +573,7 @@ defineSuite([
         invertedColor[2] = Color.floatToByte(Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue * scene.invertClassificationColor.alpha);
         invertedColor[3] = 255;
 
-        scene.groundPrimitives.add(depthPrimitive);
+        scene.primitives.add(tilesetPrimitive);
         expect(scene).toRender(invertedColor);
 
         scene.groundPrimitives.add(primitive);
@@ -588,6 +655,10 @@ defineSuite([
 
         verifyClassificationPrimitiveRender(primitive, boxColor);
 
+        scene.primitives.destroyPrimitives = false;
+        scene.primitives.removeAll();
+        scene.primitives.destroyPrimitives = true;
+
         scene.groundPrimitives.destroyPrimitives = false;
         scene.groundPrimitives.removeAll();
         scene.groundPrimitives.destroyPrimitives = true;
@@ -613,6 +684,10 @@ defineSuite([
         });
 
         verifyClassificationPrimitiveRender(primitive, boxColor);
+
+        scene.primitives.destroyPrimitives = false;
+        scene.primitives.removeAll();
+        scene.primitives.destroyPrimitives = true;
 
         scene.groundPrimitives.destroyPrimitives = false;
         scene.groundPrimitives.removeAll();
@@ -688,9 +763,10 @@ defineSuite([
         verifyClassificationPrimitiveRender(primitive, boxColor);
 
         expect(scene).toDrillPickAndCall(function(pickedObjects) {
-            expect(pickedObjects.length).toEqual(2);
+            expect(pickedObjects.length).toEqual(3);
             expect(pickedObjects[0].primitive).toEqual(primitive);
-            expect(pickedObjects[1].primitive).toEqual(depthPrimitive._primitive);
+            expect(pickedObjects[1].primitive).toEqual(globePrimitive._primitive);
+            expect(pickedObjects[2].primitive).toEqual(tilesetPrimitive._primitive);
         });
     });
 
@@ -970,7 +1046,7 @@ defineSuite([
         });
 
         scene.camera.setView({ destination : rectangle });
-        scene.groundPrimitives.add(depthPrimitive);
+        scene.primitives.add(globePrimitive);
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);
             expect(rgba[0]).toEqual(0);

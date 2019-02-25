@@ -59,7 +59,7 @@ Sandcastle.addToggleButton('Limit Enabled', true, function(checked) {
     if (checked) {
         viewer.scene.globe.cartographicLimitRectangle = coffeeBeltRectangle;
     } else {
-        viewer.scene.globe.cartographicLimitRectangle = Cesium.Rectangle.MAX_VALUE;
+        viewer.scene.globe.cartographicLimitRectangle = undefined;
     }
 });
 

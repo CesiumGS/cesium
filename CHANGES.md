@@ -3,12 +3,112 @@ Change Log
 
 ### TerriaJS-only
 
-* Fixed a bug that could cause tiles to be missing from the globe surface, especially when starting with the camera zoomed close to the surface.
 * Added support for refreshing expired tokens for `ArcGisMapServerImageryProvider` via callback registered with `options.requestNewToken` in constructor.
 * Added support for `parameters` to `ArcGisMapServerImageryProvider`.
 * Hacky fix/workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/7121.
 * Added support for using the imagery splitting system with the terrain and the atmosphere, too.
 * Added support for extruding `GeoJsonDataSource` polygons using the `heightReference`, `heightProperty`, and `extrudedHeightProperty` properties.
+
+### 1.55 - 2019-03-01
+
+##### Breaking Changes :mega:
+* `czm_materialInput.slope` is now an angle in radians between 0 and pi/2 (flat to vertical), rather than a projected length 1 to 0 (flat to vertical).
+
+##### Additions :tada:
+* `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
+
+##### Fixes :wrench:
+* Fixed an issue where models would cause a crash on load if some primitives were Draco encoded and others were not. [#7383](https://github.com/AnalyticalGraphicsInc/cesium/issues/7383)
+* Fixed an issue where RTL labels not reversing correctly non alphabetic characters [#7501](https://github.com/AnalyticalGraphicsInc/cesium/pull/7501)
+* Fixed Node.js support for the `Resource` class and any functionality using it internally.
+* Fixed an issue where some ground polygons crossing the Prime Meridian would have incorrect bounding rectangles. [#7533](https://github.com/AnalyticalGraphicsInc/cesium/pull/7533)
+* Fixed an issue where polygons on terrain using rhumb lines where being rendered incorrectly. [#7538](https://github.com/AnalyticalGraphicsInc/cesium/pulls/7538)
+* Fixed an issue with `EllipsoidRhumbLines.findIntersectionWithLongitude` when longitude was IDL. [#7551](https://github.com/AnalyticalGraphicsInc/cesium/issues/7551)
+* Fixed model silhouette colors when rendering with high dynamic range. [#7563](https://github.com/AnalyticalGraphicsInc/cesium/pull/7563)
+* Fixed an issue with ground polylines on globes that use ellipsoids other than WGS84. [#7552](https://github.com/AnalyticalGraphicsInc/cesium/issues/7552)
+* Fixed an issue where Draco compressed models with RGB per-vertex color would not load in Cesium. [#7576](https://github.com/AnalyticalGraphicsInc/cesium/issues/7576)
+
+### 1.54 - 2019-02-01
+
+##### Highlights :sparkler:
+* Added support for polylines and textured entities on 3D Tiles. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437) and [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
+* Added support for loading models and 3D tilesets with WebP images using the [`EXT_texture_webp`](https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Vendor/EXT_texture_webp/README.md) glTF extension. [#7486](https://github.com/AnalyticalGraphicsInc/cesium/pull/7486)
+* Added support for rhumb lines to polygon and polyline geometries. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
+
+##### Breaking Changes :mega:
+* Billboards with `HeightReference.CLAMP_TO_GROUND` are now clamped to both terrain and 3D Tiles. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
+* The default `classificationType` for `GroundPrimitive`, `CorridorGraphics`, `EllipseGraphics`, `PolygonGraphics` and `RectangleGraphics` is now `ClassificationType.BOTH`. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
+* The properties `ModelAnimation.speedup` and `ModelAnimationCollection.speedup` have been removed. Use `ModelAnimation.multiplier` and `ModelAnimationCollection.multiplier` respectively instead. [#7494](https://github.com/AnalyticalGraphicsInc/cesium/issues/7394)
+
+##### Deprecated :hourglass_flowing_sand:
+* `Scene.clampToHeight` now takes an optional `width` argument before the `result` argument.  The previous function definition will no longer work in 1.56. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
+* `PolylineGeometry.followSurface` has been superceded by `PolylineGeometry.arcType`. The previous definition will no longer work in 1.57. Replace `followSurface: false` with `arcType: Cesium.ArcType.NONE` and `followSurface: true` with `arcType: Cesium.ArcType.GEODESIC`. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
+* `SimplePolylineGeometry.followSurface` has been superceded by `SimplePolylineGeometry.arcType`. The previous definition will no longer work in 1.57. Replace `followSurface: false` with `arcType: Cesium.ArcType.NONE` and `followSurface: true` with `arcType: Cesium.ArcType.GEODESIC`. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
+
+##### Additions :tada:
+* Added support for textured ground entities (entities with unspecified `height`) and `GroundPrimitives` on 3D Tiles. [#7434](https://github.com/AnalyticalGraphicsInc/cesium/pull/7434)
+* Added support for polylines on 3D Tiles. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437)
+* Added `classificationType` property to `PolylineGraphics` and `GroundPolylinePrimitive` which specifies whether a polyline clamped to ground should be clamped to terrain, 3D Tiles, or both. [#7437](https://github.com/AnalyticalGraphicsInc/cesium/pull/7437)
+* Added the ability to specify the width of the intersection volume for `Scene.sampleHeight`, `Scene.clampToHeight`, `Scene.sampleHeightMostDetailed`, and `Scene.clampToHeightMostDetailed`. [#7287](https://github.com/AnalyticalGraphicsInc/cesium/pull/7287)
+* Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Time%20Dynamic%20Wheels.html) on using `nodeTransformations` to rotate a model's wheels based on its velocity. [#7361](https://github.com/AnalyticalGraphicsInc/cesium/pull/7361)
+* Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Polylines%20on%203D%20Tiles.html) for drawing polylines on 3D Tiles [#7522](https://github.com/AnalyticalGraphicsInc/cesium/pull/7522)
+* Added `EllipsoidRhumbLine` class as a rhumb line counterpart to `EllipsoidGeodesic`. [#7484](https://github.com/AnalyticalGraphicsInc/cesium/pull/7484)
+* Added rhumb line support to `PolygonGeometry`, `PolygonOutlineGeometry`, `PolylineGeometry`, `GroundPolylineGeometry`, and `SimplePolylineGeometry`. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
+* When using Cesium in Node.js, we now use the combined and minified version for improved performance unless `NODE_ENV` is specifically set to `development`.
+* Improved the performance of `QuantizedMeshTerrainData.interpolateHeight`.  [#7508](https://github.com/AnalyticalGraphicsInc/cesium/pull/7508)
+* Added support for glTF models with WebP textures using the `EXT_texture_webp` extension. [#7486](https://github.com/AnalyticalGraphicsInc/cesium/pull/7486)
+
+##### Fixes :wrench:
+* Fixed 3D Tiles performance regression. [#7482](https://github.com/AnalyticalGraphicsInc/cesium/pull/7482)
+* Fixed an issue where classification primitives with the `CESIUM_3D_TILE` classification type would render on terrain. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
+* Fixed an issue where 3D Tiles would show through the globe. [#7422](https://github.com/AnalyticalGraphicsInc/cesium/pull/7422)
+* Fixed crash when entity geometry show value is an interval that only covered part of the entity availability range [#7458](https://github.com/AnalyticalGraphicsInc/cesium/pull/7458)
+* Fix rectangle positions at the north and south poles. [#7451](https://github.com/AnalyticalGraphicsInc/cesium/pull/7451)
+* Fixed image size issue when using multiple particle systems. [#7412](https://github.com/AnalyticalGraphicsInc/cesium/pull/7412)
+* Fixed Sandcastle's "Open in New Window" button not displaying imagery due to blob URI limitations. [#7250](https://github.com/AnalyticalGraphicsInc/cesium/pull/7250)
+* Fixed an issue where setting `scene.globe.cartographicLimitRectangle` to `undefined` would cause a crash. [#7477](https://github.com/AnalyticalGraphicsInc/cesium/issues/7477)
+* Fixed `PrimitiveCollection.removeAll` to no longer `contain` removed primitives. [#7491](https://github.com/AnalyticalGraphicsInc/cesium/pull/7491)
+* Fixed `GeoJsonDataSource` to use polygons and polylines that use rhumb lines. [#7492](https://github.com/AnalyticalGraphicsInc/cesium/pull/7492)
+* Fixed an issue where some ground polygons would be cut off along circles of latitude. [#7507](https://github.com/AnalyticalGraphicsInc/cesium/issues/7507)
+* Fixed an issue that would cause IE 11 to crash when enabling image-based lighting. [#7485](https://github.com/AnalyticalGraphicsInc/cesium/issues/7485)
+
+### 1.53 - 2019-01-02
+
+##### Additions :tada:
+* Added image-based lighting for PBR models and 3D Tiles. [#7172](https://github.com/AnalyticalGraphicsInc/cesium/pull/7172)
+    * `Scene.specularEnvironmentMaps` is a url to a KTX file that contains the specular environment map and convoluted mipmaps for image-based lighting of all PBR models in the scene.
+    * `Scene.sphericalHarmonicCoefficients` is an array of 9 `Cartesian3` spherical harmonics coefficients for the diffuse irradiance of all PBR models in the scene.
+    * The `specularEnvironmentMaps` and `sphericalHarmonicCoefficients` properties of `Model` and `Cesium3DTileset` can be used to override the values from the scene for specific models and tilesets.
+    * The `luminanceAtZenith` property of `Model` and `Cesium3DTileset` adjusts the luminance of the procedural image-based lighting.
+* Double click away from an entity to un-track it [#7285](https://github.com/AnalyticalGraphicsInc/cesium/pull/7285)
+
+##### Fixes :wrench:
+* Fixed 3D Tiles visibility checking when running multiple passes within the same frame. [#7289](https://github.com/AnalyticalGraphicsInc/cesium/pull/7289)
+* Fixed contrast on imagery layers. [#7382](https://github.com/AnalyticalGraphicsInc/cesium/issues/7382)
+* Fixed rendering transparent background color when `highDynamicRange` is enabled. [#7427](https://github.com/AnalyticalGraphicsInc/cesium/issues/7427)
+* Fixed translucent geometry when `highDynamicRange` is toggled. [#7451](https://github.com/AnalyticalGraphicsInc/cesium/pull/7451)
+
+### 1.52 - 2018-12-03
+
+##### Breaking Changes :mega:
+* `TerrainProviders` that implement `availability` must now also implement the `loadTileDataAvailability` method.
+
+##### Deprecated :hourglass_flowing_sand:
+* The property `ModelAnimation.speedup` has been deprecated and renamed to `ModelAnimation.multiplier`. `speedup` will be removed in version 1.54. [#7393](https://github.com/AnalyticalGraphicsInc/cesium/pull/7393)
+
+##### Additions :tada:
+* Added functions to get the most detailed height of 3D Tiles on-screen or off-screen. [#7115](https://github.com/AnalyticalGraphicsInc/cesium/pull/7115)
+    * Added `Scene.sampleHeightMostDetailed`, an asynchronous version of `Scene.sampleHeight` that uses the maximum level of detail for 3D Tiles.
+    * Added `Scene.clampToHeightMostDetailed`, an asynchronous version of `Scene.clampToHeight` that uses the maximum level of detail for 3D Tiles.
+* Added support for high dynamic range rendering. It is enabled by default when supported, but can be disabled with `Scene.highDynamicRange`. [#7017](https://github.com/AnalyticalGraphicsInc/cesium/pull/7017)
+* Added `Scene.invertClassificationSupported` for checking if invert classification is supported.
+* Added `computeLineSegmentLineSegmentIntersection` to `Intersections2D`. [#7228](https://github.com/AnalyticalGraphicsInc/Cesium/pull/7228)
+* Added ability to load availability progressively from a quantized mesh extension instead of upfront. This will speed up load time and reduce memory usage. [#7196](https://github.com/AnalyticalGraphicsInc/cesium/pull/7196)
+* Added the ability to apply styles to 3D Tilesets that don't contain features. [#7255](https://github.com/AnalyticalGraphicsInc/Cesium/pull/7255)
+
+##### Fixes :wrench:
+* Fixed issue causing polyline to look wavy depending on the position of the camera [#7209](https://github.com/AnalyticalGraphicsInc/cesium/pull/7209)
+* Fixed translucency issues for dynamic geometry entities. [#7364](https://github.com/AnalyticalGraphicsInc/cesium/issues/7364)
 
 ### 1.51 - 2018-11-01
 

@@ -221,6 +221,18 @@ define([
             get : function() {
                 return this._waterMask;
             }
+        },
+
+        childTileMask : {
+            get : function() {
+                return this._childTileMask;
+            }
+        },
+
+        canUpsample : {
+            get : function() {
+                return defined(this._mesh);
+            }
         }
     });
 
@@ -334,7 +346,11 @@ define([
                     stride,
                     obb,
                     terrainEncoding,
-                    exaggeration);
+                    exaggeration,
+                    result.westIndicesSouthToNorth,
+                    result.southIndicesEastToWest,
+                    result.eastIndicesNorthToSouth,
+                    result.northIndicesWestToEast);
 
             // Free memory received from server after mesh is created.
             that._quantizedVertices = undefined;
@@ -498,6 +514,14 @@ define([
         return interpolateMeshHeight(this, u, v);
     };
 
+    function pointInBoundingBox(u, v, u0, v0, u1, v1, u2, v2) {
+        var minU = Math.min(u0, u1, u2);
+        var maxU = Math.max(u0, u1, u2);
+        var minV = Math.min(v0, v1, v2);
+        var maxV = Math.max(v0, v1, v2);
+        return (u >= minU && u <= maxU && v >= minV && v <= maxV);
+    }
+
     var texCoordScratch0 = new Cartesian2();
     var texCoordScratch1 = new Cartesian2();
     var texCoordScratch2 = new Cartesian2();
@@ -517,12 +541,14 @@ define([
             var uv1 = encoding.decodeTextureCoordinates(vertices, i1, texCoordScratch1);
             var uv2 = encoding.decodeTextureCoordinates(vertices, i2, texCoordScratch2);
 
-            var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y, barycentricCoordinateScratch);
-            if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
-                var h0 = encoding.decodeHeight(vertices, i0);
-                var h1 = encoding.decodeHeight(vertices, i1);
-                var h2 = encoding.decodeHeight(vertices, i2);
-                return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2;
+            if (pointInBoundingBox(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y)) {
+                var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, uv0.x, uv0.y, uv1.x, uv1.y, uv2.x, uv2.y, barycentricCoordinateScratch);
+                if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
+                    var h0 = encoding.decodeHeight(vertices, i0);
+                    var h1 = encoding.decodeHeight(vertices, i1);
+                    var h2 = encoding.decodeHeight(vertices, i2);
+                    return barycentric.x * h0 + barycentric.y * h1 + barycentric.z * h2;
+                }
             }
         }
 
@@ -549,12 +575,14 @@ define([
             var v1 = vBuffer[i1];
             var v2 = vBuffer[i2];
 
-            var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, u0, v0, u1, v1, u2, v2, barycentricCoordinateScratch);
-            if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
-                var quantizedHeight = barycentric.x * heightBuffer[i0] +
-                                      barycentric.y * heightBuffer[i1] +
-                                      barycentric.z * heightBuffer[i2];
-                return CesiumMath.lerp(terrainData._minimumHeight, terrainData._maximumHeight, quantizedHeight / maxShort);
+            if (pointInBoundingBox(u, v, u0, v0, u1, v1, u2, v2)) {
+                var barycentric = Intersections2D.computeBarycentricCoordinates(u, v, u0, v0, u1, v1, u2, v2, barycentricCoordinateScratch);
+                if (barycentric.x >= -1e-15 && barycentric.y >= -1e-15 && barycentric.z >= -1e-15) {
+                    var quantizedHeight = barycentric.x * heightBuffer[i0] +
+                                          barycentric.y * heightBuffer[i1] +
+                                          barycentric.z * heightBuffer[i2];
+                    return CesiumMath.lerp(terrainData._minimumHeight, terrainData._maximumHeight, quantizedHeight / maxShort);
+                }
             }
         }
 

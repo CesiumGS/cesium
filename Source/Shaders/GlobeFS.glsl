@@ -80,6 +80,10 @@ uniform float u_minimumBrightness;
 uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
+#ifdef HIGHLIGHT_FILL_TILE
+uniform vec4 u_fillHighlightColor;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
@@ -89,6 +93,7 @@ varying vec3 v_normalEC;
 #ifdef APPLY_MATERIAL
 varying float v_height;
 varying float v_slope;
+varying float v_aspect;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
@@ -136,6 +141,14 @@ vec4 sampleAndBlend(
     vec3 color = value.rgb;
     float alpha = value.a;
 
+#if !defined(APPLY_GAMMA)
+    vec4 tempColor = czm_gammaCorrect(vec4(color, alpha));
+    color = tempColor.rgb;
+    alpha = tempColor.a;
+#else
+    color = pow(color, vec3(textureOneOverGamma));
+#endif
+
 #ifdef APPLY_SPLIT
     float splitPosition = czm_imagerySplitPosition;
     // Split to the left
@@ -164,10 +177,6 @@ vec4 sampleAndBlend(
     color = czm_saturation(color, textureSaturation);
 #endif
 
-#ifdef APPLY_GAMMA
-    color = pow(color, vec3(textureOneOverGamma));
-#endif
-
     float sourceAlpha = alpha * textureAlpha;
     float outAlpha = mix(previousColor.a, 1.0, sourceAlpha);
     vec3 outColor = mix(previousColor.rgb * previousColor.a, color, sourceAlpha) / outAlpha;
@@ -193,7 +202,6 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
 void main()
 {
-
 #ifdef TILE_LIMIT_RECTANGLE
     if (v_textureCoordinates.x < u_cartographicLimitRectangle.x || u_cartographicLimitRectangle.z < v_textureCoordinates.x ||
         v_textureCoordinates.y < u_cartographicLimitRectangle.y || u_cartographicLimitRectangle.w < v_textureCoordinates.y)
@@ -229,7 +237,7 @@ void main()
     }
 #endif
 
-#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING)
+#if defined(SHOW_REFLECTIVE_OCEAN) || defined(ENABLE_DAYNIGHT_SHADING) || defined(HDR)
     vec3 normalMC = czm_geodeticSurfaceNormal(v_positionMC, vec3(0.0), vec3(1.0));   // normalized surface normal in model coordinates
     vec3 normalEC = czm_normal3D * normalMC;                                         // normalized surface normal in eye coordiantes
 #endif
@@ -288,11 +296,12 @@ void main()
     materialInput.normalEC = normalize(v_normalEC);
     materialInput.slope = v_slope;
     materialInput.height = v_height;
+    materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
 
-#if defined(ENABLE_VERTEX_LIGHTING)
+#ifdef ENABLE_VERTEX_LIGHTING
     float diffuseIntensity = clamp(czm_getLambertDiffuse(czm_sunDirectionEC, normalize(v_normalEC)) * 0.9 + 0.3, 0.0, 1.0);
     vec4 finalColor = vec4(color.rgb * diffuseIntensity, color.a);
 #elif defined(ENABLE_DAYNIGHT_SHADING)
@@ -314,10 +323,16 @@ void main()
     }
 #endif
 
+#ifdef HIGHLIGHT_FILL_TILE
+    finalColor = vec4(mix(finalColor.rgb, u_fillHighlightColor.rgb, u_fillHighlightColor.a), finalColor.a);
+#endif
+
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
-    const float fExposure = 2.0;
     vec3 fogColor = colorCorrect(v_fogMieColor) + finalColor.rgb * colorCorrect(v_fogRayleighColor);
+#ifndef HDR
+    const float fExposure = 2.0;
     fogColor = vec3(1.0) - exp(-fExposure * fogColor);
+#endif
 #endif
 
 #ifdef FOG
@@ -326,7 +341,12 @@ void main()
     fogColor *= darken;
 #endif
 
+#ifdef HDR
+    const float modifier = 0.15;
+    finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor, modifier), finalColor.a);
+#else
     finalColor = vec4(czm_fog(v_distance, finalColor.rgb, fogColor), finalColor.a);
+#endif
 #endif
 
 #ifdef GROUND_ATMOSPHERE
@@ -353,15 +373,28 @@ void main()
     AtmosphereColor atmosColor = computeGroundAtmosphereFromSpace(ellipsoidPosition, true);
 
     vec3 groundAtmosphereColor = colorCorrect(atmosColor.mie) + finalColor.rgb * colorCorrect(atmosColor.rayleigh);
+#ifndef HDR
     groundAtmosphereColor = vec3(1.0) - exp(-fExposure * groundAtmosphereColor);
+#endif
 
     fadeInDist = u_nightFadeDistance.x;
     fadeOutDist = u_nightFadeDistance.y;
 
     float sunlitAtmosphereIntensity = clamp((cameraDist - fadeOutDist) / (fadeInDist - fadeOutDist), 0.0, 1.0);
+
+#ifdef HDR
+    // Some tweaking to make HDR look better
+    sunlitAtmosphereIntensity = max(sunlitAtmosphereIntensity * sunlitAtmosphereIntensity, 0.03);
+#endif
+
     groundAtmosphereColor = mix(groundAtmosphereColor, fogColor, sunlitAtmosphereIntensity);
 #else
     vec3 groundAtmosphereColor = fogColor;
+#endif
+
+#ifdef HDR
+    // Some tweaking to make HDR look better
+    groundAtmosphereColor = czm_saturation(groundAtmosphereColor, 1.6);
 #endif
 
     finalColor = vec4(mix(finalColor.rgb, groundAtmosphereColor, fade), finalColor.a);
@@ -456,7 +489,19 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
     float surfaceReflectance = mix(0.0, mix(u_zoomedOutOceanSpecularIntensity, oceanSpecularIntensity, waveIntensity), maskValue);
     float specular = specularIntensity * surfaceReflectance;
 
-    return vec4(imageryColor.rgb + diffuseHighlight + nonDiffuseHighlight + specular, imageryColor.a);
+#ifdef HDR
+    specular *= 1.4;
+
+    float e = 0.2;
+    float d = 3.3;
+    float c = 1.7;
+
+    vec3 color = imageryColor.rgb + (c * (vec3(e) + imageryColor.rgb * d) * (diffuseHighlight + nonDiffuseHighlight + specular));
+#else
+    vec3 color = imageryColor.rgb + diffuseHighlight + nonDiffuseHighlight + specular;
+#endif
+
+    return vec4(color, imageryColor.a);
 }
 
 #endif // #ifdef SHOW_REFLECTIVE_OCEAN

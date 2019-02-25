@@ -47,7 +47,7 @@ define([
         /**
          * The Resource used to access the Pelias endpoint.
          * @type {Resource}
-         * @memberof {PeliasGeocoderService.prototype}
+         * @memberof PeliasGeocoderService.prototype
          * @readonly
          */
         url: {

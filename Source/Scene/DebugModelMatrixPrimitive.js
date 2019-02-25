@@ -1,4 +1,5 @@
 define([
+        '../Core/ArcType',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defaultValue',
@@ -10,6 +11,7 @@ define([
         './PolylineColorAppearance',
         './Primitive'
     ], function(
+        ArcType,
         Cartesian3,
         Color,
         defaultValue,
@@ -142,7 +144,7 @@ define([
                         Color.RED,
                         Color.RED
                     ],
-                    followSurface: false
+                    arcType: ArcType.NONE
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,
@@ -160,7 +162,7 @@ define([
                         Color.GREEN,
                         Color.GREEN
                     ],
-                    followSurface: false
+                    arcType: ArcType.NONE
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,
@@ -178,7 +180,7 @@ define([
                         Color.BLUE,
                         Color.BLUE
                     ],
-                    followSurface: false
+                    arcType: ArcType.NONE
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,

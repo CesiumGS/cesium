@@ -824,7 +824,7 @@ define([
             } else if (node._value === 'isClass') {
                 node.evaluate = node._evaluateIsClass;
             } else if (node._value === 'getExactClassName') {
-                node.evaluate = node._evaluategetExactClassName;
+                node.evaluate = node._evaluateGetExactClassName;
             } else if (node._value === 'Boolean') {
                 node.evaluate = node._evaluateBooleanConversion;
             } else if (node._value === 'Number') {
@@ -900,6 +900,9 @@ define([
     }
 
     function evaluateTilesetTime(feature) {
+        if (!defined(feature)) {
+            return 0.0;
+        }
         return feature.content.tileset.timeSinceLoad;
     }
 
@@ -928,6 +931,13 @@ define([
             var test = this._test.evaluate(feature);
             return evaluate(call, left, right, test);
         };
+    }
+
+    function getFeatureProperty(feature, name) {
+        // Returns undefined if the feature is not defined or the property name is not defined for that feature
+        if (defined(feature)) {
+            return feature.getProperty(name);
+        }
     }
 
     Node.prototype._evaluateLiteral = function() {
@@ -1046,7 +1056,7 @@ define([
         while (match !== null) {
             var placeholder = match[0];
             var variableName = match[1];
-            var property = feature.getProperty(variableName);
+            var property = getFeatureProperty(feature, variableName);
             if (!defined(property)) {
                 property = '';
             }
@@ -1058,7 +1068,7 @@ define([
 
     Node.prototype._evaluateVariable = function(feature) {
         // evaluates to undefined if the property name is not defined for that feature
-        return feature.getProperty(this._value);
+        return getFeatureProperty(feature, this._value);
     };
 
     function checkFeature (ast) {
@@ -1068,7 +1078,7 @@ define([
     // PERFORMANCE_IDEA: Determine if parent property needs to be computed before runtime
     Node.prototype._evaluateMemberDot = function(feature) {
         if (checkFeature(this._left)) {
-            return feature.getProperty(this._right.evaluate(feature));
+            return getFeatureProperty(feature, this._right.evaluate(feature));
         }
         var property = this._left.evaluate(feature);
         if (!defined(property)) {
@@ -1093,7 +1103,7 @@ define([
 
     Node.prototype._evaluateMemberBrackets = function(feature) {
         if (checkFeature(this._left)) {
-            return feature.getProperty(this._right.evaluate(feature));
+            return getFeatureProperty(feature, this._right.evaluate(feature));
         }
         var property = this._left.evaluate(feature);
         if (!defined(property)) {
@@ -1388,15 +1398,23 @@ define([
     };
 
     Node.prototype._evaluateIsExactClass = function(feature) {
-        return feature.isExactClass(this._left.evaluate(feature));
+        if (defined(feature)) {
+            return feature.isExactClass(this._left.evaluate(feature));
+        }
+        return false;
     };
 
     Node.prototype._evaluateIsClass = function(feature) {
-        return feature.isClass(this._left.evaluate(feature));
+        if (defined(feature)) {
+            return feature.isClass(this._left.evaluate(feature));
+        }
+        return false;
     };
 
-    Node.prototype._evaluategetExactClassName = function(feature) {
-        return feature.getExactClassName();
+    Node.prototype._evaluateGetExactClassName = function(feature) {
+        if (defined(feature)) {
+            return feature.getExactClassName();
+        }
     };
 
     Node.prototype._evaluateBooleanConversion = function(feature) {

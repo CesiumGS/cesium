@@ -4,6 +4,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartographic',
         '../Core/Check',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -22,6 +23,7 @@ define([
         '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/Pass',
+        '../Renderer/RenderState',
         '../ThirdParty/when',
         './Axis',
         './Cesium3DTile',
@@ -29,6 +31,7 @@ define([
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizations',
         './Cesium3DTileRefine',
+        './Cesium3DTilesetAsyncTraversal',
         './Cesium3DTilesetCache',
         './Cesium3DTilesetStatistics',
         './Cesium3DTilesetTraversal',
@@ -39,6 +42,7 @@ define([
         './PointCloudShading',
         './SceneMode',
         './ShadowMode',
+        './StencilConstants',
         './TileBoundingRegion',
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
@@ -48,6 +52,7 @@ define([
         Cartesian3,
         Cartographic,
         Check,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
@@ -66,6 +71,7 @@ define([
         Transforms,
         ClearCommand,
         Pass,
+        RenderState,
         when,
         Axis,
         Cesium3DTile,
@@ -73,6 +79,7 @@ define([
         Cesium3DTileContentState,
         Cesium3DTileOptimizations,
         Cesium3DTileRefine,
+        Cesium3DTilesetAsyncTraversal,
         Cesium3DTilesetCache,
         Cesium3DTilesetStatistics,
         Cesium3DTilesetTraversal,
@@ -83,6 +90,7 @@ define([
         PointCloudShading,
         SceneMode,
         ShadowMode,
+        StencilConstants,
         TileBoundingRegion,
         TileBoundingSphere,
         TileOrientedBoundingBox) {
@@ -119,6 +127,9 @@ define([
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
      * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade models.
+     * @param {Number} [options.luminanceAtZenith=0.5] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+     * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
+     * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -185,13 +196,16 @@ define([
         this._selectedTilesToStyle = [];
         this._loadTimestamp = undefined;
         this._timeSinceLoad = 0.0;
+        this._updatedVisibilityFrame = 0;
         this._extras = undefined;
+        this._credits = undefined;
 
         this._cullWithChildrenBounds = defaultValue(options.cullWithChildrenBounds, true);
         this._allTilesAdditive = true;
 
         this._hasMixedContent = false;
 
+        this._stencilClearCommand = undefined;
         this._backfaceCommands = new ManagedArray();
 
         this._maximumScreenSpaceError = defaultValue(options.maximumScreenSpaceError, 16);
@@ -204,6 +218,7 @@ define([
         this._statistics = new Cesium3DTilesetStatistics();
         this._statisticsLastRender = new Cesium3DTilesetStatistics();
         this._statisticsLastPick = new Cesium3DTilesetStatistics();
+        this._statisticsLastAsync = new Cesium3DTilesetStatistics();
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
@@ -590,6 +605,44 @@ define([
         this.lightColor = options.lightColor;
 
         /**
+         * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+         * This is used when {@link Cesium3DTileset#specularEnvironmentMaps} and {@link Cesium3DTileset#sphericalHarmonicCoefficients} are not defined.
+         *
+         * @type Number
+         *
+         * @default 0.5
+         *
+         */
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.5);
+
+        /**
+         * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
+         * computed from the atmosphere color is used.
+         * <p>
+         * There are nine <code>Cartesian3</code> coefficients.
+         * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21</sub>, L<sub>22</sub>
+         * </p>
+         *
+         * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
+         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * supplied to {@link Cesium3DTileset#specularEnvironmentMaps}.
+         *
+         * @type {Cartesian3[]}
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
+         */
+        this.sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
+
+        /**
+         * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @type {String}
+         * @see Cesium3DTileset#sphericalHarmonicCoefficients
+         */
+        this.specularEnvironmentMaps = options.specularEnvironmentMaps;
+
+        /**
          * This property is for debugging only; it is not optimized for production use.
          * <p>
          * Determines if only the tiles from last frame should be used for rendering.  This
@@ -710,7 +763,6 @@ define([
          * @default false
          */
         this.debugShowUrl = defaultValue(options.debugShowUrl, false);
-        this._credits = undefined;
 
         var that = this;
         var resource;
@@ -736,12 +788,28 @@ define([
             .then(function(tilesetJson) {
                 that._root = that.loadTileset(resource, tilesetJson);
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
-                that._asset = tilesetJson.asset;
+                var asset = tilesetJson.asset;
+                that._asset = asset;
                 that._properties = tilesetJson.properties;
                 that._geometricError = tilesetJson.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
+
+                var extras = asset.extras;
+                if (defined(extras) && defined(extras.cesium) && defined(extras.cesium.credits)) {
+                    var extraCredits = extras.cesium.credits;
+                    var credits = that._credits;
+                    if (!defined(credits)) {
+                        credits = [];
+                        that._credits = credits;
+                    }
+                    for (var i = 0; i < extraCredits.length; i++) {
+                        var credit = extraCredits[i];
+                        credits.push(new Credit(credit.html, credit.showOnScreen));
+                    }
+                }
+
                 // Save the original, untransformed bounding volume position so we can apply
                 // the tile transform and model matrix at run time
                 var boundingVolume = that._root.createBoundingVolume(tilesetJson.root.boundingVolume, Matrix4.IDENTITY);
@@ -1699,17 +1767,12 @@ define([
         tileset._tileDebugLabels.update(frameState);
     }
 
-    var stencilClearCommand = new ClearCommand({
-        stencil : 0,
-        pass : Pass.CESIUM_3D_TILE
-    });
-
     function updateTiles(tileset, frameState) {
         tileset._styleEngine.applyStyle(tileset, frameState);
 
+        var statistics = tileset._statistics;
         var passes = frameState.passes;
         var isRender = passes.render;
-        var statistics = tileset._statistics;
         var commandList = frameState.commandList;
         var numberOfInitialCommands = commandList.length;
         var selectedTiles = tileset._selectedTiles;
@@ -1725,7 +1788,16 @@ define([
         tileset._backfaceCommands.length = 0;
 
         if (bivariateVisibilityTest) {
-            commandList.push(stencilClearCommand);
+            if (!defined(tileset._stencilClearCommand)) {
+                tileset._stencilClearCommand = new ClearCommand({
+                    stencil : 0,
+                    pass : Pass.CESIUM_3D_TILE,
+                    renderState : RenderState.fromCache({
+                        stencilMask : StencilConstants.SKIP_LOD_MASK
+                    })
+                });
+            }
+            commandList.push(tileset._stencilClearCommand);
         }
 
         var lengthBeforeUpdate = commandList.length;
@@ -1899,69 +1971,78 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    /**
-     * @private
-     */
-    Cesium3DTileset.prototype.update = function(frameState) {
+    function update(tileset, frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
-            return;
+            return false;
         }
 
-        if (!this.show || !this.ready) {
-            return;
+        if (!tileset.show || !tileset.ready) {
+            return false;
         }
 
-        if (!defined(this._loadTimestamp)) {
-            this._loadTimestamp = JulianDate.clone(frameState.time);
+        if (!defined(tileset._loadTimestamp)) {
+            tileset._loadTimestamp = JulianDate.clone(frameState.time);
         }
 
         // Update clipping planes
-        var clippingPlanes = this._clippingPlanes;
-        this._clippingPlanesOriginMatrixDirty = true;
+        var clippingPlanes = tileset._clippingPlanes;
+        tileset._clippingPlanesOriginMatrixDirty = true;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
             clippingPlanes.update(frameState);
         }
 
-        this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
+        tileset._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, tileset._loadTimestamp) * 1000, 0.0);
 
-        this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail && !this._allTilesAdditive;
+        tileset._skipLevelOfDetail = tileset.skipLevelOfDetail && !defined(tileset._classificationType) && !tileset._disableSkipLevelOfDetail && !tileset._allTilesAdditive;
 
         // Do out-of-core operations (new content requests, cache removal,
         // process new tiles) only during the render pass.
         var passes = frameState.passes;
         var isRender = passes.render;
         var isPick = passes.pick;
+        var isAsync = passes.asynchronous;
 
-        var statistics = this._statistics;
+        var statistics = tileset._statistics;
         statistics.clear();
 
-        if (this.dynamicScreenSpaceError) {
-            updateDynamicScreenSpaceError(this, frameState);
+        if (tileset.dynamicScreenSpaceError) {
+            updateDynamicScreenSpaceError(tileset, frameState);
         }
 
         if (isRender) {
-            this._cache.reset();
+            tileset._cache.reset();
         }
 
-        Cesium3DTilesetTraversal.selectTiles(this, frameState);
+        ++tileset._updatedVisibilityFrame;
 
-        if (isRender) {
-            requestTiles(this);
-            processTiles(this, frameState);
+        var ready;
+
+        if (isAsync) {
+            ready = Cesium3DTilesetAsyncTraversal.selectTiles(tileset, frameState);
+        } else {
+            ready = Cesium3DTilesetTraversal.selectTiles(tileset, frameState);
         }
 
-        updateTiles(this, frameState);
+        if (isRender || isAsync) {
+            requestTiles(tileset);
+        }
 
         if (isRender) {
-            unloadTiles(this);
+            processTiles(tileset, frameState);
+        }
+
+        updateTiles(tileset, frameState);
+
+        if (isRender) {
+            unloadTiles(tileset);
 
             // Events are raised (added to the afterRender queue) here since promises
             // may resolve outside of the update loop that then raise events, e.g.,
             // model's readyPromise.
-            raiseLoadProgressEvent(this, frameState);
+            raiseLoadProgressEvent(tileset, frameState);
 
             if (statistics.selected !== 0) {
-                var credits = this._credits;
+                var credits = tileset._credits;
                 if (defined(credits)) {
                     var length = credits.length;
                     for (var i = 0; i < length; i++) {
@@ -1972,8 +2053,24 @@ define([
         }
 
         // Update last statistics
-        var statisticsLast = isPick ? this._statisticsLastPick : this._statisticsLastRender;
+        var statisticsLast = isAsync ? tileset._statisticsLastAsync : (isPick ? tileset._statisticsLastPick : tileset._statisticsLastRender);
         Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
+
+        return ready;
+    }
+
+    /**
+     * @private
+     */
+    Cesium3DTileset.prototype.update = function(frameState) {
+        update(this, frameState);
+    };
+
+    /**
+     * @private
+     */
+    Cesium3DTileset.prototype.updateAsync = function(frameState) {
+        return update(this, frameState);
     };
 
     /**
