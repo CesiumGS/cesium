@@ -139,7 +139,7 @@ define([
         }
 
         var button = event.button;
-        screenSpaceEventHandler._buttonDown = button;
+        screenSpaceEventHandler._buttonDown[button] = true;
 
         var screenSpaceEventType;
         if (button === MouseButton.LEFT) {
@@ -176,29 +176,7 @@ define([
         position : new Cartesian2()
     };
 
-    function handleMouseUp(screenSpaceEventHandler, event) {
-        if (!canProcessMouseEvent(screenSpaceEventHandler)) {
-            return;
-        }
-
-        var button = event.button;
-        screenSpaceEventHandler._buttonDown = undefined;
-
-        var screenSpaceEventType;
-        var clickScreenSpaceEventType;
-        if (button === MouseButton.LEFT) {
-            screenSpaceEventType = ScreenSpaceEventType.LEFT_UP;
-            clickScreenSpaceEventType = ScreenSpaceEventType.LEFT_CLICK;
-        } else if (button === MouseButton.MIDDLE) {
-            screenSpaceEventType = ScreenSpaceEventType.MIDDLE_UP;
-            clickScreenSpaceEventType = ScreenSpaceEventType.MIDDLE_CLICK;
-        } else if (button === MouseButton.RIGHT) {
-            screenSpaceEventType = ScreenSpaceEventType.RIGHT_UP;
-            clickScreenSpaceEventType = ScreenSpaceEventType.RIGHT_CLICK;
-        } else {
-            return;
-        }
-
+    function cancelMouseEvent(screenSpaceEventHandler, screenSpaceEventType, clickScreenSpaceEventType, event) {
         var modifier = getModifier(event);
 
         var action = screenSpaceEventHandler.getInputAction(screenSpaceEventType, modifier);
@@ -228,6 +206,31 @@ define([
         }
     }
 
+    function handleMouseUp(screenSpaceEventHandler, event) {
+        if (!canProcessMouseEvent(screenSpaceEventHandler)) {
+            return;
+        }
+
+        var button = event.button;
+
+        if (button !== MouseButton.LEFT && button !== MouseButton.MIDDLE && button !== MouseButton.RIGHT){
+            return;
+        }
+
+        if(screenSpaceEventHandler._buttonDown[MouseButton.LEFT]){
+            cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.LEFT_UP, ScreenSpaceEventType.LEFT_CLICK, event);
+            screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = false;
+        }
+        if(screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE]){
+            cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.MIDDLE_UP, ScreenSpaceEventType.MIDDLE_CLICK, event);
+            screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] = false;
+        }
+        if(screenSpaceEventHandler._buttonDown[MouseButton.RIGHT]){
+            cancelMouseEvent(screenSpaceEventHandler, ScreenSpaceEventType.RIGHT_UP, ScreenSpaceEventType.RIGHT_CLICK, event);
+            screenSpaceEventHandler._buttonDown[MouseButton.RIGHT] = false;
+        }
+    }
+
     var mouseMoveEvent = {
         startPosition : new Cartesian2(),
         endPosition : new Cartesian2()
@@ -254,7 +257,9 @@ define([
 
         Cartesian2.clone(position, previousPosition);
 
-        if (defined(screenSpaceEventHandler._buttonDown)) {
+        if (screenSpaceEventHandler._buttonDown[MouseButton.LEFT] ||
+            screenSpaceEventHandler._buttonDown[MouseButton.MIDDLE] ||
+            screenSpaceEventHandler._buttonDown[MouseButton.RIGHT]) {
             event.preventDefault();
         }
     }
@@ -403,9 +408,9 @@ define([
         var clickAction;
         var pinching = screenSpaceEventHandler._isPinching;
 
-        if (numberOfTouches !== 1 && screenSpaceEventHandler._buttonDown === MouseButton.LEFT) {
+        if (numberOfTouches !== 1 && screenSpaceEventHandler._buttonDown[MouseButton.LEFT]) {
             // transitioning from single touch, trigger UP and might trigger CLICK
-            screenSpaceEventHandler._buttonDown = undefined;
+            screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = false;
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_UP, modifier);
 
             if (defined(action)) {
@@ -454,7 +459,7 @@ define([
             Cartesian2.clone(position, screenSpaceEventHandler._primaryStartPosition);
             Cartesian2.clone(position, screenSpaceEventHandler._primaryPreviousPosition);
 
-            screenSpaceEventHandler._buttonDown = MouseButton.LEFT;
+            screenSpaceEventHandler._buttonDown[MouseButton.LEFT] = true;
 
             action = screenSpaceEventHandler.getInputAction(ScreenSpaceEventType.LEFT_DOWN, modifier);
 
@@ -539,7 +544,7 @@ define([
         var numberOfTouches = positions.length;
         var action;
 
-        if (numberOfTouches === 1 && screenSpaceEventHandler._buttonDown === MouseButton.LEFT) {
+        if (numberOfTouches === 1 && screenSpaceEventHandler._buttonDown[MouseButton.LEFT]) {
             // moving single touch
             var position = positions.values[0];
             Cartesian2.clone(position, screenSpaceEventHandler._primaryPosition);
@@ -658,7 +663,11 @@ define([
      */
     function ScreenSpaceEventHandler(element) {
         this._inputEvents = {};
-        this._buttonDown = undefined;
+        this._buttonDown = {
+            LEFT: false,
+            MIDDLE: false,
+            RIGHT: false
+        };
         this._isPinching = false;
         this._lastSeenTouchEvent = -ScreenSpaceEventHandler.mouseEmulationIgnoreMilliseconds;
 

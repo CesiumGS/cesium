@@ -109,6 +109,198 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('can get tiles around a root tile', function() {
+        var tilingScheme = new GeographicTilingScheme({
+            numberOfLevelZeroTilesX : 3,
+            numberOfLevelZeroTilesY : 3
+        });
+        var levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+
+        var L0X0Y0 = levelZeroTiles.filter(function(tile) {
+            return tile.x === 0 && tile.y === 0;
+        })[0];
+        var L0X1Y0 = levelZeroTiles.filter(function(tile) {
+            return tile.x === 1 && tile.y === 0;
+        })[0];
+        var L0X2Y0 = levelZeroTiles.filter(function(tile) {
+            return tile.x === 2 && tile.y === 0;
+        })[0];
+        var L0X0Y1 = levelZeroTiles.filter(function(tile) {
+            return tile.x === 0 && tile.y === 1;
+        })[0];
+        var L0X1Y1 = levelZeroTiles.filter(function(tile) {
+            return tile.x === 1 && tile.y === 1;
+        })[0];
+        var L0X2Y1 = levelZeroTiles.filter(function(tile) {
+            return tile.x === 2 && tile.y === 1;
+        })[0];
+        var L0X0Y2 = levelZeroTiles.filter(function(tile) {
+            return tile.x === 0 && tile.y === 2;
+        })[0];
+        var L0X1Y2 = levelZeroTiles.filter(function(tile) {
+            return tile.x === 1 && tile.y === 2;
+        })[0];
+        var L0X2Y2 = levelZeroTiles.filter(function(tile) {
+            return tile.x === 2 && tile.y === 2;
+        })[0];
+
+        expect(L0X0Y0.findTileToWest(levelZeroTiles)).toBe(L0X2Y0);
+        expect(L0X0Y0.findTileToEast(levelZeroTiles)).toBe(L0X1Y0);
+        expect(L0X0Y0.findTileToNorth(levelZeroTiles)).toBeUndefined();
+        expect(L0X0Y0.findTileToSouth(levelZeroTiles)).toBe(L0X0Y1);
+
+        expect(L0X1Y0.findTileToWest(levelZeroTiles)).toBe(L0X0Y0);
+        expect(L0X1Y0.findTileToEast(levelZeroTiles)).toBe(L0X2Y0);
+        expect(L0X1Y0.findTileToNorth(levelZeroTiles)).toBeUndefined();
+        expect(L0X1Y0.findTileToSouth(levelZeroTiles)).toBe(L0X1Y1);
+
+        expect(L0X2Y0.findTileToWest(levelZeroTiles)).toBe(L0X1Y0);
+        expect(L0X2Y0.findTileToEast(levelZeroTiles)).toBe(L0X0Y0);
+        expect(L0X2Y0.findTileToNorth(levelZeroTiles)).toBeUndefined();
+        expect(L0X2Y0.findTileToSouth(levelZeroTiles)).toBe(L0X2Y1);
+
+        expect(L0X0Y1.findTileToWest(levelZeroTiles)).toBe(L0X2Y1);
+        expect(L0X0Y1.findTileToEast(levelZeroTiles)).toBe(L0X1Y1);
+        expect(L0X0Y1.findTileToNorth(levelZeroTiles)).toBe(L0X0Y0);
+        expect(L0X0Y1.findTileToSouth(levelZeroTiles)).toBe(L0X0Y2);
+
+        expect(L0X1Y1.findTileToWest(levelZeroTiles)).toBe(L0X0Y1);
+        expect(L0X1Y1.findTileToEast(levelZeroTiles)).toBe(L0X2Y1);
+        expect(L0X1Y1.findTileToNorth(levelZeroTiles)).toBe(L0X1Y0);
+        expect(L0X1Y1.findTileToSouth(levelZeroTiles)).toBe(L0X1Y2);
+
+        expect(L0X2Y1.findTileToWest(levelZeroTiles)).toBe(L0X1Y1);
+        expect(L0X2Y1.findTileToEast(levelZeroTiles)).toBe(L0X0Y1);
+        expect(L0X2Y1.findTileToNorth(levelZeroTiles)).toBe(L0X2Y0);
+        expect(L0X2Y1.findTileToSouth(levelZeroTiles)).toBe(L0X2Y2);
+
+        expect(L0X0Y2.findTileToWest(levelZeroTiles)).toBe(L0X2Y2);
+        expect(L0X0Y2.findTileToEast(levelZeroTiles)).toBe(L0X1Y2);
+        expect(L0X0Y2.findTileToNorth(levelZeroTiles)).toBe(L0X0Y1);
+        expect(L0X0Y2.findTileToSouth(levelZeroTiles)).toBeUndefined();
+
+        expect(L0X1Y2.findTileToWest(levelZeroTiles)).toBe(L0X0Y2);
+        expect(L0X1Y2.findTileToEast(levelZeroTiles)).toBe(L0X2Y2);
+        expect(L0X1Y2.findTileToNorth(levelZeroTiles)).toBe(L0X1Y1);
+        expect(L0X1Y2.findTileToSouth(levelZeroTiles)).toBeUndefined();
+
+        expect(L0X2Y2.findTileToWest(levelZeroTiles)).toBe(L0X1Y2);
+        expect(L0X2Y2.findTileToEast(levelZeroTiles)).toBe(L0X0Y2);
+        expect(L0X2Y2.findTileToNorth(levelZeroTiles)).toBe(L0X2Y1);
+        expect(L0X2Y2.findTileToSouth(levelZeroTiles)).toBeUndefined();
+    });
+
+    it('can get tiles around a tile when they share a common parent', function() {
+        var tilingScheme = new GeographicTilingScheme({
+            numberOfLevelZeroTilesX : 2,
+            numberOfLevelZeroTilesY : 1
+        });
+
+        var levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+        var parent = levelZeroTiles[1];
+        var sw = parent.southwestChild;
+        var se = parent.southeastChild;
+        var nw = parent.northwestChild;
+        var ne = parent.northeastChild;
+
+        expect(sw.findTileToEast(levelZeroTiles)).toBe(se);
+        expect(sw.findTileToNorth(levelZeroTiles)).toBe(nw);
+        expect(se.findTileToWest(levelZeroTiles)).toBe(sw);
+        expect(se.findTileToNorth(levelZeroTiles)).toBe(ne);
+        expect(nw.findTileToEast(levelZeroTiles)).toBe(ne);
+        expect(nw.findTileToSouth(levelZeroTiles)).toBe(sw);
+        expect(ne.findTileToWest(levelZeroTiles)).toBe(nw);
+        expect(ne.findTileToSouth(levelZeroTiles)).toBe(se);
+    });
+
+    it('can get tiles around a tile when they do not share a common parent', function() {
+        var tilingScheme = new GeographicTilingScheme({
+            numberOfLevelZeroTilesX : 2,
+            numberOfLevelZeroTilesY : 2
+        });
+
+        var levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+
+        var northwest = levelZeroTiles[0];
+        var nwse = northwest.southeastChild;
+        var nwne = northwest.northeastChild;
+        var nwsw = northwest.southwestChild;
+
+        var northeast = levelZeroTiles[1];
+        var nesw = northeast.southwestChild;
+        var nenw = northeast.northwestChild;
+        var nese = northeast.southeastChild;
+
+        var southwest = levelZeroTiles[2];
+        var swne = southwest.northeastChild;
+        var swnw = southwest.northwestChild;
+        var swse = southwest.southeastChild;
+
+        var southeast = levelZeroTiles[3];
+        var senw = southeast.northwestChild;
+        var sene = southeast.northeastChild;
+        var sesw = southeast.southwestChild;
+
+        expect(nwse.findTileToEast(levelZeroTiles)).toBe(nesw);
+        expect(nwse.findTileToSouth(levelZeroTiles)).toBe(swne);
+        expect(nwne.findTileToEast(levelZeroTiles)).toBe(nenw);
+        expect(nwsw.findTileToSouth(levelZeroTiles)).toBe(swnw);
+
+        expect(nesw.findTileToWest(levelZeroTiles)).toBe(nwse);
+        expect(nesw.findTileToSouth(levelZeroTiles)).toBe(senw);
+        expect(nenw.findTileToWest(levelZeroTiles)).toBe(nwne);
+        expect(nese.findTileToSouth(levelZeroTiles)).toBe(sene);
+
+        expect(swne.findTileToEast(levelZeroTiles)).toBe(senw);
+        expect(swne.findTileToNorth(levelZeroTiles)).toBe(nwse);
+        expect(swnw.findTileToNorth(levelZeroTiles)).toBe(nwsw);
+        expect(swse.findTileToEast(levelZeroTiles)).toBe(sesw);
+
+        expect(senw.findTileToWest(levelZeroTiles)).toBe(swne);
+        expect(senw.findTileToNorth(levelZeroTiles)).toBe(nesw);
+        expect(sene.findTileToNorth(levelZeroTiles)).toBe(nese);
+        expect(sesw.findTileToWest(levelZeroTiles)).toBe(swse);
+    });
+
+    it('can get adjacent tiles wrapping around the anti-meridian', function() {
+        var tilingScheme = new GeographicTilingScheme({
+            numberOfLevelZeroTilesX : 2,
+            numberOfLevelZeroTilesY : 1
+        });
+
+        var levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+
+        var west = levelZeroTiles[0];
+        var wsw = west.southwestChild;
+        var wnw = west.northwestChild;
+
+        var east = levelZeroTiles[1];
+        var ene = east.northeastChild;
+        var ese = east.southeastChild;
+
+        expect(wsw.findTileToWest(levelZeroTiles)).toBe(ese);
+        expect(wnw.findTileToWest(levelZeroTiles)).toBe(ene);
+
+        expect(ene.findTileToEast(levelZeroTiles)).toBe(wnw);
+        expect(ese.findTileToEast(levelZeroTiles)).toBe(wsw);
+    });
+
+    it('returns undefined when asked for adjacent tiles north of the north pole or south of the south pole', function() {
+        var tilingScheme = new GeographicTilingScheme({
+            numberOfLevelZeroTilesX : 2,
+            numberOfLevelZeroTilesY : 1
+        });
+
+        var levelZeroTiles = QuadtreeTile.createLevelZeroTiles(tilingScheme);
+
+        var west = levelZeroTiles[0];
+        var wnw = west.northwestChild;
+        var wsw = west.southwestChild;
+
+        expect(wnw.findTileToNorth(levelZeroTiles)).toBeUndefined();
+        expect(wsw.findTileToSouth(levelZeroTiles)).toBeUndefined();
+    });
+
     describe('createLevelZeroTiles', function() {
         var tilingScheme1x1;
         var tilingScheme2x2;
