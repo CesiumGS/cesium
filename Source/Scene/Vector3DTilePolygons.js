@@ -287,7 +287,7 @@ define([
             if (defined(minimumHeights) && defined(maximumHeights)) {
 				minimumHeights = arraySlice(minimumHeights);
 				maximumHeights = arraySlice(maximumHeights);
-				
+
                 transferrableObjects.push(minimumHeights.buffer, maximumHeights.buffer);
                 parameters.minimumHeights = minimumHeights;
                 parameters.maximumHeights = maximumHeights;
