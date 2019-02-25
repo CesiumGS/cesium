@@ -1364,16 +1364,6 @@ function requirejsOptimize(name, config) {
 }
 
 // TerriajS-specific tasks.
-var workerGlob = [
-    './Source/Workers/*.js',
-    '!./Source/Workers/*.profile.js',
-    '!./Source/Workers/cesiumWorkerBootstrapper.js',
-    '!./Source/Workers/transferTypedArrayTest.js',
-    '!./Source/Workers/createTaskProcessorWorker.js'
-];
-
-gulp.task('terria-prepare-cesium', ['build', 'generateStubs', 'terria-copy-cesium-assets', 'terria-copy-cesiumWorkerBootstrapper']);
-
 gulp.task('terria-copy-cesium-assets', function() {
     return gulp.src([
             'Source/Workers/transferTypedArrayTest.js',
@@ -1390,4 +1380,5 @@ gulp.task('terria-copy-cesiumWorkerBootstrapper', function() {
         .pipe(gulp.dest('wwwroot/build/Workers'));
 });
 
-gulp.task('terria-default', ['terria-prepare-cesium']);
+gulp.task('terria-prepare-cesium', gulp.series('build', 'generateStubs', 'terria-copy-cesium-assets', 'terria-copy-cesiumWorkerBootstrapper'));
+gulp.task('terria-default', gulp.series('terria-prepare-cesium'));
