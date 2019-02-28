@@ -3589,6 +3589,62 @@ defineSuite([
         });
     });
 
+    it('converts followSurface to arcType for backwards compatibility', function() {
+        var packet = [{
+            id : 'document',
+            version : '1.0'
+        }, {
+            id : 'followSurface-false',
+            polyline : {
+                followSurface : false
+            }
+        }, {
+            id : 'followSurface-true',
+            polyline : {
+                followSurface : true
+            }
+        }, {
+            id : 'followSurface-time-varying',
+            polyline : {
+                followSurface : [{
+                    interval : '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    boolean : true
+                }, {
+                    interval : '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    boolean : false
+                }]
+            }
+        }, {
+            id : 'arcType-overrides-followSurface',
+            polyline : {
+                followSurface : true,
+                arcType: 'RHUMB'
+            }
+        }];
+
+        var dataSource = new CzmlDataSource();
+        return dataSource.load(packet).then(function(dataSource) {
+            var date = JulianDate.now();
+
+            var entity = dataSource.entities.getById('followSurface-false');
+            expect(entity.polyline.arcType.isConstant).toBe(true);
+            expect(entity.polyline.arcType.getValue(date)).toBe(ArcType.NONE);
+
+            entity = dataSource.entities.getById('followSurface-true');
+            expect(entity.polyline.arcType.isConstant).toBe(true);
+            expect(entity.polyline.arcType.getValue(date)).toBe(ArcType.GEODESIC);
+
+            entity = dataSource.entities.getById('followSurface-time-varying');
+            expect(entity.polyline.arcType.isConstant).toBe(false);
+            expect(entity.polyline.arcType.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toBe(ArcType.GEODESIC);
+            expect(entity.polyline.arcType.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toBe(ArcType.NONE);
+
+            entity = dataSource.entities.getById('arcType-overrides-followSurface');
+            expect(entity.polyline.arcType.isConstant).toBe(true);
+            expect(entity.polyline.arcType.getValue(date)).toBe(ArcType.RHUMB);
+        });
+    });
+
     // The below test was generated, along with ValidationDocument.czml,
     // by the czml-writer ValidationDocumentationGenerator.
     // https://github.com/AnalyticalGraphicsInc/czml-writer/blob/master/DotNet/GenerateFromSchema/ValidationDocumentGenerator.cs
