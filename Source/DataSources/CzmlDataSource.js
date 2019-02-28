@@ -1804,10 +1804,10 @@ define([
         // Don't want to break CZML spec to keep this workaround even after followSurface has been deprecated from geometry.
         // See https://github.com/AnalyticalGraphicsInc/cesium/pull/7582#discussion_r258695385
         if (defined(polylineData.followSurface) && !defined(polylineData.arcType)) {
-            if (polyline.followSurface) {
-                processPacketData(ArcType, polyline, 'arcType', ArcType.GEODESIC, interval, sourceUri, entityCollection);
+            if (polylineData.followSurface) {
+                processPacketData(ArcType, polyline, 'arcType', 'GEODESIC', interval, sourceUri, entityCollection);
             } else {
-                processPacketData(ArcType, polyline, 'arcType', ArcType.NONE, interval, sourceUri, entityCollection);
+                processPacketData(ArcType, polyline, 'arcType', 'NONE', interval, sourceUri, entityCollection);
             }
         } else {
             processPacketData(ArcType, polyline, 'arcType', polylineData.arcType, interval, sourceUri, entityCollection);

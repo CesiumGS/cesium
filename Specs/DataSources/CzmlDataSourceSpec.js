@@ -203,7 +203,7 @@ defineSuite([
     it('name uses source name if CZML name is undefined', function() {
         var dataSource = new CzmlDataSource();
         return dataSource.load(clockCzml, {
-            sourceUri: 'Gallery/simple.czml?asd=true'
+            sourceUri : 'Gallery/simple.czml?asd=true'
         }).then(function(dataSource) {
             expect(dataSource.name).toEqual('simple.czml');
         });
@@ -212,7 +212,7 @@ defineSuite([
     it('does not overwrite existing name if CZML name is undefined', function() {
         var dataSource = new CzmlDataSource('myName');
         return dataSource.load(clockCzml, {
-            sourceUri: 'Gallery/simple.czml'
+            sourceUri : 'Gallery/simple.czml'
         }).then(function(dataSource) {
             expect(dataSource.name).toEqual('myName');
         });
@@ -278,7 +278,7 @@ defineSuite([
     it('process loads expected data from Resource', function() {
         var dataSource = new CzmlDataSource();
         return dataSource.process(new Resource({
-            url: simpleUrl
+            url : simpleUrl
         })).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(10);
         });
@@ -386,8 +386,8 @@ defineSuite([
             dataSource.changedEvent.addEventListener(spy);
 
             var newCzml = {
-                id: 'document',
-                version: '1.0',
+                id : 'document',
+                version : '1.0',
                 clock : {
                     interval : '2013-03-15T10:00:00Z/2013-03-16T10:00:00Z',
                     currentTime : '2012-03-15T10:00:00Z',
@@ -450,7 +450,7 @@ defineSuite([
                 image : 'image.png',
                 scale : 1.0,
                 rotation : 1.3,
-                heightReference: 'CLAMP_TO_GROUND',
+                heightReference : 'CLAMP_TO_GROUND',
                 horizontalOrigin : 'CENTER',
                 verticalOrigin : 'CENTER',
                 color : {
@@ -486,7 +486,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         return dataSource.load(makePacket(billboardPacket), {
-            sourceUri: sourceUri
+            sourceUri : sourceUri
         }).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
 
@@ -562,24 +562,24 @@ defineSuite([
 
     it('can handle aligned axis expressed as a velocity reference within an interval', function() {
         var packet = {
-            'position': {
-                'epoch': '2016-06-17T12:00:00Z',
-                'cartesian': [0, 1, 2, 3,
-                              60, 61, 122, 183]
+            'position' : {
+                'epoch' : '2016-06-17T12:00:00Z',
+                'cartesian' : [0, 1, 2, 3,
+                               60, 61, 122, 183]
             },
-            'billboard': {
-                'alignedAxis': [
+            'billboard' : {
+                'alignedAxis' : [
                     {
-                        'interval': '2016-06-17T12:00:00Z/2016-06-17T12:00:30Z',
-                        'unitCartesian': [
+                        'interval' : '2016-06-17T12:00:00Z/2016-06-17T12:00:30Z',
+                        'unitCartesian' : [
                             0,
                             1,
                             0
                         ]
                     },
                     {
-                        'interval': '2016-06-17T12:00:30Z/2016-06-17T12:01:00Z',
-                        'velocityReference': '#position'
+                        'interval' : '2016-06-17T12:00:30Z/2016-06-17T12:01:00Z',
+                        'velocityReference' : '#position'
                     }
                 ]
             }
@@ -618,7 +618,7 @@ defineSuite([
 
         var dataSource = new CzmlDataSource();
         return dataSource.load(makePacket(packet), {
-            sourceUri: source
+            sourceUri : source
         }).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var imageProperty = entity.billboard.image;
@@ -933,10 +933,10 @@ defineSuite([
             expect(entity.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
 
             czml = {
-                position: {
-                    referenceFrame: 'FIXED',
-                    epoch: JulianDate.toIso8601(epoch),
-                    cartesian: [1.0, 2.0, 3.0]
+                position : {
+                    referenceFrame : 'FIXED',
+                    epoch : JulianDate.toIso8601(epoch),
+                    cartesian : [1.0, 2.0, 3.0]
                 }
             };
 
@@ -981,9 +981,9 @@ defineSuite([
             expect(entity.position.referenceFrame).toBe(ReferenceFrame.INERTIAL);
 
             var czml2 = {
-                position: {
-                    epoch: JulianDate.toIso8601(epoch),
-                    cartesian: [1.0, 2.0, 3.0]
+                position : {
+                    epoch : JulianDate.toIso8601(epoch),
+                    cartesian : [1.0, 2.0, 3.0]
                 }
             };
             return dataSource.process(czml2);
@@ -1118,7 +1118,7 @@ defineSuite([
                 },
                 outlineWidth : 6,
                 shadows : 'ENABLED',
-                zIndex: 8
+                zIndex : 8
             }
         };
 
@@ -1154,7 +1154,7 @@ defineSuite([
             var entity = dataSource.entities.values[0];
 
             var validTime = TimeInterval.fromIso8601({
-                iso8601: ellipsePacketInterval.ellipse.interval
+                iso8601 : ellipsePacketInterval.ellipse.interval
             }).start;
             var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
@@ -1239,7 +1239,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601({
-            iso8601: ellipsoidPacketInterval.ellipsoid.interval
+            iso8601 : ellipsoidPacketInterval.ellipsoid.interval
         }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
@@ -1342,7 +1342,7 @@ defineSuite([
         };
 
         var validTime = TimeInterval.fromIso8601({
-            iso8601: labelPacket.label.interval
+            iso8601 : labelPacket.label.interval
         }).start;
         var invalidTime = JulianDate.addSeconds(validTime, -1, new JulianDate());
 
@@ -1477,8 +1477,8 @@ defineSuite([
                 'cartesian' : [0, 1, 2, 3,
                                60, 61, 122, 183]
             },
-            'orientation': {
-                'velocityReference': '#position'
+            'orientation' : {
+                'velocityReference' : '#position'
             }
         };
 
@@ -1585,21 +1585,21 @@ defineSuite([
 
     it('works with properties that are constant.', function() {
         var testObject = {
-            foo: 4,
-            bar: {
-                name: 'bar'
+            foo : 4,
+            bar : {
+                name : 'bar'
             }
         };
         var testArray = [2, 4, 16, 'test'];
         var packet = {
-            properties: {
-                constant_name: 'ABC',
-                constant_height: 8,
-                constant_object: {
-                    value: testObject
+            properties : {
+                constant_name : 'ABC',
+                constant_height : 8,
+                constant_object : {
+                    value : testObject
                 },
-                constant_array: {
-                    value: testArray
+                constant_array : {
+                    value : testArray
                 }
             }
         };
@@ -1616,25 +1616,25 @@ defineSuite([
 
     it('works with properties which are constant with specified type.', function() {
         var testObject = {
-            foo: 4,
-            bar: {
-                name: 'bar'
+            foo : 4,
+            bar : {
+                name : 'bar'
             }
         };
         var testArray = [2, 4, 16, 'test'];
         var packet = {
-            properties: {
-                constant_name: {
-                    string: 'ABC'
+            properties : {
+                constant_name : {
+                    string : 'ABC'
                 },
-                constant_height: {
-                    number: 8
+                constant_height : {
+                    number : 8
                 },
-                constant_object: {
-                    object: testObject
+                constant_object : {
+                    object : testObject
                 },
-                constant_array: {
-                    array: testArray
+                constant_array : {
+                    array : testArray
                 }
             }
         };
@@ -1651,10 +1651,10 @@ defineSuite([
 
     it('works with properties with one interval.', function() {
         var packet = {
-            properties: {
-                changing_name: {
-                    interval: '2012/2014',
-                    value: 'ABC'
+            properties : {
+                changing_name : {
+                    interval : '2012/2014',
+                    value : 'ABC'
                 }
             }
         };
@@ -1673,10 +1673,10 @@ defineSuite([
 
     it('works with properties with one interval with specified type.', function() {
         var packet = {
-            properties: {
-                changing_name: {
-                    interval: '2012/2014',
-                    string: 'ABC'
+            properties : {
+                changing_name : {
+                    interval : '2012/2014',
+                    string : 'ABC'
                 }
             }
         };
@@ -1697,15 +1697,15 @@ defineSuite([
         var array1 = [1, 2, 3];
         var array2 = [4, 5, 6];
         var packet = {
-            properties: {
-                changing_array: [
+            properties : {
+                changing_array : [
                     {
-                        interval: '2012/2013',
-                        value: array1
+                        interval : '2012/2013',
+                        value : array1
                     },
                     {
-                        interval: '2013/2014',
-                        value: array2
+                        interval : '2013/2014',
+                        value : array2
                     }
                 ]
             }
@@ -1725,20 +1725,20 @@ defineSuite([
 
     it('handles boolean custom properties with intervals.', function() {
         var packet = {
-            id: 'MyID',
-            properties: {
-                custom_boolean: [
+            id : 'MyID',
+            properties : {
+                custom_boolean : [
                     {
-                        interval: '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
-                        boolean: true
+                        interval : '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
+                        boolean : true
                     },
                     {
-                        interval: '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
-                        boolean: false
+                        interval : '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
+                        boolean : false
                     },
                     {
-                        interval: '2012-04-02T12:00:02Z/2012-04-02T12:01:00Z',
-                        boolean: true
+                        interval : '2012-04-02T12:00:02Z/2012-04-02T12:01:00Z',
+                        boolean : true
                     }
                 ]
             }
@@ -1761,15 +1761,15 @@ defineSuite([
         var array1 = [1, 2, 3];
         var array2 = [4, 5, 6];
         var packet = {
-            properties: {
-                changing_array: [
+            properties : {
+                changing_array : [
                     {
-                        interval: '2012/2013',
-                        array: array1
+                        interval : '2012/2013',
+                        array : array1
                     },
                     {
-                        interval: '2013/2014',
-                        array: array2
+                        interval : '2013/2014',
+                        array : array2
                     }
                 ]
             }
@@ -1789,11 +1789,11 @@ defineSuite([
 
     it('handles sampled custom properties.', function() {
         var packet = {
-            id: 'MyID',
-            properties: {
-                custom_cartesian: {
-                    epoch: '2012-04-02T12:00:00Z',
-                    cartesian: [
+            id : 'MyID',
+            properties : {
+                custom_cartesian : {
+                    epoch : '2012-04-02T12:00:00Z',
+                    cartesian : [
                         0, 1, 2, 3,
                         60, 4, 5, 6,
                         120, 7, 8, 9
@@ -1822,125 +1822,125 @@ defineSuite([
         var interval1 = '2012/2013';
         var interval2 = '2013/2014';
         var packet = {
-            id: 'MyID',
-            properties: {
-                custom_array_constant: {
-                    array: [1, 2, 3]
+            id : 'MyID',
+            properties : {
+                custom_array_constant : {
+                    array : [1, 2, 3]
                 },
-                custom_array_interval: [
+                custom_array_interval : [
                     {
-                        interval: interval1,
-                        array: [1, 2, 3]
+                        interval : interval1,
+                        array : [1, 2, 3]
                     },
                     {
-                        interval: interval2,
-                        array: [4, 5, 6]
+                        interval : interval2,
+                        array : [4, 5, 6]
                     }
                 ],
-                custom_boolean_constant: {
-                    boolean: true
+                custom_boolean_constant : {
+                    boolean : true
                 },
-                custom_boolean_interval: [
+                custom_boolean_interval : [
                     {
-                        interval: interval1,
-                        boolean: true
+                        interval : interval1,
+                        boolean : true
                     },
                     {
-                        interval: interval2,
-                        boolean: false
+                        interval : interval2,
+                        boolean : false
                     }
                 ],
-                custom_boundingRectangle_constant: {
-                    boundingRectangle: [20, 30, 10, 11]
+                custom_boundingRectangle_constant : {
+                    boundingRectangle : [20, 30, 10, 11]
                 },
-                custom_boundingRectangle_interval: [
+                custom_boundingRectangle_interval : [
                     {
-                        interval: interval1,
-                        boundingRectangle: [20, 30, 10, 11]
+                        interval : interval1,
+                        boundingRectangle : [20, 30, 10, 11]
                     },
                     {
-                        interval: interval2,
-                        boundingRectangle: [21, 31, 11, 12]
+                        interval : interval2,
+                        boundingRectangle : [21, 31, 11, 12]
                     }
                 ],
-                custom_boundingRectangle_sampled: {
-                    epoch: '2012-06-01',
-                    boundingRectangle: [
+                custom_boundingRectangle_sampled : {
+                    epoch : '2012-06-01',
+                    boundingRectangle : [
                         0, 20, 30, 10, 11,
                         60, 21, 31, 11, 12
                     ]
                 },
-                custom_cartesian2_constant: {
-                    cartesian2: [20, 30]
+                custom_cartesian2_constant : {
+                    cartesian2 : [20, 30]
                 },
-                custom_cartesian2_interval: [
+                custom_cartesian2_interval : [
                     {
-                        interval: interval1,
-                        cartesian2: [20, 30]
+                        interval : interval1,
+                        cartesian2 : [20, 30]
                     },
                     {
-                        interval: interval2,
-                        cartesian2: [21, 31]
+                        interval : interval2,
+                        cartesian2 : [21, 31]
                     }
                 ],
-                custom_cartesian2_sampled: {
-                    epoch: '2012-06-01',
-                    cartesian2: [
+                custom_cartesian2_sampled : {
+                    epoch : '2012-06-01',
+                    cartesian2 : [
                         0, 20, 30,
                         60, 21, 31
                     ]
                 },
-                custom_cartesian_constant: {
-                    cartesian: [10, 11, 12]
+                custom_cartesian_constant : {
+                    cartesian : [10, 11, 12]
                 },
-                custom_cartesian_interval: [
+                custom_cartesian_interval : [
                     {
-                        interval: interval1,
-                        cartesian: [10, 11, 12]
+                        interval : interval1,
+                        cartesian : [10, 11, 12]
                     },
                     {
-                        interval: interval2,
-                        cartesian: [13, 14, 15]
+                        interval : interval2,
+                        cartesian : [13, 14, 15]
                     }
                 ],
-                custom_cartesian_sampled: {
-                    epoch: '2012-06-01',
-                    cartesian: [
+                custom_cartesian_sampled : {
+                    epoch : '2012-06-01',
+                    cartesian : [
                         0, 10, 11, 12,
                         60, 13, 14, 15
                     ]
                 },
-                custom_color_constant: {
-                    rgbaf: [0.1, 0.2, 0.3, 0.4]
+                custom_color_constant : {
+                    rgbaf : [0.1, 0.2, 0.3, 0.4]
                 },
-                custom_color_interval: [
+                custom_color_interval : [
                     {
-                        interval: interval1,
-                        rgbaf: [0.1, 0.2, 0.3, 0.4]
+                        interval : interval1,
+                        rgbaf : [0.1, 0.2, 0.3, 0.4]
                     },
                     {
-                        interval: interval2,
-                        rgbaf: [0.5, 0.6, 0.7, 0.8]
+                        interval : interval2,
+                        rgbaf : [0.5, 0.6, 0.7, 0.8]
                     }
                 ],
-                custom_color_sampled: {
-                    epoch: '2012-06-01',
-                    rgbaf: [
+                custom_color_sampled : {
+                    epoch : '2012-06-01',
+                    rgbaf : [
                         0, 0.1, 0.2, 0.3, 0.4,
                         60, 0.5, 0.6, 0.7, 0.8
                     ]
                 },
-                custom_date_constant: {
-                    date: '2014-06-01'
+                custom_date_constant : {
+                    date : '2014-06-01'
                 },
-                custom_date_interval: [
+                custom_date_interval : [
                     {
-                        interval: interval1,
-                        date: '2014-06-01'
+                        interval : interval1,
+                        date : '2014-06-01'
                     },
                     {
-                        interval: interval2,
-                        date: '2015-06-01'
+                        interval : interval2,
+                        date : '2015-06-01'
                     }
                 ]
             }
@@ -2040,22 +2040,22 @@ defineSuite([
 
     it('handles properties in a way that allows CompositeEntityCollection to work', function() {
         var testObject1 = {
-            foo: 4,
-            bar: {
-                name: 'bar'
+            foo : 4,
+            bar : {
+                name : 'bar'
             }
         };
         var testArray1 = [2, 4, 16, 'test'];
         var packet1 = {
-            id: 'test',
-            properties: {
-                constant_name: 'ABC',
-                constant_height: 8,
-                constant_object: {
-                    value: testObject1
+            id : 'test',
+            properties : {
+                constant_name : 'ABC',
+                constant_height : 8,
+                constant_object : {
+                    value : testObject1
                 },
-                constant_array: {
-                    value: testArray1
+                constant_array : {
+                    value : testArray1
                 }
             }
         };
@@ -2075,9 +2075,9 @@ defineSuite([
 
         // Load a new packet into dataSource2 and it should take precedence in the composite.
         var packet2 = {
-            id: 'test',
-            properties: {
-                constant_name: 'DEF'
+            id : 'test',
+            properties : {
+                constant_name : 'DEF'
             }
         };
 
@@ -2091,18 +2091,18 @@ defineSuite([
 
         // Changed values should be mirrored in the composite, too.
         var testObject3 = {
-            some: 'value'
+            some : 'value'
         };
         var testArray3 = ['not', 'the', 'same', 4];
         var packet3 = {
-            id: 'test',
-            properties: {
-                constant_height: 9,
-                constant_object: {
-                    value: testObject3
+            id : 'test',
+            properties : {
+                constant_height : 9,
+                constant_object : {
+                    value : testObject3
                 },
-                constant_array: {
-                    value: testArray3
+                constant_array : {
+                    value : testArray3
                 }
             }
         };
@@ -2123,15 +2123,15 @@ defineSuite([
         };
 
         var packet2 = {
-            id: 'testObject',
-            availability: '2000-02-02/2001-02-02'
+            id : 'testObject',
+            availability : '2000-02-02/2001-02-02'
         };
 
         var dataSource = new CzmlDataSource();
         return dataSource.process(makePacket(packet1)).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var interval = TimeInterval.fromIso8601({
-                iso8601: packet1.availability
+                iso8601 : packet1.availability
             });
             expect(entity.availability.length).toEqual(1);
             expect(entity.availability.get(0)).toEqual(interval);
@@ -2140,7 +2140,7 @@ defineSuite([
         }).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var interval = TimeInterval.fromIso8601({
-                iso8601: packet2.availability
+                iso8601 : packet2.availability
             });
             expect(entity.availability.length).toEqual(1);
             expect(entity.availability.get(0)).toEqual(interval);
@@ -2162,10 +2162,10 @@ defineSuite([
             var entity = dataSource.entities.values[0];
 
             var interval1 = TimeInterval.fromIso8601({
-                iso8601: packet1.availability[0]
+                iso8601 : packet1.availability[0]
             });
             var interval2 = TimeInterval.fromIso8601({
-                iso8601: packet1.availability[1]
+                iso8601 : packet1.availability[1]
             });
             expect(entity.availability.length).toEqual(2);
             expect(entity.availability.get(0)).toEqual(interval1);
@@ -2175,10 +2175,10 @@ defineSuite([
         }).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var interval1 = TimeInterval.fromIso8601({
-                iso8601: packet2.availability[0]
+                iso8601 : packet2.availability[0]
             });
             var interval2 = TimeInterval.fromIso8601({
-                iso8601: packet2.availability[1]
+                iso8601 : packet2.availability[1]
             });
             expect(entity.availability.length).toEqual(2);
             expect(entity.availability.get(0)).toEqual(interval1);
@@ -2375,7 +2375,7 @@ defineSuite([
                 closeTop : false,
                 closeBottom : false,
                 shadows : 'ENABLED',
-                zIndex: 3
+                zIndex : 3
             }
         };
 
@@ -2631,7 +2631,7 @@ defineSuite([
                 gltf : './Data/Models/Box/CesiumBoxTest.gltf',
                 incrementallyLoadTextures : true,
                 shadows : 'ENABLED',
-                heightReference: 'CLAMP_TO_GROUND',
+                heightReference : 'CLAMP_TO_GROUND',
                 silhouetteColor : {
                     rgbaf : [1.0, 0.0, 0.0, 1.0]
                 },
@@ -3159,8 +3159,8 @@ defineSuite([
                     }
                 },
                 length : 5,
-                topRadius: 6,
-                bottomRadius: 7,
+                topRadius : 6,
+                bottomRadius : 7,
                 show : true,
                 outline : true,
                 outlineColor : {
@@ -3211,7 +3211,7 @@ defineSuite([
                 extrudedHeight : 2,
                 granularity : 3,
                 height : 4,
-                width: 9,
+                width : 9,
                 show : true,
                 outline : true,
                 outlineColor : {
@@ -3219,7 +3219,7 @@ defineSuite([
                 },
                 outlineWidth : 6,
                 shadows : 'ENABLED',
-                zIndex: 5
+                zIndex : 5
             }
         };
 
@@ -3502,8 +3502,8 @@ defineSuite([
                         color : {
                             rgbaf : [0.1, 0.2, 0.3, 0.4]
                         },
-                        dashLength: 16.0,
-                        dashPattern: 7.0
+                        dashLength : 16.0,
+                        dashPattern : 7.0
                     }
                 }
             }
@@ -3589,6 +3589,48 @@ defineSuite([
         });
     });
 
+    it('has backwards compatibility for old properties', function() {
+        var packet = [{
+            id : 'document',
+            version : '1.0'
+        }, {
+            id : 'straight-line',
+            polyline : {
+                positions : {
+                    cartographicDegrees : [
+                        -75, 43, 500000,
+                        -125, 43, 500000
+                    ]
+                },
+                followSurface : false,
+                width : 10
+            }
+        }, {
+            id : 'arced-line',
+            polyline : {
+                positions : {
+                    cartographicDegrees : [
+                        -75, 43, 500000,
+                        -125, 43, 500000
+                    ]
+                },
+                followSurface : true,
+                width : 10
+            }
+        }];
+
+        var dataSource = new CzmlDataSource();
+        return dataSource.load(packet).then(function(dataSource) {
+            var date = JulianDate.now();
+
+            var entity = dataSource.entities.getById('straight-line');
+            expect(entity.polyline.arcType.getValue(date)).toBe(ArcType.NONE);
+
+            entity = dataSource.entities.getById('arced-line');
+            expect(entity.polyline.arcType.getValue(date)).toBe(ArcType.GEODESIC);
+        });
+    });
+
     // The below test was generated, along with ValidationDocument.czml,
     // by the czml-writer ValidationDocumentationGenerator.
     // https://github.com/AnalyticalGraphicsInc/czml-writer/blob/master/DotNet/GenerateFromSchema/ValidationDocumentGenerator.cs
@@ -3646,7 +3688,7 @@ defineSuite([
             expect(e.box.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.box.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(3775, 49016));
             expect(e.corridor.show.getValue(date)).toEqual(true);
-            expect(e.corridor.positions.getValue(date)).toEqual([ new Cartesian3(36415, 2702, 36618), new Cartesian3(47759, 11706, 63277) ]);
+            expect(e.corridor.positions.getValue(date)).toEqual([new Cartesian3(36415, 2702, 36618), new Cartesian3(47759, 11706, 63277)]);
             expect(e.corridor.width.getValue(date)).toEqual(20413.0);
             expect(e.corridor.height.getValue(date)).toEqual(8062.0);
             expect(e.corridor.extrudedHeight.getValue(date)).toEqual(22846.0);
@@ -3757,7 +3799,7 @@ defineSuite([
             expect(e.point.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(29646, 52915));
             expect(e.point.disableDepthTestDistance.getValue(date)).toEqual(9675.0);
             expect(e.polygon.show.getValue(date)).toEqual(true);
-            expect(e.polygon.hierarchy.getValue(date)).toEqual([ new Cartesian3(39143, 2200, 6408), new Cartesian3(27161, 33386, 62338) ]);
+            expect(e.polygon.hierarchy.getValue(date)).toEqual([new Cartesian3(39143, 2200, 6408), new Cartesian3(27161, 33386, 62338)]);
             expect(e.polygon.height.getValue(date)).toEqual(26391.0);
             expect(e.polygon.extrudedHeight.getValue(date)).toEqual(15922.0);
             expect(e.polygon.stRotation.getValue(date)).toEqual(2555.0);
@@ -3773,7 +3815,7 @@ defineSuite([
             expect(e.polygon.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.polygon.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(5989, 26104));
             expect(e.polyline.show.getValue(date)).toEqual(true);
-            expect(e.polyline.positions.getValue(date)).toEqual([ new Cartesian3(23333, 31067, 17529), new Cartesian3(57924, 41186, 31648) ]);
+            expect(e.polyline.positions.getValue(date)).toEqual([new Cartesian3(23333, 31067, 17529), new Cartesian3(57924, 41186, 31648)]);
             expect(e.polyline.width.getValue(date)).toEqual(14667.0);
             expect(e.polyline.granularity.getValue(date)).toEqual(53395.0);
             expect(e.polyline.material.color.getValue(date)).toEqual(Color.fromBytes(88, 0, 232, 230));
@@ -3796,9 +3838,9 @@ defineSuite([
             expect(e.rectangle.shadows.getValue(date)).toEqual(ShadowMode.CAST_ONLY);
             expect(e.rectangle.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(21388, 23379));
             expect(e.wall.show.getValue(date)).toEqual(true);
-            expect(e.wall.positions.getValue(date)).toEqual([ new Cartesian3(21681, 40276, 30621), new Cartesian3(3959, 61967, 19442) ]);
-            expect(e.wall.minimumHeights.getValue(date)).toEqual([ 49466, 44737 ]);
-            expect(e.wall.maximumHeights.getValue(date)).toEqual([ 59672, 62697 ]);
+            expect(e.wall.positions.getValue(date)).toEqual([new Cartesian3(21681, 40276, 30621), new Cartesian3(3959, 61967, 19442)]);
+            expect(e.wall.minimumHeights.getValue(date)).toEqual([49466, 44737]);
+            expect(e.wall.maximumHeights.getValue(date)).toEqual([59672, 62697]);
             expect(e.wall.granularity.getValue(date)).toEqual(47652.0);
             expect(e.wall.fill.getValue(date)).toEqual(true);
             expect(e.wall.material.color.getValue(date)).toEqual(Color.fromBytes(64, 176, 190, 65));
@@ -3847,9 +3889,9 @@ defineSuite([
             expect(e = dataSource.entities.getById('constant_box_outlineColor_rgbaf')).toBeDefined();
             expect(e.box.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.835294117647059, 0.0313725490196078, 0.282352941176471, 0.337254901960784), 1e-14);
             expect(e = dataSource.entities.getById('constant_corridor_positions_cartographicRadians')).toBeDefined();
-            expect(e.corridor.positions.getValue(date)).toEqual([ Cartesian3.fromRadians(0.220356654342316, 0.879184920197648, 64909), Cartesian3.fromRadians(0.175978952571564, 1.00316515710468, 913) ]);
+            expect(e.corridor.positions.getValue(date)).toEqual([Cartesian3.fromRadians(0.220356654342316, 0.879184920197648, 64909), Cartesian3.fromRadians(0.175978952571564, 1.00316515710468, 913)]);
             expect(e = dataSource.entities.getById('constant_corridor_positions_cartographicDegrees')).toBeDefined();
-            expect(e.corridor.positions.getValue(date)).toEqual([ Cartesian3.fromDegrees(28, 14, 63058), Cartesian3.fromDegrees(15, 37, 26381) ]);
+            expect(e.corridor.positions.getValue(date)).toEqual([Cartesian3.fromDegrees(28, 14, 63058), Cartesian3.fromDegrees(15, 37, 26381)]);
             expect(e = dataSource.entities.getById('constant_corridor_material_solidColor_color')).toBeDefined();
             expect(e.corridor.material.color.getValue(date)).toEqualEpsilon(new Color(0.333333333333333, 0.87843137254902, 0.356862745098039, 0.435294117647059), 1e-14);
             expect(e = dataSource.entities.getById('material_corridor_material_image')).toBeDefined();
@@ -4034,9 +4076,9 @@ defineSuite([
             expect(e = dataSource.entities.getById('constant_point_outlineColor_rgbaf')).toBeDefined();
             expect(e.point.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.00392156862745098, 0.388235294117647, 0.101960784313725, 0.16078431372549), 1e-14);
             expect(e = dataSource.entities.getById('constant_polygon_hierarchy_cartographicRadians')).toBeDefined();
-            expect(e.polygon.hierarchy.getValue(date)).toEqual([ Cartesian3.fromRadians(0.612948853926511, 1.3346715688367, 54401), Cartesian3.fromRadians(1.1867596160592, 0.345663242797974, 35811) ]);
+            expect(e.polygon.hierarchy.getValue(date)).toEqual([Cartesian3.fromRadians(0.612948853926511, 1.3346715688367, 54401), Cartesian3.fromRadians(1.1867596160592, 0.345663242797974, 35811)]);
             expect(e = dataSource.entities.getById('constant_polygon_hierarchy_cartographicDegrees')).toBeDefined();
-            expect(e.polygon.hierarchy.getValue(date)).toEqual([ Cartesian3.fromDegrees(19, 41, 50907), Cartesian3.fromDegrees(28, 40, 24937) ]);
+            expect(e.polygon.hierarchy.getValue(date)).toEqual([Cartesian3.fromDegrees(19, 41, 50907), Cartesian3.fromDegrees(28, 40, 24937)]);
             expect(e = dataSource.entities.getById('constant_polygon_material_solidColor_color')).toBeDefined();
             expect(e.polygon.material.color.getValue(date)).toEqualEpsilon(new Color(0.980392156862745, 0.905882352941176, 0.274509803921569, 0.972549019607843), 1e-14);
             expect(e = dataSource.entities.getById('material_polygon_material_image')).toBeDefined();
@@ -4067,9 +4109,9 @@ defineSuite([
             expect(e = dataSource.entities.getById('constant_polygon_outlineColor_rgbaf')).toBeDefined();
             expect(e.polygon.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.105882352941176, 0.423529411764706, 0.619607843137255, 0.956862745098039), 1e-14);
             expect(e = dataSource.entities.getById('constant_polyline_positions_cartographicRadians')).toBeDefined();
-            expect(e.polyline.positions.getValue(date)).toEqual([ Cartesian3.fromRadians(0.23083587429617, 0.738315731088925, 41390), Cartesian3.fromRadians(0.537259577218533, 0.25389340391868, 10573) ]);
+            expect(e.polyline.positions.getValue(date)).toEqual([Cartesian3.fromRadians(0.23083587429617, 0.738315731088925, 41390), Cartesian3.fromRadians(0.537259577218533, 0.25389340391868, 10573)]);
             expect(e = dataSource.entities.getById('constant_polyline_positions_cartographicDegrees')).toBeDefined();
-            expect(e.polyline.positions.getValue(date)).toEqual([ Cartesian3.fromDegrees(19, 5, 11802), Cartesian3.fromDegrees(15, 40, 39495) ]);
+            expect(e.polyline.positions.getValue(date)).toEqual([Cartesian3.fromDegrees(19, 5, 11802), Cartesian3.fromDegrees(15, 40, 39495)]);
             expect(e = dataSource.entities.getById('constant_polyline_material_solidColor_color')).toBeDefined();
             expect(e.polyline.material.color.getValue(date)).toEqualEpsilon(new Color(0.764705882352941, 0.894117647058824, 0.874509803921569, 0.105882352941176), 1e-14);
             expect(e = dataSource.entities.getById('material_polyline_material_polylineOutline')).toBeDefined();
@@ -4208,9 +4250,9 @@ defineSuite([
             expect(e = dataSource.entities.getById('constant_rectangle_outlineColor_rgbaf')).toBeDefined();
             expect(e.rectangle.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.301960784313725, 0.0352941176470588, 0.917647058823529, 0.207843137254902), 1e-14);
             expect(e = dataSource.entities.getById('constant_wall_positions_cartographicRadians')).toBeDefined();
-            expect(e.wall.positions.getValue(date)).toEqual([ Cartesian3.fromRadians(0.990822494752221, 0.11729920547879, 47975), Cartesian3.fromRadians(1.22405890229697, 1.46292679641256, 13438) ]);
+            expect(e.wall.positions.getValue(date)).toEqual([Cartesian3.fromRadians(0.990822494752221, 0.11729920547879, 47975), Cartesian3.fromRadians(1.22405890229697, 1.46292679641256, 13438)]);
             expect(e = dataSource.entities.getById('constant_wall_positions_cartographicDegrees')).toBeDefined();
-            expect(e.wall.positions.getValue(date)).toEqual([ Cartesian3.fromDegrees(30, 24, 27738), Cartesian3.fromDegrees(14, 41, 41667) ]);
+            expect(e.wall.positions.getValue(date)).toEqual([Cartesian3.fromDegrees(30, 24, 27738), Cartesian3.fromDegrees(14, 41, 41667)]);
             expect(e = dataSource.entities.getById('constant_wall_material_solidColor_color')).toBeDefined();
             expect(e.wall.material.color.getValue(date)).toEqualEpsilon(new Color(0.694117647058824, 0.317647058823529, 0.909803921568627, 0.501960784313725), 1e-14);
             expect(e = dataSource.entities.getById('material_wall_material_image')).toBeDefined();
