@@ -20,6 +20,13 @@ define([
         CesiumMath) {
     'use strict';
 
+    function sign(value) {
+        if (value < 0) {
+            return -1;
+        }
+        return 1;
+    }
+
     function calculateM(ellipticity, major, latitude) {
         if (ellipticity === 0.0) { // sphere
             return major * latitude;
@@ -417,7 +424,7 @@ define([
         intersectionLongitude = CesiumMath.negativePiToPi(intersectionLongitude);
 
         if (CesiumMath.equalsEpsilon(Math.abs(intersectionLongitude), Math.PI, CesiumMath.EPSILON14)) {
-            intersectionLongitude = Math.sign(start.longitude) * Math.PI;
+            intersectionLongitude = sign(start.longitude) * Math.PI;
         }
 
         if (!defined(result)) {
@@ -437,7 +444,7 @@ define([
             }
 
             result.longitude = intersectionLongitude;
-            result.latitude = CesiumMath.PI_OVER_TWO * Math.sign(CesiumMath.PI_OVER_TWO - heading);
+            result.latitude = CesiumMath.PI_OVER_TWO * sign(CesiumMath.PI_OVER_TWO - heading);
             result.height = 0;
             return result;
         }
