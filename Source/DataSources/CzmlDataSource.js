@@ -44,6 +44,7 @@ define([
         '../ThirdParty/when',
         './BillboardGraphics',
         './BoxGraphics',
+        './CallbackProperty',
         './ColorMaterialProperty',
         './CompositeMaterialProperty',
         './CompositePositionProperty',
@@ -132,6 +133,7 @@ define([
         when,
         BillboardGraphics,
         BoxGraphics,
+        CallbackProperty,
         ColorMaterialProperty,
         CompositeMaterialProperty,
         CompositePositionProperty,
@@ -211,6 +213,12 @@ define([
         }
 
         throw new RuntimeError(JSON.stringify(packetData) + ' is not valid CZML.');
+    }
+
+    function createAdapterProperty(property, adapterFunction) {
+        return new CallbackProperty(function(time, result) {
+            return adapterFunction(property.getValue(time, result));
+        }, property.isConstant);
     }
 
     var scratchCartesian = new Cartesian3();
@@ -1777,6 +1785,10 @@ define([
         processPacketData(Number, polygon, 'zIndex', polygonData.zIndex, interval, sourceUri, entityCollection);
     }
 
+    function adaptFollowSurfaceToArcType(followSurface) {
+        return followSurface ? ArcType.GEODESIC : ArcType.NONE;
+    }
+
     function processPolyline(entity, packet, entityCollection, sourceUri) {
         var polylineData = packet.polyline;
         if (!defined(polylineData)) {
@@ -1801,21 +1813,18 @@ define([
         processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'depthFailMaterial', polylineData.depthFailMaterial, interval, sourceUri, entityCollection);
-        // Don't want to break CZML spec to keep this workaround even after followSurface has been deprecated from geometry.
-        // See https://github.com/AnalyticalGraphicsInc/cesium/pull/7582#discussion_r258695385
-        if (defined(polylineData.followSurface) && !defined(polylineData.arcType)) {
-            if (polyline.followSurface) {
-                processPacketData(ArcType, polyline, 'arcType', ArcType.GEODESIC, interval, sourceUri, entityCollection);
-            } else {
-                processPacketData(ArcType, polyline, 'arcType', ArcType.NONE, interval, sourceUri, entityCollection);
-            }
-        } else {
-            processPacketData(ArcType, polyline, 'arcType', polylineData.arcType, interval, sourceUri, entityCollection);
-        }
+        processPacketData(ArcType, polyline, 'arcType', polylineData.arcType, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polyline, 'clampToGround', polylineData.clampToGround, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polyline, 'shadows', polylineData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polyline, 'distanceDisplayCondition', polylineData.distanceDisplayCondition, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'zIndex', polylineData.zIndex, interval, sourceUri, entityCollection);
+
+        // for backwards compatibility, adapt CZML followSurface to arcType.
+        if (defined(polylineData.followSurface) && !defined(polylineData.arcType)) {
+            var tempObj = {};
+            processPacketData(Boolean, tempObj, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+            polyline.arcType = createAdapterProperty(tempObj.followSurface, adaptFollowSurfaceToArcType);
+        }
     }
 
     function processRectangle(entity, packet, entityCollection, sourceUri) {
