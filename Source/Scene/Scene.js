@@ -2019,6 +2019,12 @@ define([
 
     function executeIdCommand(command, scene, context, passState) {
         var frameState = scene._frameState;
+
+        if (command instanceof ClearCommand) {
+            command.execute(context, passState);
+            return;
+        }
+
         var derivedCommands = command.derivedCommands;
         if (!defined(derivedCommands)) {
             return;

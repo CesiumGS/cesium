@@ -19,6 +19,7 @@ define([
 
     var fragDepthRegex = /\bgl_FragDepthEXT\b/;
     var discardRegex = /\bdiscard\b/;
+    var fragDataRegex = /\bgl_FragData\b/;
 
     function getDepthOnlyShaderProgram(context, shaderProgram) {
         var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'depthOnly');
@@ -27,12 +28,12 @@ define([
             var fs = shaderProgram.fragmentShaderSource;
 
             var i;
-            var writesDepthOrDiscards = false;
+            var writesDepthOrDiscardsOrFragData = false;
             var sources = fs.sources;
             var length = sources.length;
             for (i = 0; i < length; ++i) {
-                if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i])) {
-                    writesDepthOrDiscards = true;
+                if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i]) || fragDataRegex.test(sources[i])) {
+                    writesDepthOrDiscardsOrFragData = true;
                     break;
                 }
             }
@@ -48,7 +49,7 @@ define([
             }
 
             var source;
-            if (!writesDepthOrDiscards && !usesLogDepth) {
+            if (!writesDepthOrDiscardsOrFragData && !usesLogDepth) {
                 source =
                     'void main() \n' +
                     '{ \n' +
@@ -57,7 +58,7 @@ define([
                 fs = new ShaderSource({
                     sources : [source]
                 });
-            } else if (!writesDepthOrDiscards && usesLogDepth) {
+            } else if (!writesDepthOrDiscardsOrFragData && usesLogDepth) {
                 source =
                     '#ifdef GL_EXT_frag_depth \n' +
                     '#extension GL_EXT_frag_depth : enable \n' +
@@ -252,27 +253,39 @@ define([
             var attributeLocations = shaderProgram._attributeLocations;
             var fs = shaderProgram.fragmentShaderSource;
 
+            var i;
+            var fragData = false;
             var sources = fs.sources;
             var length = sources.length;
 
-            var newMain =
-                'void main() \n' +
-                '{ \n' +
-                '    czm_non_pick_main(); \n' +
-                '    if (gl_FragColor.a == 0.0) { \n' +
-                '        discard; \n' +
-                '    } \n' +
-                '    gl_FragColor = ' + pickId + '; \n' +
-                '} \n';
-            var newSources = new Array(length + 1);
-            for (var i = 0; i < length; ++i) {
-                newSources[i] = ShaderSource.replaceMain(sources[i], 'czm_non_pick_main');
+            for (i = 0; i < length; ++i) {
+                if (fragDataRegex.test(sources[i])) {
+                    fragData = true;
+                    break;
+                }
             }
-            newSources[length] = newMain;
-            fs = new ShaderSource({
-                sources : newSources,
-                defines : fs.defines
-            });
+
+            if (!fragData) {
+                var newMain =
+                    'void main() \n' +
+                    '{ \n' +
+                    '    czm_non_pick_main(); \n' +
+                    '    if (gl_FragColor.a == 0.0) { \n' +
+                    '        discard; \n' +
+                    '    } \n' +
+                    '    gl_FragColor = ' + pickId + '; \n' +
+                    '} \n';
+                var newSources = new Array(length + 1);
+                for (i = 0; i < length; ++i) {
+                    newSources[i] = ShaderSource.replaceMain(sources[i], 'czm_non_pick_main');
+                }
+                newSources[length] = newMain;
+                fs = new ShaderSource({
+                    sources : newSources,
+                    defines : fs.defines
+                });
+            }
+
             shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'pick', {
                 vertexShaderSource : shaderProgram.vertexShaderSource,
                 fragmentShaderSource : fs,
