@@ -137,6 +137,8 @@ defineSuite([
     var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
     var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
     var dracoCompressedModelWithLinesUrl = './Data/Models/DracoCompression/BoxWithLines/BoxWithLines.gltf';
+    var dracoBoxVertexColorsRGBUrl = './Data/Models/DracoCompression/BoxVertexColorsDracoRGB.gltf';
+    var dracoBoxVertexColorsRGBAUrl = './Data/Models/DracoCompression/BoxVertexColorsDracoRGBA.gltf';
 
     var boxGltf2Url = './Data/Models/Box-Gltf-2/Box.gltf';
     var boxGltf2WithTechniquesUrl = './Data/Models/Box-Gltf-2-Techniques/Box.gltf';
@@ -2680,6 +2682,20 @@ defineSuite([
             expect(atrributeData['NORMAL'].quantization).toBeDefined();
             expect(atrributeData['JOINTS_0'].quantization).toBeUndefined();
 
+            primitives.remove(m);
+        });
+    });
+
+    it('loads draco compressed glTF with RGBA per-vertex color', function() {
+        return loadModel(dracoBoxVertexColorsRGBAUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads draco compressed glTF with RGB per-vertex color', function() {
+        return loadModel(dracoBoxVertexColorsRGBUrl).then(function(m) {
+            verifyRender(m);
             primitives.remove(m);
         });
     });
