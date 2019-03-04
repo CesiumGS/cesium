@@ -1375,10 +1375,5 @@ gulp.task('terria-copy-cesium-assets', function() {
         .pipe(gulp.dest('wwwroot/build/'));
 });
 
-gulp.task('terria-copy-cesiumWorkerBootstrapper', function() {
-    return gulp.src('Source/Workers/cesiumWorkerBootstrapper.js')
-        .pipe(gulp.dest('wwwroot/build/Workers'));
-});
-
-gulp.task('terria-prepare-cesium', gulp.series('build', 'generateStubs', 'terria-copy-cesium-assets', 'terria-copy-cesiumWorkerBootstrapper'));
+gulp.task('terria-prepare-cesium', gulp.series('generateStubs', 'terria-copy-cesium-assets'));
 gulp.task('terria-default', gulp.series('terria-prepare-cesium'));

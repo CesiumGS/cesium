@@ -588,13 +588,13 @@ define([
      * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns false.
      *
      * @param {Number} left The first number to compare.
-     * @param {Number} second The second number to compare.
+     * @param {Number} right The second number to compare.
      * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
      * @returns {Boolean} <code>true</code> if <code>left</code> is less than <code>right</code> by more than
      *          <code>absoluteEpsilon<code>. <code>false</code> if <code>left</code> is greater or if the two
      *          values are nearly equal.
      */
-    CesiumMath.leftIsLessThanRight = function(left, right, absoluteEpsilon) {
+    CesiumMath.lessThan = function(left, right, absoluteEpsilon) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('first is required.');
@@ -614,12 +614,12 @@ define([
      * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns true.
      *
      * @param {Number} left The first number to compare.
-     * @param {Number} second The second number to compare.
+     * @param {Number} right The second number to compare.
      * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
      * @returns {Boolean} <code>true</code> if <code>left</code> is less than <code>right</code> or if the
      *          the values are nearly equal.
      */
-    CesiumMath.leftIsLessThanOrEqualToRight = function(left, right, absoluteEpsilon) {
+    CesiumMath.lessThanOrEquals = function(left, right, absoluteEpsilon) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('first is required.');
@@ -639,13 +639,13 @@ define([
      * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns false.
      *
      * @param {Number} left The first number to compare.
-     * @param {Number} second The second number to compare.
+     * @param {Number} right The second number to compare.
      * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
      * @returns {Boolean} <code>true</code> if <code>left</code> is greater than <code>right</code> by more than
      *          <code>absoluteEpsilon<code>. <code>false</code> if <code>left</code> is less or if the two
      *          values are nearly equal.
      */
-    CesiumMath.leftIsGreaterThanRight = function(left, right, absoluteEpsilon) {
+    CesiumMath.greaterThan = function(left, right, absoluteEpsilon) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('first is required.');
@@ -665,12 +665,12 @@ define([
      * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns true.
      *
      * @param {Number} left The first number to compare.
-     * @param {Number} second The second number to compare.
+     * @param {Number} right The second number to compare.
      * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
      * @returns {Boolean} <code>true</code> if <code>left</code> is greater than <code>right</code> or if the
      *          the values are nearly equal.
      */
-    CesiumMath.leftIsGreaterThanOrEqualToRight = function(left, right, absoluteEpsilon) {
+    CesiumMath.greaterThanOrEquals = function(left, right, absoluteEpsilon) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(left)) {
             throw new DeveloperError('first is required.');
