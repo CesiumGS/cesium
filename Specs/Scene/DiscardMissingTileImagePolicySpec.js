@@ -70,7 +70,7 @@ defineSuite([
             return pollToPromise(function() {
                 return policy.isReady();
             }).then(function() {
-                if (FeatureDetection.supportsCreateImageBitmap()) {
+                if ((FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync())) {
                     expect(Resource._Implementations.createImageBitmapFromBlob).toHaveBeenCalled();
                 } else {
                     expect(Resource._Implementations.createImage).toHaveBeenCalled();

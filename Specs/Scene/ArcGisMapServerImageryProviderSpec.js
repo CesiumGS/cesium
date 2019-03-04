@@ -292,7 +292,7 @@ defineSuite([
             expect(provider.usingPrecachedTiles).toEqual(true);
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url) || FeatureDetection.supportsCreateImageBitmap()) {
+                if (/^blob:/.test(url) || (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync())) {
                     // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
@@ -465,7 +465,7 @@ defineSuite([
             expect(provider.hasAlphaChannel).toBeDefined();
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url) || FeatureDetection.supportsCreateImageBitmap()) {
+                if (/^blob:/.test(url) || (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync())) {
                     // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {

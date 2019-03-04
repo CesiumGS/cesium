@@ -4,6 +4,7 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/defined',
+        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/GoogleEarthEnterpriseMetadata',
         'Core/GoogleEarthEnterpriseTileInformation',
@@ -25,6 +26,7 @@ defineSuite([
         DefaultProxy,
         defaultValue,
         defined,
+        FeatureDetection,
         GeographicTilingScheme,
         GoogleEarthEnterpriseMetadata,
         GoogleEarthEnterpriseTileInformation,
@@ -44,6 +46,7 @@ defineSuite([
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
+        return Resource.supportsImageBitmapOptions();
     });
 
     beforeAll(function() {
@@ -86,7 +89,7 @@ defineSuite([
 
     function installFakeImageRequest(expectedUrl, proxy) {
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url)) {
+            if (/^blob:/.test(url) || (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync())) {
                 // load blob url normally
                 Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else {

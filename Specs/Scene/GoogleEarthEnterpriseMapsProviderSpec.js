@@ -30,6 +30,12 @@ defineSuite([
         isImageOrImageBitmap) {
     'use strict';
 
+    beforeAll(function() {
+        // This suite spies on requests. The test below needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions();
+    });
+
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
@@ -176,7 +182,7 @@ defineSuite([
             expect(provider.credit).toBeInstanceOf(Object);
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url) || FeatureDetection.supportsCreateImageBitmap()) {
+                if (/^blob:/.test(url) || (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync())) {
                     // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
@@ -294,7 +300,7 @@ defineSuite([
         });
 
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url) || FeatureDetection.supportsCreateImageBitmap()) {
+            if (/^blob:/.test(url) || (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync())) {
                 // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                 Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else if (tries === 2) {

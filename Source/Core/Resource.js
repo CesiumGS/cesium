@@ -376,6 +376,7 @@ define([
         });
     };
 
+    var supportsImageBitmapOptionsResult;
     var supportsImageBitmapOptionsPromise;
     /**
      * A helper function to check whether createImageBitmap supports passing ImageBitmapOptions.
@@ -393,7 +394,8 @@ define([
         }
 
         if (!FeatureDetection.supportsCreateImageBitmap()) {
-            supportsImageBitmapOptionsPromise = when.resolve(false);
+            supportsImageBitmapOptionsResult = false;
+            supportsImageBitmapOptionsPromise = when.resolve(supportsImageBitmapOptionsResult);
             return supportsImageBitmapOptionsPromise;
         }
 
@@ -408,13 +410,30 @@ define([
                 });
             })
             .then(function(imageBitmap) {
-                return true;
+                supportsImageBitmapOptionsResult = true;
+                return supportsImageBitmapOptionsResult;
             })
             .otherwise(function() {
-                return false;
+                supportsImageBitmapOptionsResult = false;
+                return supportsImageBitmapOptionsResult;
             });
 
         return supportsImageBitmapOptionsPromise;
+    };
+
+    /**
+     * Same as Resource.supportsImageBitmapOptions but synchronous. If the result is not ready, returns undefined.
+     *
+     * @returns {Boolean} True if this browser supports creating an ImageBitmap with options.
+     *
+     * @private
+     */
+    Resource.supportsImageBitmapOptionsSync = function() {
+        if (!defined(supportsImageBitmapOptionsPromise)) {
+            Resource.supportsImageBitmapOptions();
+        }
+
+        return supportsImageBitmapOptionsResult;
     };
 
     defineProperties(Resource, {
@@ -1821,39 +1840,54 @@ define([
      */
     Resource._Implementations = {};
 
+    function loadImageElement(url, crossOrigin, deferred) {
+        var image = new Image();
+
+        image.onload = function() {
+            deferred.resolve(image);
+        };
+
+        image.onerror = function(e) {
+            deferred.reject(e);
+        };
+
+        if (crossOrigin) {
+            if (TrustedServers.contains(url)) {
+                image.crossOrigin = 'use-credentials';
+            } else {
+                image.crossOrigin = '';
+            }
+        }
+
+        image.src = url;
+    }
+
     Resource._Implementations.createImage = function(url, crossOrigin, deferred, flipY) {
         if (!FeatureDetection.supportsCreateImageBitmap()) {
-            var image = new Image();
-
-            image.onload = function() {
-                deferred.resolve(image);
-            };
-
-            image.onerror = function(e) {
-                deferred.reject(e);
-            };
-
-            if (crossOrigin) {
-                if (TrustedServers.contains(url)) {
-                    image.crossOrigin = 'use-credentials';
-                } else {
-                    image.crossOrigin = '';
-                }
-            }
-
-            image.src = url;
-        } else {
-            // Passing an Image to createImageBitmap will force it to run on the main thread
-            // since DOM elements don't exist on workers. We convert it to a blob so it's non-blocking.
-            // See:
-            //    https://bugzilla.mozilla.org/show_bug.cgi?id=1044102#c38
-            //    https://bugs.chromium.org/p/chromium/issues/detail?id=580202#c10
-            Resource.fetchBlob({
-                url: url
-            }).then(function(blob) {
-                return Resource._Implementations.createImageBitmapFromBlob(blob, flipY);
-            }).then(deferred.resolve).otherwise(deferred.reject);
+            loadImageElement(url, crossOrigin, deferred);
+            return;
         }
+
+        // Passing an Image to createImageBitmap will force it to run on the main thread
+        // since DOM elements don't exist on workers. We convert it to a blob so it's non-blocking.
+        // See:
+        //    https://bugzilla.mozilla.org/show_bug.cgi?id=1044102#c38
+        //    https://bugs.chromium.org/p/chromium/issues/detail?id=580202#c10
+        Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                // We can only use ImageBitmap if we can flip on decode.
+                // See: https://github.com/AnalyticalGraphicsInc/cesium/pull/7579#issuecomment-466146898
+                if (!result) {
+                    loadImageElement(url, crossOrigin, deferred);
+                    return;
+                }
+
+                Resource.fetchBlob({
+                    url: url
+                }).then(function(blob) {
+                    return Resource._Implementations.createImageBitmapFromBlob(blob, flipY);
+                }).then(deferred.resolve).otherwise(deferred.reject);
+            });
     };
 
     Resource._Implementations.createImageBitmapFromBlob = function(blob, flipY) {

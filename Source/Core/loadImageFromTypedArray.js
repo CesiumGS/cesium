@@ -33,17 +33,10 @@ define([
 
         // Avoid an extra fetch by just calling createImageBitmap here directly on the blob
         // instead of sending it to Resource as a blob URL.
-        if (FeatureDetection.supportsCreateImageBitmap()) {
-            return Resource.supportsImageBitmapOptions()
-                .then(function(supportsBitmapOptions) {
-                    if (supportsBitmapOptions) {
-                        return createImageBitmap(blob, {
-                            imageOrientation: flipY ? 'flipY' : 'none'
-                        });
-                    }
-
-                    return createImageBitmap(blob);
-                });
+        if (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync()) {
+            return when(createImageBitmap(blob, {
+                imageOrientation: flipY ? 'flipY' : 'none'
+            }));
         }
 
         var blobUrl = window.URL.createObjectURL(blob);

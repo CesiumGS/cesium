@@ -1165,6 +1165,13 @@ defineSuite([
             return [imageData.data[0], imageData.data[1], imageData.data[2], imageData.data[3]];
         }
 
+        it('can call supportsImageBitmapOptions and supportsImageBitmapOptionsSync', function() {
+            return Resource.supportsImageBitmapOptions()
+                .then(function(result) {
+                    expect(Resource.supportsImageBitmapOptionsSync()).toEqual(result);
+                });
+        });
+
         it('can load and decode an image', function() {
             return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
                 expect(loadedImage.width).toEqual(1);
@@ -1209,12 +1216,12 @@ defineSuite([
             });
         });
 
-        it('does not pass options when ImageBitmapOptions are not supported', function() {
+        it('does not use ImageBitmap when ImageBitmapOptions are not supported', function() {
             spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
             spyOn(window, 'createImageBitmap').and.callThrough();
 
             return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
-                expect(window.createImageBitmap).toHaveBeenCalledWith(new Blob());
+                expect(window.createImageBitmap).not.toHaveBeenCalledWith();
             });
         });
 
