@@ -132,6 +132,16 @@ define([
         var north = rectangle.north;
         var south = rectangle.south;
 
+        var northCap = false;
+        var southCap = false;
+
+        if (north === CesiumMath.PI_OVER_TWO) {
+            northCap = true;
+        }
+        if (south === -CesiumMath.PI_OVER_TWO) {
+            southCap = true;
+        }
+
         var width;
         var height;
         var granularityX;
@@ -140,17 +150,14 @@ define([
         var dy = north - south;
         if (west > east) {
             dx = (CesiumMath.TWO_PI - west + east);
-            width = Math.ceil(dx / granularity) + 1;
-            height = Math.ceil(dy / granularity) + 1;
-            granularityX = dx / (width - 1);
-            granularityY = dy / (height - 1);
         } else {
             dx = east - west;
-            width = Math.ceil(dx / granularity) + 1;
-            height = Math.ceil(dy / granularity) + 1;
-            granularityX = dx / (width - 1);
-            granularityY = dy / (height - 1);
         }
+
+        width = Math.ceil(dx / granularity) + 1;
+        height = Math.ceil(dy / granularity) + 1;
+        granularityX = dx / (width - 1);
+        granularityY = dy / (height - 1);
 
         var nwCorner = Rectangle.northwest(rectangle, nwCornerResult);
         var center = Rectangle.center(rectangle, centerScratch);
@@ -176,7 +183,9 @@ define([
             nwCorner : nwCorner,
             boundingRectangle : boundingRectangle,
             width: width,
-            height: height
+            height: height,
+            northCap: northCap,
+            southCap: southCap
         };
 
         if (rotation !== 0) {

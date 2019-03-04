@@ -1,5 +1,6 @@
 define([
         './ApproximateTerrainHeights',
+        './ArcType',
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
@@ -13,6 +14,7 @@ define([
         './defineProperties',
         './Ellipsoid',
         './EllipsoidGeodesic',
+        './EllipsoidRhumbLine',
         './EncodedCartesian3',
         './GeographicProjection',
         './Geometry',
@@ -25,6 +27,7 @@ define([
         './WebMercatorProjection'
     ], function(
         ApproximateTerrainHeights,
+        ArcType,
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
@@ -38,6 +41,7 @@ define([
         defineProperties,
         Ellipsoid,
         EllipsoidGeodesic,
+        EllipsoidRhumbLine,
         EncodedCartesian3,
         GeographicProjection,
         Geometry,
@@ -70,7 +74,7 @@ define([
     var WALL_INITIAL_MAX_HEIGHT = 1000.0;
 
     /**
-     * A description of a polyline on terrain. Only to be used with {@link GroundPolylinePrimitive}.
+     * A description of a polyline on terrain or 3D Tiles. Only to be used with {@link GroundPolylinePrimitive}.
      *
      * @alias GroundPolylineGeometry
      * @constructor
@@ -80,6 +84,7 @@ define([
      * @param {Number} [options.width=1.0] The screen space width in pixels.
      * @param {Number} [options.granularity=9999.0] The distance interval in meters used for interpolating options.points. Defaults to 9999.0 meters. Zero indicates no interpolation.
      * @param {Boolean} [options.loop=false] Whether during geometry creation a line segment will be added between the last and first line positions to make this Polyline a loop.
+     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
      *
      * @exception {DeveloperError} At least two positions are required.
      *
@@ -103,6 +108,9 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if ((!defined(positions)) || (positions.length < 2)) {
             throw new DeveloperError('At least two positions are required.');
+        }
+        if (defined(options.arcType) && options.arcType !== ArcType.GEODESIC && options.arcType !== ArcType.RHUMB) {
+            throw new DeveloperError('Valid options for arcType are ArcType.GEODESIC and ArcType.RHUMB.');
         }
         //>>includeEnd('debug');
 
@@ -130,6 +138,13 @@ define([
          */
         this.loop = defaultValue(options.loop, false);
 
+        /**
+         * The type of path the polyline must follow. Valid options are {@link ArcType.GEODESIC} and {@link ArcType.RHUMB}.
+         * @type {ArcType}
+         * @default ArcType.GEODESIC
+         */
+        this.arcType = defaultValue(options.arcType, ArcType.GEODESIC);
+
         this._ellipsoid = Ellipsoid.WGS84;
 
         // MapProjections can't be packed, so store the index to a known MapProjection.
@@ -150,7 +165,7 @@ define([
          */
         packedLength: {
             get: function() {
-                return 1.0 + this._positions.length * 3 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0 + 1.0;
+                return 1.0 + this._positions.length * 3 + 1.0 + 1.0 + 1.0 + Ellipsoid.packedLength + 1.0 + 1.0;
             }
         }
     });
@@ -159,7 +174,7 @@ define([
      * Set the GroundPolylineGeometry's projection and ellipsoid.
      * Used by GroundPolylinePrimitive to signal scene information to the geometry for generating 2D attributes.
      *
-     * @param {GroundPolylineGeometry} groundPolylineGeometry GroundPolylinGeometry describing a polyline on terrain.
+     * @param {GroundPolylineGeometry} groundPolylineGeometry GroundPolylinGeometry describing a polyline on terrain or 3D Tiles.
      * @param {Projection} mapProjection A MapProjection used for projecting cartographic coordinates to 2D.
      * @private
      */
@@ -195,12 +210,19 @@ define([
     var interpolatedBottomScratch = new Cartesian3();
     var interpolatedTopScratch = new Cartesian3();
     var interpolatedNormalScratch = new Cartesian3();
-    function interpolateSegment(start, end, minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray) {
+    function interpolateSegment(start, end, minHeight, maxHeight, granularity, arcType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray) {
         if (granularity === 0.0) {
             return;
         }
-        var ellipsoidGeodesic = new EllipsoidGeodesic(start, end, ellipsoid);
-        var surfaceDistance = ellipsoidGeodesic.surfaceDistance;
+
+        var ellipsoidLine;
+        if (arcType === ArcType.GEODESIC) {
+            ellipsoidLine = new EllipsoidGeodesic(start, end, ellipsoid);
+        } else if (arcType === ArcType.RHUMB) {
+            ellipsoidLine = new EllipsoidRhumbLine(start, end, ellipsoid);
+        }
+
+        var surfaceDistance = ellipsoidLine.surfaceDistance;
         if (surfaceDistance < granularity) {
             return;
         }
@@ -214,7 +236,7 @@ define([
         var pointsToAdd = segments - 1;
         var packIndex = normalsArray.length;
         for (var i = 0; i < pointsToAdd; i++) {
-            var interpolatedCartographic = ellipsoidGeodesic.interpolateUsingSurfaceDistance(distanceFromStart, interpolatedCartographicScratch);
+            var interpolatedCartographic = ellipsoidLine.interpolateUsingSurfaceDistance(distanceFromStart, interpolatedCartographicScratch);
             var interpolatedBottom = getPosition(ellipsoid, interpolatedCartographic, minHeight, interpolatedBottomScratch);
             var interpolatedTop = getPosition(ellipsoid, interpolatedCartographic, maxHeight, interpolatedTopScratch);
 
@@ -266,6 +288,7 @@ define([
 
         array[index++] = value.granularity;
         array[index++] = value.loop ? 1.0 : 0.0;
+        array[index++] = value.arcType;
 
         Ellipsoid.pack(value._ellipsoid, array, index);
         index += Ellipsoid.packedLength;
@@ -299,6 +322,7 @@ define([
 
         var granularity = array[index++];
         var loop = array[index++] === 1.0;
+        var arcType = array[index++];
 
         var ellipsoid = Ellipsoid.unpack(array, index);
         index += Ellipsoid.packedLength;
@@ -307,20 +331,15 @@ define([
         var scene3DOnly = (array[index++] === 1.0);
 
         if (!defined(result)) {
-            var geometry = new GroundPolylineGeometry({
-                positions : positions,
-                granularity : granularity,
-                loop : loop,
-                ellipsoid : ellipsoid
+            result = new GroundPolylineGeometry({
+                positions : positions
             });
-            geometry._projectionIndex = projectionIndex;
-            geometry._scene3DOnly = scene3DOnly;
-            return geometry;
         }
 
         result._positions = positions;
         result.granularity = granularity;
         result.loop = loop;
+        result.arcType = arcType;
         result._ellipsoid = ellipsoid;
         result._projectionIndex = projectionIndex;
         result._scene3DOnly = scene3DOnly;
@@ -384,9 +403,12 @@ define([
     var nextBottomScratch = new Cartesian3();
     var vertexNormalScratch = new Cartesian3();
     var intersectionScratch = new Cartesian3();
+    var cartographicScratch0 = new Cartographic();
+    var cartographicScratch1 = new Cartographic();
+    var cartographicIntersectionScratch = new Cartographic();
     /**
      * Computes shadow volumes for the ground polyline, consisting of its vertices, indices, and a bounding sphere.
-     * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain.
+     * Vertices are "fat," packing all the data needed in each volume to describe a line on terrain or 3D Tiles.
      * Should not be called independent of {@link GroundPolylinePrimitive}.
      *
      * @param {GroundPolylineGeometry} groundPolylineGeometry
@@ -397,6 +419,7 @@ define([
         var loop = groundPolylineGeometry.loop;
         var ellipsoid = groundPolylineGeometry._ellipsoid;
         var granularity = groundPolylineGeometry.granularity;
+        var arcType = groundPolylineGeometry.arcType;
         var projection = new PROJECTIONS[groundPolylineGeometry._projectionIndex](ellipsoid);
 
         var minHeight = WALL_INITIAL_MIN_HEIGHT;
@@ -417,7 +440,12 @@ define([
         // may get split by the plane of IDL + Prime Meridian.
         var p0;
         var p1;
+        var c0;
+        var c1;
+        var rhumbLine = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
         var intersection;
+        var intersectionCartographic;
+        var intersectionLongitude;
         var splitPositions = [positions[0]];
         for (i = 0; i < positionsLength - 1; i++) {
             p0 = positions[i];
@@ -426,7 +454,21 @@ define([
             if (defined(intersection) &&
                 !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
                 !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
-                splitPositions.push(Cartesian3.clone(intersection));
+                if (groundPolylineGeometry.arcType === ArcType.GEODESIC) {
+                    splitPositions.push(Cartesian3.clone(intersection));
+                } else if (groundPolylineGeometry.arcType === ArcType.RHUMB) {
+                    intersectionLongitude = ellipsoid.cartesianToCartographic(intersection, cartographicScratch0).longitude;
+                    c0 = ellipsoid.cartesianToCartographic(p0, cartographicScratch0);
+                    c1 = ellipsoid.cartesianToCartographic(p1, cartographicScratch1);
+                    rhumbLine.setEndPoints(c0, c1);
+                    intersectionCartographic = rhumbLine.findIntersectionWithLongitude(intersectionLongitude, cartographicIntersectionScratch);
+                    intersection = ellipsoid.cartographicToCartesian(intersectionCartographic, intersectionScratch);
+                    if (defined(intersection) &&
+                        !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
+                        !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
+                        splitPositions.push(Cartesian3.clone(intersection));
+                    }
+                }
             }
             splitPositions.push(p1);
         }
@@ -438,7 +480,21 @@ define([
             if (defined(intersection) &&
                 !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
                 !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
-                splitPositions.push(Cartesian3.clone(intersection));
+                if (groundPolylineGeometry.arcType === ArcType.GEODESIC) {
+                    splitPositions.push(Cartesian3.clone(intersection));
+                } else if (groundPolylineGeometry.arcType === ArcType.RHUMB) {
+                    intersectionLongitude = ellipsoid.cartesianToCartographic(intersection, cartographicScratch0).longitude;
+                    c0 = ellipsoid.cartesianToCartographic(p0, cartographicScratch0);
+                    c1 = ellipsoid.cartesianToCartographic(p1, cartographicScratch1);
+                    rhumbLine.setEndPoints(c0, c1);
+                    intersectionCartographic = rhumbLine.findIntersectionWithLongitude(intersectionLongitude, cartographicIntersectionScratch);
+                    intersection = ellipsoid.cartographicToCartesian(intersectionCartographic, intersectionScratch);
+                    if (defined(intersection) &&
+                        !Cartesian3.equalsEpsilon(intersection, p0, CesiumMath.EPSILON7) &&
+                        !Cartesian3.equalsEpsilon(intersection, p1, CesiumMath.EPSILON7)) {
+                        splitPositions.push(Cartesian3.clone(intersection));
+                    }
+                }
             }
         }
         var cartographicsLength = splitPositions.length;
@@ -495,7 +551,7 @@ define([
         cartographicsArray.push(startCartographic.latitude);
         cartographicsArray.push(startCartographic.longitude);
 
-        interpolateSegment(startCartographic, nextCartographic, minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
+        interpolateSegment(startCartographic, nextCartographic, minHeight, maxHeight, granularity, arcType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
 
         // All inbetween points
         for (i = 1; i < cartographicsLength - 1; ++i) {
@@ -514,7 +570,7 @@ define([
             cartographicsArray.push(vertexCartographic.latitude);
             cartographicsArray.push(vertexCartographic.longitude);
 
-            interpolateSegment(cartographics[i], cartographics[i + 1], minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
+            interpolateSegment(cartographics[i], cartographics[i + 1], minHeight, maxHeight, granularity, arcType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
         }
 
         // Last point - either loop or attach a normal "perpendicular" to the wall.
@@ -542,7 +598,7 @@ define([
         cartographicsArray.push(endCartographic.longitude);
 
         if (loop) {
-            interpolateSegment(endCartographic, startCartographic, minHeight, maxHeight, granularity, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
+            interpolateSegment(endCartographic, startCartographic, minHeight, maxHeight, granularity, arcType, ellipsoid, normalsArray, bottomPositionsArray, topPositionsArray, cartographicsArray);
             index = normalsArray.length;
             for (i = 0; i < 3; ++i) {
                 normalsArray[index + i] = normalsArray[i];

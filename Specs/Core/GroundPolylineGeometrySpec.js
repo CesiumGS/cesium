@@ -1,23 +1,25 @@
 defineSuite([
         'Core/GroundPolylineGeometry',
         'Core/ApproximateTerrainHeights',
+        'Core/ArcType',
         'Core/arraySlice',
         'Core/Cartesian3',
         'Core/Cartographic',
-        'Core/Math',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
+        'Core/Math',
         'Core/WebMercatorProjection',
         'Specs/createPackableSpecs'
     ], function(
         GroundPolylineGeometry,
         ApproximateTerrainHeights,
+        ArcType,
         arraySlice,
         Cartesian3,
         Cartographic,
-        CesiumMath,
         Ellipsoid,
         GeographicProjection,
+        CesiumMath,
         WebMercatorProjection,
         createPackableSpecs) {
     'use strict';
@@ -364,6 +366,58 @@ defineSuite([
         expect(geometry.attributes.position.values.length).toEqual(24 * 3);
     });
 
+    it('interpolates long polyline segments for rhumb lines', function() {
+        // rhumb distance = 289020, geodesic distance = 288677
+        var positions = Cartesian3.fromDegreesArray([
+            10, 75,
+            20, 75
+        ]);
+
+        var rhumbGroundPolylineGeometry = new GroundPolylineGeometry({
+            positions : positions,
+            granularity : 2890.0,
+            arcType: ArcType.RHUMB
+        });
+        var geodesicGroundPolylineGeometry = new GroundPolylineGeometry({
+            positions : positions,
+            granularity : 2890.0,
+            arcType: ArcType.GEODESIC
+        });
+
+        var rhumbGeometry = GroundPolylineGeometry.createGeometry(rhumbGroundPolylineGeometry);
+        var geodesicGeometry = GroundPolylineGeometry.createGeometry(geodesicGroundPolylineGeometry);
+
+        expect(rhumbGeometry.indices.length).toEqual(3636);
+        expect(geodesicGeometry.indices.length).toEqual(3600);
+        expect(geodesicGeometry.attributes.position.values.length).toEqual(2400);
+        expect(rhumbGeometry.attributes.position.values.length).toEqual(2424);
+
+        // Interpolate one segment but not the other
+        positions = Cartesian3.fromDegreesArray([
+            10, 75,
+            20, 75,
+            20.01, 75
+        ]);
+        rhumbGroundPolylineGeometry = new GroundPolylineGeometry({
+            positions : positions,
+            granularity : 2890.0,
+            arcType: ArcType.RHUMB
+        });
+        geodesicGroundPolylineGeometry = new GroundPolylineGeometry({
+            positions : positions,
+            granularity : 2890.0,
+            arcType: ArcType.GEODESIC
+        });
+
+        rhumbGeometry = GroundPolylineGeometry.createGeometry(rhumbGroundPolylineGeometry);
+        geodesicGeometry = GroundPolylineGeometry.createGeometry(geodesicGroundPolylineGeometry);
+
+        expect(rhumbGeometry.indices.length).toEqual(3636 + 36);
+        expect(geodesicGeometry.indices.length).toEqual(3600 + 36);
+        expect(geodesicGeometry.attributes.position.values.length).toEqual(2400 + 24);
+        expect(rhumbGeometry.attributes.position.values.length).toEqual(2424 + 24);
+    });
+
     it('loops when there are enough positions and loop is specified', function() {
         var groundPolylineGeometry = new GroundPolylineGeometry({
             positions : Cartesian3.fromDegreesArray([
@@ -476,7 +530,7 @@ defineSuite([
             granularity : 10.0 // no interpolative subdivision
         });
         groundPolylineGeometry._scene3DOnly = true;
-        GroundPolylineGeometry.setProjectionAndEllipsoid(groundPolylineGeometry, new WebMercatorProjection(Ellipsoid.WGS84));
+        GroundPolylineGeometry.setProjectionAndEllipsoid(groundPolylineGeometry, new WebMercatorProjection(Ellipsoid.UNIT_SPHERE));
 
         var packedArray = [0];
         GroundPolylineGeometry.pack(groundPolylineGeometry, packedArray, 1);
@@ -494,9 +548,36 @@ defineSuite([
         expect(Cartesian3.equals(scratchPositions[1], groundPolylineGeometry._positions[1])).toBe(true);
         expect(scratch.loop).toBe(true);
         expect(scratch.granularity).toEqual(10.0);
-        expect(scratch._ellipsoid.equals(Ellipsoid.WGS84)).toBe(true);
+        expect(scratch._ellipsoid.equals(Ellipsoid.UNIT_SPHERE)).toBe(true);
         expect(scratch._scene3DOnly).toBe(true);
         expect(scratch._projectionIndex).toEqual(1);
+    });
+
+    it('can unpack onto a new instance', function() {
+        var groundPolylineGeometry = new GroundPolylineGeometry({
+            positions : Cartesian3.fromDegreesArray([
+                -1.0, 0.0,
+                1.0, 0.0
+            ]),
+            loop : true,
+            granularity : 10.0 // no interpolative subdivision
+        });
+        groundPolylineGeometry._scene3DOnly = true;
+        GroundPolylineGeometry.setProjectionAndEllipsoid(groundPolylineGeometry, new WebMercatorProjection(Ellipsoid.UNIT_SPHERE));
+
+        var packedArray = [0];
+        GroundPolylineGeometry.pack(groundPolylineGeometry, packedArray, 1);
+        var result = GroundPolylineGeometry.unpack(packedArray, 1);
+
+        var scratchPositions = result._positions;
+        expect(scratchPositions.length).toEqual(2);
+        expect(Cartesian3.equals(scratchPositions[0], groundPolylineGeometry._positions[0])).toBe(true);
+        expect(Cartesian3.equals(scratchPositions[1], groundPolylineGeometry._positions[1])).toBe(true);
+        expect(result.loop).toBe(true);
+        expect(result.granularity).toEqual(10.0);
+        expect(result._ellipsoid.equals(Ellipsoid.UNIT_SPHERE)).toBe(true);
+        expect(result._scene3DOnly).toBe(true);
+        expect(result._projectionIndex).toEqual(1);
     });
 
     it('provides a method for setting projection and ellipsoid', function() {
@@ -564,6 +645,7 @@ defineSuite([
     Cartesian3.pack(positions[2], packedInstance, packedInstance.length);
     packedInstance.push(polyline.granularity);
     packedInstance.push(polyline.loop ? 1.0 : 0.0);
+    packedInstance.push(polyline.arcType);
 
     Ellipsoid.pack(Ellipsoid.WGS84, packedInstance, packedInstance.length);
 

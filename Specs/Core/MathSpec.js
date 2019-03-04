@@ -254,6 +254,110 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('lessThan works', function() {
+        expect(CesiumMath.lessThan(1.0, 2.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThan(2.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.0, 1.2, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.2, 1.0, 0.2)).toBe(false);
+    });
+
+    it('lessThan throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.lessThan(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThan throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.lessThan(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThan throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.lessThan(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThanOrEquals works', function() {
+        expect(CesiumMath.lessThanOrEquals(1.0, 2.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(2.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThanOrEquals(1.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(1.0, 1.2, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(1.2, 1.0, 0.2)).toBe(true);
+    });
+
+    it('lessThanOrEquals throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.lessThanOrEquals(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThanOrEquals throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.lessThanOrEquals(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThanOrEquals throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.lessThanOrEquals(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThan works', function() {
+        expect(CesiumMath.greaterThan(1.0, 2.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(2.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThan(1.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(1.0, 1.2, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(1.2, 1.0, 0.2)).toBe(false);
+    });
+
+    it('greaterThan throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.greaterThan(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThan throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.greaterThan(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThan throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.greaterThan(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThanOrEquals works', function() {
+        expect(CesiumMath.greaterThanOrEquals(1.0, 2.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThanOrEquals(2.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.0, 1.2, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.2, 1.0, 0.2)).toBe(true);
+    });
+
+    it('greaterThanOrEquals throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.greaterThanOrEquals(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThanOrEquals throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.greaterThanOrEquals(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThanOrEquals throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.greaterThanOrEquals(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('factorial produces the correct results', function() {
         var factorials = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600, 6227020800, 87178291200, 1307674368000, 20922789888000, 355687428096000, 6402373705728000,
                           121645100408832000, 2432902008176640000, 51090942171709440000, 1124000727777607680000, 25852016738884976640000, 620448401733239439360000];

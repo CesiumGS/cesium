@@ -187,11 +187,11 @@ define([
             offscreen : false,
 
             /**
-             * <code>true</code> if the primitive should update for an async pass, <code>false</code> otherwise.
+             * <code>true</code> if the primitive should update for an asynchronous pass, <code>false</code> otherwise.
              * @type {Boolean}
              * @default false
              */
-            async : false
+            asynchronous : false
         };
 
         /**

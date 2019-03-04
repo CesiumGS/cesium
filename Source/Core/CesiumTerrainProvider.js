@@ -904,7 +904,10 @@ define([
          * Gets an object that can be used to determine availability of terrain from this provider, such as
          * at points and in rectangles.  This function should not be called before
          * {@link CesiumTerrainProvider#ready} returns true.  This property may be undefined if availability
-         * information is not available.
+         * information is not available. Note that this reflects tiles that are known to be available currently.
+         * Additional tiles may be discovered to be available in the future, e.g. if availability information
+         * exists deeper in the tree rather than it all being discoverable at the root. However, a tile that
+         * is available now will not become unavailable in the future.
          * @memberof CesiumTerrainProvider.prototype
          * @type {TileAvailability}
          */
@@ -936,7 +939,7 @@ define([
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
      * @param {Number} level The level of the tile for which to request geometry.
-     * @returns {Boolean} Undefined if not supported, otherwise true or false.
+     * @returns {Boolean} Undefined if not supported or availability is unknown, otherwise true or false.
      */
     CesiumTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
         if (!defined(this._availability)) {
@@ -999,11 +1002,8 @@ define([
         }
 
         var availabilityLevels = layer.availabilityLevels;
-        if (level % availabilityLevels === 0) {
-            level -= availabilityLevels;
-        }
-
-        var parentLevel = ((level / availabilityLevels) | 0) * availabilityLevels;
+        var parentLevel = (level % availabilityLevels === 0) ?
+            (level - availabilityLevels) : ((level / availabilityLevels) | 0) * availabilityLevels;
         var divisor = 1 << (level - parentLevel);
         var parentX = (x / divisor) | 0;
         var parentY = (y / divisor) | 0;
@@ -1070,6 +1070,9 @@ define([
             result: false
         };
     }
+
+    // Used for testing
+    CesiumTerrainProvider._getAvailabilityTile = getAvailabilityTile;
 
     return CesiumTerrainProvider;
 });

@@ -43,6 +43,8 @@ define([
      * @param {Boolean} [options.closeBottom=true] When false, leaves off the bottom of an extruded polygon open.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the polygon casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this polygon will be displayed.
+     * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this polygon will classify terrain, 3D Tiles, or both when on the ground.
+     * @param {Property} [options.arcType=ArcType.GEODESIC] The type of line the polygon edges must follow.
      * @param {ConstantProperty} [options.zIndex=0] A property specifying the zIndex used for ordering ground geometry.  Only has an effect if the polygon is constant and neither height or extrudedHeight are specified.
      *
      * @see Entity
@@ -87,6 +89,8 @@ define([
         this._distanceDisplayConditionSubscription = undefined;
         this._classificationType = undefined;
         this._classificationTypeSubscription = undefined;
+        this._arcType = undefined;
+        this._arcTypeSubscription = undefined;
         this._zIndex = undefined;
         this._zIndexSubscription = undefined;
         this._definitionChanged = new Event();
@@ -255,9 +259,17 @@ define([
          * Gets or sets the {@link ClassificationType} Property specifying whether this polygon will classify terrain, 3D Tiles, or both when on the ground.
          * @memberof PolygonGraphics.prototype
          * @type {Property}
-         * @default ClassificationType.TERRAIN
+         * @default ClassificationType.BOTH
          */
         classificationType : createPropertyDescriptor('classificationType'),
+
+        /**
+         * Gets or sets the {@link ArcType} Property specifying the type of lines the polygon edges use.
+         * @memberof PolygonGraphics.prototype
+         * @type {Property}
+         * @default ArcType.GEODESIC
+         */
+        arcType : createPropertyDescriptor('arcType'),
 
         /**
          * Gets or sets the zIndex Prperty specifying the ordering of ground geometry.  Only has an effect if the polygon is constant and neither height or extrudedHeight are specified.
@@ -297,6 +309,7 @@ define([
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         result.classificationType = this.classificationType;
+        result.arcType = this.arcType;
         result.zIndex = this.zIndex;
 
         return result;
@@ -334,6 +347,7 @@ define([
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.classificationType = defaultValue(this.classificationType, source.classificationType);
+        this.arcType = defaultValue(this.arcType, source.arcType);
         this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
 
