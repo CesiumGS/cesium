@@ -22,7 +22,7 @@ defineSuite([
         });
     });
 
-    it('flips image when ImageBitmapOptions are supported', function() {
+    it('flips image only when flipY is true', function() {
         var options = {
             uint8Array: new Uint8Array([67, 101, 115, 105, 117, 109]), // This is an invalid PNG.
             format: 'image/png',
@@ -32,32 +32,28 @@ defineSuite([
         var blob = new Blob([options.uint8Array], {
             type : options.format
         });
-        var supportsImageBitmapOptions;
 
-        return loadImageFromTypedArray(options)
-            .then(Resource.supportsImageBitmapOptions)
+        return Resource.supportsImageBitmapOptions()
             .then(function(result) {
-                supportsImageBitmapOptions = result;
-                if (supportsImageBitmapOptions) {
-                    expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-                        imageOrientation: 'flipY'
-                    });
-                } else {
-                    expect(window.createImageBitmap).toHaveBeenCalledWith(blob);
+                if (!result) {
+                    return;
                 }
 
-                options.flipY = false;
-                window.createImageBitmap.calls.reset();
-                return loadImageFromTypedArray(options);
-            })
-            .then(function() {
-                if (supportsImageBitmapOptions) {
-                    expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-                        imageOrientation: 'none'
+                return loadImageFromTypedArray(options)
+                    .then(function() {
+                        expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
+                            imageOrientation: 'flipY'
+                        });
+
+                         window.createImageBitmap.calls.reset();
+                         options.flipY = false;
+                         return loadImageFromTypedArray(options);
+                    })
+                    .then(function() {
+                        expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
+                            imageOrientation: 'none'
+                        });
                     });
-                } else {
-                    expect(window.createImageBitmap).toHaveBeenCalledWith(blob);
-                }
             });
     });
 

@@ -941,7 +941,7 @@ define([
             return;
         }
 
-        if (FeatureDetection.supportsCreateImageBitmap()) {
+        if (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync()) {
             return blobPromise
                 .then(function(blob) {
                     return Resource._Implementations.createImageBitmapFromBlob(blob, flipY);

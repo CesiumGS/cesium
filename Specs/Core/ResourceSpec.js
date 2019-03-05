@@ -1152,6 +1152,7 @@ defineSuite([
         var canvas;
         beforeAll(function() {
             canvas = createCanvas(1, 2);
+            return Resource.supportsImageBitmapOptions();
         });
 
         afterAll(function() {
@@ -1166,6 +1167,10 @@ defineSuite([
         }
 
         it('can call supportsImageBitmapOptions and supportsImageBitmapOptionsSync', function() {
+            if (!Resource.supportsImageBitmapOptionsSync()) {
+                return;
+            }
+
             return Resource.supportsImageBitmapOptions()
                 .then(function(result) {
                     expect(Resource.supportsImageBitmapOptionsSync()).toEqual(result);
@@ -1173,6 +1178,10 @@ defineSuite([
         });
 
         it('can load and decode an image', function() {
+            if (!Resource.supportsImageBitmapOptionsSync()) {
+                return;
+            }
+
             return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
                 expect(loadedImage.width).toEqual(1);
                 expect(loadedImage.height).toEqual(1);
@@ -1181,6 +1190,10 @@ defineSuite([
         });
 
         it('correctly flips image when ImageBitmapOptions are supported', function() {
+            if (!Resource.supportsImageBitmapOptionsSync()) {
+                return;
+            }
+
             var loadedImage;
 
             return Resource.fetchImage({
@@ -1199,6 +1212,10 @@ defineSuite([
         });
 
         it('correctly loads image without flip when ImageBitmapOptions are supported', function() {
+            if (!Resource.supportsImageBitmapOptionsSync()) {
+                return;
+            }
+
             var loadedImage;
 
             return Resource.fetchImage({
@@ -1217,6 +1234,10 @@ defineSuite([
         });
 
         it('does not use ImageBitmap when ImageBitmapOptions are not supported', function() {
+            if (!Resource.supportsImageBitmapOptionsSync()) {
+                return;
+            }
+
             spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
             spyOn(window, 'createImageBitmap').and.callThrough();
 
@@ -1226,6 +1247,10 @@ defineSuite([
         });
 
         it('rejects the promise when the image errors', function() {
+            if (!Resource.supportsImageBitmapOptionsSync()) {
+                return;
+            }
+
             return Resource.fetchImage('http://example.invalid/testuri.png')
                 .then(function() {
                     fail('expected promise to reject');
