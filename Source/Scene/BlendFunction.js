@@ -106,7 +106,7 @@ define([
          * @type {Number}
          * @constant
          */
-        ONE_MINUS_CONSTANT_COLOR : WebGLConstants.ONE_MINUS_CONSTANT_ALPHA,
+        ONE_MINUS_CONSTANT_COLOR : WebGLConstants.ONE_MINUS_CONSTANT_COLOR,
 
         /**
          * The blend factor is the constant alpha.

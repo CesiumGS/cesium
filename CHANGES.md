@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.56 - 2019-04-01
+
+##### Fixes :wrench:
+* Fixed the value for `BlendFunction.ONE_MINUS_CONSTANT_COLOR`. [#7624](https://github.com/AnalyticalGraphicsInc/cesium/pull/7624)
+
 ### 1.55 - 2019-03-01
 
 ##### Breaking Changes :mega:
