@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.56 - 2019-04-01
+
+##### Fixes :wrench:
+* Fixed the value for `BlendFunction.ONE_MINUS_CONSTANT_COLOR`.
+
 ### 1.55 - 2019-03-01
 
 ##### Breaking Changes :mega:
