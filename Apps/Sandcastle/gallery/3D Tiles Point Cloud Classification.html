@@ -27,11 +27,13 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 // An example showing a point cloud tileset classified by a Geometry tileset.
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider : Cesium.createWorldTerrain()
+});
 
 //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
 var tileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(5714)
+    url: Cesium.IonResource.fromAssetId(16421)
 });
 viewer.scene.primitives.add(tileset);
 
@@ -59,11 +61,8 @@ classificationTileset.style = new Cesium.Cesium3DTileStyle({
 });
 
 viewer.scene.camera.setView({
-    destination : new Cesium.Cartesian3(4401448.974612145, 225038.45962842644, 4595135.776680152),
-    orientation : {
-        heading : 5.36861655457269,
-        pitch : -0.4029289137364358
-    }
+    destination: new Cesium.Cartesian3(4401744.644145314, 225051.41078911052, 4595420.374784433),
+    orientation: new Cesium.HeadingPitchRoll(5.646733805039757, -0.276607153839886, 6.281110875400085)
 });
 
 // Information about the currently highlighted feature

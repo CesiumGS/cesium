@@ -174,6 +174,7 @@ defineSuite([
         modelPromises.push(loadModel(riggedFigureUrl).then(function(model) {
             riggedFigureModel = model;
         }));
+        modelPromises.push(FeatureDetection.supportsWebP.initialize());
 
         return when.all(modelPromises);
     });
@@ -980,7 +981,8 @@ defineSuite([
     });
 
     it('Throws for EXT_texture_webp if browser does not support WebP', function() {
-        spyOn(FeatureDetection, 'supportsWebPSync').and.returnValue(false);
+        var supportsWebP = FeatureDetection.supportsWebP._result;
+        FeatureDetection.supportsWebP._result = false;
         return Resource.fetchJson(texturedBoxWebpUrl).then(function(gltf) {
             gltf.extensionsRequired = ['EXT_texture_webp'];
             var model = primitives.add(new Model({
@@ -991,6 +993,7 @@ defineSuite([
                 scene.renderForSpecs();
             }).toThrowRuntimeError();
             primitives.remove(model);
+            FeatureDetection.supportsWebP._result = supportsWebP;
         });
     });
 
@@ -1206,6 +1209,9 @@ defineSuite([
     });
 
     it('renders textured box with WebP texture', function() {
+        if (!FeatureDetection.supportsWebP()) {
+            return;
+        }
         return loadModel(texturedBoxWebpUrl, {
             incrementallyLoadTextures : false
         }).then(function(m) {

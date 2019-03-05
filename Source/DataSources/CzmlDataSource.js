@@ -1,4 +1,5 @@
 define([
+        '../Core/ArcType',
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -43,6 +44,7 @@ define([
         '../ThirdParty/when',
         './BillboardGraphics',
         './BoxGraphics',
+        './CallbackProperty',
         './ColorMaterialProperty',
         './CompositeMaterialProperty',
         './CompositePositionProperty',
@@ -86,6 +88,7 @@ define([
         './VelocityVectorProperty',
         './WallGraphics'
     ], function(
+        ArcType,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -130,6 +133,7 @@ define([
         when,
         BillboardGraphics,
         BoxGraphics,
+        CallbackProperty,
         ColorMaterialProperty,
         CompositeMaterialProperty,
         CompositePositionProperty,
@@ -209,6 +213,12 @@ define([
         }
 
         throw new RuntimeError(JSON.stringify(packetData) + ' is not valid CZML.');
+    }
+
+    function createAdapterProperty(property, adapterFunction) {
+        return new CallbackProperty(function(time, result) {
+            return adapterFunction(property.getValue(time, result));
+        }, property.isConstant);
     }
 
     var scratchCartesian = new Cartesian3();
@@ -501,6 +511,8 @@ define([
         } else if (czmlInterval.hasOwnProperty('rgba') ||
                    czmlInterval.hasOwnProperty('rgbaf')) {
             return Color;
+        } else if (czmlInterval.hasOwnProperty('arcType')) {
+            return ArcType;
         } else if (czmlInterval.hasOwnProperty('colorBlendMode')) {
             return ColorBlendMode;
         } else if (czmlInterval.hasOwnProperty('cornerType')) {
@@ -546,6 +558,8 @@ define([
         // The associations in this function need to be kept in sync with the
         // associations in getPropertyType
         switch (type) {
+            case ArcType:
+                return ArcType[defaultValue(czmlInterval.arcType, czmlInterval)];
             case Array:
                 return czmlInterval.array;
             case Boolean:
@@ -1765,9 +1779,14 @@ define([
         processPacketData(Boolean, polygon, 'perPositionHeight', polygonData.perPositionHeight, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'closeTop', polygonData.closeTop, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'closeBottom', polygonData.closeBottom, interval, sourceUri, entityCollection);
+        processPacketData(ArcType, polygon, 'arcType', polygonData.arcType, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polygon, 'shadows', polygonData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polygon, 'distanceDisplayCondition', polygonData.distanceDisplayCondition, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'zIndex', polygonData.zIndex, interval, sourceUri, entityCollection);
+    }
+
+    function adaptFollowSurfaceToArcType(followSurface) {
+        return followSurface ? ArcType.GEODESIC : ArcType.NONE;
     }
 
     function processPolyline(entity, packet, entityCollection, sourceUri) {
@@ -1794,11 +1813,18 @@ define([
         processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'depthFailMaterial', polylineData.depthFailMaterial, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+        processPacketData(ArcType, polyline, 'arcType', polylineData.arcType, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polyline, 'clampToGround', polylineData.clampToGround, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polyline, 'shadows', polylineData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polyline, 'distanceDisplayCondition', polylineData.distanceDisplayCondition, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'zIndex', polylineData.zIndex, interval, sourceUri, entityCollection);
+
+        // for backwards compatibility, adapt CZML followSurface to arcType.
+        if (defined(polylineData.followSurface) && !defined(polylineData.arcType)) {
+            var tempObj = {};
+            processPacketData(Boolean, tempObj, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+            polyline.arcType = createAdapterProperty(tempObj.followSurface, adaptFollowSurfaceToArcType);
+        }
     }
 
     function processRectangle(entity, packet, entityCollection, sourceUri) {
