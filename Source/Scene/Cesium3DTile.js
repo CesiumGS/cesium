@@ -313,6 +313,7 @@ define([
 
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
+        this._distanceToCenterLine = 0;
         this._centerZDepth = 0;
         this._screenSpaceError = 0;
         this._visibilityPlaneMask = 0;
@@ -620,27 +621,29 @@ define([
     var scratchCartesian = new Cartesian3();
     function isPriorityDeferred(tile, frameState) {
         var tileset = tile._tileset;
-        if (!tileset._skipLevelOfDetail || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
-            return false;
-        }
 
         // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
-        tile._foveatedFactor = 0;
         var camera = frameState.camera;
         var boundingSphere = tile.boundingSphere;
         var radius = boundingSphere.radius;
         var scaledCameraDirection = Cartesian3.multiplyByScalar(camera.directionWC, tile._centerZDepth, scratchCartesian);
         var closestPointOnLine = Cartesian3.add(camera.positionWC, scaledCameraDirection, scratchCartesian);
         // The distance from the camera's view direction to the tile.
-        var distanceToLine = Cartesian3.subtract(closestPointOnLine, boundingSphere.center, scratchCartesian);
-        var distanceSquared = Cartesian3.dot(distanceToLine, distanceToLine);
+        var toLine = Cartesian3.subtract(closestPointOnLine, boundingSphere.center, scratchCartesian);
+        var distanceToCenterLine = Cartesian3.magnitude(toLine);
+        var notTouchingSphere = distanceToCenterLine > radius;
+        tile._distanceToCenterLine = notTouchingSphere ? distanceToCenterLine : 0;
+
+        if (!tileset._skipLevelOfDetail || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
+            return false;
+        }
 
         // If camera's direction vector is inside the bounding sphere then consider
         // this tile right along the line of sight and set _foveatedFactor to 0.
         // Otherwise,_foveatedFactor is one minus the dot product of the camera's direction
         // and the vector between the camera and the point on the bounding sphere closest to the view line.
-        if (distanceSquared > radius * radius) {
-            var toLineNormalized = Cartesian3.normalize(distanceToLine, scratchCartesian);
+        if (notTouchingSphere) {
+            var toLineNormalized = Cartesian3.normalize(toLine, scratchCartesian);
             var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalized, radius, scratchCartesian);
             var closestOnSphere = Cartesian3.add(boundingSphere.center, scaledToLine, scratchCartesian);
             var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, camera.positionWC, scratchCartesian);
