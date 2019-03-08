@@ -1352,7 +1352,7 @@ define([
     };
 
     /**
-     * Updates the tiles _priorityDistance
+     * Updates the tile's _priorityDistance
      * @private
      */
     Cesium3DTile.prototype.updatePriorityDistance = function() {
