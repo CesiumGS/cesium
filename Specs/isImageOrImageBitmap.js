@@ -10,11 +10,12 @@ define([
         // Many ImageryProvider specs will test if the requested image
         // succeeded by checking its instance. Since this may be an Image
         // or ImageBitmap, we abstract this check here.
-        if (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync()) {
-            return image instanceof ImageBitmap;
+        var isImageBitmap = false;
+        if (typeof createImageBitmap === 'function') {
+            isImageBitmap = image instanceof ImageBitmap;
         }
 
-        return image instanceof Image;
+        return isImageBitmap || image instanceof Image;
     }
 
     return isImageOrImageBitmap;

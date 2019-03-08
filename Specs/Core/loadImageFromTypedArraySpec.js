@@ -1,11 +1,11 @@
 defineSuite([
         'Core/loadImageFromTypedArray',
-        'Core/FeatureDetection',
-        'Core/Resource'
+        'Core/Resource',
+        'ThirdParty/when'
     ], function(
         loadImageFromTypedArray,
-        FeatureDetection,
-        Resource) {
+        Resource,
+        when) {
     'use strict';
 
     it('can load an image', function() {
@@ -28,7 +28,7 @@ defineSuite([
             format: 'image/png',
             flipY: true
         };
-        spyOn(window, 'createImageBitmap');
+        spyOn(window, 'createImageBitmap').and.returnValue(when.resolve({}));
         var blob = new Blob([options.uint8Array], {
             type : options.format
         });
@@ -58,7 +58,7 @@ defineSuite([
     });
 
     it('can load an image when ImageBitmap is not supported', function() {
-        spyOn(FeatureDetection, 'supportsCreateImageBitmap').and.returnValue(false);
+        spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
         spyOn(window, 'createImageBitmap').and.callThrough();
         return Resource.fetchArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {
             var options = {

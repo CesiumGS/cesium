@@ -31,24 +31,19 @@ define([
             type : format
         });
 
-        // Avoid an extra fetch by just calling createImageBitmap here directly on the blob
-        // instead of sending it to Resource as a blob URL.
-        if (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync()) {
-            return when(createImageBitmap(blob, {
-                imageOrientation: flipY ? 'flipY' : 'none'
-            }));
-        }
-
         var blobUrl = window.URL.createObjectURL(blob);
         var resource = new Resource({
             url: blobUrl,
             request: request
         });
-        return resource.fetchImage()
+        return resource.fetchImage({
+            flipY : flipY
+        })
             .then(function(image) {
                 window.URL.revokeObjectURL(blobUrl);
                 return image;
-            }, function(error) {
+            })
+            .otherwise(function(error) {
                 window.URL.revokeObjectURL(blobUrl);
                 return when.reject(error);
             });

@@ -6,7 +6,6 @@ defineSuite([
         'Core/Cartographic',
         'Core/DefaultProxy',
         'Core/defined',
-        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
         'Core/objectToQuery',
@@ -33,7 +32,6 @@ defineSuite([
         Cartographic,
         DefaultProxy,
         defined,
-        FeatureDetection,
         GeographicTilingScheme,
         getAbsoluteUri,
         objectToQuery,
@@ -54,10 +52,14 @@ defineSuite([
         Uri) {
     'use strict';
 
+    var supportsImageBitmapOptions;
     beforeAll(function() {
-        // This suite spies on requests. The test below needs to make a request to a data URI.
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
         // We run it here to avoid interfering with the tests.
-        return Resource.supportsImageBitmapOptions();
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
     });
 
     beforeEach(function() {
@@ -292,7 +294,7 @@ defineSuite([
             expect(provider.usingPrecachedTiles).toEqual(true);
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url) || (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync())) {
+                if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                     // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
@@ -465,7 +467,7 @@ defineSuite([
             expect(provider.hasAlphaChannel).toBeDefined();
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url) || (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync())) {
+                if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                     // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {

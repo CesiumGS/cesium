@@ -134,9 +134,4 @@ defineSuite([
                 expect(FeatureDetection.supportsWebP()).toEqual(supportsWebP);
             });
     });
-
-    it('detects createImageBitmap support', function() {
-        var supportsCreateImageBitmap = FeatureDetection.supportsCreateImageBitmap();
-        expect(typeof supportsCreateImageBitmap).toEqual('boolean');
-    });
 });

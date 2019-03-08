@@ -267,10 +267,6 @@ define([
         }
     }
 
-    function supportsCreateImageBitmap() {
-        return typeof createImageBitmap === 'function';
-    }
-
     /**
      * A set of functions to detect whether the current browser supports
      * various features.
@@ -295,7 +291,6 @@ define([
         supportsPointerEvents : supportsPointerEvents,
         supportsImageRenderingPixelated: supportsImageRenderingPixelated,
         supportsWebP: supportsWebP,
-        supportsCreateImageBitmap: supportsCreateImageBitmap,
         imageRenderingValue: imageRenderingValue,
         typedArrayTypes: typedArrayTypes
     };

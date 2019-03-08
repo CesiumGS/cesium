@@ -1,23 +1,25 @@
 defineSuite([
         'Scene/DiscardMissingTileImagePolicy',
         'Core/Cartesian2',
-        'Core/FeatureDetection',
         'Core/Resource',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
         DiscardMissingTileImagePolicy,
         Cartesian2,
-        FeatureDetection,
         Resource,
         pollToPromise,
         when) {
     'use strict';
 
+    var supportsImageBitmapOptions;
     beforeAll(function() {
-        // This suite spies on requests. The test below needs to make a request to a data URI.
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
         // We run it here to avoid interfering with the tests.
-        return Resource.supportsImageBitmapOptions();
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
     });
 
     afterEach(function() {
@@ -70,7 +72,7 @@ defineSuite([
             return pollToPromise(function() {
                 return policy.isReady();
             }).then(function() {
-                if ((FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync())) {
+                if (supportsImageBitmapOptions) {
                     expect(Resource._Implementations.createImageBitmapFromBlob).toHaveBeenCalled();
                 } else {
                     expect(Resource._Implementations.createImage).toHaveBeenCalled();

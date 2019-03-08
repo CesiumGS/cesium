@@ -4,7 +4,6 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/defined',
-        'Core/FeatureDetection',
         'Core/GeographicTilingScheme',
         'Core/GoogleEarthEnterpriseMetadata',
         'Core/GoogleEarthEnterpriseTileInformation',
@@ -26,7 +25,6 @@ defineSuite([
         DefaultProxy,
         defaultValue,
         defined,
-        FeatureDetection,
         GeographicTilingScheme,
         GoogleEarthEnterpriseMetadata,
         GoogleEarthEnterpriseTileInformation,
@@ -46,11 +44,17 @@ defineSuite([
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
-        return Resource.supportsImageBitmapOptions();
     });
 
+    var supportsImageBitmapOptions;
     beforeAll(function() {
         decodeGoogleEarthEnterpriseData.passThroughDataForTesting = true;
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
     });
 
     afterAll(function() {
@@ -89,7 +93,7 @@ defineSuite([
 
     function installFakeImageRequest(expectedUrl, proxy) {
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url) || (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync())) {
+            if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // load blob url normally
                 Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else {
@@ -106,7 +110,7 @@ defineSuite([
         };
 
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            if (defined(expectedUrl)) {
+            if (defined(expectedUrl) && !/^blob:/.test(url)) {
                 if (proxy) {
                     var uri = new Uri(url);
                     url = decodeURIComponent(uri.query);

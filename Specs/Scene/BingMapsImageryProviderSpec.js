@@ -3,7 +3,6 @@ defineSuite([
         'Core/appendForwardSlash',
         'Core/DefaultProxy',
         'Core/defined',
-        'Core/FeatureDetection',
         'Core/queryToObject',
         'Core/RequestScheduler',
         'Core/Resource',
@@ -22,7 +21,6 @@ defineSuite([
         appendForwardSlash,
         DefaultProxy,
         defined,
-        FeatureDetection,
         queryToObject,
         RequestScheduler,
         Resource,
@@ -37,6 +35,16 @@ defineSuite([
         isImageOrImageBitmap,
         Uri) {
     'use strict';
+
+    var supportsImageBitmapOptions;
+    beforeAll(function() {
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
+    });
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -177,7 +185,7 @@ defineSuite([
 
     function installFakeImageRequest(expectedUrl, expectedParams, proxy) {
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url) || (FeatureDetection.supportsCreateImageBitmap() && Resource.supportsImageBitmapOptionsSync())) {
+            if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                 Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else {
