@@ -299,7 +299,7 @@ define([
         // Request priority
         tile._wasMinPriorityChild = false;
         tile._priorityDistanceHolder = tile;
-        tile._priorityDistance = CesiumMath.lerp(tile._distanceToCamera, tile._distanceToCenterLine, tileset.screenCenterPriority);
+        tile.updatePriorityDistance();
         updateMinMaxPriority(tileset, tile);
 
         // SkipLOD

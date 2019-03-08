@@ -385,4 +385,31 @@ defineSuite([
         tile2.updatePriority();
         expect(tile2._priority).toBeGreaterThan(1000);
     });
+
+    it('updates priorityDistance member', function() {
+        var tileset = mockTileset;
+        var tile = new Cesium3DTile(tileset, '/some_url', tileWithBoundingSphere, undefined);
+        tile._priorityDistance = 0;
+        tile._distanceToCamera = 2;
+        tile._distanceToCenterLine = 4;
+
+        // Pure distance
+        tileset.screenCenterPriority = 0;
+        var expected = tile._distanceToCamera;
+        tile.updatePriorityDistance();
+        expect(CesiumMath.equalsEpsilon(tile._priorityDistance, expected, CesiumMath.EPSILON2)).toBe(true);
+
+        // Pure center line
+        tileset.screenCenterPriority = 1;
+        expected = tile._distanceToCenterLine;
+        tile.updatePriorityDistance();
+        expect(CesiumMath.equalsEpsilon(tile._priorityDistance, expected, CesiumMath.EPSILON2)).toBe(true);
+
+        // Mix of distance and center line
+        tileset.screenCenterPriority = 0.7;
+        expected = CesiumMath.lerp(tile._distanceToCamera, tile._distanceToCenterLine, tileset.screenCenterPriority); // Want to mix in distanceToCamera to get a bit of front-to-back sorting to avoid occlusion issues.
+        tile.updatePriorityDistance();
+        expect(CesiumMath.equalsEpsilon(tile._priorityDistance, expected, CesiumMath.EPSILON2)).toBe(true);
+    });
+
 }, 'WebGL');

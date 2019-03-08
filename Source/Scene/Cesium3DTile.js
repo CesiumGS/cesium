@@ -1352,6 +1352,14 @@ define([
     };
 
     /**
+     * Updates the tiles _priorityDistance
+     * @private
+     */
+    Cesium3DTile.prototype.updatePriorityDistance = function() {
+        var tileset = this.tileset;
+        this._priorityDistance = CesiumMath.lerp(this._distanceToCamera, this._distanceToCenterLine, tileset.screenCenterPriority); // Want to mix in distanceToCamera to get a bit of front-to-back sorting to avoid occlusion issues.
+    };
+    /**
      * @private
      */
     Cesium3DTile.prototype.isDestroyed = function() {
