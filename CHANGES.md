@@ -3,6 +3,9 @@ Change Log
 
 ### 1.56 - 2019-04-01
 
+##### Additions :tada:
+* Added new parameter to `PolylineGlowMaterial` called `taperPower`, that works similar to the existing `glowPower` parameter, to taper the back of the line away. [#7626](https://github.com/AnalyticalGraphicsInc/cesium/pull/7626)
+
 ##### Fixes :wrench:
 * Fixed the value for `BlendFunction.ONE_MINUS_CONSTANT_COLOR`. [#7624](https://github.com/AnalyticalGraphicsInc/cesium/pull/7624)
 
