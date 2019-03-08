@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -288,7 +290,9 @@ function applyPolylineArrowMaterial(primitive, scene) {
 function applyPolylineGlowMaterial(primitive, scene) {
     Sandcastle.declare(applyPolylineGlowMaterial);  // For highlighting in Sandcastle.
     var material = Cesium.Material.fromType('PolylineGlow', {
-        innerWidth : primitive.width / 2.0
+        color : Cesium.Color.CRIMSON,
+        glowPower : 0.2,
+        taperPower : 0.4
     });
     primitive.material = material;
 }

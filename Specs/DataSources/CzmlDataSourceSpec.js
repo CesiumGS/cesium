@@ -3458,7 +3458,8 @@ defineSuite([
                         color : {
                             rgbaf : [0.1, 0.2, 0.3, 0.4]
                         },
-                        glowPower : 0.75
+                        glowPower : 0.75,
+                        taperPower : 0.55
                     }
                 }
             }
@@ -3469,6 +3470,7 @@ defineSuite([
             var entity = dataSource.entities.getById('polylineGlow');
             expect(entity.polyline.material.color.getValue()).toEqual(new Color(0.1, 0.2, 0.3, 0.4));
             expect(entity.polyline.material.glowPower.getValue()).toEqual(0.75);
+            expect(entity.polyline.material.taperPower.getValue()).toEqual(0.55);
         });
     });
 

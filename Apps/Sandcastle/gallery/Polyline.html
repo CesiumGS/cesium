@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -59,7 +61,8 @@ var glowingLine = viewer.entities.add({
         width : 10,
         material : new Cesium.PolylineGlowMaterialProperty({
             glowPower : 0.2,
-            color : Cesium.Color.BLUE
+            taperPower : 0.5,
+            color : Cesium.Color.CORNFLOWERBLUE
         })
     }
 });
@@ -103,7 +106,7 @@ var dashedLine = viewer.entities.add({
 
 viewer.zoomTo(viewer.entities);
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
     startup(Cesium);
