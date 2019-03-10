@@ -15,7 +15,6 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'Specs/isImageOrImageBitmap',
         'ThirdParty/when'
     ], function(
         UrlTemplateImageryProvider,
@@ -34,7 +33,6 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        isImageOrImageBitmap,
         when) {
     'use strict';
 
@@ -119,7 +117,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -166,7 +164,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -228,7 +226,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(isImageOrImageBitmap(imagery.image)).toBe(true);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
@@ -254,7 +252,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -283,7 +281,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -312,7 +310,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -341,7 +339,7 @@ defineSuite([
 
             return provider.requestImage(12, 10, 5).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -364,7 +362,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -387,7 +385,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -410,7 +408,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -433,7 +431,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -456,7 +454,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -478,7 +476,7 @@ defineSuite([
 
             return provider.requestImage(3, 0, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -500,7 +498,7 @@ defineSuite([
 
             return provider.requestImage(0, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -522,7 +520,7 @@ defineSuite([
 
             return provider.requestImage(1, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -552,7 +550,7 @@ defineSuite([
 
             return provider.requestImage(1, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -574,7 +572,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -597,7 +595,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -620,7 +618,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -648,7 +646,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });

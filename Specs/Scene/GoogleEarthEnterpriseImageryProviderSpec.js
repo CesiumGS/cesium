@@ -16,7 +16,6 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'Specs/isImageOrImageBitmap',
         'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
@@ -37,7 +36,6 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        isImageOrImageBitmap,
         Uri,
         when) {
     'use strict';
@@ -233,7 +231,7 @@ defineSuite([
             installFakeImageRequest('http://fake.fake.invalid/flatfile?f1-03-i.1');
 
             return imageryProvider.requestImage(0, 0, 0).then(function(image) {
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -303,7 +301,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(isImageOrImageBitmap(imagery.image)).toBe(true);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

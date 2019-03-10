@@ -14,7 +14,6 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'Specs/isImageOrImageBitmap',
         'ThirdParty/Uri'
     ], function(
         BingMapsImageryProvider,
@@ -32,7 +31,6 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        isImageOrImageBitmap,
         Uri) {
     'use strict';
 
@@ -374,7 +372,7 @@ defineSuite([
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -405,7 +403,7 @@ defineSuite([
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -494,7 +492,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(isImageOrImageBitmap(imagery.image)).toBe(true);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

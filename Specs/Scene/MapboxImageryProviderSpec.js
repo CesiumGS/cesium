@@ -10,8 +10,7 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'Specs/isImageOrImageBitmap'
+        'Specs/pollToPromise'
     ], function(
         MapboxImageryProvider,
         DefaultProxy,
@@ -24,8 +23,7 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        pollToPromise,
-        isImageOrImageBitmap) {
+        pollToPromise) {
     'use strict';
 
     beforeEach(function() {
@@ -105,7 +103,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -128,7 +126,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -157,7 +155,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -189,7 +187,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(isImageOrImageBitmap(image)).toBe(true);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -273,7 +271,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(isImageOrImageBitmap(imagery.image)).toBe(true);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
