@@ -19,6 +19,7 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
+        'Specs/isImageOrImageBitmap',
         'ThirdParty/Uri'
     ], function(
         WebMapTileServiceImageryProvider,
@@ -41,6 +42,7 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
+        isImageOrImageBitmap,
         Uri) {
     'use strict';
 
@@ -364,7 +366,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(image)).toBe(true);
             });
         });
     });
@@ -414,7 +416,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(imagery.image)).toBe(true);
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

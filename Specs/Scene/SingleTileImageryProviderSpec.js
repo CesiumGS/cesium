@@ -10,6 +10,7 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
+        'Specs/isImageOrImageBitmap',
         'ThirdParty/when'
     ], function(
         SingleTileImageryProvider,
@@ -23,6 +24,7 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
+        isImageOrImageBitmap,
         when) {
     'use strict';
 
@@ -150,7 +152,7 @@ defineSuite([
             return provider.ready;
         }).then(function() {
             return when(provider.requestImage(0, 0, 0), function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(image)).toBe(true);
             });
         });
     });
@@ -216,7 +218,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(isImageOrImageBitmap(imagery.image)).toBe(true);
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

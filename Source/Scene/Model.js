@@ -1723,7 +1723,9 @@ define([
                 } else if (crnRegex.test(uri)) {
                     promise = loadCRN(imageResource);
                 } else {
-                    promise = imageResource.fetchImage();
+                    promise = imageResource.fetchImage({
+                        flipY: false
+                    });
                 }
                 promise.then(imageLoad(model, id, imageId)).otherwise(ModelUtility.getFailedLoadFunction(model, 'image', imageResource.url));
             }
@@ -2325,7 +2327,11 @@ define([
                 ++model._loadResources.pendingTextureLoads;
             } else {
                 var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
-                loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType)
+                loadImageFromTypedArray({
+                    uint8Array: loadResources.getBuffer(bufferView),
+                    format: gltfTexture.mimeType,
+                    flipY: false
+                })
                     .then(onload).otherwise(onerror);
                 ++loadResources.pendingBufferViewToImage;
             }
