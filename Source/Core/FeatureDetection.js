@@ -4,7 +4,6 @@ define([
         './defineProperties',
         './DeveloperError',
         './Fullscreen',
-        './RuntimeError',
         '../ThirdParty/when'
     ], function(
         defaultValue,
@@ -12,7 +11,6 @@ define([
         defineProperties,
         DeveloperError,
         Fullscreen,
-        RuntimeError,
         when) {
     'use strict';
     /*global CanvasPixelArray*/
