@@ -720,9 +720,8 @@ define([
      * @private
      *
      * @param {Imagery} imagery The imagery to request.
-     * @param {Function} [priorityFunction] The priority function used for sorting the imagery request.
      */
-    ImageryLayer.prototype._requestImagery = function(imagery, priorityFunction) {
+    ImageryLayer.prototype._requestImagery = function(imagery) {
         var imageryProvider = this._imageryProvider;
 
         var that = this;
@@ -765,10 +764,9 @@ define([
 
         function doRequest() {
             var request = new Request({
-                throttle : true,
+                throttle : false,
                 throttleByServer : true,
-                type : RequestType.IMAGERY,
-                priorityFunction : priorityFunction
+                type : RequestType.IMAGERY
             });
             imagery.request = request;
             imagery.state = ImageryState.TRANSITIONING;
@@ -789,6 +787,34 @@ define([
         }
 
         doRequest();
+    };
+
+    ImageryLayer.prototype._createTextureWebGL = function(context, imagery) {
+        var sampler = new Sampler({
+            minificationFilter : this.minificationFilter,
+            magnificationFilter : this.magnificationFilter
+        });
+
+        var image = imagery.image;
+
+        if (defined(image.internalFormat)) {
+            return new Texture({
+                context : context,
+                pixelFormat : image.internalFormat,
+                width : image.width,
+                height : image.height,
+                source : {
+                    arrayBufferView : image.bufferView
+                },
+                sampler : sampler
+            });
+        }
+        return new Texture({
+            context : context,
+            source : image,
+            pixelFormat : this._imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB,
+            sampler : sampler
+        });
     };
 
     /**
@@ -830,32 +856,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var sampler = new Sampler({
-            minificationFilter : this.minificationFilter,
-            magnificationFilter : this.magnificationFilter
-        });
-
         // Imagery does not need to be discarded, so upload it to WebGL.
-        var texture;
-        if (defined(image.internalFormat)) {
-            texture = new Texture({
-                context : context,
-                pixelFormat : image.internalFormat,
-                width : image.width,
-                height : image.height,
-                source : {
-                    arrayBufferView : image.bufferView
-                },
-                sampler : sampler
-            });
-        } else {
-            texture = new Texture({
-                context : context,
-                source : image,
-                pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB,
-                sampler : sampler
-            });
-        }
+        var texture = this._createTextureWebGL(context, imagery);
 
         if (imageryProvider.tilingScheme.projection instanceof WebMercatorProjection) {
             imagery.textureWebMercator = texture;
@@ -870,16 +872,16 @@ define([
         return minificationFilter + ':' + magnificationFilter + ':' + maximumAnisotropy;
     }
 
-    function finalizeReprojectTexture(imageryLayer, context, imagery, texture) {
-        var minificationFilter = imageryLayer.minificationFilter;
-        var magnificationFilter = imageryLayer.magnificationFilter;
+    ImageryLayer.prototype._finalizeReprojectTexture = function(context, texture) {
+        var minificationFilter = this.minificationFilter;
+        var magnificationFilter = this.magnificationFilter;
         var usesLinearTextureFilter = minificationFilter === TextureMinificationFilter.LINEAR && magnificationFilter === TextureMagnificationFilter.LINEAR;
         // Use mipmaps if this texture has power-of-two dimensions.
         // In addition, mipmaps are only generated if the texture filters are both LINEAR.
         if (usesLinearTextureFilter && !PixelFormat.isCompressedFormat(texture.pixelFormat) && CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             minificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
             var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
-            var maximumAnisotropy = Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy));
+            var maximumAnisotropy = Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy));
             var mipmapSamplerKey = getSamplerKey(minificationFilter, magnificationFilter, maximumAnisotropy);
             var mipmapSamplers = context.cache.imageryLayerMipmapSamplers;
             if (!defined(mipmapSamplers)) {
@@ -916,9 +918,7 @@ define([
             }
             texture.sampler = nonMipmapSampler;
         }
-
-        imagery.state = ImageryState.READY;
-    }
+    };
 
     /**
      * Enqueues a command re-projecting a texture to a {@link GeographicProjection} on the next update, if necessary, and generate
@@ -956,7 +956,8 @@ define([
                     },
                     postExecute : function(outputTexture) {
                         imagery.texture = outputTexture;
-                        finalizeReprojectTexture(that, context, imagery, outputTexture);
+                        that._finalizeReprojectTexture(context, outputTexture);
+                        imagery.state = ImageryState.READY;
                         imagery.releaseReference();
                     }
                 });
@@ -965,7 +966,8 @@ define([
             if (needGeographicProjection) {
                 imagery.texture = texture;
             }
-            finalizeReprojectTexture(this, context, imagery, texture);
+            this._finalizeReprojectTexture(context, texture);
+            imagery.state = ImageryState.READY;
         }
     };
 

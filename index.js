@@ -2,36 +2,20 @@
 'use strict';
 
 var path = require('path');
-var requirejs = require('requirejs');
 
-//In explicit development mode, use un-optimized requirejs modules for improved error checking.
-if (process.env.NODE_ENV === 'development') {
-    requirejs.config({
-        paths: {
-            'Cesium': path.join(__dirname, 'Source')
-        },
-        nodeRequire: require
-    });
-    module.exports = requirejs('Cesium/Cesium');
+// If in 'production' mode, use the combined/minified/optimized version of Cesium
+if (process.env.NODE_ENV === 'production') {
+    module.exports = require(path.join(__dirname, 'Build/Cesium/Cesium'));
     return;
 }
 
-//In all other cases, use minified Cesium for performance.
+// Otherwise, use un-optimized requirejs modules for improved error checking. For example 'development' mode
+var requirejs = require('requirejs');
 requirejs.config({
     paths: {
-        'Cesium': path.join(__dirname, 'Build/Cesium/Cesium')
+        'Cesium': path.join(__dirname, 'Source')
     },
     nodeRequire: require
 });
 
-const hadCesiumProperty = global.hasOwnProperty('Cesium');
-const oldCesium = global.Cesium;
-
-requirejs('Cesium');
-module.exports = global.Cesium;
-
-if (hadCesiumProperty) {
-    global.Cesium = oldCesium;
-} else {
-    delete global.Cesium;
-}
+module.exports = requirejs('Cesium/Cesium');

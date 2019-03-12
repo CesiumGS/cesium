@@ -136,6 +136,9 @@ defineSuite([
     var emissiveUrl = './Data/Models/PBR/BoxEmissive/BoxEmissive.gltf';
     var dracoCompressedModelUrl = './Data/Models/DracoCompression/CesiumMilkTruck/CesiumMilkTruck.gltf';
     var dracoCompressedModelWithAnimationUrl = './Data/Models/DracoCompression/CesiumMan/CesiumMan.gltf';
+    var dracoCompressedModelWithLinesUrl = './Data/Models/DracoCompression/BoxWithLines/BoxWithLines.gltf';
+    var dracoBoxVertexColorsRGBUrl = './Data/Models/DracoCompression/BoxVertexColorsDracoRGB.gltf';
+    var dracoBoxVertexColorsRGBAUrl = './Data/Models/DracoCompression/BoxVertexColorsDracoRGBA.gltf';
 
     var boxGltf2Url = './Data/Models/Box-Gltf-2/Box.gltf';
     var boxGltf2WithTechniquesUrl = './Data/Models/Box-Gltf-2-Techniques/Box.gltf';
@@ -171,6 +174,7 @@ defineSuite([
         modelPromises.push(loadModel(riggedFigureUrl).then(function(model) {
             riggedFigureModel = model;
         }));
+        modelPromises.push(FeatureDetection.supportsWebP.initialize());
 
         return when.all(modelPromises);
     });
@@ -977,7 +981,8 @@ defineSuite([
     });
 
     it('Throws for EXT_texture_webp if browser does not support WebP', function() {
-        spyOn(FeatureDetection, 'supportsWebPSync').and.returnValue(false);
+        var supportsWebP = FeatureDetection.supportsWebP._result;
+        FeatureDetection.supportsWebP._result = false;
         return Resource.fetchJson(texturedBoxWebpUrl).then(function(gltf) {
             gltf.extensionsRequired = ['EXT_texture_webp'];
             var model = primitives.add(new Model({
@@ -988,6 +993,7 @@ defineSuite([
                 scene.renderForSpecs();
             }).toThrowRuntimeError();
             primitives.remove(model);
+            FeatureDetection.supportsWebP._result = supportsWebP;
         });
     });
 
@@ -1203,6 +1209,9 @@ defineSuite([
     });
 
     it('renders textured box with WebP texture', function() {
+        if (!FeatureDetection.supportsWebP()) {
+            return;
+        }
         return loadModel(texturedBoxWebpUrl, {
             incrementallyLoadTextures : false
         }).then(function(m) {
@@ -2603,6 +2612,13 @@ defineSuite([
         });
     });
 
+    it('loads a glTF with KHR_draco_mesh_compression extension and LINES attributes', function() {
+        return loadModel(dracoCompressedModelWithLinesUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
     it('loads multiple draco models from cache without decoding', function() {
         var initialModel;
         var decoder = DracoLoader._getDecoderTaskProcessor();
@@ -2672,6 +2688,20 @@ defineSuite([
             expect(atrributeData['NORMAL'].quantization).toBeDefined();
             expect(atrributeData['JOINTS_0'].quantization).toBeUndefined();
 
+            primitives.remove(m);
+        });
+    });
+
+    it('loads draco compressed glTF with RGBA per-vertex color', function() {
+        return loadModel(dracoBoxVertexColorsRGBAUrl).then(function(m) {
+            verifyRender(m);
+            primitives.remove(m);
+        });
+    });
+
+    it('loads draco compressed glTF with RGB per-vertex color', function() {
+        return loadModel(dracoBoxVertexColorsRGBUrl).then(function(m) {
+            verifyRender(m);
             primitives.remove(m);
         });
     });
@@ -3223,7 +3253,6 @@ defineSuite([
                         tilesWaitingForChildren : 0
                     }
                 },
-                tileLoadedEvent : new Event(),
                 imageryLayersUpdatedEvent : new Event(),
                 destroy : function() {}
             };

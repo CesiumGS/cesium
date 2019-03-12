@@ -1,6 +1,8 @@
 define([
+        './Cartesian3',
         './defaultValue'
     ], function(
+        Cartesian3,
         defaultValue) {
     'use strict';
 
@@ -16,7 +18,7 @@ define([
       *                       The vertex data is in the order [X, Y, Z, H, U, V], where X, Y, and Z represent
       *                       the Cartesian position of the vertex, H is the height above the ellipsoid, and
       *                       U and V are the texture coordinates.
-      * @param {Uint16Array|Uint32Array} indices The indices describing how the vertices are connected to form triangles.
+      * @param {Uint8Array|Uint16Array|Uint32Array} indices The indices describing how the vertices are connected to form triangles.
       * @param {Number} minimumHeight The lowest height in the tile, in meters above the ellipsoid.
       * @param {Number} maximumHeight The highest height in the tile, in meters above the ellipsoid.
       * @param {BoundingSphere} boundingSphere3D A bounding sphere that completely contains the tile.
@@ -27,10 +29,19 @@ define([
       * @param {OrientedBoundingBox} [orientedBoundingBox] A bounding box that completely contains the tile.
       * @param {TerrainEncoding} encoding Information used to decode the mesh.
       * @param {Number} exaggeration The amount that this mesh was exaggerated.
+      * @param {Number[]} westIndicesSouthToNorth The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
+      * @param {Number[]} southIndicesEastToWest The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
+      * @param {Number[]} eastIndicesNorthToSouth The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
+      * @param {Number[]} northIndicesWestToEast The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
       *
       * @private
       */
-    function TerrainMesh(center, vertices, indices, minimumHeight, maximumHeight, boundingSphere3D, occludeePointInScaledSpace, vertexStride, orientedBoundingBox, encoding, exaggeration) {
+    function TerrainMesh(
+        center, vertices, indices, minimumHeight, maximumHeight,
+        boundingSphere3D, occludeePointInScaledSpace,
+        vertexStride, orientedBoundingBox, encoding, exaggeration,
+        westIndicesSouthToNorth, southIndicesEastToWest, eastIndicesNorthToSouth, northIndicesWestToEast) {
+
         /**
          * The center of the tile.  Vertex positions are specified relative to this center.
          * @type {Cartesian3}
@@ -57,7 +68,7 @@ define([
 
         /**
          * The indices describing how the vertices are connected to form triangles.
-         * @type {Uint16Array|Uint32Array}
+         * @type {Uint8Array|Uint16Array|Uint32Array}
          */
         this.indices = indices;
 
@@ -104,6 +115,30 @@ define([
          * @type {Number}
          */
         this.exaggeration = exaggeration;
+
+        /**
+         * The indices of the vertices on the Western edge of the tile, ordered from South to North (clockwise).
+         * @type {Number[]}
+         */
+        this.westIndicesSouthToNorth = westIndicesSouthToNorth;
+
+        /**
+         * The indices of the vertices on the Southern edge of the tile, ordered from East to West (clockwise).
+         * @type {Number[]}
+         */
+        this.southIndicesEastToWest = southIndicesEastToWest;
+
+        /**
+         * The indices of the vertices on the Eastern edge of the tile, ordered from North to South (clockwise).
+         * @type {Number[]}
+         */
+        this.eastIndicesNorthToSouth = eastIndicesNorthToSouth;
+
+        /**
+         * The indices of the vertices on the Northern edge of the tile, ordered from West to East (clockwise).
+         * @type {Number[]}
+         */
+        this.northIndicesWestToEast = northIndicesWestToEast;
     }
 
     return TerrainMesh;
