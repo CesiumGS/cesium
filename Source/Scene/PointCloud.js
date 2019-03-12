@@ -634,7 +634,7 @@ define([
 
         var batchIdsVertexBuffer;
         if (hasBatchIds) {
-            batchIds = prepareVertexAttribute(batchIds, "batchIds");
+            batchIds = prepareVertexAttribute(batchIds, 'batchIds');
             batchIdsVertexBuffer = Buffer.createVertexBuffer({
                 context : context,
                 typedArray : batchIds,
