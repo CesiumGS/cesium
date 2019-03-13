@@ -266,6 +266,7 @@ define([
          * @default true
          */
         this.prefetchFlightDestinations = defaultValue(options.prefetchFlightDestinations, true);
+        this._prefetchPass = false;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -2216,6 +2217,9 @@ define([
         var passOptions = Cesium3DTilePass.getPassOptions(pass);
         var ignoreCommands = passOptions.ignoreCommands;
 
+        // Need a flag somewhere to promote the priority of prefetches
+        this._prefetchPass = pass === Cesium3DTilePass.PREFETCH ? true : false;
+
         var commandList = defaultValue(tilesetPassState.commandList, originalCommandList);
         var commandStart = commandList.length;
 
@@ -2226,6 +2230,9 @@ define([
         var statisticsLast = this._statisticsLastPerPass[pass];
 
         tilesetPassState.ready = update(this, frameState, statisticsLast, passOptions);
+
+        // Turn off
+        this._prefetchPass = false;
 
         if (ignoreCommands) {
             commandList.length = commandStart;
