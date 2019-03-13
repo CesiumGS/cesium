@@ -344,7 +344,7 @@ define([
         /**
          * Gets the zindex
          * @type {Number}
-         * @memberof GroundGeometryUpdater.prototype
+         * @memberof PolylineGeometryUpdater.prototype
          * @readonly
          */
         zIndex: {
