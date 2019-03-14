@@ -11,6 +11,7 @@ Change Log
 
 ##### Additions :tada:
 * `Resource.fetchImage` now has a `flipY` option to vertically flip an image during fetch & decode. It is only valid when `ImageBitmapOptions` is supported by the browser. [#7579](https://github.com/AnalyticalGraphicsInc/cesium/pull/7579)
+* Added `backFaceCulling` and `normalShading` options to `PointCloudShading`. Both options are only applicable for point clouds containing normals. [#7399](https://github.com/AnalyticalGraphicsInc/cesium/pull/7399)
 
 ##### Fixes :wrench:
 * Fixed the value for `BlendFunction.ONE_MINUS_CONSTANT_COLOR`. [#7624](https://github.com/AnalyticalGraphicsInc/cesium/pull/7624)
