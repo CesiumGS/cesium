@@ -147,13 +147,13 @@ define([
         this._quantizedRange = 0.0;
         this._octEncodedRange = 0.0;
 
-        this._pointCloudShading = defined(options.shading) ? options.shading : new PointCloudShading();
-
         // Use per-point normals to hide back-facing points.
-        this._backFaceCulling = this.backFaceCulling;
+        this.backFaceCulling = false;
+        this._backFaceCulling = false;
 
         // Whether to enable normal shading
-        this._normalShading = this.normalShading;
+        this.normalShading = true;
+        this._normalShading = true;
 
         this._opaqueRenderState = undefined;
         this._translucentRenderState = undefined;
@@ -245,18 +245,6 @@ define([
             },
             set : function(value) {
                 this._boundingSphere = BoundingSphere.clone(value);
-            }
-        },
-
-        backFaceCulling : {
-            get : function() {
-                return this._pointCloudShading.backFaceCulling;
-            }
-        },
-
-        normalShading : {
-            get : function() {
-                return this._pointCloudShading.normalShading;
             }
         }
     });
