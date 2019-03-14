@@ -18,6 +18,8 @@ define([
      * @param {Boolean} [options.eyeDomeLighting=true] When true, use eye dome lighting when drawing with point attenuation.
      * @param {Number} [options.eyeDomeLightingStrength=1.0] Increasing this value increases contrast on slopes and edges.
      * @param {Number} [options.eyeDomeLightingRadius=1.0] Increase the thickness of contours from eye dome lighting.
+     * @param {Boolean} [options.backFaceCulling=false] Determines whether back-facing points are hidden. This option works only if data has normals included.
+     * @param {Boolean} [options.normalShading=true] Determines whether a point cloud that contains normals is shaded based on the sun direction.
      *
      * @alias PointCloudShading
      * @constructor
@@ -78,7 +80,7 @@ define([
         this.eyeDomeLightingRadius = defaultValue(pointCloudShading.eyeDomeLightingRadius, 1.0);
 
         /**
-         * Determines whether backfaces of points are hidden.
+         * Determines whether back-facing points are hidden.
          * This option works only if data has normals included.
          *
          * @type {Boolean}
