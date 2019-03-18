@@ -315,6 +315,7 @@ define([
         this._distanceToCamera = 0;
         this._centerZDepth = 0;
         this._screenSpaceError = 0;
+        this._screenSpaceErrorProgressiveResolution = 0; // The screen space error at a given screen height of tileset.progressiveResolutionHeightFraction * screenHeight
         this._visibilityPlaneMask = 0;
         this._visible = false;
         this._inRequestVolume = false;
@@ -674,8 +675,9 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.getScreenSpaceError = function(frameState, useParentGeometricError) {
+    Cesium3DTile.prototype.getScreenSpaceError = function(frameState, useParentGeometricError, progressiveResolutionHeightFraction) {
         var tileset = this._tileset;
+        var heightFraction = defaultValue(progressiveResolutionHeightFraction, 1.0);
         var parentGeometricError = defined(this.parent) ? this.parent.geometricError : tileset._geometricError;
         var geometricError = useParentGeometricError ? parentGeometricError : this.geometricError;
         if (geometricError === 0.0) {
@@ -686,7 +688,7 @@ define([
         var frustum = camera.frustum;
         var context = frameState.context;
         var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+        var height = context.drawingBufferHeight * heightFraction; // If progresiveSSEHeightFraction was provided, maybe take min with 1080p for rediculously large screens like 8k making this opt from moving fast?
         var error;
         if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
             if (defined(frustum._offCenterFrustum)) {
@@ -716,12 +718,14 @@ define([
      */
     Cesium3DTile.prototype.updateVisibility = function(frameState) {
         var parent = this.parent;
-        var parentTransform = defined(parent) ? parent.computedTransform : this._tileset.modelMatrix;
+        var tileset = this._tileset;
+        var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
         var parentVisibilityPlaneMask = defined(parent) ? parent._visibilityPlaneMask : CullingVolume.MASK_INDETERMINATE;
         this.updateTransform(parentTransform);
         this._distanceToCamera = this.distanceToTile(frameState);
         this._centerZDepth = this.distanceToTileCenter(frameState);
         this._screenSpaceError = this.getScreenSpaceError(frameState, false);
+        this._screenSpaceErrorProgressiveResolution = this.getScreenSpaceError(frameState, false, tileset.progressiveResolutionHeightFraction);
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
