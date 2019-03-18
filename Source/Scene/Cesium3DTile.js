@@ -1341,7 +1341,7 @@ define([
         // Most of these digits behave like penalties for not having a flag raised. Makes it easier to reason about and simplifies logic.
         // These digits sort tiles into higher and lower priorities, then the general priority digits(depth/distance) will sort tiles within these higher digits
         var progressiveResolutionScale = distanceScale * 10; // This is penalized less than foveated tiles because we want center tiles to continuously load
-        var foveatedScaled = progressiveResolutionScale * 10;
+        var foveatedScale = progressiveResolutionScale * 10;
 
         // Map 0-1 then convert to digit
         var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
@@ -1354,52 +1354,6 @@ define([
 
         // Get the final base 10 number
         var number = foveatedDigit + distanceDigit + depthDigit + progressiveResolutionDigit;
-        this._priority = number;
-    };
-
-    /**
-     * Sets the priority of the tile based on distance and depth
-     * @private
-     */
-    Cesium3DTile.prototype.updatePriority = function() {
-        var tileset = this.tileset;
-        var minPriority = tileset._minPriority;
-        var maxPriority = tileset._maxPriority;
-
-        // Mix priorities by mapping them into base 10 numbers
-        // Because the mappings are fuzzy you need a digit or two of separation in some cases so priorities don't bleed into each other
-        // These two digits are generally how tiles are prioritized
-        var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
-        var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
-
-        // Map 0-1 then convert to digit
-        var zeroToOneDepth = CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
-        zeroToOneDepth = this.refine === Cesium3DTileRefine.ADD ? 1.0 - zeroToOneDepth : zeroToOneDepth; // For addative (pointclouds), load leaves first
-        var depthDigit = depthScale * zeroToOneDepth;
-        var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
-
-        // Digits, or numerical bin. Most of them behave like penalties for not having a flag raised. Makes it easier to reason about and simplifies logic.
-        // These digits sort tiles into higher and lower priorities, then the general priority digits(depth/distance) will sort tiles within these higher digits
-        // Mult by 10 for next base 10 digit from the previous
-        var progressiveSSEScale = distanceScale * 10;
-        var foveatedScaled = progressiveSSEScale * 10;
-        var prefetchScale = foveatedScaled * 10;
-        var fillVoidScale = prefetchScale * 10; // These should probably be highest penalty
-
-        var progressiveSSE = this._priorityProgressiveSSE;
-        var foveated = this._priorityDeferred;
-        var prefetch = tileset._prefetchPass;
-        var fillVoid = this._priorityFillVoid;
-
-        // No need to map. It's either the digit or 0.
-        var progressiveSSEDigit = progressiveSSE ? 0 : progressiveSSEScale;
-        var foveatedDigit = !foveated ? 0 : foveatedScaled;
-        var prefetchDigit = prefetch ? 0 : prefetchScale;
-        var fillVoidDigit = fillVoid ? 0 : fillVoidScale; // Highest penality if not having these values, i.e. we want these the most
-
-
-        // Get the final base 10 number
-        var number = depthDigit + distanceDigit + foveatedDigit + progressiveSSEDigit + prefetchDigit + fillVoidDigit;
         this._priority = number;
     };
 
