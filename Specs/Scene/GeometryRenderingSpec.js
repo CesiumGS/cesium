@@ -1,4 +1,5 @@
 defineSuite([
+        'Core/ArcType',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/PlaneGeometry',
@@ -41,6 +42,7 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], 'Scene/GeometryRendering', function(
+        ArcType,
         BoundingSphere,
         BoxGeometry,
         PlaneGeometry,
@@ -1563,7 +1565,7 @@ defineSuite([
                     ]),
                     width : 20.0,
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
-                    followSurface: false
+                    arcType : ArcType.NONE
                 }),
                 id : 'polyline'
             });
@@ -1582,7 +1584,7 @@ defineSuite([
                     width : 20.0,
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
                     colorsPerVertex : true,
-                    followSurface: false
+                    arcType : ArcType.NONE
                 }),
                 id : 'polyline'
             });

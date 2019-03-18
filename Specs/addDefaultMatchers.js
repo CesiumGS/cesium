@@ -576,6 +576,21 @@ define([
                 };
             },
 
+            toBeImageOrImageBitmap : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual) {
+                        if (typeof createImageBitmap !== 'function') {
+                            return {
+                                pass : actual instanceof Image
+                            };
+                        }
+
+                        return {
+                            pass : actual instanceof ImageBitmap || actual instanceof Image
+                        };
+                    }
+                };
+            },
             toThrowDeveloperError : makeThrowFunction(debug, DeveloperError, 'DeveloperError'),
 
             toThrowRuntimeError : makeThrowFunction(true, RuntimeError, 'RuntimeError'),

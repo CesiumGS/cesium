@@ -490,7 +490,10 @@ define([
         return 10.0;
     }
 
+    var defaultShading = new PointCloudShading();
+
     function renderFrame(that, frame, updateState, frameState) {
+        var shading = defaultValue(that.shading, defaultShading);
         var pointCloud = frame.pointCloud;
         var transform = defaultValue(frame.transform, Matrix4.IDENTITY);
         pointCloud.modelMatrix = Matrix4.multiplyTransformation(that.modelMatrix, transform, scratchModelMatrix);
@@ -499,14 +502,13 @@ define([
         pointCloud.shadows = that.shadows;
         pointCloud.clippingPlanes = that._clippingPlanes;
         pointCloud.isClipped = updateState.isClipped;
+        pointCloud.attenuation = shading.attenuation;
+        pointCloud.backFaceCulling = shading.backFaceCulling;
+        pointCloud.normalShading = shading.normalShading;
+        pointCloud.geometricError = getGeometricError(that, pointCloud);
+        pointCloud.geometricErrorScale = shading.geometricErrorScale;
+        pointCloud.maximumAttenuation = getMaximumAttenuation(that);
 
-        var shading = that.shading;
-        if (defined(shading)) {
-            pointCloud.attenuation = shading.attenuation;
-            pointCloud.geometricError = getGeometricError(that, pointCloud);
-            pointCloud.geometricErrorScale = shading.geometricErrorScale;
-            pointCloud.maximumAttenuation = getMaximumAttenuation(that);
-        }
         pointCloud.update(frameState);
         frame.touchedFrameNumber = frameState.frameNumber;
     }

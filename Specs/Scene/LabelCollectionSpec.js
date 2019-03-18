@@ -1983,6 +1983,17 @@ defineSuite([
             expect(label.text).toEqual(text);
             expect(label._renderedText).toEqual(expectedText);
         });
+
+        it('should reversing correctly non alphabetic characters', function() {
+            var text = 'A אב: ג\nאב: ג';
+            var expectedText = 'A ג :בא\nג :בא';
+            var label = labels.add({
+                text : text
+            });
+
+            expect(label.text).toEqual(text);
+            expect(label._renderedText).toEqual(expectedText);
+        });
     });
 
     it('computes bounding sphere in 3D', function() {

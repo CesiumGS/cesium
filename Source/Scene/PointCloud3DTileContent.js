@@ -14,6 +14,7 @@ define([
         './Cesium3DTileFeature',
         './Cesium3DTileRefine',
         './PointCloud',
+        './PointCloudShading',
         './SceneMode'
     ], function(
         Color,
@@ -31,6 +32,7 @@ define([
         Cesium3DTileFeature,
         Cesium3DTileRefine,
         PointCloud,
+        PointCloudShading,
         SceneMode) {
     'use strict';
 
@@ -270,9 +272,11 @@ define([
         }
     };
 
+    var defaultShading = new PointCloudShading();
+
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
         var pointCloud = this._pointCloud;
-        var pointCloudShading = tileset.pointCloudShading;
+        var pointCloudShading = defaultValue(tileset.pointCloudShading, defaultShading);
         var tile = this._tile;
         var batchTable = this._batchTable;
         var mode = frameState.mode;
@@ -300,7 +304,6 @@ define([
         this._styleDirty = false;
 
         pointCloud.clippingPlanesOriginMatrix = tileset.clippingPlanesOriginMatrix;
-
         pointCloud.style = defined(batchTable) ? undefined : tileset.style;
         pointCloud.styleDirty = styleDirty;
         pointCloud.modelMatrix = tile.computedTransform;
@@ -310,9 +313,11 @@ define([
         pointCloud.clippingPlanes = clippingPlanes;
         pointCloud.isClipped = defined(clippingPlanes) && clippingPlanes.enabled && tile._isClipped;
         pointCloud.clippingPlanesDirty = tile.clippingPlanesDirty;
-        pointCloud.attenuation = defined(pointCloudShading) ? pointCloudShading.attenuation : false;
+        pointCloud.attenuation = pointCloudShading.attenuation;
+        pointCloud.backFaceCulling = pointCloudShading.backFaceCulling;
+        pointCloud.normalShading = pointCloudShading.normalShading;
         pointCloud.geometricError = getGeometricError(this);
-        pointCloud.geometricErrorScale = defined(pointCloudShading) ? pointCloudShading.geometricErrorScale : 1.0;
+        pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
         if (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) {
             pointCloud.maximumAttenuation = pointCloudShading.maximumAttenuation;
         } else if (tile.refine === Cesium3DTileRefine.ADD) {
