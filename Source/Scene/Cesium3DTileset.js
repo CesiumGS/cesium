@@ -244,6 +244,8 @@ define([
         this.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, true);
         this.cullRequestsWhileMovingMultiplier = defaultValue(options.cullRequestsWhileMovingMultiplier, 60);
 
+        this.progressiveResolutionHeightFraction = CesiumMath.clamp(defaultValue(options.progressiveResolutionHeightFraction, 0.3), 0, 1);
+
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;
 
