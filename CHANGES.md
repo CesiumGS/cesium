@@ -7,16 +7,21 @@ Change Log
 * `czm_materialInput.slope` is now an angle in radians between 0 and pi/2 (flat to vertical), rather than a projected length 1 to 0 (flat to vertical).
 
 ##### Additions :tada:
+* Updated terrain and imagery rendering, resulting in terrain/imagery loading ~33% faster and using ~33% less data [#7061](https://github.com/AnalyticalGraphicsInc/cesium/pull/7061)
 * `czm_materialInput.aspect` was added as an angle in radians between 0 and 2pi (east, north, west to south).
+* Added CZML `arcType` support for `polyline` and `polygon`, which supersedes `followSurface`. `followSurface` is still supported for compatibility with existing documents. [#7582](https://github.com/AnalyticalGraphicsInc/cesium/pull/7582)
 
 ##### Fixes :wrench:
 * Fixed an issue where models would cause a crash on load if some primitives were Draco encoded and others were not. [#7383](https://github.com/AnalyticalGraphicsInc/cesium/issues/7383)
+* Fixed an issue where RTL labels not reversing correctly non alphabetic characters [#7501](https://github.com/AnalyticalGraphicsInc/cesium/pull/7501)
 * Fixed Node.js support for the `Resource` class and any functionality using it internally.
 * Fixed an issue where some ground polygons crossing the Prime Meridian would have incorrect bounding rectangles. [#7533](https://github.com/AnalyticalGraphicsInc/cesium/pull/7533)
 * Fixed an issue where polygons on terrain using rhumb lines where being rendered incorrectly. [#7538](https://github.com/AnalyticalGraphicsInc/cesium/pulls/7538)
 * Fixed an issue with `EllipsoidRhumbLines.findIntersectionWithLongitude` when longitude was IDL. [#7551](https://github.com/AnalyticalGraphicsInc/cesium/issues/7551)
 * Fixed model silhouette colors when rendering with high dynamic range. [#7563](https://github.com/AnalyticalGraphicsInc/cesium/pull/7563)
 * Fixed an issue with ground polylines on globes that use ellipsoids other than WGS84. [#7552](https://github.com/AnalyticalGraphicsInc/cesium/issues/7552)
+* Fixed an issue where Draco compressed models with RGB per-vertex color would not load in Cesium. [#7576](https://github.com/AnalyticalGraphicsInc/cesium/issues/7576)
+* Fixed an issue where the outline geometry for extruded Polygons didn't calculate the correct indices. [#7599](https://github.com/AnalyticalGraphicsInc/cesium/issues/7599)
 
 ### 1.54 - 2019-02-01
 

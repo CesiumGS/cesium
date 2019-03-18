@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/PolylineMaterialAppearance',
+        'Core/ArcType',
         'Core/Cartesian3',
         'Core/GeometryInstance',
         'Core/PolylineGeometry',
@@ -9,6 +10,7 @@ defineSuite([
         'Specs/createScene'
     ], function(
         PolylineMaterialAppearance,
+        ArcType,
         Cartesian3,
         GeometryInstance,
         PolylineGeometry,
@@ -58,7 +60,7 @@ defineSuite([
                     ],
                     width : 10.0,
                     vertexFormat : PolylineMaterialAppearance.VERTEX_FORMAT,
-                    followSurface: false
+                    arcType : ArcType.NONE
                 })
             }),
             appearance : new PolylineMaterialAppearance({
