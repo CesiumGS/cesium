@@ -216,8 +216,31 @@ define([
         return movementRatio < 1;
     }
 
+
+    function progressiveResolutionStoppedRefining(tileset, tile, frameState) {
+        if (tileset.progressiveResolutionHeightFraction <= 0 || tileset.progressiveResolutionHeightFraction >= 1) {
+            return;
+        }
+
+        if (!hasUnloadedContent(tile) && !tile.contentExpired) {
+            // Comment this early return out for better heatmap debugging (so that it gets updated every frame)
+            return;
+        }
+
+        tile._priorityProgressiveResolution = tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError; // Mark non-SSE leaves
+        var parent = tile.parent;
+        var maxSSE = tileset._maximumScreenSpaceError;
+        var tilePasses = tile._screenSpaceErrorProgressiveResolution <= maxSSE;
+        var parentFails = defined(parent) && parent._screenSpaceErrorProgressiveResolution > maxSSE;
+        if (tilePasses && parentFails) { // A progressive resolution SSE leaf, load and promote its priority
+            tile._priorityProgressiveResolution = true;
+            loadTile(tileset, tile, frameState);
+        }
+    }
+
     function loadTile(tileset, tile, frameState) {
-        if ((hasUnloadedContent(tile) || tile.contentExpired) && isOnScreenLongEnough(tileset, tile, frameState)) {
+        // Can go inside the if but put out here for debug viewing (updated every frame)
+        if (tile._requestedFrame !== frameState.frameNumber && (hasUnloadedContent(tile) || tile.contentExpired) && isOnScreenLongEnough(tileset, tile, frameState)) {
             tile._requestedFrame = frameState.frameNumber;
             tileset._requestedTiles.push(tile);
         }
@@ -483,6 +506,9 @@ define([
             }
 
             var stoppedRefining = !refines && parentRefines;
+
+            // Load progressive screen resolution SSE leaves
+            progressiveResolutionStoppedRefining(tileset, tile, frameState);
 
             if (hasEmptyContent(tile)) {
                 // Add empty tile just to show its debug bounding volume
