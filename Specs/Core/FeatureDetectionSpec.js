@@ -116,11 +116,22 @@ defineSuite([
         }
     });
 
+    it('supportWebP throws when it has not been initialized', function() {
+        FeatureDetection.supportsWebP._promise = undefined;
+        FeatureDetection.supportsWebP._result = undefined;
+        expect(function() {
+            FeatureDetection.supportsWebP();
+        }).toThrowDeveloperError();
+    });
+
     it('detects WebP support', function() {
-        return FeatureDetection.supportsWebP()
+        FeatureDetection.supportsWebP._promise = undefined;
+        FeatureDetection.supportsWebP._result = undefined;
+
+        return FeatureDetection.supportsWebP.initialize()
             .then(function(supportsWebP) {
                 expect(typeof supportsWebP).toEqual('boolean');
-                expect(FeatureDetection.supportsWebPSync()).toEqual(supportsWebP);
+                expect(FeatureDetection.supportsWebP()).toEqual(supportsWebP);
             });
     });
 });

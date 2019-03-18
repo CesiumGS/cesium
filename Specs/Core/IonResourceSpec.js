@@ -225,8 +225,10 @@ defineSuite([
         var fetchImage = spyOn(Resource.prototype, 'fetchImage');
         var endpointResource = IonResource._createEndpointResource(assetId);
         var resource = new IonResource(endpoint, endpointResource);
-        resource.fetchImage(false, true);
-        expect(fetchImage).toHaveBeenCalledWith(true, true);
+        resource.fetchImage();
+        expect(fetchImage).toHaveBeenCalledWith({
+            preferBlob : true
+        });
     });
 
     it('Calls base fetchImage with no changes for external assets', function() {
@@ -240,8 +242,12 @@ defineSuite([
         var fetchImage = spyOn(Resource.prototype, 'fetchImage');
         var endpointResource = IonResource._createEndpointResource(assetId);
         var resource = new IonResource(externalEndpoint, endpointResource);
-        resource.fetchImage(false, true);
-        expect(fetchImage).toHaveBeenCalledWith(false, true);
+        resource.fetchImage({
+            preferBlob : false
+        });
+        expect(fetchImage).toHaveBeenCalledWith({
+            preferBlob : false
+        });
     });
 
     describe('retryCallback', function() {
