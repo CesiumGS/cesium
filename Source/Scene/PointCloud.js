@@ -516,7 +516,7 @@ define([
         return boundingSphere;
     }
 
-    function prepareVertexAttribute(typedArray) {
+    function prepareVertexAttribute(typedArray, name) {
         // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
         var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
         if (componentDatatype === ComponentDatatype.INT || componentDatatype === ComponentDatatype.UNSIGNED_INT || componentDatatype === ComponentDatatype.DOUBLE) {
@@ -573,7 +573,7 @@ define([
             for (var name in styleableProperties) {
                 if (styleableProperties.hasOwnProperty(name)) {
                     var property = styleableProperties[name];
-                    var typedArray = prepareVertexAttribute(property.typedArray);
+                    var typedArray = prepareVertexAttribute(property.typedArray, name);
                     componentsPerAttribute = property.componentCount;
                     componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
 
@@ -634,7 +634,7 @@ define([
 
         var batchIdsVertexBuffer;
         if (hasBatchIds) {
-            batchIds = prepareVertexAttribute(batchIds);
+            batchIds = prepareVertexAttribute(batchIds, 'batchIds');
             batchIdsVertexBuffer = Buffer.createVertexBuffer({
                 context : context,
                 typedArray : batchIds,
