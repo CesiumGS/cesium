@@ -3186,10 +3186,12 @@ define([
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
-            if ((primitive instanceof Cesium3DTileset) && primitive.show) {
+            if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
                 primitive.unloadTiles(frameState);
                 primitive._cache.reset();
                 primitive.cancelOutOfViewRequests(frameState);
+                primitive.processTiles(frameState);
+                primitive.raiseLoadProgressEvent(frameState);
             }
         }
     }
