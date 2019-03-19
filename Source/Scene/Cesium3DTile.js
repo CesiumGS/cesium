@@ -688,7 +688,7 @@ define([
         var frustum = camera.frustum;
         var context = frameState.context;
         var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight * heightFraction; // If progresiveSSEHeightFraction was provided, maybe take min with 1080p for rediculously large screens like 8k making this opt from moving fast?
+        var height = context.drawingBufferHeight * heightFraction;
         var error;
         if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
             if (defined(frustum._offCenterFrustum)) {

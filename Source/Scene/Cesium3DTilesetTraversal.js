@@ -217,14 +217,14 @@ define([
     }
 
     function progressiveResolutionStoppedRefining(tileset, tile, frameState) {
-        if (tileset.progressiveResolutionHeightFraction <= 0 || tileset.progressiveResolutionHeightFraction >= 1) {
+        if (tileset.progressiveResolutionHeightFraction <= 0 || tileset.progressiveResolutionHeightFraction > 0.5) {
             return;
         }
 
-        // if (!hasUnloadedContent(tile) && !tile.contentExpired) {
-        //     // Comment this early return out for better heatmap debugging (so that it gets updated every frame)
-        //     return;
-        // }
+        if (!hasUnloadedContent(tile) && !tile.contentExpired) {
+            // Comment this early return out for better heatmap debugging (so that it gets updated every frame)
+            return;
+        }
 
         tile._priorityProgressiveResolution = tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError; // Mark non-SSE leaves
         var parent = tile.parent;
