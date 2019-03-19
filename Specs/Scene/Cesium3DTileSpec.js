@@ -362,11 +362,13 @@ defineSuite([
         var tile1 = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
         tile1._priorityDistanceHolder = tile1;
         tile1._priorityDistance = 0;
+        tile1._priorityProgressiveResolution = true;
         tile1._depth = 0;
 
         var tile2 = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
         tile2._priorityDistanceHolder = tile1;
         tile2._priorityDistance = 1; // priorityDistance is actually 0 since its linked up to tile1
+        tile2._priorityProgressiveResolution = true;
         tile2._depth = 1;
 
         mockTileset._minPriority = { depth: 0, distance: 0 };
@@ -380,9 +382,16 @@ defineSuite([
         expect(CesiumMath.equalsEpsilon(tile1._priority, tile1ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
         expect(CesiumMath.equalsEpsilon(tile2._priority, tile2ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
 
+        // Priority not progressive resolution penalty
+        tile2._priorityProgressiveResolution = false;
+        tile2.updatePriority();
+        expect(tile2._priority).toBeGreaterThan(1000);
+        tile2._priorityProgressiveResolution = true;
+
         // Priority deferral penalty
         tile2._priorityDeferred = true;
         tile2.updatePriority();
-        expect(tile2._priority).toBeGreaterThan(1000);
+        expect(tile2._priority).toBeGreaterThan(10000);
+        tile2._priorityDeferred = false;
     });
 }, 'WebGL');
