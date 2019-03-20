@@ -2222,18 +2222,13 @@ define([
 
         tilesetPassState.ready = false;
 
-        var preloadWhenHidden = !this.show && this.preloadWhenHidden;
         var pass = tilesetPassState.pass;
-
-        if (pass === Cesium3DTilePass.RENDER && preloadWhenHidden) {
-            pass = Cesium3DTilePass.PRELOAD;
-        }
 
         var passOptions = Cesium3DTilePass.getPassOptions(pass);
         var ignoreCommands = passOptions.ignoreCommands;
 
         // Need a flag somewhere to promote the priority of preloads
-        this._preloadFlightPass = pass === Cesium3DTilePass.PRELOAD ? true : false;
+        this._preloadFlightPass = pass === Cesium3DTilePass.PRELOAD_FLIGHT ? true : false;
 
         var commandList = defaultValue(tilesetPassState.commandList, originalCommandList);
         var commandStart = commandList.length;

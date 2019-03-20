@@ -20,9 +20,10 @@ define([
         PICK : 1,
         SHADOW : 2,
         PRELOAD : 3,
-        MOST_DETAILED_PRELOAD : 4,
-        MOST_DETAILED_PICK : 5,
-        NUMBER_OF_PASSES : 6
+        PRELOAD_FLIGHT : 4,
+        MOST_DETAILED_PRELOAD : 5,
+        MOST_DETAILED_PICK : 6,
+        NUMBER_OF_PASSES : 7
     };
 
     var passOptions = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
@@ -49,6 +50,13 @@ define([
     });
 
     passOptions[Cesium3DTilePass.PRELOAD] = freezeObject({
+        traversal : Cesium3DTilesetTraversal,
+        isRender : false,
+        requestTiles : true,
+        ignoreCommands : true
+    });
+
+    passOptions[Cesium3DTilePass.PRELOAD_FLIGHT] = freezeObject({
         traversal : Cesium3DTilesetTraversal,
         isRender : false,
         requestTiles : true,

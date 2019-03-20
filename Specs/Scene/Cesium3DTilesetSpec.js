@@ -3326,7 +3326,7 @@ defineSuite([
             viewNothing(); // Main camera views nothing, pass camera views all tiles
 
             var preloadFlightPassState = new Cesium3DTilePassState({
-                pass : Cesium3DTilePass.PRELOAD,
+                pass : Cesium3DTilePass.PRELOAD_FLIGHT,
                 camera : passCamera,
                 cullingVolume : passCullingVolume
             });

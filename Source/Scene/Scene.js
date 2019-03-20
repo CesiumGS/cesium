@@ -1710,8 +1710,12 @@ define([
         pass : Cesium3DTilePass.PICK
     });
 
-    var preloadFlightTilesetPassState = new Cesium3DTilePassState({
+    var preloadTilesetPassState = new Cesium3DTilePassState({
         pass : Cesium3DTilePass.PRELOAD
+    });
+
+    var preloadFlightTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.PRELOAD_FLIGHT
     });
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
@@ -3204,6 +3208,7 @@ define([
         }
 
         updateMostDetailedRayPicks(scene);
+        updatePreloadPass(scene);
         updatePreloadFlightPass(scene);
 
         frameState.creditDisplay.update();
@@ -3845,6 +3850,21 @@ define([
             return element.object;
         });
     };
+
+    function updatePreloadPass(scene) {
+        var frameState = scene._frameState;
+        preloadTilesetPassState.camera = frameState.camera;
+        preloadTilesetPassState.cullingVolume = frameState.cullingVolume;
+
+        var primitives = scene.primitives;
+        var length = primitives.length;
+        for (var i = 0; i < length; ++i) {
+            var primitive = primitives.get(i);
+            if ((primitive instanceof Cesium3DTileset) && primitive.preloadWhenHidden && !primitive.show) {
+                primitive.updateForPass(scene._frameState, preloadTilesetPassState);
+            }
+        }
+    }
 
     function updatePreloadFlightPass(scene) {
         if (!defined(scene.camera._currentFlight) || !defined(scene.preloadFlightCamera)) {
