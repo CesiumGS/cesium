@@ -1336,7 +1336,7 @@ define([
         var foveatedScale = distanceScale * 10;
 
         // This digit should generally be last
-        var prefetchScale = foveatedScale * 10; // On or off so don't need an additional digit of separation to prevent blend
+        var preloadFlightScale = foveatedScale * 10; // On or off so don't need an additional digit of separation to prevent blend
 
         // Map 0-1 then convert to digit
         var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
@@ -1346,10 +1346,10 @@ define([
 
         var foveatedDigit = this._priorityDeferred ? foveatedScale : 0;
 
-        var prefetchDigit = tileset._prefetchPass && !tileset.preloadWhenHidden ? 0 : prefetchScale; // Penalize non-prefetches
+        var preloadFlightDigit = tileset._preloadFlightPass && !tileset.preloadWhenHidden ? 0 : preloadFlightScale; // Penalize non-preloads
 
         // Get the final base 10 number
-        var number = foveatedDigit + distanceDigit + depthDigit + prefetchDigit;
+        var number = foveatedDigit + distanceDigit + depthDigit + preloadFlightDigit;
         this._priority = number;
     };
 

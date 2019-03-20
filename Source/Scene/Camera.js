@@ -2889,13 +2889,14 @@ define([
         this._currentFlight = flightTween;
 
         if (this._mode === SceneMode.SCENE3D) {
-            if (!defined(this._scene._prefetchCamera)) {
-                this._scene._prefetchCamera = Camera.clone(this);
+            if (!defined(this._scene.preloadFlightCamera)) {
+                this._scene.preloadFlightCamera = Camera.clone(this);
             }
-            this._scene._prefetchCamera.setView({ destination: destination, orientation: orientation });
-            this._scene._prefetchCullingVolume = this._scene._prefetchCamera.frustum.computeCullingVolume(this._scene._prefetchCamera.positionWC, this._scene._prefetchCamera.directionWC, this._scene._prefetchCamera.upWC);
+            this._scene.preloadFlightCamera.setView({ destination: destination, orientation: orientation });
+
+            this._scene.preloadFlightCullingVolume = this._scene.preloadFlightCamera.frustum.computeCullingVolume(this._scene.preloadFlightCamera.positionWC, this._scene.preloadFlightCamera.directionWC, this._scene.preloadFlightCamera.upWC);
         } else {
-            this._scene._prefetchCamera = undefined;
+            this._scene.preloadFlightCamera = undefined;
         }
     };
 

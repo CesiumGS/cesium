@@ -19,8 +19,8 @@ define([
         RENDER : 0,
         PICK : 1,
         SHADOW : 2,
-        PREFETCH : 3,
-        MOST_DETAILED_PREFETCH : 4,
+        PRELOAD : 3,
+        MOST_DETAILED_PRELOAD : 4,
         MOST_DETAILED_PICK : 5,
         NUMBER_OF_PASSES : 6
     };
@@ -48,14 +48,14 @@ define([
         ignoreCommands : false
     });
 
-    passOptions[Cesium3DTilePass.PREFETCH] = freezeObject({
+    passOptions[Cesium3DTilePass.PRELOAD] = freezeObject({
         traversal : Cesium3DTilesetTraversal,
         isRender : false,
         requestTiles : true,
         ignoreCommands : true
     });
 
-    passOptions[Cesium3DTilePass.MOST_DETAILED_PREFETCH] = freezeObject({
+    passOptions[Cesium3DTilePass.MOST_DETAILED_PRELOAD] = freezeObject({
         traversal : Cesium3DTilesetMostDetailedTraversal,
         isRender : false,
         requestTiles : true,

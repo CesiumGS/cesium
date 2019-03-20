@@ -3325,15 +3325,15 @@ defineSuite([
             var passCullingVolume = passCamera.frustum.computeCullingVolume(passCamera.positionWC, passCamera.directionWC, passCamera.upWC);
             viewNothing(); // Main camera views nothing, pass camera views all tiles
 
-            var prefetchPassState = new Cesium3DTilePassState({
-                pass : Cesium3DTilePass.PREFETCH,
+            var preloadFlightPassState = new Cesium3DTilePassState({
+                pass : Cesium3DTilePass.PRELOAD,
                 camera : passCamera,
                 cullingVolume : passCullingVolume
             });
 
             return Cesium3DTilesTester.loadTileset(scene, tilesetUrl).then(function(tileset) {
                 expect(tileset.statistics.selected).toBe(0);
-                tileset.updateForPass(scene.frameState, prefetchPassState);
+                tileset.updateForPass(scene.frameState, preloadFlightPassState);
                 expect(tileset._requestedTiles.length).toBe(5);
             });
         });
@@ -3639,11 +3639,11 @@ defineSuite([
         });
     });
 
-    it('prefetches tiles', function() {
+    it('preloads tiles', function() {
         // Flight destination
         viewAllTiles();
-        scene._prefetchCamera = Camera.clone(scene.camera);
-        scene._prefetchCullingVolume = scene.camera.frustum.computeCullingVolume(scene.camera.positionWC, scene.camera.directionWC, scene.camera.upWC);
+        scene._preloadFlightCamera = Camera.clone(scene.camera);
+        scene._preloadFlightCullingVolume = scene.camera.frustum.computeCullingVolume(scene.camera.positionWC, scene.camera.directionWC, scene.camera.upWC);
 
         // Reset view
         viewNothing();

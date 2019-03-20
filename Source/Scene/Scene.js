@@ -803,8 +803,8 @@ define([
 
         this._pickOffscreenView = new View(this, pickOffscreenCamera, pickOffscreenViewport);
 
-        this._prefetchCamera = new Camera(this);
-        this._prefetchCullingVolume = undefined;
+        this.preloadFlightCamera = new Camera(this);
+        this.preloadFlightCullingVolume = undefined;
 
         /**
          * @private
@@ -1694,8 +1694,8 @@ define([
         }
     };
 
-    var mostDetailedPrefetchTilesetPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.MOST_DETAILED_PREFETCH
+    var mostDetailedPreloadTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.MOST_DETAILED_PRELOAD
     });
 
     var mostDetailedPickTilesetPassState = new Cesium3DTilePassState({
@@ -1710,8 +1710,8 @@ define([
         pass : Cesium3DTilePass.PICK
     });
 
-    var prefetchTilesetPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.PREFETCH
+    var preloadFlightTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.PRELOAD
     });
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
@@ -3204,7 +3204,7 @@ define([
         }
 
         updateMostDetailedRayPicks(scene);
-        updatePrefetchPass(scene);
+        updatePreloadFlightPass(scene);
 
         frameState.creditDisplay.update();
     }
@@ -3846,20 +3846,20 @@ define([
         });
     };
 
-    function updatePrefetchPass(scene) {
-        if (!defined(scene.camera._currentFlight) || !defined(scene._prefetchCamera)) {
+    function updatePreloadFlightPass(scene) {
+        if (!defined(scene.camera._currentFlight) || !defined(scene.preloadFlightCamera)) {
             return;
         }
 
-        prefetchTilesetPassState.camera = scene._prefetchCamera;
-        prefetchTilesetPassState.cullingVolume = scene._prefetchCullingVolume;
+        preloadFlightTilesetPassState.camera = scene.preloadFlightCamera;
+        preloadFlightTilesetPassState.cullingVolume = scene.preloadFlightCullingVolume;
 
         var primitives = scene.primitives;
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
             if ((primitive instanceof Cesium3DTileset) && primitive.show) {
-                primitive.updateForPass(scene._frameState, prefetchTilesetPassState);
+                primitive.updateForPass(scene._frameState, preloadFlightTilesetPassState);
             }
         }
     }
@@ -3892,7 +3892,7 @@ define([
         var camera = scene._pickOffscreenView.camera;
         var cullingVolume = updateOffscreenCameraFromRay(scene, ray, width, camera);
 
-        var tilesetPassState = mostDetailedPrefetchTilesetPassState;
+        var tilesetPassState = mostDetailedPreloadTilesetPassState;
         tilesetPassState.camera = camera;
         tilesetPassState.cullingVolume = cullingVolume;
 

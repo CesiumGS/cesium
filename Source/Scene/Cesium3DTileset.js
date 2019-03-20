@@ -121,7 +121,7 @@ define([
      * @param {Number} [options.cullRequestsWhileMovingMultiplier=60] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
      * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
      * @param {Boolean} [options.preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
-     * @param {Boolean} [options.prefetchFlightDestinations=true] Optimization option. Fetch tiles at the camera's flight destination while the camera is in flight.
+     * @param {Boolean} [options.preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
@@ -275,8 +275,8 @@ define([
          * @type {Boolean}
          * @default true
          */
-        this.prefetchFlightDestinations = defaultValue(options.prefetchFlightDestinations, true);
-        this._prefetchPass = false;
+        this.preloadFlightDestinations = defaultValue(options.preloadFlightDestinations, true);
+        this._preloadFlightPass = false;
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -2226,14 +2226,14 @@ define([
         var pass = tilesetPassState.pass;
 
         if (pass === Cesium3DTilePass.RENDER && preloadWhenHidden) {
-            pass = Cesium3DTilePass.PREFETCH;
+            pass = Cesium3DTilePass.PRELOAD;
         }
 
         var passOptions = Cesium3DTilePass.getPassOptions(pass);
         var ignoreCommands = passOptions.ignoreCommands;
 
-        // Need a flag somewhere to promote the priority of prefetches
-        this._prefetchPass = pass === Cesium3DTilePass.PREFETCH ? true : false;
+        // Need a flag somewhere to promote the priority of preloads
+        this._preloadFlightPass = pass === Cesium3DTilePass.PRELOAD ? true : false;
 
         var commandList = defaultValue(tilesetPassState.commandList, originalCommandList);
         var commandStart = commandList.length;
@@ -2247,9 +2247,6 @@ define([
         if (this.show || ignoreCommands) {
             tilesetPassState.ready = update(this, frameState, passStatistics, passOptions);
         }
-
-        // Turn off
-        this._prefetchPass = false;
 
         if (ignoreCommands) {
             commandList.length = commandStart;
