@@ -1781,8 +1781,8 @@ define([
     var rotateVertScratchNegate = new Cartesian3();
     function rotateVertical(camera, angle) {
         var position = camera.position;
-        var p = Cartesian3.normalize(position, rotateVertScratchP);
-        if (defined(camera.constrainedAxis)) {
+        if (defined(camera.constrainedAxis) && !Cartesian3.equalsEpsilon(camera.position, Cartesian3.ZERO, CesiumMath.EPSILON2)) {
+            var p = Cartesian3.normalize(position, rotateVertScratchP);
             var northParallel = Cartesian3.equalsEpsilon(p, camera.constrainedAxis, CesiumMath.EPSILON2);
             var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(camera.constrainedAxis, rotateVertScratchNegate), CesiumMath.EPSILON2);
             if ((!northParallel && !southParallel)) {
