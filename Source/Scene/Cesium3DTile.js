@@ -1346,7 +1346,7 @@ define([
 
         var foveatedDigit = this._priorityDeferred ? foveatedScale : 0;
 
-        var prefetchDigit = tileset._prefetchPass ? 0 : prefetchScale; // Penalize non-prefetches
+        var prefetchDigit = tileset._prefetchPass && !tilset.preloadWhenHidden ? 0 : prefetchScale; // Penalize non-prefetches
 
         // Get the final base 10 number
         var number = foveatedDigit + distanceDigit + depthDigit + prefetchDigit;
