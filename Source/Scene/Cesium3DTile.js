@@ -30,6 +30,7 @@ define([
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizationHint',
+        './Cesium3DTilePass',
         './Cesium3DTileRefine',
         './Empty3DTileContent',
         './SceneMode',
@@ -68,6 +69,7 @@ define([
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileOptimizationHint,
+        Cesium3DTilePass,
         Cesium3DTileRefine,
         Empty3DTileContent,
         SceneMode,
@@ -1346,7 +1348,8 @@ define([
 
         var foveatedDigit = this._priorityDeferred ? foveatedScale : 0;
 
-        var preloadFlightDigit = tileset._preloadFlightPass ? 0 : preloadFlightScale; // Penalize non-preloads
+        // var preloadFlightDigit = tileset._preloadFlightPass ? 0 : preloadFlightScale; // Penalize non-preloads
+        var preloadFlightDigit = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale; // Penalize non-preloads
 
         // Get the final base 10 number
         var number = foveatedDigit + distanceDigit + depthDigit + preloadFlightDigit;

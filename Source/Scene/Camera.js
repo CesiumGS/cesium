@@ -301,6 +301,16 @@ define([
         }
     }
 
+    /**
+     * Checks there's a camera flight for this camera.
+     *
+     * @returns {Boolean} Whether or not this camera has a current flight with a valid preloadFlightCamera in scene.
+     */
+    Camera.prototype.hasCurrentFlight = function() {
+        // The preload flight camera defined check only here since it can be set to undefined when not 3D mode.
+        return defined(this._currentFlight) && defined(this._scene.preloadFlightCamera);
+    };
+
     Camera.prototype._updateCameraChanged = function() {
         var camera = this;
 

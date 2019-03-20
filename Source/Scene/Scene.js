@@ -803,6 +803,11 @@ define([
 
         this._pickOffscreenView = new View(this, pickOffscreenCamera, pickOffscreenViewport);
 
+        /**
+         * The camera view for the scene camera flight destination. Used for preloading flight destination tiles.
+         * @type {Camera}
+         * @private
+         */
         this.preloadFlightCamera = new Camera(this);
         this.preloadFlightCullingVolume = undefined;
 
@@ -3867,7 +3872,8 @@ define([
     }
 
     function updatePreloadFlightPass(scene) {
-        if (!defined(scene.camera._currentFlight) || !defined(scene.preloadFlightCamera)) {
+        var camera = scene._frameState.camera;
+        if (!camera.hasCurrentFlight()) {
             return;
         }
 
@@ -3878,7 +3884,7 @@ define([
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
-            if ((primitive instanceof Cesium3DTileset) && primitive.show) {
+            if ((primitive instanceof Cesium3DTileset) && primitive.preloadFlightDestinations && primitive.show) {
                 primitive.updateForPass(scene._frameState, preloadFlightTilesetPassState);
             }
         }
