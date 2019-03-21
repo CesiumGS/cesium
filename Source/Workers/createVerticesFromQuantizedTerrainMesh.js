@@ -102,8 +102,11 @@ define([
         var maxLatitude = Number.NEGATIVE_INFINITY;
 
         for (var i = 0; i < quantizedVertexCount; ++i) {
-            var u = uBuffer[i] / maxShort;
-            var v = vBuffer[i] / maxShort;
+            var rawU = uBuffer[i];
+            var rawV = vBuffer[i];
+
+            var u = rawU / maxShort;
+            var v = rawV / maxShort;
             var height = CesiumMath.lerp(minimumHeight, maximumHeight, heightBuffer[i] / maxShort);
 
             cartographicScratch.longitude = CesiumMath.lerp(west, east, u);
@@ -130,6 +133,19 @@ define([
             Cartesian3.minimumByComponent(cartesian3Scratch, minimum, minimum);
             Cartesian3.maximumByComponent(cartesian3Scratch, maximum, maximum);
         }
+
+        var westIndicesSouthToNorth = copyAndSort(parameters.westIndices, function(a, b) {
+            return uvs[a].y - uvs[b].y;
+        });
+        var eastIndicesNorthToSouth = copyAndSort(parameters.eastIndices, function(a, b) {
+            return uvs[b].y - uvs[a].y;
+        });
+        var southIndicesEastToWest = copyAndSort(parameters.southIndices, function(a, b) {
+            return uvs[b].x - uvs[a].x;
+        });
+        var northIndicesWestToEast = copyAndSort(parameters.northIndices, function(a, b) {
+            return uvs[a].x - uvs[b].x;
+        });
 
         var orientedBoundingBox;
         var boundingSphere;
@@ -211,6 +227,10 @@ define([
         return {
             vertices : vertexBuffer.buffer,
             indices : indexBuffer.buffer,
+            westIndicesSouthToNorth : westIndicesSouthToNorth,
+            southIndicesEastToWest : southIndicesEastToWest,
+            eastIndicesNorthToSouth : eastIndicesNorthToSouth,
+            northIndicesWestToEast : northIndicesWestToEast,
             vertexStride : vertexStride,
             center : center,
             minimumHeight : minimumHeight,
@@ -336,6 +356,25 @@ define([
         }
 
         return indexBufferIndex;
+    }
+
+    function copyAndSort(typedArray, comparator) {
+        var copy;
+        if (typeof typedArray.slice === 'function') {
+            copy = typedArray.slice();
+            if (typeof copy.sort !== 'function') {
+                // Sliced typed array isn't sortable, so we can't use it.
+                copy = undefined;
+            }
+        }
+
+        if (!defined(copy)) {
+            copy = Array.prototype.slice.call(typedArray);
+        }
+
+        copy.sort(comparator);
+
+        return copy;
     }
 
     return createTaskProcessorWorker(createVerticesFromQuantizedTerrainMesh);

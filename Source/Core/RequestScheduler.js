@@ -342,17 +342,17 @@ define([
             request.serverKey = RequestScheduler.getServerKey(request.url);
         }
 
+        if (request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
+            // Server is saturated. Try again later.
+            return undefined;
+        }
+
         if (!RequestScheduler.throttleRequests || !request.throttle) {
             return startRequest(request);
         }
 
         if (activeRequests.length >= RequestScheduler.maximumRequests) {
             // Active requests are saturated. Try again later.
-            return undefined;
-        }
-
-        if (request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
-            // Server is saturated. Try again later.
             return undefined;
         }
 

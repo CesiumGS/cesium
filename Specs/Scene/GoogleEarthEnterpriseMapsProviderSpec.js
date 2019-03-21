@@ -26,6 +26,16 @@ defineSuite([
         pollToPromise) {
     'use strict';
 
+    var supportsImageBitmapOptions;
+    beforeAll(function() {
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
+    });
+
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
@@ -172,8 +182,8 @@ defineSuite([
             expect(provider.credit).toBeInstanceOf(Object);
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url)) {
-                    // load blob url normally
+                if (/^blob:/.test(url) || supportsImageBitmapOptions) {
+                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual('http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
@@ -191,7 +201,7 @@ defineSuite([
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -290,8 +300,8 @@ defineSuite([
         });
 
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url)) {
-                // load blob url normally
+            if (/^blob:/.test(url) || supportsImageBitmapOptions) {
+                // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                 Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else if (tries === 2) {
                 // Succeed after 2 tries
@@ -327,7 +337,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

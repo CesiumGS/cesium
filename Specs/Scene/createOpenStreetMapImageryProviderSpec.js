@@ -72,7 +72,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -94,7 +94,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -116,7 +116,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -144,7 +144,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -193,7 +193,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -256,7 +256,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

@@ -116,7 +116,7 @@ defineSuite([
         var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
         var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
             positions : positions,
-            followSurface: false
+            arcType: ArcType.NONE
         }));
 
         expect(line.attributes.position.values).toEqual([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0]);
@@ -131,7 +131,7 @@ defineSuite([
         var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
             positions : positions,
             colors : colors,
-            followSurface: false
+            arcType : ArcType.NONE
         }));
 
         expect(line.attributes.color).toBeDefined();
@@ -147,7 +147,7 @@ defineSuite([
             positions : positions,
             colors : colors,
             colorsPerVertex : true,
-            followSurface: false
+            arcType : ArcType.NONE
         }));
 
         expect(line.attributes.color).toBeDefined();
@@ -161,7 +161,7 @@ defineSuite([
         positions : positions,
         colors : [Color.RED, Color.LIME, Color.BLUE],
         colorsPerVertex : true,
-        followSurface : false,
+        arcType : ArcType.NONE,
         granularity : 11,
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
@@ -171,7 +171,7 @@ defineSuite([
     line = new SimplePolylineGeometry({
         positions : positions,
         colorsPerVertex : false,
-        followSurface : false,
+        arcType : ArcType.NONE,
         granularity : 11,
         ellipsoid : new Ellipsoid(12, 13, 14)
     });

@@ -416,6 +416,10 @@ define([
 
         intersectionLongitude = CesiumMath.negativePiToPi(intersectionLongitude);
 
+        if (CesiumMath.equalsEpsilon(Math.abs(intersectionLongitude), Math.PI, CesiumMath.EPSILON14)) {
+            intersectionLongitude = CesiumMath.sign(start.longitude) * Math.PI;
+        }
+
         if (!defined(result)) {
             result = new Cartographic();
         }
@@ -433,7 +437,7 @@ define([
             }
 
             result.longitude = intersectionLongitude;
-            result.latitude = CesiumMath.PI_OVER_TWO * Math.sign(CesiumMath.PI_OVER_TWO - heading);
+            result.latitude = CesiumMath.PI_OVER_TWO * CesiumMath.sign(CesiumMath.PI_OVER_TWO - heading);
             result.height = 0;
             return result;
         }
@@ -454,7 +458,7 @@ define([
         } while (!CesiumMath.equalsEpsilon(newPhi, phi, CesiumMath.EPSILON12));
 
         result.longitude = intersectionLongitude;
-        result.latitude = phi;
+        result.latitude = newPhi;
         result.height = 0;
         return result;
     };

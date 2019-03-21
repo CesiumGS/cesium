@@ -6,6 +6,8 @@ defineSuite([
         'Core/Request',
         'Core/RequestErrorEvent',
         'Core/RequestScheduler',
+        'Core/TrustedServers',
+        'Specs/createCanvas',
         'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
@@ -16,9 +18,21 @@ defineSuite([
         Request,
         RequestErrorEvent,
         RequestScheduler,
+        TrustedServers,
+        createCanvas,
         Uri,
         when) {
     'use strict';
+
+    var dataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2Nk+M/wHwAEBgIA5agATwAAAABJRU5ErkJggg==';
+    var supportsImageBitmapOptions;
+
+    beforeAll(function() {
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
+    });
 
     it('Constructor sets correct properties', function() {
         var proxy = new DefaultProxy('/proxy/');
@@ -1122,26 +1136,122 @@ defineSuite([
             });
     });
 
-    describe('fetchImage', function() {
+    it('can load an image preferring blob', function() {
+        return Resource.fetchImage('./Data/Images/Green.png', true).then(function(loadedImage) {
+            expect(loadedImage.width).toEqual(1);
+            expect(loadedImage.height).toEqual(1);
+        });
+    });
 
-        var dataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2Nk+M/wHwAEBgIA5agATwAAAABJRU5ErkJggg==';
+    it('can load an image from a data URI', function() {
+        return Resource.fetchImage(dataUri).then(function(loadedImage) {
+            expect(loadedImage.width).toEqual(1);
+            expect(loadedImage.height).toEqual(1);
+        });
+    });
 
-        it('can load an image', function() {
+    describe('fetchImage with ImageBitmap', function() {
+        if (!supportsImageBitmapOptions) {
+            return;
+        }
+
+        var canvas;
+        beforeAll(function() {
+            canvas = createCanvas(1, 2);
+        });
+
+        afterAll(function() {
+            document.body.removeChild(canvas);
+        });
+
+        function getColorAtPixel(image, x, y) {
+            var context = canvas.getContext('2d');
+            context.drawImage(image, 0, 0, image.width, image.height);
+            var imageData = context.getImageData(0, 0, 1, 1);
+            return [imageData.data[0], imageData.data[1], imageData.data[2], imageData.data[3]];
+        }
+
+        it('can call supportsImageBitmapOptions', function() {
+            return Resource.supportsImageBitmapOptions()
+                .then(function(result) {
+                    expect(typeof result).toEqual('boolean');
+                });
+        });
+
+        it('can load and decode an image', function() {
             return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
                 expect(loadedImage.width).toEqual(1);
                 expect(loadedImage.height).toEqual(1);
+                expect(loadedImage instanceof ImageBitmap);
             });
         });
 
-        it('can load an image preferring blob', function() {
-            return Resource.fetchImage('./Data/Images/Green.png', true).then(function(loadedImage) {
-                expect(loadedImage.width).toEqual(1);
-                expect(loadedImage.height).toEqual(1);
+        it('correctly flips image when ImageBitmapOptions are supported', function() {
+            var loadedImage;
+
+            return Resource.fetchImage({
+                url: './Data/Images/BlueOverRed.png',
+                flipY: true
+            }).then(function(image) {
+                loadedImage = image;
+                return Resource.supportsImageBitmapOptions();
+            }).then(function(supportsImageBitmapOptions) {
+                if (supportsImageBitmapOptions) {
+                    expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([255, 0, 0, 255]);
+                } else {
+                    expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 0, 255, 255]);
+                }
             });
         });
 
-        it('can load an image from a data URI', function() {
-            return Resource.fetchImage(dataUri).then(function(loadedImage) {
+        it('correctly loads image without flip when ImageBitmapOptions are supported', function() {
+            var loadedImage;
+
+            return Resource.fetchImage({
+                url: './Data/Images/BlueOverRed.png',
+                flipY: false
+             }).then(function(image) {
+                loadedImage = image;
+                return Resource.supportsImageBitmapOptions();
+            }).then(function(supportsImageBitmapOptions) {
+                if (supportsImageBitmapOptions) {
+                    expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 0, 255, 255]);
+                } else {
+                    expect(getColorAtPixel(loadedImage, 0, 0)).toEqual([0, 0, 255, 255]);
+                }
+            });
+        });
+
+        it('does not use ImageBitmap when ImageBitmapOptions are not supported', function() {
+            spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
+            spyOn(window, 'createImageBitmap').and.callThrough();
+
+            return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
+                expect(window.createImageBitmap).not.toHaveBeenCalledWith();
+            });
+        });
+
+        it('rejects the promise when the image errors', function() {
+            return Resource.fetchImage('http://example.invalid/testuri.png')
+                .then(function() {
+                    fail('expected promise to reject');
+                })
+                .otherwise(function(error) {
+                   expect(error).toBeInstanceOf(RequestErrorEvent);
+                });
+        });
+    });
+
+    describe('fetchImage without ImageBitmap', function() {
+        beforeAll(function() {
+            // Force it to use the Image constructor since these specs all test
+            // specific functionality of this code path. For example, the crossOrigin
+            // restriction does not apply to images loaded with ImageBitmap.
+            spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
+        });
+
+        it('can load an image', function() {
+            return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
                 expect(loadedImage.width).toEqual(1);
                 expect(loadedImage.height).toEqual(1);
             });

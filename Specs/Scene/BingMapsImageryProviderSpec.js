@@ -34,6 +34,16 @@ defineSuite([
         Uri) {
     'use strict';
 
+    var supportsImageBitmapOptions;
+    beforeAll(function() {
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
+    });
+
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
     });
@@ -173,8 +183,8 @@ defineSuite([
 
     function installFakeImageRequest(expectedUrl, expectedParams, proxy) {
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url)) {
-                // load blob url normally
+            if (/^blob:/.test(url) || supportsImageBitmapOptions) {
+                // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
                 Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else {
                 if (defined(expectedUrl)) {
@@ -362,7 +372,7 @@ defineSuite([
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -393,7 +403,7 @@ defineSuite([
             });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -482,7 +492,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
