@@ -293,7 +293,7 @@ defineSuite([
         expect(style.style.show).toEqual('${height} * ${showFactor} >= 1000');
 
         style.show = false;
-        expect(style.style.show).toEqual(false);
+        expect(style.style.show).toEqual('false');
 
         var jsonExp = {
             conditions : [
@@ -539,7 +539,7 @@ defineSuite([
         var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.pointSize = 2;
-        expect(style.style.pointSize).toEqual(2);
+        expect(style.style.pointSize).toEqual('2');
 
         style.pointSize = '${targetPointSize} + 1.0';
         expect(style.style.pointSize).toEqual('${targetPointSize} + 1.0');
@@ -787,7 +787,7 @@ defineSuite([
         var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.pointOutlineWidth = 2;
-        expect(style.style.pointOutlineWidth).toEqual(2);
+        expect(style.style.pointOutlineWidth).toEqual('2');
 
         style.pointOutlineWidth = '${targetPointSize} + 1.0';
         expect(style.style.pointOutlineWidth).toEqual('${targetPointSize} + 1.0');
@@ -1153,7 +1153,7 @@ defineSuite([
         var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.labelOutlineWidth = 2;
-        expect(style.style.labelOutlineWidth).toEqual(2);
+        expect(style.style.labelOutlineWidth).toEqual('2');
 
         style.labelOutlineWidth = '${targetLabelSize} + 1.0';
         expect(style.style.labelOutlineWidth).toEqual('${targetLabelSize} + 1.0');
@@ -1400,7 +1400,7 @@ defineSuite([
         var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.labelStyle = 2;
-        expect(style.style.labelStyle).toEqual(2);
+        expect(style.style.labelStyle).toEqual('2');
 
         style.labelStyle = '${targetLabelStyle}';
         expect(style.style.labelStyle).toEqual('${targetLabelStyle}');
@@ -1905,7 +1905,7 @@ defineSuite([
         expect(style.style.backgroundEnabled).toEqual('${height} * ${backgroundFactor} >= 1000');
 
         style.backgroundEnabled = false;
-        expect(style.style.backgroundEnabled).toEqual(false);
+        expect(style.style.backgroundEnabled).toEqual('false');
 
         var jsonExp = {
             conditions : [
@@ -2408,7 +2408,7 @@ defineSuite([
         expect(style.style.anchorLineEnabled).toEqual('${height} * ${anchorFactor} >= 1000');
 
         style.anchorLineEnabled = false;
-        expect(style.style.anchorLineEnabled).toEqual(false);
+        expect(style.style.anchorLineEnabled).toEqual('false');
 
         var jsonExp = {
             conditions : [
@@ -2882,7 +2882,7 @@ defineSuite([
         var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.horizontalOrigin = -1;
-        expect(style.style.horizontalOrigin).toEqual(-1);
+        expect(style.style.horizontalOrigin).toEqual('-1');
 
         style.horizontalOrigin = '${targetOrigin}';
         expect(style.style.horizontalOrigin).toEqual('${targetOrigin}');
@@ -3001,7 +3001,7 @@ defineSuite([
         var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.verticalOrigin = -1;
-        expect(style.style.verticalOrigin).toEqual(-1);
+        expect(style.style.verticalOrigin).toEqual('-1');
 
         style.verticalOrigin = '${targetOrigin}';
         expect(style.style.verticalOrigin).toEqual('${targetOrigin}');
@@ -3120,7 +3120,7 @@ defineSuite([
         var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.labelHorizontalOrigin = -1;
-        expect(style.style.labelHorizontalOrigin).toEqual(-1);
+        expect(style.style.labelHorizontalOrigin).toEqual('-1');
 
         style.labelHorizontalOrigin = '${targetOrigin}';
         expect(style.style.labelHorizontalOrigin).toEqual('${targetOrigin}');
@@ -3239,7 +3239,7 @@ defineSuite([
         var style = new Cesium3DTileStyle({ 'defines': defines });
 
         style.labelVerticalOrigin = -1;
-        expect(style.style.labelVerticalOrigin).toEqual(-1);
+        expect(style.style.labelVerticalOrigin).toEqual('-1');
 
         style.labelVerticalOrigin = '${targetOrigin}';
         expect(style.style.labelVerticalOrigin).toEqual('${targetOrigin}');
