@@ -94,7 +94,7 @@ define([
             var sampler = gltf.samplers[gltf.textures[textureIndex].sampler];
 
             var repeatS = sampler.wrapS === WebGLConstants.REPEAT ? 'true' : 'false';
-            var repeatT = sampler.wrapS === WebGLConstants.REPEAT ? 'true' : 'false';
+            var repeatT = sampler.wrapT === WebGLConstants.REPEAT ? 'true' : 'false';
 
             texCoord = textureName + 'Coord';
             result.fragmentShaderMain += '    vec2 ' + texCoord + ' = computeTexCoord(' + defaultTexCoord + ', ' + textureName + 'Offset, ' + textureName + 'Rotation, ' + textureName + 'Scale, ' + repeatS + ', ' + repeatT + ');\n';
@@ -108,6 +108,22 @@ define([
     var DEFAULT_TEXTURE_ROTATION = [0.0];
     var DEFAULT_TEXTURE_SCALE = [1.0, 1.0];
 
+    function handleKHRTextureTransform(parameterName, value, generatedMaterialValues) {
+        if (parameterName.indexOf('Texture') === -1 || !defined(value.extensions) || !defined(value.extensions.KHR_texture_transform)) {
+            return;
+        }
+
+        var uniformName = 'u_' + parameterName;
+        var extension = value.extensions.KHR_texture_transform;
+        generatedMaterialValues[uniformName + 'Offset'] = defaultValue(extension.offset, DEFAULT_TEXTURE_OFFSET);
+        generatedMaterialValues[uniformName + 'Rotation'] = defaultValue(extension.rotation, DEFAULT_TEXTURE_ROTATION);
+        generatedMaterialValues[uniformName + 'Scale'] = defaultValue(extension.scale, DEFAULT_TEXTURE_SCALE);
+
+        if (defined(value.texCoord) && defined(extension.texCoord)) {
+            generatedMaterialValues[uniformName].texCoord = extension.texCoord;
+        }
+    }
+
     function generateTechnique(gltf, material, materialIndex, generatedMaterialValues, primitiveByMaterial, options) {
         var addBatchIdToGeneratedShaders = defaultValue(options.addBatchIdToGeneratedShaders, false);
 
@@ -120,24 +136,15 @@ define([
 
         var uniformName;
         var parameterName;
+        var value;
         var pbrMetallicRoughness = material.pbrMetallicRoughness;
         if (defined(pbrMetallicRoughness) && !useSpecGloss) {
             for (parameterName in pbrMetallicRoughness) {
                 if (pbrMetallicRoughness.hasOwnProperty(parameterName)) {
-                    var value = pbrMetallicRoughness[parameterName];
+                    value = pbrMetallicRoughness[parameterName];
                     uniformName = 'u_' + parameterName;
                     generatedMaterialValues[uniformName] = value;
-
-                    if (parameterName.indexOf('Texture') >= 0 && defined(value.extensions) && defined(value.extensions.KHR_texture_transform)) {
-                        var extension = value.extensions.KHR_texture_transform;
-                        generatedMaterialValues[uniformName + 'Offset'] = defaultValue(extension.offset, DEFAULT_TEXTURE_OFFSET);
-                        generatedMaterialValues[uniformName + 'Rotation'] = defaultValue(extension.rotation, DEFAULT_TEXTURE_ROTATION);
-                        generatedMaterialValues[uniformName + 'Scale'] = defaultValue(extension.scale, DEFAULT_TEXTURE_SCALE);
-
-                        if (defined(value.texCoord) && defined(extension.texCoord)) {
-                            generatedMaterialValues[uniformName].texCoord = extension.texCoord;
-                        }
-                    }
+                    handleKHRTextureTransform(parameterName, value, generatedMaterialValues);
                 }
             }
         }
@@ -146,16 +153,20 @@ define([
             var pbrSpecularGlossiness = material.extensions.KHR_materials_pbrSpecularGlossiness;
             for (parameterName in pbrSpecularGlossiness) {
                 if (pbrSpecularGlossiness.hasOwnProperty(parameterName)) {
+                    value = pbrSpecularGlossiness[parameterName];
                     uniformName = 'u_' + parameterName;
-                    generatedMaterialValues[uniformName] = pbrSpecularGlossiness[parameterName];
+                    generatedMaterialValues[uniformName] = value;
+                    handleKHRTextureTransform(parameterName, value, generatedMaterialValues);
                 }
             }
         }
 
         for (var additional in material) {
             if (material.hasOwnProperty(additional) && ((additional.indexOf('Texture') >= 0) || additional.indexOf('Factor') >= 0)) {
+                value = material[additional];
                 uniformName = 'u_' + additional;
-                generatedMaterialValues[uniformName] = material[additional];
+                generatedMaterialValues[uniformName] = value;
+                handleKHRTextureTransform(additional, value, generatedMaterialValues);
             }
         }
 
@@ -547,14 +558,12 @@ define([
         fragmentShader +=
             'vec2 computeTexCoord(vec2 texCoords, vec2 offset, float rotation, vec2 scale, bool repeatS, bool repeatT) \n' +
             '{\n' +
-            '    mat3 translationMatrix = mat3(1.0, 0.0, 0.0, 0.0, 1.0, 0.0, offset.x, offset.y, 1.0); \n' +
             '    rotation = -rotation; \n' +
-            '    mat3 rotationMatrix = mat3(\n' +
-            '        cos(rotation), sin(rotation), 0.0, \n' +
-            '       -sin(rotation), cos(rotation), 0.0, \n' +
-            '        0.0, 0.0, 1.0); \n' +
-            '    mat3 scaleMatrix = mat3(scale.x, 0.0, 0.0, 0.0, scale.y, 0.0, 0.0, 0.0, 1.0); \n' +
-            '    vec2 transformedTexCoords = ((translationMatrix * rotationMatrix * scaleMatrix) * vec3(fract(texCoords), 1.0)).xy; \n' +
+            '    mat3 transform = mat3(\n' +
+            '        cos(rotation) * scale.x, sin(rotation) * scale.x, 0.0, \n' +
+            '       -sin(rotation) * scale.y, cos(rotation) * scale.y, 0.0, \n' +
+            '        offset.x, offset.y, 1.0); \n' +
+            '    vec2 transformedTexCoords = (transform * vec3(fract(texCoords), 1.0)).xy; \n' +
             '    transformedTexCoords.x = repeatS ? fract(transformedTexCoords.x) : clamp(transformedTexCoords.x, 0.0, 1.0); \n' +
             '    transformedTexCoords.y = repeatT ? fract(transformedTexCoords.y) : clamp(transformedTexCoords.y, 0.0, 1.0); \n' +
             '    return transformedTexCoords; \n' +
