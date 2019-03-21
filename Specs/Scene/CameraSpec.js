@@ -75,7 +75,7 @@ defineSuite([
             maximumZoomDistance: 5906376272000.0  // distance from the Sun to Pluto in meters.
         };
         this.camera = undefined;
-        this._prefetchCamera = undefined;
+        this.preloadFlightCamera = undefined;
         this.context = {
             drawingBufferWidth : 1024,
             drawingBufferHeight : 768
@@ -100,7 +100,8 @@ defineSuite([
         camera.minimumZoomDistance = 0.0;
 
         scene.camera = camera;
-        scene._prefetchCamera = Camera.clone(camera);
+        scene.preloadFlightCamera = Camera.clone(camera);
+        camera._scene = scene;
         scene.mapMode2D = MapMode2D.INFINITE_2D;
     });
 

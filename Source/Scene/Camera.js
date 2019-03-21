@@ -2900,16 +2900,19 @@ define([
 
         // Save the final destination view information for the PRELOAD_FLIGHT pass.
         var preloadFlightCamera = this._scene.preloadFlightCamera;
-        if (this._mode === SceneMode.SCENE3D) {
-            if (!defined(preloadFlightCamera)) {
-                preloadFlightCamera = Camera.clone(this);
-            }
-            preloadFlightCamera.setView({ destination: destination, orientation: orientation });
-
-            this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
-        } else {
-            preloadFlightCamera = undefined;
-        }
+        Camera.clone(this, preloadFlightCamera);
+        preloadFlightCamera.setView({ destination: destination, orientation: orientation });
+        this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
+        // if (this._mode === SceneMode.SCENE3D) {
+        //     if (!defined(preloadFlightCamera)) {
+        //         preloadFlightCamera = Camera.clone(this);
+        //     }
+        //     preloadFlightCamera.setView({ destination: destination, orientation: orientation });
+        //
+        //     this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
+        // } else {
+        //     preloadFlightCamera = undefined;
+        // }
     };
 
     function distanceToBoundingSphere3D(camera, radius) {
