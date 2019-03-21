@@ -809,6 +809,12 @@ define([
          * @private
          */
         this.preloadFlightCamera = new Camera(this);
+
+        /**
+         * The culling volume for the scene camera flight destination. Used for preloading flight destination tiles.
+         * @type {CullingVolume}
+         * @private
+         */
         this.preloadFlightCullingVolume = undefined;
 
         /**

@@ -2898,15 +2898,17 @@ define([
         flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
         this._currentFlight = flightTween;
 
+        // Save the final destination view information for the PRELOAD_FLIGHT pass.
+        var preloadFlightCamera = this._scene.preloadFlightCamera;
         if (this._mode === SceneMode.SCENE3D) {
-            if (!defined(this._scene.preloadFlightCamera)) {
-                this._scene.preloadFlightCamera = Camera.clone(this);
+            if (!defined(preloadFlightCamera)) {
+                preloadFlightCamera = Camera.clone(this);
             }
-            this._scene.preloadFlightCamera.setView({ destination: destination, orientation: orientation });
+            preloadFlightCamera.setView({ destination: destination, orientation: orientation });
 
-            this._scene.preloadFlightCullingVolume = this._scene.preloadFlightCamera.frustum.computeCullingVolume(this._scene.preloadFlightCamera.positionWC, this._scene.preloadFlightCamera.directionWC, this._scene.preloadFlightCamera.upWC);
+            this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
         } else {
-            this._scene.preloadFlightCamera = undefined;
+            preloadFlightCamera = undefined;
         }
     };
 
