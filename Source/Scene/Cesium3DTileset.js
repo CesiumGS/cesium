@@ -1673,6 +1673,7 @@ define([
     }
 
     /**
+     * Perform any pass invariant tasks here. Called after the render pass.
      * @private
      */
     Cesium3DTileset.prototype.postPassesUpdate = function(frameState) {
@@ -1680,9 +1681,10 @@ define([
         this.raiseLoadProgressEvent(frameState);
         this._cache.unloadTiles(this, unloadTile);
         this._cache.reset();
-    }
+    };
 
     /**
+     * Perform any pass invariant tasks here. Called before any passes are executed.
      * @private
      */
     Cesium3DTileset.prototype.prePassesUpdate = function(frameState) {
@@ -2178,27 +2180,8 @@ define([
             return false;
         }
 
-        // if (!defined(tileset._loadTimestamp)) {
-        //     tileset._loadTimestamp = JulianDate.clone(frameState.time);
-        // }
-        // // Update clipping planes
-        // var clippingPlanes = tileset._clippingPlanes;
-        // tileset._clippingPlanesOriginMatrixDirty = true;
-        // if (defined(clippingPlanes) && clippingPlanes.enabled) {
-        //     clippingPlanes.update(frameState);
-        // }
-        //
-        // tileset._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, tileset._loadTimestamp) * 1000, 0.0);
-        //
-        // tileset._skipLevelOfDetail = tileset.skipLevelOfDetail && !defined(tileset._classificationType) && !tileset._disableSkipLevelOfDetail && !tileset._allTilesAdditive;
-
-
         var statistics = tileset._statistics;
         statistics.clear();
-
-        // if (tileset.dynamicScreenSpaceError) {
-        //     updateDynamicScreenSpaceError(tileset, frameState);
-        // }
 
         var isRender = passOptions.isRender;
 
@@ -2215,14 +2198,6 @@ define([
         }
 
         updateTiles(tileset, frameState, isRender);
-
-        // var credits = tileset._credits;
-        // if (isRender && defined(credits)) {
-        //     var length = credits.length;
-        //     for (var i = 0; i < length; i++) {
-        //         frameState.creditDisplay.addCredit(credits[i]);
-        //     }
-        // }
 
         // Update pass statistics
         Cesium3DTilesetStatistics.clone(statistics, passStatistics);
