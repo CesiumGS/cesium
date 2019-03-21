@@ -3189,7 +3189,7 @@ define([
         }
     }
 
-    function postRenderUpdate(scene) {
+    function preFrameUpdate(scene) {
         var frameState = scene._frameState;
         var primitives = scene.primitives;
         var length = primitives.length;
@@ -3208,6 +3208,7 @@ define([
             scene.globe.update(frameState);
         }
 
+        preFrameUpdate(scene);
         updateMostDetailedRayPicks(scene);
         updatePreloadPass(scene);
         updatePreloadFlightPass(scene);
@@ -3345,7 +3346,6 @@ define([
             this._preRender.raiseEvent(this, time);
             tryAndCatchError(this, render);
 
-            postRenderUpdate(this);
             RequestScheduler.update();
         }
 

@@ -1692,7 +1692,8 @@ define([
             var tile = requestedTilesInFlight[i];
 
             // NOTE: This is framerate dependant so make sure the threshold check is small
-            var outOfView = (frameState.frameNumber - tile._touchedFrame) >= 1;
+            // _touchedFrame is from last frame since this function is called at the beginning of a new frame before traversals. This is why we subtract 1.
+            var outOfView = ((frameState.frameNumber - 1) - tile._touchedFrame) >= 1;
             if (tile._contentState !== Cesium3DTileContentState.LOADING) {
                 // No longer fetching from host, don't need to track it anymore. Gets marked as LOADING in Cesium3DTile::requestContent().
                 ++removeCount;
