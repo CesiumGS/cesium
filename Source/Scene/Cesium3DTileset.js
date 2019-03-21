@@ -1672,7 +1672,6 @@ define([
         return a._priority - b._priority;
     }
 
-
     /**
      * @private
      */
@@ -1682,7 +1681,7 @@ define([
         cancelOutOfViewRequests(this, frameState);
         processTiles(this, frameState);
         this.raiseLoadProgressEvent(frameState);
-    }
+    };
 
     function cancelOutOfViewRequests(tileset, frameState) {
         var requestedTilesInFlight = tileset._requestedTilesInFlight;
@@ -1711,7 +1710,7 @@ define([
         }
 
         requestedTilesInFlight.length -= removeCount;
-    };
+    }
 
     function requestTiles(tileset, isAsync) {
         // Sort requests by priority before making any requests.
@@ -1808,7 +1807,7 @@ define([
         for (var i = 0; i < length; ++i) {
             tiles[i].process(tileset, frameState);
         }
-    };
+    }
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -2253,7 +2252,6 @@ define([
         frameState.camera = originalCamera;
         frameState.cullingVolume = originalCullingVolume;
     };
-
 
     /**
      * <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
