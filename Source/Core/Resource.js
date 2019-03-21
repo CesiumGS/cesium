@@ -569,15 +569,17 @@ define([
         // objectToQuery escapes the placeholders.  Undo that.
         var url = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
 
-        var template = this._templateValues;
-        var keys = Object.keys(template);
-        if (keys.length > 0) {
-            for (var i = 0; i < keys.length; i++) {
-                var key = keys[i];
-                var value = template[key];
-                url = url.replace(new RegExp('{' + key + '}', 'g'), encodeURIComponent(value));
+        var templateValues = this._templateValues;
+        url = url.replace(/{(.*?)}/g, function(match, key) {
+            var replacement = templateValues[key];
+            if (defined(replacement)) {
+                // use the replacement value from templateValues if there is one...
+                return encodeURIComponent(replacement);
             }
-        }
+            // otherwise leave it unchanged
+            return match;
+        });
+
         if (proxy && defined(this.proxy)) {
             url = this.proxy.getURL(url);
         }
