@@ -1672,11 +1672,20 @@ define([
         return a._priority - b._priority;
     }
 
+
     /**
      * @private
      */
-    Cesium3DTileset.prototype.cancelOutOfViewRequests = function(frameState) {
-        var requestedTilesInFlight = this._requestedTilesInFlight;
+    Cesium3DTileset.prototype.preFrameUpdate = function(frameState) {
+        this._cache.unloadTiles(this, unloadTile);
+        this._cache.reset();
+        cancelOutOfViewRequests(this, frameState);
+        processTiles(this, frameState);
+        this.raiseLoadProgressEvent(frameState);
+    }
+
+    function cancelOutOfViewRequests(tileset, frameState) {
+        var requestedTilesInFlight = tileset._requestedTilesInFlight;
         var removeCount = 0;
         var length = requestedTilesInFlight.length;
         for (var i = 0; i < length; ++i) {
@@ -1790,13 +1799,13 @@ define([
         tiles.length -= removeCount;
     }
 
-    Cesium3DTileset.prototype.processTiles = function(frameState) {
-        filterProcessingQueue(this);
-        var tiles = this._processingQueue;
+    function processTiles(tileset, frameState) {
+        filterProcessingQueue(tileset);
+        var tiles = tileset._processingQueue;
         var length = tiles.length;
         // Process tiles in the PROCESSING state so they will eventually move to the READY state.
         for (var i = 0; i < length; ++i) {
-            tiles[i].process(this, frameState);
+            tiles[i].process(tileset, frameState);
         }
     };
 
@@ -2067,13 +2076,6 @@ define([
     }
 
     /**
-     * @private
-     */
-    Cesium3DTileset.prototype.unloadTiles = function() {
-        this._cache.unloadTiles(this, unloadTile);
-    };
-
-    /**
      * Unloads all tiles that weren't selected the previous frame.  This can be used to
      * explicitly manage the tile cache and reduce the total number of tiles loaded below
      * {@link Cesium3DTileset#maximumMemoryUsage}.
@@ -2250,6 +2252,7 @@ define([
         frameState.camera = originalCamera;
         frameState.cullingVolume = originalCullingVolume;
     };
+
 
     /**
      * <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
