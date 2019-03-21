@@ -3189,14 +3189,26 @@ define([
         }
     }
 
-    function preFrameUpdate(scene) {
+    function prePassesUpdate(scene) {
         var frameState = scene._frameState;
         var primitives = scene.primitives;
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
             if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
-                primitive.preFrameUpdate(frameState);
+                primitive.prePassesUpdate(frameState);
+            }
+        }
+    }
+
+    function postPassesUpdate(scene) {
+        var frameState = scene._frameState;
+        var primitives = scene.primitives;
+        var length = primitives.length;
+        for (var i = 0; i < length; ++i) {
+            var primitive = primitives.get(i);
+            if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
+                primitive.postPassesUpdate(frameState);
             }
         }
     }
@@ -3208,7 +3220,6 @@ define([
             scene.globe.update(frameState);
         }
 
-        preFrameUpdate(scene);
         updateMostDetailedRayPicks(scene);
         updatePreloadPass(scene);
         updatePreloadFlightPass(scene);
@@ -3338,6 +3349,7 @@ define([
 
         // Update
         this._preUpdate.raiseEvent(this, time);
+        tryAndCatchError(this, prePassesUpdate);
         tryAndCatchError(this, update);
         this._postUpdate.raiseEvent(this, time);
 
@@ -3345,6 +3357,8 @@ define([
             // Render
             this._preRender.raiseEvent(this, time);
             tryAndCatchError(this, render);
+
+            tryAndCatchError(this, postPassesUpdate);
 
             RequestScheduler.update();
         }

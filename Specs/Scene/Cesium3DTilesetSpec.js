@@ -3642,14 +3642,16 @@ defineSuite([
     it('preloads tiles', function() {
         // Flight destination
         viewAllTiles();
-        scene._preloadFlightCamera = Camera.clone(scene.camera);
-        scene._preloadFlightCullingVolume = scene.camera.frustum.computeCullingVolume(scene.camera.positionWC, scene.camera.directionWC, scene.camera.upWC);
+        scene.preloadFlightCamera = Camera.clone(scene.camera);
+        scene.preloadFlightCullingVolume = scene.camera.frustum.computeCullingVolume(scene.camera.positionWC, scene.camera.directionWC, scene.camera.upWC);
 
         // Reset view
         viewNothing();
 
         return Cesium3DTilesTester.loadTileset(scene, tilesetUniform).then(function(tileset) {
-            scene.camera._currentFlight = 'something';
+            spyOn(Camera.prototype, 'hasCurrentFlight').and.callFake(function() {
+                return true;
+            });
             scene.renderForSpecs();
             expect(tileset._requestedTilesInFlight.length).toBeGreaterThan(0);
         });

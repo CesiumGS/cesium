@@ -1675,12 +1675,44 @@ define([
     /**
      * @private
      */
-    Cesium3DTileset.prototype.preFrameUpdate = function(frameState) {
+    Cesium3DTileset.prototype.postPassesUpdate = function(frameState) {
+        cancelOutOfViewRequests(this, frameState);
+        this.raiseLoadProgressEvent(frameState);
         this._cache.unloadTiles(this, unloadTile);
         this._cache.reset();
-        cancelOutOfViewRequests(this, frameState);
+    }
+
+    /**
+     * @private
+     */
+    Cesium3DTileset.prototype.prePassesUpdate = function(frameState) {
         processTiles(this, frameState);
-        this.raiseLoadProgressEvent(frameState);
+
+        // Update clipping planes
+        var clippingPlanes = this._clippingPlanes;
+        this._clippingPlanesOriginMatrixDirty = true;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            clippingPlanes.update(frameState);
+        }
+
+        if (!defined(this._loadTimestamp)) {
+            this._loadTimestamp = JulianDate.clone(frameState.time);
+        }
+        this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
+
+        this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail && !this._allTilesAdditive;
+
+        if (this.dynamicScreenSpaceError) {
+            updateDynamicScreenSpaceError(this, frameState);
+        }
+
+        var credits = this._credits;
+        if (defined(credits)) {
+            var length = credits.length;
+            for (var i = 0; i < length; i++) {
+                frameState.creditDisplay.addCredit(credits[i]);
+            }
+        }
     };
 
     function cancelOutOfViewRequests(tileset, frameState) {
@@ -1691,8 +1723,7 @@ define([
             var tile = requestedTilesInFlight[i];
 
             // NOTE: This is framerate dependant so make sure the threshold check is small
-            // _touchedFrame is from last frame since this function is called at the beginning of a new frame before traversals. This is why we subtract 1.
-            var outOfView = ((frameState.frameNumber - 1) - tile._touchedFrame) >= 1;
+            var outOfView = (frameState.frameNumber - tile._touchedFrame) >= 1;
             if (tile._contentState !== Cesium3DTileContentState.LOADING) {
                 // No longer fetching from host, don't need to track it anymore. Gets marked as LOADING in Cesium3DTile::requestContent().
                 ++removeCount;
@@ -2147,27 +2178,27 @@ define([
             return false;
         }
 
-        if (!defined(tileset._loadTimestamp)) {
-            tileset._loadTimestamp = JulianDate.clone(frameState.time);
-        }
+        // if (!defined(tileset._loadTimestamp)) {
+        //     tileset._loadTimestamp = JulianDate.clone(frameState.time);
+        // }
+        // // Update clipping planes
+        // var clippingPlanes = tileset._clippingPlanes;
+        // tileset._clippingPlanesOriginMatrixDirty = true;
+        // if (defined(clippingPlanes) && clippingPlanes.enabled) {
+        //     clippingPlanes.update(frameState);
+        // }
+        //
+        // tileset._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, tileset._loadTimestamp) * 1000, 0.0);
+        //
+        // tileset._skipLevelOfDetail = tileset.skipLevelOfDetail && !defined(tileset._classificationType) && !tileset._disableSkipLevelOfDetail && !tileset._allTilesAdditive;
 
-        // Update clipping planes
-        var clippingPlanes = tileset._clippingPlanes;
-        tileset._clippingPlanesOriginMatrixDirty = true;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            clippingPlanes.update(frameState);
-        }
-
-        tileset._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, tileset._loadTimestamp) * 1000, 0.0);
-
-        tileset._skipLevelOfDetail = tileset.skipLevelOfDetail && !defined(tileset._classificationType) && !tileset._disableSkipLevelOfDetail && !tileset._allTilesAdditive;
 
         var statistics = tileset._statistics;
         statistics.clear();
 
-        if (tileset.dynamicScreenSpaceError) {
-            updateDynamicScreenSpaceError(tileset, frameState);
-        }
+        // if (tileset.dynamicScreenSpaceError) {
+        //     updateDynamicScreenSpaceError(tileset, frameState);
+        // }
 
         var isRender = passOptions.isRender;
 
@@ -2185,17 +2216,13 @@ define([
 
         updateTiles(tileset, frameState, isRender);
 
-        if (isRender) {
-            if (statistics.selected !== 0) {
-                var credits = tileset._credits;
-                if (defined(credits)) {
-                    var length = credits.length;
-                    for (var i = 0; i < length; i++) {
-                        frameState.creditDisplay.addCredit(credits[i]);
-                    }
-                }
-            }
-        }
+        // var credits = tileset._credits;
+        // if (isRender && defined(credits)) {
+        //     var length = credits.length;
+        //     for (var i = 0; i < length; i++) {
+        //         frameState.creditDisplay.addCredit(credits[i]);
+        //     }
+        // }
 
         // Update pass statistics
         Cesium3DTilesetStatistics.clone(statistics, passStatistics);
