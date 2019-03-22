@@ -505,6 +505,12 @@ defineSuite([
         style.pointSize = new ConditionsExpression(jsonExp);
         expect(style.style.pointSize).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return 1; }
+        };
+        style.pointSize = customExpression;
+        expect(style.style.pointSize).toEqual(customExpression);
+
         style.pointSize = undefined;
         expect(style.style.pointSize).toBeUndefined();
     });
@@ -631,6 +637,13 @@ defineSuite([
         style.pointOutlineColor = new ConditionsExpression(jsonExp);
         expect(style.style.pointOutlineColor).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return Color.RED; },
+            evaluateColor: function() { return Color.RED; }
+        };
+        style.pointOutlineColor = customExpression;
+        expect(style.style.pointOutlineColor).toEqual(customExpression);
+
         style.pointOutlineColor = undefined;
         expect(style.style.pointOutlineColor).toBeUndefined();
     });
@@ -752,6 +765,12 @@ defineSuite([
         };
         style.pointOutlineWidth = new ConditionsExpression(jsonExp);
         expect(style.style.pointOutlineWidth).toEqual(jsonExp);
+
+        var customExpression = {
+            evaluate: function() { return 1; }
+        };
+        style.pointOutlineWidth = customExpression;
+        expect(style.style.pointOutlineWidth).toEqual(customExpression);
 
         style.pointOutlineWidth = undefined;
         expect(style.style.pointOutlineWidth).toBeUndefined();
@@ -878,6 +897,13 @@ defineSuite([
         style.labelColor = new ConditionsExpression(jsonExp);
         expect(style.style.labelColor).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return Color.RED; },
+            evaluateColor: function() { return Color.RED; }
+        };
+        style.labelColor = customExpression;
+        expect(style.style.labelColor).toEqual(customExpression);
+
         style.labelColor = undefined;
         expect(style.style.labelColor).toBeUndefined();
     });
@@ -997,6 +1023,13 @@ defineSuite([
 
         style.labelOutlineColor = new ConditionsExpression(jsonExp);
         expect(style.style.labelOutlineColor).toEqual(jsonExp);
+
+        var customExpression = {
+            evaluate: function() { return Color.RED; },
+            evaluateColor: function() { return Color.RED; }
+        };
+        style.labelOutlineColor = customExpression;
+        expect(style.style.labelOutlineColor).toEqual(customExpression);
 
         style.labelOutlineColor = undefined;
         expect(style.style.labelOutlineColor).toBeUndefined();
@@ -1118,6 +1151,12 @@ defineSuite([
         };
         style.labelOutlineWidth = new ConditionsExpression(jsonExp);
         expect(style.style.labelOutlineWidth).toEqual(jsonExp);
+
+        var customExpression = {
+            evaluate: function() { return 1; }
+        };
+        style.labelOutlineWidth = customExpression;
+        expect(style.style.labelOutlineWidth).toEqual(customExpression);
 
         style.labelOutlineWidth = undefined;
         expect(style.style.labelOutlineWidth).toBeUndefined();
@@ -1248,6 +1287,12 @@ defineSuite([
         style.font = new ConditionsExpression(jsonExp);
         expect(style.style.font).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return '\'24px Helvetica\''; }
+        };
+        style.font = customExpression;
+        expect(style.style.font).toEqual(customExpression);
+
         style.font = undefined;
         expect(style.style.font).toBeUndefined();
     });
@@ -1365,6 +1410,12 @@ defineSuite([
         };
         style.labelStyle = new ConditionsExpression(jsonExp);
         expect(style.style.labelStyle).toEqual(jsonExp);
+
+        var customExpression = {
+            evaluate: function() { return 0; }
+        };
+        style.labelStyle = customExpression;
+        expect(style.style.labelStyle).toEqual(customExpression);
 
         style.labelStyle = undefined;
         expect(style.style.labelStyle).toBeUndefined();
@@ -1495,6 +1546,12 @@ defineSuite([
         style.labelText = new ConditionsExpression(jsonExp);
         expect(style.style.labelText).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return '\'test text 1\''; }
+        };
+        style.labelText = customExpression;
+        expect(style.style.labelText).toEqual(customExpression);
+
         style.labelText = undefined;
         expect(style.style.labelText).toBeUndefined();
     });
@@ -1621,6 +1678,13 @@ defineSuite([
         style.backgroundColor = new ConditionsExpression(jsonExp);
         expect(style.style.backgroundColor).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return Color.RED; },
+            evaluateColor: function() { return Color.RED; }
+        };
+        style.backgroundColor = customExpression;
+        expect(style.style.backgroundColor).toEqual(customExpression);
+
         style.backgroundColor = undefined;
         expect(style.style.backgroundColor).toBeUndefined();
     });
@@ -1737,6 +1801,12 @@ defineSuite([
                 ['true', 'vec2(3.0, 4.0)']
             ]
         };
+
+        var customExpression = {
+            evaluate: function() { return new Cartesian2(1.0, 2.0); }
+        };
+        style.labelText = customExpression;
+        expect(style.style.labelText).toEqual(customExpression);
 
         style.backgroundPadding = new ConditionsExpression(jsonExp);
         expect(style.style.backgroundPadding).toEqual(jsonExp);
@@ -1867,6 +1937,12 @@ defineSuite([
 
         style.backgroundEnabled = new ConditionsExpression(jsonExp);
         expect(style.style.backgroundEnabled).toEqual(jsonExp);
+
+        var customExpression = {
+            evaluate: function() { return true; }
+        };
+        style.backgroundEnabled = customExpression;
+        expect(style.style.backgroundEnabled).toEqual(customExpression);
     });
 
     it('sets backgroundEnabled values in setter', function() {
@@ -1997,6 +2073,12 @@ defineSuite([
         style.scaleByDistance = new ConditionsExpression(jsonExp);
         expect(style.style.scaleByDistance).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return new Cartesian4(1.0, 2.0, 3.0, 4.0); }
+        };
+        style.scaleByDistance = customExpression;
+        expect(style.style.scaleByDistance).toEqual(customExpression);
+
         style.scaleByDistance = undefined;
         expect(style.style.scaleByDistance).toBeUndefined();
     });
@@ -2116,6 +2198,12 @@ defineSuite([
 
         style.distanceDisplayCondition = new ConditionsExpression(jsonExp);
         expect(style.style.distanceDisplayCondition).toEqual(jsonExp);
+
+        var customExpression = {
+            evaluate: function() { return new Cartesian4(1.0, 2.0, 3.0, 4.0); }
+        };
+        style.distanceDisplayCondition = customExpression;
+        expect(style.style.distanceDisplayCondition).toEqual(customExpression);
 
         style.distanceDisplayCondition = undefined;
         expect(style.style.distanceDisplayCondition).toBeUndefined();
@@ -2239,6 +2327,12 @@ defineSuite([
 
         style.heightOffset = new ConditionsExpression(jsonExp);
         expect(style.style.heightOffset).toEqual(jsonExp);
+
+        var customExpression = {
+            evaluate: function() { return 2; }
+        };
+        style.heightOffset = customExpression;
+        expect(style.style.heightOffset).toEqual(customExpression);
 
         style.heightOffset = undefined;
         expect(style.style.heightOffset).toBeUndefined();
@@ -2370,6 +2464,11 @@ defineSuite([
         style.anchorLineEnabled = new ConditionsExpression(jsonExp);
         expect(style.style.anchorLineEnabled).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return true; }
+        };
+        style.anchorLineEnabled = customExpression;
+        expect(style.style.anchorLineEnabled).toEqual(customExpression);
     });
 
     it('sets anchorLineEnabled values in setter', function() {
@@ -2500,6 +2599,13 @@ defineSuite([
         style.anchorLineColor = new ConditionsExpression(jsonExp);
         expect(style.style.anchorLineColor).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return Color.RED; },
+            evaluateColor: function() { return Color.RED; }
+        };
+        style.anchorLineColor = customExpression;
+        expect(style.style.anchorLineColor).toEqual(customExpression);
+
         style.anchorLineColor = undefined;
         expect(style.style.anchorLineColor).toBeUndefined();
     });
@@ -2622,6 +2728,12 @@ defineSuite([
 
         style.image = new ConditionsExpression(jsonExp);
         expect(style.style.image).toEqual(jsonExp);
+
+        var customExpression = {
+            evaluate: function() { return '\'url/to/image1\''; }
+        };
+        style.image = customExpression;
+        expect(style.style.image).toEqual(customExpression);
 
         style.image = undefined;
         expect(style.style.image).toBeUndefined();
@@ -2752,6 +2864,12 @@ defineSuite([
         style.disableDepthTestDistance = new ConditionsExpression(jsonExp);
         expect(style.style.disableDepthTestDistance).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return 1.0; }
+        };
+        style.disableDepthTestDistance = customExpression;
+        expect(style.style.disableDepthTestDistance).toEqual(customExpression);
+
         style.disableDepthTestDistance = undefined;
         expect(style.style.disableDepthTestDistance).toBeUndefined();
     });
@@ -2847,6 +2965,12 @@ defineSuite([
 
         style.horizontalOrigin = new ConditionsExpression(jsonExp);
         expect(style.style.horizontalOrigin).toEqual(jsonExp);
+
+        var customExpression = {
+            evaluate: function() { return 1; }
+        };
+        style.horizontalOrigin = customExpression;
+        expect(style.style.horizontalOrigin).toEqual(customExpression);
 
         style.horizontalOrigin = undefined;
         expect(style.style.horizontalOrigin).toBeUndefined();
@@ -2967,6 +3091,12 @@ defineSuite([
         style.verticalOrigin = new ConditionsExpression(jsonExp);
         expect(style.style.verticalOrigin).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return 1; }
+        };
+        style.verticalOrigin = customExpression;
+        expect(style.style.verticalOrigin).toEqual(customExpression);
+
         style.verticalOrigin = undefined;
         expect(style.style.verticalOrigin).toBeUndefined();
     });
@@ -3086,6 +3216,12 @@ defineSuite([
         style.labelHorizontalOrigin = new ConditionsExpression(jsonExp);
         expect(style.style.labelHorizontalOrigin).toEqual(jsonExp);
 
+        var customExpression = {
+            evaluate: function() { return 1; }
+        };
+        style.labelHorizontalOrigin = customExpression;
+        expect(style.style.labelHorizontalOrigin).toEqual(customExpression);
+
         style.labelHorizontalOrigin = undefined;
         expect(style.style.labelHorizontalOrigin).toBeUndefined();
     });
@@ -3204,6 +3340,12 @@ defineSuite([
 
         style.labelVerticalOrigin = new ConditionsExpression(jsonExp);
         expect(style.style.labelVerticalOrigin).toEqual(jsonExp);
+
+        var customExpression = {
+            evaluate: function() { return 1; }
+        };
+        style.labelVerticalOrigin = customExpression;
+        expect(style.style.labelVerticalOrigin).toEqual(customExpression);
 
         style.labelVerticalOrigin = undefined;
         expect(style.style.labelVerticalOrigin).toBeUndefined();

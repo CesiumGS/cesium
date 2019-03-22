@@ -181,7 +181,7 @@ define([
         } else if (defined(expression.conditionsExpression)) {
             return clone(expression.conditionsExpression, true);
         }
-        return undefined;
+        return expression;
     }
 
     defineProperties(Cesium3DTileStyle.prototype, {
