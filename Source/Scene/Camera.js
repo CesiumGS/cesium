@@ -2903,7 +2903,8 @@ define([
         Camera.clone(this, preloadFlightCamera);
         preloadFlightCamera.setView({ destination: destination, orientation: orientation });
         this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
-        // if (this._mode === SceneMode.SCENE3D) {
+
+        // if (this._mode !== SceneMode.SCENE2D) {
         //     if (!defined(preloadFlightCamera)) {
         //         preloadFlightCamera = Camera.clone(this);
         //     }
