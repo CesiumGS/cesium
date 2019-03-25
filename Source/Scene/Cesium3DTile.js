@@ -1333,7 +1333,7 @@ define([
         // Theoretically, the digit of separation should be the amount of leading 0's in the mapped min for the digit of interest.
         // Think of digits as penalties, if a tile has some large quanity or has a flag raised it's (usually) penalized for it, expressed as a higher number for the digit
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
-        var distanceScale = depthScale * 100; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
+        var distanceScale = depthScale * 100;
         var foveatedScale = distanceScale * 100;
 
         // Map 0-1 then convert to digit
