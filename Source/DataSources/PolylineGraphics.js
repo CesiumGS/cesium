@@ -149,7 +149,6 @@ define([
          * Gets or sets the {@link ArcType} Property specifying whether the line segments should be great arcs, rhumb lines or linearly connected.
          * @memberof PolylineGraphics.prototype
          * @type {Property}
-         * @deprecated This property has been deprecated. Use {@link PolylineGraphics#arcType} instead.
          * @default ArcType.GEODESIC
          */
         arcType : createPropertyDescriptor('arcType'),

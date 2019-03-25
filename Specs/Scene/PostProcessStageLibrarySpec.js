@@ -53,6 +53,7 @@ defineSuite([
         scene.postProcessStages.fxaa.enabled = false;
         scene.postProcessStages.bloom.enabled = false;
         scene.postProcessStages.ambientOcclusion.enabled = false;
+        scene.renderForSpecs();
     });
 
     var model;
