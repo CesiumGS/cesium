@@ -417,7 +417,7 @@ define([
         intersectionLongitude = CesiumMath.negativePiToPi(intersectionLongitude);
 
         if (CesiumMath.equalsEpsilon(Math.abs(intersectionLongitude), Math.PI, CesiumMath.EPSILON14)) {
-            intersectionLongitude = Math.sign(start.longitude) * Math.PI;
+            intersectionLongitude = CesiumMath.sign(start.longitude) * Math.PI;
         }
 
         if (!defined(result)) {
@@ -437,7 +437,7 @@ define([
             }
 
             result.longitude = intersectionLongitude;
-            result.latitude = CesiumMath.PI_OVER_TWO * Math.sign(CesiumMath.PI_OVER_TWO - heading);
+            result.latitude = CesiumMath.PI_OVER_TWO * CesiumMath.sign(CesiumMath.PI_OVER_TWO - heading);
             result.height = 0;
             return result;
         }

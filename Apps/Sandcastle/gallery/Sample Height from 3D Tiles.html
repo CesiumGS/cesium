@@ -81,7 +81,7 @@ function sampleHeights() {
         viewer.entities.add({
             polyline : {
                 positions : clampedCartesians,
-                followSurface : false,
+                arcType : Cesium.ArcType.NONE,
                 width : 2,
                 material : new Cesium.PolylineOutlineMaterialProperty({
                     color : Cesium.Color.YELLOW

@@ -1,4 +1,5 @@
 define([
+        '../Core/ArcType',
         '../Core/AssociativeArray',
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -64,6 +65,7 @@ define([
         './TimeIntervalCollectionProperty',
         './WallGraphics'
     ], function(
+        ArcType,
         AssociativeArray,
         BoundingRectangle,
         Cartesian2,
@@ -1287,7 +1289,7 @@ define([
             entity.polyline = polyline;
             polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode, ellipsoid);
             if (!tessellate || canExtrude) {
-                polyline.followSurface = false;
+                polyline.arcType = ArcType.NONE;
             }
         }
 

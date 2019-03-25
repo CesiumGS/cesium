@@ -197,7 +197,7 @@ define([
         var cornersLength = corners.length;
 
         var indicesSize = ((length * 2) + cornersLength) * 2;
-        var indices = IndexDatatype.createTypedArray(length, indicesSize);
+        var indices = IndexDatatype.createTypedArray(length + cornersLength, indicesSize);
 
         index = 0;
         for (i = 0; i < length; ++i) {

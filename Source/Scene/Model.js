@@ -4303,10 +4303,11 @@ define([
             return;
         }
 
-        var supportsWebP = FeatureDetection.supportsWebPSync();
-        if (!defined(supportsWebP)) {
+        if (!FeatureDetection.supportsWebP.initialized) {
+            FeatureDetection.supportsWebP.initialize();
             return;
         }
+        var supportsWebP = FeatureDetection.supportsWebP();
 
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;

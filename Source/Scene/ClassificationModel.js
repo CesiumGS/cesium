@@ -958,10 +958,11 @@ define([
             return;
         }
 
-        var supportsWebP = FeatureDetection.supportsWebPSync();
-        if (!defined(supportsWebP)) {
+        if (!FeatureDetection.supportsWebP.initialized) {
+            FeatureDetection.supportsWebP.initialize();
             return;
         }
+        var supportsWebP = FeatureDetection.supportsWebP();
 
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             this._state = ModelState.LOADING;
