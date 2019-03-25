@@ -344,7 +344,7 @@ define([
 
         this._priority = 0.0; // The priority used for request sorting
         this._priorityDistance = Number.MAX_VALUE; // The value to update in the priority refinement chain
-        this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
+        this._priorityHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
         this._priorityDeferred = false;
         this._foveatedFactor = 0;
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
@@ -634,9 +634,6 @@ define([
         var notTouchingSphere = distanceToCenterLine > radius;
         tile._distanceToCenterLine = notTouchingSphere ? distanceToCenterLine : 0;
 
-        if (!tileset._skipLevelOfDetail || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
-            return false;
-        }
 
         // If camera's direction vector is inside the bounding sphere then consider
         // this tile right along the line of sight and set _foveatedFactor to 0.
@@ -651,6 +648,10 @@ define([
             tile._foveatedFactor = 1 - Math.abs(Cartesian3.dot(camera.directionWC, toClosestOnSphereNormalize));
         } else {
             tile._foveatedFactor = 0;
+        }
+
+        if (!tileset._skipLevelOfDetail || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
+            return false;
         }
 
         var maxFoveatedFactor = 1 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60
@@ -1331,34 +1332,57 @@ define([
         var minPriority = tileset._minPriority;
         var maxPriority = tileset._maxPriority;
 
+        // // Mix priorities by mapping them into base 10 numbers
+        // // Because the mappings are fuzzy you need a digit of separation so priorities don't bleed into each other
+        // // Maybe this mental model is terrible and just rename to weights?
+        // var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
+        // var distanceScale = depthScale * 100; // Hundreds's "digit", digit of separation from previous
+        // var foveatedScale = distanceScale * 100;
+        //
+        // // Map 0-1 then convert to digit
+        // var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
+        //
+        // // Map 0-1 then convert to digit
+        // var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
+        //
+        // // Map 0-1 then convert to digit
+        // var foveatedDigit = foveatedScale * CesiumMath.normalize(this._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);;
+        //
+        // var foveatedDeferScale = foveatedScale * 10;
+        // var foveatedDeferDigit = this._priorityDeferred ? foveatedDeferScale : 0;
+        //
+        // // Get the final base 10 number
+        // var number = foveatedDeferDigit + distanceDigit + depthDigit;
+        // this._priority = number;
+
         // Mix priorities by mapping them into base 10 numbers
         // Because the mappings are fuzzy you need a digit of separation so priorities don't bleed into each other
         // Maybe this mental model is terrible and just rename to weights?
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
-        var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
-        var foveatedScale = distanceScale * 10;
+        var distanceScale = depthScale * 100; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
+        var foveatedScale = distanceScale * 100;
 
-        // Map 0-1 then convert to digit
-        var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
 
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
-        var foveatedDigit = this._priorityDeferred ? foveatedScale : 0;
+        // // Map 0-1 then convert to digit
+        var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityHolder._priorityDistance, minPriority.distance, maxPriority.distance);
+
+        // Map 0-1 then convert to digit
+        var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);;
+
+        var foveatedDeferScale = foveatedScale * 10;
+        // var foveatedDeferDigit = this._priorityDeferred ? foveatedDeferScale : 0;
+        var foveatedDeferDigit = 0;
 
         // Get the final base 10 number
-        var number = foveatedDigit + distanceDigit + depthDigit;
+        var number = foveatedDeferDigit + foveatedDigit + distanceDigit + depthDigit;
         this._priority = number;
+
+        // this._priority = CesiumMath.normalize(this._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
     };
 
-    /**
-     * Updates the tile's _priorityDistance
-     * @private
-     */
-    Cesium3DTile.prototype.updatePriorityDistance = function() {
-        var tileset = this.tileset;
-        this._priorityDistance = CesiumMath.lerp(this._distanceToCamera, this._distanceToCenterLine, tileset.screenCenterPriority); // Want to mix in distanceToCamera to get a bit of front-to-back sorting to avoid occlusion issues.
-    };
     /**
      * @private
      */

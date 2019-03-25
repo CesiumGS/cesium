@@ -195,10 +195,12 @@ define([
     }
 
     function updateMinMaxPriority(tileset, tile) {
-        tileset._maxPriority.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriority.distance);
-        tileset._minPriority.distance = Math.min(tile._priorityDistanceHolder._priorityDistance, tileset._minPriority.distance);
+        tileset._maxPriority.distance = Math.max(tile._priorityHolder._priorityDistance, tileset._maxPriority.distance);
+        tileset._minPriority.distance = Math.min(tile._priorityHolder._priorityDistance, tileset._minPriority.distance);
         tileset._maxPriority.depth = Math.max(tile._depth, tileset._maxPriority.depth);
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
+        tileset._maxPriority.foveatedFactor = Math.max(tile._priorityHolder._foveatedFactor, tileset._maxPriority.foveatedFactor);
+        tileset._minPriority.foveatedFactor = Math.min(tile._priorityHolder._foveatedFactor, tileset._minPriority.foveatedFactor);
     }
 
     function isOnScreenLongEnough(tileset, tile, frameState) {
@@ -298,8 +300,8 @@ define([
 
         // Request priority
         tile._wasMinPriorityChild = false;
-        tile._priorityDistanceHolder = tile;
-        tile.updatePriorityDistance();
+        tile._priorityHolder = tile;
+        tile._priorityDistance = tile._distanceToCamera;
         updateMinMaxPriority(tileset, tile);
 
         // SkipLOD
@@ -369,24 +371,26 @@ define([
 
         // Determining min child
         var minIndex = -1;
-        var minPriorityDistance = Number.MAX_VALUE;
+        var minPriority = Number.MAX_VALUE;
+        var priorityName = '_foveatedFactor';
+        var priorityTwoName = '_priorityDistance';
 
         var child;
         for (i = 0; i < length; ++i) {
             child = children[i];
             if (isVisible(child)) {
                 stack.push(child);
-                if (child._priorityDistance < minPriorityDistance) {
+                if (child[priorityName] < minPriority) {
                     minIndex = i;
-                    minPriorityDistance = child._priorityDistance;
+                    minPriority = child[priorityName];
                 }
                 anyChildrenVisible = true;
             } else if (checkRefines || tileset.loadSiblings) {
                 // Keep non-visible children loaded since they are still needed before the parent can refine.
                 // Or loadSiblings is true so always load tiles regardless of visibility.
-                if (child._priorityDistance < minPriorityDistance) {
+                if (child[priorityName] < minPriority) {
                     minIndex = i;
-                    minPriorityDistance = child._priorityDistance;
+                    minPriority = child[priorityName];
                 }
                 loadTile(tileset, child, frameState);
                 touchTile(tileset, child, frameState);
@@ -408,17 +412,18 @@ define([
             refines = false;
         }
 
-        if (minIndex !== -1) {
+        if (!skipLevelOfDetail(tileset) && minIndex !== -1) {
             // An ancestor will hold the _priorityDistance for descendants between itself and its highest priority descendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
             // Priority of all tiles that refer to the _priorityDistance stored in the common ancestor will be differentiated based on their _depth.
             var minPriorityChild = children[minIndex];
             minPriorityChild._wasMinPriorityChild = true;
-            var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) ? tile._priorityDistanceHolder : tile; // This is where priority dependency chains are wired up or started anew.
-            priorityHolder._priorityDistance = Math.min(minPriorityChild._priorityDistance, priorityHolder._priorityDistance);
+            var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) ? tile._priorityHolder : tile; // This is where priority dependency chains are wired up or started anew.
+            priorityHolder[priorityName] = Math.min(minPriorityChild[priorityName], priorityHolder[priorityName]);
+            priorityHolder[priorityTwoName] = Math.min(minPriorityChild[priorityTwoName], priorityHolder[priorityTwoName]);
 
             for (i = 0; i < length; ++i) {
                 child = children[i];
-                child._priorityDistanceHolder = priorityHolder;
+                child._priorityHolder = priorityHolder;
             }
         }
 
