@@ -313,7 +313,6 @@ define([
 
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
-        this._distanceToCenterLine = 0;
         this._centerZDepth = 0;
         this._screenSpaceError = 0;
         this._visibilityPlaneMask = 0;
@@ -343,8 +342,7 @@ define([
         this._debugColorizeTiles = false;
 
         this._priority = 0.0; // The priority used for request sorting
-        this._priorityDistance = Number.MAX_VALUE; // The value to update in the priority refinement chain
-        this._priorityHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
+        this._priorityHolder = this; // Reference to the ancestor up the tree that holds the _foveatedFactor and _distanceToCamera for all tiles in the refinement chain.
         this._priorityDeferred = false;
         this._foveatedFactor = 0;
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
@@ -632,8 +630,6 @@ define([
         var toLine = Cartesian3.subtract(closestPointOnLine, boundingSphere.center, scratchCartesian);
         var distanceToCenterLine = Cartesian3.magnitude(toLine);
         var notTouchingSphere = distanceToCenterLine > radius;
-        tile._distanceToCenterLine = notTouchingSphere ? distanceToCenterLine : 0;
-
 
         // If camera's direction vector is inside the bounding sphere then consider
         // this tile right along the line of sight and set _foveatedFactor to 0.
@@ -654,7 +650,7 @@ define([
             return false;
         }
 
-        var maxFoveatedFactor = 1 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60
+        var maxFoveatedFactor = 1 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60. NOTE very hard to defer verically foveated tiles since max is based on fovy (which is fov). Lowering the 0.5 to a smaller fraction of the screen height will start to defer vertically foveated tiles.
         var foveatedConeFactor = tileset.foveatedConeSize * maxFoveatedFactor;
 
         // If it's inside the user-defined view cone, then it should not be deferred.
@@ -1340,16 +1336,15 @@ define([
         var distanceScale = depthScale * 100; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var foveatedScale = distanceScale * 100;
 
-
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var replace = this.refine === Cesium3DTileRefine.REPLACE;
-        var distanceDigit = (!tileset._skipLevelOfDetail && replace) ? distanceScale * CesiumMath.normalize(this._priorityHolder._priorityDistance, minPriority.distance, maxPriority.distance) : 0;
+        var distanceDigit = (!tileset._skipLevelOfDetail && replace) ? distanceScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) : 0;
 
         // Map 0-1 then convert to digit
-        var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);;
+        var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
 
         // Flag on/off penality digits
         var foveatedDeferScale = foveatedScale * 10;

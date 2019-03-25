@@ -195,8 +195,8 @@ define([
     }
 
     function updateMinMaxPriority(tileset, tile) {
-        tileset._maxPriority.distance = Math.max(tile._priorityHolder._priorityDistance, tileset._maxPriority.distance);
-        tileset._minPriority.distance = Math.min(tile._priorityHolder._priorityDistance, tileset._minPriority.distance);
+        tileset._maxPriority.distance = Math.max(tile._priorityHolder._distanceToCamera, tileset._maxPriority.distance);
+        tileset._minPriority.distance = Math.min(tile._priorityHolder._distanceToCamera, tileset._minPriority.distance);
         tileset._maxPriority.depth = Math.max(tile._depth, tileset._maxPriority.depth);
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
         tileset._maxPriority.foveatedFactor = Math.max(tile._priorityHolder._foveatedFactor, tileset._maxPriority.foveatedFactor);
@@ -301,7 +301,6 @@ define([
         // Request priority
         tile._wasMinPriorityChild = false;
         tile._priorityHolder = tile;
-        tile._priorityDistance = tile._distanceToCamera;
         updateMinMaxPriority(tileset, tile);
 
         // SkipLOD
@@ -373,7 +372,7 @@ define([
         var minIndex = -1;
         var minPriority = Number.MAX_VALUE;
         var mainPriorityName = '_foveatedFactor';
-        var secondaryPriorityName = '_priorityDistance';
+        var secondaryPriorityName = '_distanceToCamera';
 
         var child;
         for (i = 0; i < length; ++i) {
@@ -412,9 +411,9 @@ define([
             refines = false;
         }
 
-        if (!skipLevelOfDetail(tileset) && minIndex !== -1) {
-            // An ancestor will hold the _priorityDistance for descendants between itself and its highest priority descendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
-            // Priority of all tiles that refer to the _priorityDistance stored in the common ancestor will be differentiated based on their _depth.
+        if (minIndex !== -1 && !skipLevelOfDetail(tileset) && tile.refine === Cesium3DTileRefine.REPLACE) {
+            // An ancestor will hold the _foveatedFactor and _distanceToCamera for descendants between itself and its highest priority descendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
+            // Priority of all tiles that refer to the _foveatedFactor and _distanceToCamera stored in the common ancestor will be differentiated based on their _depth.
             var minPriorityChild = children[minIndex];
             minPriorityChild._wasMinPriorityChild = true;
             var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) && minPriority <= tile._priorityHolder[mainPriorityName] ? tile._priorityHolder : tile; // This is where priority dependency chains are wired up or started anew.
