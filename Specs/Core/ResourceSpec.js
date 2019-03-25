@@ -191,7 +191,7 @@ defineSuite([
         expect(derived.url).toEqual('http://test.com/tileset/other_endpoint?a=5&a=7&a=1&a=2&a=4&b=6&b=3');
     });
 
-    it('templateValues are respected', function() {
+    it('replaces templateValues in the url', function() {
         var resource = new Resource({
             url: 'http://test.com/tileset/{foo}/{bar}',
             templateValues: {
@@ -201,6 +201,38 @@ defineSuite([
         });
 
         expect(resource.url).toEqual('http://test.com/tileset/test1/test2');
+    });
+
+    it('replaces numeric templateValues', function() {
+        var resource = new Resource({
+            url: 'http://test.com/tileset/{0}/{1}',
+            templateValues: {
+                '0': 'test1',
+                '1': 'test2'
+            }
+        });
+
+        expect(resource.url).toEqual('http://test.com/tileset/test1/test2');
+    });
+
+    it('leaves templateValues unchanged that are not provided', function() {
+        var resource = new Resource({
+            url: 'http://test.com/tileset/{foo}/{bar}'
+        });
+
+        expect(resource.url).toEqual('http://test.com/tileset/{foo}/{bar}');
+    });
+
+    it('url encodes replacement templateValues in the url', function() {
+        var resource = new Resource({
+            url: 'http://test.com/tileset/{foo}/{bar}',
+            templateValues: {
+                foo: 'a/b',
+                bar: 'x$y#'
+            }
+        });
+
+        expect(resource.url).toEqual('http://test.com/tileset/a%2Fb/x%24y%23');
     });
 
     it('getDerivedResource sets correct properties', function() {

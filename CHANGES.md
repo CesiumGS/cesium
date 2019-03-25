@@ -19,6 +19,7 @@ Change Log
 * Fixed `HeadingPitchRoll.pitch` being `NaN` when using `.fromQuaternion` do to a rounding error
 for pitches close to +/- 90°. [#7654](https://github.com/AnalyticalGraphicsInc/cesium/pull/7654)
 * Fixed a type of crash caused by the camera being rotated through terrain. [#6783](https://github.com/AnalyticalGraphicsInc/cesium/issues/6783)
+* Fixed an error in `Resource` when used with template replacements using numeric keys. [#7668](https://github.com/AnalyticalGraphicsInc/cesium/pull/7668)
 
 ### 1.55 - 2019-03-01
 
