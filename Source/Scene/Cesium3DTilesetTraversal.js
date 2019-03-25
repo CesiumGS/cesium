@@ -418,8 +418,8 @@ define([
             var minPriorityChild = children[minIndex];
             minPriorityChild._wasMinPriorityChild = true;
             var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) && minPriority <= tile._priorityHolder[mainPriorityName] ? tile._priorityHolder : tile; // This is where priority dependency chains are wired up or started anew.
-            priorityHolder[mainPriorityName] = minPriorityChild[mainPriorityName];
-            priorityHolder[secondaryPriorityName] = minPriorityChild[secondaryPriorityName];
+            priorityHolder[mainPriorityName] = Math.min(minPriorityChild[mainPriorityName], priorityHolder[mainPriorityName]);
+            priorityHolder[secondaryPriorityName] = Math.min(minPriorityChild[secondaryPriorityName], priorityHolder[secondaryPriorityName]);
 
             for (i = 0; i < length; ++i) {
                 child = children[i];
