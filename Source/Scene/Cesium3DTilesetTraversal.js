@@ -372,25 +372,25 @@ define([
         // Determining min child
         var minIndex = -1;
         var minPriority = Number.MAX_VALUE;
-        var priorityName = '_foveatedFactor';
-        var priorityTwoName = '_priorityDistance';
+        var mainPriorityName = '_foveatedFactor';
+        var secondaryPriorityName = '_priorityDistance';
 
         var child;
         for (i = 0; i < length; ++i) {
             child = children[i];
             if (isVisible(child)) {
                 stack.push(child);
-                if (child[priorityName] < minPriority) {
+                if (child[mainPriorityName] < minPriority) {
                     minIndex = i;
-                    minPriority = child[priorityName];
+                    minPriority = child[mainPriorityName];
                 }
                 anyChildrenVisible = true;
             } else if (checkRefines || tileset.loadSiblings) {
                 // Keep non-visible children loaded since they are still needed before the parent can refine.
                 // Or loadSiblings is true so always load tiles regardless of visibility.
-                if (child[priorityName] < minPriority) {
+                if (child[mainPriorityName] < minPriority) {
                     minIndex = i;
-                    minPriority = child[priorityName];
+                    minPriority = child[mainPriorityName];
                 }
                 loadTile(tileset, child, frameState);
                 touchTile(tileset, child, frameState);
@@ -417,9 +417,9 @@ define([
             // Priority of all tiles that refer to the _priorityDistance stored in the common ancestor will be differentiated based on their _depth.
             var minPriorityChild = children[minIndex];
             minPriorityChild._wasMinPriorityChild = true;
-            var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) ? tile._priorityHolder : tile; // This is where priority dependency chains are wired up or started anew.
-            priorityHolder[priorityName] = Math.min(minPriorityChild[priorityName], priorityHolder[priorityName]);
-            priorityHolder[priorityTwoName] = Math.min(minPriorityChild[priorityTwoName], priorityHolder[priorityTwoName]);
+            var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) && minPriority <= tile._priorityHolder[mainPriorityName] ? tile._priorityHolder : tile; // This is where priority dependency chains are wired up or started anew.
+            priorityHolder[mainPriorityName] = minPriorityChild[mainPriorityName];
+            priorityHolder[secondaryPriorityName] = minPriorityChild[secondaryPriorityName];
 
             for (i = 0; i < length; ++i) {
                 child = children[i];
