@@ -383,6 +383,6 @@ defineSuite([
         // Priority deferral penalty
         tile2.priorityDeferred = true;
         tile2.updatePriority();
-        expect(tile2._priority).toBeGreaterThan(1000);
+        expect(tile2._priority).toBeGreaterThanOrEqualTo(1000);
     });
 }, 'WebGL');

@@ -626,6 +626,56 @@ define([
         }
     });
 
+    var scratchCartesian = new Cartesian3();
+    function isPriorityDeferred(tile, frameState) {
+        var tileset = tile._tileset;
+        var replace = tile.refine === Cesium3DTileRefine.REPLACE;
+        if ((replace && !tileset._skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
+            return false;
+        }
+
+        // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
+        var camera = frameState.camera;
+        var boundingSphere = tile.boundingSphere;
+        var radius = boundingSphere.radius;
+        var scaledCameraDirection = Cartesian3.multiplyByScalar(camera.directionWC, tile._centerZDepth, scratchCartesian);
+        var closestPointOnLine = Cartesian3.add(camera.positionWC, scaledCameraDirection, scratchCartesian);
+        // The distance from the camera's view direction to the tile.
+        var distanceToLine = Cartesian3.subtract(closestPointOnLine, boundingSphere.center, scratchCartesian);
+        var distanceSquared = Cartesian3.dot(distanceToLine, distanceToLine);
+
+        // If camera's direction vector is inside the bounding sphere then consider
+        // this tile right along the line of sight and set _foveatedFactor to 0.
+        // Otherwise,_foveatedFactor is one minus the dot product of the camera's direction
+        // and the vector between the camera and the point on the bounding sphere closest to the view line.
+        if (distanceSquared > radius * radius) {
+            var toLineNormalized = Cartesian3.normalize(distanceToLine, scratchCartesian);
+            var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalized, radius, scratchCartesian);
+            var closestOnSphere = Cartesian3.add(boundingSphere.center, scaledToLine, scratchCartesian);
+            var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, camera.positionWC, scratchCartesian);
+            var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
+            tile._foveatedFactor = 1 - Math.abs(Cartesian3.dot(camera.directionWC, toClosestOnSphereNormalize));
+        } else {
+            tile._foveatedFactor = 0;
+        }
+
+        var maxFoveatedFactor = 1 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60
+        var foveatedConeFactor = tileset.foveatedConeSize * maxFoveatedFactor;
+
+        // If it's inside the user-defined view cone, then it should not be deferred.
+        if (tile._foveatedFactor <= foveatedConeFactor) {
+            return false;
+        }
+
+        // Relax SSE based on how big the angle is between the tile and the edge of the foveated cone.
+        var range = maxFoveatedFactor - foveatedConeFactor;
+        var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0, 1);
+        var sseRelaxation = tileset.foveatedInterpolationCallback(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
+        var sse = tile._screenSpaceError === 0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
+
+        return (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
+    }
+
     var scratchJulianDate = new JulianDate();
 
     /**
@@ -681,6 +731,7 @@ define([
         this._distanceToCamera = this.distanceToTile(frameState);
         this._centerZDepth = this.distanceToTileCenter(frameState);
         this._screenSpaceError = this.getScreenSpaceError(frameState, false);
+        this.priorityDeferred = isPriorityDeferred(this, frameState);
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
