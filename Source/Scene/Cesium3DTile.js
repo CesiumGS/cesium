@@ -731,10 +731,10 @@ define([
         this._distanceToCamera = this.distanceToTile(frameState);
         this._centerZDepth = this.distanceToTileCenter(frameState);
         this._screenSpaceError = this.getScreenSpaceError(frameState, false);
-        this.priorityDeferred = isPriorityDeferred(this, frameState);
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
+        this.priorityDeferred = isPriorityDeferred(this, frameState);
     };
 
     /**
