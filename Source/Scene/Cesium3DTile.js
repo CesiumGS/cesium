@@ -1332,32 +1332,10 @@ define([
         var minPriority = tileset._minPriority;
         var maxPriority = tileset._maxPriority;
 
-        // // Mix priorities by mapping them into base 10 numbers
-        // // Because the mappings are fuzzy you need a digit of separation so priorities don't bleed into each other
-        // // Maybe this mental model is terrible and just rename to weights?
-        // var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
-        // var distanceScale = depthScale * 100; // Hundreds's "digit", digit of separation from previous
-        // var foveatedScale = distanceScale * 100;
-        //
-        // // Map 0-1 then convert to digit
-        // var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
-        //
-        // // Map 0-1 then convert to digit
-        // var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
-        //
-        // // Map 0-1 then convert to digit
-        // var foveatedDigit = foveatedScale * CesiumMath.normalize(this._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);;
-        //
-        // var foveatedDeferScale = foveatedScale * 10;
-        // var foveatedDeferDigit = this._priorityDeferred ? foveatedDeferScale : 0;
-        //
-        // // Get the final base 10 number
-        // var number = foveatedDeferDigit + distanceDigit + depthDigit;
-        // this._priority = number;
-
         // Mix priorities by mapping them into base 10 numbers
-        // Because the mappings are fuzzy you need a digit of separation so priorities don't bleed into each other
-        // Maybe this mental model is terrible and just rename to weights?
+        // Because the mappings are fuzzy you need a digit or two of separation so priorities don't bleed into each other
+        // Theoretically, the digit of separation should be the amount of leading 0's in the mapped min for the digit of interest.
+        // Think of digits as penalties, if a tile has some large quanity or has a flag raised it's (usually) penalized for it, expressed as a higher number for the digit
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var distanceScale = depthScale * 100; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var foveatedScale = distanceScale * 100;
@@ -1366,21 +1344,20 @@ define([
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
-        // // Map 0-1 then convert to digit
-        var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityHolder._priorityDistance, minPriority.distance, maxPriority.distance);
+        // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
+        var replace = this.refine === Cesium3DTileRefine.REPLACE;
+        var distanceDigit = (!tileset._skipLevelOfDetail && replace) ? distanceScale * CesiumMath.normalize(this._priorityHolder._priorityDistance, minPriority.distance, maxPriority.distance) : 0;
 
         // Map 0-1 then convert to digit
         var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);;
 
+        // Flag on/off penality digits
         var foveatedDeferScale = foveatedScale * 10;
-        // var foveatedDeferDigit = this._priorityDeferred ? foveatedDeferScale : 0;
-        var foveatedDeferDigit = 0;
+        var foveatedDeferDigit = this._priorityDeferred ? foveatedDeferScale : 0;
 
         // Get the final base 10 number
-        var number = foveatedDeferDigit + foveatedDigit + distanceDigit + depthDigit;
+        var number = depthDigit + distanceDigit + foveatedDigit + foveatedDeferDigit;
         this._priority = number;
-
-        // this._priority = CesiumMath.normalize(this._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
     };
 
     /**
