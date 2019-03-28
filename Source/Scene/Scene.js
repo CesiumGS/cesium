@@ -3370,8 +3370,13 @@ define([
      */
     Scene.prototype.render = function(time) {
         this._preUpdate.raiseEvent(this, time);
+
+        // Any pass invariant code that needs to be executed before passes
         tryAndCatchError(this, prePassesUpdate, {scene: this});
+
         exectutePasses(this, time);
+
+        // Any pass invariant code that needs to be executed after passes
         tryAndCatchError(this, postPassesUpdate, {scene: this});
 
         // Often used to trigger events that the user might be subscribed to. Things like the tile load events, ready promises, etc.
