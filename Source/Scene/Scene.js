@@ -3233,7 +3233,7 @@ define([
         }
         scene._jobScheduler.resetBudgets();
 
-        // Should render
+        // Determine if shouldRender
         var cameraChanged = scene._view.checkForCameraUpdates(scene);
         var shouldRender = !scene.requestRenderMode || scene._renderRequested || cameraChanged || scene._logDepthBufferDirty || scene._hdrDirty || (scene.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(scene.maximumRenderTimeChange) && defined(scene._lastRenderTime)) {
@@ -3241,7 +3241,6 @@ define([
             shouldRender = shouldRender || difference > scene.maximumRenderTimeChange;
         }
 
-        // Update frameState
         if (shouldRender) {
             scene._lastRenderTime = JulianDate.clone(time, scene._lastRenderTime);
             scene._renderRequested = false;
@@ -3252,21 +3251,13 @@ define([
             updateFrameNumber(scene, frameNumber, time);
         }
 
-        // Update globe
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
         }
 
-        // Update picks
         tryAndCatchError(scene, updateMostDetailedRayPicks, {scene: scene});
-
-        // Update general preloads
         tryAndCatchError(scene, updatePreloadPass, {scene: scene});
-
-        // Update flight preloads
         tryAndCatchError(scene, updatePreloadFlightPass, {scene: scene});
-
-        // Render
         tryAndCatchError(scene, render, {scene: scene, shouldRender: shouldRender, time: time});
     }
 
