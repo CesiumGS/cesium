@@ -3195,7 +3195,8 @@ define([
         }
     }
 
-    function prePassesUpdate(scene) {
+    function prePassesUpdate(args) {
+        var scene = args.scene;
         var frameState = scene._frameState;
         var primitives = scene.primitives;
         var length = primitives.length;
@@ -3207,7 +3208,8 @@ define([
         }
     }
 
-    function postPassesUpdate(scene) {
+    function postPassesUpdate(args) {
+        var scene = args.scene;
         var frameState = scene._frameState;
         var primitives = scene.primitives;
         var length = primitives.length;
@@ -3217,25 +3219,72 @@ define([
                 primitive.postPassesUpdate(frameState);
             }
         }
+
+        RequestScheduler.update();
     }
 
-    function update(scene) {
+    function exectutePasses(scene, time) {
         var frameState = scene._frameState;
 
+        if (!defined(time)) {
+            time = JulianDate.now();
+        }
+        scene._jobScheduler.resetBudgets();
+
+        // Should render
+        var cameraChanged = scene._view.checkForCameraUpdates(scene);
+        var shouldRender = !scene.requestRenderMode || scene._renderRequested || cameraChanged || scene._logDepthBufferDirty || scene._hdrDirty || (scene.mode === SceneMode.MORPHING);
+        if (!shouldRender && defined(scene.maximumRenderTimeChange) && defined(scene._lastRenderTime)) {
+            var difference = Math.abs(JulianDate.secondsDifference(scene._lastRenderTime, time));
+            shouldRender = shouldRender || difference > scene.maximumRenderTimeChange;
+        }
+
+        // Update frameState
+        if (shouldRender) {
+            scene._lastRenderTime = JulianDate.clone(time, scene._lastRenderTime);
+            scene._renderRequested = false;
+            scene._logDepthBufferDirty = false;
+            scene._hdrDirty = false;
+
+            var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
+            updateFrameNumber(scene, frameNumber, time);
+        }
+
+        // Update globe
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
         }
 
-        updateMostDetailedRayPicks(scene);
-        updatePreloadPass(scene);
-        updatePreloadFlightPass(scene);
+        // Update picks
+        tryAndCatchError(scene, updateMostDetailedRayPicks, {scene: scene});
 
-        frameState.creditDisplay.update();
+        // Update general preloads
+        tryAndCatchError(scene, updatePreloadPass, {scene: scene});
+
+        // Update flight preloads
+        tryAndCatchError(scene, updatePreloadFlightPass, {scene: scene});
+
+        // Render
+        tryAndCatchError(scene, render, {scene: scene, shouldRender: shouldRender, time: time});
     }
 
     var scratchBackgroundColor = new Color();
 
-    function render(scene) {
+    function render(args) {
+        var scene = args.scene;
+        var shouldRender = args.shouldRender;
+        var time = args.time;
+
+        if (!shouldRender) {
+            if (scene.requestRenderMode) {
+                updateDebugShowFramesPerSecond(scene, shouldRender);
+                callAfterRenderFunctions(scene);
+            }
+            return;
+        }
+
+        scene._preRender.raiseEvent(scene, time);
+
         scene._pickPositionCacheDirty = true;
 
         var context = scene.context;
@@ -3308,11 +3357,16 @@ define([
 
         frameState.creditDisplay.endFrame();
         context.endFrame();
+
+        updateDebugShowFramesPerSecond(scene, shouldRender);
+        callAfterRenderFunctions(scene);
+
+        scene._postRender.raiseEvent(scene, time);
     }
 
-    function tryAndCatchError(scene, functionToExecute) {
+    function tryAndCatchError(scene, functionToExecute, args) {
         try {
-            functionToExecute(scene);
+            functionToExecute(args);
         } catch (error) {
             scene._renderError.raiseEvent(scene, error);
 
@@ -3329,52 +3383,11 @@ define([
      * @private
      */
     Scene.prototype.render = function(time) {
-        if (!defined(time)) {
-            time = JulianDate.now();
-        }
-
-        var frameState = this._frameState;
-        this._jobScheduler.resetBudgets();
-
-        var cameraChanged = this._view.checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || this._hdrDirty || (this.mode === SceneMode.MORPHING);
-        if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
-            var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
-            shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
-        }
-
-        if (shouldRender) {
-            this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
-            this._renderRequested = false;
-            this._logDepthBufferDirty = false;
-            this._hdrDirty = false;
-
-            var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
-            updateFrameNumber(this, frameNumber, time);
-        }
-
-        // Update
         this._preUpdate.raiseEvent(this, time);
-        tryAndCatchError(this, prePassesUpdate);
-        tryAndCatchError(this, update);
+        tryAndCatchError(this, prePassesUpdate, {scene: this});
+        exectutePasses(this, time);
+        tryAndCatchError(this, postPassesUpdate, {scene: this});
         this._postUpdate.raiseEvent(this, time);
-
-        if (shouldRender) {
-            // Render
-            this._preRender.raiseEvent(this, time);
-            tryAndCatchError(this, render);
-
-            tryAndCatchError(this, postPassesUpdate);
-
-            RequestScheduler.update();
-        }
-
-        updateDebugShowFramesPerSecond(this, shouldRender);
-        callAfterRenderFunctions(this);
-
-        if (shouldRender) {
-            this._postRender.raiseEvent(this, time);
-        }
     };
 
     /**
@@ -3872,7 +3885,8 @@ define([
         });
     };
 
-    function updatePreloadPass(scene) {
+    function updatePreloadPass(args) {
+        var scene = args.scene;
         var frameState = scene._frameState;
         preloadTilesetPassState.camera = frameState.camera;
         preloadTilesetPassState.cullingVolume = frameState.cullingVolume;
@@ -3887,7 +3901,8 @@ define([
         }
     }
 
-    function updatePreloadFlightPass(scene) {
+    function updatePreloadFlightPass(args) {
+        var scene = args.scene;
         var camera = scene._frameState.camera;
         if (!camera.hasCurrentFlight()) {
             return;
@@ -3957,8 +3972,9 @@ define([
         return ready;
     }
 
-    function updateMostDetailedRayPicks(scene) {
+    function updateMostDetailedRayPicks(args) {
         // Modifies array during iteration
+        var scene = args.scene;
         var rayPicks = scene._mostDetailedRayPicks;
         for (var i = 0; i < rayPicks.length; ++i) {
             if (updateMostDetailedRayPick(scene, rayPicks[i])) {
