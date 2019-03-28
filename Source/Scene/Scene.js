@@ -3220,8 +3220,6 @@ define([
             }
         }
 
-        callAfterRenderFunctions(scene);
-
         RequestScheduler.update();
     }
 
@@ -3375,6 +3373,11 @@ define([
         tryAndCatchError(this, prePassesUpdate, {scene: this});
         exectutePasses(this, time);
         tryAndCatchError(this, postPassesUpdate, {scene: this});
+
+        // Often used to trigger events that the user might be subscribed to. Things like the tile load events, ready promises, etc.
+        // We don't want those events to resolve during the render loop because the events might add new primitives
+        callAfterRenderFunctions(this);
+
         this._postUpdate.raiseEvent(this, time);
     };
 
