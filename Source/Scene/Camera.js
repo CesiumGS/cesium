@@ -304,6 +304,7 @@ define([
     /**
      * Checks there's a camera flight for this camera.
      *
+     * @private
      * @returns {Boolean} Whether or not this camera has a current flight with a valid preloadFlightCamera in scene.
      */
     Camera.prototype.hasCurrentFlight = function() {

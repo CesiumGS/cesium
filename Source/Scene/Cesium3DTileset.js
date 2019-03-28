@@ -276,7 +276,6 @@ define([
          * @default true
          */
         this.preloadFlightDestinations = defaultValue(options.preloadFlightDestinations, true);
-        this._preloadFlightPass = false;
         this._pass = undefined; // Cesium3DTilePass
 
         /**
@@ -1678,9 +1677,18 @@ define([
      */
     Cesium3DTileset.prototype.postPassesUpdate = function(frameState) {
         cancelOutOfViewRequests(this, frameState);
-        this.raiseLoadProgressEvent(frameState);
+        raiseLoadProgressEvent(this, frameState);
         this._cache.unloadTiles(this, unloadTile);
         this._cache.reset();
+
+        var statistics = this._statisticsPerPass[Cesium3DTilePass.RENDER];
+        var credits = this._credits;
+        if (defined(credits) && statistics.selected !== 0) {
+            var length = credits.length;
+            for (var i = 0; i < length; i++) {
+                frameState.creditDisplay.addCredit(credits[i]);
+            }
+        }
     };
 
     /**
@@ -1706,14 +1714,6 @@ define([
 
         if (this.dynamicScreenSpaceError) {
             updateDynamicScreenSpaceError(this, frameState);
-        }
-
-        var credits = this._credits;
-        if (defined(credits)) {
-            var length = credits.length;
-            for (var i = 0; i < length; i++) {
-                frameState.creditDisplay.addCredit(credits[i]);
-            }
         }
     };
 
@@ -2123,10 +2123,10 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    Cesium3DTileset.prototype.raiseLoadProgressEvent = function(frameState) {
-        var that = this;
-        var statistics = this._statistics;
-        var statisticsLast = this._statisticsLast;
+     function raiseLoadProgressEvent(tileset, frameState) {
+        var that = tileset;
+        var statistics = tileset._statistics;
+        var statisticsLast = tileset._statisticsLast;
 
         var numberOfPendingRequests = statistics.numberOfPendingRequests;
         var numberOfTilesProcessing = statistics.numberOfTilesProcessing;
@@ -2143,23 +2143,23 @@ define([
             });
         }
 
-        this._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
+        tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
         // Events are raised (added to the afterRender queue) here since promises
         // may resolve outside of the update loop that then raise events, e.g.,
         // model's readyPromise.
-        if (progressChanged && this._tilesLoaded) {
+        if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
                 that.allTilesLoaded.raiseEvent();
             });
-            if (!this._initialTilesLoaded) {
-                this._initialTilesLoaded = true;
+            if (!tileset._initialTilesLoaded) {
+                tileset._initialTilesLoaded = true;
                 frameState.afterRender.push(function() {
                     that.initialTilesLoaded.raiseEvent();
                 });
             }
         }
-    };
+    }
 
     function resetMinMax(tileset) {
         tileset._heatmap.resetMinMax();
