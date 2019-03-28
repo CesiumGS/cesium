@@ -2123,7 +2123,7 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-     function raiseLoadProgressEvent(tileset, frameState) {
+    function raiseLoadProgressEvent(tileset, frameState) {
         var that = tileset;
         var statistics = tileset._statistics;
         var statisticsLast = tileset._statisticsLast;

@@ -3309,6 +3309,7 @@ define([
         frameState.backgroundColor = backgroundColor;
 
         frameState.creditDisplay.beginFrame();
+        frameState.creditDisplay.update();
 
         scene.fog.update(frameState);
 
