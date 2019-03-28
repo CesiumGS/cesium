@@ -3195,35 +3195,12 @@ define([
         }
     }
 
-    function prePassesUpdate(args) {
-        var scene = args.scene;
-        var frameState = scene._frameState;
-        var primitives = scene.primitives;
-        var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            var primitive = primitives.get(i);
-            if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
-                primitive.prePassesUpdate(frameState);
-            }
-        }
-    }
-
-    function postPassesUpdate(args) {
-        var scene = args.scene;
-        var frameState = scene._frameState;
-        var primitives = scene.primitives;
-        var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            var primitive = primitives.get(i);
-            if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
-                primitive.postPassesUpdate(frameState);
-            }
-        }
-
-        RequestScheduler.update();
-    }
-
-    function exectutePasses(scene, time) {
+    function executePasses(scene, time) {
+        /**
+         *
+         * Pre passes update. Execute any pass invariant code that should run before the passes here.
+         *
+         */
         var frameState = scene._frameState;
 
         if (!defined(time)) {
@@ -3249,26 +3226,57 @@ define([
             updateFrameNumber(scene, frameNumber, time);
         }
 
+        // Update tilesets for passes
+        var primitives = scene.primitives;
+        var length = primitives.length;
+        var i;
+        var primitive;
+        for (i = 0; i < length; ++i) {
+            primitive = primitives.get(i);
+            if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
+                primitive.prePassesUpdate(frameState);
+            }
+        }
+
+        // Update globe
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
         }
 
-        tryAndCatchError(scene, updateMostDetailedRayPicks, {scene: scene});
-        tryAndCatchError(scene, updatePreloadPass, {scene: scene});
-        tryAndCatchError(scene, updatePreloadFlightPass, {scene: scene});
-        tryAndCatchError(scene, render, {scene: scene, shouldRender: shouldRender, time: time});
+        /**
+         *
+         * Passes update. Add any passes here
+         *
+         */
+        updateMostDetailedRayPicks(scene);
+        updatePreloadPass(scene);
+        updatePreloadFlightPass(scene);
+        if (shouldRender) {
+            render(scene);
+        }
+
+        /**
+         *
+         * Post passes update. Execute any pass invariant code that should run after the passes here.
+         *
+         */
+        primitives = scene.primitives;
+        length = primitives.length;
+        for (i = 0; i < length; ++i) {
+            primitive = primitives.get(i);
+            if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
+                primitive.postPassesUpdate(frameState);
+            }
+        }
+
+        RequestScheduler.update();
     }
 
     var scratchBackgroundColor = new Color();
 
-    function render(args) {
-        var scene = args.scene;
-        var shouldRender = args.shouldRender;
-        var time = args.time;
-
-        if (!shouldRender) {
-            return;
-        }
+    function render(scene) {
+        var frameState = scene._frameState;
+        var time = frameState.time;
 
         scene._preRender.raiseEvent(scene, time);
 
@@ -3276,7 +3284,6 @@ define([
 
         var context = scene.context;
         var us = context.uniformState;
-        var frameState = scene._frameState;
 
         var view = scene._defaultView;
         scene._view = view;
@@ -3346,20 +3353,8 @@ define([
         frameState.creditDisplay.endFrame();
         context.endFrame();
 
-        updateDebugShowFramesPerSecond(scene, shouldRender);
+        updateDebugShowFramesPerSecond(scene, true);
         scene._postRender.raiseEvent(scene, time);
-    }
-
-    function tryAndCatchError(scene, functionToExecute, args) {
-        try {
-            functionToExecute(args);
-        } catch (error) {
-            scene._renderError.raiseEvent(scene, error);
-
-            if (scene.rethrowRenderErrors) {
-                throw error;
-            }
-        }
     }
 
     /**
@@ -3371,18 +3366,17 @@ define([
     Scene.prototype.render = function(time) {
         this._preUpdate.raiseEvent(this, time);
 
-        // Any pass invariant code that needs to be executed before passes
-        tryAndCatchError(this, prePassesUpdate, {scene: this});
-
-        exectutePasses(this, time);
-
-        // Any pass invariant code that needs to be executed after passes
-        tryAndCatchError(this, postPassesUpdate, {scene: this});
-
+        try {
+            executePasses(this, time);
+        } catch (error) {
+            this._renderError.raiseEvent(this, error);
+            if (this.rethrowRenderErrors) {
+                throw error;
+            }
+        }
         // Often used to trigger events that the user might be subscribed to. Things like the tile load events, ready promises, etc.
         // We don't want those events to resolve during the render loop because the events might add new primitives
         callAfterRenderFunctions(this);
-
         this._postUpdate.raiseEvent(this, time);
     };
 
@@ -3881,8 +3875,7 @@ define([
         });
     };
 
-    function updatePreloadPass(args) {
-        var scene = args.scene;
+    function updatePreloadPass(scene) {
         var frameState = scene._frameState;
         preloadTilesetPassState.camera = frameState.camera;
         preloadTilesetPassState.cullingVolume = frameState.cullingVolume;
@@ -3897,8 +3890,7 @@ define([
         }
     }
 
-    function updatePreloadFlightPass(args) {
-        var scene = args.scene;
+    function updatePreloadFlightPass(scene) {
         var camera = scene._frameState.camera;
         if (!camera.hasCurrentFlight()) {
             return;
@@ -3968,9 +3960,8 @@ define([
         return ready;
     }
 
-    function updateMostDetailedRayPicks(args) {
+    function updateMostDetailedRayPicks(scene) {
         // Modifies array during iteration
-        var scene = args.scene;
         var rayPicks = scene._mostDetailedRayPicks;
         for (var i = 0; i < rayPicks.length; ++i) {
             if (updateMostDetailedRayPick(scene, rayPicks[i])) {
