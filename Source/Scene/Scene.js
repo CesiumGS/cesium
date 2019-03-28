@@ -3220,6 +3220,8 @@ define([
             }
         }
 
+        callAfterRenderFunctions(scene);
+
         RequestScheduler.update();
     }
 
@@ -3276,10 +3278,6 @@ define([
         var time = args.time;
 
         if (!shouldRender) {
-            if (scene.requestRenderMode) {
-                updateDebugShowFramesPerSecond(scene, shouldRender);
-                callAfterRenderFunctions(scene);
-            }
             return;
         }
 
@@ -3360,8 +3358,6 @@ define([
         context.endFrame();
 
         updateDebugShowFramesPerSecond(scene, shouldRender);
-        callAfterRenderFunctions(scene);
-
         scene._postRender.raiseEvent(scene, time);
     }
 
