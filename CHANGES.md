@@ -20,6 +20,7 @@ Change Log
 for pitches close to +/- 90°. [#7654](https://github.com/AnalyticalGraphicsInc/cesium/pull/7654)
 * Fixed a type of crash caused by the camera being rotated through terrain. [#6783](https://github.com/AnalyticalGraphicsInc/cesium/issues/6783)
 * Fixed an error in `Resource` when used with template replacements using numeric keys. [#7668](https://github.com/AnalyticalGraphicsInc/cesium/pull/7668)
+* Fixed an error in `Cesium3DTilePointFeature` where `anchorLineColor` used the same color Instance instead of cloning the color [#7686](https://github.com/AnalyticalGraphicsInc/cesium/pull/7686)
 
 ### 1.55 - 2019-03-01
 
