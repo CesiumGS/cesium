@@ -3216,8 +3216,8 @@ define([
         }
 
         scene._pickPositionCacheDirty = true;
-        frameState.creditDisplay.beginFrame();
         frameState.creditDisplay.update();
+        frameState.creditDisplay.beginFrame();
     }
 
     function postPassesUpdate(scene) {
@@ -3373,10 +3373,12 @@ define([
         tryAndCatchError(scene, updateMostDetailedRayPicks);
         tryAndCatchError(scene, updatePreloadPass);
         tryAndCatchError(scene, updatePreloadFlightPass);
+
+        scene._postUpdate.raiseEvent(scene, time);
+
         if (shouldRender) {
             scene._preRender.raiseEvent(scene, time);
             tryAndCatchError(scene, render);
-            scene._postRender.raiseEvent(scene, time);
         }
 
         /**
@@ -3390,7 +3392,9 @@ define([
         // We don't want those events to resolve during the render loop because the events might add new primitives
         callAfterRenderFunctions(scene);
 
-        scene._postUpdate.raiseEvent(scene, time);
+        if (shouldRender) {
+            scene._postRender.raiseEvent(scene, time);
+        }
     };
 
     /**
