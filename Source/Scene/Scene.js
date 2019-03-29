@@ -3195,38 +3195,10 @@ define([
         }
     }
 
-    function executePasses(scene, time) {
-        /**
-         *
-         * Pre passes update. Execute any pass invariant code that should run before the passes here.
-         *
-         */
-        var frameState = scene._frameState;
-
-        if (!defined(time)) {
-            time = JulianDate.now();
-        }
+    function prePassesUpdate(scene) {
         scene._jobScheduler.resetBudgets();
 
-        // Determine if shouldRender
-        var cameraChanged = scene._view.checkForCameraUpdates(scene);
-        var shouldRender = !scene.requestRenderMode || scene._renderRequested || cameraChanged || scene._logDepthBufferDirty || scene._hdrDirty || (scene.mode === SceneMode.MORPHING);
-        if (!shouldRender && defined(scene.maximumRenderTimeChange) && defined(scene._lastRenderTime)) {
-            var difference = Math.abs(JulianDate.secondsDifference(scene._lastRenderTime, time));
-            shouldRender = shouldRender || difference > scene.maximumRenderTimeChange;
-        }
-
-        if (shouldRender) {
-            scene._lastRenderTime = JulianDate.clone(time, scene._lastRenderTime);
-            scene._renderRequested = false;
-            scene._logDepthBufferDirty = false;
-            scene._hdrDirty = false;
-
-            var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
-            updateFrameNumber(scene, frameNumber, time);
-        }
-
-        // Update tilesets for passes
+        var frameState = scene._frameState;
         var primitives = scene.primitives;
         var length = primitives.length;
         var i;
@@ -3239,7 +3211,6 @@ define([
 
         }
 
-        // Update globe
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
         }
@@ -3247,26 +3218,14 @@ define([
         scene._pickPositionCacheDirty = true;
         frameState.creditDisplay.beginFrame();
         frameState.creditDisplay.update();
+    }
 
-        /**
-         *
-         * Passes update. Add any passes here
-         *
-         */
-        updateMostDetailedRayPicks(scene);
-        updatePreloadPass(scene);
-        updatePreloadFlightPass(scene);
-        if (shouldRender) {
-            render(scene);
-        }
-
-        /**
-         *
-         * Post passes update. Execute any pass invariant code that should run after the passes here.
-         *
-         */
-        primitives = scene.primitives;
-        length = primitives.length;
+    function postPassesUpdate(scene) {
+        var frameState = scene._frameState;
+        var primitives = scene.primitives;
+        var length = primitives.length;
+        var i;
+        var primitive;
         for (i = 0; i < length; ++i) {
             primitive = primitives.get(i);
             if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
@@ -3275,7 +3234,6 @@ define([
         }
 
         RequestScheduler.update();
-
         frameState.creditDisplay.endFrame();
     }
 
@@ -3283,9 +3241,6 @@ define([
 
     function render(scene) {
         var frameState = scene._frameState;
-        var time = frameState.time;
-
-        scene._preRender.raiseEvent(scene, time);
 
         var context = scene.context;
         var us = context.uniformState;
@@ -3355,7 +3310,18 @@ define([
         context.endFrame();
 
         updateDebugShowFramesPerSecond(scene, true);
-        scene._postRender.raiseEvent(scene, time);
+    }
+
+    function tryAndCatchError(scene, functionToExecute) {
+        try {
+            functionToExecute(scene);
+        } catch (error) {
+            scene._renderError.raiseEvent(scene, error);
+
+            if (scene.rethrowRenderErrors) {
+                throw error;
+            }
+        }
     }
 
     /**
@@ -3365,20 +3331,66 @@ define([
      * @private
      */
     Scene.prototype.render = function(time) {
-        this._preUpdate.raiseEvent(this, time);
+        /**
+         *
+         * Pre passes update. Execute any pass invariant code that should run before the passes here.
+         *
+         */
+        var scene = this;
+        scene._preUpdate.raiseEvent(scene, time);
 
-        try {
-            executePasses(this, time);
-        } catch (error) {
-            this._renderError.raiseEvent(this, error);
-            if (this.rethrowRenderErrors) {
-                throw error;
-            }
+        var frameState = scene._frameState;
+
+        if (!defined(time)) {
+            time = JulianDate.now();
         }
-        // Often used to trigger events that the user might be subscribed to. Things like the tile load events, ready promises, etc.
+
+        // Determine if shouldRender
+        var cameraChanged = scene._view.checkForCameraUpdates(scene);
+        var shouldRender = !scene.requestRenderMode || scene._renderRequested || cameraChanged || scene._logDepthBufferDirty || scene._hdrDirty || (scene.mode === SceneMode.MORPHING);
+        if (!shouldRender && defined(scene.maximumRenderTimeChange) && defined(scene._lastRenderTime)) {
+            var difference = Math.abs(JulianDate.secondsDifference(scene._lastRenderTime, time));
+            shouldRender = shouldRender || difference > scene.maximumRenderTimeChange;
+        }
+
+        if (shouldRender) {
+            scene._lastRenderTime = JulianDate.clone(time, scene._lastRenderTime);
+            scene._renderRequested = false;
+            scene._logDepthBufferDirty = false;
+            scene._hdrDirty = false;
+
+            var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
+            updateFrameNumber(scene, frameNumber, time);
+        }
+
+        tryAndCatchError(scene, prePassesUpdate);
+
+        /**
+         *
+         * Passes update. Add any passes here
+         *
+         */
+        tryAndCatchError(scene, updateMostDetailedRayPicks);
+        tryAndCatchError(scene, updatePreloadPass);
+        tryAndCatchError(scene, updatePreloadFlightPass);
+        if (shouldRender) {
+            scene._preRender.raiseEvent(scene, time);
+            tryAndCatchError(scene, render);
+            scene._postRender.raiseEvent(scene, time);
+        }
+
+        /**
+         *
+         * Post passes update. Execute any pass invariant code that should run after the passes here.
+         *
+         */
+        tryAndCatchError(scene, postPassesUpdate);
+
+        // Often used to trigger events (so don't want in trycatch) that the user might be subscribed to. Things like the tile load events, ready promises, etc.
         // We don't want those events to resolve during the render loop because the events might add new primitives
-        callAfterRenderFunctions(this);
-        this._postUpdate.raiseEvent(this, time);
+        callAfterRenderFunctions(scene);
+
+        scene._postUpdate.raiseEvent(scene, time);
     };
 
     /**
