@@ -1235,7 +1235,7 @@ define([
                 return this._specularEnvironmentMaps;
             },
             set : function(value) {
-                this._shouldUpdateSpecularMapAtlas = value !== this._specularEnvironmentMaps;
+                this._shouldUpdateSpecularMapAtlas = this._shouldUpdateSpecularMapAtlas || value !== this._specularEnvironmentMaps;
                 this._specularEnvironmentMaps = value;
             }
         }
