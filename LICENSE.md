@@ -940,3 +940,9 @@ https://github.com/logos
 ### Font Awesome Icon
 
 Font Awesome by Dave Gandy - http://fontawesome.io
+
+### High-Resolution Lunar Texture ("moonNotSmall.png")
+
+Public Domain
+http://celestiamotherlode.net/catalog/show_addon_details.php?addon_id=980
+
