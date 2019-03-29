@@ -3308,8 +3308,6 @@ define([
         }
 
         context.endFrame();
-
-        updateDebugShowFramesPerSecond(scene, true);
     }
 
     function tryAndCatchError(scene, functionToExecute) {
@@ -3386,6 +3384,7 @@ define([
          * Post passes update. Execute any pass invariant code that should run after the passes here.
          *
          */
+        updateDebugShowFramesPerSecond(scene, shouldRender);
         tryAndCatchError(scene, postPassesUpdate);
 
         // Often used to trigger events (so don't want in trycatch) that the user might be subscribed to. Things like the tile load events, ready promises, etc.
