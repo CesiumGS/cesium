@@ -2124,7 +2124,6 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function raiseLoadProgressEvent(tileset, frameState) {
-        var that = tileset;
         var statistics = tileset._statistics;
         var statisticsLast = tileset._statisticsLast;
 
@@ -2139,7 +2138,7 @@ define([
 
         if (progressChanged) {
             frameState.afterRender.push(function() {
-                that.loadProgress.raiseEvent(numberOfPendingRequests, numberOfTilesProcessing);
+                tileset.loadProgress.raiseEvent(numberOfPendingRequests, numberOfTilesProcessing);
             });
         }
 
@@ -2150,12 +2149,12 @@ define([
         // model's readyPromise.
         if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
-                that.allTilesLoaded.raiseEvent();
+                tileset.allTilesLoaded.raiseEvent();
             });
             if (!tileset._initialTilesLoaded) {
                 tileset._initialTilesLoaded = true;
                 frameState.afterRender.push(function() {
-                    that.initialTilesLoaded.raiseEvent();
+                    tileset.initialTilesLoaded.raiseEvent();
                 });
             }
         }
