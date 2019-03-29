@@ -804,6 +804,20 @@ define([
         this._pickOffscreenView = new View(this, pickOffscreenCamera, pickOffscreenViewport);
 
         /**
+         * The camera view for the scene camera flight destination. Used for preloading flight destination tiles.
+         * @type {Camera}
+         * @private
+         */
+        this.preloadFlightCamera = new Camera(this);
+
+        /**
+         * The culling volume for the scene camera flight destination. Used for preloading flight destination tiles.
+         * @type {CullingVolume}
+         * @private
+         */
+        this.preloadFlightCullingVolume = undefined;
+
+        /**
          * @private
          */
         this.pickOffscreenDefaultWidth = pickOffscreenDefaultWidth;
@@ -1691,8 +1705,8 @@ define([
         }
     };
 
-    var mostDetailedPrefetchTilesetPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.MOST_DETAILED_PREFETCH
+    var mostDetailedPreloadTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.MOST_DETAILED_PRELOAD
     });
 
     var mostDetailedPickTilesetPassState = new Cesium3DTilePassState({
@@ -1705,6 +1719,14 @@ define([
 
     var pickTilesetPassState = new Cesium3DTilePassState({
         pass : Cesium3DTilePass.PICK
+    });
+
+    var preloadTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.PRELOAD
+    });
+
+    var preloadFlightTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.PRELOAD_FLIGHT
     });
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
@@ -3173,26 +3195,55 @@ define([
         }
     }
 
-    function update(scene) {
+    function prePassesUpdate(scene) {
+        scene._jobScheduler.resetBudgets();
+
         var frameState = scene._frameState;
+        var primitives = scene.primitives;
+        var length = primitives.length;
+        var i;
+        var primitive;
+        for (i = 0; i < length; ++i) {
+            primitive = primitives.get(i);
+            if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
+                primitive.prePassesUpdate(frameState);
+            }
+
+        }
 
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
         }
 
-        updateMostDetailedRayPicks(scene);
-
+        scene._pickPositionCacheDirty = true;
         frameState.creditDisplay.update();
+        frameState.creditDisplay.beginFrame();
+    }
+
+    function postPassesUpdate(scene) {
+        var frameState = scene._frameState;
+        var primitives = scene.primitives;
+        var length = primitives.length;
+        var i;
+        var primitive;
+        for (i = 0; i < length; ++i) {
+            primitive = primitives.get(i);
+            if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
+                primitive.postPassesUpdate(frameState);
+            }
+        }
+
+        RequestScheduler.update();
+        frameState.creditDisplay.endFrame();
     }
 
     var scratchBackgroundColor = new Color();
 
     function render(scene) {
-        scene._pickPositionCacheDirty = true;
+        var frameState = scene._frameState;
 
         var context = scene.context;
         var us = context.uniformState;
-        var frameState = scene._frameState;
 
         var view = scene._defaultView;
         scene._view = view;
@@ -3210,8 +3261,6 @@ define([
             backgroundColor.blue = Math.pow(backgroundColor.blue, scene.gamma);
         }
         frameState.backgroundColor = backgroundColor;
-
-        frameState.creditDisplay.beginFrame();
 
         scene.fog.update(frameState);
 
@@ -3258,7 +3307,6 @@ define([
             }
         }
 
-        frameState.creditDisplay.endFrame();
         context.endFrame();
     }
 
@@ -3281,48 +3329,70 @@ define([
      * @private
      */
     Scene.prototype.render = function(time) {
+        /**
+         *
+         * Pre passes update. Execute any pass invariant code that should run before the passes here.
+         *
+         */
+        var scene = this;
+        scene._preUpdate.raiseEvent(scene, time);
+
+        var frameState = scene._frameState;
+
         if (!defined(time)) {
             time = JulianDate.now();
         }
 
-        var frameState = this._frameState;
-        this._jobScheduler.resetBudgets();
-
-        var cameraChanged = this._view.checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || this._hdrDirty || (this.mode === SceneMode.MORPHING);
-        if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
-            var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
-            shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
+        // Determine if shouldRender
+        var cameraChanged = scene._view.checkForCameraUpdates(scene);
+        var shouldRender = !scene.requestRenderMode || scene._renderRequested || cameraChanged || scene._logDepthBufferDirty || scene._hdrDirty || (scene.mode === SceneMode.MORPHING);
+        if (!shouldRender && defined(scene.maximumRenderTimeChange) && defined(scene._lastRenderTime)) {
+            var difference = Math.abs(JulianDate.secondsDifference(scene._lastRenderTime, time));
+            shouldRender = shouldRender || difference > scene.maximumRenderTimeChange;
         }
 
         if (shouldRender) {
-            this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
-            this._renderRequested = false;
-            this._logDepthBufferDirty = false;
-            this._hdrDirty = false;
+            scene._lastRenderTime = JulianDate.clone(time, scene._lastRenderTime);
+            scene._renderRequested = false;
+            scene._logDepthBufferDirty = false;
+            scene._hdrDirty = false;
 
             var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
-            updateFrameNumber(this, frameNumber, time);
+            updateFrameNumber(scene, frameNumber, time);
         }
 
-        // Update
-        this._preUpdate.raiseEvent(this, time);
-        tryAndCatchError(this, update);
-        this._postUpdate.raiseEvent(this, time);
+        tryAndCatchError(scene, prePassesUpdate);
+
+        /**
+         *
+         * Passes update. Add any passes here
+         *
+         */
+        tryAndCatchError(scene, updateMostDetailedRayPicks);
+        tryAndCatchError(scene, updatePreloadPass);
+        tryAndCatchError(scene, updatePreloadFlightPass);
+
+        scene._postUpdate.raiseEvent(scene, time);
 
         if (shouldRender) {
-            // Render
-            this._preRender.raiseEvent(this, time);
-            tryAndCatchError(this, render);
-
-            RequestScheduler.update();
+            scene._preRender.raiseEvent(scene, time);
+            tryAndCatchError(scene, render);
         }
 
-        updateDebugShowFramesPerSecond(this, shouldRender);
-        callAfterRenderFunctions(this);
+        /**
+         *
+         * Post passes update. Execute any pass invariant code that should run after the passes here.
+         *
+         */
+        updateDebugShowFramesPerSecond(scene, shouldRender);
+        tryAndCatchError(scene, postPassesUpdate);
+
+        // Often used to trigger events (so don't want in trycatch) that the user might be subscribed to. Things like the tile load events, ready promises, etc.
+        // We don't want those events to resolve during the render loop because the events might add new primitives
+        callAfterRenderFunctions(scene);
 
         if (shouldRender) {
-            this._postRender.raiseEvent(this, time);
+            scene._postRender.raiseEvent(scene, time);
         }
     };
 
@@ -3821,6 +3891,40 @@ define([
         });
     };
 
+    function updatePreloadPass(scene) {
+        var frameState = scene._frameState;
+        preloadTilesetPassState.camera = frameState.camera;
+        preloadTilesetPassState.cullingVolume = frameState.cullingVolume;
+
+        var primitives = scene.primitives;
+        var length = primitives.length;
+        for (var i = 0; i < length; ++i) {
+            var primitive = primitives.get(i);
+            if ((primitive instanceof Cesium3DTileset) && primitive.preloadWhenHidden && !primitive.show) {
+                primitive.updateForPass(scene._frameState, preloadTilesetPassState);
+            }
+        }
+    }
+
+    function updatePreloadFlightPass(scene) {
+        var camera = scene._frameState.camera;
+        if (!camera.hasCurrentFlight()) {
+            return;
+        }
+
+        preloadFlightTilesetPassState.camera = scene.preloadFlightCamera;
+        preloadFlightTilesetPassState.cullingVolume = scene.preloadFlightCullingVolume;
+
+        var primitives = scene.primitives;
+        var length = primitives.length;
+        for (var i = 0; i < length; ++i) {
+            var primitive = primitives.get(i);
+            if ((primitive instanceof Cesium3DTileset) && primitive.preloadFlightDestinations && primitive.show) {
+                primitive.updateForPass(scene._frameState, preloadFlightTilesetPassState);
+            }
+        }
+    }
+
     var scratchRight = new Cartesian3();
     var scratchUp = new Cartesian3();
 
@@ -3846,11 +3950,10 @@ define([
         var width = rayPick.width;
         var tilesets = rayPick.tilesets;
 
-        var view = scene._pickOffscreenView;
-        var camera = view.camera;
-        var cullingVolume = updateOffscreenCameraFromRay(scene, ray, width, view.camera);
+        var camera = scene._pickOffscreenView.camera;
+        var cullingVolume = updateOffscreenCameraFromRay(scene, ray, width, camera);
 
-        var tilesetPassState = mostDetailedPrefetchTilesetPassState;
+        var tilesetPassState = mostDetailedPreloadTilesetPassState;
         tilesetPassState.camera = camera;
         tilesetPassState.cullingVolume = cullingVolume;
 
