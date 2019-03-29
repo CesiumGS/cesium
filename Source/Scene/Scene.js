@@ -3236,12 +3236,17 @@ define([
             if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
                 primitive.prePassesUpdate(frameState);
             }
+
         }
 
         // Update globe
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
         }
+
+        scene._pickPositionCacheDirty = true;
+        frameState.creditDisplay.beginFrame();
+        frameState.creditDisplay.update();
 
         /**
          *
@@ -3270,6 +3275,8 @@ define([
         }
 
         RequestScheduler.update();
+
+        frameState.creditDisplay.endFrame();
     }
 
     var scratchBackgroundColor = new Color();
@@ -3279,8 +3286,6 @@ define([
         var time = frameState.time;
 
         scene._preRender.raiseEvent(scene, time);
-
-        scene._pickPositionCacheDirty = true;
 
         var context = scene.context;
         var us = context.uniformState;
@@ -3301,9 +3306,6 @@ define([
             backgroundColor.blue = Math.pow(backgroundColor.blue, scene.gamma);
         }
         frameState.backgroundColor = backgroundColor;
-
-        frameState.creditDisplay.beginFrame();
-        frameState.creditDisplay.update();
 
         scene.fog.update(frameState);
 
@@ -3350,7 +3352,6 @@ define([
             }
         }
 
-        frameState.creditDisplay.endFrame();
         context.endFrame();
 
         updateDebugShowFramesPerSecond(scene, true);
