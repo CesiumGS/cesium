@@ -3983,7 +3983,7 @@ define([
 
     function deferPromiseUntilPostRender(scene, promise) {
         // Resolve promise after scene's postRender in case entities are created when the promise resolves.
-        // Entities can't be created after viewer._onTick and before viewer._postRender.
+        // Entities can't be created between viewer._onTick and viewer._postRender.
         var deferred = when.defer();
         promise.then(function(result) {
             var removeCallback = scene.postRender.addEventListener(function() {
