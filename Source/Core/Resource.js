@@ -603,21 +603,6 @@ define([
 
     /**
      * Combines the specified object and the existing query parameters. This allows you to add many parameters at once,
-     *  as opposed to adding them one at a time to the queryParameters property. If a value is already set, it will be replaced with the new value.
-     *
-     * @param {Object} params The query parameters
-     * @param {Boolean} [useAsDefault=false] If true the params will be used as the default values, so they will only be set if they are undefined.
-     *
-     * @deprecated
-     */
-    Resource.prototype.addQueryParameters = function(params, useAsDefault) {
-        deprecationWarning('Resource.addQueryParameters', 'addQueryParameters has been deprecated and will be removed 1.45. Use setQueryParameters or appendQueryParameters instead.');
-
-        return this.setQueryParameters(params, useAsDefault);
-    };
-
-    /**
-     * Combines the specified object and the existing query parameters. This allows you to add many parameters at once,
      *  as opposed to adding them one at a time to the queryParameters property.
      *
      * @param {Object} params The query parameters
@@ -639,21 +624,6 @@ define([
         } else {
             this._templateValues = combine(template, this._templateValues);
         }
-    };
-
-    /**
-     * Combines the specified object and the existing template values. This allows you to add many values at once,
-     *  as opposed to adding them one at a time to the templateValues property. If a value is already set, it will become an array and the new value will be appended.
-     *
-     * @param {Object} template The template values
-     * @param {Boolean} [useAsDefault=false] If true the values will be used as the default values, so they will only be set if they are undefined.
-     *
-     * @deprecated
-     */
-    Resource.prototype.addTemplateValues = function(template, useAsDefault) {
-        deprecationWarning('Resource.addTemplateValues', 'addTemplateValues has been deprecated and will be removed 1.45. Use setTemplateValues.');
-
-        return this.setTemplateValues(template, useAsDefault);
     };
 
     /**
@@ -899,7 +869,7 @@ define([
      */
     Resource.prototype.fetchImage = function (options) {
         if (typeof options === 'boolean') {
-            deprecationWarning('fetchImage-parameter-change', 'fetchImage now takes an options object in CesiumJS 1.56. Use resource.fetchImage({ preferBlob: true }) instead of resource.fetchImage(true).');
+            deprecationWarning('fetchImage-parameter-change', 'fetchImage now takes an options object in CesiumJS 1.57. Use resource.fetchImage({ preferBlob: true }) instead of resource.fetchImage(true).');
             options = {
                 preferBlob : options
             };
