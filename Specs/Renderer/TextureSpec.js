@@ -39,7 +39,7 @@ defineSuite([
     var blueImage;
     var blueAlphaImage;
     var blueOverRedImage;
-    var blueOverRedUnflippedImage;
+    var blueOverRedFlippedImage;
     var red16x16Image;
 
     var greenDXTImage;
@@ -59,26 +59,41 @@ defineSuite([
     beforeAll(function() {
         context = createContext();
         var promises = [];
-        promises.push(Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
+
+        promises.push(Resource.fetchImage({
+            url: './Data/Images/Green.png',
+            flipY: true
+        }).then(function(image) {
             greenImage = image;
         }));
-        promises.push(Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
+        promises.push(Resource.fetchImage({
+            url: './Data/Images/Blue.png',
+            flipY: true
+        }).then(function(image) {
             blueImage = image;
         }));
-        promises.push(Resource.fetchImage('./Data/Images/BlueAlpha.png').then(function(image) {
+        promises.push(Resource.fetchImage({
+            url: './Data/Images/BlueAlpha.png',
+            flipY: true
+        }).then(function(image) {
             blueAlphaImage = image;
         }));
-        promises.push(Resource.fetchImage('./Data/Images/BlueOverRed.png').then(function(image) {
+        promises.push(Resource.fetchImage({
+            url: './Data/Images/BlueOverRed.png',
+            flipY: true
+        }).then(function(image) {
             blueOverRedImage = image;
         }));
-        // Turn off the default flipping.
         promises.push(Resource.fetchImage({
             url: './Data/Images/BlueOverRed.png',
             flipY: false
         }).then(function(image) {
-            blueOverRedUnflippedImage = image;
+            blueOverRedFlippedImage = image;
         }));
-        promises.push(Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
+        promises.push(Resource.fetchImage({
+            url: './Data/Images/Red16x16.png',
+            flipY : true
+        }).then(function(image) {
             red16x16Image = image;
         }));
         promises.push(loadKTX('./Data/Images/Green4x4DXT1.ktx').then(function(image) {
@@ -209,7 +224,7 @@ defineSuite([
 
                 texture = new Texture({
                     context : context,
-                    source : blueOverRedUnflippedImage,
+                    source : blueOverRedFlippedImage,
                     pixelFormat : PixelFormat.RGBA,
                     flipY : false
                 });
@@ -223,7 +238,7 @@ defineSuite([
                 // Flip the texture.
                 texture = new Texture({
                     context : context,
-                    source : blueOverRedUnflippedImage,
+                    source : blueOverRedFlippedImage,
                     pixelFormat : PixelFormat.RGBA,
                     flipY : true
                 });
