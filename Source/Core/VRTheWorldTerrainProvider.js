@@ -267,9 +267,7 @@ define([
             },
             request : request
         });
-        var promise = resource.fetchImage({
-            flipY : false
-        });
+        var promise = resource.fetchImage();
         if (!defined(promise)) {
             return undefined;
         }

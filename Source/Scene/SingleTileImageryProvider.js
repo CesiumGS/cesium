@@ -109,7 +109,7 @@ define([
         }
 
         function doRequest() {
-            when(resource.fetchImage(), success, failure);
+            when(resource.fetchImage({ flipY: true }), success, failure);
         }
 
         doRequest();

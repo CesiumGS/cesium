@@ -817,7 +817,9 @@ define([
                     } else if (crnRegex.test(uniformValue)) {
                         promise = loadCRN(resource);
                     } else {
-                        promise = resource.fetchImage();
+                        promise = resource.fetchImage({
+                            flipY : true
+                        });
                     }
                     when(promise, function(image) {
                         material._loadedImages.push({
@@ -866,13 +868,17 @@ define([
                 uniformValue.positiveZ + uniformValue.negativeZ;
 
             if (path !== material._texturePaths[uniformId]) {
+                var fetchOptions = {
+                    flipY : true
+                };
+
                 var promises = [
-                    Resource.createIfNeeded(uniformValue.positiveX).fetchImage(),
-                    Resource.createIfNeeded(uniformValue.negativeX).fetchImage(),
-                    Resource.createIfNeeded(uniformValue.positiveY).fetchImage(),
-                    Resource.createIfNeeded(uniformValue.negativeY).fetchImage(),
-                    Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(),
-                    Resource.createIfNeeded(uniformValue.negativeZ).fetchImage()
+                    Resource.createIfNeeded(uniformValue.positiveX).fetchImage(fetchOptions),
+                    Resource.createIfNeeded(uniformValue.negativeX).fetchImage(fetchOptions),
+                    Resource.createIfNeeded(uniformValue.positiveY).fetchImage(fetchOptions),
+                    Resource.createIfNeeded(uniformValue.negativeY).fetchImage(fetchOptions),
+                    Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(fetchOptions),
+                    Resource.createIfNeeded(uniformValue.negativeZ).fetchImage(fetchOptions)
                 ];
 
                 when.all(promises).then(function(images) {

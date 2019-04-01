@@ -345,11 +345,14 @@ define([
             return loadCRN(resource);
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
             return resource.fetchImage({
-                preferBlob : true
+                preferBlob : true,
+                flipY : true
             });
         }
 
-        return resource.fetchImage();
+        return resource.fetchImage({
+            flipY : true
+        });
     };
 
     return ImageryProvider;

@@ -360,7 +360,9 @@ define([
         } else if ((typeof image === 'string') || (image instanceof Resource)) {
             // Get a resource
             var resource = Resource.createIfNeeded(image);
-            image = resource.fetchImage();
+            image = resource.fetchImage({
+                flipY : true
+            });
         }
 
         var that = this;

@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.56.1 - 2019-04-01
+
+##### Breaking Changes :mega:
+* Changed the default image orientation on `Resource.fetchImage` to `flipY : false`. In general, if an image is going to be uploaded as a texture, `flipY` should be true. Textures in Cesium are flipped by default on upload. If the browser supports `ImageBitmap`, then it cannot be flipped during upload, so it should be flipped on fetch instead.
+
 ### 1.56 - 2019-04-01
 
 ##### Breaking Changes :mega:

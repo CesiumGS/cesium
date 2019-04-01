@@ -877,7 +877,7 @@ define([
      *
      * @param {Object} [options] An object with the following properties.
      * @param {Boolean} [options.preferBlob=false] If true, we will load the image via a blob.
-     * @param {Boolean} [options.flipY=true] If true, image will be vertially flipped during decode. Only applies if the browser supports `createImageBitmap`.
+     * @param {Boolean} [options.flipY=false] If true, image will be vertially flipped during decode. Only applies if the browser supports `createImageBitmap`.
      * @returns {Promise.<ImageBitmap>|Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -906,7 +906,7 @@ define([
         }
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var preferBlob = defaultValue(options.preferBlob, false);
-        var flipY = defaultValue(options.flipY, true);
+        var flipY = defaultValue(options.flipY, false);
 
         checkAndResetRequest(this.request);
 
@@ -1025,7 +1025,7 @@ define([
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.flipY = true] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports createImageBitmap.
+     * @param {Boolean} [options.flipY = false] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports createImageBitmap.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.

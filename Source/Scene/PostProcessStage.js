@@ -670,7 +670,10 @@ define([
                 var resource = new Resource({
                     url : stageNameUrlOrImage
                 });
-                promises.push(resource.fetchImage().then(createLoadImageFunction(stage, name)));
+
+                promises.push(resource.fetchImage({
+                    flipY : true
+                }).then(createLoadImageFunction(stage, name)));
             } else {
                 stage._texturesToCreate.push({
                     name : name,
