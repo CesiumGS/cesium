@@ -6,6 +6,7 @@ Change Log
 ##### Breaking Changes :mega:
 * `Resource.fetchImage` now returns an `ImageBitmap` instead of `Image` when supported. This allows for decoding images while fetching using `createImageBitmap` to greatly speed up texture upload and decrease frame drops when loading models with large textures. [#7579](https://github.com/AnalyticalGraphicsInc/cesium/pull/7579)
 * `Cesium3DTileStyle.style` now has an empty `Object` as its default value, instead of `undefined`. [#7567](https://github.com/AnalyticalGraphicsInc/cesium/issues/7567)
+* `Scene.clampToHeight` now takes an optional `width` argument before the `result` argument. [#7693](https://github.com/AnalyticalGraphicsInc/cesium/pull/7693)
 * In the `Resource` class, `addQueryParameters` and `addTemplateValues` have been removed. Please use `setQueryParameters` and `setTemplateValues` instead. [#7695](https://github.com/AnalyticalGraphicsInc/cesium/issues/7695)
 
 ##### Deprecated :hourglass_flowing_sand:
