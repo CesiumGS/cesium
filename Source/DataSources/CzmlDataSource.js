@@ -1769,6 +1769,8 @@ define([
         processPositions(polygon, 'hierarchy', polygonData.positions, entityCollection);
         processPacketData(Number, polygon, 'height', polygonData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'extrudedHeight', polygonData.extrudedHeight, interval, sourceUri, entityCollection);
+		processPacketData(HeightReference, polygon, 'heightReference', polygonData.heightReference, interval, sourceUri, entityCollection);
+		processPacketData(HeightReference, polygon, 'extrudedHeightReference', polygonData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(Rotation, polygon, 'stRotation', polygonData.stRotation, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'granularity', polygonData.granularity, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'fill', polygonData.fill, interval, sourceUri, entityCollection);
