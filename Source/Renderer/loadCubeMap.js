@@ -67,7 +67,8 @@ define([
         // Also, it is perhaps acceptable to use the context here in the callbacks, but
         // ideally, we would do it in the primitive's update function.
         var flipOptions = {
-            flipY : true
+            flipY : true,
+            preferImageBitmap: true
         };
 
         var facePromises = [

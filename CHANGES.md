@@ -1,10 +1,14 @@
 Change Log
 ==========
 
-### 1.56.1 - 2019-04-01
+### 1.56.1 - 2019-04-02
+
+##### Additions :tada:
+* `Resource.fetchImage` now takes a `preferImageBitmap` option to use `createImageBitmap` when supported to move image decode off the main thread. This option defaults to `false`.
 
 ##### Breaking Changes :mega:
-* Changed the default image orientation on `Resource.fetchImage` to `flipY : false`. In general, if an image is going to be uploaded as a texture, `flipY` should be true. Textures in Cesium are flipped by default on upload. If the browser supports `ImageBitmap`, then it cannot be flipped during upload, so it should be flipped on fetch instead.
+* Changed `Resource.fetchImage` back to return an `Image` by default, instead of an `ImageBitmap` when supported. Note that an `ImageBitmap` cannot be flipped during texture upload. Instead, set `flipY : true` during fetch to flip it.
+* Changed the default `flipY` option in `Resource.fetchImage` to false. This only has an effect when ImageBitmap is used.
 
 ### 1.56 - 2019-04-01
 

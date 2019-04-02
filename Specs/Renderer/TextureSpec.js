@@ -59,41 +59,26 @@ defineSuite([
     beforeAll(function() {
         context = createContext();
         var promises = [];
-
-        promises.push(Resource.fetchImage({
-            url: './Data/Images/Green.png',
-            flipY: true
-        }).then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
             greenImage = image;
         }));
-        promises.push(Resource.fetchImage({
-            url: './Data/Images/Blue.png',
-            flipY: true
-        }).then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
             blueImage = image;
         }));
-        promises.push(Resource.fetchImage({
-            url: './Data/Images/BlueAlpha.png',
-            flipY: true
-        }).then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueAlpha.png').then(function(image) {
             blueAlphaImage = image;
         }));
-        promises.push(Resource.fetchImage({
-            url: './Data/Images/BlueOverRed.png',
-            flipY: true
-        }).then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueOverRed.png').then(function(image) {
             blueOverRedImage = image;
         }));
+        // Load this image as an ImageBitmap
         promises.push(Resource.fetchImage({
             url: './Data/Images/BlueOverRed.png',
-            flipY: false
+            preferImageBitmap: true
         }).then(function(image) {
             blueOverRedFlippedImage = image;
         }));
-        promises.push(Resource.fetchImage({
-            url: './Data/Images/Red16x16.png',
-            flipY : true
-        }).then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
             red16x16Image = image;
         }));
         promises.push(loadKTX('./Data/Images/Green4x4DXT1.ktx').then(function(image) {
@@ -211,7 +196,7 @@ defineSuite([
         }).contextToRender([0, 0, 255, 255]);
     });
 
-    it('can flip texture only if ImageBitmapOptions is not supported', function() {
+    it('cannot flip texture when using ImageBitmap', function() {
         var topColor = new Color(0.0, 0.0, 1.0, 1.0);
         var bottomColor = new Color(1.0, 0.0, 0.0, 1.0);
 

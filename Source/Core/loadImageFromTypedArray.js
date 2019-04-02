@@ -37,7 +37,8 @@ define([
             request: request
         });
         return resource.fetchImage({
-            flipY : flipY
+            flipY : flipY,
+            preferImageBitmap : true
         })
             .then(function(image) {
                 window.URL.revokeObjectURL(blobUrl);

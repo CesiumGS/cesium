@@ -91,7 +91,7 @@ define([
 
         resource.fetchImage({
             preferBlob : true,
-            flipY : true
+            preferImageBitmap : true
         }).then(success).otherwise(failure);
     }
 
