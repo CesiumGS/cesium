@@ -842,12 +842,13 @@ define([
 
     /**
      * Asynchronously loads the given image resource.  Returns a promise that will resolve to
-     * an {@link https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap|ImageBitmap} if the browser supports `createImageBitmap` or otherwise an
+     * an {@link https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap|ImageBitmap} if <code>preferImageBitmap</code> is true and the browser supports <code>createImageBitmap</code> or otherwise an
      * {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement|Image} once loaded, or reject if the image failed to load.
      *
      * @param {Object} [options] An object with the following properties.
      * @param {Boolean} [options.preferBlob=false] If true, we will load the image via a blob.
-     * @param {Boolean} [options.flipY=true] If true, image will be vertially flipped during decode. Only applies if the browser supports `createImageBitmap`.
+     * @param {Boolean} [options.preferImageBitmap=false] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
+     * @param {Boolean} [options.flipY=false] If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
      * @returns {Promise.<ImageBitmap>|Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -875,8 +876,9 @@ define([
             };
         }
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var preferImageBitmap = defaultValue(options.preferImageBitmap, false);
         var preferBlob = defaultValue(options.preferBlob, false);
-        var flipY = defaultValue(options.flipY, true);
+        var flipY = defaultValue(options.flipY, false);
 
         checkAndResetRequest(this.request);
 
@@ -886,7 +888,11 @@ define([
         // 3. It's a blob URI
         // 4. It doesn't have request headers and we preferBlob is false
         if (!xhrBlobSupported || this.isDataUri || this.isBlobUri || (!this.hasHeaders && !preferBlob)) {
-            return fetchImage(this, flipY);
+            return fetchImage({
+                resource: this,
+                flipY: flipY,
+                preferImageBitmap: preferImageBitmap
+            });
         }
 
         var blobPromise = this.fetchBlob();
@@ -895,40 +901,46 @@ define([
         }
 
         var supportsImageBitmap;
+        var useImageBitmap;
         var generatedBlobResource;
         var generatedBlob;
         return Resource.supportsImageBitmapOptions()
             .then(function(result) {
                 supportsImageBitmap = result;
+                useImageBitmap = supportsImageBitmap && preferImageBitmap;
                 return blobPromise;
             })
             .then(function(blob) {
                 if (!defined(blob)) {
                     return;
                 }
-                if (supportsImageBitmap) {
+                generatedBlob = blob;
+                if (useImageBitmap) {
                     return Resource._Implementations.createImageBitmapFromBlob(blob, flipY);
                 }
-                generatedBlob = blob;
                 var blobUrl = window.URL.createObjectURL(blob);
                 generatedBlobResource = new Resource({
                     url: blobUrl
                 });
 
-                return fetchImage(generatedBlobResource, flipY);
+                return fetchImage({
+                    resource: generatedBlobResource,
+                    flipY: flipY,
+                    preferImageBitmap: false
+                });
             })
             .then(function(image) {
                 if (!defined(image)) {
                     return;
                 }
-                if (supportsImageBitmap) {
-                    return image;
-                }
-                window.URL.revokeObjectURL(generatedBlobResource.url);
-
                 // This is because the blob object is needed for DiscardMissingTileImagePolicy
                 // See https://github.com/AnalyticalGraphicsInc/cesium/issues/1353
                 image.blob = generatedBlob;
+                if (useImageBitmap) {
+                    return image;
+                }
+
+                window.URL.revokeObjectURL(generatedBlobResource.url);
                 return image;
             })
             .otherwise(function(error) {
@@ -940,7 +952,21 @@ define([
             });
     };
 
-    function fetchImage(resource, flipY) {
+    /**
+     * Fetches an image and returns a promise to it.
+     *
+     * @param {Object} [options] An object with the following properties.
+     * @param {Resource} [options.resource] Resource object that points to an image to fetch.
+     * @param {Boolean} [options.preferImageBitmap] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
+     * @param {Boolean} [options.flipY] If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
+     *
+     * @private
+     */
+    function fetchImage(options) {
+        var resource = options.resource;
+        var flipY = options.flipY;
+        var preferImageBitmap = options.preferImageBitmap;
+
         var request = resource.request;
         request.url = resource.url;
         request.requestFunction = function() {
@@ -954,7 +980,7 @@ define([
 
             var deferred = when.defer();
 
-            Resource._Implementations.createImage(url, crossOrigin, deferred, flipY);
+            Resource._Implementations.createImage(url, crossOrigin, deferred, flipY, preferImageBitmap);
 
             return deferred.promise;
         };
@@ -978,7 +1004,11 @@ define([
                             request.state = RequestState.UNISSUED;
                             request.deferred = undefined;
 
-                            return fetchImage(resource, flipY);
+                            return fetchImage({
+                                resource: resource,
+                                flipY: flipY,
+                                preferImageBitmap: preferImageBitmap
+                            });
                         }
 
                         return when.reject(e);
@@ -995,18 +1025,20 @@ define([
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
-     * @param {Boolean} [options.flipY = true] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports createImageBitmap.
+     * @param {Boolean} [options.flipY=false] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports <code>createImageBitmap</code>.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
-     * @param {Boolean} [options.preferBlob = false]  If true, we will load the image via a blob.
+     * @param {Boolean} [options.preferBlob=false]  If true, we will load the image via a blob.
+     * @param {Boolean} [options.preferImageBitmap=false] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
      * @returns {Promise.<ImageBitmap>|Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     Resource.fetchImage = function (options) {
         var resource = new Resource(options);
         return resource.fetchImage({
             flipY: options.flipY,
-            preferBlob: options.preferBlob
+            preferBlob: options.preferBlob,
+            preferImageBitmap: options.preferImageBitmap
         });
     };
 
@@ -1818,17 +1850,17 @@ define([
         image.src = url;
     }
 
-    Resource._Implementations.createImage = function(url, crossOrigin, deferred, flipY) {
+    Resource._Implementations.createImage = function(url, crossOrigin, deferred, flipY, preferImageBitmap) {
         // Passing an Image to createImageBitmap will force it to run on the main thread
         // since DOM elements don't exist on workers. We convert it to a blob so it's non-blocking.
         // See:
         //    https://bugzilla.mozilla.org/show_bug.cgi?id=1044102#c38
         //    https://bugs.chromium.org/p/chromium/issues/detail?id=580202#c10
         Resource.supportsImageBitmapOptions()
-            .then(function(result) {
+            .then(function(supportsImageBitmap) {
                 // We can only use ImageBitmap if we can flip on decode.
                 // See: https://github.com/AnalyticalGraphicsInc/cesium/pull/7579#issuecomment-466146898
-                if (!result) {
+                if (!(supportsImageBitmap && preferImageBitmap)) {
                     loadImageElement(url, crossOrigin, deferred);
                     return;
                 }
@@ -1855,16 +1887,9 @@ define([
     };
 
     Resource._Implementations.createImageBitmapFromBlob = function(blob, flipY) {
-        return Resource.supportsImageBitmapOptions()
-            .then(function(result) {
-                if (!result) {
-                    return createImageBitmap(blob);
-                }
-
-                return createImageBitmap(blob, {
-                    imageOrientation: flipY ? 'flipY' : 'none'
-                });
-            });
+        return createImageBitmap(blob, {
+            imageOrientation: flipY ? 'flipY' : 'none'
+        });
     };
 
     function decodeResponse(loadWithHttpResponse, responseType) {

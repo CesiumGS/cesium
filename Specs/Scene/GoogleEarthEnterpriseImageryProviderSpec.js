@@ -93,7 +93,7 @@ defineSuite([
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // load blob url normally
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
             } else {
                 if (proxy) {
                     var uri = new Uri(url);

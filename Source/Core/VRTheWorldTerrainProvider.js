@@ -268,7 +268,7 @@ define([
             request : request
         });
         var promise = resource.fetchImage({
-            flipY : false
+            preferImageBitmap: true
         });
         if (!defined(promise)) {
             return undefined;

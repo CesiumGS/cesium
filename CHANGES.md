@@ -1,6 +1,16 @@
 Change Log
 ==========
 
+### 1.56.1 - 2019-04-02
+
+##### Additions :tada:
+* `Resource.fetchImage` now takes a `preferImageBitmap` option to use `createImageBitmap` when supported to move image decode off the main thread. This option defaults to `false`.
+
+##### Breaking Changes :mega:
+* The following breaking changes are relative to 1.56. The `Resource.fetchImage` behavior is now identical to 1.55 and earlier.
+    * Changed `Resource.fetchImage` back to return an `Image` by default, instead of an `ImageBitmap` when supported. Note that an `ImageBitmap` cannot be flipped during texture upload. Instead, set `flipY : true` during fetch to flip it.
+    * Changed the default `flipY` option in `Resource.fetchImage` to false. This only has an effect when ImageBitmap is used.
+
 ### 1.56 - 2019-04-01
 
 ##### Breaking Changes :mega:
