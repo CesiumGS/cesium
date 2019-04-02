@@ -944,10 +944,10 @@ define([
                 if (!defined(blob)) {
                     return;
                 }
+                generatedBlob = blob;
                 if (useImageBitmap) {
                     return Resource._Implementations.createImageBitmapFromBlob(blob, flipY);
                 }
-                generatedBlob = blob;
                 var blobUrl = window.URL.createObjectURL(blob);
                 generatedBlobResource = new Resource({
                     url: blobUrl
@@ -963,14 +963,14 @@ define([
                 if (!defined(image)) {
                     return;
                 }
-                if (useImageBitmap) {
-                    return image;
-                }
-                window.URL.revokeObjectURL(generatedBlobResource.url);
-
                 // This is because the blob object is needed for DiscardMissingTileImagePolicy
                 // See https://github.com/AnalyticalGraphicsInc/cesium/issues/1353
                 image.blob = generatedBlob;
+                if (useImageBitmap) {
+                    return image;
+                }
+
+                window.URL.revokeObjectURL(generatedBlobResource.url);
                 return image;
             })
             .otherwise(function(error) {
