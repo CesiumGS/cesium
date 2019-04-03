@@ -635,9 +635,12 @@ define([
             }
         }
 
-        var intersection = cullingVolume.computeVisibility(boundingVolume);
-        if (intersection === Intersect.OUTSIDE) {
-            return Visibility.NONE;
+        var intersection = Intersect.INTERSECTING;
+        if (defined(boundingVolume)) {
+            intersection = cullingVolume.computeVisibility(boundingVolume);
+            if (intersection === Intersect.OUTSIDE) {
+                return Visibility.NONE;
+            }
         }
 
         var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
@@ -898,14 +901,18 @@ define([
         } else if (surfaceTile.boundingVolumeSourceTile !== heightSource) {
             // Heights are from a new source tile, so update the bounding volume.
             surfaceTile.boundingVolumeSourceTile = heightSource;
-            surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-                tile.rectangle,
-                tileBoundingRegion.minimumHeight,
-                tileBoundingRegion.maximumHeight,
-                tile.tilingScheme.ellipsoid,
-                surfaceTile.orientedBoundingBox);
 
-            surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
+            var rectangle = tile.rectangle;
+            if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+                surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+                    tile.rectangle,
+                    tileBoundingRegion.minimumHeight,
+                    tileBoundingRegion.maximumHeight,
+                    tile.tilingScheme.ellipsoid,
+                    surfaceTile.orientedBoundingBox);
+
+                surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
+            }
         }
 
         var min = tileBoundingRegion.minimumHeight;
