@@ -1723,9 +1723,7 @@ define([
                 } else if (crnRegex.test(uri)) {
                     promise = loadCRN(imageResource);
                 } else {
-                    promise = imageResource.fetchImage({
-                        flipY: false
-                    });
+                    promise = imageResource.fetchImage();
                 }
                 promise.then(imageLoad(model, id, imageId)).otherwise(ModelUtility.getFailedLoadFunction(model, 'image', imageResource.url));
             }

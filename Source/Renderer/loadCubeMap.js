@@ -66,14 +66,18 @@ define([
         //
         // Also, it is perhaps acceptable to use the context here in the callbacks, but
         // ideally, we would do it in the primitive's update function.
+        var flipOptions = {
+            flipY : true,
+            preferImageBitmap: true
+        };
 
         var facePromises = [
-            Resource.createIfNeeded(urls.positiveX).fetchImage(),
-            Resource.createIfNeeded(urls.negativeX).fetchImage(),
-            Resource.createIfNeeded(urls.positiveY).fetchImage(),
-            Resource.createIfNeeded(urls.negativeY).fetchImage(),
-            Resource.createIfNeeded(urls.positiveZ).fetchImage(),
-            Resource.createIfNeeded(urls.negativeZ).fetchImage()
+            Resource.createIfNeeded(urls.positiveX).fetchImage(flipOptions),
+            Resource.createIfNeeded(urls.negativeX).fetchImage(flipOptions),
+            Resource.createIfNeeded(urls.positiveY).fetchImage(flipOptions),
+            Resource.createIfNeeded(urls.negativeY).fetchImage(flipOptions),
+            Resource.createIfNeeded(urls.positiveZ).fetchImage(flipOptions),
+            Resource.createIfNeeded(urls.negativeZ).fetchImage(flipOptions)
         ];
 
         return when.all(facePromises, function(images) {
