@@ -3798,12 +3798,18 @@ function updateMostDetailedRayPicks(scene) {
   return scene._picking.updateMostDetailedRayPicks(scene);
 }
 
+/**Нужно в данный момент рендерить следующий кадр.**/
+Scene.prototype.shouldRenderFrame = function(){
+	var cameraChanged = this._view.checkForCameraUpdates(this);
+	return !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || this._hdrDirty || (this.mode === SceneMode.MORPHING);
+}
+
 /**
  * Update and render the scene. It is usually not necessary to call this function
  * directly because {@link CesiumWidget} or {@link Viewer} do it automatically.
  * @param {JulianDate} [time] The simulation time at which to render.
  */
-Scene.prototype.render = function (time) {
+Scene.prototype.render = function(time) {
   /**
    *
    * Pre passes update. Execute any pass invariant code that should run before the passes here.
@@ -3818,24 +3824,13 @@ Scene.prototype.render = function (time) {
     time = JulianDate.now();
   }
 
-  // Determine if shouldRender
-  var cameraChanged = this._view.checkForCameraUpdates(this);
-  var shouldRender =
-    !this.requestRenderMode ||
-    this._renderRequested ||
-    cameraChanged ||
-    this._logDepthBufferDirty ||
-    this._hdrDirty ||
-    this.mode === SceneMode.MORPHING;
-  if (
-    !shouldRender &&
-    defined(this.maximumRenderTimeChange) &&
-    defined(this._lastRenderTime)
-  ) {
-    var difference = Math.abs(
-      JulianDate.secondsDifference(this._lastRenderTime, time)
-    );
-    shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
+  this._jobScheduler.resetBudgets();
+
+  var shouldRender = this.shouldRenderFrame();
+
+  if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
+	  var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
+	  shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
   }
 
   if (shouldRender) {
