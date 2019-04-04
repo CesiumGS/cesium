@@ -12,6 +12,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/EllipsoidGeodesic',
         '../Core/Event',
+        '../Core/getTimestamp',
         '../Core/HeadingPitchRange',
         '../Core/HeadingPitchRoll',
         '../Core/Intersect',
@@ -43,6 +44,7 @@ define([
         Ellipsoid,
         EllipsoidGeodesic,
         Event,
+        getTimestamp,
         HeadingPitchRange,
         HeadingPitchRoll,
         Intersect,
@@ -130,6 +132,14 @@ define([
          * @private
          */
         this.positionWCDeltaMagnitudeLastFrame = 0;
+
+        /**
+         * How long in seconds since the camera has stopped moving
+         *
+         * @private
+         */
+        this.timeSinceMoved = 0;
+        this._lastMovedTimestamp = 0;
 
         /**
          * The view direction of the camera.
@@ -298,6 +308,14 @@ define([
             var delta = Cartesian3.subtract(camera.positionWC, camera._oldPositionWC, camera._oldPositionWC);
             camera.positionWCDeltaMagnitude = Cartesian3.magnitude(delta);
             camera._oldPositionWC = Cartesian3.clone(camera.positionWC, camera._oldPositionWC);
+
+            // Update move timers
+            if (camera.positionWCDeltaMagnitude > 0) {
+                camera.timeSinceMoved = 0;
+                camera._lastMovedTimestamp = getTimestamp();
+            } else {
+                camera.timeSinceMoved = Math.max(getTimestamp() - camera._lastMovedTimestamp, 0.0) / 1000;
+            }
         }
     }
 

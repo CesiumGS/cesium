@@ -78,7 +78,7 @@ define([
         this.camera = camera;
         this._cameraClone = Camera.clone(camera);
         this._cameraStartFired = false;
-        this._cameraMovedTime = undefined;
+        this._cameraMovedTime = getTimestamp();
 
         this.viewport = viewport;
         this.passState = passState;

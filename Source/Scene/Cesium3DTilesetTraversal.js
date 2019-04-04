@@ -219,10 +219,21 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
-        if ((hasUnloadedContent(tile) || tile.contentExpired) && isOnScreenLongEnough(tileset, tile, frameState)) {
-            tile._requestedFrame = frameState.frameNumber;
-            tileset._requestedTiles.push(tile);
+        if (!hasUnloadedContent(tile) && !tile.contentExpired) {
+            return;
         }
+
+        if (!isOnScreenLongEnough(tileset, tile, frameState)) {
+            return;
+        }
+
+        var cameraHasNotStoppedMovingLongEnough = frameState.camera.timeSinceMoved < tileset.foveatedTimeDelay;
+        if (tile.priorityDeferred && cameraHasNotStoppedMovingLongEnough) {
+            return;
+        }
+
+        tile._requestedFrame = frameState.frameNumber;
+        tileset._requestedTiles.push(tile);
     }
 
     function updateVisibility(tileset, tile, frameState) {

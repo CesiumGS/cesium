@@ -313,6 +313,16 @@ define([
          */
         this.clippingPlanesDirty = false;
 
+        /**
+         * Tracks if the tile's request should be deferred until all non-deferred
+         * tiles load.
+         *
+         * @type {Boolean}
+         *
+         * @private
+         */
+        this.priorityDeferred = false;
+
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0;
         this._centerZDepth = 0;
@@ -345,7 +355,6 @@ define([
 
         this._priority = 0.0; // The priority used for request sorting
         this._priorityHolder = this; // Reference to the ancestor up the tree that holds the _foveatedFactor and _distanceToCamera for all tiles in the refinement chain.
-        this._priorityDeferred = false;
         this._foveatedFactor = 0;
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
 
@@ -648,7 +657,8 @@ define([
             tile._foveatedFactor = 0;
         }
 
-        if (!tileset._skipLevelOfDetail || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
+        var replace = tile.refine === Cesium3DTileRefine.REPLACE;
+        if ((replace && !tileset._skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
             return false;
         }
 
@@ -727,7 +737,7 @@ define([
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
-        this._priorityDeferred = isPriorityDeferred(this, frameState);
+        this.priorityDeferred = isPriorityDeferred(this, frameState);
     };
 
     /**
@@ -1351,7 +1361,7 @@ define([
         var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
 
         // Flag on/off penality digits
-        var foveatedDeferDigit = this._priorityDeferred ? foveatedDeferScale : 0;
+        var foveatedDeferDigit = this.priorityDeferred ? foveatedDeferScale : 0;
 
         var preloadFlightDigit = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale; // Penalize non-preloads
 

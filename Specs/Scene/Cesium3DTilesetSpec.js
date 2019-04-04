@@ -2833,7 +2833,8 @@ defineSuite([
     it('loadSiblings', function() {
         viewBottomLeft();
         return Cesium3DTilesTester.loadTileset(scene, tilesetReplacement3Url, {
-            loadSiblings : false
+            loadSiblings : false,
+            foveatedTimeDelay : 0
         }).then(function(tileset) {
             var statistics = tileset._statistics;
             expect(statistics.numberOfTilesWithContentReady).toBe(2);
@@ -3624,6 +3625,7 @@ defineSuite([
             tileset.foveatedScreenSpaceError = true;
             tileset.foveatedConeSize = 0;
             tileset.maximumScreenSpaceError = 8;
+            tileset.foveatedTimeDelay = 0;
 
             // Position camera such that some tiles are outside the foveated cone but still on screen.
             viewAllTiles();
@@ -3635,7 +3637,34 @@ defineSuite([
             // Verify deferred
             var requestedTilesInFlight = tileset._requestedTilesInFlight;
             expect(requestedTilesInFlight.length).toBe(1);
-            expect(requestedTilesInFlight[0]._priorityDeferred).toBe(true);
+            expect(requestedTilesInFlight[0].priorityDeferred).toBe(true);
+        });
+    });
+
+    it('loads deferred requests only after time delay.', function() {
+        viewNothing();
+        return Cesium3DTilesTester.loadTileset(scene, tilesetRefinementMix).then(function(tileset) {
+            tileset.foveatedScreenSpaceError = true;
+            tileset.foveatedConeSize = 0;
+            tileset.maximumScreenSpaceError = 8;
+            tileset.foveatedTimeDelay = 0.1;
+
+            // Position camera such that some tiles are outside the foveated cone but still on screen.
+            viewAllTiles();
+            scene.camera.moveLeft(205.0);
+            scene.camera.moveDown(205.0);
+
+            scene.renderForSpecs();
+
+            // Nothing should be loaded yet.
+            expect(tileset._requestedTilesInFlight.length).toBe(0);
+            // Eventually, a deferred tile should load.
+            return pollToPromise(function() {
+                scene.renderForSpecs();
+                return tileset._requestedTilesInFlight.length !== 0;
+            }).then(function() {
+                expect(tileset._requestedTilesInFlight[0].priorityDeferred).toBe(true);
+            });
         });
     });
 
