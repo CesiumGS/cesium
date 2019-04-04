@@ -344,8 +344,7 @@ define([
         this._debugColorizeTiles = false;
 
         this._priority = 0.0; // The priority used for request sorting
-        this._priorityDistance = Number.MAX_VALUE; // The value to update in the priority refinement chain
-        this._priorityDistanceHolder = this; // Reference to the ancestor up the tree that holds the _priorityDistance for all tiles in the refinement chain.
+        this._priorityHolder = this; // Reference to the ancestor up the tree that holds the _foveatedFactor and _distanceToCamera for all tiles in the refinement chain.
         this._priorityDeferred = false;
         this._foveatedFactor = 0;
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
@@ -622,27 +621,24 @@ define([
     var scratchCartesian = new Cartesian3();
     function isPriorityDeferred(tile, frameState) {
         var tileset = tile._tileset;
-        if (!tileset._skipLevelOfDetail || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
-            return false;
-        }
 
         // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
-        tile._foveatedFactor = 0;
         var camera = frameState.camera;
         var boundingSphere = tile.boundingSphere;
         var radius = boundingSphere.radius;
         var scaledCameraDirection = Cartesian3.multiplyByScalar(camera.directionWC, tile._centerZDepth, scratchCartesian);
         var closestPointOnLine = Cartesian3.add(camera.positionWC, scaledCameraDirection, scratchCartesian);
         // The distance from the camera's view direction to the tile.
-        var distanceToLine = Cartesian3.subtract(closestPointOnLine, boundingSphere.center, scratchCartesian);
-        var distanceSquared = Cartesian3.dot(distanceToLine, distanceToLine);
+        var toLine = Cartesian3.subtract(closestPointOnLine, boundingSphere.center, scratchCartesian);
+        var distanceToCenterLine = Cartesian3.magnitude(toLine);
+        var notTouchingSphere = distanceToCenterLine > radius;
 
         // If camera's direction vector is inside the bounding sphere then consider
         // this tile right along the line of sight and set _foveatedFactor to 0.
         // Otherwise,_foveatedFactor is one minus the dot product of the camera's direction
         // and the vector between the camera and the point on the bounding sphere closest to the view line.
-        if (distanceSquared > radius * radius) {
-            var toLineNormalized = Cartesian3.normalize(distanceToLine, scratchCartesian);
+        if (notTouchingSphere) {
+            var toLineNormalized = Cartesian3.normalize(toLine, scratchCartesian);
             var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalized, radius, scratchCartesian);
             var closestOnSphere = Cartesian3.add(boundingSphere.center, scaledToLine, scratchCartesian);
             var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, camera.positionWC, scratchCartesian);
@@ -652,7 +648,11 @@ define([
             tile._foveatedFactor = 0;
         }
 
-        var maxFoveatedFactor = 1 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60
+        if (!tileset._skipLevelOfDetail || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
+            return false;
+        }
+
+        var maxFoveatedFactor = 1 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60. NOTE very hard to defer verically foveated tiles since max is based on fovy (which is fov). Lowering the 0.5 to a smaller fraction of the screen height will start to defer vertically foveated tiles.
         var foveatedConeFactor = tileset.foveatedConeSize * maxFoveatedFactor;
 
         // If it's inside the user-defined view cone, then it should not be deferred.
@@ -1331,28 +1331,32 @@ define([
         var maxPriority = tileset._maxPriority;
 
         // Mix priorities by mapping them into base 10 numbers
-        // Because the mappings are fuzzy you need a digit of separation so priorities don't bleed into each other
-        // Maybe this mental model is terrible and just rename to weights?
+        // Because the mappings are fuzzy you need a digit or two of separation so priorities don't bleed into each other
+        // Theoretically, the digit of separation should be the amount of leading 0's in the mapped min for the digit of interest.
+        // Think of digits as penalties, if a tile has some large quanity or has a flag raised it's (usually) penalized for it, expressed as a higher number for the digit
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
-        var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
-        var foveatedScale = distanceScale * 10;
-
-        // This digit should generally be last
-        var preloadFlightScale = foveatedScale * 10; // On or off so don't need an additional digit of separation to prevent blend
-
-        // Map 0-1 then convert to digit
-        var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
+        var distanceScale = depthScale * 100;
+        var foveatedScale = distanceScale * 100;
+        var foveatedDeferScale = foveatedScale * 10;
+        var preloadFlightScale = foveatedDeferScale * 10;
 
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
-        var foveatedDigit = this._priorityDeferred ? foveatedScale : 0;
+        // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
+        var replace = this.refine === Cesium3DTileRefine.REPLACE;
+        var distanceDigit = (!tileset._skipLevelOfDetail && replace) ? distanceScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) : 0;
+
+        // Map 0-1 then convert to digit
+        var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
+
+        // Flag on/off penality digits
+        var foveatedDeferDigit = this._priorityDeferred ? foveatedDeferScale : 0;
 
         var preloadFlightDigit = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale; // Penalize non-preloads
 
         // Get the final base 10 number
-        var number = foveatedDigit + distanceDigit + depthDigit + preloadFlightDigit;
-        this._priority = number;
+        this._priority = depthDigit + distanceDigit + foveatedDigit + foveatedDeferDigit + preloadFlightDigit;
     };
 
     /**

@@ -360,17 +360,19 @@ defineSuite([
 
     it('updates priority', function() {
         var tile1 = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
-        tile1._priorityDistanceHolder = tile1;
-        tile1._priorityDistance = 0;
+        tile1._priorityHolder = tile1;
+        tile1._foveatedFactor = 0;
+        tile1._distanceToCamera = 1;
         tile1._depth = 0;
 
         var tile2 = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
-        tile2._priorityDistanceHolder = tile1;
-        tile2._priorityDistance = 1; // priorityDistance is actually 0 since its linked up to tile1
+        tile2._priorityHolder = tile1;
+        tile2._foveatedFactor = 1; // foveatedFactor (when considered for priority in certain modes) is actually 0 since its linked up to tile1
+        tile1._distanceToCamera = 0;
         tile2._depth = 1;
 
-        mockTileset._minPriority = { depth: 0, distance: 0 };
-        mockTileset._maxPriority = { depth: 1, distance: 1 };
+        mockTileset._minPriority = { depth: 0, distance: 0, foveatedFactor: 0  };
+        mockTileset._maxPriority = { depth: 1, distance: 1, foveatedFactor: 1  };
 
         tile1.updatePriority();
         tile2.updatePriority();
@@ -384,6 +386,7 @@ defineSuite([
         // Priority deferral penalty
         tile2._priorityDeferred = true;
         tile2.updatePriority();
-        expect(tile2._priority).toBeGreaterThan(1000);
+        expect(tile2._priority).toBeGreaterThanOrEqualTo(1000);
     });
+
 }, 'WebGL');
