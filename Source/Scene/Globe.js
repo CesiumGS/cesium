@@ -175,7 +175,7 @@ define([
          * Enable lighting the globe with the sun as a light source.
          *
          * @type {Boolean}
-         * @default true
+         * @default false
          */
         this.enableLighting = false;
 

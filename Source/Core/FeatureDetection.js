@@ -1,14 +1,16 @@
 define([
         './defaultValue',
         './defined',
+        './defineProperties',
+        './DeveloperError',
         './Fullscreen',
-        './RuntimeError',
         '../ThirdParty/when'
     ], function(
         defaultValue,
         defined,
+        defineProperties,
+        DeveloperError,
         Fullscreen,
-        RuntimeError,
         when) {
     'use strict';
     /*global CanvasPixelArray*/
@@ -203,44 +205,54 @@ define([
         return supportsImageRenderingPixelated() ? imageRenderingValueResult : undefined;
     }
 
-    var supportsWebPResult;
-    var supportsWebPPromise;
     function supportsWebP() {
+        //>>includeStart('debug', pragmas.debug);
+        if (!supportsWebP.initialized) {
+            throw new DeveloperError('You must call FeatureDetection.supportsWebP.initialize and wait for the promise to resolve before calling FeatureDetection.supportsWebP');
+        }
+        //>>includeEnd('debug');
+        return supportsWebP._result;
+    }
+    supportsWebP._promise = undefined;
+    supportsWebP._result = undefined;
+    supportsWebP.initialize = function() {
         // From https://developers.google.com/speed/webp/faq#how_can_i_detect_browser_support_for_webp
-        if (defined(supportsWebPPromise)) {
-            return supportsWebPPromise.promise;
+        if (defined(supportsWebP._promise)) {
+            return supportsWebP._promise;
         }
 
-        supportsWebPPromise = when.defer();
+        var supportsWebPDeferred = when.defer();
+        supportsWebP._promise = supportsWebPDeferred.promise;
         if (isEdge()) {
             // Edge's WebP support with WebGL is incomplete.
             // See bug report: https://developer.microsoft.com/en-us/microsoft-edge/platform/issues/19221241/
-            supportsWebPResult = false;
-            supportsWebPPromise.resolve(supportsWebPResult);
+            supportsWebP._result = false;
+            supportsWebPDeferred.resolve(supportsWebP._result);
+            return supportsWebPDeferred.promise;
         }
 
         var image = new Image();
         image.onload = function () {
-            supportsWebPResult = (image.width > 0) && (image.height > 0);
-            supportsWebPPromise.resolve(supportsWebPResult);
+            supportsWebP._result = (image.width > 0) && (image.height > 0);
+            supportsWebPDeferred.resolve(supportsWebP._result);
         };
 
         image.onerror = function () {
-            supportsWebPResult = false;
-            supportsWebPPromise.resolve(supportsWebPResult);
+            supportsWebP._result = false;
+            supportsWebPDeferred.resolve(supportsWebP._result);
         };
 
         image.src = 'data:image/webp;base64,UklGRiIAAABXRUJQVlA4IBYAAAAwAQCdASoBAAEADsD+JaQAA3AAAAAA';
 
-        return supportsWebPPromise.promise;
-    }
-
-    function supportsWebPSync() {
-        if (!defined(supportsWebPPromise)) {
-            supportsWebP();
+        return supportsWebPDeferred.promise;
+    };
+    defineProperties(supportsWebP, {
+        initialized: {
+            get: function() {
+                return defined(supportsWebP._result);
+            }
         }
-        return supportsWebPResult;
-    }
+    });
 
     var typedArrayTypes = [];
     if (typeof ArrayBuffer !== 'undefined') {
@@ -279,7 +291,6 @@ define([
         supportsPointerEvents : supportsPointerEvents,
         supportsImageRenderingPixelated: supportsImageRenderingPixelated,
         supportsWebP: supportsWebP,
-        supportsWebPSync: supportsWebPSync,
         imageRenderingValue: imageRenderingValue,
         typedArrayTypes: typedArrayTypes
     };

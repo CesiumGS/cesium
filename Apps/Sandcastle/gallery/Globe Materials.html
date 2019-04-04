@@ -200,8 +200,8 @@ function updateMaterial() {
         if (selectedShading === 'elevation') {
             material = getElevationContourMaterial();
             shadingUniforms = material.materials.elevationRampMaterial.uniforms;
-            shadingUniforms.minHeight = minHeight;
-            shadingUniforms.maxHeight = maxHeight;
+            shadingUniforms.minimumHeight = minHeight;
+            shadingUniforms.maximumHeight = maxHeight;
             contourUniforms = material.materials.contourMaterial.uniforms;
         } else if (selectedShading === 'slope') {
             material = getSlopeContourMaterial();
@@ -221,8 +221,8 @@ function updateMaterial() {
     } else if (selectedShading === 'elevation') {
         material = Cesium.Material.fromType('ElevationRamp');
         shadingUniforms = material.uniforms;
-        shadingUniforms.minHeight = minHeight;
-        shadingUniforms.maxHeight = maxHeight;
+        shadingUniforms.minimumHeight = minHeight;
+        shadingUniforms.maximumHeight = maxHeight;
     } else if (selectedShading === 'slope') {
         material = Cesium.Material.fromType('SlopeRamp');
         shadingUniforms = material.uniforms;

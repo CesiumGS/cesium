@@ -254,107 +254,107 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('leftIsLessThanRight works', function() {
-        expect(CesiumMath.leftIsLessThanRight(1.0, 2.0, 0.2)).toBe(true);
-        expect(CesiumMath.leftIsLessThanRight(2.0, 1.0, 0.2)).toBe(false);
-        expect(CesiumMath.leftIsLessThanRight(1.0, 1.0, 0.2)).toBe(false);
-        expect(CesiumMath.leftIsLessThanRight(1.0, 1.2, 0.2)).toBe(false);
-        expect(CesiumMath.leftIsLessThanRight(1.2, 1.0, 0.2)).toBe(false);
+    it('lessThan works', function() {
+        expect(CesiumMath.lessThan(1.0, 2.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThan(2.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.0, 1.2, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.2, 1.0, 0.2)).toBe(false);
     });
 
-    it('leftIsLessThanRight throws for undefined left', function() {
+    it('lessThan throws for undefined left', function() {
         expect(function() {
-            CesiumMath.leftIsLessThanRight(undefined, 5.0, CesiumMath.EPSILON16);
+            CesiumMath.lessThan(undefined, 5.0, CesiumMath.EPSILON16);
         }).toThrowDeveloperError();
     });
 
-    it('leftIsLessThanRight throws for undefined right', function() {
+    it('lessThan throws for undefined right', function() {
         expect(function() {
-            CesiumMath.leftIsLessThanRight(1.0, undefined, CesiumMath.EPSILON16);
+            CesiumMath.lessThan(1.0, undefined, CesiumMath.EPSILON16);
         }).toThrowDeveloperError();
     });
 
-    it('leftIsLessThanRight throws for undefined absoluteEpsilon', function() {
+    it('lessThan throws for undefined absoluteEpsilon', function() {
         expect(function() {
-            CesiumMath.leftIsLessThanRight(1.0, 5.0, undefined);
+            CesiumMath.lessThan(1.0, 5.0, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('leftIsLessThanOrEqualToRight works', function() {
-        expect(CesiumMath.leftIsLessThanOrEqualToRight(1.0, 2.0, 0.2)).toBe(true);
-        expect(CesiumMath.leftIsLessThanOrEqualToRight(2.0, 1.0, 0.2)).toBe(false);
-        expect(CesiumMath.leftIsLessThanOrEqualToRight(1.0, 1.0, 0.2)).toBe(true);
-        expect(CesiumMath.leftIsLessThanOrEqualToRight(1.0, 1.2, 0.2)).toBe(true);
-        expect(CesiumMath.leftIsLessThanOrEqualToRight(1.2, 1.0, 0.2)).toBe(true);
+    it('lessThanOrEquals works', function() {
+        expect(CesiumMath.lessThanOrEquals(1.0, 2.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(2.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThanOrEquals(1.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(1.0, 1.2, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(1.2, 1.0, 0.2)).toBe(true);
     });
 
-    it('leftIsLessThanOrEqualToRight throws for undefined left', function() {
+    it('lessThanOrEquals throws for undefined left', function() {
         expect(function() {
-            CesiumMath.leftIsLessThanOrEqualToRight(undefined, 5.0, CesiumMath.EPSILON16);
+            CesiumMath.lessThanOrEquals(undefined, 5.0, CesiumMath.EPSILON16);
         }).toThrowDeveloperError();
     });
 
-    it('leftIsLessThanOrEqualToRight throws for undefined right', function() {
+    it('lessThanOrEquals throws for undefined right', function() {
         expect(function() {
-            CesiumMath.leftIsLessThanOrEqualToRight(1.0, undefined, CesiumMath.EPSILON16);
+            CesiumMath.lessThanOrEquals(1.0, undefined, CesiumMath.EPSILON16);
         }).toThrowDeveloperError();
     });
 
-    it('leftIsLessThanOrEqualToRight throws for undefined absoluteEpsilon', function() {
+    it('lessThanOrEquals throws for undefined absoluteEpsilon', function() {
         expect(function() {
-            CesiumMath.leftIsLessThanOrEqualToRight(1.0, 5.0, undefined);
+            CesiumMath.lessThanOrEquals(1.0, 5.0, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('leftIsGreaterThanRight works', function() {
-        expect(CesiumMath.leftIsGreaterThanRight(1.0, 2.0, 0.2)).toBe(false);
-        expect(CesiumMath.leftIsGreaterThanRight(2.0, 1.0, 0.2)).toBe(true);
-        expect(CesiumMath.leftIsGreaterThanRight(1.0, 1.0, 0.2)).toBe(false);
-        expect(CesiumMath.leftIsGreaterThanRight(1.0, 1.2, 0.2)).toBe(false);
-        expect(CesiumMath.leftIsGreaterThanRight(1.2, 1.0, 0.2)).toBe(false);
+    it('greaterThan works', function() {
+        expect(CesiumMath.greaterThan(1.0, 2.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(2.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThan(1.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(1.0, 1.2, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(1.2, 1.0, 0.2)).toBe(false);
     });
 
-    it('leftIsGreaterThanRight throws for undefined left', function() {
+    it('greaterThan throws for undefined left', function() {
         expect(function() {
-            CesiumMath.leftIsGreaterThanRight(undefined, 5.0, CesiumMath.EPSILON16);
+            CesiumMath.greaterThan(undefined, 5.0, CesiumMath.EPSILON16);
         }).toThrowDeveloperError();
     });
 
-    it('leftIsGreaterThanRight throws for undefined right', function() {
+    it('greaterThan throws for undefined right', function() {
         expect(function() {
-            CesiumMath.leftIsGreaterThanRight(1.0, undefined, CesiumMath.EPSILON16);
+            CesiumMath.greaterThan(1.0, undefined, CesiumMath.EPSILON16);
         }).toThrowDeveloperError();
     });
 
-    it('leftIsGreaterThanRight throws for undefined absoluteEpsilon', function() {
+    it('greaterThan throws for undefined absoluteEpsilon', function() {
         expect(function() {
-            CesiumMath.leftIsGreaterThanRight(1.0, 5.0, undefined);
+            CesiumMath.greaterThan(1.0, 5.0, undefined);
         }).toThrowDeveloperError();
     });
 
-    it('leftIsGreaterThanOrEqualToRight works', function() {
-        expect(CesiumMath.leftIsGreaterThanOrEqualToRight(1.0, 2.0, 0.2)).toBe(false);
-        expect(CesiumMath.leftIsGreaterThanOrEqualToRight(2.0, 1.0, 0.2)).toBe(true);
-        expect(CesiumMath.leftIsGreaterThanOrEqualToRight(1.0, 1.0, 0.2)).toBe(true);
-        expect(CesiumMath.leftIsGreaterThanOrEqualToRight(1.0, 1.2, 0.2)).toBe(true);
-        expect(CesiumMath.leftIsGreaterThanOrEqualToRight(1.2, 1.0, 0.2)).toBe(true);
+    it('greaterThanOrEquals works', function() {
+        expect(CesiumMath.greaterThanOrEquals(1.0, 2.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThanOrEquals(2.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.0, 1.2, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.2, 1.0, 0.2)).toBe(true);
     });
 
-    it('leftIsGreaterThanOrEqualToRight throws for undefined left', function() {
+    it('greaterThanOrEquals throws for undefined left', function() {
         expect(function() {
-            CesiumMath.leftIsGreaterThanOrEqualToRight(undefined, 5.0, CesiumMath.EPSILON16);
+            CesiumMath.greaterThanOrEquals(undefined, 5.0, CesiumMath.EPSILON16);
         }).toThrowDeveloperError();
     });
 
-    it('leftIsGreaterThanOrEqualToRight throws for undefined right', function() {
+    it('greaterThanOrEquals throws for undefined right', function() {
         expect(function() {
-            CesiumMath.leftIsGreaterThanOrEqualToRight(1.0, undefined, CesiumMath.EPSILON16);
+            CesiumMath.greaterThanOrEquals(1.0, undefined, CesiumMath.EPSILON16);
         }).toThrowDeveloperError();
     });
 
-    it('leftIsGreaterThanOrEqualToRight throws for undefined absoluteEpsilon', function() {
+    it('greaterThanOrEquals throws for undefined absoluteEpsilon', function() {
         expect(function() {
-            CesiumMath.leftIsGreaterThanOrEqualToRight(1.0, 5.0, undefined);
+            CesiumMath.greaterThanOrEquals(1.0, 5.0, undefined);
         }).toThrowDeveloperError();
     });
 

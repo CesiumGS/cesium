@@ -27,11 +27,18 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider : Cesium.createWorldTerrain()
+});
 
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5714) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(16421) });
 viewer.scene.primitives.add(tileset);
-viewer.zoomTo(tileset);
+
+viewer.scene.camera.setView({
+    destination: new Cesium.Cartesian3(4401744.644145314, 225051.41078911052, 4595420.374784433),
+    orientation: new Cesium.HeadingPitchRoll(5.646733805039757, -0.276607153839886, 6.281110875400085)
+});
+
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }

@@ -349,14 +349,14 @@ define([
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (CesiumMath.leftIsGreaterThanRight(sourceRectangle.north, existingRectangle.south, epsilon)) {
+                    if (CesiumMath.greaterThan(sourceRectangle.north, existingRectangle.south, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (CesiumMath.leftIsGreaterThanOrEqualToRight(sourceRectangle.south, existingRectangle.north, epsilon)) {
+                    if (CesiumMath.greaterThanOrEquals(sourceRectangle.south, existingRectangle.north, epsilon)) {
                         break;
                     }
                 }
@@ -367,14 +367,14 @@ define([
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (CesiumMath.leftIsLessThanRight(sourceRectangle.west, existingRectangle.east, epsilon)) {
+                    if (CesiumMath.lessThan(sourceRectangle.west, existingRectangle.east, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (CesiumMath.leftIsLessThanOrEqualToRight(sourceRectangle.east, existingRectangle.west, epsilon)) {
+                    if (CesiumMath.lessThanOrEquals(sourceRectangle.east, existingRectangle.west, epsilon)) {
                         break;
                     }
                 }
@@ -385,14 +385,14 @@ define([
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (CesiumMath.leftIsLessThanRight(sourceRectangle.south, existingRectangle.north, epsilon)) {
+                    if (CesiumMath.lessThan(sourceRectangle.south, existingRectangle.north, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (CesiumMath.leftIsLessThanOrEqualToRight(sourceRectangle.north, existingRectangle.south, epsilon)) {
+                    if (CesiumMath.lessThanOrEquals(sourceRectangle.north, existingRectangle.south, epsilon)) {
                         break;
                     }
                 }
@@ -403,14 +403,14 @@ define([
                 for (startIndex = 0; startIndex < edgeTiles.length; ++startIndex) {
                     existingTile = edgeTiles[startIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (CesiumMath.leftIsGreaterThanRight(sourceRectangle.east, existingRectangle.west, epsilon)) {
+                    if (CesiumMath.greaterThan(sourceRectangle.east, existingRectangle.west, epsilon)) {
                         break;
                     }
                 }
                 for (endIndex = startIndex; endIndex < edgeTiles.length; ++endIndex) {
                     existingTile = edgeTiles[endIndex];
                     existingRectangle = existingTile.rectangle;
-                    if (CesiumMath.leftIsGreaterThanOrEqualToRight(sourceRectangle.west, existingRectangle.east, epsilon)) {
+                    if (CesiumMath.greaterThanOrEquals(sourceRectangle.west, existingRectangle.east, epsilon)) {
                         break;
                     }
                 }

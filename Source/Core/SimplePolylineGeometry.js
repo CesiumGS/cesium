@@ -128,7 +128,7 @@ define([
 
         this._followSurface = defaultValue(options.followSurface, true);
         if (defined(options.followSurface)) {
-            deprecationWarning('PolylineGeometry.followSurface', 'PolylineGeometry.followSurface is deprecated and will be removed in Cesium 1.55. Use PolylineGeometry.arcType instead.');
+            deprecationWarning('PolylineGeometry.followSurface', 'PolylineGeometry.followSurface is deprecated and will be removed in Cesium 1.57. Use PolylineGeometry.arcType instead.');
             options.arcType = options.followSurface ? ArcType.GEODESIC : ArcType.NONE;
         }
         this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);

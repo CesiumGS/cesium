@@ -153,7 +153,8 @@
         "distanceDisplayCondition":[
           15797,46507
         ]
-      }
+      },
+      "zIndex":59315
     },
     "cylinder":{
       "show":true,
@@ -218,7 +219,8 @@
         "distanceDisplayCondition":[
           27813,30828
         ]
-      }
+      },
+      "zIndex":3341
     },
     "ellipsoid":{
       "show":true,
@@ -425,6 +427,7 @@
           39143,2200,6408,27161,33386,62338
         ]
       },
+      "arcType":"RHUMB",
       "height":26391,
       "extrudedHeight":15922,
       "stRotation":2555,
@@ -454,7 +457,8 @@
         "distanceDisplayCondition":[
           5989,26104
         ]
-      }
+      },
+      "zIndex":31269
     },
     "polyline":{
       "show":true,
@@ -463,6 +467,7 @@
           23333,31067,17529,57924,41186,31648
         ]
       },
+      "arcType":"RHUMB",
       "width":14667,
       "granularity":53395,
       "material":{
@@ -474,7 +479,6 @@
           }
         }
       },
-      "followSurface":true,
       "shadows":"CAST_ONLY",
       "depthFailMaterial":{
         "solidColor":{
@@ -489,7 +493,9 @@
         "distanceDisplayCondition":[
           5807,30486
         ]
-      }
+      },
+      "clampToGround":true,
+      "zIndex":17658
     },
     "rectangle":{
       "show":true,
@@ -525,7 +531,8 @@
         "distanceDisplayCondition":[
           21388,23379
         ]
-      }
+      },
+      "zIndex":445
     },
     "wall":{
       "show":true,
@@ -5905,6 +5912,9 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#corridor.distanceDisplayCondition"
+      },
+      "zIndex":{
+        "reference":"Constant#corridor.zIndex"
       }
     },
     "cylinder":{
@@ -6004,6 +6014,9 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#ellipse.distanceDisplayCondition"
+      },
+      "zIndex":{
+        "reference":"Constant#ellipse.zIndex"
       }
     },
     "ellipsoid":{
@@ -6241,6 +6254,9 @@
           "ConstantPosition1#position","ConstantPosition2#position"
         ]
       },
+      "arcType":{
+        "reference":"Constant#polygon.arcType"
+      },
       "height":{
         "reference":"Constant#polygon.height"
       },
@@ -6286,6 +6302,9 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#polygon.distanceDisplayCondition"
+      },
+      "zIndex":{
+        "reference":"Constant#polygon.zIndex"
       }
     },
     "polyline":{
@@ -6296,6 +6315,9 @@
         "references":[
           "ConstantPosition1#position","ConstantPosition2#position"
         ]
+      },
+      "arcType":{
+        "reference":"Constant#polyline.arcType"
       },
       "width":{
         "reference":"Constant#polyline.width"
@@ -6310,9 +6332,6 @@
           }
         }
       },
-      "followSurface":{
-        "reference":"Constant#polyline.followSurface"
-      },
       "shadows":{
         "reference":"Constant#polyline.shadows"
       },
@@ -6325,6 +6344,12 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#polyline.distanceDisplayCondition"
+      },
+      "clampToGround":{
+        "reference":"Constant#polyline.clampToGround"
+      },
+      "zIndex":{
+        "reference":"Constant#polyline.zIndex"
       }
     },
     "rectangle":{
@@ -6373,6 +6398,9 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#rectangle.distanceDisplayCondition"
+      },
+      "zIndex":{
+        "reference":"Constant#rectangle.zIndex"
       }
     },
     "wall":{
@@ -9041,6 +9069,13 @@
           0,10884,63530,
           3600,20076,27683
         ]
+      },
+      "zIndex":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,36068,
+          3600,60697
+        ]
       }
     },
     "cylinder":{
@@ -9199,6 +9234,13 @@
         "distanceDisplayCondition":[
           0,38393,63947,
           3600,29119,43121
+        ]
+      },
+      "zIndex":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,8989,
+          3600,52730
         ]
       }
     },
@@ -9581,6 +9623,13 @@
           0,22140,31962,
           3600,3927,22422
         ]
+      },
+      "zIndex":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,37357,
+          3600,64769
+        ]
       }
     },
     "polyline":{
@@ -9625,6 +9674,13 @@
         "distanceDisplayCondition":[
           0,4857,10258,
           3600,36588,47246
+        ]
+      },
+      "zIndex":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,55130,
+          3600,15491
         ]
       }
     },
@@ -9701,6 +9757,13 @@
         "distanceDisplayCondition":[
           0,24813,30560,
           3600,34617,40071
+        ]
+      },
+      "zIndex":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,27256,
+          3600,53581
         ]
       }
     },

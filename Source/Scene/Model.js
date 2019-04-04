@@ -1235,7 +1235,7 @@ define([
                 return this._specularEnvironmentMaps;
             },
             set : function(value) {
-                this._shouldUpdateSpecularMapAtlas = value !== this._specularEnvironmentMaps;
+                this._shouldUpdateSpecularMapAtlas = this._shouldUpdateSpecularMapAtlas || value !== this._specularEnvironmentMaps;
                 this._specularEnvironmentMaps = value;
             }
         }
@@ -2325,7 +2325,11 @@ define([
                 ++model._loadResources.pendingTextureLoads;
             } else {
                 var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
-                loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType)
+                loadImageFromTypedArray({
+                    uint8Array: loadResources.getBuffer(bufferView),
+                    format: gltfTexture.mimeType,
+                    flipY: false
+                })
                     .then(onload).otherwise(onerror);
                 ++loadResources.pendingBufferViewToImage;
             }
@@ -4303,10 +4307,11 @@ define([
             return;
         }
 
-        var supportsWebP = FeatureDetection.supportsWebPSync();
-        if (!defined(supportsWebP)) {
+        if (!FeatureDetection.supportsWebP.initialized) {
+            FeatureDetection.supportsWebP.initialize();
             return;
         }
+        var supportsWebP = FeatureDetection.supportsWebP();
 
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
