@@ -411,7 +411,7 @@ define([
             refines = false;
         }
 
-        if (minIndex !== -1 && !skipLevelOfDetail(tileset) && tile.refine === Cesium3DTileRefine.REPLACE) {
+        if (minIndex !== -1 && !skipLevelOfDetail(tileset) && replace) {
             // An ancestor will hold the _foveatedFactor and _distanceToCamera for descendants between itself and its highest priority descendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
             // Priority of all tiles that refer to the _foveatedFactor and _distanceToCamera stored in the common ancestor will be differentiated based on their _depth.
             var minPriorityChild = children[minIndex];
