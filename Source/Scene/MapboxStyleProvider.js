@@ -29,10 +29,11 @@ var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/map
  *
  * @param {Object} [options] Object with the following properties:
  * @param {String} [options.url='https://api.mapbox.com/styles/v1/'] The Mapbox server url.
- * @param {String} [options.username='mapbox'] The username of the account to which the map belongs.
+ * @param {String} [options.username='mapbox'] The username of the map account.
  * @param {String} options.styleId The Mapbox Style ID.
  * @param {String} [options.accessToken] The public access token for the imagery.
- * @param {Number} [options.tilesize=512] The size of the image tile.
+ * @param {Number} [options.tilesize=512] The size of the image tiles.
+ * @param {Boolean} [options.scaleFactor] Determines if tiles are rendered at a @2x scale factor.
  * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
  * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
  *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
@@ -43,7 +44,7 @@ var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/map
  *
  *
  * @example
- * // Mapbox tile provider
+ * // Mapbox style provider
  * var mapbox = new Cesium.MapboxStyleProvider({
  *     styleId: 'streets-v11',
  *     accessToken: 'thisIsMyAccessToken'
@@ -81,11 +82,13 @@ function MapboxStyleProvider(options) {
     var username = defaultValue(options.username, 'mapbox');
     this._username = username;
 
+    var scaleFactor = defined(options.scaleFactor) ? '@2x' : '';
+
     var templateUrl = resource.getUrlComponent();
     if (!trailingSlashRegex.test(templateUrl)) {
         templateUrl += '/';
     }
-    templateUrl += this._username + '/' + styleId + '/tiles/' + this._tilesize + '/{z}/{x}/{y}';
+    templateUrl += this._username + '/' + styleId + '/tiles/' + this._tilesize + '/{z}/{x}/{y}' + scaleFactor;
     resource.url = templateUrl;
 
     resource.setQueryParameters({
