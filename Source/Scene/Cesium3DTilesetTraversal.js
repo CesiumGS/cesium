@@ -227,8 +227,8 @@ define([
             return;
         }
 
-        var cameraStoppedMoving = frameState.camera._scene._timeSinceCameraMoved >= tileset.foveatedTimeDelay * 1000;
-        if (tile.priorityDeferred && !cameraStoppedMoving) {
+        var cameraHasNotStoppedMovingLongEnough = frameState.camera.timeSinceMoved < tileset.foveatedTimeDelay;
+        if (tile.priorityDeferred && cameraHasNotStoppedMovingLongEnough) {
             return;
         }
 

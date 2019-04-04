@@ -3343,7 +3343,6 @@ define([
 
         // Determine if shouldRender
         var cameraChanged = scene._view.checkForCameraUpdates(scene);
-        scene._timeSinceCameraMoved = scene._view.getTimeSinceCameraMoved();
         var shouldRender = !scene.requestRenderMode || scene._renderRequested || cameraChanged || scene._logDepthBufferDirty || scene._hdrDirty || (scene.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(scene.maximumRenderTimeChange) && defined(scene._lastRenderTime)) {
             var difference = Math.abs(JulianDate.secondsDifference(scene._lastRenderTime, time));

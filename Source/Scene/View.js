@@ -115,10 +115,6 @@ define([
                camera0.frustum.equalsEpsilon(camera1.frustum, epsilon);
     }
 
-    View.prototype.getTimeSinceCameraMoved = function(scene) {
-        return getTimestamp() - this._cameraMovedTime;
-    };
-
     View.prototype.checkForCameraUpdates = function(scene) {
         var camera = this.camera;
         var cameraClone = this._cameraClone;
