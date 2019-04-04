@@ -196,7 +196,7 @@ define([
 
         /**
          * Gets or sets the zIndex Property specifying the ordering of the polyline. Only has an effect if `clampToGround` is true and polylines on terrain is supported.
-         * @memberof RectangleGraphics.prototype
+         * @memberof PolylineGraphics.prototype
          * @type {ConstantProperty}
          * @default 0
          */
