@@ -208,7 +208,7 @@ function starBurst(mousePosition) {
         instances.push(new Cesium.GeometryInstance({
             geometry : new Cesium.SimplePolylineGeometry({
                 positions : [starBurstState.center, lines[i]],
-                followSurface : false,
+                arcType : Cesium.ArcType.NONE,
                 granularity : Cesium.Math.PI_OVER_FOUR
             }),
             attributes : {

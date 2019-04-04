@@ -464,7 +464,7 @@ defineSuite([
 
             expect(scene).toPickAndCall(function(result) {
                 // Set culling to true
-                content._pointCloud.backFaceCulling = true;
+                tileset.pointCloudShading.backFaceCulling = true;
 
                 expect(scene).toPickAndCall(function(result) {
                     picked = result;
@@ -487,7 +487,7 @@ defineSuite([
                 }
 
                 // Set culling to false
-                content._pointCloud.backFaceCulling = false;
+                tileset.pointCloudShading.backFaceCulling = false;
 
                 expect(scene).toPickAndCall(function(result) {
                     picked = result;
