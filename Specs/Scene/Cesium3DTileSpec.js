@@ -377,7 +377,7 @@ defineSuite([
         tile1.updatePriority();
         tile2.updatePriority();
 
-        var nonPreloadFlightPenalty = 10000;
+        var nonPreloadFlightPenalty = 1000000;
         var tile1ExpectedPriority = nonPreloadFlightPenalty + 0;
         var tile2ExpectedPriority = nonPreloadFlightPenalty + 1;
         expect(CesiumMath.equalsEpsilon(tile1._priority, tile1ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
@@ -386,7 +386,8 @@ defineSuite([
         // Priority deferral penalty
         tile2.priorityDeferred = true;
         tile2.updatePriority();
-        expect(tile2._priority).toBeGreaterThanOrEqualTo(1000);
+        var foveatedDeferralPenalty = 100000;
+        expect(tile2._priority).toBeGreaterThanOrEqualTo(foveatedDeferralPenalty);
     });
 
 }, 'WebGL');
