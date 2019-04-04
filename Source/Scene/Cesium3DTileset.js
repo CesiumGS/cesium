@@ -120,6 +120,8 @@ define([
      * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
      * @param {Number} [options.cullRequestsWhileMovingMultiplier=60] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
      * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
+     * @param {Boolean} [options.preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
+     * @param {Boolean} [options.preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
@@ -229,10 +231,11 @@ define([
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
         this._statistics = new Cesium3DTilesetStatistics();
-        this._statisticsLastPerPass = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
+        this._statisticsLast = new Cesium3DTilesetStatistics();
+        this._statisticsPerPass = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
 
         for (var i = 0; i < Cesium3DTilePass.NUMBER_OF_PASSES; ++i) {
-            this._statisticsLastPerPass[i] = new Cesium3DTilesetStatistics();
+            this._statisticsPerPass[i] = new Cesium3DTilesetStatistics();
         }
 
         this._requestedTilesInFlight = [];
@@ -257,6 +260,23 @@ define([
         this._initialClippingPlanesOriginMatrix = Matrix4.IDENTITY; // Computed from the tileset JSON.
         this._clippingPlanesOriginMatrix = undefined; // Combines the above with any run-time transforms.
         this._clippingPlanesOriginMatrixDirty = true;
+
+        /**
+         * Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.preloadWhenHidden = defaultValue(options.preloadWhenHidden, false);
+
+        /**
+         * Optimization option. Fetch tiles at the camera's flight destination while the camera is in flight.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.preloadFlightDestinations = defaultValue(options.preloadFlightDestinations, true);
+        this._pass = undefined; // Cesium3DTilePass
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -1651,7 +1671,53 @@ define([
         return a._priority - b._priority;
     }
 
-    function cancelOutOfViewRequestedTiles(tileset, frameState) {
+    /**
+     * Perform any pass invariant tasks here. Called after the render pass.
+     * @private
+     */
+    Cesium3DTileset.prototype.postPassesUpdate = function(frameState) {
+        cancelOutOfViewRequests(this, frameState);
+        raiseLoadProgressEvent(this, frameState);
+        this._cache.unloadTiles(this, unloadTile);
+        this._cache.reset();
+
+        var statistics = this._statisticsPerPass[Cesium3DTilePass.RENDER];
+        var credits = this._credits;
+        if (defined(credits) && statistics.selected !== 0) {
+            var length = credits.length;
+            for (var i = 0; i < length; i++) {
+                frameState.creditDisplay.addCredit(credits[i]);
+            }
+        }
+    };
+
+    /**
+     * Perform any pass invariant tasks here. Called before any passes are executed.
+     * @private
+     */
+    Cesium3DTileset.prototype.prePassesUpdate = function(frameState) {
+        processTiles(this, frameState);
+
+        // Update clipping planes
+        var clippingPlanes = this._clippingPlanes;
+        this._clippingPlanesOriginMatrixDirty = true;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            clippingPlanes.update(frameState);
+        }
+
+        if (!defined(this._loadTimestamp)) {
+            this._loadTimestamp = JulianDate.clone(frameState.time);
+        }
+        this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
+
+        this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail && !this._allTilesAdditive;
+
+        if (this.dynamicScreenSpaceError) {
+            updateDynamicScreenSpaceError(this, frameState);
+        }
+    };
+
+    function cancelOutOfViewRequests(tileset, frameState) {
         var requestedTilesInFlight = tileset._requestedTilesInFlight;
         var removeCount = 0;
         var length = requestedTilesInFlight.length;
@@ -2042,10 +2108,6 @@ define([
         tile.destroy();
     }
 
-    function unloadTiles(tileset) {
-        tileset._cache.unloadTiles(tileset, unloadTile);
-    }
-
     /**
      * Unloads all tiles that weren't selected the previous frame.  This can be used to
      * explicitly manage the tile cache and reduce the total number of tiles loaded below
@@ -2061,12 +2123,16 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function raiseLoadProgressEvent(tileset, frameState, statisticsLast) {
+    function raiseLoadProgressEvent(tileset, frameState) {
         var statistics = tileset._statistics;
+        var statisticsLast = tileset._statisticsLast;
+
         var numberOfPendingRequests = statistics.numberOfPendingRequests;
         var numberOfTilesProcessing = statistics.numberOfTilesProcessing;
         var lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
         var lastNumberOfTilesProcessing = statisticsLast.numberOfTilesProcessing;
+
+        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
 
         var progressChanged = (numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberOfTilesProcessing !== lastNumberOfTilesProcessing);
 
@@ -2078,6 +2144,9 @@ define([
 
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
+        // Events are raised (added to the afterRender queue) here since promises
+        // may resolve outside of the update loop that then raise events, e.g.,
+        // model's readyPromise.
         if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
@@ -2101,42 +2170,19 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function update(tileset, frameState, statisticsLast, passOptions) {
+    function update(tileset, frameState, passStatistics, passOptions) {
         if (frameState.mode === SceneMode.MORPHING) {
             return false;
         }
 
-        if (!tileset.show || !tileset.ready) {
+        if (!tileset.ready) {
             return false;
         }
-
-        if (!defined(tileset._loadTimestamp)) {
-            tileset._loadTimestamp = JulianDate.clone(frameState.time);
-        }
-
-        // Update clipping planes
-        var clippingPlanes = tileset._clippingPlanes;
-        tileset._clippingPlanesOriginMatrixDirty = true;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            clippingPlanes.update(frameState);
-        }
-
-        tileset._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, tileset._loadTimestamp) * 1000, 0.0);
-
-        tileset._skipLevelOfDetail = tileset.skipLevelOfDetail && !defined(tileset._classificationType) && !tileset._disableSkipLevelOfDetail && !tileset._allTilesAdditive;
 
         var statistics = tileset._statistics;
         statistics.clear();
 
-        if (tileset.dynamicScreenSpaceError) {
-            updateDynamicScreenSpaceError(tileset, frameState);
-        }
-
         var isRender = passOptions.isRender;
-
-        if (isRender) {
-            tileset._cache.reset();
-        }
 
         // Resets the visibility check for each pass
         ++tileset._updatedVisibilityFrame;
@@ -2146,41 +2192,14 @@ define([
 
         var ready = passOptions.traversal.selectTiles(tileset, frameState);
 
-        if (isRender) {
-            cancelOutOfViewRequestedTiles(tileset, frameState);
-        }
-
         if (passOptions.requestTiles) {
             requestTiles(tileset);
         }
 
-        if (isRender) {
-            processTiles(tileset, frameState);
-        }
-
         updateTiles(tileset, frameState, isRender);
 
-        if (isRender) {
-            unloadTiles(tileset);
-
-            // Events are raised (added to the afterRender queue) here since promises
-            // may resolve outside of the update loop that then raise events, e.g.,
-            // model's readyPromise.
-            raiseLoadProgressEvent(tileset, frameState, statisticsLast);
-
-            if (statistics.selected !== 0) {
-                var credits = tileset._credits;
-                if (defined(credits)) {
-                    var length = credits.length;
-                    for (var i = 0; i < length; i++) {
-                        frameState.creditDisplay.addCredit(credits[i]);
-                    }
-                }
-            }
-        }
-
-        // Update last statistics
-        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
+        // Update pass statistics
+        Cesium3DTilesetStatistics.clone(statistics, passStatistics);
 
         return ready;
     }
@@ -2208,6 +2227,7 @@ define([
         tilesetPassState.ready = false;
 
         var pass = tilesetPassState.pass;
+
         var passOptions = Cesium3DTilePass.getPassOptions(pass);
         var ignoreCommands = passOptions.ignoreCommands;
 
@@ -2218,9 +2238,12 @@ define([
         frameState.camera = defaultValue(tilesetPassState.camera, originalCamera);
         frameState.cullingVolume = defaultValue(tilesetPassState.cullingVolume, originalCullingVolume);
 
-        var statisticsLast = this._statisticsLastPerPass[pass];
+        var passStatistics = this._statisticsPerPass[pass];
 
-        tilesetPassState.ready = update(this, frameState, statisticsLast, passOptions);
+        if (this.show || ignoreCommands) {
+            this._pass = pass;
+            tilesetPassState.ready = update(this, frameState, passStatistics, passOptions);
+        }
 
         if (ignoreCommands) {
             commandList.length = commandStart;

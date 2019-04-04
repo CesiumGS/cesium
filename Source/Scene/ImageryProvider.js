@@ -344,10 +344,17 @@ define([
         } else if (crnRegex.test(resource)) {
             return loadCRN(resource);
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return resource.fetchImage(true);
+            return resource.fetchImage({
+                preferBlob : true,
+                preferImageBitmap : true,
+                flipY : true
+            });
         }
 
-        return resource.fetchImage();
+        return resource.fetchImage({
+            preferImageBitmap : true,
+            flipY : true
+        });
     };
 
     return ImageryProvider;

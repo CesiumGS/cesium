@@ -301,6 +301,17 @@ define([
         }
     }
 
+    /**
+     * Checks there's a camera flight for this camera.
+     *
+     * @private
+     * @returns {Boolean} Whether or not this camera has a current flight with a valid preloadFlightCamera in scene.
+     */
+    Camera.prototype.hasCurrentFlight = function() {
+        // The preload flight camera defined check only here since it can be set to undefined when not 3D mode.
+        return defined(this._currentFlight) && defined(this._scene.preloadFlightCamera);
+    };
+
     Camera.prototype._updateCameraChanged = function() {
         var camera = this;
 
@@ -1809,8 +1820,8 @@ define([
     var rotateVertScratchNegate = new Cartesian3();
     function rotateVertical(camera, angle) {
         var position = camera.position;
-        var p = Cartesian3.normalize(position, rotateVertScratchP);
-        if (defined(camera.constrainedAxis)) {
+        if (defined(camera.constrainedAxis) && !Cartesian3.equalsEpsilon(camera.position, Cartesian3.ZERO, CesiumMath.EPSILON2)) {
+            var p = Cartesian3.normalize(position, rotateVertScratchP);
             var northParallel = Cartesian3.equalsEpsilon(p, camera.constrainedAxis, CesiumMath.EPSILON2);
             var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(camera.constrainedAxis, rotateVertScratchNegate), CesiumMath.EPSILON2);
             if ((!northParallel && !southParallel)) {
@@ -2887,6 +2898,19 @@ define([
         var scene = this._scene;
         flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
         this._currentFlight = flightTween;
+
+        // Save the final destination view information for the PRELOAD_FLIGHT pass.
+        var preloadFlightCamera = this._scene.preloadFlightCamera;
+        if (this._mode !== SceneMode.SCENE2D) {
+            if (!defined(preloadFlightCamera)) {
+                preloadFlightCamera = Camera.clone(this);
+            }
+            preloadFlightCamera.setView({ destination: destination, orientation: orientation });
+
+            this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
+        } else {
+            preloadFlightCamera = undefined;
+        }
     };
 
     function distanceToBoundingSphere3D(camera, radius) {

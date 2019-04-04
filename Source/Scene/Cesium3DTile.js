@@ -30,6 +30,7 @@ define([
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizationHint',
+        './Cesium3DTilePass',
         './Cesium3DTileRefine',
         './Empty3DTileContent',
         './SceneMode',
@@ -68,6 +69,7 @@ define([
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileOptimizationHint,
+        Cesium3DTilePass,
         Cesium3DTileRefine,
         Empty3DTileContent,
         SceneMode,
@@ -1335,6 +1337,8 @@ define([
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var distanceScale = depthScale * 100;
         var foveatedScale = distanceScale * 100;
+        var foveatedDeferScale = foveatedScale * 10;
+        var preloadFlightScale = foveatedDeferScale * 10;
 
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
@@ -1347,12 +1351,12 @@ define([
         var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
 
         // Flag on/off penality digits
-        var foveatedDeferScale = foveatedScale * 10;
         var foveatedDeferDigit = this._priorityDeferred ? foveatedDeferScale : 0;
 
+        var preloadFlightDigit = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale; // Penalize non-preloads
+
         // Get the final base 10 number
-        var number = depthDigit + distanceDigit + foveatedDigit + foveatedDeferDigit;
-        this._priority = number;
+        this._priority = depthDigit + distanceDigit + foveatedDigit + foveatedDeferDigit + preloadFlightDigit;
     };
 
     /**
