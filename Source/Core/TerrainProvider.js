@@ -229,6 +229,7 @@ define([
 
     /**
      * Makes sure we load availability data for a tile
+     * @function
      *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.

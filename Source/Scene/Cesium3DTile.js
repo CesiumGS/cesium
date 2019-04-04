@@ -30,6 +30,7 @@ define([
         './Cesium3DTileContentFactory',
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizationHint',
+        './Cesium3DTilePass',
         './Cesium3DTileRefine',
         './Empty3DTileContent',
         './SceneMode',
@@ -68,6 +69,7 @@ define([
         Cesium3DTileContentFactory,
         Cesium3DTileContentState,
         Cesium3DTileOptimizationHint,
+        Cesium3DTilePass,
         Cesium3DTileRefine,
         Empty3DTileContent,
         SceneMode,
@@ -1344,6 +1346,9 @@ define([
         var distanceScale = 100; // Hundreds's "digit", digit of separation from previous
         var foveatedScale = distanceScale * 10;
 
+        // This digit should generally be last
+        var preloadFlightScale = foveatedScale * 10; // On or off so don't need an additional digit of separation to prevent blend
+
         // Map 0-1 then convert to digit
         var distanceDigit = distanceScale * CesiumMath.normalize(this._priorityDistanceHolder._priorityDistance, minPriority.distance, maxPriority.distance);
 
@@ -1352,8 +1357,10 @@ define([
 
         var foveatedDigit = this.priorityDeferred ? foveatedScale : 0;
 
+        var preloadFlightDigit = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale; // Penalize non-preloads
+
         // Get the final base 10 number
-        var number = foveatedDigit + distanceDigit + depthDigit;
+        var number = foveatedDigit + distanceDigit + depthDigit + preloadFlightDigit;
         this._priority = number;
     };
 
