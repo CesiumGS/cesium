@@ -490,7 +490,8 @@ define([
 
                 return loadImageFromTypedArray({
                     uint8Array: a,
-                    format: type
+                    format: type,
+                    flipY: true
                 });
             });
     };

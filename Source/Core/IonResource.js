@@ -172,6 +172,7 @@ define([
             };
             if (defined(userOptions)) {
                 options.flipY = userOptions.flipY;
+                options.preferImageBitmap = userOptions.preferImageBitmap;
             }
         }
 
