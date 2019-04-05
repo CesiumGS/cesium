@@ -313,7 +313,6 @@ define([
         tile._wasMinPriorityChild = false;
         tile._priorityHolder = tile;
         updateMinMaxPriority(tileset, tile);
-        tile._priorityProgressiveResolution = false;
 
         // SkipLOD
         tile._shouldSelect = false;
