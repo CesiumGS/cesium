@@ -14,7 +14,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidGeometry',
@@ -98,7 +97,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         EllipsoidGeometry,
@@ -4232,12 +4230,6 @@ define([
             throw new DeveloperError('clampToHeight requires depth texture support. Check clampToHeightSupported.');
         }
         //>>includeEnd('debug');
-
-        if (width instanceof Cartesian3) {
-            result = width;
-            width = undefined;
-            deprecationWarning('clampToHeight-parameter-change', 'clampToHeight now takes an optional width argument before the result argument in Cesium 1.54.  The previous function definition will no longer work in 1.56.');
-        }
 
         var ray = getRayForClampToHeight(this, cartesian);
         var pickResult = pickFromRay(this, ray, objectsToExclude, width, true, false);

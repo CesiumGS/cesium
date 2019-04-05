@@ -164,8 +164,19 @@ define([
         return result;
     };
 
-    IonResource.prototype.fetchImage = function (preferBlob, allowCrossOrigin) {
-        return Resource.prototype.fetchImage.call(this, this._isExternal ? preferBlob : true, allowCrossOrigin);
+    IonResource.prototype.fetchImage = function (options) {
+        if (!this._isExternal) {
+            var userOptions = options;
+            options = {
+                preferBlob : true
+            };
+            if (defined(userOptions)) {
+                options.flipY = userOptions.flipY;
+                options.preferImageBitmap = userOptions.preferImageBitmap;
+            }
+        }
+
+        return Resource.prototype.fetchImage.call(this, options);
     };
 
     IonResource.prototype._makeRequest = function(options) {

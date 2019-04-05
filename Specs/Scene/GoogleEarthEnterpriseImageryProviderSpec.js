@@ -44,8 +44,15 @@ defineSuite([
         RequestScheduler.clearForSpecs();
     });
 
+    var supportsImageBitmapOptions;
     beforeAll(function() {
         decodeGoogleEarthEnterpriseData.passThroughDataForTesting = true;
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
     });
 
     afterAll(function() {
@@ -84,9 +91,9 @@ defineSuite([
 
     function installFakeImageRequest(expectedUrl, proxy) {
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url)) {
+            if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // load blob url normally
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
             } else {
                 if (proxy) {
                     var uri = new Uri(url);
@@ -101,7 +108,7 @@ defineSuite([
         };
 
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-            if (defined(expectedUrl)) {
+            if (defined(expectedUrl) && !/^blob:/.test(url)) {
                 if (proxy) {
                     var uri = new Uri(url);
                     url = decodeURIComponent(uri.query);
@@ -224,7 +231,7 @@ defineSuite([
             installFakeImageRequest('http://fake.fake.invalid/flatfile?f1-03-i.1');
 
             return imageryProvider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -294,7 +301,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

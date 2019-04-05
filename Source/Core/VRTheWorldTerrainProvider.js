@@ -267,7 +267,9 @@ define([
             },
             request : request
         });
-        var promise = resource.fetchImage();
+        var promise = resource.fetchImage({
+            preferImageBitmap: true
+        });
         if (!defined(promise)) {
             return undefined;
         }

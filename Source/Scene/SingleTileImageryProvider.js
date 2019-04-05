@@ -109,7 +109,7 @@ define([
         }
 
         function doRequest() {
-            when(resource.fetchImage(), success, failure);
+            resource.fetchImage().then(success).otherwise(failure);
         }
 
         doRequest();

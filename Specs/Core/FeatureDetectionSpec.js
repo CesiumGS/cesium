@@ -134,5 +134,4 @@ defineSuite([
                 expect(FeatureDetection.supportsWebP()).toEqual(supportsWebP);
             });
     });
-
 });
