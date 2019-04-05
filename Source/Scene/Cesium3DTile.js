@@ -327,6 +327,7 @@ define([
         this._distanceToCamera = 0;
         this._centerZDepth = 0;
         this._screenSpaceError = 0;
+        this._screenSpaceErrorProgressiveResolution = 0; // The screen space error at a given screen height of tileset.progressiveResolutionHeightFraction * screenHeight
         this._visibilityPlaneMask = 0;
         this._visible = false;
         this._inRequestVolume = false;
@@ -355,6 +356,8 @@ define([
 
         this._priority = 0.0; // The priority used for request sorting
         this._priorityHolder = this; // Reference to the ancestor up the tree that holds the _foveatedFactor and _distanceToCamera for all tiles in the refinement chain.
+        this._priorityProgressiveResolution = false;
+        this._priorityProgressiveResolutionSSELeaf = false;
         this._foveatedFactor = 0;
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
 
@@ -686,8 +689,9 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.getScreenSpaceError = function(frameState, useParentGeometricError) {
+    Cesium3DTile.prototype.getScreenSpaceError = function(frameState, useParentGeometricError, progressiveResolutionHeightFraction) {
         var tileset = this._tileset;
+        var heightFraction = defaultValue(progressiveResolutionHeightFraction, 1.0);
         var parentGeometricError = defined(this.parent) ? this.parent.geometricError : tileset._geometricError;
         var geometricError = useParentGeometricError ? parentGeometricError : this.geometricError;
         if (geometricError === 0.0) {
@@ -698,7 +702,7 @@ define([
         var frustum = camera.frustum;
         var context = frameState.context;
         var width = context.drawingBufferWidth;
-        var height = context.drawingBufferHeight;
+        var height = context.drawingBufferHeight * heightFraction;
         var error;
         if (frameState.mode === SceneMode.SCENE2D || frustum instanceof OrthographicFrustum) {
             if (defined(frustum._offCenterFrustum)) {
@@ -721,6 +725,24 @@ define([
         return error;
     };
 
+    function isPriorityProgressiveResolution(tileset, tile, frameState) {
+        if (tileset.progressiveResolutionHeightFraction <= 0 || tileset.progressiveResolutionHeightFraction > 0.5) {
+            return false;
+        }
+
+        var isProgressiveResolutionTile = tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError; // Mark non-SSE leaves
+        tile._priorityProgressiveResolutionSSELeaf = false; // Needed for skipLOD
+        var parent = tile.parent;
+        var maxSSE = tileset._maximumScreenSpaceError;
+        var tilePasses = tile._screenSpaceErrorProgressiveResolution <= maxSSE;
+        var parentFails = defined(parent) && parent._screenSpaceErrorProgressiveResolution > maxSSE;
+        if (tilePasses && parentFails) { // A progressive resolution SSE leaf, promote its priority as well
+            tile._priorityProgressiveResolutionSSELeaf = true;
+            isProgressiveResolutionTile = true;
+        }
+        return isProgressiveResolutionTile;
+    }
+
     /**
      * Update the tile's visibility.
      *
@@ -728,16 +750,19 @@ define([
      */
     Cesium3DTile.prototype.updateVisibility = function(frameState) {
         var parent = this.parent;
-        var parentTransform = defined(parent) ? parent.computedTransform : this._tileset.modelMatrix;
+        var tileset = this._tileset;
+        var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
         var parentVisibilityPlaneMask = defined(parent) ? parent._visibilityPlaneMask : CullingVolume.MASK_INDETERMINATE;
         this.updateTransform(parentTransform);
         this._distanceToCamera = this.distanceToTile(frameState);
         this._centerZDepth = this.distanceToTileCenter(frameState);
         this._screenSpaceError = this.getScreenSpaceError(frameState, false);
+        this._screenSpaceErrorProgressiveResolution = this.getScreenSpaceError(frameState, false, tileset.progressiveResolutionHeightFraction);
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
         this.priorityDeferred = isPriorityDeferred(this, frameState);
+        this._priorityProgressiveResolution = isPriorityProgressiveResolution(tileset, this, frameState);
     };
 
     /**
@@ -1346,7 +1371,8 @@ define([
         // Think of digits as penalties, if a tile has some large quanity or has a flag raised it's (usually) penalized for it, expressed as a higher number for the digit
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
         var distanceScale = depthScale * 100;
-        var foveatedScale = distanceScale * 100;
+        var preloadProgressiveResolutionScale = distanceScale * 10; // This is penalized less than foveated defer tiles because we want center tiles to continuously load
+        var foveatedScale = preloadProgressiveResolutionScale * 100;
         var foveatedDeferScale = foveatedScale * 10;
         var preloadFlightScale = foveatedDeferScale * 10;
 
@@ -1354,19 +1380,21 @@ define([
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
-        var replace = this.refine === Cesium3DTileRefine.REPLACE;
-        var distanceDigit = (!tileset._skipLevelOfDetail && replace) ? distanceScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) : 0;
+        var useDistanceDigit = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
+        var distanceDigit = useDistanceDigit ? distanceScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) : 0;
 
         // Map 0-1 then convert to digit
         var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
 
         // Flag on/off penality digits
+        var preloadProgressiveResolutionDigit = this._priorityProgressiveResolution ? 0 : preloadProgressiveResolutionScale;
+
         var foveatedDeferDigit = this.priorityDeferred ? foveatedDeferScale : 0;
 
         var preloadFlightDigit = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale; // Penalize non-preloads
 
         // Get the final base 10 number
-        this._priority = depthDigit + distanceDigit + foveatedDigit + foveatedDeferDigit + preloadFlightDigit;
+        this._priority = depthDigit + distanceDigit + preloadProgressiveResolutionDigit + foveatedDigit + foveatedDeferDigit + preloadFlightDigit;
     };
 
     /**

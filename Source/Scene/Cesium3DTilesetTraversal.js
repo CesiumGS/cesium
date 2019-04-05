@@ -219,7 +219,7 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
-        if (!hasUnloadedContent(tile) && !tile.contentExpired) {
+        if (tile._requestedFrame === frameState.frameNumber || (!hasUnloadedContent(tile) && !tile.contentExpired)) {
             return;
         }
 
@@ -345,9 +345,10 @@ define([
     function reachedSkippingThreshold(tileset, tile) {
         var ancestor = tile._ancestorWithContent;
         return !tileset.immediatelyLoadDesiredLevelOfDetail &&
-               defined(ancestor) &&
+               (tile._priorityProgressiveResolutionSSELeaf ||
+               (defined(ancestor) &&
                (tile._screenSpaceError < (ancestor._screenSpaceError / tileset.skipScreenSpaceErrorFactor)) &&
-               (tile._depth > (ancestor._depth + tileset.skipLevels));
+               (tile._depth > (ancestor._depth + tileset.skipLevels))));
     }
 
     function sortChildrenByDistanceToCamera(a, b) {

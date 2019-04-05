@@ -364,12 +364,14 @@ defineSuite([
         tile1._foveatedFactor = 0;
         tile1._distanceToCamera = 1;
         tile1._depth = 0;
+        tile1._priorityProgressiveResolution = true;
 
         var tile2 = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingSphere, undefined);
         tile2._priorityHolder = tile1;
         tile2._foveatedFactor = 1; // foveatedFactor (when considered for priority in certain modes) is actually 0 since its linked up to tile1
-        tile1._distanceToCamera = 0;
+        tile2._distanceToCamera = 0;
         tile2._depth = 1;
+        tile2._priorityProgressiveResolution = true;
 
         mockTileset._minPriority = { depth: 0, distance: 0, foveatedFactor: 0  };
         mockTileset._maxPriority = { depth: 1, distance: 1, foveatedFactor: 1  };
@@ -377,17 +379,25 @@ defineSuite([
         tile1.updatePriority();
         tile2.updatePriority();
 
-        var nonPreloadFlightPenalty = 1000000;
+        var nonPreloadFlightPenalty = 10000000;
         var tile1ExpectedPriority = nonPreloadFlightPenalty + 0;
         var tile2ExpectedPriority = nonPreloadFlightPenalty + 1;
         expect(CesiumMath.equalsEpsilon(tile1._priority, tile1ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
         expect(CesiumMath.equalsEpsilon(tile2._priority, tile2ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
 
-        // Priority deferral penalty
+        // Penalty for not being a progressive resolution
+        tile2._priorityProgressiveResolution = false;
+        tile2.updatePriority();
+        var nonProgressiveResoutionPenalty = 1000;
+        expect(tile2._priority).toBeGreaterThan(nonProgressiveResoutionPenalty);
+        tile2._priorityProgressiveResolution = true;
+
+        // Penalty for being a foveated deferral
         tile2.priorityDeferred = true;
         tile2.updatePriority();
         var foveatedDeferralPenalty = 100000;
         expect(tile2._priority).toBeGreaterThanOrEqualTo(foveatedDeferralPenalty);
+        tile2._priorityDeferred = false;
     });
 
 }, 'WebGL');
