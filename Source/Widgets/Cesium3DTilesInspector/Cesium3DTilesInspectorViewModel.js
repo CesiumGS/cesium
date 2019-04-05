@@ -73,8 +73,8 @@ define([
             return '';
         }
 
-        var statistics = isPick ? tileset._statisticsLastPerPass[Cesium3DTilePass.PICK] :
-                                  tileset._statisticsLastPerPass[Cesium3DTilePass.RENDER];
+        var statistics = isPick ? tileset._statisticsPerPass[Cesium3DTilePass.PICK] :
+                                  tileset._statisticsPerPass[Cesium3DTilePass.RENDER];
 
         // Since the pick pass uses a smaller frustum around the pixel of interest,
         // the statistics will be different than the normal render pass.

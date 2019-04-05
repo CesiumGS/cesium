@@ -120,15 +120,18 @@ define([
      * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
      * @param {Number} [options.cullRequestsWhileMovingMultiplier=60] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
      * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
+     * @param {Boolean} [options.preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
+     * @param {Boolean} [options.preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
      * @param {Number} [options.progressiveResolutionHeightFraction=0.3] Optimization option. If between (0, 0.5], tiles at or above the screen space error for the reduced screen resolution of progressiveResolutionHeightFraction*screenHeight will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load. Helps a lot with 4k monitors. Clamped at 0.5 because this feature won't have as much value if the progressive resolution is close to the original resolution.
      * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the {@link Cesium3DTileset#foveatedConeSize} are loaded.
-     * @param {Number} [options.foveatedConeSize=0.3] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0 means the cone will be the line formed by the camera position and its view direction. Setting it 1 means the cone encompasses the entire field of view of the camera, essentially disabling the effect.
+     * @param {Number} [options.foveatedConeSize=0.1] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and their screen space error. This is controlled by {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0 means the cone will be the line formed by the camera position and its view direction. Setting it 1 means the cone encompasses the entire field of view of the camera, disabling the effect.
      * @param {Number} [options.foveatedMinimumScreenSpaceErrorRelaxation=0] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationCallback}.
      * @param {Cesium3DTileset~foveatedInterpolationCallback} [options.foveatedInterpolationCallback=Math.lerp] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
+     * @param {Number} [options.foveatedTimeDelay=0.2] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. This time delay prevents requesting tiles around the edges of the screen when the camera is moving. Setting it to 0 will immediately request all tiles in any given view.
      * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
      * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
      * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
@@ -230,16 +233,17 @@ define([
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
         this._statistics = new Cesium3DTilesetStatistics();
-        this._statisticsLastPerPass = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
+        this._statisticsLast = new Cesium3DTilesetStatistics();
+        this._statisticsPerPass = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
 
         for (var i = 0; i < Cesium3DTilePass.NUMBER_OF_PASSES; ++i) {
-            this._statisticsLastPerPass[i] = new Cesium3DTilesetStatistics();
+            this._statisticsPerPass[i] = new Cesium3DTilesetStatistics();
         }
 
         this._requestedTilesInFlight = [];
 
-        this._maxPriority = { depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
-        this._minPriority = { depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
+        this._maxPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
+        this._minPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
         this.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, true);
         this.cullRequestsWhileMovingMultiplier = defaultValue(options.cullRequestsWhileMovingMultiplier, 60);
@@ -262,6 +266,23 @@ define([
         this._clippingPlanesOriginMatrixDirty = true;
 
         /**
+         * Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.preloadWhenHidden = defaultValue(options.preloadWhenHidden, false);
+
+        /**
+         * Optimization option. Fetch tiles at the camera's flight destination while the camera is in flight.
+         *
+         * @type {Boolean}
+         * @default true
+         */
+        this.preloadFlightDestinations = defaultValue(options.preloadFlightDestinations, true);
+        this._pass = undefined; // Cesium3DTilePass
+
+        /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
          * away will be rendered with lower detail than closer tiles. This improves performance by rendering fewer
          * tiles and making less requests, but may result in a slight drop in visual quality for tiles in the distance.
@@ -282,7 +303,7 @@ define([
          * @default true
          */
         this.foveatedScreenSpaceError = defaultValue(options.foveatedScreenSpaceError, true);
-        this._foveatedConeSize = defaultValue(options.foveatedConeSize, 0.3);
+        this._foveatedConeSize = defaultValue(options.foveatedConeSize, 0.1);
         this._foveatedMinimumScreenSpaceErrorRelaxation = defaultValue(options.foveatedMinimumScreenSpaceErrorRelaxation, 0);
 
         /**
@@ -291,6 +312,17 @@ define([
          * @type {Cesium3DTileset~foveatedInterpolationCallback} A callback to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}.
          */
         this.foveatedInterpolationCallback = defaultValue(options.foveatedInterpolationCallback, CesiumMath.lerp);
+
+        /**
+         * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control
+         * how long in seconds to wait after the camera stops moving before deferred tiles start loading in.
+         * This time delay prevents requesting tiles around the edges of the screen when the camera is moving.
+         * Setting it to 0 will immediately request all tiles in any given view.
+         *
+         * @type {Number}
+         * @default 0.2
+         */
+        this.foveatedTimeDelay = defaultValue(options.foveatedTimeDelay, 0.2);
 
         /**
          * A scalar that determines the density used to adjust the dynamic screen space error, similar to {@link Fog}. Increasing this
@@ -1654,7 +1686,53 @@ define([
         return a._priority - b._priority;
     }
 
-    function cancelOutOfViewRequestedTiles(tileset, frameState) {
+    /**
+     * Perform any pass invariant tasks here. Called after the render pass.
+     * @private
+     */
+    Cesium3DTileset.prototype.postPassesUpdate = function(frameState) {
+        cancelOutOfViewRequests(this, frameState);
+        raiseLoadProgressEvent(this, frameState);
+        this._cache.unloadTiles(this, unloadTile);
+        this._cache.reset();
+
+        var statistics = this._statisticsPerPass[Cesium3DTilePass.RENDER];
+        var credits = this._credits;
+        if (defined(credits) && statistics.selected !== 0) {
+            var length = credits.length;
+            for (var i = 0; i < length; i++) {
+                frameState.creditDisplay.addCredit(credits[i]);
+            }
+        }
+    };
+
+    /**
+     * Perform any pass invariant tasks here. Called before any passes are executed.
+     * @private
+     */
+    Cesium3DTileset.prototype.prePassesUpdate = function(frameState) {
+        processTiles(this, frameState);
+
+        // Update clipping planes
+        var clippingPlanes = this._clippingPlanes;
+        this._clippingPlanesOriginMatrixDirty = true;
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            clippingPlanes.update(frameState);
+        }
+
+        if (!defined(this._loadTimestamp)) {
+            this._loadTimestamp = JulianDate.clone(frameState.time);
+        }
+        this._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, this._loadTimestamp) * 1000, 0.0);
+
+        this._skipLevelOfDetail = this.skipLevelOfDetail && !defined(this._classificationType) && !this._disableSkipLevelOfDetail && !this._allTilesAdditive;
+
+        if (this.dynamicScreenSpaceError) {
+            updateDynamicScreenSpaceError(this, frameState);
+        }
+    };
+
+    function cancelOutOfViewRequests(tileset, frameState) {
         var requestedTilesInFlight = tileset._requestedTilesInFlight;
         var removeCount = 0;
         var length = requestedTilesInFlight.length;
@@ -2045,10 +2123,6 @@ define([
         tile.destroy();
     }
 
-    function unloadTiles(tileset) {
-        tileset._cache.unloadTiles(tileset, unloadTile);
-    }
-
     /**
      * Unloads all tiles that weren't selected the previous frame.  This can be used to
      * explicitly manage the tile cache and reduce the total number of tiles loaded below
@@ -2064,12 +2138,16 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function raiseLoadProgressEvent(tileset, frameState, statisticsLast) {
+    function raiseLoadProgressEvent(tileset, frameState) {
         var statistics = tileset._statistics;
+        var statisticsLast = tileset._statisticsLast;
+
         var numberOfPendingRequests = statistics.numberOfPendingRequests;
         var numberOfTilesProcessing = statistics.numberOfTilesProcessing;
         var lastNumberOfPendingRequest = statisticsLast.numberOfPendingRequests;
         var lastNumberOfTilesProcessing = statisticsLast.numberOfTilesProcessing;
+
+        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
 
         var progressChanged = (numberOfPendingRequests !== lastNumberOfPendingRequest) || (numberOfTilesProcessing !== lastNumberOfTilesProcessing);
 
@@ -2081,6 +2159,9 @@ define([
 
         tileset._tilesLoaded = (statistics.numberOfPendingRequests === 0) && (statistics.numberOfTilesProcessing === 0) && (statistics.numberOfAttemptedRequests === 0);
 
+        // Events are raised (added to the afterRender queue) here since promises
+        // may resolve outside of the update loop that then raise events, e.g.,
+        // model's readyPromise.
         if (progressChanged && tileset._tilesLoaded) {
             frameState.afterRender.push(function() {
                 tileset.allTilesLoaded.raiseEvent();
@@ -2104,42 +2185,19 @@ define([
 
     ///////////////////////////////////////////////////////////////////////////
 
-    function update(tileset, frameState, statisticsLast, passOptions) {
+    function update(tileset, frameState, passStatistics, passOptions) {
         if (frameState.mode === SceneMode.MORPHING) {
             return false;
         }
 
-        if (!tileset.show || !tileset.ready) {
+        if (!tileset.ready) {
             return false;
         }
-
-        if (!defined(tileset._loadTimestamp)) {
-            tileset._loadTimestamp = JulianDate.clone(frameState.time);
-        }
-
-        // Update clipping planes
-        var clippingPlanes = tileset._clippingPlanes;
-        tileset._clippingPlanesOriginMatrixDirty = true;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
-            clippingPlanes.update(frameState);
-        }
-
-        tileset._timeSinceLoad = Math.max(JulianDate.secondsDifference(frameState.time, tileset._loadTimestamp) * 1000, 0.0);
-
-        tileset._skipLevelOfDetail = tileset.skipLevelOfDetail && !defined(tileset._classificationType) && !tileset._disableSkipLevelOfDetail && !tileset._allTilesAdditive;
 
         var statistics = tileset._statistics;
         statistics.clear();
 
-        if (tileset.dynamicScreenSpaceError) {
-            updateDynamicScreenSpaceError(tileset, frameState);
-        }
-
         var isRender = passOptions.isRender;
-
-        if (isRender) {
-            tileset._cache.reset();
-        }
 
         // Resets the visibility check for each pass
         ++tileset._updatedVisibilityFrame;
@@ -2149,41 +2207,14 @@ define([
 
         var ready = passOptions.traversal.selectTiles(tileset, frameState);
 
-        if (isRender) {
-            cancelOutOfViewRequestedTiles(tileset, frameState);
-        }
-
         if (passOptions.requestTiles) {
             requestTiles(tileset);
         }
 
-        if (isRender) {
-            processTiles(tileset, frameState);
-        }
-
         updateTiles(tileset, frameState, isRender);
 
-        if (isRender) {
-            unloadTiles(tileset);
-
-            // Events are raised (added to the afterRender queue) here since promises
-            // may resolve outside of the update loop that then raise events, e.g.,
-            // model's readyPromise.
-            raiseLoadProgressEvent(tileset, frameState, statisticsLast);
-
-            if (statistics.selected !== 0) {
-                var credits = tileset._credits;
-                if (defined(credits)) {
-                    var length = credits.length;
-                    for (var i = 0; i < length; i++) {
-                        frameState.creditDisplay.addCredit(credits[i]);
-                    }
-                }
-            }
-        }
-
-        // Update last statistics
-        Cesium3DTilesetStatistics.clone(statistics, statisticsLast);
+        // Update pass statistics
+        Cesium3DTilesetStatistics.clone(statistics, passStatistics);
 
         return ready;
     }
@@ -2211,6 +2242,7 @@ define([
         tilesetPassState.ready = false;
 
         var pass = tilesetPassState.pass;
+
         var passOptions = Cesium3DTilePass.getPassOptions(pass);
         var ignoreCommands = passOptions.ignoreCommands;
 
@@ -2221,9 +2253,12 @@ define([
         frameState.camera = defaultValue(tilesetPassState.camera, originalCamera);
         frameState.cullingVolume = defaultValue(tilesetPassState.cullingVolume, originalCullingVolume);
 
-        var statisticsLast = this._statisticsLastPerPass[pass];
+        var passStatistics = this._statisticsPerPass[pass];
 
-        tilesetPassState.ready = update(this, frameState, statisticsLast, passOptions);
+        if (this.show || ignoreCommands) {
+            this._pass = pass;
+            tilesetPassState.ready = update(this, frameState, passStatistics, passOptions);
+        }
 
         if (ignoreCommands) {
             commandList.length = commandStart;

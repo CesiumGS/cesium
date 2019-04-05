@@ -195,10 +195,12 @@ define([
     }
 
     function updateMinMaxPriority(tileset, tile) {
-        tileset._maxPriority.distance = Math.max(tile._priorityDistanceHolder._priorityDistance, tileset._maxPriority.distance);
-        tileset._minPriority.distance = Math.min(tile._priorityDistanceHolder._priorityDistance, tileset._minPriority.distance);
+        tileset._maxPriority.distance = Math.max(tile._priorityHolder._distanceToCamera, tileset._maxPriority.distance);
+        tileset._minPriority.distance = Math.min(tile._priorityHolder._distanceToCamera, tileset._minPriority.distance);
         tileset._maxPriority.depth = Math.max(tile._depth, tileset._maxPriority.depth);
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
+        tileset._maxPriority.foveatedFactor = Math.max(tile._priorityHolder._foveatedFactor, tileset._maxPriority.foveatedFactor);
+        tileset._minPriority.foveatedFactor = Math.min(tile._priorityHolder._foveatedFactor, tileset._minPriority.foveatedFactor);
     }
 
     function isOnScreenLongEnough(tileset, tile, frameState) {
@@ -221,11 +223,6 @@ define([
             return;
         }
 
-        if (!hasUnloadedContent(tile) && !tile.contentExpired) {
-            // Comment this early return out for better heatmap debugging (so that it gets updated every frame)
-            return;
-        }
-
         tile._priorityProgressiveResolution = tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError; // Mark non-SSE leaves
         var parent = tile.parent;
         var maxSSE = tileset._maximumScreenSpaceError;
@@ -238,11 +235,21 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
-        // Can go inside the if but put out here for debug viewing (updated every frame)
-        if (tile._requestedFrame !== frameState.frameNumber && (hasUnloadedContent(tile) || tile.contentExpired) && isOnScreenLongEnough(tileset, tile, frameState)) {
-            tile._requestedFrame = frameState.frameNumber;
-            tileset._requestedTiles.push(tile);
+        if (tile._requestedFrame !== frameState.frameNumber && !hasUnloadedContent(tile) && !tile.contentExpired) {
+            return;
         }
+
+        if (!isOnScreenLongEnough(tileset, tile, frameState)) {
+            return;
+        }
+
+        var cameraHasNotStoppedMovingLongEnough = frameState.camera.timeSinceMoved < tileset.foveatedTimeDelay;
+        if (tile.priorityDeferred && cameraHasNotStoppedMovingLongEnough) {
+            return;
+        }
+
+        tile._requestedFrame = frameState.frameNumber;
+        tileset._requestedTiles.push(tile);
     }
 
     function updateVisibility(tileset, tile, frameState) {
@@ -320,8 +327,7 @@ define([
 
         // Request priority
         tile._wasMinPriorityChild = false;
-        tile._priorityDistance = tile._distanceToCamera;
-        tile._priorityDistanceHolder = tile;
+        tile._priorityHolder = tile;
         updateMinMaxPriority(tileset, tile);
         tile._priorityProgressiveResolution = false;
 
@@ -392,24 +398,26 @@ define([
 
         // Determining min child
         var minIndex = -1;
-        var minPriorityDistance = Number.MAX_VALUE;
+        var minPriority = Number.MAX_VALUE;
+        var mainPriorityName = '_foveatedFactor';
+        var secondaryPriorityName = '_distanceToCamera';
 
         var child;
         for (i = 0; i < length; ++i) {
             child = children[i];
             if (isVisible(child)) {
                 stack.push(child);
-                if (child._priorityDistance < minPriorityDistance) {
+                if (child[mainPriorityName] < minPriority) {
                     minIndex = i;
-                    minPriorityDistance = child._priorityDistance;
+                    minPriority = child[mainPriorityName];
                 }
                 anyChildrenVisible = true;
             } else if (checkRefines || tileset.loadSiblings) {
                 // Keep non-visible children loaded since they are still needed before the parent can refine.
                 // Or loadSiblings is true so always load tiles regardless of visibility.
-                if (child._priorityDistance < minPriorityDistance) {
+                if (child[mainPriorityName] < minPriority) {
                     minIndex = i;
-                    minPriorityDistance = child._priorityDistance;
+                    minPriority = child[mainPriorityName];
                 }
                 loadTile(tileset, child, frameState);
                 touchTile(tileset, child, frameState);
@@ -431,17 +439,18 @@ define([
             refines = false;
         }
 
-        if (minIndex !== -1) {
-            // An ancestor will hold the _priorityDistance for descendants between itself and its highest priority descendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
-            // Priority of all tiles that refer to the _priorityDistance stored in the common ancestor will be differentiated based on their _depth.
+        if (minIndex !== -1 && !skipLevelOfDetail(tileset) && replace) {
+            // An ancestor will hold the _foveatedFactor and _distanceToCamera for descendants between itself and its highest priority descendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
+            // Priority of all tiles that refer to the _foveatedFactor and _distanceToCamera stored in the common ancestor will be differentiated based on their _depth.
             var minPriorityChild = children[minIndex];
             minPriorityChild._wasMinPriorityChild = true;
-            var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) ? tile._priorityDistanceHolder : tile; // This is where priority dependency chains are wired up or started anew.
-            priorityHolder._priorityDistance = Math.min(minPriorityChild._priorityDistance, priorityHolder._priorityDistance);
+            var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) && minPriority <= tile._priorityHolder[mainPriorityName] ? tile._priorityHolder : tile; // This is where priority dependency chains are wired up or started anew.
+            priorityHolder[mainPriorityName] = Math.min(minPriorityChild[mainPriorityName], priorityHolder[mainPriorityName]);
+            priorityHolder[secondaryPriorityName] = Math.min(minPriorityChild[secondaryPriorityName], priorityHolder[secondaryPriorityName]);
 
             for (i = 0; i < length; ++i) {
                 child = children[i];
-                child._priorityDistanceHolder = priorityHolder;
+                child._priorityHolder = priorityHolder;
             }
         }
 

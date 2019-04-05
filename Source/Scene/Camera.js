@@ -12,6 +12,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/EllipsoidGeodesic',
         '../Core/Event',
+        '../Core/getTimestamp',
         '../Core/HeadingPitchRange',
         '../Core/HeadingPitchRoll',
         '../Core/Intersect',
@@ -43,6 +44,7 @@ define([
         Ellipsoid,
         EllipsoidGeodesic,
         Event,
+        getTimestamp,
         HeadingPitchRange,
         HeadingPitchRoll,
         Intersect,
@@ -130,6 +132,14 @@ define([
          * @private
          */
         this.positionWCDeltaMagnitudeLastFrame = 0;
+
+        /**
+         * How long in seconds since the camera has stopped moving
+         *
+         * @private
+         */
+        this.timeSinceMoved = 0;
+        this._lastMovedTimestamp = 0;
 
         /**
          * The view direction of the camera.
@@ -298,8 +308,27 @@ define([
             var delta = Cartesian3.subtract(camera.positionWC, camera._oldPositionWC, camera._oldPositionWC);
             camera.positionWCDeltaMagnitude = Cartesian3.magnitude(delta);
             camera._oldPositionWC = Cartesian3.clone(camera.positionWC, camera._oldPositionWC);
+
+            // Update move timers
+            if (camera.positionWCDeltaMagnitude > 0) {
+                camera.timeSinceMoved = 0;
+                camera._lastMovedTimestamp = getTimestamp();
+            } else {
+                camera.timeSinceMoved = Math.max(getTimestamp() - camera._lastMovedTimestamp, 0.0) / 1000;
+            }
         }
     }
+
+    /**
+     * Checks there's a camera flight for this camera.
+     *
+     * @private
+     * @returns {Boolean} Whether or not this camera has a current flight with a valid preloadFlightCamera in scene.
+     */
+    Camera.prototype.hasCurrentFlight = function() {
+        // The preload flight camera defined check only here since it can be set to undefined when not 3D mode.
+        return defined(this._currentFlight) && defined(this._scene.preloadFlightCamera);
+    };
 
     Camera.prototype._updateCameraChanged = function() {
         var camera = this;
@@ -1809,8 +1838,8 @@ define([
     var rotateVertScratchNegate = new Cartesian3();
     function rotateVertical(camera, angle) {
         var position = camera.position;
-        var p = Cartesian3.normalize(position, rotateVertScratchP);
-        if (defined(camera.constrainedAxis)) {
+        if (defined(camera.constrainedAxis) && !Cartesian3.equalsEpsilon(camera.position, Cartesian3.ZERO, CesiumMath.EPSILON2)) {
+            var p = Cartesian3.normalize(position, rotateVertScratchP);
             var northParallel = Cartesian3.equalsEpsilon(p, camera.constrainedAxis, CesiumMath.EPSILON2);
             var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(camera.constrainedAxis, rotateVertScratchNegate), CesiumMath.EPSILON2);
             if ((!northParallel && !southParallel)) {
@@ -2887,6 +2916,19 @@ define([
         var scene = this._scene;
         flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
         this._currentFlight = flightTween;
+
+        // Save the final destination view information for the PRELOAD_FLIGHT pass.
+        var preloadFlightCamera = this._scene.preloadFlightCamera;
+        if (this._mode !== SceneMode.SCENE2D) {
+            if (!defined(preloadFlightCamera)) {
+                preloadFlightCamera = Camera.clone(this);
+            }
+            preloadFlightCamera.setView({ destination: destination, orientation: orientation });
+
+            this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
+        } else {
+            preloadFlightCamera = undefined;
+        }
     };
 
     function distanceToBoundingSphere3D(camera, radius) {
