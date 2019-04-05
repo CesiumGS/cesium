@@ -730,7 +730,6 @@ define([
             return false;
         }
 
-
         var isProgressiveResolutionTile = tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError; // Mark non-SSE leaves
         tile._priorityProgressiveResolutionSSELeaf = false; // Needed for skipLOD
         var parent = tile.parent;
