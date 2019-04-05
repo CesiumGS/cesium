@@ -4194,7 +4194,7 @@ define([
         var that = this;
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return deferPromiseUntilPostRender(this, launchAsyncRayPick(this, ray, objectsToExclude, width, function() {
+        return deferPromiseUntilPostRender(this, launchMostDetailedRayPick(this, ray, objectsToExclude, width, function() {
             return pickFromRay(that, ray, objectsToExclude, width, false, true);
         }));
     };
@@ -4223,7 +4223,7 @@ define([
         var that = this;
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return deferPromiseUntilPostRender(this, launchAsyncRayPick(this, ray, objectsToExclude, width, function() {
+        return deferPromiseUntilPostRender(this, launchMostDetailedRayPick(this, ray, objectsToExclude, width, function() {
             return drillPickFromRay(that, ray, limit, objectsToExclude, width, false, true);
         }));
     };
