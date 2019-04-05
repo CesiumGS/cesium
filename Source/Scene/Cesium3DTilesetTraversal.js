@@ -235,7 +235,7 @@ define([
     }
 
     function loadTile(tileset, tile, frameState) {
-        if (tile._requestedFrame !== frameState.frameNumber && !hasUnloadedContent(tile) && !tile.contentExpired) {
+        if (tile._requestedFrame === frameState.frameNumber || (!hasUnloadedContent(tile) && !tile.contentExpired)) {
             return;
         }
 

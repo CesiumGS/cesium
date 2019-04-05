@@ -379,7 +379,7 @@ defineSuite([
         tile1.updatePriority();
         tile2.updatePriority();
 
-        var nonPreloadFlightPenalty = 1000000;
+        var nonPreloadFlightPenalty = 10000000;
         var tile1ExpectedPriority = nonPreloadFlightPenalty + 0;
         var tile2ExpectedPriority = nonPreloadFlightPenalty + 1;
         expect(CesiumMath.equalsEpsilon(tile1._priority, tile1ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
