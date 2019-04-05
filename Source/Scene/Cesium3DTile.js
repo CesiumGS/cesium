@@ -724,6 +724,22 @@ define([
         return error;
     };
 
+    function isPriorityProgressiveResolution(tileset, tile, frameState) {
+        if (tileset.progressiveResolutionHeightFraction <= 0 || tileset.progressiveResolutionHeightFraction > 0.5) {
+            return;
+        }
+
+        var isProgressiveResolutionTile = !tileset._skipLevelOfDetail && (tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError); // Mark non-SSE leaves when doing non-skipLOD
+        var parent = tile.parent;
+        var maxSSE = tileset._maximumScreenSpaceError;
+        var tilePasses = tile._screenSpaceErrorProgressiveResolution <= maxSSE;
+        var parentFails = defined(parent) && parent._screenSpaceErrorProgressiveResolution > maxSSE;
+        if (tilePasses && parentFails) { // A progressive resolution SSE leaf, promote its priority as well
+            isProgressiveResolutionTile = true;
+        }
+        return isProgressiveResolutionTile;
+    }
+
     /**
      * Update the tile's visibility.
      *
@@ -743,6 +759,7 @@ define([
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
         this.priorityDeferred = isPriorityDeferred(this, frameState);
+        this._priorityProgressiveResolution = isPriorityProgressiveResolution(tileset, this, frameState);
     };
 
     /**

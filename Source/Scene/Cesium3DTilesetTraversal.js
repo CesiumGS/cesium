@@ -218,22 +218,6 @@ define([
         return movementRatio < 1;
     }
 
-    function progressiveResolutionStoppedRefining(tileset, tile, frameState) {
-        if (tileset.progressiveResolutionHeightFraction <= 0 || tileset.progressiveResolutionHeightFraction > 0.5) {
-            return;
-        }
-
-        tile._priorityProgressiveResolution = tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError; // Mark non-SSE leaves
-        var parent = tile.parent;
-        var maxSSE = tileset._maximumScreenSpaceError;
-        var tilePasses = tile._screenSpaceErrorProgressiveResolution <= maxSSE;
-        var parentFails = defined(parent) && parent._screenSpaceErrorProgressiveResolution > maxSSE;
-        if (tilePasses && parentFails) { // A progressive resolution SSE leaf, load and promote its priority
-            tile._priorityProgressiveResolution = true;
-            loadTile(tileset, tile, frameState);
-        }
-    }
-
     function loadTile(tileset, tile, frameState) {
         if (tile._requestedFrame === frameState.frameNumber || (!hasUnloadedContent(tile) && !tile.contentExpired)) {
             return;
@@ -362,9 +346,10 @@ define([
     function reachedSkippingThreshold(tileset, tile) {
         var ancestor = tile._ancestorWithContent;
         return !tileset.immediatelyLoadDesiredLevelOfDetail &&
-               defined(ancestor) &&
+               (tile._priorityProgressiveResolution ||
+               (defined(ancestor) &&
                (tile._screenSpaceError < (ancestor._screenSpaceError / tileset.skipScreenSpaceErrorFactor)) &&
-               (tile._depth > (ancestor._depth + tileset.skipLevels));
+               (tile._depth > (ancestor._depth + tileset.skipLevels))));
     }
 
     function sortChildrenByDistanceToCamera(a, b) {
@@ -515,9 +500,6 @@ define([
             }
 
             var stoppedRefining = !refines && parentRefines;
-
-            // Load progressive screen resolution SSE leaves
-            progressiveResolutionStoppedRefining(tileset, tile, frameState);
 
             if (hasEmptyContent(tile)) {
                 // Add empty tile just to show its debug bounding volume
