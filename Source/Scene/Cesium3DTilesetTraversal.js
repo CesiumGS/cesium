@@ -345,7 +345,7 @@ define([
     function reachedSkippingThreshold(tileset, tile) {
         var ancestor = tile._ancestorWithContent;
         return !tileset.immediatelyLoadDesiredLevelOfDetail &&
-               (tile._priorityProgressiveResolution ||
+               (tile._priorityProgressiveResolutionSSELeaf ||
                (defined(ancestor) &&
                (tile._screenSpaceError < (ancestor._screenSpaceError / tileset.skipScreenSpaceErrorFactor)) &&
                (tile._depth > (ancestor._depth + tileset.skipLevels))));

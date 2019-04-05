@@ -357,6 +357,7 @@ define([
         this._priority = 0.0; // The priority used for request sorting
         this._priorityHolder = this; // Reference to the ancestor up the tree that holds the _foveatedFactor and _distanceToCamera for all tiles in the refinement chain.
         this._priorityProgressiveResolution = false;
+        this._priorityProgressiveResolutionSSELeaf = false;
         this._foveatedFactor = 0;
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
 
@@ -729,13 +730,15 @@ define([
             return false;
         }
 
-        var isProgressiveResolutionTile = !tileset._skipLevelOfDetail && (tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError); // Mark non-SSE leaves when doing non-skipLOD
-        // var isProgressiveResolutionTile = tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError; // Mark non-SSE leaves
+
+        var isProgressiveResolutionTile = tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError; // Mark non-SSE leaves
+        tile._priorityProgressiveResolutionSSELeaf = false; // Needed for skipLOD
         var parent = tile.parent;
         var maxSSE = tileset._maximumScreenSpaceError;
         var tilePasses = tile._screenSpaceErrorProgressiveResolution <= maxSSE;
         var parentFails = defined(parent) && parent._screenSpaceErrorProgressiveResolution > maxSSE;
         if (tilePasses && parentFails) { // A progressive resolution SSE leaf, promote its priority as well
+            tile._priorityProgressiveResolutionSSELeaf = true;
             isProgressiveResolutionTile = true;
         }
         return isProgressiveResolutionTile;
