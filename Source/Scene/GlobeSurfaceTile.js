@@ -201,12 +201,7 @@ define([
     };
 
     GlobeSurfaceTile.prototype.pickTriangle = function(ray, mode, projection, cullBackFaces) {
-        var terrain = this.pickTerrain;
-        if (!defined(terrain)) {
-            return undefined;
-        }
-
-        var mesh = terrain.mesh;
+        var mesh = this.renderedMesh;
         if (!defined(mesh)) {
             return undefined;
         }
