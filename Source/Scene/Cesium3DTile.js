@@ -726,7 +726,7 @@ define([
 
     function isPriorityProgressiveResolution(tileset, tile, frameState) {
         if (tileset.progressiveResolutionHeightFraction <= 0 || tileset.progressiveResolutionHeightFraction > 0.5) {
-            return;
+            return false;
         }
 
         var isProgressiveResolutionTile = !tileset._skipLevelOfDetail && (tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError); // Mark non-SSE leaves when doing non-skipLOD
