@@ -14,7 +14,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidGeometry',
@@ -98,7 +97,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         EllipsoidGeometry,
@@ -3981,6 +3979,19 @@ define([
         return getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, asynchronous);
     }
 
+    function deferPromiseUntilPostRender(scene, promise) {
+        // Resolve promise after scene's postRender in case entities are created when the promise resolves.
+        // Entities can't be created between viewer._onTick and viewer._postRender.
+        var deferred = when.defer();
+        promise.then(function(result) {
+            var removeCallback = scene.postRender.addEventListener(function() {
+                deferred.resolve(result);
+                removeCallback();
+            });
+        });
+        return deferred.promise;
+    }
+
     /**
      * Returns an object containing the first object intersected by the ray and the position of intersection,
      * or <code>undefined</code> if there were no intersections. The intersected object has a <code>primitive</code>
@@ -4064,9 +4075,9 @@ define([
         var that = this;
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return launchAsyncRayPick(this, ray, objectsToExclude, width, function() {
+        return deferPromiseUntilPostRender(this, launchAsyncRayPick(this, ray, objectsToExclude, width, function() {
             return pickFromRay(that, ray, objectsToExclude, width, false, true);
-        });
+        }));
     };
 
     /**
@@ -4093,9 +4104,9 @@ define([
         var that = this;
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return launchAsyncRayPick(this, ray, objectsToExclude, width, function() {
+        return deferPromiseUntilPostRender(this, launchAsyncRayPick(this, ray, objectsToExclude, width, function() {
             return drillPickFromRay(that, ray, limit, objectsToExclude, width, false, true);
-        });
+        }));
     };
 
     var scratchSurfacePosition = new Cartesian3();
@@ -4233,12 +4244,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (width instanceof Cartesian3) {
-            result = width;
-            width = undefined;
-            deprecationWarning('clampToHeight-parameter-change', 'clampToHeight now takes an optional width argument before the result argument in Cesium 1.54.  The previous function definition will no longer work in 1.56.');
-        }
-
         var ray = getRayForClampToHeight(this, cartesian);
         var pickResult = pickFromRay(this, ray, objectsToExclude, width, true, false);
         if (defined(pickResult)) {
@@ -4290,13 +4295,13 @@ define([
         for (var i = 0; i < length; ++i) {
             promises[i] = sampleHeightMostDetailed(this, positions[i], objectsToExclude, width);
         }
-        return when.all(promises).then(function(heights) {
+        return deferPromiseUntilPostRender(this, when.all(promises).then(function(heights) {
             var length = heights.length;
             for (var i = 0; i < length; ++i) {
                 positions[i].height = heights[i];
             }
             return positions;
-        });
+        }));
     };
 
     /**
@@ -4342,13 +4347,13 @@ define([
         for (var i = 0; i < length; ++i) {
             promises[i] = clampToHeightMostDetailed(this, cartesians[i], objectsToExclude, width, cartesians[i]);
         }
-        return when.all(promises).then(function(clampedCartesians) {
+        return deferPromiseUntilPostRender(this, when.all(promises).then(function(clampedCartesians) {
             var length = clampedCartesians.length;
             for (var i = 0; i < length; ++i) {
                 cartesians[i] = clampedCartesians[i];
             }
             return cartesians;
-        });
+        }));
     };
 
     /**

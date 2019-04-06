@@ -90,7 +90,9 @@ define([
         }
 
         resource.fetchImage({
-            preferBlob : true
+            preferBlob : true,
+            preferImageBitmap : true,
+            flipY : true
         }).then(success).otherwise(failure);
     }
 

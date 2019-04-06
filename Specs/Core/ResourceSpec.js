@@ -191,7 +191,7 @@ defineSuite([
         expect(derived.url).toEqual('http://test.com/tileset/other_endpoint?a=5&a=7&a=1&a=2&a=4&b=6&b=3');
     });
 
-    it('templateValues are respected', function() {
+    it('replaces templateValues in the url', function() {
         var resource = new Resource({
             url: 'http://test.com/tileset/{foo}/{bar}',
             templateValues: {
@@ -201,6 +201,38 @@ defineSuite([
         });
 
         expect(resource.url).toEqual('http://test.com/tileset/test1/test2');
+    });
+
+    it('replaces numeric templateValues', function() {
+        var resource = new Resource({
+            url: 'http://test.com/tileset/{0}/{1}',
+            templateValues: {
+                '0': 'test1',
+                '1': 'test2'
+            }
+        });
+
+        expect(resource.url).toEqual('http://test.com/tileset/test1/test2');
+    });
+
+    it('leaves templateValues unchanged that are not provided', function() {
+        var resource = new Resource({
+            url: 'http://test.com/tileset/{foo}/{bar}'
+        });
+
+        expect(resource.url).toEqual('http://test.com/tileset/{foo}/{bar}');
+    });
+
+    it('url encodes replacement templateValues in the url', function() {
+        var resource = new Resource({
+            url: 'http://test.com/tileset/{foo}/{bar}',
+            templateValues: {
+                foo: 'a/b',
+                bar: 'x$y#'
+            }
+        });
+
+        expect(resource.url).toEqual('http://test.com/tileset/a%2Fb/x%24y%23');
     });
 
     it('getDerivedResource sets correct properties', function() {
@@ -1136,6 +1168,13 @@ defineSuite([
             });
     });
 
+    it('can load an SVG', function() {
+        return Resource.fetchImage('./Data/Images/Red16x16.svg').then(function(loadedImage) {
+            expect(loadedImage.width).toEqual(16);
+            expect(loadedImage.height).toEqual(16);
+        });
+    });
+
     it('can load an image preferring blob', function() {
         return Resource.fetchImage('./Data/Images/Green.png', true).then(function(loadedImage) {
             expect(loadedImage.width).toEqual(1);
@@ -1151,10 +1190,6 @@ defineSuite([
     });
 
     describe('fetchImage with ImageBitmap', function() {
-        if (!supportsImageBitmapOptions) {
-            return;
-        }
-
         var canvas;
         beforeAll(function() {
             canvas = createCanvas(1, 2);
@@ -1172,6 +1207,10 @@ defineSuite([
         }
 
         it('can call supportsImageBitmapOptions', function() {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
             return Resource.supportsImageBitmapOptions()
                 .then(function(result) {
                     expect(typeof result).toEqual('boolean');
@@ -1179,7 +1218,14 @@ defineSuite([
         });
 
         it('can load and decode an image', function() {
-            return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
+            return Resource.fetchImage({
+                url: './Data/Images/Green.png',
+                preferImageBitmap: true
+            }).then(function(loadedImage) {
                 expect(loadedImage.width).toEqual(1);
                 expect(loadedImage.height).toEqual(1);
                 expect(loadedImage instanceof ImageBitmap);
@@ -1187,11 +1233,16 @@ defineSuite([
         });
 
         it('correctly flips image when ImageBitmapOptions are supported', function() {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
             var loadedImage;
 
             return Resource.fetchImage({
                 url: './Data/Images/BlueOverRed.png',
-                flipY: true
+                flipY: true,
+                preferImageBitmap: true
             }).then(function(image) {
                 loadedImage = image;
                 return Resource.supportsImageBitmapOptions();
@@ -1205,11 +1256,16 @@ defineSuite([
         });
 
         it('correctly loads image without flip when ImageBitmapOptions are supported', function() {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
             var loadedImage;
 
             return Resource.fetchImage({
                 url: './Data/Images/BlueOverRed.png',
-                flipY: false
+                flipY: false,
+                preferImageBitmap: true
              }).then(function(image) {
                 loadedImage = image;
                 return Resource.supportsImageBitmapOptions();
@@ -1223,16 +1279,30 @@ defineSuite([
         });
 
         it('does not use ImageBitmap when ImageBitmapOptions are not supported', function() {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
             spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
             spyOn(window, 'createImageBitmap').and.callThrough();
 
-            return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
+            return Resource.fetchImage({
+                url: './Data/Images/Green.png',
+                preferImageBitmap: true
+            }).then(function(loadedImage) {
                 expect(window.createImageBitmap).not.toHaveBeenCalledWith();
             });
         });
 
         it('rejects the promise when the image errors', function() {
-            return Resource.fetchImage('http://example.invalid/testuri.png')
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
+            return Resource.fetchImage({
+                url: 'http://example.invalid/testuri.png',
+                preferImageBitmap: true
+            })
                 .then(function() {
                     fail('expected promise to reject');
                 })
