@@ -21,7 +21,7 @@ define([
         AERIAL : 'Aerial',
 
         /**
-         * Aerial imagery with a road overlay.
+         * Aerial imagery with a road overlay, using the legacy static tile service.
          *
          * @type {String}
          * @constant
@@ -29,12 +29,28 @@ define([
         AERIAL_WITH_LABELS : 'AerialWithLabels',
 
         /**
-         * Roads without additional imagery.
+         * Aerial imagery with a road overlay, using the dynamic tile service.
+         *
+         * @type {String}
+         * @constant
+         */
+        AERIAL_WITH_LABELS_ON_DEMAND : 'AerialWithLabelsOnDemand',
+
+        /**
+         * Roads without additional imagery, using the legacy static tile service.
          *
          * @type {String}
          * @constant
          */
         ROAD : 'Road',
+
+        /**
+         * Roads without additional imagery, using the dynamic tile service.
+         *
+         * @type {String}
+         * @constant
+         */
+        ROAD_ON_DEMAND : 'RoadOnDemand',
 
         /**
          * A dark version of the road maps.
