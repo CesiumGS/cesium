@@ -4,8 +4,8 @@ Change Log
 ### 1.57 - 2019-05-01
 
 ##### Fixes :wrench:
-
 * Fixed an error where `clampToHeightMostDetailed` or `sampleHeightMostDetailed` would crash if entities were created when the promise resolved. [#7690](https://github.com/AnalyticalGraphicsInc/cesium/pull/7690)
+* Fixed an issue with compositing merged entity availability. [#7717](https://github.com/AnalyticalGraphicsInc/cesium/issues/7717)
 
 ### 1.56.1 - 2019-04-02
 
