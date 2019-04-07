@@ -2105,7 +2105,7 @@ define([
             drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
 
             if (isOutline) {
-                drawFS = drawFS.replace('    czm_writeLogDepth();',
+                drawFS = drawFS.replace('czm_writeLogDepth();',
                     '    czm_writeLogDepth();\n' +
                     '#if defined(LOG_DEPTH) && !defined(DISABLE_LOG_DEPTH_FRAGMENT_WRITE)\n' +
                     '    gl_FragDepthEXT -= 5e-5;\n' +
@@ -2198,6 +2198,15 @@ define([
         if (!FeatureDetection.isInternetExplorer()) {
             drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
             drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+
+            var isOutline = program.isOutline;
+            if (isOutline) {
+                drawFS = drawFS.replace('czm_writeLogDepth();',
+                    '    czm_writeLogDepth();\n' +
+                    '#if defined(LOG_DEPTH) && !defined(DISABLE_LOG_DEPTH_FRAGMENT_WRITE)\n' +
+                    '    gl_FragDepthEXT -= 5e-5;\n' +
+                    '#endif');
+            }
         }
 
         if (!defined(model._uniformMapLoaded)) {
