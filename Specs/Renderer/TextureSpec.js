@@ -39,7 +39,7 @@ defineSuite([
     var blueImage;
     var blueAlphaImage;
     var blueOverRedImage;
-    var blueOverRedUnflippedImage;
+    var blueOverRedFlippedImage;
     var red16x16Image;
 
     var greenDXTImage;
@@ -71,12 +71,12 @@ defineSuite([
         promises.push(Resource.fetchImage('./Data/Images/BlueOverRed.png').then(function(image) {
             blueOverRedImage = image;
         }));
-        // Turn off the default flipping.
+        // Load this image as an ImageBitmap
         promises.push(Resource.fetchImage({
             url: './Data/Images/BlueOverRed.png',
-            flipY: false
+            preferImageBitmap: true
         }).then(function(image) {
-            blueOverRedUnflippedImage = image;
+            blueOverRedFlippedImage = image;
         }));
         promises.push(Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
             red16x16Image = image;
@@ -196,7 +196,7 @@ defineSuite([
         }).contextToRender([0, 0, 255, 255]);
     });
 
-    it('can flip texture only if ImageBitmapOptions is not supported', function() {
+    it('cannot flip texture when using ImageBitmap', function() {
         var topColor = new Color(0.0, 0.0, 1.0, 1.0);
         var bottomColor = new Color(1.0, 0.0, 0.0, 1.0);
 
@@ -209,7 +209,7 @@ defineSuite([
 
                 texture = new Texture({
                     context : context,
-                    source : blueOverRedUnflippedImage,
+                    source : blueOverRedFlippedImage,
                     pixelFormat : PixelFormat.RGBA,
                     flipY : false
                 });
@@ -223,7 +223,7 @@ defineSuite([
                 // Flip the texture.
                 texture = new Texture({
                     context : context,
-                    source : blueOverRedUnflippedImage,
+                    source : blueOverRedFlippedImage,
                     pixelFormat : PixelFormat.RGBA,
                     flipY : true
                 });

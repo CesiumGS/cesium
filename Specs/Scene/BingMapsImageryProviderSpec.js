@@ -185,7 +185,7 @@ defineSuite([
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
             } else {
                 if (defined(expectedUrl)) {
                     var uri = new Uri(url);
