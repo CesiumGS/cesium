@@ -282,6 +282,18 @@ define([
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
 
         /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the texture atlas for this BillboardCollection as a fullscreen quad.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugTextureAtlas = defaultValue(options.debugTextureAtlas, false);
+
+        /**
          * The billboard blending option. The default is used for rendering both opaque and translucent billboards.
          * However, if either all of the billboards are completely opaque or all are completely translucent,
          * setting the technique to BlendOption.OPAQUE or BlendOption.TRANSLUCENT can improve
@@ -1420,6 +1432,26 @@ define([
         boundingVolume.radius += size + offset;
     }
 
+    function createDebugCommand(billboardCollection, context) {
+        var fs;
+        fs = 'uniform sampler2D billboard_texture; \n' +
+             'varying vec2 v_textureCoordinates; \n' +
+             'void main() \n' +
+             '{ \n' +
+             '    gl_FragColor = texture2D(billboard_texture, v_textureCoordinates); \n' +
+             '} \n';
+
+        var drawCommand = context.createViewportQuadCommand(fs, {
+            uniformMap : {
+                billboard_texture : function() {
+                    return billboardCollection._textureAtlas.texture;
+                }
+            }
+        });
+        drawCommand.pass = Pass.OVERLAY;
+        return drawCommand;
+    }
+
     var scratchWriterArray = [];
 
     /**
@@ -1859,6 +1891,14 @@ define([
                 }
 
                 commandList.push(command);
+            }
+
+            if (this.debugTextureAtlas) {
+                if (this.debugCommand === undefined) {
+                    this.debugCommand = createDebugCommand(this, frameState.context);
+                }
+
+                commandList.push(this.debugCommand);
             }
         }
     };
