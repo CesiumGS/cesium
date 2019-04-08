@@ -252,6 +252,8 @@ define([
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
      * </li>
      * </ul>
      * </p>
@@ -1296,6 +1298,8 @@ define([
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
      * </li>
      * </ul>
      * </p>
@@ -2379,24 +2383,67 @@ define([
 
         var rendererSamplers = model._rendererResources.samplers;
         var sampler = rendererSamplers[texture.sampler];
-        sampler = defaultValue(sampler, new Sampler({
-            wrapS : TextureWrap.REPEAT,
-            wrapT : TextureWrap.REPEAT
-        }));
+        if (!defined(sampler)) {
+            sampler = new Sampler({
+                wrapS : TextureWrap.REPEAT,
+                wrapT : TextureWrap.REPEAT
+            });
+        }
+
+        var usesTextureTransform = false;
+        var materials = model.gltf.materials;
+        var materialsLength = materials.length;
+        for (var i = 0; i < materialsLength; ++i) {
+            var material = materials[i];
+            if (defined(material.extensions) && defined(material.extensions.KHR_techniques_webgl)) {
+                var values = material.extensions.KHR_techniques_webgl.values;
+                for (var valueName in values) {
+                    if (values.hasOwnProperty(valueName) && valueName.indexOf('Texture') !== -1) {
+                        var value = values[valueName];
+                        if (value.index === gltfTexture.id && defined(value.extensions) && defined(value.extensions.KHR_texture_transform)) {
+                            usesTextureTransform = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (usesTextureTransform) {
+                break;
+            }
+        }
+
+        var wrapS = sampler.wrapS;
+        var wrapT = sampler.wrapT;
+        var minFilter = sampler.minificationFilter;
+
+        if (usesTextureTransform && minFilter !== TextureMinificationFilter.LINEAR && minFilter !== TextureMinificationFilter.NEAREST) {
+            if (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST || minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) {
+                minFilter = TextureMinificationFilter.NEAREST;
+            } else {
+                minFilter = TextureMinificationFilter.LINEAR;
+            }
+
+            sampler = new Sampler({
+                wrapS : sampler.wrapS,
+                wrapT : sampler.wrapT,
+                textureMinificationFilter : minFilter,
+                textureMagnificationFilter : sampler.magnificationFilter
+            });
+        }
 
         var internalFormat = gltfTexture.internalFormat;
 
         var mipmap =
             (!(defined(internalFormat) && PixelFormat.isCompressedFormat(internalFormat))) &&
-            ((sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
-             (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
-             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
-             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
+            ((minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+             (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+             (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+             (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
         var requiresNpot = mipmap ||
-           (sampler.wrapS === TextureWrap.REPEAT) ||
-           (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
-           (sampler.wrapT === TextureWrap.REPEAT) ||
-           (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
+           (wrapS === TextureWrap.REPEAT) ||
+           (wrapS === TextureWrap.MIRRORED_REPEAT) ||
+           (wrapT === TextureWrap.REPEAT) ||
+           (wrapT === TextureWrap.MIRRORED_REPEAT);
 
         var tx;
         var source = gltfTexture.image;
