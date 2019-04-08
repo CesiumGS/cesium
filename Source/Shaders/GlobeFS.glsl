@@ -175,8 +175,29 @@ vec4 sampleAndBlend(
 
     float sourceAlpha = alpha * textureAlpha;
     float outAlpha = mix(previousColor.a, 1.0, sourceAlpha);
+    outAlpha += sign(outAlpha) - 1.0;
+
     vec3 outColor = mix(previousColor.rgb * previousColor.a, color, sourceAlpha) / outAlpha;
-    return vec4(outColor, outAlpha);
+
+    // When rendering imagery for a tile in multiple passes,
+    // some GPU/WebGL implementation combinations will not blend fragments in
+    // additional passes correctly if their computation includes an unmasked
+    // divide-by-zero operation,
+    // even if it's not in the output or if the output has alpha zero.
+    //
+    // For example, without sanitization for outAlpha,
+    // this renders without artifacts:
+    //   if (outAlpha == 0.0) { outColor = vec3(0.0); }
+    //
+    // but using czm_branchFreeTernary will cause portions of the tile that are
+    // alpha-zero in the additional pass to render as black instead of blending
+    // with the previous pass:
+    //   outColor = czm_branchFreeTernary(outAlpha == 0.0, vec3(0.0), outColor);
+    //
+    // So instead, sanitize against divide-by-zero,
+    // store this state on the sign of outAlpha, and correct on return.
+
+    return vec4(outColor, max(outAlpha, 0.0));
 }
 
 vec3 colorCorrect(vec3 rgb) {
