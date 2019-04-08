@@ -4,6 +4,7 @@ Change Log
 
 ##### Additions :tada:
 * Added support for new `BingMapsStyle` values `ROAD_ON_DEMAND` and `AERIAL_WITH_LABELS_ON_DEMAND`. The older versions of these, `ROAD` and `AERIAL_WITH_LABELS`, have been deprecated by Bing. [#7808](https://github.com/AnalyticalGraphicsInc/cesium/pull/7808)
+* Added syntax to delete data from existing properties via CZML. [#7818](https://github.com/AnalyticalGraphicsInc/cesium/pull/7818)
 
 ### 1.57 - 2019-05-01
 
