@@ -340,7 +340,6 @@ define([
                     glyph.billboard = billboard;
                 }
 
-                billboard.color = label._fillColor;
                 billboard.show = label._show;
                 billboard.position = label._position;
                 billboard.eyeOffset = label._eyeOffset;
@@ -362,7 +361,18 @@ define([
                 billboard.disableDepthTestDistance = label._disableDepthTestDistance;
                 billboard._batchIndex = label._batchIndex;
                 billboard.outlineColor = label.outlineColor;
-                billboard.outlineWidth = label.outlineWidth;
+                if (label.style === LabelStyle.FILL_AND_OUTLINE) {
+                    billboard.color = label._fillColor;
+                    billboard.outlineWidth = label.outlineWidth;
+                }
+                else if (label.style === LabelStyle.FILL) {
+                    billboard.color = label._fillColor;
+                    billboard.outlineWidth = 0.0;
+                }
+                else if (label.style === LabelStyle.OUTLINE) {
+                    billboard.color = Color.TRANSPARENT;
+                    billboard.outlineWidth = label.outlineWidth;
+                }
             }
         }
 
