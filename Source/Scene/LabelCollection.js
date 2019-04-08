@@ -16,7 +16,8 @@ define([
         './Label',
         './LabelStyle',
         './TextureAtlas',
-        './VerticalOrigin'
+        './VerticalOrigin',
+        '../ThirdParty/tiny-sdf'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -35,7 +36,8 @@ define([
         Label,
         LabelStyle,
         TextureAtlas,
-        VerticalOrigin) {
+        VerticalOrigin,
+        TinySDF) {
     'use strict';
 
     // A glyph represents a single character in a particular label.  It may or may
@@ -79,27 +81,91 @@ define([
         });
     }
 
-    // reusable object for calling writeTextToCanvas
-    var writeTextToCanvasParameters = {};
-    function createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin) {
-        writeTextToCanvasParameters.font = font;
-        writeTextToCanvasParameters.fillColor = fillColor;
-        writeTextToCanvasParameters.strokeColor = outlineColor;
-        writeTextToCanvasParameters.strokeWidth = outlineWidth;
+    var glyphFontSize = 48; // Font size in pixels
+    var glyphBuffer = 3;    // Whitespace buffer around a glyph in pixels
+    var glyphRadius = 8;    // How many pixels around the glyph shape to use for encoding distance
+    var glyphCutoff = 0.25;  // How much of the radius (relative) is used for the inside part the glyph
 
-        if (verticalOrigin === VerticalOrigin.CENTER) {
-            writeTextToCanvasParameters.textBaseline = 'middle';
-        } else if (verticalOrigin === VerticalOrigin.TOP) {
-            writeTextToCanvasParameters.textBaseline = 'top';
-        } else {
-            // VerticalOrigin.BOTTOM and VerticalOrigin.BASELINE
-            writeTextToCanvasParameters.textBaseline = 'bottom';
+    function getCSSValue(element, property) {
+        return document.defaultView.getComputedStyle(element,null).getPropertyValue(property);
+    }
+
+    var fontInfoCache = {};
+    /**
+     * Given a CSS font string return an object containing the fontFamily, fontSize, fontStyle and fontWeight.
+     */
+    function getFontInfo(font) {
+        var fontInfo = fontInfoCache[font];
+        if (fontInfo) {
+            return fontInfo;
         }
 
-        writeTextToCanvasParameters.fill = style === LabelStyle.FILL || style === LabelStyle.FILL_AND_OUTLINE;
-        writeTextToCanvasParameters.stroke = style === LabelStyle.OUTLINE || style === LabelStyle.FILL_AND_OUTLINE;
+        var div = document.createElement('div');
+        div.style.position = 'absolute';
+        div.style.opacity = 0;
+        div.style.font = font;
+        document.body.appendChild(div);
 
-        return writeTextToCanvas(character, writeTextToCanvasParameters);
+        var fontFamily = getCSSValue(div,'font-family');
+        var fontSize = getCSSValue(div,'font-size').replace('px','');
+        var fontStyle = getCSSValue(div,'font-style');
+        var fontWeight = getCSSValue(div,'font-weight');
+
+        document.body.removeChild(div);
+        fontInfo = {
+            fontFamily: fontFamily,
+            fontSize: fontSize,
+            fontStyle: fontStyle,
+            fontWeight: fontWeight
+        };
+        fontInfoCache[font] = fontInfo;
+
+        return fontInfo;
+    }
+
+    var glyphGenerators = {};
+
+    function getGlyphGenerator(fontInfo) {
+        var id = JSON.stringify([
+            fontInfo.fontFamily,
+            fontInfo.fontStyle,
+            fontInfo.fontWeight
+        ]);
+
+        var generator = glyphGenerators[id];
+        if (!defined(generator)) {
+            generator = new TinySDF(glyphFontSize, glyphBuffer, glyphRadius, glyphCutoff, fontInfo.fontFamily, fontInfo.fontWeight, fontInfo.fontStyle);
+            glyphGenerators[id] = generator;
+        }
+        return generator;
+    }
+
+    function getSDF(character, fontInfo) {
+        var generator = getGlyphGenerator(fontInfo);
+
+        var canvas = generator.canvas;
+
+        var sdf = generator.draw(character);
+        var ctx = canvas.getContext('2d');
+        var width = ctx.measureText(character).width;
+        var dimensions = {
+            bounds: {
+                minx: 0,
+                maxx: canvas.width,
+                miny: 0,
+                maxy: canvas.height
+            },
+            width: width,
+            height: canvas.height,
+            ascent: 0,
+            descent: 0,
+            fontSize: glyphFontSize
+        };
+
+        return {
+            sdf: sdf,
+            dimensions: dimensions
+        };
     }
 
     function unbindGlyph(labelCollection, glyph) {
@@ -188,34 +254,51 @@ define([
         for (textIndex = 0; textIndex < textLength; ++textIndex) {
             var character = text.charAt(textIndex);
             var font = label._font;
-            var fillColor = label._fillColor;
-            var outlineColor = label._outlineColor;
-            var outlineWidth = label._outlineWidth;
-            var style = label._style;
-            var verticalOrigin = label._verticalOrigin;
 
-            // retrieve glyph dimensions and texture index (if the canvas has area)
-            // from the glyph texture cache, or create and add if not present.
+            var fontInfo = getFontInfo(font);
+
             var id = JSON.stringify([
                                      character,
-                                     font,
-                                     fillColor.toRgba(),
-                                     outlineColor.toRgba(),
-                                     outlineWidth,
-                                     +style,
-                                     +verticalOrigin
+                                     fontInfo.fontFamily,
+                                     fontInfo.fontStyle,
+                                     fontInfo.fontWeight
                                     ]);
 
             var glyphTextureInfo = glyphTextureCache[id];
             if (!defined(glyphTextureInfo)) {
-                var canvas = createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin);
+                var sdfInfo = getSDF(character, font);
+                var sdf = sdfInfo.sdf;
 
-                glyphTextureInfo = new GlyphTextureInfo(labelCollection, -1, canvas.dimensions);
+                var width = sdfInfo.dimensions.bounds.maxy;
+                var height = sdfInfo.dimensions.bounds.maxy;
+
+                // Convert to RGBA grayscale
+                var glyphData = new Uint8Array(width * height * 4);
+                for (var i = 0; i < width; i++)
+                {
+                    for (var j = 0; j < height; j++)
+                    {
+                        var baseIndex = (j * width + i);
+                        var alpha =sdf[baseIndex];
+                        glyphData[baseIndex * 4 + 0] = alpha;
+                        glyphData[baseIndex * 4 + 1] = alpha;
+                        glyphData[baseIndex * 4 + 2] = alpha;
+                        glyphData[baseIndex * 4 + 3] = alpha;
+                    }
+                }
+
+                var image = {
+                    arrayBufferView : glyphData,
+                    width : width,
+                    height : height
+                };
+
+                var dimensions = sdfInfo.dimensions;
+
+                glyphTextureInfo = new GlyphTextureInfo(labelCollection, -1, dimensions);
                 glyphTextureCache[id] = glyphTextureInfo;
 
-                if (canvas.width > 0 && canvas.height > 0) {
-                    addGlyphToTextureAtlas(labelCollection._textureAtlas, id, canvas, glyphTextureInfo);
-                }
+                addGlyphToTextureAtlas(labelCollection._textureAtlas, id, image, glyphTextureInfo);
             }
 
             glyph = glyphs[textIndex];
@@ -257,6 +340,7 @@ define([
                     glyph.billboard = billboard;
                 }
 
+                billboard.color = label._fillColor;
                 billboard.show = label._show;
                 billboard.position = label._position;
                 billboard.eyeOffset = label._eyeOffset;
@@ -264,7 +348,10 @@ define([
                 billboard.horizontalOrigin = HorizontalOrigin.LEFT;
                 billboard.verticalOrigin = label._verticalOrigin;
                 billboard.heightReference = label._heightReference;
-                billboard.scale = label._scale;
+
+                // Compute a font size scale relative to the sdf font generated size.
+                var relativeSize = fontInfo.fontSize / glyphFontSize;
+                billboard.scale = label._scale * relativeSize;
                 billboard.pickPrimitive = label;
                 billboard.id = label._id;
                 billboard.image = id;
@@ -274,6 +361,8 @@ define([
                 billboard.distanceDisplayCondition = label._distanceDisplayCondition;
                 billboard.disableDepthTestDistance = label._disableDepthTestDistance;
                 billboard._batchIndex = label._batchIndex;
+                billboard.outlineColor = label.outlineColor;
+                billboard.outlineWidth = label.outlineWidth;
             }
         }
 
@@ -336,7 +425,8 @@ define([
         lineWidths.push(lastLineWidth);
         var maxLineHeight = maxGlyphY + maxGlyphDescent;
 
-        var scale = label._scale;
+        // Use the billboard scale b/c it's going to include the relative scale of the font size as well.
+        var scale = glyph.billboard.scale;
         var horizontalOrigin = label._horizontalOrigin;
         var verticalOrigin = label._verticalOrigin;
         var lineIndex = 0;
@@ -521,6 +611,7 @@ define([
             batchTable : this._batchTable
         });
         this._billboardCollection.destroyTextureAtlas = false;
+        this._billboardCollection._sdf = true;
 
         this._spareBillboards = [];
         this._glyphTextureCache = {};

@@ -8,6 +8,13 @@ varying vec2 v_textureCoordinates;
 varying vec4 v_pickColor;
 varying vec4 v_color;
 
+#ifdef SDF
+const float SDF_EDGE = 0.75;
+const float SDF_SMOOTHING = 1.0 / 64.0;
+const float SDF_SPREAD = 8.0; // Needs to match radius in sdf generator.
+varying vec4 v_sdf;
+#endif
+
 #ifdef FRAGMENT_DEPTH_CHECK
 varying vec4 v_textureCoordinateBounds;                  // the min and max x and y values for the texture coordinates
 varying vec4 v_originTextureCoordinateAndTranslate;      // texture coordinate at the origin, billboard translate (used for label glyphs)
@@ -51,8 +58,31 @@ float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST, bool applyTranslate, ve
 void main()
 {
     vec4 color = texture2D(u_atlas, v_textureCoordinates);
+
+#ifdef SDF
+    float distance = color.r;
+
+    vec4 outlineColor = vec4(v_sdf.xyz, 1.0);
+    float outlineWidth = v_sdf.w;
+
+    if (outlineWidth > 0.0)
+    {
+        float outlineEdge = SDF_EDGE - (outlineWidth / SDF_SPREAD);
+        float outlineFactor = smoothstep(SDF_EDGE - SDF_SMOOTHING, SDF_EDGE + SDF_SMOOTHING, distance);
+        vec4 sdfColor = mix(outlineColor, v_color, outlineFactor);
+        float alpha = smoothstep(outlineEdge - SDF_SMOOTHING, outlineEdge + SDF_SMOOTHING, distance);
+        color = vec4(sdfColor.rgb, sdfColor.a * alpha);
+    }
+    else
+    {
+        float alpha = smoothstep(SDF_EDGE - SDF_SMOOTHING, SDF_EDGE + SDF_SMOOTHING, distance);
+        color = vec4(v_color.rgb, v_color.a * alpha);
+    }
+    color = czm_gammaCorrect(color);
+#else
     color = czm_gammaCorrect(color);
     color *= czm_gammaCorrect(v_color);
+#endif
 
 // Fully transparent parts of the billboard are not pickable.
 #if !defined(OPAQUE) && !defined(TRANSLUCENT)

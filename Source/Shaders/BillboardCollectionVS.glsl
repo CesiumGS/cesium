@@ -10,6 +10,7 @@ attribute vec4 eyeOffset;                                  // eye offset in mete
 attribute vec4 scaleByDistance;                            // near, nearScale, far, farScale
 attribute vec4 pixelOffsetScaleByDistance;                 // near, nearScale, far, farScale
 attribute vec4 compressedAttribute3;                       // distance display condition near, far, disableDepthTestDistance, dimensions
+attribute vec4 sdf;                                        // sdf outline color (rgb) and width (w)
 #if defined(VERTEX_DEPTH_CHECK) || defined(FRAGMENT_DEPTH_CHECK)
 attribute vec4 textureCoordinateBoundsOrLabelTranslate;    // the min and max x and y values for the texture coordinates
 #endif
@@ -27,6 +28,9 @@ varying mat2 v_rotationMatrix;
 
 varying vec4 v_pickColor;
 varying vec4 v_color;
+#ifdef SDF
+varying vec4 v_sdf;
+#endif
 
 const float UPPER_BOUND = 32768.0;
 
@@ -417,4 +421,8 @@ if (lengthSq < disableDepthTestDistance) {
 
     v_color = color;
     v_color.a *= translucency;
+
+#ifdef SDF
+    v_sdf = sdf;
+#endif
 }

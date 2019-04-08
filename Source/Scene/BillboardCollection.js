@@ -89,6 +89,7 @@ define([
     var DISTANCE_DISPLAY_CONDITION_INDEX = Billboard.DISTANCE_DISPLAY_CONDITION;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE;
     var TEXTURE_COORDINATE_BOUNDS = Billboard.TEXTURE_COORDINATE_BOUNDS;
+    var SDF = Billboard.SDF;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations;
@@ -104,7 +105,8 @@ define([
         pixelOffsetScaleByDistance : 7,
         compressedAttribute3 : 8,
         textureCoordinateBoundsOrLabelTranslate : 9,
-        a_batchId : 10
+        a_batchId : 10,
+        sdf: 11
     };
 
     var attributeLocationsInstanced = {
@@ -119,7 +121,8 @@ define([
         pixelOffsetScaleByDistance : 8,
         compressedAttribute3 : 9,
         textureCoordinateBoundsOrLabelTranslate : 10,
-        a_batchId : 11
+        a_batchId : 11,
+        sdf: 12
     };
 
     /**
@@ -711,7 +714,7 @@ define([
         return usageChanged;
     };
 
-    function createVAF(context, numberOfBillboards, buffersUsage, instanced, batchTable) {
+    function createVAF(context, numberOfBillboards, buffersUsage, instanced, batchTable, sdf) {
         var attributes = [{
             index : attributeLocations.positionHighAndScale,
             componentsPerAttribute : 4,
@@ -780,6 +783,15 @@ define([
                 componentsPerAttribute : 1,
                 componentDatatyps : ComponentDatatype.FLOAT,
                 bufferUsage : BufferUsage.STATIC_DRAW
+            });
+        }
+
+        if (sdf) {
+            attributes.push({
+                index : attributeLocations.sdf,
+                componentsPerAttribute : 4,
+                componentDatatype : ComponentDatatype.FLOAT,
+                usage : buffersUsage[SDF]
             });
         }
 
@@ -1348,6 +1360,29 @@ define([
         }
     }
 
+    function writeSDF(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        if (!billboardCollection._sdf) {
+            return;
+        }
+
+        var i;
+        var writer = vafWriters[attributeLocations.sdf];
+
+        var outlineColor = billboard.outlineColor;
+        var outlineWidth = billboard.outlineWidth;
+
+        if (billboardCollection._instanced) {
+            i = billboard._index;
+            writer(i, outlineColor.red, outlineColor.green, outlineColor.blue, outlineWidth);
+        } else {
+            i = billboard._index * 4;
+            writer(i + 0, outlineColor.red, outlineColor.green, outlineColor.blue, outlineWidth);
+            writer(i + 1, outlineColor.red, outlineColor.green, outlineColor.blue, outlineWidth);
+            writer(i + 2, outlineColor.red, outlineColor.green, outlineColor.blue, outlineWidth);
+            writer(i + 3, outlineColor.red, outlineColor.green, outlineColor.blue, outlineWidth);
+        }
+    }
+
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePositionScaleAndRotation(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeCompressedAttrib0(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -1359,6 +1394,7 @@ define([
         writeCompressedAttribute3(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeTextureCoordinateBoundsOrLabelTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeBatchId(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeSDF(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1521,7 +1557,7 @@ define([
 
             if (billboardsLength > 0) {
                 // PERFORMANCE_IDEA:  Instead of creating a new one, resize like std::vector.
-                this._vaf = createVAF(context, billboardsLength, this._buffersUsage, this._instanced, this._batchTable);
+                this._vaf = createVAF(context, billboardsLength, this._buffersUsage, this._instanced, this._batchTable, this._sdf);
                 vafWriters = this._vaf.writers;
 
                 // Rewrite entire buffer if billboards were added or removed.
@@ -1579,6 +1615,10 @@ define([
 
             if (properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {
                 writers.push(writeTextureCoordinateBoundsOrLabelTranslate);
+            }
+
+            if (properties[SDF]) {
+                writers.push(writeSDF);
             }
 
             var numWriters = writers.length;
@@ -1699,7 +1739,8 @@ define([
             (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
             (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition) ||
             (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance) ||
-            (this._shaderClampToGround !== this._compiledShaderClampToGround)) {
+            (this._shaderClampToGround !== this._compiledShaderClampToGround) ||
+            (this._sdf !== this._compiledSDF)) {
 
             vsSource = BillboardCollectionVS;
             fsSource = BillboardCollectionFS;
@@ -1746,6 +1787,9 @@ define([
                     vs.defines.push('FRAGMENT_DEPTH_CHECK');
                 }
             }
+            if (this._sdf) {
+                vs.defines.push('SDF');
+            }
 
             var vectorFragDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
 
@@ -1761,6 +1805,11 @@ define([
                         fs.defines.push('FRAGMENT_DEPTH_CHECK');
                     }
                 }
+
+                if (this._sdf) {
+                    fs.defines.push('SDF');
+                }
+
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._sp,
@@ -1779,6 +1828,9 @@ define([
                     } else {
                         fs.defines.push('FRAGMENT_DEPTH_CHECK');
                     }
+                }
+                if (this._sdf) {
+                    fs.defines.push('SDF');
                 }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,
@@ -1801,6 +1853,9 @@ define([
                         fs.defines.push('FRAGMENT_DEPTH_CHECK');
                     }
                 }
+                if (this._sdf) {
+                    fs.defines.push('SDF');
+                }
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._sp,
@@ -1822,6 +1877,9 @@ define([
                         fs.defines.push('FRAGMENT_DEPTH_CHECK');
                     }
                 }
+                if (this._sdf) {
+                    fs.defines.push('SDF');
+                }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._spTranslucent,
@@ -1839,6 +1897,7 @@ define([
             this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
             this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
             this._compiledShaderClampToGround = this._shaderClampToGround;
+            this._compiledSDF = this._sdf;
         }
 
         var commandList = frameState.commandList;
