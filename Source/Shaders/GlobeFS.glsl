@@ -37,6 +37,10 @@ uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureCutoutRectangles[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_COLOR_TO_ALPHA
+uniform vec4 u_colorsToAlpha[TEXTURE_UNITS];
+#endif
+
 uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
@@ -115,7 +119,8 @@ vec4 sampleAndBlend(
     float textureHue,
     float textureSaturation,
     float textureOneOverGamma,
-    float split)
+    float split,
+    vec4 colorToAlpha)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
@@ -136,6 +141,12 @@ vec4 sampleAndBlend(
     vec4 value = texture2D(textureToSample, textureCoordinates);
     vec3 color = value.rgb;
     float alpha = value.a;
+
+#ifdef APPLY_COLOR_TO_ALPHA
+    vec3 colorDiff = abs(color.rgb - colorToAlpha.rgb);
+    colorDiff.r = max(max(colorDiff.r, colorDiff.g), colorDiff.b);
+    alpha = czm_branchFreeTernary(colorDiff.r < colorToAlpha.a, 0.0, alpha);
+#endif
 
 #if !defined(APPLY_GAMMA)
     vec4 tempColor = czm_gammaCorrect(vec4(color, alpha));
