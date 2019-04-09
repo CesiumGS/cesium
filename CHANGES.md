@@ -5,6 +5,7 @@ Change Log
 
 ##### Additions :tada:
 * Added support for the `KHR_texture_transform` glTF extension. [#7549](https://github.com/AnalyticalGraphicsInc/cesium/pull/7549)
+* Reworked label rendering to use signed distance fields for crisper text.
 
 ##### Fixes :wrench:
 * Fixed an error where `clampToHeightMostDetailed` or `sampleHeightMostDetailed` would crash if entities were created when the promise resolved. [#7690](https://github.com/AnalyticalGraphicsInc/cesium/pull/7690)
