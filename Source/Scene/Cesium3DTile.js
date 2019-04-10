@@ -1377,7 +1377,7 @@ define([
         var preloadFlightScale = foveatedDeferScale * 10;
 
         // Map 0-1 then convert to digit
-        var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
+        var depthDigit = 0;//depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var useDistanceDigit = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
@@ -1385,14 +1385,14 @@ define([
                                                distanceScale * CesiumMath.normalize(Math.min(this._priorityHolder._screenSpaceError, 10000), minPriority.screenSpaceError, maxPriority.screenSpaceError);
 
         // Map 0-1 then convert to digit
-        var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
+        var foveatedDigit = 0;//foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
 
         // Flag on/off penality digits
-        var preloadProgressiveResolutionDigit = this._priorityProgressiveResolution ? 0 : preloadProgressiveResolutionScale;
+        var preloadProgressiveResolutionDigit = 0;//this._priorityProgressiveResolution ? 0 : preloadProgressiveResolutionScale;
 
-        var foveatedDeferDigit = this.priorityDeferred ? foveatedDeferScale : 0;
+        var foveatedDeferDigit = 0;//this.priorityDeferred ? foveatedDeferScale : 0;
 
-        var preloadFlightDigit = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale; // Penalize non-preloads
+        var preloadFlightDigit = 0;//tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale; // Penalize non-preloads
 
         // Get the final base 10 number
         this._priority = depthDigit + distanceDigit + preloadProgressiveResolutionDigit + foveatedDigit + foveatedDeferDigit + preloadFlightDigit;
