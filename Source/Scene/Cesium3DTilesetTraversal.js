@@ -197,12 +197,17 @@ define([
     function updateMinMaxPriority(tileset, tile) {
         tileset._maxPriority.distance = Math.max(tile._priorityHolder._distanceToCamera, tileset._maxPriority.distance);
         tileset._minPriority.distance = Math.min(tile._priorityHolder._distanceToCamera, tileset._minPriority.distance);
-        tileset._maxPriority.screenSpaceError = Math.max(Math.min(tile._priorityHolder._screenSpaceError, 10000), tileset._maxPriority.screenSpaceError);
-        tileset._minPriority.screenSpaceError = Math.min(Math.min(tile._priorityHolder._screenSpaceError, 10000), tileset._minPriority.screenSpaceError);
         tileset._maxPriority.depth = Math.max(tile._depth, tileset._maxPriority.depth);
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
         tileset._maxPriority.foveatedFactor = Math.max(tile._priorityHolder._foveatedFactor, tileset._maxPriority.foveatedFactor);
         tileset._minPriority.foveatedFactor = Math.min(tile._priorityHolder._foveatedFactor, tileset._minPriority.foveatedFactor);
+
+        // var parent = tile.parent;
+        // var useParentScreenSpaceError = defined(parent) && (!tileset._skipLevelOfDetail || (tile._screenSpaceError === 0.0) || parent.hasTilesetContent);
+        // var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
+        // var priorityReverseScreenSpaceError = tileset.root._screenSpaceError - screenSpaceError;
+        tileset._maxPriority.reverseScreenSpaceError = Math.max(tile._priorityReverseScreenSpaceError, tileset._maxPriority.reverseScreenSpaceError);
+        tileset._minPriority.reverseScreenSpaceError = Math.min(tile._priorityReverseScreenSpaceError, tileset._minPriority.reverseScreenSpaceError);
     }
 
     function isOnScreenLongEnough(tileset, tile, frameState) {
