@@ -83,7 +83,7 @@ var viewModel = {
     outlineWidth: 0.75,
     scale: 1.0,
     outlineColor : 'Red',
-    outlineColors : ['Red', 'Green', 'Blue', 'Yellow', 'Gray', 'Black'],
+    outlineColors : ['Red', 'Green', 'Blue', 'Yellow', 'Gray', 'Black']
 };
 
 // Convert the viewModel members into knockout observables.
@@ -91,7 +91,6 @@ Cesium.knockout.track(viewModel);
 // Bind the viewModel to the DOM elements of the UI that call for it.
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
-
 
 // Create a label collection with two labels
 var labels = viewer.scene.primitives.add(new Cesium.LabelCollection());
@@ -113,7 +112,6 @@ var morgantown = labels.add({
   outlineWidth: 2.0,
   style: Cesium.LabelStyle.FILL_AND_OUTLINE
 });
-
 
 var atlasStats = document.getElementById("atlasStats");
 
@@ -145,7 +143,6 @@ var fontDelta = -1.0;
 var fontSize = 48.0;
 var minFontSize = 1.0;
 var maxFontSize = 48.0;
-
 
 viewer.scene.preUpdate.addEventListener(function(scene, time) {
     if (labels._textureAtlas) {
