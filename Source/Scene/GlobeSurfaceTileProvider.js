@@ -1880,6 +1880,8 @@ define([
                     colorToAlpha.y = color.green;
                     colorToAlpha.z = color.blue;
                     colorToAlpha.w = imageryLayer.colorToAlphaThreshold;
+                } else {
+                    colorToAlpha.w = -1.0;
                 }
 
                 if (defined(imagery.credits)) {
