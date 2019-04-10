@@ -1872,14 +1872,17 @@ define([
                     colorToAlpha = uniformMapProperties.colorsToAlpha[numberOfDayTextures] = new Cartesian4();
                 }
 
-                applyColorToAlpha = defined(imageryLayer.colorToAlpha) && imageryLayer.colorToAlphaThreshold > 0.0;
+                var hasColorToAlpha = defined(imageryLayer.colorToAlpha) && imageryLayer.colorToAlphaThreshold > 0.0;
+                applyColorToAlpha = applyColorToAlpha || hasColorToAlpha;
 
-                if (applyColorToAlpha) {
+                if (hasColorToAlpha) {
                     var color = imageryLayer.colorToAlpha;
                     colorToAlpha.x = color.red;
                     colorToAlpha.y = color.green;
                     colorToAlpha.z = color.blue;
                     colorToAlpha.w = imageryLayer.colorToAlphaThreshold;
+                } else {
+                    colorToAlpha.w = -1.0;
                 }
 
                 if (defined(imagery.credits)) {
