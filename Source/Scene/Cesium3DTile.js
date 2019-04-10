@@ -1370,7 +1370,6 @@ define([
      */
     Cesium3DTile.prototype.updatePriority = function() {
         var tileset = this.tileset;
-        var skipLevelOfDetail = tileset._skipLevelOfDetail;
         var minPriority = tileset._minPriority;
         var maxPriority = tileset._maxPriority;
 
@@ -1384,18 +1383,17 @@ define([
         var foveatedScale = preloadProgressiveResolutionScale * 100;
         var foveatedDeferScale = foveatedScale * 10;
         var preloadFlightScale = foveatedDeferScale * 10;
+        var preferLeaves = false;
 
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
+        depthDigit = preferLeaves ? 1 - depthDigit : depthDigit;
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
-        var useDistanceDigit = !skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
-        // var parent = this.parent;
-        // var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail || (this._screenSpaceError === 0.0) || parent.hasTilesetContent);
-        // var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : this._screenSpaceError;
-        // var priorityReverseScreenSpaceError = tileset.root._screenSpaceError - screenSpaceError;
+        var useDistanceDigit = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
         var distanceDigit = useDistanceDigit ? distanceScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
                                                distanceScale * CesiumMath.normalize(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
+        distanceDigit = !useDistanceDigit && preferLeaves ? 1 - distanceDigit : distanceDigit;
 
         // Map 0-1 then convert to digit
         var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
