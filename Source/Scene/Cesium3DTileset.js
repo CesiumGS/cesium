@@ -242,8 +242,8 @@ define([
 
         this._requestedTilesInFlight = [];
 
-        this._maxPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE };
-        this._minPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE };
+        this._maxPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE, screenSpaceError: -Number.MAX_VALUE };
+        this._minPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, screenSpaceError: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
         this.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, true);
         this.cullRequestsWhileMovingMultiplier = defaultValue(options.cullRequestsWhileMovingMultiplier, 60);
@@ -2183,6 +2183,8 @@ define([
         tileset._maxPriority.foveatedFactor = -Number.MAX_VALUE;
         tileset._minPriority.distance = Number.MAX_VALUE;
         tileset._maxPriority.distance = -Number.MAX_VALUE;
+        tileset._minPriority.screenSpaceError = Number.MAX_VALUE;
+        tileset._maxPriority.screenSpaceError = -Number.MAX_VALUE;
     }
 
     ///////////////////////////////////////////////////////////////////////////
