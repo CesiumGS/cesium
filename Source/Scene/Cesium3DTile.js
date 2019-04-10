@@ -661,7 +661,7 @@ define([
         }
 
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        if ((replace && !tileset._skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
+        if ((replace && !tileset._skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0 || tile._priorityProgressiveResolution) {
             return false;
         }
 
@@ -761,8 +761,8 @@ define([
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
-        this.priorityDeferred = isPriorityDeferred(this, frameState);
         this._priorityProgressiveResolution = isPriorityProgressiveResolution(tileset, this, frameState);
+        this.priorityDeferred = isPriorityDeferred(this, frameState);
     };
 
     /**
@@ -1380,8 +1380,8 @@ define([
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
-        var useDistanceDigit = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
-        var distanceDigit = useDistanceDigit ? distanceScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) : 0;
+        var useDistanceDigit = true; // !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
+        var distanceDigit = useDistanceDigit ? distanceScale * CesiumMath.normalize(Math.min(this._priorityHolder._screenSpaceError, 4096), minPriority.distance, maxPriority.distance) : 0;
 
         // Map 0-1 then convert to digit
         var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);

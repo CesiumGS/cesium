@@ -2179,6 +2179,8 @@ define([
         tileset._heatmap.resetMinMax();
         tileset._minPriority.depth = Number.MAX_VALUE;
         tileset._maxPriority.depth = -Number.MAX_VALUE;
+        tileset._minPriority.foveatedFactor = Number.MAX_VALUE;
+        tileset._maxPriority.foveatedFactor = -Number.MAX_VALUE;
         tileset._minPriority.distance = Number.MAX_VALUE;
         tileset._maxPriority.distance = -Number.MAX_VALUE;
     }
