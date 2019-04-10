@@ -10,9 +10,9 @@ varying vec4 v_color;
 
 #ifdef SDF
 const float SDF_EDGE = 0.75;
-const float SDF_SMOOTHING = 1.0 / 64.0;
-const float SDF_SPREAD = 8.0; // Needs to match radius in sdf generator.
+const float SDF_SPREAD = 8.0;
 varying vec4 v_sdf;
+varying float v_sdfSmoothing;
 #endif
 
 #ifdef FRAGMENT_DEPTH_CHECK
@@ -68,14 +68,14 @@ void main()
     if (outlineWidth > 0.0)
     {
         float outlineEdge = SDF_EDGE - (outlineWidth / SDF_SPREAD);
-        float outlineFactor = smoothstep(SDF_EDGE - SDF_SMOOTHING, SDF_EDGE + SDF_SMOOTHING, distance);
+        float outlineFactor = smoothstep(SDF_EDGE - v_sdfSmoothing, SDF_EDGE + v_sdfSmoothing, distance);
         vec4 sdfColor = mix(outlineColor, v_color, outlineFactor);
-        float alpha = smoothstep(outlineEdge - SDF_SMOOTHING, outlineEdge + SDF_SMOOTHING, distance);
+        float alpha = smoothstep(outlineEdge - v_sdfSmoothing, outlineEdge + v_sdfSmoothing, distance);
         color = vec4(sdfColor.rgb, sdfColor.a * alpha);
     }
     else
     {
-        float alpha = smoothstep(SDF_EDGE - SDF_SMOOTHING, SDF_EDGE + SDF_SMOOTHING, distance);
+        float alpha = smoothstep(SDF_EDGE - v_sdfSmoothing, SDF_EDGE + v_sdfSmoothing, distance);
         color = vec4(v_color.rgb, v_color.a * alpha);
     }
     color = czm_gammaCorrect(color);
