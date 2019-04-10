@@ -1382,7 +1382,7 @@ define([
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var useDistanceDigit = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
         var distanceDigit = useDistanceDigit ? distanceScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
-                                               distanceScale * (1.0 - CesiumMath.normalize(Math.min(this._priorityHolder._screenSpaceError, 4096), minPriority.screenSpaceError, maxPriority.screenSpaceError));
+                                               distanceScale * CesiumMath.normalize(Math.min(this._priorityHolder._screenSpaceError, 10000), minPriority.screenSpaceError, maxPriority.screenSpaceError);
 
         // Map 0-1 then convert to digit
         var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);

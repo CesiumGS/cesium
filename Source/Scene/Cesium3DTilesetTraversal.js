@@ -197,8 +197,8 @@ define([
     function updateMinMaxPriority(tileset, tile) {
         tileset._maxPriority.distance = Math.max(tile._priorityHolder._distanceToCamera, tileset._maxPriority.distance);
         tileset._minPriority.distance = Math.min(tile._priorityHolder._distanceToCamera, tileset._minPriority.distance);
-        tileset._maxPriority.screenSpaceError = Math.max(Math.min(tile._priorityHolder._screenSpaceError, 4096), tileset._maxPriority.screenSpaceError);
-        tileset._minPriority.screenSpaceError = Math.min(Math.min(tile._priorityHolder._screenSpaceError, 4096), tileset._minPriority.screenSpaceError);
+        tileset._maxPriority.screenSpaceError = Math.max(Math.min(tile._priorityHolder._screenSpaceError, 10000), tileset._maxPriority.screenSpaceError);
+        tileset._minPriority.screenSpaceError = Math.min(Math.min(tile._priorityHolder._screenSpaceError, 10000), tileset._minPriority.screenSpaceError);
         tileset._maxPriority.depth = Math.max(tile._depth, tileset._maxPriority.depth);
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
         tileset._maxPriority.foveatedFactor = Math.max(tile._priorityHolder._foveatedFactor, tileset._maxPriority.foveatedFactor);
