@@ -1390,7 +1390,7 @@ define([
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var useDistance = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
-        var sortingDigit = useDistance ? preferedSortingScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
+        var preferedSortingDigit = useDistance ? preferedSortingScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
                                          preferedSortingScale * CesiumMath.normalize(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
 
         // Map 0-1 then convert to digit
@@ -1404,7 +1404,7 @@ define([
         var preloadFlightDigit = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale; // Penalize non-preloads
 
         // Get the final base 10 number
-        this._priority = depthDigit + sortingDigit + preloadProgressiveResolutionDigit + foveatedDigit + foveatedDeferDigit + preloadFlightDigit;
+        this._priority = depthDigit + preferedSortingDigit + preloadProgressiveResolutionDigit + foveatedDigit + foveatedDeferDigit + preloadFlightDigit;
     };
 
     /**
