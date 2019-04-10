@@ -369,7 +369,8 @@ define([
         this._color = undefined;
         this._colorDirty = false;
 
-        this._request = undefined; }
+        this._request = undefined;
+    }
 
     // This can be overridden for testing purposes
     Cesium3DTile._deprecationWarning = deprecationWarning;
@@ -1378,8 +1379,8 @@ define([
         // Theoretically, the digit of separation should be the amount of leading 0's in the mapped min for the digit of interest.
         // Think of digits as penalties, if a tile has some large quanity or has a flag raised it's (usually) penalized for it, expressed as a higher number for the digit
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
-        var distanceScale = depthScale * 100;
-        var preloadProgressiveResolutionScale = distanceScale * 10; // This is penalized less than foveated defer tiles because we want center tiles to continuously load
+        var preferedSortingScale = depthScale * 100;
+        var preloadProgressiveResolutionScale = preferedSortingScale * 10; // This is penalized less than foveated defer tiles because we want center tiles to continuously load
         var foveatedScale = preloadProgressiveResolutionScale * 100;
         var foveatedDeferScale = foveatedScale * 10;
         var preloadFlightScale = foveatedDeferScale * 10;
@@ -1388,9 +1389,9 @@ define([
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
-        var useDistanceDigit = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
-        var distanceDigit = useDistanceDigit ? distanceScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
-                                               distanceScale * CesiumMath.normalize(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
+        var useDistance = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
+        var sortingDigit = useDistance ? preferedSortingScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
+                                         preferedSortingScale * CesiumMath.normalize(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
 
         // Map 0-1 then convert to digit
         var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
@@ -1403,7 +1404,7 @@ define([
         var preloadFlightDigit = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale; // Penalize non-preloads
 
         // Get the final base 10 number
-        this._priority = depthDigit + distanceDigit + preloadProgressiveResolutionDigit + foveatedDigit + foveatedDeferDigit + preloadFlightDigit;
+        this._priority = depthDigit + sortingDigit + preloadProgressiveResolutionDigit + foveatedDigit + foveatedDeferDigit + preloadFlightDigit;
     };
 
     /**
