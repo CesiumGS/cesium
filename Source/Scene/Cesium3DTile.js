@@ -1383,17 +1383,14 @@ define([
         var foveatedScale = preloadProgressiveResolutionScale * 100;
         var foveatedDeferScale = foveatedScale * 10;
         var preloadFlightScale = foveatedDeferScale * 10;
-        var preferLeaves = false;
 
         // Map 0-1 then convert to digit
         var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
-        depthDigit = preferLeaves ? 1 - depthDigit : depthDigit;
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var useDistanceDigit = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
         var distanceDigit = useDistanceDigit ? distanceScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
                                                distanceScale * CesiumMath.normalize(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
-        distanceDigit = !useDistanceDigit && preferLeaves ? 1 - distanceDigit : distanceDigit;
 
         // Map 0-1 then convert to digit
         var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
