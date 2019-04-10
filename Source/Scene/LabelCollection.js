@@ -201,6 +201,11 @@ define([
         var glyphIndex;
         var textIndex;
 
+        var font = label._font;
+        var fontInfo = getFontInfo(font);
+        // Compute a font size scale relative to the sdf font generated size.
+        label._relativeSize = fontInfo.fontSize / glyphFontSize;
+
         // if we have more glyphs than needed, unbind the extras.
         if (textLength < glyphsLength) {
             for (glyphIndex = textLength; glyphIndex < glyphsLength; ++glyphIndex) {
@@ -237,7 +242,7 @@ define([
             backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
             backgroundBillboard.verticalOrigin = label._verticalOrigin;
             backgroundBillboard.heightReference = label._heightReference;
-            backgroundBillboard.scale = label._scale;
+            backgroundBillboard.scale = label._scale * label._relativeSize;
             backgroundBillboard.pickPrimitive = label;
             backgroundBillboard.id = label._id;
             backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
@@ -253,10 +258,6 @@ define([
         // or changed characters (rebinding existing glyphs)
         for (textIndex = 0; textIndex < textLength; ++textIndex) {
             var character = text.charAt(textIndex);
-            var font = label._font;
-
-            var fontInfo = getFontInfo(font);
-
             var id = JSON.stringify([
                                      character,
                                      fontInfo.fontFamily,
@@ -347,10 +348,7 @@ define([
                 billboard.horizontalOrigin = HorizontalOrigin.LEFT;
                 billboard.verticalOrigin = label._verticalOrigin;
                 billboard.heightReference = label._heightReference;
-
-                // Compute a font size scale relative to the sdf font generated size.
-                var relativeSize = fontInfo.fontSize / glyphFontSize;
-                billboard.scale = label._scale * relativeSize;
+                billboard.scale = label._scale * label._relativeSize;
                 billboard.pickPrimitive = label;
                 billboard.id = label._id;
                 billboard.image = id;
@@ -435,8 +433,7 @@ define([
         lineWidths.push(lastLineWidth);
         var maxLineHeight = maxGlyphY + maxGlyphDescent;
 
-        // Use the billboard scale b/c it's going to include the relative scale of the font size as well.
-        var scale = glyph.billboard.scale;
+        var scale = label.scale * label._relativeSize;
         var horizontalOrigin = label._horizontalOrigin;
         var verticalOrigin = label._verticalOrigin;
         var lineIndex = 0;
