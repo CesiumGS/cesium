@@ -20,7 +20,7 @@ define([
     function loadImageFromTypedArray(options) {
         var uint8Array = options.uint8Array;
         var format = options.format;
-        var imageBitmapSupported = options.imageBitmapSupported;
+        var request = options.request;
         var flipY = defaultValue(options.flipY, false);
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('uint8Array', uint8Array);
@@ -31,13 +31,32 @@ define([
             type : format
         });
 
-        if (imageBitmapSupported) {
-            return when(createImageBitmap(blob, {
-                imageOrientation: flipY ? 'flipY' : 'none'
-            }));
-        } else {
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                if (result) {
+                    return when(createImageBitmap(blob, {
+                        imageOrientation: flipY ? 'flipY' : 'none'
+                    }));
+                }
 
-        }
+                var blobUrl = window.URL.createObjectURL(blob);
+                var resource = new Resource({
+                    url: blobUrl,
+                    request: request
+                });
+                return resource.fetchImage({
+                    flipY : flipY
+                })
+                    .then(function(image) {
+                        window.URL.revokeObjectURL(blobUrl);
+                        return image;
+                    }, function(error) {
+                    })
+                    .otherwise(function(error) {
+                        window.URL.revokeObjectURL(blobUrl);
+                        return when.reject(error);
+                    });
+            });
     }
 
     return loadImageFromTypedArray;
