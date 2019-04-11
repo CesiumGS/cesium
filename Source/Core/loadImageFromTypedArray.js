@@ -34,9 +34,7 @@ define([
         return Resource.supportsImageBitmapOptions()
             .then(function(result) {
                 if (result) {
-                    return when(createImageBitmap(blob, {
-                        imageOrientation: flipY ? 'flipY' : 'none'
-                    }));
+                    return when(Resource.createImageBitmapFromBlob(blob, flipY));
                 }
 
                 var blobUrl = window.URL.createObjectURL(blob);
@@ -44,6 +42,7 @@ define([
                     url: blobUrl,
                     request: request
                 });
+
                 return resource.fetchImage({
                     flipY : flipY
                 })
