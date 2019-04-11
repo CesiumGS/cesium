@@ -169,6 +169,8 @@ define([
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      * @param {Rectangle} [options.cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
      * @param {Number} [options.projectedImageryReprojectionWidth=128] Width of the grid for reprojecting imagery that uses a {@link ProjectedImageryTilingScheme}. Clamps between 2-255 (inclusive).
+     * @param {Color} [options.colorToAlpha] Color to be used as alpha.
+     * @param {Number} [options.colorToAlphaThreshold=0.004] Threshold for color-to-alpha.
      */
     function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
@@ -301,6 +303,20 @@ define([
          * @type {Rectangle}
          */
         this.cutoutRectangle = options.cutoutRectangle;
+
+        /**
+         * Color value that should be set to transparent.
+         *
+         * @type {Color}
+         */
+        this.colorToAlpha = options.colorToAlpha;
+
+        /**
+         * Normalized (0-1) threshold for color-to-alpha.
+         *
+         * @type {Number}
+         */
+        this.colorToAlphaThreshold = defaultValue(options.colorToAlphaThreshold, ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD);
     }
 
     defineProperties(ImageryLayer.prototype, {
@@ -397,6 +413,14 @@ define([
      * @default 128
      */
     ImageryLayer.DEFAULT_PROJECTED_IMAGERY_REPROJECTION_WIDTH = 128;
+
+    /**
+     * This value is used as the default threshold for color-to-alpha if one is not provided
+     * during construction or by the imagery provider.
+     * @type {Number}
+     * @default 0.004
+     */
+    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
 
     /**
      * Gets a value indicating whether this layer is the base layer in the
