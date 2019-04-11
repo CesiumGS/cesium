@@ -31,23 +31,9 @@ define([
             type : format
         });
 
-        var blobUrl = window.URL.createObjectURL(blob);
-        var resource = new Resource({
-            url: blobUrl,
-            request: request
-        });
-        return resource.fetchImage({
-            flipY : flipY,
-            preferImageBitmap : true
-        })
-            .then(function(image) {
-                window.URL.revokeObjectURL(blobUrl);
-                return image;
-            })
-            .otherwise(function(error) {
-                window.URL.revokeObjectURL(blobUrl);
-                return when.reject(error);
-            });
+        return when(createImageBitmap(blob, {
+            imageOrientation: flipY ? 'flipY' : 'none'
+        }));
     }
 
     return loadImageFromTypedArray;
