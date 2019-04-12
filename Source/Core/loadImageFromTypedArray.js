@@ -46,15 +46,14 @@ define([
                 return resource.fetchImage({
                     flipY : flipY
                 })
-                    .then(function(image) {
-                        window.URL.revokeObjectURL(blobUrl);
-                        return image;
-                    }, function(error) {
-                    })
-                    .otherwise(function(error) {
-                        window.URL.revokeObjectURL(blobUrl);
-                        return when.reject(error);
-                    });
+                .then(function(image) {
+                    window.URL.revokeObjectURL(blobUrl);
+                    return image;
+                })
+                .otherwise(function(error) {
+                    window.URL.revokeObjectURL(blobUrl);
+                    return when.reject(error);
+                });
             });
     }
 
