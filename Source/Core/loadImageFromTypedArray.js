@@ -31,13 +31,14 @@ define([
             type : format
         });
 
+        var blobUrl;
         return Resource.supportsImageBitmapOptions()
             .then(function(result) {
                 if (result) {
                     return when(Resource.createImageBitmapFromBlob(blob, flipY));
                 }
 
-                var blobUrl = window.URL.createObjectURL(blob);
+                blobUrl = window.URL.createObjectURL(blob);
                 var resource = new Resource({
                     url: blobUrl,
                     request: request
@@ -45,15 +46,19 @@ define([
 
                 return resource.fetchImage({
                     flipY : flipY
-                })
-                .then(function(image) {
-                    window.URL.revokeObjectURL(blobUrl);
-                    return image;
-                })
-                .otherwise(function(error) {
-                    window.URL.revokeObjectURL(blobUrl);
-                    return when.reject(error);
                 });
+            })
+            .then(function(result) {
+                if (defined(blobUrl)) {
+                    window.URL.revokeObjectURL(blobUrl);
+                }
+                return result;
+            })
+            .otherwise(function(error) {
+                if (defined(blobUrl)) {
+                    window.URL.revokeObjectURL(blobUrl);
+                }
+                return when.reject(error);
             });
     }
 
