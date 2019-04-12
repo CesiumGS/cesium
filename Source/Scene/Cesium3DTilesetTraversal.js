@@ -482,7 +482,6 @@ define([
         // and rendering children and parent tiles simultaneously.
         var stack = traversal.stack;
         stack.push(root);
-        var preferLeaves = tileset.preferLeaves;
 
         while (stack.length > 0) {
             traversal.stackMaximumLength = Math.max(traversal.stackMaximumLength, stack.length);
@@ -515,11 +514,7 @@ define([
             } else if (add) {
                 // Additive tiles are always loaded and selected
                 selectDesiredTile(tileset, tile, frameState);
-                if (preferLeaves && (stoppedRefining || reachedSkippingThreshold(tileset, tile))) {
-                    loadTile(tileset, tile, frameState);
-                } else {
-                    loadTile(tileset, tile, frameState);
-                }
+                loadTile(tileset, tile, frameState);
             } else if (replace) {
                 if (baseTraversal) {
                     // Always load tiles in the base traversal
