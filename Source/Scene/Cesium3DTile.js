@@ -1416,7 +1416,7 @@ define([
 
         // Compute the digits for each priority
         var depthDigits = priorityNormalizeAndClamp(this._depth, minPriority.depth, maxPriority.depth);
-        depthDigits = preferLeaves ? 1 - depthDigits : 0;
+        depthDigits = preferLeaves ? 1 - depthDigits : depthDigits;
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var useDistance = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;

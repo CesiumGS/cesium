@@ -379,7 +379,7 @@ defineSuite([
         tile1.updatePriority();
         tile2.updatePriority();
 
-        var nonPreloadFlightPenalty = 10000000;
+        var nonPreloadFlightPenalty = 10000000000;
         var tile1ExpectedPriority = nonPreloadFlightPenalty + 0;
         var tile2ExpectedPriority = nonPreloadFlightPenalty + 1;
         expect(CesiumMath.equalsEpsilon(tile1._priority, tile1ExpectedPriority, CesiumMath.EPSILON2)).toBe(true);
@@ -388,14 +388,14 @@ defineSuite([
         // Penalty for not being a progressive resolution
         tile2._priorityProgressiveResolution = false;
         tile2.updatePriority();
-        var nonProgressiveResoutionPenalty = 1000;
+        var nonProgressiveResoutionPenalty = 100000000;
         expect(tile2._priority).toBeGreaterThan(nonProgressiveResoutionPenalty);
         tile2._priorityProgressiveResolution = true;
 
         // Penalty for being a foveated deferral
         tile2.priorityDeferred = true;
         tile2.updatePriority();
-        var foveatedDeferralPenalty = 100000;
+        var foveatedDeferralPenalty = 10000000;
         expect(tile2._priority).toBeGreaterThanOrEqualTo(foveatedDeferralPenalty);
         tile2._priorityDeferred = false;
     });
