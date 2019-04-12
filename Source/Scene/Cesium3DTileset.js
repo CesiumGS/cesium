@@ -122,6 +122,7 @@ define([
      * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
      * @param {Boolean} [options.preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
      * @param {Boolean} [options.preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
+     * @param {Boolean} [options.preferLeaves=false] Optimization option. Prefer loading of leaves first.
      * @param {Boolean} [options.dynamicScreenSpaceError=false] Optimization option. Reduce the screen space error for tiles that are further away from the camera.
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
@@ -249,6 +250,7 @@ define([
         this.cullRequestsWhileMovingMultiplier = defaultValue(options.cullRequestsWhileMovingMultiplier, 60);
 
         this.progressiveResolutionHeightFraction = CesiumMath.clamp(defaultValue(options.progressiveResolutionHeightFraction, 0.3), 0, 0.5);
+        this.preferLeaves = defaultValue(options.preferLeaves, false);
 
         this._tilesLoaded = false;
         this._initialTilesLoaded = false;

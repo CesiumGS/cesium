@@ -1371,6 +1371,7 @@ define([
      */
     Cesium3DTile.prototype.updatePriority = function() {
         var tileset = this.tileset;
+        var preferLeaves = tileset.preferLeaves;
         var minPriority = tileset._minPriority;
         var maxPriority = tileset._maxPriority;
 
@@ -1379,19 +1380,22 @@ define([
         // Theoretically, the digit of separation should be the amount of leading 0's in the mapped min for the digit of interest.
         // Think of digits as penalties, if a tile has some large quanity or has a flag raised it's (usually) penalized for it, expressed as a higher number for the digit
         var depthScale = 1; // One's "digit", digit in quotes here because instead of being an integer in [0..9] it will be a double in [0..10). We want it continuous anyway, not discrete.
-        var preferedSortingScale = depthScale * 100;
-        var preloadProgressiveResolutionScale = preferedSortingScale * 10; // This is penalized less than foveated defer tiles because we want center tiles to continuously load
+        var preferredSortingScale = depthScale * 100;
+        var preloadProgressiveResolutionScale = preferredSortingScale * 10; // This is penalized less than foveated defer tiles because we want center tiles to continuously load
         var foveatedScale = preloadProgressiveResolutionScale * 100;
         var foveatedDeferScale = foveatedScale * 10;
         var preloadFlightScale = foveatedDeferScale * 10;
 
         // Map 0-1 then convert to digit
-        var depthDigit = depthScale * CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
+        var depthNormalize = CesiumMath.normalize(this._depth, minPriority.depth, maxPriority.depth);
+        depthNormalize = preferLeaves ? 1 - depthNormalize : depthNormalize;
+        var depthDigit = depthScale * depthNormalize;
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var useDistance = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
-        var preferedSortingDigit = useDistance ? preferedSortingScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
-                                         preferedSortingScale * CesiumMath.normalize(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
+        var preferredSortingDigit = useDistance ? preferredSortingScale * CesiumMath.normalize(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
+                                                  preferredSortingScale * CesiumMath.normalize(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
+        var preferredSortingDigit = preferLeaves ? 0 : preferredSortingDigit; // Just gets in the way when preferLeaves
 
         // Map 0-1 then convert to digit
         var foveatedDigit = foveatedScale * CesiumMath.normalize(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
@@ -1404,7 +1408,7 @@ define([
         var preloadFlightDigit = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale; // Penalize non-preloads
 
         // Get the final base 10 number
-        this._priority = depthDigit + preferedSortingDigit + preloadProgressiveResolutionDigit + foveatedDigit + foveatedDeferDigit + preloadFlightDigit;
+        this._priority = depthDigit + preferredSortingDigit + preloadProgressiveResolutionDigit + foveatedDigit + foveatedDeferDigit + preloadFlightDigit;
     };
 
     /**
