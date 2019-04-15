@@ -1426,7 +1426,6 @@ define([
         preferredSortingDigits = preferLeaves ? 0 : preferredSortingDigits; // Turn off when preferLeaves
 
         var preloadProgressiveResolutionDigits = this._priorityProgressiveResolution ? 0 : preloadProgressiveResolutionScale;
-        preloadProgressiveResolutionDigits = preferLeaves ? 0 : preloadProgressiveResolutionDigits; // Turn off when preferLeaves
 
         var normalizedFoveatedFactor = priorityNormalizeAndClamp(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
         var foveatedDigits = isolateDigits(normalizedFoveatedFactor, foveatedDigitsCount, foveatedLeftShift);
