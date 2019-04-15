@@ -201,6 +201,8 @@ define([
         tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
         tileset._maxPriority.foveatedFactor = Math.max(tile._priorityHolder._foveatedFactor, tileset._maxPriority.foveatedFactor);
         tileset._minPriority.foveatedFactor = Math.min(tile._priorityHolder._foveatedFactor, tileset._minPriority.foveatedFactor);
+        tileset._maxPriority.reverseScreenSpaceError = Math.max(tile._priorityReverseScreenSpaceError, tileset._maxPriority.reverseScreenSpaceError);
+        tileset._minPriority.reverseScreenSpaceError = Math.min(tile._priorityReverseScreenSpaceError, tileset._minPriority.reverseScreenSpaceError);
     }
 
     function isOnScreenLongEnough(tileset, tile, frameState) {
