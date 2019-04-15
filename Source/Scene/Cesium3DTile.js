@@ -1387,9 +1387,9 @@ define([
 
         // Combine priority systems together by mapping them into a base 10 number where each priority controls a specific set of digits in the number.
         // For number priorities, map them to a 0.xxxxx number then left shift it up into a set number of digits before the decimal point. Chop of the fractional part then left shift again into the position it needs to go.
-        // For blending number prirorities, normalize them to 0-1 and interpolate to get a combined 0-1 number, then proceed as normal.
+        // For blending number priorities, normalize them to 0-1 and interpolate to get a combined 0-1 number, then proceed as normal.
         // Booleans can just be 0 or 10^leftshift.
-        // Think of digits as penalties since smaller numbers are higher priority. If a tile has some large quanity or has a flag raised it's (usually) penalized for it, expressed as a higher number for the digit.
+        // Think of digits as penalties since smaller numbers are higher priority. If a tile has some large quantity or has a flag raised it's (usually) penalized for it, expressed as a higher number for the digit.
         // Priority number format: preloadFlightDigits(1) | foveatedDeferDigits(1) | foveatedDigits(4) | preloadProgressiveResolutionDigits(1) | preferredSortingDigits(4) . depthDigits(the decimal digits)
         // Certain flags like preferLeaves will flip / turn off certain digits to get desired load order.
 
@@ -1420,9 +1420,9 @@ define([
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var useDistance = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
-        var normalizedpreferredSorting = useDistance ? priorityNormalizeAndClamp(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
+        var normalizedPreferredSorting = useDistance ? priorityNormalizeAndClamp(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
                                                       priorityNormalizeAndClamp(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
-        var preferredSortingDigits = isolateDigits(normalizedpreferredSorting, preferredSortingDigitsCount, preferredSortingLeftShift);
+        var preferredSortingDigits = isolateDigits(normalizedPreferredSorting, preferredSortingDigitsCount, preferredSortingLeftShift);
         preferredSortingDigits = preferLeaves ? 0 : preferredSortingDigits; // Turn off when preferLeaves
 
         var preloadProgressiveResolutionDigits = this._priorityProgressiveResolution ? 0 : preloadProgressiveResolutionScale;
