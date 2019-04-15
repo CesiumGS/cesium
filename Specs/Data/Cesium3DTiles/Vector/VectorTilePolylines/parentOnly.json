@@ -1,0 +1,23 @@
+{
+  "asset": {
+    "version": "0.0"
+  },
+  "geometricError": 5000,
+  "root": {
+    "boundingVolume": {
+      "region": [
+        -0.00017453292519943296,
+        -0.00017453292519943296,
+        0.00017453292519943296,
+        0.00017453292519943296,
+        -1000,
+        1000
+      ]
+    },
+    "geometricError": 0,
+    "refine": "REPLACE",
+    "content": {
+      "url": "parent.vctr"
+    }
+  }
+}

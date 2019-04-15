@@ -140,6 +140,7 @@ define([
      * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
      * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
      * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
+     * @param {Cartesian2} [options.minimumMaximumHeight] Minimum and maximum height for vector tiles clamped to surfaces.
      *
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
      *
@@ -234,6 +235,11 @@ define([
         this._initialClippingPlanesOriginMatrix = Matrix4.IDENTITY; // Computed from the tileset JSON.
         this._clippingPlanesOriginMatrix = undefined; // Combines the above with any run-time transforms.
         this._clippingPlanesOriginMatrixDirty = true;
+
+        /**
+         * TODO: move this all somewhere that makes more sense in terms of order, wouldja?
+         */
+        this._minimumMaximumHeight = Cartesian2.clone(options.minimumMaximumHeight);
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -1361,6 +1367,15 @@ define([
                 Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.y', value.y, 1.0);
                 //>>includeEnd('debug');
                 Cartesian2.clone(value, this._imageBasedLightingFactor);
+            }
+        },
+
+        /**
+         * TODO: document!
+         */
+        minimumMaximumHeight : {
+            get : function() {
+                return this._minimumMaximumHeight;
             }
         }
     });

@@ -17,7 +17,8 @@ define([
         './Cesium3DTileBatchTable',
         './Vector3DTilePoints',
         './Vector3DTilePolygons',
-        './Vector3DTilePolylines'
+        './Vector3DTilePolylines',
+        './Vector3DTileClampedPolylines'
     ], function(
         Cartesian3,
         defaultValue,
@@ -37,7 +38,8 @@ define([
         Cesium3DTileBatchTable,
         Vector3DTilePoints,
         Vector3DTilePolygons,
-        Vector3DTilePolylines) {
+        Vector3DTilePolylines,
+        Vector3DTileClampedPolylines) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -251,6 +253,14 @@ define([
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfUint32 = Uint32Array.BYTES_PER_ELEMENT;
 
+    function createFloatingPolylines(options) {
+        return new Vector3DTilePolylines(options);
+    }
+
+    function createClampedPolylines(options) {
+        return new Vector3DTileClampedPolylines(options);
+    }
+
     function initialize(content, arrayBuffer, byteOffset) {
         byteOffset = defaultValue(byteOffset, 0);
 
@@ -421,7 +431,11 @@ define([
                 widths = new Uint16Array(featureTableBinary.buffer, polylineWidthsByteOffset, numberOfPolylines);
             }
 
-            content._polylines = new Vector3DTilePolylines({
+            var createPolylines = createFloatingPolylines;
+            if (defined(content._tileset.minimumMaximumHeight)) {
+                createPolylines = createClampedPolylines;
+            }
+            content._polylines = createPolylines({
                 positions : polylinePositions,
                 widths : widths,
                 counts : polylineCounts,
@@ -431,7 +445,8 @@ define([
                 center : center,
                 rectangle : rectangle,
                 boundingVolume : content.tile.boundingVolume.boundingVolume,
-                batchTable : batchTable
+                batchTable : batchTable,
+                tileset : content._tileset
             });
         }
 
