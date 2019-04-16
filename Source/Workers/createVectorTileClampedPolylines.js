@@ -94,8 +94,16 @@ define([
         var startEllipsoidNormal = ellipsoid.geodeticSurfaceNormal(position, scratchStartEllipsoidNormal);
         position = Cartesian3.add(endRTC, center, positionScratch);
         var endEllipsoidNormal = ellipsoid.geodeticSurfaceNormal(position, scratchEndEllipsoidNormal);
-        var startFaceNormal = Cartesian3.subtract(preStartRTC, startRTC, scratchStartFaceNormal);
-        var endFaceNormal = Cartesian3.subtract(postEndRTC, endRTC, scratchEndFaceNormal);
+        var startFaceNormal = Cartesian3.subtract(startRTC, preStartRTC, scratchStartFaceNormal);
+        var endFaceNormal = Cartesian3.subtract(endRTC, postEndRTC, scratchEndFaceNormal);
+
+        if (Cartesian3.equals(startFaceNormal, Cartesian3.ZERO)) {
+            startFaceNormal = Cartesian3.subtract(endRTC, startRTC, scratchStartFaceNormal);
+        }
+
+        if (Cartesian3.equals(endFaceNormal, Cartesian3.ZERO)) {
+            endFaceNormal = Cartesian3.subtract(startRTC, endRTC, scratchStartFaceNormal);
+        }
 
         if (!Cartesian3.equals(startFaceNormal, Cartesian3.ZERO)) {
             Cartesian3.normalize(startFaceNormal, startFaceNormal);

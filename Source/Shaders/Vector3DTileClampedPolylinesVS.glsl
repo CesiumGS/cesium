@@ -9,6 +9,11 @@ attribute float a_batchId;
 uniform mat4 u_modifiedModelView;
 uniform vec2 u_minimumMaximumHeight;
 
+varying vec4 v_startPlaneEC;
+varying vec4 v_endPlaneEC;
+varying vec4 v_rightPlaneEC;
+varying float v_halfWidth;
+
 void main()
 {
     vec3 scratchNormal;
@@ -59,8 +64,18 @@ void main()
     //positionEC.xyz += scratchNormal * (widthEC * sign(0.5 - mod(startFaceNormalAndVertexCorner.w, 2.0)));
 
     // Push for width. Don't worry about mitering for now.
-    float widthEC = endFaceNormalAndHalfWidth.w * max(0.0, czm_metersPerPixel(positionEC));
+    float widthEC = 2.0 * endFaceNormalAndHalfWidth.w * max(0.0, czm_metersPerPixel(positionEC));
     positionEC.xyz += rightEC * (widthEC * sign(0.5 - mod(startFaceNormalAndVertexCorner.w, 2.0)));
 
-    gl_Position = czm_projection * positionEC;
+    gl_Position = czm_depthClampFarPlane(czm_projection * positionEC);
+
+    positionEC = u_modifiedModelView * vec4(startPositionAndHeight.xyz, 1.0);
+    scratchNormal = czm_normal * startFaceNormalAndVertexCorner.xyz;
+    v_rightPlaneEC = vec4(rightEC, -dot(rightEC, positionEC.xyz));
+    v_startPlaneEC = vec4(scratchNormal, -dot(scratchNormal, positionEC.xyz));
+
+    positionEC = u_modifiedModelView * vec4(endPositionAndHeight.xyz, 1.0);
+    scratchNormal = czm_normal * endFaceNormalAndHalfWidth.xyz;
+    v_endPlaneEC = vec4(scratchNormal, -dot(scratchNormal, positionEC.xyz));
+    v_halfWidth = endFaceNormalAndHalfWidth.w;
 }
