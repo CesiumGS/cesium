@@ -71,20 +71,12 @@ void main()
 
     gl_Position = czm_depthClampFarPlane(czm_projection * position);
 
-    // Use middle-height of start and end points for planes
-    targetHeight = 0.5 * (u_minimumMaximumHeight.x + u_minimumMaximumHeight.y);
-    position = vec4(startPositionAndHeight.xyz, 1.0);
-    position.xyz += (targetHeight - startPositionAndHeight.w) * startEllipsoidNormal;
-    position = u_modifiedModelView * position;
-
+    position = u_modifiedModelView * vec4(startPositionAndHeight.xyz, 1.0);
     scratchNormal = czm_normal * startFaceNormalAndVertexCorner.xyz;
     v_startPlaneEC = vec4(scratchNormal, -dot(scratchNormal, position.xyz));
     v_rightPlaneEC = vec4(right, -dot(right, position.xyz));
 
-    position = vec4(endPositionAndHeight.xyz, 1.0);
-    position.xyz += (targetHeight - endPositionAndHeight.w) * endEllipsoidNormal;
-    position = u_modifiedModelView * position;
-
+    position = u_modifiedModelView * vec4(endPositionAndHeight.xyz, 1.0);
     scratchNormal = czm_normal * endFaceNormalAndHalfWidth.xyz;
     v_endPlaneEC = vec4(scratchNormal, -dot(scratchNormal, position.xyz));
     v_halfWidth = endFaceNormalAndHalfWidth.w;

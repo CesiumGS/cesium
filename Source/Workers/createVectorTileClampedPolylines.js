@@ -110,7 +110,7 @@ define([
 
     var towardCurrScratch = new Cartesian3();
     var towardNextScratch = new Cartesian3();
-    function computeMiteredNormal(previousPosition, position, nextPosition, result) {
+    function computeMiteredNormal(previousPosition, position, nextPosition, ellipsoidSurfaceNormal, result) {
         var towardNext = Cartesian3.subtract(nextPosition, position, towardNextScratch);
         var towardCurr = Cartesian3.subtract(position, previousPosition, towardCurrScratch);
         Cartesian3.normalize(towardNext, towardNext);
@@ -124,6 +124,10 @@ define([
         if (Cartesian3.equals(result, Cartesian3.ZERO)) {
             result = Cartesian3.subtract(previousPosition, position);
         }
+
+        // Make sure the normal is orthogonal to the ellipsoid surface normal
+        Cartesian3.cross(result, ellipsoidSurfaceNormal, result);
+        Cartesian3.cross(ellipsoidSurfaceNormal, result, result);
         Cartesian3.normalize(result, result);
         return result;
     }
@@ -158,8 +162,8 @@ define([
         position = Cartesian3.add(endRTC, center, positionScratch);
         var endEllipsoidNormal = ellipsoid.geodeticSurfaceNormal(position, scratchEndEllipsoidNormal);
 
-        var startFaceNormal = computeMiteredNormal(preStartRTC, startRTC, endRTC, scratchStartFaceNormal);
-        var endFaceNormal = computeMiteredNormal(postEndRTC, endRTC, startRTC, scratchEndFaceNormal);
+        var startFaceNormal = computeMiteredNormal(preStartRTC, startRTC, endRTC, startEllipsoidNormal, scratchStartFaceNormal);
+        var endFaceNormal = computeMiteredNormal(postEndRTC, endRTC, startRTC, endEllipsoidNormal, scratchEndFaceNormal);
 
         var startEllipsoidNormals = this.startEllipsoidNormals;
         var endEllipsoidNormals = this.endEllipsoidNormals;

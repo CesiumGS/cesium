@@ -26,7 +26,8 @@ define([
         '../Shaders/Vector3DTileClampedPolylinesFS',
         '../ThirdParty/when',
         './BlendingState',
-        './Cesium3DTileFeature'
+        './Cesium3DTileFeature',
+        './CullFace'
     ], function(
         arraySlice,
         Cartesian3,
@@ -55,7 +56,8 @@ define([
         Vector3DTileClampedPolylinesFS,
         when,
         BlendingState,
-        Cesium3DTileFeature) {
+        Cesium3DTileFeature,
+        CullFace) {
     'use strict';
 
     /**
@@ -425,29 +427,14 @@ define([
 
         primitive._rs = RenderState.fromCache({
             cull : {
-                //enabled : true // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
-                enabled : false
+                enabled : true,
+                face : CullFace.FRONT // Geometry is "inverted," so cull front when materials on volume instead of on terrain (morph)
+            },
+            depthTest : {
+                enabled : true
             },
             blending : BlendingState.ALPHA_BLEND,
-            depthMask : false,
-            stencilTest : {
-                enabled : false
-                //enabled : mask3DTiles,
-                //frontFunction : StencilFunction.EQUAL,
-                //frontOperation : {
-                //    fail : StencilOperation.KEEP,
-                //    zFail : StencilOperation.KEEP,
-                //    zPass : StencilOperation.KEEP
-                //},
-                //backFunction : StencilFunction.EQUAL,
-                //backOperation : {
-                //    fail : StencilOperation.KEEP,
-                //    zFail : StencilOperation.KEEP,
-                //    zPass : StencilOperation.KEEP
-                //},
-                //reference : StencilConstants.CESIUM_3D_TILE_MASK,
-                //mask : StencilConstants.CESIUM_3D_TILE_MASK
-            }
+            depthMask : false
         });
     }
 
@@ -466,7 +453,8 @@ define([
             sources : [PolylineCommon, vsSource]
         });
         var fs = new ShaderSource({
-            defines : ['VECTOR_TILE', 'DEBUG_SHOW_VOLUME'],
+            //defines : ['VECTOR_TILE', 'DEBUG_SHOW_VOLUME'],
+            defines : ['VECTOR_TILE'],
             sources : [fsSource]
         });
 
@@ -488,7 +476,7 @@ define([
                 shaderProgram : primitive._sp,
                 uniformMap : uniformMap,
                 boundingVolume : primitive._boundingVolume,
-                pass : Pass.TRANSLUCENT,
+                pass : Pass.TERRAIN_CLASSIFICATION,
                 pickId : primitive._batchTable.getPickId()
             });
         }
