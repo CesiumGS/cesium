@@ -161,6 +161,8 @@ define([
 
         this.text = defaultValue(options.text, '');
 
+        this._relativeSize = 1.0;
+
         this._updateClamping();
     }
 
@@ -1113,7 +1115,7 @@ define([
         var y = 0;
         var width = 0;
         var height = 0;
-        var scale = label.scale;
+        var scale = label.scale * label._relativeSize;
         var resolutionScale = label._labelCollection._resolutionScale;
 
         var backgroundBillboard = label._backgroundBillboard;
