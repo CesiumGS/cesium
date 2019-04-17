@@ -466,7 +466,7 @@ define([
             sources : [PolylineCommon, vsSource]
         });
         var fs = new ShaderSource({
-            defines : ['VECTOR_TILE'],
+            defines : ['VECTOR_TILE', 'DEBUG_SHOW_VOLUME'],
             sources : [fsSource]
         });
 

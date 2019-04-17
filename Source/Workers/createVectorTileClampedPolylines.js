@@ -19,6 +19,7 @@ define([
     'use strict';
 
     var MAX_SHORT = 32767;
+    var MITER_BREAK = Math.cos(CesiumMath.toRadians(150.0));
 
     var scratchBVCartographic = new Cartographic();
     var scratchEncodedPosition = new Cartesian3();
@@ -43,6 +44,48 @@ define([
         return decodedPositions;
     }
 
+    var previousCompressedCartographicScratch = new Cartographic();
+    var currentCompressedCartographicScratch = new Cartographic();
+    function removeDuplicates(uBuffer, vBuffer, heightBuffer, counts) {
+        var countsLength = counts.length;
+        var positionsLength = uBuffer.length;
+        var markRemoval = new Uint8Array(positionsLength);
+        var previous = previousCompressedCartographicScratch;
+        var current = currentCompressedCartographicScratch;
+        var offset = 0;
+        for (var i = 0; i < countsLength; i++) {
+            var count = counts[i];
+            var updatedCount = count;
+            for (var j = 1; j < count; j++) {
+                var index = offset + j;
+                var previousIndex = index - 1;
+                current.longitude = uBuffer[index];
+                current.latitude = vBuffer[index];
+                current.height = heightBuffer[index];
+                previous.longitude = uBuffer[previousIndex];
+                previous.latitude = vBuffer[previousIndex];
+                previous.height = heightBuffer[previousIndex];
+
+                if (Cartographic.equals(current, previous)) {
+                    updatedCount--;
+                    markRemoval[previousIndex] = 1;
+                }
+            }
+            counts[i] = updatedCount;
+            offset += count;
+        }
+
+        var nextAvailableIndex = 0;
+        for (var k = 0; k < positionsLength; k++) {
+            if (markRemoval[k] !== 1) {
+                uBuffer[nextAvailableIndex] = uBuffer[k];
+                vBuffer[nextAvailableIndex] = vBuffer[k];
+                heightBuffer[nextAvailableIndex] = heightBuffer[k];
+                nextAvailableIndex++;
+            }
+        }
+    }
+
     function VertexAttributesAndIndices(volumesCount) {
         var vertexCount = volumesCount * 8;
         var vec3Floats = vertexCount * 3;
@@ -63,6 +106,26 @@ define([
         this.indexOffset = 0;
 
         this.volumeStartIndex = 0;
+    }
+
+    var towardCurrScratch = new Cartesian3();
+    var towardNextScratch = new Cartesian3();
+    function computeMiteredNormal(previousPosition, position, nextPosition, result) {
+        var towardNext = Cartesian3.subtract(nextPosition, position, towardNextScratch);
+        var towardCurr = Cartesian3.subtract(position, previousPosition, towardCurrScratch);
+        Cartesian3.normalize(towardNext, towardNext);
+        Cartesian3.normalize(towardCurr, towardCurr);
+
+        if (Cartesian3.dot(towardNext, towardCurr) < MITER_BREAK) {
+            towardCurr = Cartesian3.multiplyByScalar(towardCurr, -1.0, towardCurrScratch);
+        }
+
+        Cartesian3.add(towardNext, towardCurr, result);
+        if (Cartesian3.equals(result, Cartesian3.ZERO)) {
+            result = Cartesian3.subtract(previousPosition, position);
+        }
+        Cartesian3.normalize(result, result);
+        return result;
     }
 
     // Winding order is reversed so each segment's volume is inside-out
@@ -94,24 +157,9 @@ define([
         var startEllipsoidNormal = ellipsoid.geodeticSurfaceNormal(position, scratchStartEllipsoidNormal);
         position = Cartesian3.add(endRTC, center, positionScratch);
         var endEllipsoidNormal = ellipsoid.geodeticSurfaceNormal(position, scratchEndEllipsoidNormal);
-        var startFaceNormal = Cartesian3.subtract(startRTC, preStartRTC, scratchStartFaceNormal);
-        var endFaceNormal = Cartesian3.subtract(endRTC, postEndRTC, scratchEndFaceNormal);
 
-        if (Cartesian3.equals(startFaceNormal, Cartesian3.ZERO)) {
-            startFaceNormal = Cartesian3.subtract(endRTC, startRTC, scratchStartFaceNormal);
-        }
-
-        if (Cartesian3.equals(endFaceNormal, Cartesian3.ZERO)) {
-            endFaceNormal = Cartesian3.subtract(startRTC, endRTC, scratchStartFaceNormal);
-        }
-
-        if (!Cartesian3.equals(startFaceNormal, Cartesian3.ZERO)) {
-            Cartesian3.normalize(startFaceNormal, startFaceNormal);
-        }
-
-        if (!Cartesian3.equals(endFaceNormal, Cartesian3.ZERO)) {
-            Cartesian3.normalize(endFaceNormal, endFaceNormal);
-        }
+        var startFaceNormal = computeMiteredNormal(preStartRTC, startRTC, endRTC, scratchStartFaceNormal);
+        var endFaceNormal = computeMiteredNormal(postEndRTC, endRTC, startRTC, scratchEndFaceNormal);
 
         var startEllipsoidNormals = this.startEllipsoidNormals;
         var endEllipsoidNormals = this.endEllipsoidNormals;
@@ -196,6 +244,16 @@ define([
         Cartesian3.unpack(packedBuffer, offset, center);
 
         var i;
+
+        // Unpack positions and generate volumes
+        var positionsLength = encodedPositions.length / 3;
+        var uBuffer = encodedPositions.subarray(0, positionsLength);
+        var vBuffer = encodedPositions.subarray(positionsLength, 2 * positionsLength);
+        var heightBuffer = encodedPositions.subarray(2 * positionsLength, 3 * positionsLength);
+        AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
+
+        removeDuplicates(uBuffer, vBuffer, heightBuffer, counts);
+
         // Figure out how many volumes and how many vertices there will be.
         var countsLength = counts.length;
         var volumesCount = 0;
@@ -206,54 +264,61 @@ define([
 
         var attribsAndIndices = new VertexAttributesAndIndices(volumesCount);
 
-        // Unpack positions and generate volumes
-        var positionsLength = encodedPositions.length / 3;
-        var uBuffer = encodedPositions.subarray(0, positionsLength);
-        var vBuffer = encodedPositions.subarray(positionsLength, 2 * positionsLength);
-        var heightBuffer = encodedPositions.subarray(2 * positionsLength, 3 * positionsLength);
-        AttributeCompression.zigZagDeltaDecode(uBuffer, vBuffer, heightBuffer);
-
         var positionsRTC = decodePositionsToRtc(uBuffer, vBuffer, heightBuffer, rectangle, minimumHeight, maximumHeight, ellipsoid, center);
 
-        var volumeStartPositionIndex = 0;
-        var heightsStartIndex = 0;
+        var currentPositionIndex = 0;
+        var currentHeightIndex = 0;
         for (i = 0; i < countsLength; i++) {
-            var polylinesVolumeCount = counts[i] - 1;
+            var polylineVolumeCount = counts[i] - 1;
             var halfWidth = widths[i] * 0.5;
             var batchId = batchIds[i];
-            for (var j = 0; j < polylinesVolumeCount; j++) {
-                var volumeStart = Cartesian3.unpack(positionsRTC, volumeStartPositionIndex, scratchP0);
-                var volumeEnd = Cartesian3.unpack(positionsRTC, volumeStartPositionIndex + 3, scratchP1);
+            var volumeFirstPositionIndex = currentPositionIndex;
+            for (var j = 0; j < polylineVolumeCount; j++) {
+                var volumeStart = Cartesian3.unpack(positionsRTC, currentPositionIndex, scratchP0);
+                var volumeEnd = Cartesian3.unpack(positionsRTC, currentPositionIndex + 3, scratchP1);
 
-                var startHeight = heightBuffer[heightsStartIndex];
-                var endHeight = heightBuffer[heightsStartIndex + 1];
+                var startHeight = heightBuffer[currentHeightIndex];
+                var endHeight = heightBuffer[currentHeightIndex + 1];
                 startHeight = CesiumMath.lerp(minimumHeight, maximumHeight, startHeight / MAX_SHORT);
                 endHeight = CesiumMath.lerp(minimumHeight, maximumHeight, endHeight / MAX_SHORT);
 
-                heightsStartIndex++;
+                currentHeightIndex++;
 
                 var preStart = scratchPrev;
                 var postEnd = scratchNext;
                 if (j === 0) {
-                    var offsetPastStart = Cartesian3.subtract(volumeStart, volumeEnd, scratchPrev);
-                    preStart = Cartesian3.add(offsetPastStart, volumeStart, scratchPrev);
+                    // Check if this volume is like a loop
+                    var finalPositionIndex = volumeFirstPositionIndex + (polylineVolumeCount * 3);
+                    var finalPosition = Cartesian3.unpack(positionsRTC, finalPositionIndex, scratchPrev);
+                    if (Cartesian3.equals(finalPosition, volumeStart)) {
+                        Cartesian3.unpack(positionsRTC, finalPositionIndex - 3, preStart);
+                    } else {
+                        var offsetPastStart = Cartesian3.subtract(volumeStart, volumeEnd, scratchPrev);
+                        preStart = Cartesian3.add(offsetPastStart, volumeStart, scratchPrev);
+                    }
                 } else {
-                    Cartesian3.unpack(positionsRTC, volumeStartPositionIndex - 3, preStart);
+                    Cartesian3.unpack(positionsRTC, currentPositionIndex - 3, preStart);
                 }
 
-                if (j === polylinesVolumeCount - 1) {
-                    var offsetPastEnd = Cartesian3.subtract(volumeEnd, volumeStart, scratchNext);
-                    postEnd = Cartesian3.add(offsetPastEnd, volumeEnd, scratchNext);
+                if (j === polylineVolumeCount - 1) {
+                    // Check if this volume is like a loop
+                    var firstPosition = Cartesian3.unpack(positionsRTC, volumeFirstPositionIndex, scratchNext);
+                    if (Cartesian3.equals(firstPosition, volumeEnd)) {
+                        Cartesian3.unpack(positionsRTC, volumeFirstPositionIndex + 3, postEnd);
+                    } else {
+                        var offsetPastEnd = Cartesian3.subtract(volumeEnd, volumeStart, scratchNext);
+                        postEnd = Cartesian3.add(offsetPastEnd, volumeEnd, scratchNext);
+                    }
                 } else {
-                    Cartesian3.unpack(positionsRTC, volumeStartPositionIndex + 6, postEnd);
+                    Cartesian3.unpack(positionsRTC, currentPositionIndex + 6, postEnd);
                 }
 
                 attribsAndIndices.addVolume(preStart, volumeStart, volumeEnd, postEnd, startHeight, endHeight, halfWidth, batchId, center, ellipsoid);
 
-                volumeStartPositionIndex += 3;
+                currentPositionIndex += 3;
             }
-            volumeStartPositionIndex += 3;
-            heightsStartIndex++;
+            currentPositionIndex += 3;
+            currentHeightIndex++;
         }
 
         var indices = attribsAndIndices.indices;

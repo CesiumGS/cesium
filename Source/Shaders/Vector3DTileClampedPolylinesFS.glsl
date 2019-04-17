@@ -41,7 +41,7 @@ void main()
         discard;
 #endif // DEBUG_SHOW_VOLUME
     }
-    gl_FragColor = vec4(u_highlightColor.rgb, 0.5);
+    gl_FragColor = u_highlightColor;
 
     czm_writeDepthClampedToFarPlane();
 }
