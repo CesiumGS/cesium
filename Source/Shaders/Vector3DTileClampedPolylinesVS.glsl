@@ -29,22 +29,25 @@ void main()
     float isEnd = floor(startFaceNormalAndVertexCorner.w * 0.251); // 0 for front, 1 for end
     float isTop = floor(startFaceNormalAndVertexCorner.w * mix(0.51, 0.19, isEnd)); // 0 for bottom, 1 for top
 
-    scratchNormal = endPositionAndHeight.xyz - startPositionAndHeight.xyz;
-    vec3 rightEC = czm_normal * normalize(cross(scratchNormal, startEllipsoidNormal));
-    scratchNormal = czm_normal * scratchNormal; // scratchNormal = forwardEC
+    scratchNormal = endPositionAndHeight.xyz - startPositionAndHeight.xyz; // scratchNormal = forward
+    vec3 right = normalize(cross(scratchNormal, startEllipsoidNormal));
 
-    vec4 positionEC = u_modifiedModelView * vec4(startPositionAndHeight.xyz, 1.0);
-    positionEC.xyz += scratchNormal * isEnd; // scratchNormal = forwardEC // TODO: ^ above can prolly be less math
+    vec4 position = vec4(startPositionAndHeight.xyz, 1.0);
+    position.xyz += scratchNormal * isEnd; // scratchNormal = forward
 
     // Push for volume height
     float targetHeight = mix(u_minimumMaximumHeight.x, u_minimumMaximumHeight.y, isTop);
-    scratchNormal = czm_normal * mix(startEllipsoidNormal, endEllipsoidNormal, isEnd); // scratchNormal = ellipsoidNormalEC
+    scratchNormal = mix(startEllipsoidNormal, endEllipsoidNormal, isEnd); // scratchNormal = ellipsoidNormal
     float ellipsoidHeight = mix(startPositionAndHeight.w, endPositionAndHeight.w, isEnd);
-    positionEC.xyz += (targetHeight - ellipsoidHeight) * scratchNormal; // scratchNormal = ellipsoidNormalEC
+    position.xyz += (targetHeight - ellipsoidHeight) * scratchNormal; // scratchNormal = ellipsoidNormal
 
-    // Push for width in a direction that is in the start or end plane and in a plane with rightEC
+    // move from RTC to EC
+    position = u_modifiedModelView * position;
+    right = czm_normal * right;
+
+    // Push for width in a direction that is in the start or end plane and in a plane with right
     // N = normalEC ("right-facing" direction for push)
-    // R = rightEC
+    // R = right
     // p = angle between N and R
     // w = distance to push along R if R == N
     // d = distance to push along N
@@ -59,30 +62,30 @@ void main()
     scratchNormal = cross(scratchNormal, mix(startEllipsoidNormal, endEllipsoidNormal, isEnd));
     scratchNormal = czm_normal * normalize(scratchNormal);
 
-    float widthEC = 2.0 * endFaceNormalAndHalfWidth.w * max(0.0, czm_metersPerPixel(positionEC));
-    widthEC = widthEC / dot(scratchNormal, rightEC);
-    positionEC.xyz += scratchNormal * (widthEC * sign(0.5 - mod(startFaceNormalAndVertexCorner.w, 2.0)));
+    float widthEC = 2.0 * endFaceNormalAndHalfWidth.w * max(0.0, czm_metersPerPixel(position));
+    widthEC = widthEC / dot(scratchNormal, right);
+    position.xyz += scratchNormal * (widthEC * sign(0.5 - mod(startFaceNormalAndVertexCorner.w, 2.0)));
 
     // debug
-    //positionEC.xyz += (czm_normal * mix(startFaceNormalAndVertexCorner.xyz, endFaceNormalAndHalfWidth.xyz, isEnd)) * 0.2;
+    //position.xyz += (czm_normal * mix(startFaceNormalAndVertexCorner.xyz, endFaceNormalAndHalfWidth.xyz, isEnd)) * 0.2;
 
-    gl_Position = czm_depthClampFarPlane(czm_projection * positionEC);
+    gl_Position = czm_depthClampFarPlane(czm_projection * position);
 
     // Use middle-height of start and end points for planes
     targetHeight = 0.5 * (u_minimumMaximumHeight.x + u_minimumMaximumHeight.y);
-    positionEC = vec4(startPositionAndHeight.xyz, 1.0);
-    positionEC.xyz += (targetHeight - startPositionAndHeight.w) * startEllipsoidNormal;
-    positionEC = u_modifiedModelView * positionEC;
+    position = vec4(startPositionAndHeight.xyz, 1.0);
+    position.xyz += (targetHeight - startPositionAndHeight.w) * startEllipsoidNormal;
+    position = u_modifiedModelView * position;
 
     scratchNormal = czm_normal * startFaceNormalAndVertexCorner.xyz;
-    v_startPlaneEC = vec4(scratchNormal, -dot(scratchNormal, positionEC.xyz));
-    v_rightPlaneEC = vec4(rightEC, -dot(rightEC, positionEC.xyz));
+    v_startPlaneEC = vec4(scratchNormal, -dot(scratchNormal, position.xyz));
+    v_rightPlaneEC = vec4(right, -dot(right, position.xyz));
 
-    positionEC = vec4(endPositionAndHeight.xyz, 1.0);
-    positionEC.xyz += (targetHeight - endPositionAndHeight.w) * endEllipsoidNormal;
-    positionEC = u_modifiedModelView * positionEC;
+    position = vec4(endPositionAndHeight.xyz, 1.0);
+    position.xyz += (targetHeight - endPositionAndHeight.w) * endEllipsoidNormal;
+    position = u_modifiedModelView * position;
 
     scratchNormal = czm_normal * endFaceNormalAndHalfWidth.xyz;
-    v_endPlaneEC = vec4(scratchNormal, -dot(scratchNormal, positionEC.xyz));
+    v_endPlaneEC = vec4(scratchNormal, -dot(scratchNormal, position.xyz));
     v_halfWidth = endFaceNormalAndHalfWidth.w;
 }
