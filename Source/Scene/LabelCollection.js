@@ -82,7 +82,7 @@ define([
     }
 
     var glyphFontSize = 48; // Font size in pixels
-    var glyphBuffer = 3;    // Whitespace buffer around a glyph in pixels
+    var glyphBuffer = 2;    // Whitespace buffer around a glyph in pixels
     var glyphRadius = 8;    // How many pixels around the glyph shape to use for encoding distance
     var glyphCutoff = 0.25;  // How much of the radius (relative) is used for the inside part the glyph
 
