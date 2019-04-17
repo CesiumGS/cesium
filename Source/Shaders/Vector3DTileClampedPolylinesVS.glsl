@@ -7,7 +7,8 @@ attribute vec4 endFaceNormalAndHalfWidth;
 attribute float a_batchId;
 
 uniform mat4 u_modifiedModelView;
-uniform vec2 u_minimumMaximumHeight;
+uniform vec2 u_topBottomOffsets;
+uniform vec2 u_minimumMaximumHeights;
 
 varying vec4 v_startPlaneEC;
 varying vec4 v_endPlaneEC;
@@ -36,10 +37,17 @@ void main()
     position.xyz += scratchNormal * isEnd; // scratchNormal = forward
 
     // Push for volume height
-    float targetHeight = mix(u_minimumMaximumHeight.x, u_minimumMaximumHeight.y, isTop);
+    float offset;
     scratchNormal = mix(startEllipsoidNormal, endEllipsoidNormal, isEnd); // scratchNormal = ellipsoidNormal
-    float ellipsoidHeight = mix(startPositionAndHeight.w, endPositionAndHeight.w, isEnd);
-    position.xyz += (targetHeight - ellipsoidHeight) * scratchNormal; // scratchNormal = ellipsoidNormal
+
+    // clamp to height min/max range
+    offset = mix(startPositionAndHeight.w, endPositionAndHeight.w, isEnd);
+    offset = clamp(offset, u_minimumMaximumHeights.x, u_minimumMaximumHeights.y) - offset;
+    position.xyz += offset * scratchNormal; // scratchNormal = ellipsoidNormal
+
+    // offset height to create volume
+    offset = mix(u_topBottomOffsets.y, u_topBottomOffsets.x, isTop);
+    position.xyz += offset * scratchNormal; // scratchNormal = ellipsoidNormal
 
     // move from RTC to EC
     position = u_modifiedModelView * position;
@@ -62,9 +70,9 @@ void main()
     scratchNormal = cross(scratchNormal, mix(startEllipsoidNormal, endEllipsoidNormal, isEnd));
     scratchNormal = czm_normal * normalize(scratchNormal);
 
-    float widthEC = 2.0 * endFaceNormalAndHalfWidth.w * max(0.0, czm_metersPerPixel(position));
-    widthEC = widthEC / dot(scratchNormal, right);
-    position.xyz += scratchNormal * (widthEC * sign(0.5 - mod(startFaceNormalAndVertexCorner.w, 2.0)));
+    offset = 2.0 * endFaceNormalAndHalfWidth.w * max(0.0, czm_metersPerPixel(position)); // offset = widthEC
+    offset = offset / dot(scratchNormal, right);
+    position.xyz += scratchNormal * (offset * sign(0.5 - mod(startFaceNormalAndVertexCorner.w, 2.0)));
 
     // debug
     //position.xyz += (czm_normal * mix(startFaceNormalAndVertexCorner.xyz, endFaceNormalAndHalfWidth.xyz, isEnd)) * 0.2;

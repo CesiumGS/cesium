@@ -432,7 +432,7 @@ define([
             }
 
             var createPolylines = createFloatingPolylines;
-            if (defined(content._tileset.minimumMaximumHeight)) {
+            if (defined(content._tileset.topBottomOffsets)) {
                 createPolylines = createClampedPolylines;
             }
             content._polylines = createPolylines({

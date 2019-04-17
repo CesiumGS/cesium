@@ -36,7 +36,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 var tileset = new Cesium.Cesium3DTileset({
     //url: '../../../../Specs/Data/Cesium3DTiles/Vector/VectorTilePolylines/parentOnly.json',
     url: '../../../../Specs/Data/Cesium3DTiles/Vector/VectorTileCombined/tileset.json',
-    //minimumMaximumHeight: new Cesium.Cartesian2(-0.01, 0.01)
+    topBottomOffsets: new Cesium.Cartesian2(10.0, -10.0)
 });
 //viewer.extend(Cesium.viewerCesium3DTilesInspectorMixin);
 viewer.scene.globe.depthTestAgainstTerrain = false;

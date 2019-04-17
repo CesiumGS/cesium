@@ -96,6 +96,8 @@ define([
         TileOrientedBoundingBox) {
     'use strict';
 
+    var defaultMinMaxHeights = new Cartesian2(Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY);
+
     /**
      * A {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles tileset},
      * used for streaming massive heterogeneous 3D geospatial datasets.
@@ -140,7 +142,8 @@ define([
      * @param {Boolean} [options.debugShowRenderingStatistics=false] For debugging only. When true, draws labels to indicate the number of commands, points, triangles and features for each tile.
      * @param {Boolean} [options.debugShowMemoryUsage=false] For debugging only. When true, draws labels to indicate the texture and geometry memory in megabytes used by each tile.
      * @param {Boolean} [options.debugShowUrl=false] For debugging only. When true, draws labels to indicate the url of each tile.
-     * @param {Cartesian2} [options.minimumMaximumHeight] Minimum and maximum height for vector tiles clamped to surfaces.
+     * @param {Cartesian2} [options.minimumMaximumHeights] Minimum and maximum height for vector tiles clamped to surfaces.
+     * @param {Cartesian2} [options.topBottomOffsets] Offsets applied to vector lines that have been clamped to the minimum/maximum height range.
      *
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
      *
@@ -239,7 +242,8 @@ define([
         /**
          * TODO: move this all somewhere that makes more sense in terms of order, wouldja?
          */
-        this._minimumMaximumHeight = Cartesian2.clone(options.minimumMaximumHeight);
+        this._topBottomOffsets = Cartesian2.clone(options.topBottomOffsets);
+        this._minimumMaximumHeights = Cartesian2.clone(defaultValue(options.minimumMaximumHeights, defaultMinMaxHeights));
 
         /**
          * Optimization option. Whether the tileset should refine based on a dynamic screen space error. Tiles that are further
@@ -1373,9 +1377,14 @@ define([
         /**
          * TODO: document!
          */
-        minimumMaximumHeight : {
+        topBottomOffsets : {
             get : function() {
-                return this._minimumMaximumHeight;
+                return this._topBottomOffsets;
+            }
+        },
+        minimumMaximumHeights : {
+            get : function() {
+                return this._minimumMaximumHeights;
             }
         }
     });
