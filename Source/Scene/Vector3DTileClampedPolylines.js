@@ -27,7 +27,9 @@ define([
         '../ThirdParty/when',
         './BlendingState',
         './Cesium3DTileFeature',
-        './CullFace'
+        './StencilConstants',
+        './StencilFunction',
+        './StencilOperation'
     ], function(
         arraySlice,
         Cartesian3,
@@ -57,7 +59,9 @@ define([
         when,
         BlendingState,
         Cesium3DTileFeature,
-        CullFace) {
+        StencilConstants,
+        StencilFunction,
+        StencilOperation) {
     'use strict';
 
     /**
@@ -423,22 +427,40 @@ define([
         };
     }
 
+    function getRenderState(mask3DTiles) {
+        return RenderState.fromCache({
+            cull : {
+                enabled : true // prevent double-draw. Geometry is "inverted" (reversed winding order) so we're drawing backfaces.
+            },
+            blending : BlendingState.ALPHA_BLEND,
+            depthMask : false,
+            stencilTest : {
+                enabled : mask3DTiles,
+                frontFunction : StencilFunction.EQUAL,
+                frontOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.KEEP
+                },
+                backFunction : StencilFunction.EQUAL,
+                backOperation : {
+                    fail : StencilOperation.KEEP,
+                    zFail : StencilOperation.KEEP,
+                    zPass : StencilOperation.KEEP
+                },
+                reference : StencilConstants.CESIUM_3D_TILE_MASK,
+                mask : StencilConstants.CESIUM_3D_TILE_MASK
+            }
+        });
+    }
+
     function createRenderStates(primitive) {
         if (defined(primitive._rs)) {
             return;
         }
 
-        primitive._rs = RenderState.fromCache({
-            cull : {
-                enabled : true,
-                face : CullFace.FRONT // Geometry is "inverted," so cull front when materials on volume instead of on terrain (morph)
-            },
-            depthTest : {
-                enabled : true
-            },
-            blending : BlendingState.ALPHA_BLEND,
-            depthMask : false
-        });
+        primitive._rs = getRenderState(false);
+        primitive._rs3DTiles = getRenderState(true);
     }
 
     function createShaders(primitive, context) {
@@ -470,9 +492,10 @@ define([
     }
 
     function queueCommands(primitive, frameState) {
+        var command = primitive._command;
         if (!defined(primitive._command)) {
             var uniformMap = primitive._batchTable.getUniformMapCallback()(primitive._uniformMap);
-            primitive._command = new DrawCommand({
+            command = primitive._command = new DrawCommand({
                 owner : primitive,
                 vertexArray : primitive._va,
                 renderState : primitive._rs,
@@ -482,9 +505,15 @@ define([
                 pass : Pass.TERRAIN_CLASSIFICATION,
                 pickId : primitive._batchTable.getPickId()
             });
+
+            var derivedTilesetCommand = DrawCommand.shallowClone(command, command.derivedCommands.tileset);
+            derivedTilesetCommand.renderState = primitive._rs3DTiles;
+            derivedTilesetCommand.pass = Pass.CESIUM_3D_TILE_CLASSIFICATION;
+            command.derivedCommands.tileset = derivedTilesetCommand;
         }
 
-        frameState.commandList.push(primitive._command);
+        frameState.commandList.push(command);
+        frameState.commandList.push(command.derivedCommands.tileset);
     }
 
     /**
