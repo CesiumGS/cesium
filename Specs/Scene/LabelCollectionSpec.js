@@ -1250,8 +1250,6 @@ defineSuite([
             expect(label._glyphs.length).toEqual(0);
         });
 
-        // todo: fix.
-        /*
         it('does not create billboards for spaces', function() {
             var label = labels.add({
                 text : 'abc'
@@ -1265,7 +1263,6 @@ defineSuite([
             expect(label._glyphs.length).toEqual(5);
             expect(labels._billboardCollection.length).toEqual(3);
         });
-        */
 
         function getGlyphBillboardVertexTranslate(label, index) {
             return Cartesian2.clone(label._glyphs[index].billboard._translate, new Cartesian2());

@@ -299,7 +299,10 @@ define([
                 glyphTextureInfo = new GlyphTextureInfo(labelCollection, -1, dimensions);
                 glyphTextureCache[id] = glyphTextureInfo;
 
-                addGlyphToTextureAtlas(labelCollection._textureAtlas, id, image, glyphTextureInfo);
+                // Don't add spaces to the atlas.
+                if (character !== ' ') {
+                    addGlyphToTextureAtlas(labelCollection._textureAtlas, id, image, glyphTextureInfo);
+                }
             }
 
             glyph = glyphs[textIndex];
