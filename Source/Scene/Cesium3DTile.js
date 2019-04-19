@@ -662,7 +662,7 @@ define([
         }
 
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        if ((replace && !tileset._skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
+        if ((replace && !tileset._skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0 || tile._priorityProgressiveResolution) {
             return false;
         }
 
