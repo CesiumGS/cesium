@@ -662,7 +662,7 @@ define([
         }
 
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        if ((replace && !tileset._skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0 || tile._priorityProgressiveResolution) {
+        if ((replace && !tileset._skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0) {
             return false;
         }
 
@@ -1423,7 +1423,6 @@ define([
         var normalizedPreferredSorting = useDistance ? priorityNormalizeAndClamp(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
                                                       priorityNormalizeAndClamp(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
         var preferredSortingDigits = isolateDigits(normalizedPreferredSorting, preferredSortingDigitsCount, preferredSortingLeftShift);
-        preferredSortingDigits = preferLeaves ? 0 : preferredSortingDigits; // Turn off when preferLeaves
 
         var preloadProgressiveResolutionDigits = this._priorityProgressiveResolution ? 0 : preloadProgressiveResolutionScale;
 
