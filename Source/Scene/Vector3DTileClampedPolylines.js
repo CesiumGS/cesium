@@ -418,11 +418,8 @@ define([
             u_highlightColor : function() {
                 return primitive._highlightColor;
             },
-            u_topBottomOffsets : function() {
-                return primitive._tileset.topBottomOffsets;
-            },
-            u_minimumMaximumHeights : function() {
-                return primitive._tileset.minimumMaximumHeights;
+            u_minimumMaximumVectorHeights : function() {
+                return primitive._tileset.minimumMaximumVectorHeights;
             }
         };
     }

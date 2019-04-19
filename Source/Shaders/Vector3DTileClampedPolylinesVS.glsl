@@ -7,8 +7,7 @@ attribute vec4 endFaceNormalAndHalfWidth;
 attribute float a_batchId;
 
 uniform mat4 u_modifiedModelView;
-uniform vec2 u_topBottomOffsets;
-uniform vec2 u_minimumMaximumHeights;
+uniform vec2 u_minimumMaximumVectorHeights;
 
 varying vec4 v_startPlaneEC;
 varying vec4 v_endPlaneEC;
@@ -40,13 +39,9 @@ void main()
     float offset;
     scratchNormal = mix(startEllipsoidNormal, endEllipsoidNormal, isEnd); // scratchNormal = ellipsoidNormal
 
-    // clamp to height min/max range
-    offset = mix(startPositionAndHeight.w, endPositionAndHeight.w, isEnd);
-    offset = clamp(offset, u_minimumMaximumHeights.x, u_minimumMaximumHeights.y) - offset;
-    position.xyz += offset * scratchNormal; // scratchNormal = ellipsoidNormal
-
     // offset height to create volume
-    offset = mix(u_topBottomOffsets.y, u_topBottomOffsets.x, isTop);
+    offset = mix(startPositionAndHeight.w, endPositionAndHeight.w, isEnd);
+    offset = mix(u_minimumMaximumVectorHeights.y, u_minimumMaximumVectorHeights.x, isTop) - offset;
     position.xyz += offset * scratchNormal; // scratchNormal = ellipsoidNormal
 
     // move from RTC to EC
