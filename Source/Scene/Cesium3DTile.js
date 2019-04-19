@@ -661,10 +661,10 @@ define([
             tile._foveatedFactor = 0;
         }
 
+        // Skip this feature if: non-skipLevelOfDetail and replace refine, if the foveated settings are turned off, if tile is progressive resolution and replace refine and skipLevelOfDetail (will help get rid of ancestor artifacts faster).
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        var skipLOD = tileset._skipLevelOfDetail;
-        // Skip this feature if: non-skipLOD and replace refine, if the foveated settings are turned off, if tile is progressive resolution and replace refine and skipLOD (will help get rid of ancestor artifacts faster).
-        if ((replace && !skipLOD) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0 || (tile._priorityProgressiveResolution && replace && skipLOD)) {
+        var skipLevelOfDetail = tileset._skipLevelOfDetail;
+        if ((replace && !skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0 || (tile._priorityProgressiveResolution && replace && skipLevelOfDetail)) {
             return false;
         }
 
