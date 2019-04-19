@@ -662,7 +662,9 @@ define([
         }
 
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        if ((replace && !tileset._skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0 || (tile._priorityProgressiveResolution && replace)) {
+        var skipLOD = tileset._skipLevelOfDetail;
+        // Skip this feature if: non-skipLOD and replace refine, if the foveated settings are turned off, if tile is progressive resolution and replace refine and skipLOD (will help get rid of ancestor artifacts faster).
+        if ((replace && !skipLOD) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0 || (tile._priorityProgressiveResolution && replace && skipLOD)) {
             return false;
         }
 
@@ -1421,7 +1423,7 @@ define([
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var useDistance = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
         var normalizedPreferredSorting = useDistance ? priorityNormalizeAndClamp(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
-                                                      priorityNormalizeAndClamp(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
+                                                       priorityNormalizeAndClamp(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
         var preferredSortingDigits = isolateDigits(normalizedPreferredSorting, preferredSortingDigitsCount, preferredSortingLeftShift);
 
         var preloadProgressiveResolutionDigits = this._priorityProgressiveResolution ? 0 : preloadProgressiveResolutionScale;
