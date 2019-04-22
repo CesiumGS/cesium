@@ -1181,6 +1181,7 @@ define([
      * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
      * y direction in Columbus view. Orientation is not used in 2D when in infinite scrolling mode.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame of the camera.
+     * @param {Boolean} [options.convert] Whether to convert the destination from world coordinates to scene coordinates (only relevant when not using 3D). Defaults to <code>true</code>.
      *
      * @example
      * // 1. Set position with a top-down view
@@ -2756,6 +2757,7 @@ define([
      * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
      * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
      * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
+     * @param {Boolean} [options.convert] Whether to convert the destination from world coordinates to scene coordinates (only relevant when not using 3D). Defaults to <code>true</code>.
      * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      *
      * @exception {DeveloperError} If either direction or up is given, then both are required.
