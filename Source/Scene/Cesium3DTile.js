@@ -661,8 +661,10 @@ define([
             tile._foveatedFactor = 0;
         }
 
+        // Skip this feature if: non-skipLevelOfDetail and replace refine, if the foveated settings are turned off, if tile is progressive resolution and replace refine and skipLevelOfDetail (will help get rid of ancestor artifacts faster).
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        if ((replace && !tileset._skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0 || tile._priorityProgressiveResolution) {
+        var skipLevelOfDetail = tileset._skipLevelOfDetail;
+        if ((replace && !skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0 || (tile._priorityProgressiveResolution && replace && skipLevelOfDetail)) {
             return false;
         }
 
@@ -1421,9 +1423,8 @@ define([
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var useDistance = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
         var normalizedPreferredSorting = useDistance ? priorityNormalizeAndClamp(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
-                                                      priorityNormalizeAndClamp(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
+                                                       priorityNormalizeAndClamp(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
         var preferredSortingDigits = isolateDigits(normalizedPreferredSorting, preferredSortingDigitsCount, preferredSortingLeftShift);
-        preferredSortingDigits = preferLeaves ? 0 : preferredSortingDigits; // Turn off when preferLeaves
 
         var preloadProgressiveResolutionDigits = this._priorityProgressiveResolution ? 0 : preloadProgressiveResolutionScale;
 
