@@ -605,6 +605,10 @@ define([
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = surfaceTile.orientedBoundingBox;
 
+        if (!defined(boundingVolume) && defined(surfaceTile.renderedMesh)) {
+            boundingVolume = surfaceTile.renderedMesh.boundingSphere3D;
+        }
+
         // Check if the tile is outside the limit area in cartographic space
         surfaceTile.clippedByBoundaries = false;
         var clippedCartographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, this.cartographicLimitRectangle);
@@ -641,6 +645,8 @@ define([
             if (intersection === Intersect.OUTSIDE) {
                 return Visibility.NONE;
             }
+        } else {
+            console.log('no bounding volume');
         }
 
         var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;

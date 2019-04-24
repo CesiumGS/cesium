@@ -1,11 +1,14 @@
 define([
         '../ThirdParty/when',
+        './BoundingSphere',
+        './Cartesian3',
         './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError',
         './GeographicProjection',
         './HeightmapTessellator',
+        './OrientedBoundingBox',
         './Math',
         './Rectangle',
         './TaskProcessor',
@@ -14,12 +17,15 @@ define([
         './TerrainProvider'
     ], function(
         when,
+        BoundingSphere,
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         GeographicProjection,
         HeightmapTessellator,
+        OrientedBoundingBox,
         CesiumMath,
         Rectangle,
         TaskProcessor,
@@ -242,16 +248,18 @@ define([
 
         var that = this;
         return when(verticesPromise, function(result) {
+            // Clone complex result objects because the transfer from the web worker
+            // has stripped them down to JSON-style objects.
             that._mesh = new TerrainMesh(
                     center,
                     new Float32Array(result.vertices),
                     TerrainProvider.getRegularGridIndices(result.gridWidth, result.gridHeight),
                     result.minimumHeight,
                     result.maximumHeight,
-                    result.boundingSphere3D,
-                    result.occludeePointInScaledSpace,
+                    BoundingSphere.clone(result.boundingSphere3D),
+                    Cartesian3.clone(result.occludeePointInScaledSpace),
                     result.numberOfAttributes,
-                    result.orientedBoundingBox,
+                    OrientedBoundingBox.clone(result.orientedBoundingBox),
                     TerrainEncoding.clone(result.encoding),
                     exaggeration,
                     result.westIndicesSouthToNorth,
@@ -324,6 +332,8 @@ define([
             arrayHeight += 2;
         }
 
+        // No need to clone here (as we do in the async version) because the result
+        // is not coming from a web worker.
         return new TerrainMesh(
             center,
             result.vertices,
@@ -334,7 +344,7 @@ define([
             result.occludeePointInScaledSpace,
             result.encoding.getStride(),
             result.orientedBoundingBox,
-            TerrainEncoding.clone(result.encoding),
+            result.encoding,
             exaggeration,
             result.westIndicesSouthToNorth,
             result.southIndicesEastToWest,
