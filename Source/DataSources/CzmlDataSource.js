@@ -1085,6 +1085,7 @@ define([
             materialData = packetData.polylineGlow;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'glowPower', materialData.glowPower, undefined, sourceUri, entityCollection);
+            processPacketData(Number, existingMaterial, 'taperPower', materialData.taperPower, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.polylineArrow)) {
             if (!(existingMaterial instanceof PolylineArrowMaterialProperty)) {
                 existingMaterial = new PolylineArrowMaterialProperty();

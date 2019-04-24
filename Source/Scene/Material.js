@@ -227,6 +227,7 @@ define([
      *  <ul>
      *      <li><code>color</code>: color and maximum alpha for the glow on the line.</li>
      *      <li><code>glowPower</code>: strength of the glow, as a percentage of the total line width (less than 1.0).</li>
+     *      <li><code>taperPower</code>: strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.</li>
      *  </ul>
      *  <li>PolylineOutline</li>
      *  <ul>
@@ -1483,7 +1484,8 @@ define([
             type : Material.PolylineGlowType,
             uniforms : {
                 color : new Color(0.0, 0.5, 1.0, 1.0),
-                glowPower : 0.25
+                glowPower : 0.25,
+                taperPower : 1.0
             },
             source : PolylineGlowMaterial
         },
