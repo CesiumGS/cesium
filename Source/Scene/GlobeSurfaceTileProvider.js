@@ -1325,6 +1325,9 @@ define([
             u_hsbShift : function() {
                 return this.properties.hsbShift;
             },
+            u_colorsToAlpha : function() {
+                return this.properties.colorsToAlpha;
+            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -1355,6 +1358,7 @@ define([
                 dayTextureSplit : [],
                 dayTextureCutoutRectangles : [],
                 dayIntensity : 0.0,
+                colorsToAlpha : [],
 
                 southAndNorthLatitude : new Cartesian2(),
                 southMercatorYAndOneOverHeight : new Cartesian2(),
@@ -1532,7 +1536,8 @@ define([
         clippingPlanes : undefined,
         clippedByBoundaries : undefined,
         hasImageryLayerCutout : undefined,
-        colorCorrect : undefined
+        colorCorrect : undefined,
+        colorToAlpha : undefined
     };
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
@@ -1789,6 +1794,7 @@ define([
             var applyAlpha = false;
             var applySplit = false;
             var applyCutout = false;
+            var applyColorToAlpha = false;
 
             while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                 var tileImagery = tileImageryCollection[imageryIndex];
@@ -1867,6 +1873,25 @@ define([
                     dayTextureCutoutRectangle.w = (cutoutRectangle.north - cartographicTileRectangle.south) * inverseTileHeight;
                 }
 
+                // Update color to alpha
+                var colorToAlpha = uniformMapProperties.colorsToAlpha[numberOfDayTextures];
+                if (!defined(colorToAlpha)) {
+                    colorToAlpha = uniformMapProperties.colorsToAlpha[numberOfDayTextures] = new Cartesian4();
+                }
+
+                var hasColorToAlpha = defined(imageryLayer.colorToAlpha) && imageryLayer.colorToAlphaThreshold > 0.0;
+                applyColorToAlpha = applyColorToAlpha || hasColorToAlpha;
+
+                if (hasColorToAlpha) {
+                    var color = imageryLayer.colorToAlpha;
+                    colorToAlpha.x = color.red;
+                    colorToAlpha.y = color.green;
+                    colorToAlpha.z = color.blue;
+                    colorToAlpha.w = imageryLayer.colorToAlphaThreshold;
+                } else {
+                    colorToAlpha.w = -1.0;
+                }
+
                 if (defined(imagery.credits)) {
                     var credits = imagery.credits;
                     for (var creditIndex = 0, creditLength = credits.length; creditIndex < creditLength; ++creditIndex) {
@@ -1913,6 +1938,7 @@ define([
             surfaceShaderSetOptions.hasImageryLayerCutout = applyCutout;
             surfaceShaderSetOptions.colorCorrect = colorCorrect;
             surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
+            surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);
             command.castShadows = castShadows;
