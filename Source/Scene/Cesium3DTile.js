@@ -664,7 +664,11 @@ define([
         // Skip this feature if: non-skipLevelOfDetail and replace refine, if the foveated settings are turned off, if tile is progressive resolution and replace refine and skipLevelOfDetail (will help get rid of ancestor artifacts faster).
         var replace = tile.refine === Cesium3DTileRefine.REPLACE;
         var skipLevelOfDetail = tileset._skipLevelOfDetail;
-        if ((replace && !skipLevelOfDetail) || !tileset.foveatedScreenSpaceError || tileset.foveatedConeSize === 1.0 || (tile._priorityProgressiveResolution && replace && skipLevelOfDetail)) {
+        if ((replace && !skipLevelOfDetail) ||
+            !tileset.foveatedScreenSpaceError ||
+            tileset.foveatedConeSize === 1.0 ||
+            (tile._priorityProgressiveResolution && replace && skipLevelOfDetail) ||
+            tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT) {
             return false;
         }
 
