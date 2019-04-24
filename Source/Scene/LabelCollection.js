@@ -267,7 +267,7 @@ define([
 
             var glyphTextureInfo = glyphTextureCache[id];
             if (!defined(glyphTextureInfo)) {
-                var sdfInfo = getSDF(character, font);
+                var sdfInfo = getSDF(character, fontInfo);
                 var sdf = sdfInfo.sdf;
 
                 var width = sdfInfo.dimensions.bounds.maxy;
