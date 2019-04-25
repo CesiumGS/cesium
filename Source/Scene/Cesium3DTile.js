@@ -1278,11 +1278,11 @@ define([
             tile._debugViewerRequestVolume = tile._debugViewerRequestVolume.destroy();
         }
 
-        var debugColorizeTilesOn = (tileset.debugColorizeTiles && !tile._debugColorizeTiles) || defined(tileset._heatmap.variableName);
+        var debugColorizeTilesOn = (tileset.debugColorizeTiles && !tile._debugColorizeTiles) || defined(tileset._heatmap.tilePropertyName);
         var debugColorizeTilesOff = !tileset.debugColorizeTiles && tile._debugColorizeTiles;
 
         if (debugColorizeTilesOn) {
-            tileset._heatmap.colorize(tile, frameState); // Skipped if tileset._heatmap.variableName is undefined
+            tileset._heatmap.colorize(tile, frameState); // Skipped if tileset._heatmap.tilePropertyName is undefined
             tile._debugColorizeTiles = true;
             tile.color = tile._debugColor;
         } else if (debugColorizeTilesOff) {
