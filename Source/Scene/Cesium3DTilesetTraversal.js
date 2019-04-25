@@ -194,15 +194,15 @@ define([
         tile._touchedFrame = frameState.frameNumber;
     }
 
-    function updateMinMaxPriority(tileset, tile) {
-        tileset._maxPriority.distance = Math.max(tile._priorityHolder._distanceToCamera, tileset._maxPriority.distance);
-        tileset._minPriority.distance = Math.min(tile._priorityHolder._distanceToCamera, tileset._minPriority.distance);
-        tileset._maxPriority.depth = Math.max(tile._depth, tileset._maxPriority.depth);
-        tileset._minPriority.depth = Math.min(tile._depth, tileset._minPriority.depth);
-        tileset._maxPriority.foveatedFactor = Math.max(tile._priorityHolder._foveatedFactor, tileset._maxPriority.foveatedFactor);
-        tileset._minPriority.foveatedFactor = Math.min(tile._priorityHolder._foveatedFactor, tileset._minPriority.foveatedFactor);
-        tileset._maxPriority.reverseScreenSpaceError = Math.max(tile._priorityReverseScreenSpaceError, tileset._maxPriority.reverseScreenSpaceError);
-        tileset._minPriority.reverseScreenSpaceError = Math.min(tile._priorityReverseScreenSpaceError, tileset._minPriority.reverseScreenSpaceError);
+    function updateMinimumMaximumPriority(tileset, tile) {
+        tileset._maximumPriority.distance = Math.max(tile._priorityHolder._distanceToCamera, tileset._maximumPriority.distance);
+        tileset._minimumPriority.distance = Math.min(tile._priorityHolder._distanceToCamera, tileset._minimumPriority.distance);
+        tileset._maximumPriority.depth = Math.max(tile._depth, tileset._maximumPriority.depth);
+        tileset._minimumPriority.depth = Math.min(tile._depth, tileset._minimumPriority.depth);
+        tileset._maximumPriority.foveatedFactor = Math.max(tile._priorityHolder._foveatedFactor, tileset._maximumPriority.foveatedFactor);
+        tileset._minimumPriority.foveatedFactor = Math.min(tile._priorityHolder._foveatedFactor, tileset._minimumPriority.foveatedFactor);
+        tileset._maximumPriority.reverseScreenSpaceError = Math.max(tile._priorityReverseScreenSpaceError, tileset._maximumPriority.reverseScreenSpaceError);
+        tileset._minimumPriority.reverseScreenSpaceError = Math.min(tile._priorityReverseScreenSpaceError, tileset._minimumPriority.reverseScreenSpaceError);
     }
 
     function isOnScreenLongEnough(tileset, tile, frameState) {
@@ -314,7 +314,7 @@ define([
         // Request priority
         tile._wasMinPriorityChild = false;
         tile._priorityHolder = tile;
-        updateMinMaxPriority(tileset, tile);
+        updateMinimumMaximumPriority(tileset, tile);
 
         // SkipLOD
         tile._shouldSelect = false;
@@ -384,7 +384,7 @@ define([
 
         // Determining min child
         var minIndex = -1;
-        var minPriority = Number.MAX_VALUE;
+        var minimumPriority = Number.MAX_VALUE;
         var mainPriorityName = '_foveatedFactor';
         var secondaryPriorityName = '_distanceToCamera';
 
@@ -393,17 +393,17 @@ define([
             child = children[i];
             if (isVisible(child)) {
                 stack.push(child);
-                if (child[mainPriorityName] < minPriority) {
+                if (child[mainPriorityName] < minimumPriority) {
                     minIndex = i;
-                    minPriority = child[mainPriorityName];
+                    minimumPriority = child[mainPriorityName];
                 }
                 anyChildrenVisible = true;
             } else if (checkRefines || tileset.loadSiblings) {
                 // Keep non-visible children loaded since they are still needed before the parent can refine.
                 // Or loadSiblings is true so always load tiles regardless of visibility.
-                if (child[mainPriorityName] < minPriority) {
+                if (child[mainPriorityName] < minimumPriority) {
                     minIndex = i;
-                    minPriority = child[mainPriorityName];
+                    minimumPriority = child[mainPriorityName];
                 }
                 loadTile(tileset, child, frameState);
                 touchTile(tileset, child, frameState);
@@ -430,7 +430,7 @@ define([
             // Priority of all tiles that refer to the _foveatedFactor and _distanceToCamera stored in the common ancestor will be differentiated based on their _depth.
             var minPriorityChild = children[minIndex];
             minPriorityChild._wasMinPriorityChild = true;
-            var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) && minPriority <= tile._priorityHolder[mainPriorityName] ? tile._priorityHolder : tile; // This is where priority dependency chains are wired up or started anew.
+            var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) && minimumPriority <= tile._priorityHolder[mainPriorityName] ? tile._priorityHolder : tile; // This is where priority dependency chains are wired up or started anew.
             priorityHolder[mainPriorityName] = Math.min(minPriorityChild[mainPriorityName], priorityHolder[mainPriorityName]);
             priorityHolder[secondaryPriorityName] = Math.min(minPriorityChild[secondaryPriorityName], priorityHolder[secondaryPriorityName]);
 

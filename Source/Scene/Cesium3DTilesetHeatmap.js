@@ -31,17 +31,17 @@ define([
         this.variableName = heatmapVariable;
 
         // Members that are updated every time a tile is colorized
-        this._min = Number.MAX_VALUE;
-        this._max = -Number.MAX_VALUE;
+        this._minimum = Number.MAX_VALUE;
+        this._maximum = -Number.MAX_VALUE;
 
         // Members that are updated once every frame
-        this._previousMin = Number.MAX_VALUE;
-        this._previousMax = -Number.MAX_VALUE;
+        this._previousMinimum = Number.MAX_VALUE;
+        this._previousMaximum = -Number.MAX_VALUE;
 
-        // If defined uses a reference min max to colorize by instead of using last frames min max of rendered tiles.
-        // For example, the _loadTimestamp can get a better colorization using setReferenceMinMax in order to take accurate colored timing diffs of various scenes.
-        this._referenceMin = {};
-        this._referenceMax = {};
+        // If defined uses a reference minimum maximum to colorize by instead of using last frames minimum maximum of rendered tiles.
+        // For example, the _loadTimestamp can get a better colorization using setReferenceMinimumMaximum in order to take accurate colored timing diffs of various scenes.
+        this._referenceMinimum = {};
+        this._referenceMaximum = {};
     }
 
     /**
@@ -58,18 +58,18 @@ define([
     }
 
     /**
-     * Sets the reference min and max for the variable name. Converted to numbers before they are stored.
+     * Sets the reference minimum and maximum for the variable name. Converted to numbers before they are stored.
      *
-     * @param {Object} min The min reference value.
-     * @param {Object} max The max reference value.
+     * @param {Object} minimum The minimum reference value.
+     * @param {Object} maximum The maximum reference value.
      * @param {String} variableName The tile variable that will use these reference values when it is colorized.
      */
-    Cesium3DTilesetHeatmap.prototype.setReferenceMinMax = function(min, max, variableName) {
-        this._referenceMin[variableName] = getHeatmapValue(min, variableName);
-        this._referenceMax[variableName] = getHeatmapValue(max, variableName);
+    Cesium3DTilesetHeatmap.prototype.setReferenceMinimumMaximum = function(minimum, maximum, variableName) {
+        this._referenceMinimum[variableName] = getHeatmapValue(minimum, variableName);
+        this._referenceMaximum[variableName] = getHeatmapValue(maximum, variableName);
     };
 
-    function getHeatmapValueAndUpdateMinMax(heatmap, tile) {
+    function getHeatmapValueAndUpdateMinimumMaximum(heatmap, tile) {
         var variableName = heatmap.variableName;
         if (defined(variableName)) {
             var heatmapValue = getHeatmapValue(tile[variableName], variableName);
@@ -77,8 +77,8 @@ define([
                 heatmap.variableName = undefined;
                 return heatmapValue;
             }
-            heatmap._max = Math.max(heatmapValue, heatmap._max);
-            heatmap._min = Math.min(heatmapValue, heatmap._min);
+            heatmap._maximum = Math.max(heatmapValue, heatmap._maximum);
+            heatmap._minimum = Math.min(heatmapValue, heatmap._minimum);
             return heatmapValue;
         }
     }
@@ -90,9 +90,9 @@ define([
                          new Color(1.000, 0.592, 0.259, 1),  // Orange
                          new Color(1.000, 0.843, 0.000, 1)]; // Yellow
     /**
-     * Colorize the tile in heat map style based on where it lies within the min max window.
+     * Colorize the tile in heat map style based on where it lies within the minimum maximum window.
      * Heatmap colors are black, blue, pink, red, orange, yellow. 'Cold' or low numbers will be black and blue, 'Hot' or high numbers will be orange and yellow,
-     * @param {Cesium3DTile} tile The tile to colorize relative to last frame's min and max values of all visible tiles.
+     * @param {Cesium3DTile} tile The tile to colorize relative to last frame's minimum and maximum values of all visible tiles.
      * @param {FrameState} frameState The frame state.
      */
     Cesium3DTilesetHeatmap.prototype.colorize = function (tile, frameState) {
@@ -101,19 +101,19 @@ define([
             return;
         }
 
-        var heatmapValue = getHeatmapValueAndUpdateMinMax(this, tile);
-        var min = this._previousMin;
-        var max = this._previousMax;
+        var heatmapValue = getHeatmapValueAndUpdateMinimumMaximum(this, tile);
+        var minimum = this._previousMinimum;
+        var maximum = this._previousMaximum;
 
-        if (min === Number.MAX_VALUE || max === -Number.MAX_VALUE) {
+        if (minimum === Number.MAX_VALUE || maximum === -Number.MAX_VALUE) {
             return;
         }
 
-        // Shift the min max window down to 0
-        var shiftedMax = (max - min) + CesiumMath.EPSILON7; // Prevent divide by 0
-        var shiftedValue = CesiumMath.clamp(heatmapValue - min, 0, shiftedMax);
+        // Shift the minimum maximum window down to 0
+        var shiftedMax = (maximum - minimum) + CesiumMath.EPSILON7; // Prevent divide by 0
+        var shiftedValue = CesiumMath.clamp(heatmapValue - minimum, 0, shiftedMax);
 
-        // Get position between min and max and convert that to a position in the color array
+        // Get position between minimum and maximum and convert that to a position in the color array
         var zeroToOne = shiftedValue / shiftedMax;
         var lastIndex = heatmapColors.length - 1;
         var colorPosition = zeroToOne * lastIndex;
@@ -134,19 +134,19 @@ define([
     };
 
     /**
-     * Resets the tracked min max values for heatmap colorization. Happens right before tileset traversal.
+     * Resets the tracked minimum maximum values for heatmap colorization. Happens right before tileset traversal.
      */
-    Cesium3DTilesetHeatmap.prototype.resetMinMax = function() {
+    Cesium3DTilesetHeatmap.prototype.resetMinimumMaximum = function() {
         // For heat map colorization
         var variableName = this.variableName;
         if (defined(variableName)) {
-            var referenceMin = this._referenceMin[variableName];
-            var referenceMax = this._referenceMax[variableName];
-            var useReference = defined(referenceMin) && defined(referenceMax);
-            this._previousMin = useReference ? referenceMin : this._min;
-            this._previousMax = useReference ? referenceMax : this._max;
-            this._min = Number.MAX_VALUE;
-            this._max = -Number.MAX_VALUE;
+            var referenceMinimum = this._referenceMinimum[variableName];
+            var referenceMaximum = this._referenceMaximum[variableName];
+            var useReference = defined(referenceMinimum) && defined(referenceMaximum);
+            this._previousMinimum = useReference ? referenceMinimum : this._minimum;
+            this._previousMaximum = useReference ? referenceMaximum : this._maximum;
+            this._minimum = Number.MAX_VALUE;
+            this._maximum = -Number.MAX_VALUE;
         }
     };
 

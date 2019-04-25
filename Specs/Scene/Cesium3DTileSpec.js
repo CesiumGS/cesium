@@ -373,8 +373,8 @@ defineSuite([
         tile2._depth = 1;
         tile2._priorityProgressiveResolution = true;
 
-        mockTileset._minPriority = { depth: 0, distance: 0, foveatedFactor: 0  };
-        mockTileset._maxPriority = { depth: 1, distance: 1, foveatedFactor: 1  };
+        mockTileset._minimumPriority = { depth: 0, distance: 0, foveatedFactor: 0  };
+        mockTileset._maximumPriority = { depth: 1, distance: 1, foveatedFactor: 1  };
 
         tile1.updatePriority();
         tile2.updatePriority();

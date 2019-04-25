@@ -66,39 +66,39 @@ defineSuite([
         expect(heatmap.isDestroyed()).toEqual(true);
     });
 
-    it('resetMinMax', function() {
+    it('resetMinimumMaximum', function() {
         var heatmap = new Cesium3DTilesetHeatmap('_centerZDepth');
-        heatmap._min = -1;
-        heatmap._max =  1;
-        heatmap.resetMinMax(); // Preparing for next frame, previousMin/Max take current frame's values
+        heatmap._minimum = -1;
+        heatmap._maximum =  1;
+        heatmap.resetMinimumMaximum(); // Preparing for next frame, previousMinimum/Maximum take current frame's values
 
-        expect(heatmap._min).toBe(Number.MAX_VALUE);
-        expect(heatmap._max).toBe(-Number.MAX_VALUE);
-        expect(heatmap._previousMin).toBe(-1);
-        expect(heatmap._previousMax).toBe( 1);
+        expect(heatmap._minimum).toBe(Number.MAX_VALUE);
+        expect(heatmap._maximum).toBe(-Number.MAX_VALUE);
+        expect(heatmap._previousMinimum).toBe(-1);
+        expect(heatmap._previousMaximum).toBe( 1);
     });
 
-    it('uses reference min max', function() {
+    it('uses reference minimum maximum', function() {
         var variableName = '_loadTimestamp';
         var heatmap = new Cesium3DTilesetHeatmap(variableName);
 
-        var refMinJulianDate = new JulianDate();
-        var refMaxJulianDate = new JulianDate();
-        JulianDate.now(refMinJulianDate);
-        JulianDate.addSeconds(refMinJulianDate, 10, refMaxJulianDate);
+        var referenceMinimumJulianDate = new JulianDate();
+        var referenceMaximumJulianDate = new JulianDate();
+        JulianDate.now(referenceMinimumJulianDate);
+        JulianDate.addSeconds(referenceMinimumJulianDate, 10, referenceMaximumJulianDate);
 
-        heatmap.setReferenceMinMax(refMinJulianDate, refMaxJulianDate, variableName); // User wants to colorize to a fixed reference.
-        var refMin = heatmap._referenceMin[variableName];
-        var refMax = heatmap._referenceMax[variableName];
+        heatmap.setReferenceMinimumMaximum(referenceMinimumJulianDate, referenceMaximumJulianDate, variableName); // User wants to colorize to a fixed reference.
+        var refMin = heatmap._referenceMinimum[variableName];
+        var refMax = heatmap._referenceMaximum[variableName];
 
-        heatmap._min = -1;
-        heatmap._max =  1;
-        heatmap.resetMinMax(); // Preparing for next frame, previousMin/Max always uses the reference values if they exist for the variable.
+        heatmap._minimum = -1;
+        heatmap._maximum =  1;
+        heatmap.resetMinimumMaximum(); // Preparing for next frame, previousMinimum/Maximum always uses the reference values if they exist for the variable.
 
-        expect(heatmap._min).toBe(Number.MAX_VALUE);
-        expect(heatmap._max).toBe(-Number.MAX_VALUE);
-        expect(heatmap._previousMin).toBe(refMin);
-        expect(heatmap._previousMax).toBe(refMax);
+        expect(heatmap._minimum).toBe(Number.MAX_VALUE);
+        expect(heatmap._maximum).toBe(-Number.MAX_VALUE);
+        expect(heatmap._previousMinimum).toBe(refMin);
+        expect(heatmap._previousMaximum).toBe(refMax);
     });
 
     it('expected color', function() {
@@ -111,18 +111,18 @@ defineSuite([
         tile._selectedFrame = frameState.frameNumber;
         var originalColor = tile._debugColor;
 
-        // This is first frame, previousMin/Max are unititialized so no coloring occurs
+        // This is first frame, previousMinimum/Maximum are unititialized so no coloring occurs
         tile._centerZDepth = 1;
         heatmap.colorize(tile, frameState);
         tile._centerZDepth = -1;
         heatmap.colorize(tile, frameState);
 
-        expect(heatmap._min).toBe(-1);
-        expect(heatmap._max).toBe( 1);
+        expect(heatmap._minimum).toBe(-1);
+        expect(heatmap._maximum).toBe( 1);
         verifyColor(tile._debugColor, originalColor);
 
-        // Preparing for next frame, previousMin/Max take current frame's values
-        heatmap.resetMinMax();
+        // Preparing for next frame, previousMinimum/Maximum take current frame's values
+        heatmap.resetMinimumMaximum();
 
         tile._centerZDepth = -1;
         heatmap.colorize(tile, frameState);

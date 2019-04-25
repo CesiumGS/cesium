@@ -672,8 +672,8 @@ define([
             return false;
         }
 
-        var maxFoveatedFactor = 1 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60. NOTE very hard to defer verically foveated tiles since max is based on fovy (which is fov). Lowering the 0.5 to a smaller fraction of the screen height will start to defer vertically foveated tiles.
-        var foveatedConeFactor = tileset.foveatedConeSize * maxFoveatedFactor;
+        var maximumFovatedFactor = 1 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60. NOTE very hard to defer verically foveated tiles since max is based on fovy (which is fov). Lowering the 0.5 to a smaller fraction of the screen height will start to defer vertically foveated tiles.
+        var foveatedConeFactor = tileset.foveatedConeSize * maximumFovatedFactor;
 
         // If it's inside the user-defined view cone, then it should not be deferred.
         if (tile._foveatedFactor <= foveatedConeFactor) {
@@ -681,7 +681,7 @@ define([
         }
 
         // Relax SSE based on how big the angle is between the tile and the edge of the foveated cone.
-        var range = maxFoveatedFactor - foveatedConeFactor;
+        var range = maximumFovatedFactor - foveatedConeFactor;
         var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0, 1);
         var sseRelaxation = tileset.foveatedInterpolationCallback(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
         var sse = tile._screenSpaceError === 0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
@@ -740,9 +740,9 @@ define([
         var isProgressiveResolutionTile = tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError; // Mark non-SSE leaves
         tile._priorityProgressiveResolutionSSELeaf = false; // Needed for skipLOD
         var parent = tile.parent;
-        var maxSSE = tileset._maximumScreenSpaceError;
-        var tilePasses = tile._screenSpaceErrorProgressiveResolution <= maxSSE;
-        var parentFails = defined(parent) && parent._screenSpaceErrorProgressiveResolution > maxSSE;
+        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+        var tilePasses = tile._screenSpaceErrorProgressiveResolution <= maximumScreenSpaceError;
+        var parentFails = defined(parent) && parent._screenSpaceErrorProgressiveResolution > maximumScreenSpaceError;
         if (tilePasses && parentFails) { // A progressive resolution SSE leaf, promote its priority as well
             tile._priorityProgressiveResolutionSSELeaf = true;
             isProgressiveResolutionTile = true;
@@ -1377,8 +1377,8 @@ define([
         return integer * Math.pow(10, leftShift);
     }
 
-    function priorityNormalizeAndClamp(value, min, max) {
-        return Math.max(CesiumMath.normalize(value, min, max) - CesiumMath.EPSILON7, 0); // Subtract epsilon since we only want decimal digits present in the output.
+    function priorityNormalizeAndClamp(value, minimum, maximum) {
+        return Math.max(CesiumMath.normalize(value, minimum, maximum) - CesiumMath.EPSILON7, 0); // Subtract epsilon since we only want decimal digits present in the output.
     }
 
     /**
@@ -1388,8 +1388,8 @@ define([
     Cesium3DTile.prototype.updatePriority = function() {
         var tileset = this.tileset;
         var preferLeaves = tileset.preferLeaves;
-        var minPriority = tileset._minPriority;
-        var maxPriority = tileset._maxPriority;
+        var minimumPriority = tileset._minimumPriority;
+        var maximumPriority = tileset._maximumPriority;
 
         // Combine priority systems together by mapping them into a base 10 number where each priority controls a specific set of digits in the number.
         // For number priorities, map them to a 0.xxxxx number then left shift it up into a set number of digits before the decimal point. Chop of the fractional part then left shift again into the position it needs to go.
@@ -1421,18 +1421,18 @@ define([
         var preloadFlightScale = Math.pow(10, preloadFlightLeftShift);
 
         // Compute the digits for each priority
-        var depthDigits = priorityNormalizeAndClamp(this._depth, minPriority.depth, maxPriority.depth);
+        var depthDigits = priorityNormalizeAndClamp(this._depth, minimumPriority.depth, maximumPriority.depth);
         depthDigits = preferLeaves ? 1 - depthDigits : depthDigits;
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var useDistance = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
-        var normalizedPreferredSorting = useDistance ? priorityNormalizeAndClamp(this._priorityHolder._distanceToCamera, minPriority.distance, maxPriority.distance) :
-                                                       priorityNormalizeAndClamp(this._priorityReverseScreenSpaceError, minPriority.reverseScreenSpaceError, maxPriority.reverseScreenSpaceError);
+        var normalizedPreferredSorting = useDistance ? priorityNormalizeAndClamp(this._priorityHolder._distanceToCamera, minimumPriority.distance, maximumPriority.distance) :
+                                                       priorityNormalizeAndClamp(this._priorityReverseScreenSpaceError, minimumPriority.reverseScreenSpaceError, maximumPriority.reverseScreenSpaceError);
         var preferredSortingDigits = isolateDigits(normalizedPreferredSorting, preferredSortingDigitsCount, preferredSortingLeftShift);
 
         var preloadProgressiveResolutionDigits = this._priorityProgressiveResolution ? 0 : preloadProgressiveResolutionScale;
 
-        var normalizedFoveatedFactor = priorityNormalizeAndClamp(this._priorityHolder._foveatedFactor, minPriority.foveatedFactor, maxPriority.foveatedFactor);
+        var normalizedFoveatedFactor = priorityNormalizeAndClamp(this._priorityHolder._foveatedFactor, minimumPriority.foveatedFactor, maximumPriority.foveatedFactor);
         var foveatedDigits = isolateDigits(normalizedFoveatedFactor, foveatedDigitsCount, foveatedLeftShift);
 
         var foveatedDeferDigits = this.priorityDeferred ? foveatedDeferScale : 0;

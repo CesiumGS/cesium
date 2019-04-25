@@ -243,8 +243,8 @@ define([
 
         this._requestedTilesInFlight = [];
 
-        this._maxPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE, reverseScreenSpaceError: -Number.MAX_VALUE };
-        this._minPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, reverseScreenSpaceError: Number.MAX_VALUE };
+        this._maximumPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE, reverseScreenSpaceError: -Number.MAX_VALUE };
+        this._minimumPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, reverseScreenSpaceError: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
         this.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, true);
         this.cullRequestsWhileMovingMultiplier = defaultValue(options.cullRequestsWhileMovingMultiplier, 60);
@@ -2177,16 +2177,16 @@ define([
         }
     }
 
-    function resetMinMax(tileset) {
-        tileset._heatmap.resetMinMax();
-        tileset._minPriority.depth = Number.MAX_VALUE;
-        tileset._maxPriority.depth = -Number.MAX_VALUE;
-        tileset._minPriority.foveatedFactor = Number.MAX_VALUE;
-        tileset._maxPriority.foveatedFactor = -Number.MAX_VALUE;
-        tileset._minPriority.distance = Number.MAX_VALUE;
-        tileset._maxPriority.distance = -Number.MAX_VALUE;
-        tileset._minPriority.reverseScreenSpaceError = Number.MAX_VALUE;
-        tileset._maxPriority.reverseScreenSpaceError = -Number.MAX_VALUE;
+    function resetMinimumMaximum(tileset) {
+        tileset._heatmap.resetMinimumMaximum();
+        tileset._minimumPriority.depth = Number.MAX_VALUE;
+        tileset._maximumPriority.depth = -Number.MAX_VALUE;
+        tileset._minimumPriority.foveatedFactor = Number.MAX_VALUE;
+        tileset._maximumPriority.foveatedFactor = -Number.MAX_VALUE;
+        tileset._minimumPriority.distance = Number.MAX_VALUE;
+        tileset._maximumPriority.distance = -Number.MAX_VALUE;
+        tileset._minimumPriority.reverseScreenSpaceError = Number.MAX_VALUE;
+        tileset._maximumPriority.reverseScreenSpaceError = -Number.MAX_VALUE;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -2209,7 +2209,7 @@ define([
         ++tileset._updatedVisibilityFrame;
 
         // Update any tracked min max values
-        resetMinMax(tileset);
+        resetMinimumMaximum(tileset);
 
         var ready = passOptions.traversal.selectTiles(tileset, frameState);
 
