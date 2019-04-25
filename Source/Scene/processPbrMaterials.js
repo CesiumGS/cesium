@@ -577,7 +577,7 @@ define([
         // Add normal mapping to fragment shader
         if (hasNormals) {
             fragmentShader += '    vec3 ng = normalize(v_normal);\n';
-            fragmentShader += '    vec3 positionWC = vec3(czm_inverseView * vec4(v_positionEC, 1.0));';
+            fragmentShader += '    vec3 positionWC = vec3(czm_inverseView * vec4(v_positionEC, 1.0));\n';
             if (defined(generatedMaterialValues.u_normalTexture)) {
                 if (hasTangents) {
                     // Read tangents from varying
