@@ -88,6 +88,14 @@ define([
         descendantTraversal.stack.trim(descendantTraversal.stackMaximumLength);
         selectionTraversal.stack.trim(selectionTraversal.stackMaximumLength);
         selectionTraversal.ancestorStack.trim(selectionTraversal.ancestorStackMaximumLength);
+
+        // Update the priority for any requests found during traversal
+        // Update after traversal so that min and max values can be used to normalize priority values
+        var requestedTiles = tileset._requestedTiles;
+        var length = requestedTiles.length;
+        for (var i = 0; i < length; ++i) {
+            requestedTiles[i].updatePriority();
+        }
     };
 
     function executeBaseTraversal(tileset, root, frameState) {

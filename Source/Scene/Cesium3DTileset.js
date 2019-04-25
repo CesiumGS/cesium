@@ -1775,14 +1775,8 @@ define([
         // This makes it less likely that requests will be cancelled after being issued.
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
-        var i;
-        if (!isAsync) { // Prevent async picks from having their priorities overwritten
-            for (i = 0; i < length; ++i) {
-                requestedTiles[i].updatePriority();
-            }
-        }
         requestedTiles.sort(sortRequestByPriority);
-        for (i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             requestContent(tileset, requestedTiles[i]);
         }
     }
