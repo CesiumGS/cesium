@@ -1693,6 +1693,10 @@ define([
      * @private
      */
     Cesium3DTileset.prototype.postPassesUpdate = function(frameState) {
+        if (!this.ready) {
+            return;
+        }
+
         cancelOutOfViewRequests(this, frameState);
         raiseLoadProgressEvent(this, frameState);
         this._cache.unloadTiles(this, unloadTile);
@@ -1713,6 +1717,10 @@ define([
      * @private
      */
     Cesium3DTileset.prototype.prePassesUpdate = function(frameState) {
+        if (!this.ready) {
+            return;
+        }
+
         processTiles(this, frameState);
 
         // Update clipping planes
@@ -2241,13 +2249,17 @@ define([
         Check.typeOf.object('tilesetPassState', tilesetPassState);
         //>>includeEnd('debug');
 
+        var pass = tilesetPassState.pass;
+        if ((pass === Cesium3DTilePass.PRELOAD && (!this.preloadWhenHidden || this.show)) ||
+            (pass === Cesium3DTilePass.PRELOAD_FLIGHT & (!this.preloadFlightDestinations || !this.show))) {
+            return;
+        }
+
         var originalCommandList = frameState.commandList;
         var originalCamera = frameState.camera;
         var originalCullingVolume = frameState.cullingVolume;
 
         tilesetPassState.ready = false;
-
-        var pass = tilesetPassState.pass;
 
         var passOptions = Cesium3DTilePass.getPassOptions(pass);
         var ignoreCommands = passOptions.ignoreCommands;

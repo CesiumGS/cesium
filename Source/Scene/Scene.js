@@ -3198,16 +3198,7 @@ define([
 
         var frameState = scene._frameState;
         var primitives = scene.primitives;
-        var length = primitives.length;
-        var i;
-        var primitive;
-        for (i = 0; i < length; ++i) {
-            primitive = primitives.get(i);
-            if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
-                primitive.prePassesUpdate(frameState);
-            }
-
-        }
+        primitives.prePassesUpdate(frameState);
 
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
@@ -3221,15 +3212,7 @@ define([
     function postPassesUpdate(scene) {
         var frameState = scene._frameState;
         var primitives = scene.primitives;
-        var length = primitives.length;
-        var i;
-        var primitive;
-        for (i = 0; i < length; ++i) {
-            primitive = primitives.get(i);
-            if ((primitive instanceof Cesium3DTileset) && primitive.ready) {
-                primitive.postPassesUpdate(frameState);
-            }
-        }
+        primitives.postPassesUpdate(frameState);
 
         RequestScheduler.update();
         frameState.creditDisplay.endFrame();
@@ -3895,17 +3878,12 @@ define([
         preloadTilesetPassState.cullingVolume = frameState.cullingVolume;
 
         var primitives = scene.primitives;
-        var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            var primitive = primitives.get(i);
-            if ((primitive instanceof Cesium3DTileset) && primitive.preloadWhenHidden && !primitive.show) {
-                primitive.updateForPass(scene._frameState, preloadTilesetPassState);
-            }
-        }
+        primitives.updateForPass(frameState, preloadTilesetPassState);
     }
 
     function updatePreloadFlightPass(scene) {
-        var camera = scene._frameState.camera;
+        var frameState = scene._frameState;
+        var camera = frameState.camera;
         if (!camera.hasCurrentFlight()) {
             return;
         }
@@ -3914,13 +3892,7 @@ define([
         preloadFlightTilesetPassState.cullingVolume = scene.preloadFlightCullingVolume;
 
         var primitives = scene.primitives;
-        var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            var primitive = primitives.get(i);
-            if ((primitive instanceof Cesium3DTileset) && primitive.preloadFlightDestinations && primitive.show) {
-                primitive.updateForPass(scene._frameState, preloadFlightTilesetPassState);
-            }
-        }
+        primitives.updateForPass(frameState, preloadFlightTilesetPassState);
     }
 
     var scratchRight = new Cartesian3();
