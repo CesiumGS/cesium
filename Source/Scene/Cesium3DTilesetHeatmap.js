@@ -21,14 +21,14 @@ define([
      * @constructor
      * @private
      */
-    function Cesium3DTilesetHeatmap(heatmapVariable) {
+    function Cesium3DTilesetHeatmap(tileVariableName) {
         /**
          * The tile variable to track for heatmap colorization.
          * Tile's will be colorized relative to the other visible tile's values for this variable.
          *
          * @type {String}
          */
-        this.variableName = heatmapVariable;
+        this.variableName = tileVariableName;
 
         // Members that are updated every time a tile is colorized
         this._minimum = Number.MAX_VALUE;
