@@ -21,14 +21,14 @@ define([
      * @constructor
      * @private
      */
-    function Cesium3DTilesetHeatmap(propertyName) {
+    function Cesium3DTilesetHeatmap(variableName) {
         /**
          * The tile variable to track for heatmap colorization.
          * Tile's will be colorized relative to the other visible tile's values for this variable.
          *
          * @type {String}
          */
-        this.propertyName = propertyName;
+        this.variableName = variableName;
 
         // Members that are updated every time a tile is colorized
         this._minimum = Number.MAX_VALUE;
@@ -47,9 +47,9 @@ define([
     /**
      * Convert to a usable heatmap value (i.e. a number). Ensures that tile values that aren't stored as numbers can be used for colorization.
      */
-     function getHeatmapValue(tileValue, propertyName) {
+     function getHeatmapValue(tileValue, variableName) {
         var value;
-        if (propertyName === '_loadTimestamp') {
+        if (variableName === '_loadTimestamp') {
             value = JulianDate.toDate(tileValue).getTime();
         } else {
             value = tileValue;
@@ -62,19 +62,19 @@ define([
      *
      * @param {Object} minimum The minimum reference value.
      * @param {Object} maximum The maximum reference value.
-     * @param {String} propertyName The tile variable that will use these reference values when it is colorized.
+     * @param {String} variableName The tile variable that will use these reference values when it is colorized.
      */
-    Cesium3DTilesetHeatmap.prototype.setReferenceMinimumMaximum = function(minimum, maximum, propertyName) {
-        this._referenceMinimum[propertyName] = getHeatmapValue(minimum, propertyName);
-        this._referenceMaximum[propertyName] = getHeatmapValue(maximum, propertyName);
+    Cesium3DTilesetHeatmap.prototype.setReferenceMinimumMaximum = function(minimum, maximum, variableName) {
+        this._referenceMinimum[variableName] = getHeatmapValue(minimum, variableName);
+        this._referenceMaximum[variableName] = getHeatmapValue(maximum, variableName);
     };
 
     function getHeatmapValueAndUpdateMinimumMaximum(heatmap, tile) {
-        var propertyName = heatmap.propertyName;
-        if (defined(propertyName)) {
-            var heatmapValue = getHeatmapValue(tile[propertyName], propertyName);
+        var variableName = heatmap.variableName;
+        if (defined(variableName)) {
+            var heatmapValue = getHeatmapValue(tile[variableName], variableName);
             if (!defined(heatmapValue)) {
-                heatmap.propertyName = undefined;
+                heatmap.variableName = undefined;
                 return heatmapValue;
             }
             heatmap._maximum = Math.max(heatmapValue, heatmap._maximum);
@@ -96,8 +96,8 @@ define([
      * @param {FrameState} frameState The frame state.
      */
     Cesium3DTilesetHeatmap.prototype.colorize = function (tile, frameState) {
-        var propertyName = this.propertyName;
-        if (!defined(propertyName) || !tile.contentAvailable || tile._selectedFrame !== frameState.frameNumber) {
+        var variableName = this.variableName;
+        if (!defined(variableName) || !tile.contentAvailable || tile._selectedFrame !== frameState.frameNumber) {
             return;
         }
 
@@ -138,10 +138,10 @@ define([
      */
     Cesium3DTilesetHeatmap.prototype.resetMinimumMaximum = function() {
         // For heat map colorization
-        var propertyName = this.propertyName;
-        if (defined(propertyName)) {
-            var referenceMinimum = this._referenceMinimum[propertyName];
-            var referenceMaximum = this._referenceMaximum[propertyName];
+        var variableName = this.variableName;
+        if (defined(variableName)) {
+            var referenceMinimum = this._referenceMinimum[variableName];
+            var referenceMaximum = this._referenceMaximum[variableName];
             var useReference = defined(referenceMinimum) && defined(referenceMaximum);
             this._previousMinimum = useReference ? referenceMinimum : this._minimum;
             this._previousMaximum = useReference ? referenceMaximum : this._maximum;
