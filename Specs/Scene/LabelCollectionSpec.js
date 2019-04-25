@@ -1138,8 +1138,6 @@ defineSuite([
             expect(bbox.y).toBeGreaterThan(bbox.height * -1.2);
         });
 
-        // TODO:  Where do all these multipliers come fom?
-        /*
         it('computes screen space bounding box with horizontal origin', function() {
             var scale = 1.5;
 
@@ -1160,7 +1158,6 @@ defineSuite([
             expect(bbox.x).toBeLessThan(bbox.width * -0.8);
             expect(bbox.x).toBeGreaterThan(bbox.width * -1.2);
         });
-        */
 
         it('computes screen space bounding box with padded background', function() {
             var scale = 1.5;
