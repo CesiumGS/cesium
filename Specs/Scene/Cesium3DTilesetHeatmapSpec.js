@@ -79,17 +79,17 @@ defineSuite([
     });
 
     it('uses reference minimum maximum', function() {
-        var variableName = '_loadTimestamp';
-        var heatmap = new Cesium3DTilesetHeatmap(variableName);
+        var propertyName = '_loadTimestamp';
+        var heatmap = new Cesium3DTilesetHeatmap(propertyName);
 
         var referenceMinimumJulianDate = new JulianDate();
         var referenceMaximumJulianDate = new JulianDate();
         JulianDate.now(referenceMinimumJulianDate);
         JulianDate.addSeconds(referenceMinimumJulianDate, 10, referenceMaximumJulianDate);
 
-        heatmap.setReferenceMinimumMaximum(referenceMinimumJulianDate, referenceMaximumJulianDate, variableName); // User wants to colorize to a fixed reference.
-        var refMin = heatmap._referenceMinimum[variableName];
-        var refMax = heatmap._referenceMaximum[variableName];
+        heatmap.setReferenceMinimumMaximum(referenceMinimumJulianDate, referenceMaximumJulianDate, propertyName); // User wants to colorize to a fixed reference.
+        var referenceMinimum = heatmap._referenceMinimum[propertyName];
+        var referenceMaximum = heatmap._referenceMaximum[propertyName];
 
         heatmap._minimum = -1;
         heatmap._maximum =  1;
@@ -97,8 +97,8 @@ defineSuite([
 
         expect(heatmap._minimum).toBe(Number.MAX_VALUE);
         expect(heatmap._maximum).toBe(-Number.MAX_VALUE);
-        expect(heatmap._previousMinimum).toBe(refMin);
-        expect(heatmap._previousMaximum).toBe(refMax);
+        expect(heatmap._previousMinimum).toBe(referenceMinimum);
+        expect(heatmap._previousMaximum).toBe(referenceMaximum);
     });
 
     it('expected color', function() {
