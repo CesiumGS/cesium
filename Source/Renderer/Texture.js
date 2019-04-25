@@ -198,7 +198,6 @@ define([
         var unpackAlignment = 4;
         if (defined(source) && defined(source.arrayBufferView) && !isCompressed) {
             unpackAlignment = PixelFormat.alignmentInBytes(pixelFormat, pixelDatatype, width);
-            console.log(unpackAlignment);
         }
 
         gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
