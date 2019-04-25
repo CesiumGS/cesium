@@ -111,11 +111,11 @@ define([
 
         // Shift the minimum maximum window down to 0
         var shiftedMax = (maximum - minimum) + CesiumMath.EPSILON7; // Prevent divide by 0
-        var shiftedValue = CesiumMath.clamp(heatmapValue - minimum, 0, shiftedMax);
+        var shiftedValue = CesiumMath.clamp(heatmapValue - minimum, 0.0, shiftedMax);
 
         // Get position between minimum and maximum and convert that to a position in the color array
         var zeroToOne = shiftedValue / shiftedMax;
-        var lastIndex = heatmapColors.length - 1;
+        var lastIndex = heatmapColors.length - 1.0;
         var colorPosition = zeroToOne * lastIndex;
 
         // Take floor and ceil of the value to get the two colors to lerp between, lerp using the fractional portion
@@ -126,7 +126,7 @@ define([
         var colorOne = heatmapColors[colorPositionCeil];
 
         // Perform the lerp
-        var finalColor = new Color(1,1,1,1);
+        var finalColor = Color.clone(Color.WHITE);
         finalColor.red = CesiumMath.lerp(colorZero.red, colorOne.red, t);
         finalColor.green = CesiumMath.lerp(colorZero.green, colorOne.green, t);
         finalColor.blue = CesiumMath.lerp(colorZero.blue, colorOne.blue, t);
@@ -148,14 +148,6 @@ define([
             this._minimum = Number.MAX_VALUE;
             this._maximum = -Number.MAX_VALUE;
         }
-    };
-
-    Cesium3DTilesetHeatmap.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    Cesium3DTilesetHeatmap.prototype.destroy = function() {
-        return destroyObject(this);
     };
 
     return Cesium3DTilesetHeatmap;

@@ -292,7 +292,7 @@ define([
          *
          * @private
          */
-        this.lastStyleTime = 0;
+        this.lastStyleTime = 0.0;
 
         /**
          * Marks whether the tile's children bounds are fully contained within the tile's bounds
@@ -324,10 +324,10 @@ define([
         this.priorityDeferred = false;
 
         // Members that are updated every frame for tree traversal and rendering optimizations:
-        this._distanceToCamera = 0;
-        this._centerZDepth = 0;
-        this._screenSpaceError = 0;
-        this._screenSpaceErrorProgressiveResolution = 0; // The screen space error at a given screen height of tileset.progressiveResolutionHeightFraction * screenHeight
+        this._distanceToCamera = 0.0;
+        this._centerZDepth = 0.0;
+        this._screenSpaceError = 0.0;
+        this._screenSpaceErrorProgressiveResolution = 0.0; // The screen space error at a given screen height of tileset.progressiveResolutionHeightFraction * screenHeight
         this._visibilityPlaneMask = 0;
         this._visible = false;
         this._inRequestVolume = false;
@@ -358,8 +358,8 @@ define([
         this._priorityHolder = this; // Reference to the ancestor up the tree that holds the _foveatedFactor and _distanceToCamera for all tiles in the refinement chain.
         this._priorityProgressiveResolution = false;
         this._priorityProgressiveResolutionScreenSpaceErrorLeaf = false;
-        this._priorityReverseScreenSpaceError = 0;
-        this._foveatedFactor = 0;
+        this._priorityReverseScreenSpaceError = 0.0;
+        this._foveatedFactor = 0.0;
         this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
 
         this._loadTimestamp = new JulianDate();
@@ -656,9 +656,9 @@ define([
             var closestOnSphere = Cartesian3.add(boundingSphere.center, scaledToLine, scratchCartesian);
             var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, camera.positionWC, scratchCartesian);
             var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
-            tile._foveatedFactor = 1 - Math.abs(Cartesian3.dot(camera.directionWC, toClosestOnSphereNormalize));
+            tile._foveatedFactor = 1.0 - Math.abs(Cartesian3.dot(camera.directionWC, toClosestOnSphereNormalize));
         } else {
-            tile._foveatedFactor = 0;
+            tile._foveatedFactor = 0.0;
         }
 
         // Skip this feature if: non-skipLevelOfDetail and replace refine, if the foveated settings are turned off, if tile is progressive resolution and replace refine and skipLevelOfDetail (will help get rid of ancestor artifacts faster).
@@ -672,7 +672,7 @@ define([
             return false;
         }
 
-        var maximumFovatedFactor = 1 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60. NOTE very hard to defer verically foveated tiles since max is based on fovy (which is fov). Lowering the 0.5 to a smaller fraction of the screen height will start to defer vertically foveated tiles.
+        var maximumFovatedFactor = 1.0 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60. NOTE very hard to defer vertically foveated tiles since max is based on fovy (which is fov). Lowering the 0.5 to a smaller fraction of the screen height will start to defer vertically foveated tiles.
         var foveatedConeFactor = tileset.foveatedConeSize * maximumFovatedFactor;
 
         // If it's inside the user-defined view cone, then it should not be deferred.
@@ -682,9 +682,9 @@ define([
 
         // Relax SSE based on how big the angle is between the tile and the edge of the foveated cone.
         var range = maximumFovatedFactor - foveatedConeFactor;
-        var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0, 1);
+        var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0.0, 1.0);
         var sseRelaxation = tileset.foveatedInterpolationCallback(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
-        var sse = tile._screenSpaceError === 0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
+        var sse = tile._screenSpaceError === 0.0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
 
         return (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
     }
@@ -732,8 +732,8 @@ define([
         return error;
     };
 
-    function isPriorityProgressiveResolution(tileset, tile, frameState) {
-        if (tileset.progressiveResolutionHeightFraction <= 0 || tileset.progressiveResolutionHeightFraction > 0.5) {
+    function isPriorityProgressiveResolution(tileset, tile) {
+        if (tileset.progressiveResolutionHeightFraction <= 0.0 || tileset.progressiveResolutionHeightFraction > 0.5) {
             return false;
         }
 
@@ -776,7 +776,7 @@ define([
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
         this._priorityReverseScreenSpaceError = getPriorityReverseScreenSpaceError(tileset, this);
-        this._priorityProgressiveResolution = isPriorityProgressiveResolution(tileset, this, frameState);
+        this._priorityProgressiveResolution = isPriorityProgressiveResolution(tileset, this);
         this.priorityDeferred = isPriorityDeferred(this, frameState);
     };
 
@@ -912,7 +912,7 @@ define([
 
                 // Refresh style for expired content
                 that._selectedFrame = 0;
-                that.lastStyleTime = 0;
+                that.lastStyleTime = 0.0;
 
                 JulianDate.now(that._loadTimestamp);
                 that._contentState = Cesium3DTileContentState.READY;
@@ -947,7 +947,7 @@ define([
         this._contentReadyToProcessPromise = undefined;
         this._contentReadyPromise = undefined;
 
-        this.lastStyleTime = 0;
+        this.lastStyleTime = 0.0;
         this.clippingPlanesDirty = (this._clippingPlanesState === 0);
         this._clippingPlanesState = 0;
 
@@ -1378,7 +1378,7 @@ define([
     }
 
     function priorityNormalizeAndClamp(value, minimum, maximum) {
-        return Math.max(CesiumMath.normalize(value, minimum, maximum) - CesiumMath.EPSILON7, 0); // Subtract epsilon since we only want decimal digits present in the output.
+        return Math.max(CesiumMath.normalize(value, minimum, maximum) - CesiumMath.EPSILON7, 0.0); // Subtract epsilon since we only want decimal digits present in the output.
     }
 
     /**
@@ -1422,7 +1422,7 @@ define([
 
         // Compute the digits for each priority
         var depthDigits = priorityNormalizeAndClamp(this._depth, minimumPriority.depth, maximumPriority.depth);
-        depthDigits = preferLeaves ? 1 - depthDigits : depthDigits;
+        depthDigits = preferLeaves ? 1.0 - depthDigits : depthDigits;
 
         // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
         var useDistance = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;

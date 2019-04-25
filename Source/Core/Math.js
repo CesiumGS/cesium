@@ -260,7 +260,7 @@ define([
      * @returns {Number} A scalar value, where rangeMinimum maps to 0.0 and rangeMaximum maps to 1.0.
      */
     CesiumMath.normalize = function(value, rangeMinimum, rangeMaximum) {
-        rangeMaximum = Math.max(rangeMaximum - rangeMinimum, 0);
+        rangeMaximum = Math.max(rangeMaximum - rangeMinimum, 0.0);
         return rangeMaximum === 0.0 ? 0.0 : CesiumMath.clamp((value - rangeMinimum) / rangeMaximum, 0.0, 1.0);
     };
 

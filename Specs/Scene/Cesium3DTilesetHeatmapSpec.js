@@ -59,13 +59,6 @@ defineSuite([
         expect(diff.blue).toBeLessThan(threshold);
     }
 
-    it('destroys', function() {
-        var heatmap = new Cesium3DTilesetHeatmap();
-        expect(heatmap.isDestroyed()).toEqual(false);
-        heatmap.destroy();
-        expect(heatmap.isDestroyed()).toEqual(true);
-    });
-
     it('resetMinimumMaximum', function() {
         var heatmap = new Cesium3DTilesetHeatmap('_centerZDepth');
         heatmap._minimum = -1;

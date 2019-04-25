@@ -118,8 +118,8 @@ define([
      * @param {Number} [options.maximumMemoryUsage=512] The maximum amount of memory in MB that can be used by the tileset.
      * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
      * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
-     * @param {Number} [options.cullRequestsWhileMovingMultiplier=60] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
-     * @param {String} [options.debugHeatmapTileVariableName=undefined] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
+     * @param {Number} [options.cullRequestsWhileMovingMultiplier=60.0] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
+     * @param {String} [options.debugHeatmapTileVariableName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
      * @param {Boolean} [options.preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
      * @param {Boolean} [options.preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
      * @param {Boolean} [options.preferLeaves=false] Optimization option. Prefer loading of leaves first.
@@ -127,12 +127,12 @@ define([
      * @param {Number} [options.dynamicScreenSpaceErrorDensity=0.00278] Density used to adjust the dynamic screen space error, similar to fog density.
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
-     * @param {Number} [options.progressiveResolutionHeightFraction=0.3] Optimization option. If between (0, 0.5], tiles at or above the screen space error for the reduced screen resolution of progressiveResolutionHeightFraction*screenHeight will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
+     * @param {Number} [options.progressiveResolutionHeightFraction=0.3] Optimization option. If between (0.0, 0.5], tiles at or above the screen space error for the reduced screen resolution of <code>progressiveResolutionHeightFraction*screenHeight</code> will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
      * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the {@link Cesium3DTileset#foveatedConeSize} are loaded.
-     * @param {Number} [options.foveatedConeSize=0.1] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and their screen space error. This is controlled by {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0 means the cone will be the line formed by the camera position and its view direction. Setting it 1 means the cone encompasses the entire field of view of the camera, disabling the effect.
-     * @param {Number} [options.foveatedMinimumScreenSpaceErrorRelaxation=0] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationCallback}.
+     * @param {Number} [options.foveatedConeSize=0.1] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and their screen space error. This is controlled by {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, disabling the effect.
+     * @param {Number} [options.foveatedMinimumScreenSpaceErrorRelaxation=0.0] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationCallback}.
      * @param {Cesium3DTileset~foveatedInterpolationCallback} [options.foveatedInterpolationCallback=Math.lerp] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
-     * @param {Number} [options.foveatedTimeDelay=0.2] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. This time delay prevents requesting tiles around the edges of the screen when the camera is moving. Setting it to 0 will immediately request all tiles in any given view.
+     * @param {Number} [options.foveatedTimeDelay=0.2] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. This time delay prevents requesting tiles around the edges of the screen when the camera is moving. Setting this to 0.0 will immediately request all tiles in any given view.
      * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
      * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
      * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
@@ -247,9 +247,9 @@ define([
         this._minimumPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, reverseScreenSpaceError: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTileVariableName);
         this.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, true);
-        this.cullRequestsWhileMovingMultiplier = defaultValue(options.cullRequestsWhileMovingMultiplier, 60);
+        this.cullRequestsWhileMovingMultiplier = defaultValue(options.cullRequestsWhileMovingMultiplier, 60.0);
 
-        this.progressiveResolutionHeightFraction = CesiumMath.clamp(defaultValue(options.progressiveResolutionHeightFraction, 0.3), 0, 0.5);
+        this.progressiveResolutionHeightFraction = CesiumMath.clamp(defaultValue(options.progressiveResolutionHeightFraction, 0.3), 0.0, 0.5);
         this.preferLeaves = defaultValue(options.preferLeaves, false);
 
         this._tilesLoaded = false;
@@ -306,7 +306,7 @@ define([
          */
         this.foveatedScreenSpaceError = defaultValue(options.foveatedScreenSpaceError, true);
         this._foveatedConeSize = defaultValue(options.foveatedConeSize, 0.1);
-        this._foveatedMinimumScreenSpaceErrorRelaxation = defaultValue(options.foveatedMinimumScreenSpaceErrorRelaxation, 0);
+        this._foveatedMinimumScreenSpaceErrorRelaxation = defaultValue(options.foveatedMinimumScreenSpaceErrorRelaxation, 0.0);
 
         /**
          * Gets a function that will update the foveated screen space error for a tile.
@@ -319,7 +319,7 @@ define([
          * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control
          * how long in seconds to wait after the camera stops moving before deferred tiles start loading in.
          * This time delay prevents requesting tiles around the edges of the screen when the camera is moving.
-         * Setting it to 0 will immediately request all tiles in any given view.
+         * Setting this to 0.0 will immediately request all tiles in any given view.
          *
          * @type {Number}
          * @default 0.2
@@ -883,7 +883,7 @@ define([
                         credits = [];
                         that._credits = credits;
                     }
-                    for (var i = 0; i < extraCredits.length; i++) {
+                    for (var i = 0; i < extraCredits.length; ++i) {
                         var credit = extraCredits[i];
                         credits.push(new Credit(credit.html, credit.showOnScreen));
                     }
@@ -1398,7 +1398,7 @@ define([
         /**
          * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred.
          * Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}.
-         * Setting this to 0 means the cone will be the line formed by the camera position and its view direction. Setting it 1 means the cone encompasses the entire field of view of the camera, essentially disabling the effect.
+         * Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, essentially disabling the effect.
          *
          * @memberof Cesium3DTileset.prototype
          *
@@ -1426,7 +1426,7 @@ define([
          * @memberof Cesium3DTileset.prototype
          *
          * @type {Number}
-         * @default 0
+         * @default 0.0
          */
         foveatedMinimumScreenSpaceErrorRelaxation : {
             get : function() {
@@ -1434,7 +1434,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                Check.typeOf.number.greaterThanOrEquals('foveatedMinimumScreenSpaceErrorRelaxation', value, 0);
+                Check.typeOf.number.greaterThanOrEquals('foveatedMinimumScreenSpaceErrorRelaxation', value, 0.0);
                 Check.typeOf.number.lessThanOrEquals('foveatedMinimumScreenSpaceErrorRelaxation', value, this.maximumScreenSpaceError);
                 //>>includeEnd('debug');
 
@@ -1706,7 +1706,7 @@ define([
         var credits = this._credits;
         if (defined(credits) && statistics.selected !== 0) {
             var length = credits.length;
-            for (var i = 0; i < length; i++) {
+            for (var i = 0; i < length; ++i) {
                 frameState.creditDisplay.addCredit(credits[i]);
             }
         }
@@ -1775,14 +1775,8 @@ define([
         // This makes it less likely that requests will be cancelled after being issued.
         var requestedTiles = tileset._requestedTiles;
         var length = requestedTiles.length;
-        var i;
-        if (!isAsync) { // Prevent async picks from having their priorities overwritten
-            for (i = 0; i < length; ++i) {
-                requestedTiles[i].updatePriority();
-            }
-        }
         requestedTiles.sort(sortRequestByPriority);
-        for (i = 0; i < length; ++i) {
+        for (var i = 0; i < length; ++i) {
             requestContent(tileset, requestedTiles[i]);
         }
     }

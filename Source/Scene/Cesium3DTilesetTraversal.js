@@ -88,6 +88,14 @@ define([
         descendantTraversal.stack.trim(descendantTraversal.stackMaximumLength);
         selectionTraversal.stack.trim(selectionTraversal.stackMaximumLength);
         selectionTraversal.ancestorStack.trim(selectionTraversal.ancestorStackMaximumLength);
+
+        // Update the priority for any requests found during traversal
+        // Update after traversal so that min and max values can be used to normalize priority values
+        var requestedTiles = tileset._requestedTiles;
+        var length = requestedTiles.length;
+        for (var i = 0; i < length; ++i) {
+            requestedTiles[i].updatePriority();
+        }
     };
 
     function executeBaseTraversal(tileset, root, frameState) {
@@ -215,9 +223,9 @@ define([
         var diameter = Math.max(sphere.radius * 2.0, 1.0);
 
         var camera = frameState.camera;
-        var deltaMagnitude = camera.positionWCDeltaMagnitude !== 0 ? camera.positionWCDeltaMagnitude : camera.positionWCDeltaMagnitudeLastFrame;
+        var deltaMagnitude = camera.positionWCDeltaMagnitude !== 0.0 ? camera.positionWCDeltaMagnitude : camera.positionWCDeltaMagnitudeLastFrame;
         var movementRatio = tileset.cullRequestsWhileMovingMultiplier * deltaMagnitude / diameter; // How do n frames of this movement compare to the tile's physical size.
-        return movementRatio < 1;
+        return movementRatio < 1.0;
     }
 
     function loadTile(tileset, tile, frameState) {

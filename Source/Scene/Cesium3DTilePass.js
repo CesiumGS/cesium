@@ -30,7 +30,7 @@ define([
 
     passOptions[Cesium3DTilePass.RENDER] = freezeObject({
         traversal : Cesium3DTilesetTraversal,
-        isRender : true, // Do out-of-core operations (cache removal, process new tiles) only during the render pass.
+        isRender : true,
         requestTiles : true,
         ignoreCommands : false
     });

@@ -124,22 +124,22 @@ define([
          *
          * @private
          */
-        this.positionWCDeltaMagnitude = 0;
+        this.positionWCDeltaMagnitude = 0.0;
 
         /**
          * The position delta magnitude last frame.
          *
          * @private
          */
-        this.positionWCDeltaMagnitudeLastFrame = 0;
+        this.positionWCDeltaMagnitudeLastFrame = 0.0;
 
         /**
          * How long in seconds since the camera has stopped moving
          *
          * @private
          */
-        this.timeSinceMoved = 0;
-        this._lastMovedTimestamp = 0;
+        this.timeSinceMoved = 0.0;
+        this._lastMovedTimestamp = 0.0;
 
         /**
          * The view direction of the camera.
@@ -300,7 +300,7 @@ define([
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
 
-    function getCameraDeltas(camera) {
+    function updateCameraDeltas(camera) {
         if (!defined(camera._oldPositionWC)) {
             camera._oldPositionWC = Cartesian3.clone(camera.positionWC, camera._oldPositionWC);
         } else {
@@ -310,20 +310,22 @@ define([
             camera._oldPositionWC = Cartesian3.clone(camera.positionWC, camera._oldPositionWC);
 
             // Update move timers
-            if (camera.positionWCDeltaMagnitude > 0) {
-                camera.timeSinceMoved = 0;
+            if (camera.positionWCDeltaMagnitude > 0.0) {
+                camera.timeSinceMoved = 0.0;
                 camera._lastMovedTimestamp = getTimestamp();
             } else {
-                camera.timeSinceMoved = Math.max(getTimestamp() - camera._lastMovedTimestamp, 0.0) / 1000;
+                camera.timeSinceMoved = Math.max(getTimestamp() - camera._lastMovedTimestamp, 0.0) / 1000.0;
             }
         }
     }
 
     /**
-     * Checks there's a camera flight for this camera.
+     * Checks if there's a camera flight for this camera.
+     *
+     * @returns {Boolean} Whether or not this camera has a current flight with a valid preloadFlightCamera in scene.
      *
      * @private
-     * @returns {Boolean} Whether or not this camera has a current flight with a valid preloadFlightCamera in scene.
+     *
      */
     Camera.prototype.hasCurrentFlight = function() {
         // The preload flight camera defined check only here since it can be set to undefined when not 3D mode.
@@ -333,7 +335,7 @@ define([
     Camera.prototype._updateCameraChanged = function() {
         var camera = this;
 
-        getCameraDeltas(camera);
+        updateCameraDeltas(camera);
 
         if (camera._changed.numberOfListeners === 0) {
             return;

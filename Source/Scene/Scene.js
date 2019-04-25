@@ -3315,49 +3315,48 @@ define([
          * Pre passes update. Execute any pass invariant code that should run before the passes here.
          *
          */
-        var scene = this;
-        scene._preUpdate.raiseEvent(scene, time);
+        this._preUpdate.raiseEvent(this, time);
 
-        var frameState = scene._frameState;
+        var frameState = this._frameState;
 
         if (!defined(time)) {
             time = JulianDate.now();
         }
 
         // Determine if shouldRender
-        var cameraChanged = scene._view.checkForCameraUpdates(scene);
-        var shouldRender = !scene.requestRenderMode || scene._renderRequested || cameraChanged || scene._logDepthBufferDirty || scene._hdrDirty || (scene.mode === SceneMode.MORPHING);
-        if (!shouldRender && defined(scene.maximumRenderTimeChange) && defined(scene._lastRenderTime)) {
-            var difference = Math.abs(JulianDate.secondsDifference(scene._lastRenderTime, time));
-            shouldRender = shouldRender || difference > scene.maximumRenderTimeChange;
+        var cameraChanged = this._view.checkForCameraUpdates(this);
+        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || this._hdrDirty || (this.mode === SceneMode.MORPHING);
+        if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
+            var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
+            shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
         }
 
         if (shouldRender) {
-            scene._lastRenderTime = JulianDate.clone(time, scene._lastRenderTime);
-            scene._renderRequested = false;
-            scene._logDepthBufferDirty = false;
-            scene._hdrDirty = false;
+            this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
+            this._renderRequested = false;
+            this._logDepthBufferDirty = false;
+            this._hdrDirty = false;
 
             var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
-            updateFrameNumber(scene, frameNumber, time);
+            updateFrameNumber(this, frameNumber, time);
         }
 
-        tryAndCatchError(scene, prePassesUpdate);
+        tryAndCatchError(this, prePassesUpdate);
 
         /**
          *
          * Passes update. Add any passes here
          *
          */
-        tryAndCatchError(scene, updateMostDetailedRayPicks);
-        tryAndCatchError(scene, updatePreloadPass);
-        tryAndCatchError(scene, updatePreloadFlightPass);
+        tryAndCatchError(this, updateMostDetailedRayPicks);
+        tryAndCatchError(this, updatePreloadPass);
+        tryAndCatchError(this, updatePreloadFlightPass);
 
-        scene._postUpdate.raiseEvent(scene, time);
+        this._postUpdate.raiseEvent(this, time);
 
         if (shouldRender) {
-            scene._preRender.raiseEvent(scene, time);
-            tryAndCatchError(scene, render);
+            this._preRender.raiseEvent(this, time);
+            tryAndCatchError(this, render);
         }
 
         /**
@@ -3365,15 +3364,15 @@ define([
          * Post passes update. Execute any pass invariant code that should run after the passes here.
          *
          */
-        updateDebugShowFramesPerSecond(scene, shouldRender);
-        tryAndCatchError(scene, postPassesUpdate);
+        updateDebugShowFramesPerSecond(this, shouldRender);
+        tryAndCatchError(this, postPassesUpdate);
 
         // Often used to trigger events (so don't want in trycatch) that the user might be subscribed to. Things like the tile load events, ready promises, etc.
         // We don't want those events to resolve during the render loop because the events might add new primitives
-        callAfterRenderFunctions(scene);
+        callAfterRenderFunctions(this);
 
         if (shouldRender) {
-            scene._postRender.raiseEvent(scene, time);
+            this._postRender.raiseEvent(this, time);
         }
     };
 
