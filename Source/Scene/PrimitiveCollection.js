@@ -382,7 +382,7 @@ define([
         // update().  This will be changed to manage added and removed lists.
         for (var i = 0; i < primitives.length; ++i) {
             var primitive = primitives[i];
-            if (primitive instanceof Cesium3DTileset) {
+            if (defined(primitive.prePassesUpdate)) {
                 primitive.prePassesUpdate(frameState);
             }
         }
@@ -398,7 +398,7 @@ define([
         // update().  This will be changed to manage added and removed lists.
         for (var i = 0; i < primitives.length; ++i) {
             var primitive = primitives[i];
-            if (primitive instanceof Cesium3DTileset) {
+            if (defined(primitive.updateForPass)) {
                 primitive.updateForPass(frameState, passState);
             }
         }
@@ -414,7 +414,7 @@ define([
         // update().  This will be changed to manage added and removed lists.
         for (var i = 0; i < primitives.length; ++i) {
             var primitive = primitives[i];
-            if (primitive instanceof Cesium3DTileset) {
+            if (defined(primitive.postPassesUpdate)) {
                 primitive.postPassesUpdate(frameState);
             }
         }
