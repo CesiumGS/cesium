@@ -90,6 +90,7 @@ defineSuite([
     var texturedBoxCRNEmbeddedUrl = './Data/Models/Box-Textured-CRN-Embedded/CesiumTexturedBoxTest.gltf';
     var texturedBoxCustomUrl = './Data/Models/Box-Textured-Custom/CesiumTexturedBoxTest.gltf';
     var texturedBoxKhrBinaryUrl = './Data/Models/Box-Textured-Binary/CesiumTexturedBoxTest.glb';
+    var texturedBoxTextureTransformUrl = './Data/Models/Box-Texture-Transform/CesiumTexturedBoxTest.gltf';
     var texturedBoxWebpUrl = './Data/Models/Box-Textured-Webp/CesiumBoxWebp.gltf';
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var boxEcefUrl = './Data/Models/Box-ECEF/ecef.gltf';
@@ -1200,6 +1201,16 @@ defineSuite([
             return;
         }
         return loadModel(texturedBoxCRNEmbeddedUrl, {
+            incrementallyLoadTextures : false
+        }).then(function(m) {
+            verifyRender(m);
+            expect(Object.keys(m._rendererResources.textures).length).toBe(1);
+            primitives.remove(m);
+        });
+    });
+
+    it('renders textured box with KHR_texture_transform extension', function() {
+        return loadModel(texturedBoxTextureTransformUrl, {
             incrementallyLoadTextures : false
         }).then(function(m) {
             verifyRender(m);

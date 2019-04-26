@@ -1,6 +1,7 @@
 defineSuite([
         'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',
+        'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
         'Core/Color',
         'Core/Credit',
@@ -31,6 +32,7 @@ defineSuite([
     ], function(
         GlobeSurfaceTileProvider,
         Cartesian3,
+        Cartesian4,
         CesiumTerrainProvider,
         Color,
         Credit,
@@ -586,6 +588,49 @@ defineSuite([
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual(baseColor);
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+        });
+    });
+
+    it('renders imagery with color-to-alpha', function() {
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        var layer = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        }));
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        var layerColor;
+        return updateUntilDone(scene.globe).then(function() {
+            expect(scene).toRenderAndCall(function(rgba) {
+                layerColor = rgba;
+                // Expect the layer color to be mostly red
+                expect(layerColor[0]).toBeGreaterThan(layerColor[1]);
+                expect(layerColor[0]).toBeGreaterThan(layerColor[2]);
+            });
+
+            layer.colorToAlpha = new Color(1.0, 0.0, 0.0);
+            layer.colorToAlphaThreshold = 0.1;
+
+            return updateUntilDone(scene.globe);
+        })
+        .then(function() {
+            var commandList = scene.frameState.commandList;
+
+            for (var i = 0; i < commandList.length; ++i) {
+                var command = commandList[i];
+
+                var uniforms = command.uniformMap;
+                if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
+                    continue;
+                }
+
+                expect(uniforms.u_colorsToAlpha()).toEqual([new Cartesian4(1.0, 0.0, 0.0, 0.1)]);
+            }
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(layerColor);
             });
         });
     });
