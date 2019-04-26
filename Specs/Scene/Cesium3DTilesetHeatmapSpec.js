@@ -53,7 +53,7 @@ defineSuite([
                               Math.abs(expectedColor.green - tileColor.green),
                               Math.abs(expectedColor.blue  - tileColor.blue));
 
-        var threshold = 0.01;
+        var threshold = 0.11;
         expect(diff.red).toBeLessThan(threshold);
         expect(diff.green).toBeLessThan(threshold);
         expect(diff.blue).toBeLessThan(threshold);
