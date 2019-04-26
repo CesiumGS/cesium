@@ -916,7 +916,7 @@ define([
                 }
                 generatedBlob = blob;
                 if (useImageBitmap) {
-                    return Resource._Implementations.createImageBitmapFromBlob(blob, flipY);
+                    return Resource.createImageBitmapFromBlob(blob, flipY);
                 }
                 var blobUrl = window.URL.createObjectURL(blob);
                 generatedBlobResource = new Resource({
@@ -1874,7 +1874,7 @@ define([
                     return;
                 }
 
-                return Resource._Implementations.createImageBitmapFromBlob(blob, flipY);
+                return Resource.createImageBitmapFromBlob(blob, flipY);
             })
             .then(function(imageBitmap) {
                 if (!defined(imageBitmap)) {
@@ -1886,7 +1886,12 @@ define([
             .otherwise(deferred.reject);
     };
 
-    Resource._Implementations.createImageBitmapFromBlob = function(blob, flipY) {
+    /**
+     * Wrapper for createImageBitmap
+     *
+     * @private
+     */
+    Resource.createImageBitmapFromBlob = function(blob, flipY) {
         return createImageBitmap(blob, {
             imageOrientation: flipY ? 'flipY' : 'none'
         });
