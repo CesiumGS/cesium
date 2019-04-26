@@ -119,7 +119,6 @@ define([
      * @param {Boolean} [options.cullWithChildrenBounds=true] Optimization option. Whether to cull tiles using the union of their children bounding volumes.
      * @param {Boolean} [options.cullRequestsWhileMoving=true] Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
      * @param {Number} [options.cullRequestsWhileMovingMultiplier=60.0] Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
-     * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
      * @param {Boolean} [options.preloadWhenHidden=false] Preload tiles when <code>tileset.show</code> is <code>false</code>. Loads tiles as if the tileset is visible but does not render them.
      * @param {Boolean} [options.preloadFlightDestinations=true] Optimization option. Preload tiles at the camera's flight destination while the camera is in flight.
      * @param {Boolean} [options.preferLeaves=false] Optimization option. Prefer loading of leaves first.
@@ -148,6 +147,7 @@ define([
      * @param {Number} [options.luminanceAtZenith=0.5] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+     * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
      * @param {Boolean} [options.debugFreezeFrame=false] For debugging only. Determines if only the tiles from last frame should be used for rendering.
      * @param {Boolean} [options.debugColorizeTiles=false] For debugging only. When true, assigns a random color to each tile.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. When true, render's each tile's content as a wireframe.
@@ -246,10 +246,37 @@ define([
         this._maximumPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE, reverseScreenSpaceError: -Number.MAX_VALUE };
         this._minimumPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, reverseScreenSpaceError: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTilePropertyName);
+
+        /**
+         * Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
+         *
+         * @type {Boolean}
+         * @default true
+         */
         this.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, true);
+
+        /**
+         * Optimization option. Multiplier used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
+         *
+         * @type {Number}
+         * @default 60.0
+         */
         this.cullRequestsWhileMovingMultiplier = defaultValue(options.cullRequestsWhileMovingMultiplier, 60.0);
 
+        /**
+         * Optimization option. If between (0.0, 0.5], tiles at or above the screen space error for the reduced screen resolution of <code>progressiveResolutionHeightFraction*screenHeight</code> will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
+         *
+         * @type {Number}
+         * @default 0.3
+         */
         this.progressiveResolutionHeightFraction = CesiumMath.clamp(defaultValue(options.progressiveResolutionHeightFraction, 0.3), 0.0, 0.5);
+
+        /**
+         * Optimization option. Prefer loading of leaves first.
+         *
+         * @type {Boolean}
+         * @default false
+         */
         this.preferLeaves = defaultValue(options.preferLeaves, false);
 
         this._tilesLoaded = false;
