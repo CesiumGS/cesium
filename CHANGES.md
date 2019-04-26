@@ -9,7 +9,6 @@ Change Log
 * Added support for color-to-alpha with a threshold on imagery layers. [#7727](https://github.com/AnalyticalGraphicsInc/cesium/pull/7727)
 * `CesiumMath.toSNorm` documentation changed to reflect the function's implementation.
 * Added `CesiumMath.normalize` to convert a scalar value in an arbitrary range to a scalar in the range [0.0, 1.0] .
-* Added `Cesium3DTileStatistics.numberOfLoadedTilesTotal` to capture the running total of loaded tiles for the lifetime of a session.
 
 ##### Fixes :wrench:
 * Fixed an error where `clampToHeightMostDetailed` or `sampleHeightMostDetailed` would crash if entities were created when the promise resolved. [#7690](https://github.com/AnalyticalGraphicsInc/cesium/pull/7690)
