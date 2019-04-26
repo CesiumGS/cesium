@@ -4,25 +4,25 @@ Change Log
 ### 1.57 - 2019-05-01
 
 ##### Additions :tada:
-* Updated 3DTiles streaming performance, resulting ~67% camera tour view load time reduction, ~44% camera tour tile load count reduction. And for general camera movment, ~20% load time reduction with ~27% tile load count reduction. Tile load priority changed to focus on loading tiles in the center of the screen first. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
+* Improved 3D Tiles streaming performance, resulting in ~67% camera tour load time reduction, ~44% camera tour load count reduction. And for general camera movement, ~20% load time reduction with ~27% tile load count reduction. Tile load priority changed to focus on loading tiles in the center of the screen first. Added the following tileset optimizations, which unless stated otherwise are enabled by default. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
+    * Added `Cesium3DTileset.cullRequestsWhileMoving` option to ignore requests for tiles that will likely be out-of-view due to the camera's movement when they come back from the server.
+    * Added `Cesium3DTileset.cullRequestsWhileMovingMultiplier` option to act as a multiplier when used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
+    * Added `Cesium3DTileset.preloadFlightDestinations` option to preload tiles at the camera's flight destination while the camera is in flight.
+    * Added `Cesium3DTileset.preferLeaves` option to prefer loading of leaves. Good for additive refinement point clouds. Set to `false` by default.
+    * Added `Cesium3DTileset.progressiveResolutionHeightFraction` option to load tiles at a smaller resolution first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
+    * Added `Cesium3DTileset.foveatedScreenSpaceError` option to prioritize loading tiles in the center of the screen.
+    * Added `Cesium3DTileset.foveatedConeSize` option to control the cone size that determines which tiles are deferred for loading. Tiles outside the cone are potentially deferred.
+    * Added `Cesium3DTileset.foveatedMinimumScreenSpaceErrorRelaxation` option to control the starting screen space error relaxation for tiles outside the foveated cone.
+    * Added `Cesium3DTileset.foveatedInterpolationCallback` option to control how screen space error threshold is interpolated for tiles outside the foveated cone.
+    * Added `Cesium3DTileset.foveatedTimeDelay` option to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in.
 * Added new parameter to `PolylineGlowMaterial` called `taperPower`, that works similar to the existing `glowPower` parameter, to taper the back of the line away. [#7626](https://github.com/AnalyticalGraphicsInc/cesium/pull/7626)
+* Added `Cesium3DTileset.preloadWhenHidden` tileset option to preload tiles when `tileset.show` is false. Loads tiles as if the tileset is visible but does not render them. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
 * Added support for the `KHR_texture_transform` glTF extension. [#7549](https://github.com/AnalyticalGraphicsInc/cesium/pull/7549)
 * Added functions to remove samples from `SampledProperty` and `SampledPositionProperty`. [#7723](https://github.com/AnalyticalGraphicsInc/cesium/pull/7723)
 * Added support for color-to-alpha with a threshold on imagery layers. [#7727](https://github.com/AnalyticalGraphicsInc/cesium/pull/7727)
 * Add CZML processing for `heightReference` and `extrudedHeightReference` for geoemtry types that support it.
 * `CesiumMath.toSNorm` documentation changed to reflect the function's implementation. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
 * Added `CesiumMath.normalize` to convert a scalar value in an arbitrary range to a scalar in the range [0.0, 1.0]. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
-* Added `Cesium3DTileset.cullRequestsWhileMoving` tileset optimization option to ignore requests for tiles that will likely be out-of-view due to the camera's movement when they come back from the server. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
-* Added `Cesium3DTileset.cullRequestsWhileMovingMultiplier` tileset optimization option to act as a multiplier when used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
-* Added `Cesium3DTileset.preloadWhenHidden` tileset option to preload tiles when tileset.show is false. Loads tiles as if the tileset is visible but does not render them. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
-* Added `Cesium3DTileset.preloadFlightDestinations` tileset optimization option to preload tiles at the camera's flight destination while the camera is in flight. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
-* Added `Cesium3DTileset.preferLeaves` tileset optimization option to prefer loading of leaves. Good for additive point clouds. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
-* Added `Cesium3DTileset.progressiveResolutionHeightFraction` tileset optimization option to load tiles at a smaller resolution first. This can help get a quick layer of tiles down while full resolution tiles continue to load. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
-* Added `Cesium3DTileset.foveatedScreenSpaceError` tileset optimization option to prioritize loading tiles in the center of the screen. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
-* Added `Cesium3DTileset.foveatedConeSize` tileset optimization option to control the cone size that determines which tiles are deferred for loading. Tiles outside the cone are potentially deferred. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
-* Added `Cesium3DTileset.foveatedMinimumScreenSpaceErrorRelaxation` tileset optimization option to control the starting screen space error relaxation for tiles outside the foveated cone. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
-* Added `Cesium3DTileset.foveatedInterpolationCallback` tileset optimization option to control how screen space error threshold is interpolated for tiles outside the fovea cone. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
-* Added `Cesium3DTileset.foveatedTimeDelay` tileset optimization option to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
 
 ##### Fixes :wrench:
 * Fixed an error where `clampToHeightMostDetailed` or `sampleHeightMostDetailed` would crash if entities were created when the promise resolved. [#7690](https://github.com/AnalyticalGraphicsInc/cesium/pull/7690)

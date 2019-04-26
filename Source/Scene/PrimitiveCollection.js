@@ -4,16 +4,14 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
-        '../Core/DeveloperError',
-        './Cesium3DTileset'
+        '../Core/DeveloperError'
     ], function(
         createGuid,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
-        DeveloperError,
-        Cesium3DTileset) {
+        DeveloperError) {
     'use strict';
 
     /**
