@@ -12,6 +12,7 @@ define([
         '../Core/Ellipsoid',
         '../Core/EllipsoidGeodesic',
         '../Core/Event',
+        '../Core/getTimestamp',
         '../Core/HeadingPitchRange',
         '../Core/HeadingPitchRoll',
         '../Core/Intersect',
@@ -43,6 +44,7 @@ define([
         Ellipsoid,
         EllipsoidGeodesic,
         Event,
+        getTimestamp,
         HeadingPitchRange,
         HeadingPitchRoll,
         Intersect,
@@ -115,6 +117,29 @@ define([
         this._position = new Cartesian3();
         this._positionWC = new Cartesian3();
         this._positionCartographic = new Cartographic();
+        this._oldPositionWC = undefined;
+
+        /**
+         * The position delta magnitude.
+         *
+         * @private
+         */
+        this.positionWCDeltaMagnitude = 0.0;
+
+        /**
+         * The position delta magnitude last frame.
+         *
+         * @private
+         */
+        this.positionWCDeltaMagnitudeLastFrame = 0.0;
+
+        /**
+         * How long in seconds since the camera has stopped moving
+         *
+         * @private
+         */
+        this.timeSinceMoved = 0.0;
+        this._lastMovedTimestamp = 0.0;
 
         /**
          * The view direction of the camera.
@@ -275,8 +300,42 @@ define([
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
 
+    function updateCameraDeltas(camera) {
+        if (!defined(camera._oldPositionWC)) {
+            camera._oldPositionWC = Cartesian3.clone(camera.positionWC, camera._oldPositionWC);
+        } else {
+            camera.positionWCDeltaMagnitudeLastFrame = camera.positionWCDeltaMagnitude;
+            var delta = Cartesian3.subtract(camera.positionWC, camera._oldPositionWC, camera._oldPositionWC);
+            camera.positionWCDeltaMagnitude = Cartesian3.magnitude(delta);
+            camera._oldPositionWC = Cartesian3.clone(camera.positionWC, camera._oldPositionWC);
+
+            // Update move timers
+            if (camera.positionWCDeltaMagnitude > 0.0) {
+                camera.timeSinceMoved = 0.0;
+                camera._lastMovedTimestamp = getTimestamp();
+            } else {
+                camera.timeSinceMoved = Math.max(getTimestamp() - camera._lastMovedTimestamp, 0.0) / 1000.0;
+            }
+        }
+    }
+
+    /**
+     * Checks if there's a camera flight for this camera.
+     *
+     * @returns {Boolean} Whether or not this camera has a current flight with a valid preloadFlightCamera in scene.
+     *
+     * @private
+     *
+     */
+    Camera.prototype.hasCurrentFlight = function() {
+        // The preload flight camera defined check only here since it can be set to undefined when not 3D mode.
+        return defined(this._currentFlight) && defined(this._scene.preloadFlightCamera);
+    };
+
     Camera.prototype._updateCameraChanged = function() {
         var camera = this;
+
+        updateCameraDeltas(camera);
 
         if (camera._changed.numberOfListeners === 0) {
             return;
@@ -2861,6 +2920,19 @@ define([
         var scene = this._scene;
         flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
         this._currentFlight = flightTween;
+
+        // Save the final destination view information for the PRELOAD_FLIGHT pass.
+        var preloadFlightCamera = this._scene.preloadFlightCamera;
+        if (this._mode !== SceneMode.SCENE2D) {
+            if (!defined(preloadFlightCamera)) {
+                preloadFlightCamera = Camera.clone(this);
+            }
+            preloadFlightCamera.setView({ destination: destination, orientation: orientation });
+
+            this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
+        } else {
+            preloadFlightCamera = undefined;
+        }
     };
 
     function distanceToBoundingSphere3D(camera, radius) {

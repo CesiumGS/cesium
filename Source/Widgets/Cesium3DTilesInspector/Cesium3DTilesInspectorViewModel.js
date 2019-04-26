@@ -8,6 +8,7 @@ define([
         '../../Core/ScreenSpaceEventType',
         '../../Scene/Cesium3DTileColorBlendMode',
         '../../Scene/Cesium3DTileFeature',
+        '../../Scene/Cesium3DTilePass',
         '../../Scene/Cesium3DTileset',
         '../../Scene/Cesium3DTileStyle',
         '../../Scene/PerformanceDisplay',
@@ -22,6 +23,7 @@ define([
         ScreenSpaceEventType,
         Cesium3DTileColorBlendMode,
         Cesium3DTileFeature,
+        Cesium3DTilePass,
         Cesium3DTileset,
         Cesium3DTileStyle,
         PerformanceDisplay,
@@ -71,7 +73,8 @@ define([
             return '';
         }
 
-        var statistics = isPick ? tileset._statisticsLastPick : tileset._statisticsLastRender;
+        var statistics = isPick ? tileset._statisticsPerPass[Cesium3DTilePass.PICK] :
+                                  tileset._statisticsPerPass[Cesium3DTilePass.RENDER];
 
         // Since the pick pass uses a smaller frustum around the pixel of interest,
         // the statistics will be different than the normal render pass.

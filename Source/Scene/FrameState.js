@@ -184,14 +184,7 @@ define([
              * @type {Boolean}
              * @default false
              */
-            offscreen : false,
-
-            /**
-             * <code>true</code> if the primitive should update for an asynchronous pass, <code>false</code> otherwise.
-             * @type {Boolean}
-             * @default false
-             */
-            asynchronous : false
+            offscreen : false
         };
 
         /**
@@ -378,6 +371,13 @@ define([
          * @default false
          */
         this.useLogDepth = false;
+
+        /**
+         * Additional state used to update 3D Tilesets.
+         *
+         * @type {Cesium3DTilePassState}
+         */
+        this.tilesetPassState = undefined;
     }
 
     /**
