@@ -18,6 +18,7 @@ define([
         '../ThirdParty/when',
         './BingMapsStyle',
         './DiscardMissingTileImagePolicy',
+        './DiscardEmptyTileImagePolicy',
         './ImageryProvider'
     ], function(
         BingMapsApi,
@@ -39,6 +40,7 @@ define([
         when,
         BingMapsStyle,
         DiscardMissingTileImagePolicy,
+        DiscardEmptyTilePolicy,
         ImageryProvider) {
     'use strict';
 
@@ -70,6 +72,18 @@ define([
      *        these defaults should be correct tile discarding for a standard Bing Maps server.  To ensure
      *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
      *        parameter.
+     *
+     *  @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
+     *        is invalid and should be discarded.  The default value will depend on the map style.  If
+     *        BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND is used, then a {@link DiscardEmptyTileImagePolicy} will be
+     *        used to handle the Bing Maps API sending no content instead of a missing tile image, a behaviour specific
+     *        to that imagery set.  In all over cases, a default {@link DiscardMissingTileImagePolicy} is used which
+     *        requests tile 0,0 at the maximum tile level and checks pixels (0,0), (120,140), (130,160), (200,50), and
+     *        (200,200).  If all of these pixels are transparent, the discard check is disabled and no tiles are
+     *        discarded.  If any of them have a non-transparent color, any tile that has the same values in these pixel
+     *        locations is discarded.  The end result of these defaults should be correct tile discarding for a standard
+     *        Bing Maps server.  To ensure that no tiles are discarded, construct and pass a
+     *        {@link NeverTileDiscardPolicy} for this parameter.
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
@@ -171,11 +185,17 @@ define([
 
             // Install the default tile discard policy if none has been supplied.
             if (!defined(that._tileDiscardPolicy)) {
-                that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-                    missingImageUrl : buildImageResource(that, 0, 0, that._maximumLevel).url,
-                    pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
-                    disableCheckIfAllPixelsAreTransparent : true
-                });
+                // Our default depends on which map style we're using.
+                if (that._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND) {
+                    // this map style uses a different API, which returns a tile with no data instead of a placeholder image
+                    that._tileDiscardPolicy = new DiscardEmptyTilePolicy();
+                } else {
+                    that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
+                        missingImageUrl : buildImageResource(that, 0, 0, that._maximumLevel).url,
+                        pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
+                        disableCheckIfAllPixelsAreTransparent : true
+                    });
+                }
             }
 
             var attributionList = that._attributionList = resource.imageryProviders;
@@ -533,7 +553,21 @@ define([
         }
         //>>includeEnd('debug');
 
-        return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
+        var promise = ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
+
+        if(defined(promise)) {
+            return promise.then(() => promise, (error) => {
+                // If there isn't any image, we get an InvalidStateError.
+                // The version of the Bing maps API that we hit if we're using `BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND` does this
+                // instead of returning a "This image is missing" image.
+                // Since this isn't really an error, we want to supress the one that just got thrown.
+                if (error.name === 'InvalidStateError' && error.message === 'The source image could not be decoded.') {
+                    return {};
+                }
+            });
+        }
+
+        return undefined;
     };
 
     /**
