@@ -6,6 +6,7 @@ Change Log
 ##### Additions :tada:
 * Added new parameter to `PolylineGlowMaterial` called `taperPower`, that works similar to the existing `glowPower` parameter, to taper the back of the line away. [#7626](https://github.com/AnalyticalGraphicsInc/cesium/pull/7626)
 * Added support for the `KHR_texture_transform` glTF extension. [#7549](https://github.com/AnalyticalGraphicsInc/cesium/pull/7549)
+* Added functions to remove samples from `SampledProperty` and `SampledPositionProperty`. [#7723](https://github.com/AnalyticalGraphicsInc/cesium/pull/7723)
 * Added support for color-to-alpha with a threshold on imagery layers. [#7727](https://github.com/AnalyticalGraphicsInc/cesium/pull/7727)
 
 ##### Fixes :wrench:
