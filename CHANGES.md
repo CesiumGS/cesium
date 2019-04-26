@@ -7,7 +7,9 @@ Change Log
 * Updated 3DTiles streaming performance, resulting ~67% camera tour view load time reduction, ~44% camera tour tile load count reduction. And for general camera movment, ~20% load time reduction with ~27% tile load count reduction. Tile load priority changed to focus on loading tiles in the center of the screen first. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
 * Added new parameter to `PolylineGlowMaterial` called `taperPower`, that works similar to the existing `glowPower` parameter, to taper the back of the line away. [#7626](https://github.com/AnalyticalGraphicsInc/cesium/pull/7626)
 * Added support for the `KHR_texture_transform` glTF extension. [#7549](https://github.com/AnalyticalGraphicsInc/cesium/pull/7549)
+* Added functions to remove samples from `SampledProperty` and `SampledPositionProperty`. [#7723](https://github.com/AnalyticalGraphicsInc/cesium/pull/7723)
 * Added support for color-to-alpha with a threshold on imagery layers. [#7727](https://github.com/AnalyticalGraphicsInc/cesium/pull/7727)
+* Add CZML processing for `heightReference` and `extrudedHeightReference` for geoemtry types that support it.
 * `CesiumMath.toSNorm` documentation changed to reflect the function's implementation. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
 * Added `CesiumMath.normalize` to convert a scalar value in an arbitrary range to a scalar in the range [0.0, 1.0]. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
 * Added `Cesium3DTileset.cullRequestsWhileMoving` tileset optimization option to ignore requests for tiles that will likely be out-of-view due to the camera's movement when they come back from the server. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
@@ -24,6 +26,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed an error where `clampToHeightMostDetailed` or `sampleHeightMostDetailed` would crash if entities were created when the promise resolved. [#7690](https://github.com/AnalyticalGraphicsInc/cesium/pull/7690)
+* Fixed an issue with compositing merged entity availability. [#7717](https://github.com/AnalyticalGraphicsInc/cesium/issues/7717)
 * Fixed an error where many imagery layers within a single tile would cause parts of the tile to render as black on some platforms. [#7649](https://github.com/AnalyticalGraphicsInc/cesium/issues/7649)
 * Fixed a problem where instanced 3D models were incorrectly lit when using physically based materials. [#7775](https://github.com/AnalyticalGraphicsInc/cesium/issues/7775)
 
