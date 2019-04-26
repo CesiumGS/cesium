@@ -3955,18 +3955,25 @@ define([
         }
     }
 
-    function launchMostDetailedRayPick(scene, ray, objectsToExclude, width, callback) {
-        var tilesets = [];
-        var primitives = scene.primitives;
+    function getTilesets(primitives, objectsToExclude, tilesets) {
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
-            if ((primitive instanceof Cesium3DTileset) && primitive.show) {
-                if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
-                    tilesets.push(primitive);
+            if (primitive.show) {
+                if ((primitive instanceof Cesium3DTileset)) {
+                    if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
+                        tilesets.push(primitive);
+                    }
+                } else if (primitive instanceof PrimitiveCollection) {
+                    getTilesets(primitive, objectsToExclude, tilesets);
                 }
             }
         }
+    }
+
+    function launchMostDetailedRayPick(scene, ray, objectsToExclude, width, callback) {
+        var tilesets = [];
+        getTilesets(scene.primitives, objectsToExclude, tilesets);
         if (tilesets.length === 0) {
             return when.resolve(callback());
         }
