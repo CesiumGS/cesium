@@ -1146,8 +1146,8 @@ define([
 
                 var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
                 var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
-                var glyphWidth = billboard.width * scale;
-                var glyphHeight = billboard.height * scale;
+                var glyphWidth = glyph.dimensions.width * scale;
+                var glyphHeight = glyph.dimensions.height * scale;
 
                 if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
                     glyphY -= glyphHeight;
