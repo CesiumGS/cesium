@@ -83,7 +83,7 @@ define([
         }
     }
 
-    var heatmapColors = [new Color(0.000, 0.000, 0.000, 1),  // Black
+    var heatmapColors = [new Color(0.100, 0.100, 0.100, 1),  // Dark Gray
                          new Color(0.153, 0.278, 0.878, 1),  // Blue
                          new Color(0.827, 0.231, 0.490, 1),  // Pink
                          new Color(0.827, 0.188, 0.220, 1),  // Red
