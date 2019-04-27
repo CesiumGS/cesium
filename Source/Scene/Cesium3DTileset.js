@@ -1770,7 +1770,6 @@ define([
         if (frameState.newFrame) {
             this._cache.reset();
         }
-
     };
 
     function cancelOutOfViewRequests(tileset, frameState) {
@@ -2240,9 +2239,6 @@ define([
 
         // Resets the visibility check for each pass
         ++tileset._updatedVisibilityFrame;
-        // if (isRender) {
-        //     tileset._cache.reset();
-        // }
 
         // Update any tracked min max values
         resetMinimumMaximum(tileset);
