@@ -2235,7 +2235,9 @@ define([
 
         // Resets the visibility check for each pass
         ++tileset._updatedVisibilityFrame;
-        tileset._cache.reset();
+        if (isRender) {
+            tileset._cache.reset();
+        }
 
         // Update any tracked min max values
         resetMinimumMaximum(tileset);
