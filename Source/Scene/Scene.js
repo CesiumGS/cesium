@@ -3318,6 +3318,7 @@ define([
         this._preUpdate.raiseEvent(this, time);
 
         var frameState = this._frameState;
+        frameState.newFrame = false;
 
         if (!defined(time)) {
             time = JulianDate.now();
@@ -3339,6 +3340,7 @@ define([
 
             var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
             updateFrameNumber(this, frameNumber, time);
+            frameState.newFrame = true;
         }
 
         tryAndCatchError(this, prePassesUpdate);
