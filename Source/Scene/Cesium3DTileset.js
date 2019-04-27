@@ -1727,7 +1727,6 @@ define([
         cancelOutOfViewRequests(this, frameState);
         raiseLoadProgressEvent(this, frameState);
         this._cache.unloadTiles(this, unloadTile);
-        this._cache.reset();
 
         var statistics = this._statisticsPerPass[Cesium3DTilePass.RENDER];
         var credits = this._credits;
@@ -2236,6 +2235,7 @@ define([
 
         // Resets the visibility check for each pass
         ++tileset._updatedVisibilityFrame;
+        tileset._cache.reset();
 
         // Update any tracked min max values
         resetMinimumMaximum(tileset);
