@@ -1,13 +1,17 @@
 define([
+        '../Core/Cartesian3',
         '../Core/defined',
         '../Core/Intersect',
         '../Core/ManagedArray',
+        '../Core/Math',
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine'
     ], function(
+        Cartesian3,
         defined,
         Intersect,
         ManagedArray,
+        CesiumMath,
         Cesium3DTileOptimizationHint,
         Cesium3DTileRefine) {
     'use strict';
@@ -85,7 +89,13 @@ define([
         selectionTraversal.stack.trim(selectionTraversal.stackMaximumLength);
         selectionTraversal.ancestorStack.trim(selectionTraversal.ancestorStackMaximumLength);
 
-        return true;
+        // Update the priority for any requests found during traversal
+        // Update after traversal so that min and max values can be used to normalize priority values
+        var requestedTiles = tileset._requestedTiles;
+        var length = requestedTiles.length;
+        for (var i = 0; i < length; ++i) {
+            requestedTiles[i].updatePriority();
+        }
     };
 
     function executeBaseTraversal(tileset, root, frameState) {
@@ -192,28 +202,48 @@ define([
         tile._touchedFrame = frameState.frameNumber;
     }
 
-    function getPriority(tileset, tile) {
-        // If skipLevelOfDetail is off try to load child tiles as soon as possible so that their parent can refine sooner.
-        // Additive tiles are prioritized by distance because it subjectively looks better.
-        // Replacement tiles are prioritized by screen space error.
-        // A tileset that has both additive and replacement tiles may not prioritize tiles as effectively since SSE and distance
-        // are different types of values. Maybe all priorities need to be normalized to 0-1 range.
-        if (tile.refine === Cesium3DTileRefine.ADD) {
-            return tile._distanceToCamera;
+    function updateMinimumMaximumPriority(tileset, tile) {
+        tileset._maximumPriority.distance = Math.max(tile._priorityHolder._distanceToCamera, tileset._maximumPriority.distance);
+        tileset._minimumPriority.distance = Math.min(tile._priorityHolder._distanceToCamera, tileset._minimumPriority.distance);
+        tileset._maximumPriority.depth = Math.max(tile._depth, tileset._maximumPriority.depth);
+        tileset._minimumPriority.depth = Math.min(tile._depth, tileset._minimumPriority.depth);
+        tileset._maximumPriority.foveatedFactor = Math.max(tile._priorityHolder._foveatedFactor, tileset._maximumPriority.foveatedFactor);
+        tileset._minimumPriority.foveatedFactor = Math.min(tile._priorityHolder._foveatedFactor, tileset._minimumPriority.foveatedFactor);
+        tileset._maximumPriority.reverseScreenSpaceError = Math.max(tile._priorityReverseScreenSpaceError, tileset._maximumPriority.reverseScreenSpaceError);
+        tileset._minimumPriority.reverseScreenSpaceError = Math.min(tile._priorityReverseScreenSpaceError, tileset._minimumPriority.reverseScreenSpaceError);
+    }
+
+    function isOnScreenLongEnough(tileset, tile, frameState) {
+        // Prevent unnecessary loads while camera is moving by getting the ratio of travel distance to tile size.
+        if (!tileset.cullRequestsWhileMoving) {
+            return true;
         }
-        var parent = tile.parent;
-        var useParentScreenSpaceError = defined(parent) && (!skipLevelOfDetail(tileset) || (tile._screenSpaceError === 0.0) || parent.hasTilesetContent);
-        var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
-        var rootScreenSpaceError = tileset.root._screenSpaceError;
-        return rootScreenSpaceError - screenSpaceError; // Map higher SSE to lower values (e.g. root tile is highest priority)
+
+        var sphere = tile.boundingSphere;
+        var diameter = Math.max(sphere.radius * 2.0, 1.0);
+
+        var camera = frameState.camera;
+        var deltaMagnitude = camera.positionWCDeltaMagnitude !== 0.0 ? camera.positionWCDeltaMagnitude : camera.positionWCDeltaMagnitudeLastFrame;
+        var movementRatio = tileset.cullRequestsWhileMovingMultiplier * deltaMagnitude / diameter; // How do n frames of this movement compare to the tile's physical size.
+        return movementRatio < 1.0;
     }
 
     function loadTile(tileset, tile, frameState) {
-        if (hasUnloadedContent(tile) || tile.contentExpired) {
-            tile._requestedFrame = frameState.frameNumber;
-            tile._priority = getPriority(tileset, tile);
-            tileset._requestedTiles.push(tile);
+        if (tile._requestedFrame === frameState.frameNumber || (!hasUnloadedContent(tile) && !tile.contentExpired)) {
+            return;
         }
+
+        if (!isOnScreenLongEnough(tileset, tile, frameState)) {
+            return;
+        }
+
+        var cameraHasNotStoppedMovingLongEnough = frameState.camera.timeSinceMoved < tileset.foveatedTimeDelay;
+        if (tile.priorityDeferred && cameraHasNotStoppedMovingLongEnough) {
+            return;
+        }
+
+        tile._requestedFrame = frameState.frameNumber;
+        tileset._requestedTiles.push(tile);
     }
 
     function updateVisibility(tileset, tile, frameState) {
@@ -285,11 +315,21 @@ define([
     }
 
     function updateTile(tileset, tile, frameState) {
+        // Reset some of the tile's flags and re-evaluate visibility
         updateTileVisibility(tileset, tile, frameState);
         tile.updateExpiration();
 
+        // Request priority
+        tile._wasMinPriorityChild = false;
+        tile._priorityHolder = tile;
+        updateMinimumMaximumPriority(tileset, tile);
+
+        // SkipLOD
         tile._shouldSelect = false;
         tile._finalResolution = true;
+    }
+
+    function updateTileAncestorContentLinks(tile, frameState) {
         tile._ancestorWithContent = undefined;
         tile._ancestorWithContentAvailable = undefined;
 
@@ -300,7 +340,7 @@ define([
             // ancestorWithContentAvailable is an ancestor that is rendered if a desired tile is not loaded.
             var hasContent = !hasUnloadedContent(parent) || (parent._requestedFrame === frameState.frameNumber);
             tile._ancestorWithContent = hasContent ? parent : parent._ancestorWithContent;
-            tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable;
+            tile._ancestorWithContentAvailable = parent.contentAvailable ? parent : parent._ancestorWithContentAvailable; // Links a descendant up to its contentAvailable ancestor as the traversal progresses.
         }
     }
 
@@ -315,9 +355,10 @@ define([
     function reachedSkippingThreshold(tileset, tile) {
         var ancestor = tile._ancestorWithContent;
         return !tileset.immediatelyLoadDesiredLevelOfDetail &&
-               defined(ancestor) &&
+               (tile._priorityProgressiveResolutionScreenSpaceErrorLeaf ||
+               (defined(ancestor) &&
                (tile._screenSpaceError < (ancestor._screenSpaceError / tileset.skipScreenSpaceErrorFactor)) &&
-               (tile._depth > (ancestor._depth + tileset.skipLevels));
+               (tile._depth > (ancestor._depth + tileset.skipLevels))));
     }
 
     function sortChildrenByDistanceToCamera(a, b) {
@@ -348,14 +389,28 @@ define([
         var refines = true;
 
         var anyChildrenVisible = false;
+
+        // Determining min child
+        var minIndex = -1;
+        var minimumPriority = Number.MAX_VALUE;
+
+        var child;
         for (i = 0; i < length; ++i) {
-            var child = children[i];
+            child = children[i];
             if (isVisible(child)) {
                 stack.push(child);
+                if (child._foveatedFactor < minimumPriority) {
+                    minIndex = i;
+                    minimumPriority = child._foveatedFactor;
+                }
                 anyChildrenVisible = true;
             } else if (checkRefines || tileset.loadSiblings) {
                 // Keep non-visible children loaded since they are still needed before the parent can refine.
                 // Or loadSiblings is true so always load tiles regardless of visibility.
+                if (child._foveatedFactor < minimumPriority) {
+                    minIndex = i;
+                    minimumPriority = child._foveatedFactor;
+                }
                 loadTile(tileset, child, frameState);
                 touchTile(tileset, child, frameState);
             }
@@ -374,6 +429,21 @@ define([
 
         if (!anyChildrenVisible) {
             refines = false;
+        }
+
+        if (minIndex !== -1 && !skipLevelOfDetail(tileset) && replace) {
+            // An ancestor will hold the _foveatedFactor and _distanceToCamera for descendants between itself and its highest priority descendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
+            // Priority of all tiles that refer to the _foveatedFactor and _distanceToCamera stored in the common ancestor will be differentiated based on their _depth.
+            var minPriorityChild = children[minIndex];
+            minPriorityChild._wasMinPriorityChild = true;
+            var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) && minimumPriority <= tile._priorityHolder._foveatedFactor ? tile._priorityHolder : tile; // This is where priority dependency chains are wired up or started anew.
+            priorityHolder._foveatedFactor = Math.min(minPriorityChild._foveatedFactor, priorityHolder._foveatedFactor);
+            priorityHolder._distanceToCamera = Math.min(minPriorityChild._distanceToCamera, priorityHolder._distanceToCamera);
+
+            for (i = 0; i < length; ++i) {
+                child = children[i];
+                child._priorityHolder = priorityHolder;
+            }
         }
 
         return refines;
@@ -423,6 +493,8 @@ define([
             traversal.stackMaximumLength = Math.max(traversal.stackMaximumLength, stack.length);
 
             var tile = stack.pop();
+
+            updateTileAncestorContentLinks(tile, frameState);
             var baseTraversal = inBaseTraversal(tileset, tile, baseScreenSpaceError);
             var add = tile.refine === Cesium3DTileRefine.ADD;
             var replace = tile.refine === Cesium3DTileRefine.REPLACE;
