@@ -3206,7 +3206,6 @@ define([
 
         scene._pickPositionCacheDirty = true;
         frameState.creditDisplay.update();
-        // frameState.creditDisplay.beginFrame();
     }
 
     function postPassesUpdate(scene) {
@@ -3215,7 +3214,6 @@ define([
         primitives.postPassesUpdate(frameState);
 
         RequestScheduler.update();
-        // frameState.creditDisplay.endFrame();
     }
 
     var scratchBackgroundColor = new Color();
