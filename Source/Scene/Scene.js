@@ -3206,7 +3206,7 @@ define([
 
         scene._pickPositionCacheDirty = true;
         frameState.creditDisplay.update();
-        frameState.creditDisplay.beginFrame();
+        // frameState.creditDisplay.beginFrame();
     }
 
     function postPassesUpdate(scene) {
@@ -3215,7 +3215,7 @@ define([
         primitives.postPassesUpdate(frameState);
 
         RequestScheduler.update();
-        frameState.creditDisplay.endFrame();
+        // frameState.creditDisplay.endFrame();
     }
 
     var scratchBackgroundColor = new Color();
@@ -3242,6 +3242,8 @@ define([
             backgroundColor.blue = Math.pow(backgroundColor.blue, scene.gamma);
         }
         frameState.backgroundColor = backgroundColor;
+
+        frameState.creditDisplay.beginFrame();
 
         scene.fog.update(frameState);
 
@@ -3288,6 +3290,7 @@ define([
             }
         }
 
+        frameState.creditDisplay.endFrame();
         context.endFrame();
     }
 
