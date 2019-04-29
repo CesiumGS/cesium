@@ -2275,7 +2275,8 @@ define([
 
         var pass = tilesetPassState.pass;
         if ((pass === Cesium3DTilePass.PRELOAD && (!this.preloadWhenHidden || this.show)) ||
-            (pass === Cesium3DTilePass.PRELOAD_FLIGHT & (!this.preloadFlightDestinations || !this.show))) {
+            (pass === Cesium3DTilePass.PRELOAD_FLIGHT && (!this.preloadFlightDestinations || !this.show)) ||
+            (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK && !this.cullRequestsWhileMoving && this.foveatedTimeDelay <= 0)) {
             return;
         }
 
