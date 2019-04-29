@@ -3206,7 +3206,6 @@ define([
 
         scene._pickPositionCacheDirty = true;
         frameState.creditDisplay.update();
-        frameState.creditDisplay.beginFrame();
     }
 
     function postPassesUpdate(scene) {
@@ -3215,7 +3214,6 @@ define([
         primitives.postPassesUpdate(frameState);
 
         RequestScheduler.update();
-        frameState.creditDisplay.endFrame();
     }
 
     var scratchBackgroundColor = new Color();
@@ -3242,6 +3240,8 @@ define([
             backgroundColor.blue = Math.pow(backgroundColor.blue, scene.gamma);
         }
         frameState.backgroundColor = backgroundColor;
+
+        frameState.creditDisplay.beginFrame();
 
         scene.fog.update(frameState);
 
@@ -3288,6 +3288,7 @@ define([
             }
         }
 
+        frameState.creditDisplay.endFrame();
         context.endFrame();
     }
 
@@ -3318,6 +3319,7 @@ define([
         this._preUpdate.raiseEvent(this, time);
 
         var frameState = this._frameState;
+        frameState.newFrame = false;
 
         if (!defined(time)) {
             time = JulianDate.now();
@@ -3339,6 +3341,7 @@ define([
 
             var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
             updateFrameNumber(this, frameNumber, time);
+            frameState.newFrame = true;
         }
 
         tryAndCatchError(this, prePassesUpdate);

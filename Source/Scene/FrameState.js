@@ -93,6 +93,14 @@ define([
         this.frameNumber = 0;
 
         /**
+         * <code>true</code> if a new frame has been issued and the frame number has been updated.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.newFrame = false;
+
+        /**
          * The scene's current time.
          *
          * @type {JulianDate}

@@ -1727,7 +1727,6 @@ define([
         cancelOutOfViewRequests(this, frameState);
         raiseLoadProgressEvent(this, frameState);
         this._cache.unloadTiles(this, unloadTile);
-        this._cache.reset();
 
         var statistics = this._statisticsPerPass[Cesium3DTilePass.RENDER];
         var credits = this._credits;
@@ -1766,6 +1765,10 @@ define([
 
         if (this.dynamicScreenSpaceError) {
             updateDynamicScreenSpaceError(this, frameState);
+        }
+
+        if (frameState.newFrame) {
+            this._cache.reset();
         }
     };
 
