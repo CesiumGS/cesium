@@ -3906,10 +3906,7 @@ define([
 
     function updateRequestRenderModeDeferCheckPass(scene) {
         // Check if any ignored requests are ready to go (to wake rendering up again)
-        var frameState = scene._frameState;
-
-        var primitives = scene.primitives;
-        primitives.updateForPass(frameState, requestRenderModeDeferCheckPassState);
+        scene.primitives.updateForPass(scene._frameState, requestRenderModeDeferCheckPassState);
     }
 
     var scratchRight = new Cartesian3();
