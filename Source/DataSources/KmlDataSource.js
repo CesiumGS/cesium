@@ -2489,7 +2489,7 @@ define([
      * );
      */
     function KmlDataSource(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var camera = options.camera;
         var canvas = options.canvas;
 
@@ -2700,7 +2700,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         DataSource.setLoading(this, true);
 
         var oldName = this._name;

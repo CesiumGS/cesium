@@ -206,3 +206,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Adrien David](https://github.com/adridavid)
 * [Alexander Popiak](https://github.com/apopiak)
 * [Merijn Wijngaard](https://github.com/mwijngaard)
+* [Abu Darda](https://github.com/abuDarda97)
