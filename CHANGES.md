@@ -28,6 +28,7 @@ Change Log
 * Fixed an error where `clampToHeightMostDetailed` or `sampleHeightMostDetailed` would crash if entities were created when the promise resolved. [#7690](https://github.com/AnalyticalGraphicsInc/cesium/pull/7690)
 * Fixed an issue with compositing merged entity availability. [#7717](https://github.com/AnalyticalGraphicsInc/cesium/issues/7717)
 * Fixed an error where many imagery layers within a single tile would cause parts of the tile to render as black on some platforms. [#7649](https://github.com/AnalyticalGraphicsInc/cesium/issues/7649)
+* Fixed a bug that could cause terrain with a single, global root tile (e.g. that uses `WebMercatorTilingScheme`) to be culled unexpectedly in some views. [#7702](https://github.com/AnalyticalGraphicsInc/cesium/issues/7702)
 * Fixed a problem where instanced 3D models were incorrectly lit when using physically based materials. [#7775](https://github.com/AnalyticalGraphicsInc/cesium/issues/7775)
 
 ### 1.56.1 - 2019-04-02
