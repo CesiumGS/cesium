@@ -3909,9 +3909,6 @@ define([
         var frameState = scene._frameState;
         var camera = frameState.camera;
 
-        requestRenderModeDeferCheckPassState.camera = camera;
-        requestRenderModeDeferCheckPassState.cullingVolume = frameState.cullingVolume;
-
         var primitives = scene.primitives;
         primitives.updateForPass(frameState, requestRenderModeDeferCheckPassState);
     }
