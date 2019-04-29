@@ -3907,7 +3907,6 @@ define([
     function updateRequestRenderModeDeferCheckPass(scene) {
         // Check if any ignored requests are ready to go (to wake rendering up again)
         var frameState = scene._frameState;
-        var camera = frameState.camera;
 
         var primitives = scene.primitives;
         primitives.updateForPass(frameState, requestRenderModeDeferCheckPassState);
