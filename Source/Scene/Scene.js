@@ -1727,6 +1727,10 @@ define([
         pass : Cesium3DTilePass.PRELOAD_FLIGHT
     });
 
+    var requestRenderModeDeferCheckPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK
+    });
+
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
 
@@ -3354,6 +3358,9 @@ define([
         tryAndCatchError(this, updateMostDetailedRayPicks);
         tryAndCatchError(this, updatePreloadPass);
         tryAndCatchError(this, updatePreloadFlightPass);
+        if (!shouldRender) {
+            tryAndCatchError(this, updateRequestRenderModeDeferCheckPass);
+        }
 
         this._postUpdate.raiseEvent(this, time);
 
@@ -3895,6 +3902,11 @@ define([
 
         var primitives = scene.primitives;
         primitives.updateForPass(frameState, preloadFlightTilesetPassState);
+    }
+
+    function updateRequestRenderModeDeferCheckPass(scene) {
+        // Check if any ignored requests are ready to go (to wake rendering up again)
+        scene.primitives.updateForPass(scene._frameState, requestRenderModeDeferCheckPassState);
     }
 
     var scratchRight = new Cartesian3();

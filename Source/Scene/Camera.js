@@ -301,10 +301,7 @@ define([
     }
 
     function updateCameraDeltas(camera) {
-        if (camera._scene.requestRenderMode) {
-            camera.timeSinceMoved = Number.MAX_VALUE;
-            camera.positionWCDeltaMagnitude = 0.0;
-        } else if (!defined(camera._oldPositionWC)) {
+        if (!defined(camera._oldPositionWC)) {
             camera._oldPositionWC = Cartesian3.clone(camera.positionWC, camera._oldPositionWC);
         } else {
             camera.positionWCDeltaMagnitudeLastFrame = camera.positionWCDeltaMagnitude;
