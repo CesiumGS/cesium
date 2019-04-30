@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -65,9 +67,10 @@ var czml = [{
         "material" : {
             "polylineGlow" : {
                 "color" : {
-                    "rgba" : [0, 0, 255, 255]
+                    "rgba" : [100, 149, 237, 255]
                 },
-                "glowPower" : 0.2
+                "glowPower" : 0.2,
+                "taperPower" : 0.5
             }
         },
         "width" : 10
