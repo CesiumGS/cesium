@@ -336,7 +336,6 @@ define([
         vertexShader += 'attribute vec3 a_position;\n';
         if (hasNormals) {
             vertexShader += 'varying vec3 v_positionEC;\n';
-            vertexShader += 'varying vec3 v_positionWC;\n';
         }
 
         // Morph Target Weighting
@@ -375,9 +374,6 @@ define([
         } else {
             vertexShaderMain += '    vec4 position = vec4(weightedPosition, 1.0);\n';
         }
-        if (hasNormals) {
-            vertexShaderMain += '    v_positionWC = (czm_model * position).xyz;\n';
-        }
         vertexShaderMain += '    position = u_modelViewMatrix * position;\n';
         if (hasNormals) {
             vertexShaderMain += '    v_positionEC = position.xyz;\n';
@@ -399,7 +395,6 @@ define([
 
             fragmentShader += 'varying vec3 v_normal;\n';
             fragmentShader += 'varying vec3 v_positionEC;\n';
-            fragmentShader += 'varying vec3 v_positionWC;\n';
         }
 
         // Read tangents if available
@@ -582,6 +577,7 @@ define([
         // Add normal mapping to fragment shader
         if (hasNormals) {
             fragmentShader += '    vec3 ng = normalize(v_normal);\n';
+            fragmentShader += '    vec3 positionWC = vec3(czm_inverseView * vec4(v_positionEC, 1.0));\n';
             if (defined(generatedMaterialValues.u_normalTexture)) {
                 if (hasTangents) {
                     // Read tangents from varying
@@ -745,9 +741,9 @@ define([
             fragmentShader += '    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));\n';
             // Figure out if the reflection vector hits the ellipsoid
             fragmentShader += '    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();\n';
-            fragmentShader += '    float vertexRadius = length(v_positionWC);\n';
+            fragmentShader += '    float vertexRadius = length(positionWC);\n';
             fragmentShader += '    float horizonDotNadir = 1.0 - min(1.0, ellipsoid.radii.x / vertexRadius);\n';
-            fragmentShader += '    float reflectionDotNadir = dot(r, normalize(v_positionWC));\n';
+            fragmentShader += '    float reflectionDotNadir = dot(r, normalize(positionWC));\n';
             // Flipping the X vector is a cheap way to get the inverse of czm_temeToPseudoFixed, since that's a rotation about Z.
             fragmentShader += '    r.x = -r.x;\n';
             fragmentShader += '    r = -normalize(czm_temeToPseudoFixed * r);\n';
@@ -784,10 +780,10 @@ define([
             // Luminance model from page 40 of http://silviojemma.com/public/papers/lighting/spherical-harmonic-lighting.pdf
             fragmentShader += '#ifdef USE_SUN_LUMINANCE \n';
             // Angle between sun and zenith
-            fragmentShader += '    float LdotZenith = clamp(dot(normalize(czm_inverseViewRotation * l), normalize(v_positionWC * -1.0)), 0.001, 1.0);\n';
+            fragmentShader += '    float LdotZenith = clamp(dot(normalize(czm_inverseViewRotation * l), normalize(positionWC * -1.0)), 0.001, 1.0);\n';
             fragmentShader += '    float S = acos(LdotZenith);\n';
             // Angle between zenith and current pixel
-            fragmentShader += '    float NdotZenith = clamp(dot(normalize(czm_inverseViewRotation * n), normalize(v_positionWC * -1.0)), 0.001, 1.0);\n';
+            fragmentShader += '    float NdotZenith = clamp(dot(normalize(czm_inverseViewRotation * n), normalize(positionWC * -1.0)), 0.001, 1.0);\n';
             // Angle between sun and current pixel
             fragmentShader += '    float gamma = acos(NdotL);\n';
             fragmentShader += '    float numerator = ((0.91 + 10.0 * exp(-3.0 * gamma) + 0.45 * pow(NdotL, 2.0)) * (1.0 - exp(-0.32 / NdotZenith)));\n';
