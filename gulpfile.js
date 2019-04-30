@@ -430,12 +430,17 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
 
                 return readFile(file)
                 .then(function(content) {
+                    if (!compress) {
+                        return content;
+                    }
+
                     var alreadyCompressed = (content[0] === 0x1f) && (content[1] === 0x8b);
                     if (alreadyCompressed) {
                         console.log('Skipping compressing already compressed file: ' + file);
                         return content;
                     }
-                    return compress ? gzip(content) : content;
+
+                    return gzip(content);
                 })
                 .then(function(content) {
                     // compute hash and etag
@@ -553,8 +558,8 @@ function deployCesium(bucketName, uploadDirectory, cacheControl, done) {
 function getMimeType(filename) {
     var mimeType = mime.getType(filename);
     if (mimeType) {
-        //Compress everything except binary images and video
-        var compress = !/^(image|video)\//i.test(mimeType);
+        //Compress everything except zipfiles, binary images, and video
+        var compress = !/^(image\/|video\/|application\/zip|application\/gzip)/i.test(mimeType);
         if (mimeType === 'image/svg+xml') {
             compress = true;
         }
@@ -566,7 +571,7 @@ function getMimeType(filename) {
         return { type: 'text/plain', compress: true };
     } else if (/\.(czml|topojson)$/i.test(filename)) {
         return { type: 'application/json', compress: true };
-    } else if (/\.crn$/i.test(filename)) {
+    } else if (/\.(crn|tgz)$/i.test(filename)) {
         return { type: 'application/octet-stream', compress: false };
     }
 
