@@ -975,7 +975,7 @@ define([
         },
 
         /**
-         * The outline width of this Billboard.  Effective only for SDF billboards like Label glyphs.
+         * The outline width of this Billboard in pixels.  Effective only for SDF billboards like Label glyphs.
          * @memberof Billboard.prototype
          * @type {Number}
          * @private

@@ -294,7 +294,7 @@ define([
          *
          * @default false
          */
-        this.debugTextureAtlas = defaultValue(options.debugTextureAtlas, false);
+        this.debugShowTextureAtlas = defaultValue(options.debugShowTextureAtlas, false);
 
         /**
          * The billboard blending option. The default is used for rendering both opaque and translucent billboards.
@@ -1952,8 +1952,8 @@ define([
                 commandList.push(command);
             }
 
-            if (this.debugTextureAtlas) {
-                if (this.debugCommand === undefined) {
+            if (this.debugShowTextureAtlas) {
+                if (!defined(this.debugCommand)) {
                     this.debugCommand = createDebugCommand(this, frameState.context);
                 }
 

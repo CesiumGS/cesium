@@ -84,10 +84,10 @@ define([
     var glyphFontSize = 48; // Font size in pixels
     var glyphBuffer = 2;    // Whitespace buffer around a glyph in pixels
     var glyphRadius = 8;    // How many pixels around the glyph shape to use for encoding distance
-    var glyphCutoff = 0.25;  // How much of the radius (relative) is used for the inside part the glyph
+    var glyphCutoff = 0.25; // How much of the radius (relative) is used for the inside part the glyph
 
     function getCSSValue(element, property) {
-        return document.defaultView.getComputedStyle(element,null).getPropertyValue(property);
+        return document.defaultView.getComputedStyle(element, null).getPropertyValue(property);
     }
 
     var fontInfoCache = {};
@@ -96,7 +96,7 @@ define([
      */
     function getFontInfo(font) {
         var fontInfo = fontInfoCache[font];
-        if (fontInfo) {
+        if (defined(fontInfo)) {
             return fontInfo;
         }
 
@@ -107,16 +107,16 @@ define([
         document.body.appendChild(div);
 
         var fontFamily = getCSSValue(div,'font-family');
-        var fontSize = getCSSValue(div,'font-size').replace('px','');
+        var fontSize = getCSSValue(div,'font-size').replace('px', '');
         var fontStyle = getCSSValue(div,'font-style');
         var fontWeight = getCSSValue(div,'font-weight');
 
         document.body.removeChild(div);
         fontInfo = {
-            fontFamily: fontFamily,
-            fontSize: fontSize,
-            fontStyle: fontStyle,
-            fontWeight: fontWeight
+            fontFamily : fontFamily,
+            fontSize : fontSize,
+            fontStyle : fontStyle,
+            fontWeight : fontWeight
         };
         fontInfoCache[font] = fontInfo;
 
@@ -149,17 +149,17 @@ define([
         var ctx = canvas.getContext('2d');
         var width = ctx.measureText(character).width;
         var dimensions = {
-            bounds: {
-                minx: 0,
-                maxx: canvas.width,
-                miny: 0,
-                maxy: canvas.height
+            bounds : {
+                minx : 0,
+                maxx : canvas.width,
+                miny : 0,
+                maxy : canvas.height
             },
-            width: width,
-            height: canvas.height,
-            ascent: 0,
-            descent: 0,
-            fontSize: glyphFontSize
+            width : width,
+            height : canvas.height,
+            ascent : 0,
+            descent : 0,
+            fontSize : glyphFontSize
         };
 
         return {
@@ -275,12 +275,10 @@ define([
 
                 // Convert to RGBA grayscale
                 var glyphData = new Uint8Array(width * height * 4);
-                for (var i = 0; i < width; i++)
-                {
-                    for (var j = 0; j < height; j++)
-                    {
+                for (var i = 0; i < width; i++) {
+                    for (var j = 0; j < height; j++) {
                         var baseIndex = (j * width + i);
-                        var alpha =sdf[baseIndex];
+                        var alpha = sdf[baseIndex];
                         glyphData[baseIndex * 4 + 0] = alpha;
                         glyphData[baseIndex * 4 + 1] = alpha;
                         glyphData[baseIndex * 4 + 2] = alpha;
