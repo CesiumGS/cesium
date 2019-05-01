@@ -7,7 +7,6 @@ define([
         './ComponentDatatype',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './Geometry',
@@ -28,7 +27,6 @@ define([
         ComponentDatatype,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Geometry,
@@ -142,10 +140,6 @@ define([
         this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
 
         this._followSurface = defaultValue(options.followSurface, true);
-        if (defined(options.followSurface)) {
-            deprecationWarning('PolylineGeometry.followSurface', 'PolylineGeometry.followSurface is deprecated and will be removed in Cesium 1.57. Use PolylineGeometry.arcType instead.');
-            options.arcType = options.followSurface ? ArcType.GEODESIC : ArcType.NONE;
-        }
         this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
         this._followSurface = (this._arcType !== ArcType.NONE);
 

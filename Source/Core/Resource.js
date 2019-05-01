@@ -8,7 +8,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './deprecationWarning',
         './DeveloperError',
         './freezeObject',
         './FeatureDetection',
@@ -37,7 +36,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         freezeObject,
         FeatureDetection,
@@ -869,12 +867,6 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     Resource.prototype.fetchImage = function (options) {
-        if (typeof options === 'boolean') {
-            deprecationWarning('fetchImage-parameter-change', 'fetchImage now takes an options object in CesiumJS 1.57. Use resource.fetchImage({ preferBlob: true }) instead of resource.fetchImage(true).');
-            options = {
-                preferBlob : options
-            };
-        }
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var preferImageBitmap = defaultValue(options.preferImageBitmap, false);
         var preferBlob = defaultValue(options.preferBlob, false);
