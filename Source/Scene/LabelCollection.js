@@ -270,7 +270,7 @@ define([
                 var sdfInfo = getSDF(character, fontInfo);
                 var sdf = sdfInfo.sdf;
 
-                var width = sdfInfo.dimensions.bounds.maxy;
+                var width = sdfInfo.dimensions.bounds.maxx;
                 var height = sdfInfo.dimensions.bounds.maxy;
 
                 // Convert to RGBA grayscale
