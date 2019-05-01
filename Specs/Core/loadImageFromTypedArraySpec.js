@@ -42,7 +42,8 @@ defineSuite([
                 return loadImageFromTypedArray(options)
                     .then(function() {
                         expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-                            imageOrientation: 'flipY'
+                            imageOrientation: 'flipY',
+                            premultiplyAlpha: 'none'
                         });
 
                          window.createImageBitmap.calls.reset();
@@ -51,7 +52,8 @@ defineSuite([
                     })
                     .then(function() {
                         expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-                            imageOrientation: 'none'
+                            imageOrientation: 'none',
+                            premultiplyAlpha: 'none'
                         });
                     });
             });
