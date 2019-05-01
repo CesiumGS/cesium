@@ -645,8 +645,6 @@ define([
             if (intersection === Intersect.OUTSIDE) {
                 return Visibility.NONE;
             }
-        } else {
-            console.log('no bounding volume');
         }
 
         var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
