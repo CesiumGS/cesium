@@ -916,7 +916,10 @@ define([
                 }
                 generatedBlob = blob;
                 if (useImageBitmap) {
-                    return Resource.createImageBitmapFromBlob(blob, flipY);
+                    return Resource.createImageBitmapFromBlob(blob, {
+                        flipY: flipY,
+                        premultiplyAlpha: false
+                    });
                 }
                 var blobUrl = window.URL.createObjectURL(blob);
                 generatedBlobResource = new Resource({
@@ -1874,7 +1877,10 @@ define([
                     return;
                 }
 
-                return Resource.createImageBitmapFromBlob(blob, flipY);
+                return Resource.createImageBitmapFromBlob(blob, {
+                    flipY: flipY,
+                    premultiplyAlpha: false
+                });
             })
             .then(function(imageBitmap) {
                 if (!defined(imageBitmap)) {
@@ -1891,9 +1897,14 @@ define([
      *
      * @private
      */
-    Resource.createImageBitmapFromBlob = function(blob, flipY) {
+    Resource.createImageBitmapFromBlob = function(blob, options) {
+        Check.defined('options', options);
+        Check.typeOf.bool('options.flipY', options.flipY);
+        Check.typeOf.bool('options.premultiplyAlpha', options.premultiplyAlpha);
+
         return createImageBitmap(blob, {
-            imageOrientation: flipY ? 'flipY' : 'none'
+            imageOrientation: options.flipY ? 'flipY' : 'none',
+            premultiplyAlpha: options.premultiplyAlpha ? 'premultiply' : 'none'
         });
     };
 

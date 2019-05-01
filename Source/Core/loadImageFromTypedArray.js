@@ -35,7 +35,10 @@ define([
         return Resource.supportsImageBitmapOptions()
             .then(function(result) {
                 if (result) {
-                    return when(Resource.createImageBitmapFromBlob(blob, flipY));
+                    return when(Resource.createImageBitmapFromBlob(blob, {
+                        flipY: flipY,
+                        premultiplyAlpha: false
+                    }));
                 }
 
                 blobUrl = window.URL.createObjectURL(blob);
