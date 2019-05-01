@@ -194,8 +194,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            var tilingScheme = provider.tilingScheme;
-            expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
         });
     });
 

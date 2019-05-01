@@ -1228,7 +1228,7 @@ defineSuite([
             }).then(function(loadedImage) {
                 expect(loadedImage.width).toEqual(1);
                 expect(loadedImage.height).toEqual(1);
-                expect(loadedImage instanceof ImageBitmap);
+                expect(loadedImage).toBeInstanceOf(ImageBitmap);
             });
         });
 
@@ -1745,7 +1745,7 @@ defineSuite([
                     }).then(function() {
                         fail('expected promise to reject');
                     }).otherwise(function(err) {
-                        expect(err instanceof RequestErrorEvent).toBe(true);
+                        expect(err).toBeInstanceOf(RequestErrorEvent);
                     });
                 });
 
@@ -1757,7 +1757,7 @@ defineSuite([
                         fail('expected promise to reject');
                     }).otherwise(function(err) {
                         expect(err).toBeDefined();
-                        expect(err instanceof Error).toBe(true);
+                        expect(err).toBeInstanceOf(Error);
                     });
                 });
             });
@@ -1844,7 +1844,7 @@ defineSuite([
 
                     fakeXHR.simulateError();
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
                 });
 
                 it('results in an HTTP status code less than 200', function() {
@@ -1867,7 +1867,7 @@ defineSuite([
 
                     fakeXHR.simulateHttpResponse(199);
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
                 });
 
                 it('resolves undefined for status code 204', function() {
@@ -2040,7 +2040,7 @@ defineSuite([
 
                     fakeXHR.simulateError(); // This fails because we only retry once
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
                 });
 
                 it('rejects after callback returns false', function() {
@@ -2069,7 +2069,7 @@ defineSuite([
 
                     fakeXHR.simulateError(); // This fails because the callback returns false
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
 
                     expect(cb.calls.count()).toEqual(1);
                     var receivedResource = cb.calls.argsFor(0)[0];

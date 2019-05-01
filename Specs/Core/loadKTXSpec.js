@@ -79,7 +79,7 @@ defineSuite([
 
         fakeXHR.simulateError();
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+        expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
         expect(rejectedError.statusCode).toBeUndefined();
         expect(rejectedError.response).toBeUndefined();
     });
@@ -104,7 +104,7 @@ defineSuite([
         var error = 'some error';
         fakeXHR.simulateHttpResponse(404, error);
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+        expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
         expect(rejectedError.statusCode).toEqual(404);
         expect(rejectedError.response).toEqual(error);
     });
@@ -259,7 +259,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('Invalid KTX file.');
     });
 
@@ -279,7 +279,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('File is the wrong endianness.');
     });
 
@@ -299,7 +299,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('glInternalFormat is not a valid format.');
     });
 
@@ -319,7 +319,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('glType must be zero when the texture is compressed.');
     });
 
@@ -339,7 +339,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('The type size for compressed textures must be 1.');
     });
 
@@ -359,7 +359,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('The base internal format must be the same as the format for uncompressed textures.');
     });
 
@@ -379,7 +379,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('3D textures are unsupported.');
     });
 
@@ -399,7 +399,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('Texture arrays are unsupported.');
     });
 

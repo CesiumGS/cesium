@@ -866,7 +866,7 @@ defineSuite([
         expect(updater.clampToGround).toBe(false);
 
         var instance = updater.createFillGeometryInstance(time);
-        expect(instance.geometry instanceof GroundPolylineGeometry).toBe(false);
+        expect(instance.geometry).not.toBeInstanceOf(GroundPolylineGeometry);
 
         updater.destroy();
     });
