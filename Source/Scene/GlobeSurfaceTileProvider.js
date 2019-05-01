@@ -631,7 +631,7 @@ define([
         }
 
         var clippingPlanes = this._clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+        if (defined(clippingPlanes) && clippingPlanes.enabled && defined(boundingVolume)) {
             var planeIntersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
             tile.isClipped = (planeIntersection !== Intersect.INSIDE);
             if (planeIntersection === Intersect.OUTSIDE) {
@@ -645,8 +645,6 @@ define([
             if (intersection === Intersect.OUTSIDE) {
                 return Visibility.NONE;
             }
-        } else {
-            console.log('no bounding volume');
         }
 
         var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
