@@ -404,7 +404,8 @@ define([
         })
             .then(function(blob) {
                 return createImageBitmap(blob, {
-                    imageOrientation: 'flipY'
+                    imageOrientation: 'flipY',
+                    premultiplyAlpha: 'none'
                 });
             })
             .then(function(imageBitmap) {
