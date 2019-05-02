@@ -1,16 +1,24 @@
 define([
-    '../Core/defined'
+    '../Core/defined',
+    '../Core/defaultValue'
 ], function(
-    defined) {
+    defined,
+    defaultValue) {
+
     /**
      * A policy for discarding tile images that contain no data (and so aren't actually images).
      *
      * @alias DiscardEmptyTileImagePolicy
      * @constructor
      *
+     * @param {any} [options.emptyImage={}] to compare an image to when deciding whether to discard a tile.
+     *
      * @see DiscardMissingTileImagePolicy
      */
     function DiscardEmptyTileImagePolicy(options) {
+        options = defaultValue(options, {emptyImage: DiscardEmptyTileImagePolicy.DEFAULT_EMPTY_IMAGE});
+
+        this.emptyImage = options.emptyImage;
     }
 
     /**
@@ -28,9 +36,13 @@ define([
      * @returns {Boolean} True if the image should be discarded; otherwise, false.
      */
     DiscardEmptyTileImagePolicy.prototype.shouldDiscardImage = function(image) {
-        // If the image blob is non-existent, or its size is zero, then discard it
-        return !defined(image.blob) || image.blob.size === 0;
+        return this.emptyImage === image;
     };
+
+    /**
+     * Default value for representing an empty image.
+     */
+    DiscardEmptyTileImagePolicy.DEFAULT_EMPTY_IMAGE = {};
 
     return DiscardEmptyTileImagePolicy;
 });

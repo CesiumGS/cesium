@@ -43,8 +43,18 @@ define([
          *
          * @type {String}
          * @constant
+         * @deprecated See https://github.com/AnalyticalGraphicsInc/cesium/issues/7128.
+         * Use `BingMapsStyle.ROAD_ON_DEMAND` instead
          */
         ROAD : 'Road',
+
+        /**
+         * Roads without additional imagery.
+         *
+         * @type {String}
+         * @constant
+         */
+        ROAD_ON_DEMAND : 'RoadOnDemand',
 
         /**
          * A dark version of the road maps.

@@ -556,14 +556,22 @@ define([
         var promise = ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
 
         if(defined(promise)) {
-            return promise.then(() => promise, (error) => {
-                // If there isn't any image, we get an InvalidStateError.
-                // The version of the Bing maps API that we hit if we're using `BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND` does this
-                // instead of returning a "This image is missing" image.
-                // Since this isn't really an error, we want to supress the one that just got thrown.
-                if (error.name === 'InvalidStateError' && error.message === 'The source image could not be decoded.') {
-                    return {};
+            return promise.otherwise( (error) => {
+
+                // One possible cause of an error here is that the image we tried to load was empty. This isn't actually
+                // a problem. In some imagery sets (eg. `BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND`), an empty image is
+                // returned rather than a blank "This Image is Missing" placeholder image. In this case, we supress the
+                // error.
+                if (defined(error.blob) && error.blob.size === 0) {
+
+                    // If our tile discard policy tells us how to represent an empty image, we return that.
+                    if (defined(this._tileDiscardPolicy.emptyImage)) {
+                        return this._tileDiscardPolicy.emptyImage;
+                    }
+                    // Otherwise, we return a default.
+                    return DiscardEmptyTilePolicy.DEFAULT_EMPTY_IMAGE;
                 }
+                return when.reject(error);
             });
         }
 
