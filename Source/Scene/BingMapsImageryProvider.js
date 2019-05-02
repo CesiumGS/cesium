@@ -545,8 +545,8 @@ define([
 
         var promise = ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
 
-        if(defined(promise)) {
-            return promise.otherwise((error) => {
+        if (defined(promise)) {
+            return promise.otherwise(function(error) {
 
                 // One possible cause of an error here is that the image we tried to load was empty. This isn't actually
                 // a problem. In some imagery sets (eg. `BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND`), an empty image is
