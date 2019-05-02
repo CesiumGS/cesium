@@ -1085,6 +1085,7 @@ define([
             materialData = packetData.polylineGlow;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'glowPower', materialData.glowPower, undefined, sourceUri, entityCollection);
+            processPacketData(Number, existingMaterial, 'taperPower', materialData.taperPower, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.polylineArrow)) {
             if (!(existingMaterial instanceof PolylineArrowMaterialProperty)) {
                 existingMaterial = new PolylineArrowMaterialProperty();
@@ -1396,6 +1397,8 @@ define([
         processPacketData(Number, corridor, 'width', corridorData.width, interval, sourceUri, entityCollection);
         processPacketData(Number, corridor, 'height', corridorData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, corridor, 'extrudedHeight', corridorData.extrudedHeight, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, corridor, 'heightReference', corridorData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, corridor, 'extrudedHeightReference', corridorData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(CornerType, corridor, 'cornerType', corridorData.cornerType, interval, sourceUri, entityCollection);
         processPacketData(Number, corridor, 'granularity', corridorData.granularity, interval, sourceUri, entityCollection);
         processPacketData(Boolean, corridor, 'fill', corridorData.fill, interval, sourceUri, entityCollection);
@@ -1509,6 +1512,8 @@ define([
         processPacketData(Number, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'height', ellipseData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'extrudedHeight', ellipseData.extrudedHeight, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, ellipse, 'heightReference', ellipseData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, ellipse, 'extrudedHeightReference', ellipseData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(Rotation, ellipse, 'rotation', ellipseData.rotation, interval, sourceUri, entityCollection);
         processPacketData(Rotation, ellipse, 'stRotation', ellipseData.stRotation, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'granularity', ellipseData.granularity, interval, sourceUri, entityCollection);
@@ -1769,6 +1774,8 @@ define([
         processPositions(polygon, 'hierarchy', polygonData.positions, entityCollection);
         processPacketData(Number, polygon, 'height', polygonData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'extrudedHeight', polygonData.extrudedHeight, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, polygon, 'heightReference', polygonData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, polygon, 'extrudedHeightReference', polygonData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(Rotation, polygon, 'stRotation', polygonData.stRotation, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'granularity', polygonData.granularity, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'fill', polygonData.fill, interval, sourceUri, entityCollection);
@@ -1849,6 +1856,8 @@ define([
         processPacketData(Rectangle, rectangle, 'coordinates', rectangleData.coordinates, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'height', rectangleData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'extrudedHeight', rectangleData.extrudedHeight, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, rectangle, 'heightReference', rectangleData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, rectangle, 'extrudedHeightReference', rectangleData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(Rotation, rectangle, 'rotation', rectangleData.rotation, interval, sourceUri, entityCollection);
         processPacketData(Rotation, rectangle, 'stRotation', rectangleData.stRotation, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'granularity', rectangleData.granularity, interval, sourceUri, entityCollection);
