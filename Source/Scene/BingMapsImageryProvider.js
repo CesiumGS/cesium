@@ -546,20 +546,14 @@ define([
         var promise = ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
 
         if(defined(promise)) {
-            return promise.otherwise( (error) => {
+            return promise.otherwise((error) => {
 
                 // One possible cause of an error here is that the image we tried to load was empty. This isn't actually
                 // a problem. In some imagery sets (eg. `BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND`), an empty image is
                 // returned rather than a blank "This Image is Missing" placeholder image. In this case, we supress the
                 // error.
                 if (defined(error.blob) && error.blob.size === 0) {
-
-                    // If our tile discard policy tells us how to represent an empty image, we return that.
-                    if (defined(this._tileDiscardPolicy.emptyImage)) {
-                        return this._tileDiscardPolicy.emptyImage;
-                    }
-                    // Otherwise, we return a default.
-                    return DiscardEmptyTilePolicy.DEFAULT_EMPTY_IMAGE;
+                    return DiscardEmptyTilePolicy.EMPTY_IMAGE;
                 }
                 return when.reject(error);
             });

@@ -11,14 +11,9 @@ define([
      * @alias DiscardEmptyTileImagePolicy
      * @constructor
      *
-     * @param {any} [options.emptyImage={}] to compare an image to when deciding whether to discard a tile.
-     *
      * @see DiscardMissingTileImagePolicy
      */
     function DiscardEmptyTileImagePolicy(options) {
-        options = defaultValue(options, {emptyImage: DiscardEmptyTileImagePolicy.DEFAULT_EMPTY_IMAGE});
-
-        this.emptyImage = options.emptyImage;
     }
 
     /**
@@ -36,13 +31,13 @@ define([
      * @returns {Boolean} True if the image should be discarded; otherwise, false.
      */
     DiscardEmptyTileImagePolicy.prototype.shouldDiscardImage = function(image) {
-        return this.emptyImage === image;
+        return DiscardEmptyTileImagePolicy.EMPTY_IMAGE === image;
     };
 
     /**
      * Default value for representing an empty image.
      */
-    DiscardEmptyTileImagePolicy.DEFAULT_EMPTY_IMAGE = {};
+    DiscardEmptyTileImagePolicy.EMPTY_IMAGE = {};
 
     return DiscardEmptyTileImagePolicy;
 });
