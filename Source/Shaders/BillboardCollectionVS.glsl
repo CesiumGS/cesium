@@ -29,7 +29,8 @@ varying mat2 v_rotationMatrix;
 varying vec4 v_pickColor;
 varying vec4 v_color;
 #ifdef SDF
-varying vec4 v_sdf;
+varying vec4 v_outlineColor;
+varying float v_outlineWidth;
 varying float v_sdfSmoothing;
 const float SDF_SPREAD = 8.0; // Needs to match radius in sdf generator.
 #endif
@@ -419,14 +420,35 @@ if (lengthSq < disableDepthTestDistance) {
 
 #endif
 
+#ifdef SDF
+    vec4 outlineColor;
+    float outlineWidth;
+
+    temp = sdf.x;
+    temp = temp * SHIFT_RIGHT8;
+    outlineColor.b = (temp - floor(temp)) * SHIFT_LEFT8;
+    temp = floor(temp) * SHIFT_RIGHT8;
+    outlineColor.g = (temp - floor(temp)) * SHIFT_LEFT8;
+    outlineColor.r = floor(temp);
+
+    temp = sdf.y;
+    temp = temp * SHIFT_RIGHT8;
+    float temp3 = (temp - floor(temp)) * SHIFT_LEFT8;
+    temp = floor(temp) * SHIFT_RIGHT8;
+    outlineWidth = (temp - floor(temp)) * SHIFT_LEFT8;
+    outlineColor.a = floor(temp);
+    outlineColor /= 255.0;
+
+    v_outlineWidth = 6.0 * outlineWidth / 255.0;
+    v_outlineColor = outlineColor;
+
+    // Dynamic smoothing factor from https://github.com/libgdx/libgdx/wiki/Distance-field-fonts#customizing-the-shader
+    v_sdfSmoothing = 0.25 / (SDF_SPREAD * scale);
+#endif
+
     v_pickColor = pickColor;
 
     v_color = color;
     v_color.a *= translucency;
 
-#ifdef SDF
-    v_sdf = sdf;
-    // Dynamic smoothing factor from https://github.com/libgdx/libgdx/wiki/Distance-field-fonts#customizing-the-shader
-    v_sdfSmoothing = 0.25 / (SDF_SPREAD * scale);
-#endif
 }

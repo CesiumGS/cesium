@@ -11,7 +11,8 @@ varying vec4 v_color;
 #ifdef SDF
 const float SDF_EDGE = 0.75;
 const float SDF_SPREAD = 8.0;
-varying vec4 v_sdf;
+varying vec4 v_outlineColor;
+varying float v_outlineWidth;
 varying float v_sdfSmoothing;
 #endif
 
@@ -62,8 +63,11 @@ void main()
 #ifdef SDF
     float distance = color.r;
 
-    vec4 outlineColor = vec4(v_sdf.xyz, 1.0);
-    float outlineWidth = v_sdf.w;
+    float outlineWidth = v_outlineWidth;
+
+    vec4 outlineColor = v_outlineColor;
+    //vec4 outlineColor = vec4(1.0, 0.0, 0.0, 0.1);
+    //outlineColor.a = 0.1;
 
     if (outlineWidth > 0.0)
     {
