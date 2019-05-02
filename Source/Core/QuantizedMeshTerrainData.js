@@ -326,15 +326,17 @@ define([
             var rtc = result.center;
             var minimumHeight = result.minimumHeight;
             var maximumHeight = result.maximumHeight;
-            var boundingSphere = defaultValue(result.boundingSphere, that._boundingSphere);
-            var obb = defaultValue(result.orientedBoundingBox, that._orientedBoundingBox);
-            var occlusionPoint = that._horizonOcclusionPoint;
+            var boundingSphere = defaultValue(BoundingSphere.clone(result.boundingSphere), that._boundingSphere);
+            var obb = defaultValue(OrientedBoundingBox.clone(result.orientedBoundingBox), that._orientedBoundingBox);
+            var occlusionPoint = Cartesian3.clone(that._horizonOcclusionPoint);
             var stride = result.vertexStride;
             var terrainEncoding = TerrainEncoding.clone(result.encoding);
 
             that._skirtIndex = result.skirtIndex;
             that._vertexCountWithoutSkirts = that._quantizedVertices.length / 3;
 
+            // Clone complex result objects because the transfer from the web worker
+            // has stripped them down to JSON-style objects.
             that._mesh = new TerrainMesh(
                     rtc,
                     vertices,

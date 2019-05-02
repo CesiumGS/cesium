@@ -128,13 +128,19 @@ define([
         gl.bindTexture(textureTarget, texture);
 
         function createFace(target, sourceFace, preMultiplyAlpha, flipY) {
-            // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
             var arrayBufferView = sourceFace.arrayBufferView;
             if (!defined(arrayBufferView)) {
                 arrayBufferView = sourceFace.bufferView;
             }
 
-            if (arrayBufferView) {
+            var unpackAlignment = 4;
+            if (defined(arrayBufferView)) {
+                unpackAlignment = PixelFormat.alignmentInBytes(pixelFormat, pixelDatatype, width);
+            }
+
+            gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+
+            if (defined(arrayBufferView)) {
                 gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 

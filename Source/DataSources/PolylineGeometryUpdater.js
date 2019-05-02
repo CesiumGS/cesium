@@ -82,7 +82,6 @@ define([
         this.vertexFormat = undefined;
         this.positions = undefined;
         this.width = undefined;
-        this.followSurface = undefined;
         this.arcType = undefined;
         this.granularity = undefined;
     }
@@ -515,13 +514,12 @@ define([
         this._zIndex = defaultValue(zIndex, defaultZIndex);
 
         var width = polyline.width;
-        var followSurface = polyline.followSurface;
         var arcType = polyline.arcType;
         var clampToGround = polyline.clampToGround;
         var granularity = polyline.granularity;
 
         if (!positionsProperty.isConstant || !Property.isConstant(width) ||
-            !Property.isConstant(followSurface) || !Property.isConstant(arcType) || !Property.isConstant(granularity) ||
+            !Property.isConstant(arcType) || !Property.isConstant(granularity) ||
             !Property.isConstant(clampToGround) || !Property.isConstant(zIndex)) {
             if (!this._dynamic) {
                 this._dynamic = true;
@@ -551,7 +549,6 @@ define([
             geometryOptions.vertexFormat = vertexFormat;
             geometryOptions.positions = positions;
             geometryOptions.width = defined(width) ? width.getValue(Iso8601.MINIMUM_VALUE) : undefined;
-            geometryOptions.followSurface = defined(followSurface) ? followSurface.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             geometryOptions.arcType = defined(arcType) ? arcType.getValue(Iso8601.MINIMUM_VALUE) : undefined;
             geometryOptions.granularity = defined(granularity) ? granularity.getValue(Iso8601.MINIMUM_VALUE) : undefined;
 
@@ -706,11 +703,7 @@ define([
             return;
         }
 
-        var followSurface = Property.getValueOrUndefined(polyline._followSurface, time);
         var arcType = ArcType.GEODESIC;
-        if (defined(followSurface)) {
-            arcType = followSurface ? ArcType.GEODESIC : ArcType.NONE;
-        }
         arcType = Property.getValueOrDefault(polyline._arcType, time, arcType);
 
         var globe = geometryUpdater._scene.globe;

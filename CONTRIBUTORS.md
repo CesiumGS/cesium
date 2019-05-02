@@ -205,3 +205,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Rikku-x](https://github.com/Rikku-x)
 * [Adrien David](https://github.com/adridavid)
 * [Alexander Popiak](https://github.com/apopiak)
+* [Trubie Turner](https://github.com/flexei)
+* [Merijn Wijngaard](https://github.com/mwijngaard)
