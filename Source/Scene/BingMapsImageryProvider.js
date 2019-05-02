@@ -63,27 +63,16 @@ define([
      *        for information on the supported cultures.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
-     *        is invalid and should be discarded.  If this value is not specified, a default
-     *        {@link DiscardMissingTileImagePolicy} is used which requests
-     *        tile 0,0 at the maximum tile level and checks pixels (0,0), (120,140), (130,160),
-     *        (200,50), and (200,200).  If all of these pixels are transparent, the discard check is
-     *        disabled and no tiles are discarded.  If any of them have a non-transparent color, any
-     *        tile that has the same values in these pixel locations is discarded.  The end result of
-     *        these defaults should be correct tile discarding for a standard Bing Maps server.  To ensure
-     *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
-     *        parameter.
-     *
-     *  @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded.  The default value will depend on the map style.  If
-     *        BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND is used, then a {@link DiscardEmptyTileImagePolicy} will be
-     *        used to handle the Bing Maps API sending no content instead of a missing tile image, a behaviour specific
-     *        to that imagery set.  In all over cases, a default {@link DiscardMissingTileImagePolicy} is used which
-     *        requests tile 0,0 at the maximum tile level and checks pixels (0,0), (120,140), (130,160), (200,50), and
-     *        (200,200).  If all of these pixels are transparent, the discard check is disabled and no tiles are
-     *        discarded.  If any of them have a non-transparent color, any tile that has the same values in these pixel
-     *        locations is discarded.  The end result of these defaults should be correct tile discarding for a standard
-     *        Bing Maps server.  To ensure that no tiles are discarded, construct and pass a
-     *        {@link NeverTileDiscardPolicy} for this parameter.
+     *        `BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND` or `BingMapsStyle.ROADS_ON_DEMAND` is used, then a
+     *        {@link DiscardEmptyTileImagePolicy} will be used to handle the Bing Maps API sending no content instead of
+     *        a missing tile image, a behaviour specific to that imagery set.  In all over cases, a default
+     *        {@link DiscardMissingTileImagePolicy} is used which requests tile 0,0 at the maximum tile level and checks
+     *        pixels (0,0), (120,140), (130,160), (200,50), and (200,200).  If all of these pixels are transparent, the
+     *        discard check is disabled and no tiles are discarded.  If any of them have a non-transparent color, any
+     *        tile that has the same values in these pixel locations is discarded.  The end result of these defaults
+     *        should be correct tile discarding for a standard Bing Maps server.  To ensure that no tiles are discarded,
+     *        construct and pass a {@link NeverTileDiscardPolicy} for this parameter.
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
@@ -186,7 +175,8 @@ define([
             // Install the default tile discard policy if none has been supplied.
             if (!defined(that._tileDiscardPolicy)) {
                 // Our default depends on which map style we're using.
-                if (that._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND) {
+                if (that._mapStyle === BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND
+                    || that._mapStyle === BingMapsStyle.ROAD_ON_DEMAND) {
                     // this map style uses a different API, which returns a tile with no data instead of a placeholder image
                     that._tileDiscardPolicy = new DiscardEmptyTilePolicy();
                 } else {
