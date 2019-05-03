@@ -944,6 +944,7 @@ define([
                     window.URL.revokeObjectURL(generatedBlobResource.url);
                 }
 
+                // We attach additional information to the error here so that it can be handled by an ImageProvider.
                 error.blob = generatedBlob;
 
                 return when.reject(error);
