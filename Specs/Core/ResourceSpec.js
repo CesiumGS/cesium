@@ -1310,6 +1310,27 @@ defineSuite([
                    expect(error).toBeInstanceOf(RequestErrorEvent);
                 });
         });
+
+        it('rejects the promise with extra error information when image errors and options.preferBlob is true', function() {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
+            // Force the fetching of a bad blob that is not an image to trigger the error
+            spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve(new Blob([new Uint8Array([])], { type: 'text/plain' })));
+
+            return Resource.fetchImage({
+                url: 'http://example.invalid/testuri.png',
+                preferImageBitmap: true,
+                preferBlob: true
+            })
+                .then(function() {
+                    fail('expected promise to reject');
+                })
+                .otherwise(function(error) {
+                   expect(error.blob).toBeInstanceOf(Blob);
+                });
+        });
     });
 
     describe('fetchImage without ImageBitmap', function() {
