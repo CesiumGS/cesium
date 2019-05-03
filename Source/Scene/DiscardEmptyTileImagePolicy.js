@@ -2,8 +2,9 @@ define([
     '../Core/defined',
     '../Core/defaultValue'
 ], function(
-    defined,
-    defaultValue) {
+        defined,
+        defaultValue) {
+    'use strict';
 
     /**
      * A policy for discarding tile images that contain no data (and so aren't actually images).
