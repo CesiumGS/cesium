@@ -411,7 +411,7 @@ defineSuite([
         };
 
         var cloned = Ellipsoid.clone(myEllipsoid);
-        expect(cloned instanceof Ellipsoid).toBe(true);
+        expect(cloned).toBeInstanceOf(Ellipsoid);
         expect(cloned).toEqual(myEllipsoid);
     });
 
@@ -460,7 +460,7 @@ defineSuite([
         var cartographic  = Cartographic.fromDegrees(35.23,33.23);
         var cartesianOnTheSurface = ellipsoid.cartographicToCartesian(cartographic);
         var returnedResult = ellipsoid.getSurfaceNormalIntersectionWithZAxis(cartesianOnTheSurface);
-        expect(returnedResult instanceof Cartesian3).toBe(true);
+        expect(returnedResult).toBeInstanceOf(Cartesian3);
     });
 
     it('getSurfaceNormalIntersectionWithZAxis works with a result parameter', function() {

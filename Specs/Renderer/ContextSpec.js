@@ -176,8 +176,8 @@ defineSuite([
     });
 
     it('gets maximum texture filter anisotropy', function() {
-        if(context.textureFilterAnisotropic) {
-            expect(ContextLimits.maximumTextureFilterAnisotropy >= 2).toEqual(true);
+        if (context.textureFilterAnisotropic) {
+            expect(ContextLimits.maximumTextureFilterAnisotropy).toBeGreaterThanOrEqualTo(2);
         } else {
             expect(ContextLimits.maximumTextureFilterAnisotropy).toEqual(1);
         }

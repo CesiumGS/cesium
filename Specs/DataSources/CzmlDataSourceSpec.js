@@ -287,11 +287,11 @@ defineSuite([
     it('process loads data on top of existing', function() {
         var dataSource = new CzmlDataSource();
         return dataSource.process(simple).then(function(dataSource) {
-            expect(dataSource.entities.values.length === 10);
+            expect(dataSource.entities.values.length).toEqual(10);
 
             return dataSource.process(vehicle, vehicleUrl);
         }).then(function(dataSource) {
-            expect(dataSource.entities.values.length === 11);
+            expect(dataSource.entities.values.length).toEqual(11);
         });
     });
 
@@ -3287,7 +3287,7 @@ defineSuite([
             var targetEntity = dataSource.entities.getById('targetId');
             var referenceObject = dataSource.entities.getById('referenceId');
 
-            expect(referenceObject.point.pixelSize instanceof ReferenceProperty).toBe(true);
+            expect(referenceObject.point.pixelSize).toBeInstanceOf(ReferenceProperty);
             expect(targetEntity.point.pixelSize.getValue(time)).toEqual(referenceObject.point.pixelSize.getValue(time));
         });
     });
@@ -3356,7 +3356,7 @@ defineSuite([
             var targetEntity = dataSource.entities.getById('targetId');
             var referenceObject = dataSource.entities.getById('referenceId');
 
-            expect(referenceObject.position instanceof ReferenceProperty).toBe(true);
+            expect(referenceObject.position).toBeInstanceOf(ReferenceProperty);
             expect(targetEntity.position.getValue(time)).toEqual(referenceObject.position.getValue(time));
         });
     });
@@ -3424,7 +3424,7 @@ defineSuite([
             var targetEntity = dataSource.entities.getById('targetId');
             var referenceObject = dataSource.entities.getById('referenceId');
 
-            expect(referenceObject.point.pixelSize instanceof ReferenceProperty).toBe(true);
+            expect(referenceObject.point.pixelSize).toBeInstanceOf(ReferenceProperty);
             expect(targetEntity.point.pixelSize.getValue(time)).toEqual(referenceObject.point.pixelSize.getValue(time));
         });
     });
@@ -3444,7 +3444,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         return dataSource.load(makePacket(packet)).then(function(dataSource) {
             var targetEntity = dataSource.entities.getById('testObject');
-            expect(targetEntity.point.outlineWidth instanceof ReferenceProperty).toBe(true);
+            expect(targetEntity.point.outlineWidth).toBeInstanceOf(ReferenceProperty);
             expect(targetEntity.point.outlineWidth.getValue(time)).toEqual(targetEntity.point.pixelSize.getValue(time));
         });
     });
