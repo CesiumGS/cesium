@@ -66,7 +66,7 @@ define([
      *        is invalid and should be discarded.  The default value will depend on the map style.  If
      *        `BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND` or `BingMapsStyle.ROADS_ON_DEMAND` is used, then a
      *        {@link DiscardEmptyTileImagePolicy} will be used to handle the Bing Maps API sending no content instead of
-     *        a missing tile image, a behaviour specific to that imagery set.  In all over cases, a default
+     *        a missing tile image, a behaviour specific to that imagery set.  In all other cases, a default
      *        {@link DiscardMissingTileImagePolicy} is used which requests tile 0,0 at the maximum tile level and checks
      *        pixels (0,0), (120,140), (130,160), (200,50), and (200,200).  If all of these pixels are transparent, the
      *        discard check is disabled and no tiles are discarded.  If any of them have a non-transparent color, any
