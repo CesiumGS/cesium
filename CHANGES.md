@@ -3,7 +3,7 @@ Change Log
 ### 1.58 - 2019-06-01
 
 ##### Additions :tada:
-* Added support for new Bing Maps imagery styles RoadOnDemand and AerialWithLabelsOnDemand. The other versions of these, Road and AerialWithLabels, have been deprecated. [#7808] (https://github.com/AnalyticalGraphicsInc/cesium/pull/7808)
+* Added support for new `BingMapsStyle` values `ROAD_ON_DEMAND` and `AERIAL_WITH_LABELS_ON_DEMAND`. The older versions of these, `ROAD` and `AERIAL_WITH_LABELS`, have been deprecated by Bing. [#7808] (https://github.com/AnalyticalGraphicsInc/cesium/pull/7808)
 
 ### 1.57 - 2019-05-01
 
