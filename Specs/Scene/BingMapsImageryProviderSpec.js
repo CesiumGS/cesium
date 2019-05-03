@@ -14,7 +14,9 @@ defineSuite([
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'ThirdParty/Uri'
+        'ThirdParty/Uri',
+        'ThirdParty/when',
+        'Scene/DiscardEmptyTileImagePolicy'
     ], function(
         BingMapsImageryProvider,
         appendForwardSlash,
@@ -31,7 +33,9 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        Uri) {
+        Uri,
+        when,
+        DiscardEmptyTileImagePolicy) {
     'use strict';
 
     var supportsImageBitmapOptions;
@@ -494,6 +498,43 @@ defineSuite([
             }).then(function() {
                 expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
+                imagery.releaseReference();
+            });
+        });
+    });
+
+    it('correctly handles empty tiles', function() {
+        var url = 'http://foo.bar.invalid';
+        var mapStyle = BingMapsStyle.ROAD_ON_DEMAND;
+
+        installFakeMetadataRequest(url, mapStyle);
+
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+
+        var layer = new ImageryLayer(provider);
+
+        // Fake ImageryProvider.loadImage's expected output in the case of an empty tile
+        var e = new Error();
+        e.blob = {size: 0};
+        var errorPromise = when.reject(e);
+
+        spyOn(ImageryProvider, 'loadImage').and.returnValue(errorPromise);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                expect(imagery.image).toBe(DiscardEmptyTileImagePolicy.EMPTY_IMAGE);
                 imagery.releaseReference();
             });
         });
