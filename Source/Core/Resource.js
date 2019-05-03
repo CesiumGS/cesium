@@ -944,7 +944,8 @@ define([
                     window.URL.revokeObjectURL(generatedBlobResource.url);
                 }
 
-                // We attach additional information to the error here so that it can be handled by an ImageProvider.
+                // If the blob load succeeded but the image decode failed, provide access to the blob on the error object because it may provide useful insight.
+                // In particular, BingMapsImageryProvider uses this to detect the zero-length "image" that some map styles return when a real tile is not available.
                 error.blob = generatedBlob;
 
                 return when.reject(error);
