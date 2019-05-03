@@ -944,6 +944,8 @@ define([
                     window.URL.revokeObjectURL(generatedBlobResource.url);
                 }
 
+                error.blob = generatedBlob;
+
                 return when.reject(error);
             });
     };
