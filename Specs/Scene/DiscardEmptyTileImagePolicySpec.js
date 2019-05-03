@@ -16,7 +16,7 @@ defineSuite([
     });
 
     describe('shouldDiscardImage', function() {
-        fit('does not discard a non-empty image', function() {
+        it('does not discard a non-empty image', function() {
             var promises = [];
             promises.push(Resource.fetchImage('Data/Images/Green4x4.png'));
 
@@ -33,7 +33,7 @@ defineSuite([
             });
         });
 
-        fit('discards an empty image', function() {
+        it('discards an empty image', function() {
             var promises = [];
             promises.push(when.resolve(DiscardEmptyTileImagePolicy.EMPTY_IMAGE));
 
