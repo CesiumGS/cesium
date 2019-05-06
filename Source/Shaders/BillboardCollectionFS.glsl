@@ -1,3 +1,7 @@
+#ifdef GL_OES_standard_derivatives
+#extension GL_OES_standard_derivatives : enable
+#endif
+
 uniform sampler2D u_atlas;
 
 #ifdef VECTOR_TILE
@@ -56,32 +60,67 @@ float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST, bool applyTranslate, ve
 }
 #endif
 
+// Get the distance from the edge of a glyph at a given position sampling an SDF texture.
+float getDistance(vec2 position)
+{
+    return texture2D(u_atlas, position).r;
+}
+
+#ifdef SDF
+vec4 getSDFColor(vec2 position, float outlineWidth, vec4 outlineColor, float smoothing)
+{
+    float distance = getDistance(position);
+
+    if (outlineWidth > 0.0)
+    {
+        float outlineEdge = SDF_EDGE - (outlineWidth / SDF_SPREAD);
+        float outlineFactor = smoothstep(SDF_EDGE - smoothing, SDF_EDGE + smoothing, distance);
+        vec4 sdfColor = mix(outlineColor, v_color, outlineFactor);
+        float alpha = smoothstep(outlineEdge - smoothing, outlineEdge + smoothing, distance);
+        return vec4(sdfColor.rgb, sdfColor.a * alpha);
+    }
+    else
+    {
+        float alpha = smoothstep(SDF_EDGE - smoothing, SDF_EDGE + smoothing, distance);
+        return vec4(v_color.rgb, v_color.a * alpha);
+    }
+}
+#endif
+
 void main()
 {
     vec4 color = texture2D(u_atlas, v_textureCoordinates);
 
 #ifdef SDF
-    float distance = color.r;
 
     float outlineWidth = v_outlineWidth;
-
     vec4 outlineColor = v_outlineColor;
-    //vec4 outlineColor = vec4(1.0, 0.0, 0.0, 0.1);
-    //outlineColor.a = 0.1;
 
-    if (outlineWidth > 0.0)
-    {
-        float outlineEdge = SDF_EDGE - (outlineWidth / SDF_SPREAD);
-        float outlineFactor = smoothstep(SDF_EDGE - v_sdfSmoothing, SDF_EDGE + v_sdfSmoothing, distance);
-        vec4 sdfColor = mix(outlineColor, v_color, outlineFactor);
-        float alpha = smoothstep(outlineEdge - v_sdfSmoothing, outlineEdge + v_sdfSmoothing, distance);
-        color = vec4(sdfColor.rgb, sdfColor.a * alpha);
-    }
-    else
-    {
-        float alpha = smoothstep(SDF_EDGE - v_sdfSmoothing, SDF_EDGE + v_sdfSmoothing, distance);
-        color = vec4(v_color.rgb, v_color.a * alpha);
-    }
+    // Get the current distance
+    float distance = getDistance(v_textureCoordinates);
+    float distanceChange = fwidth(distance);
+
+    vec2 texCoordChange = 0.7 * fwidth(v_textureCoordinates);
+
+    float smoothing = 0.7 * distanceChange;
+
+    color = vec4(0.0, 0.0, 0.0, 0.0);
+
+    vec4 color0 = getSDFColor(v_textureCoordinates, outlineWidth, outlineColor, smoothing);
+    color = color + color0 * color0.a;
+
+    vec4 color1 = getSDFColor(v_textureCoordinates + vec2(texCoordChange.x, texCoordChange.y), outlineWidth, outlineColor, smoothing);
+    color = color + color1 * color1.a;
+
+    vec4 color2 = getSDFColor(v_textureCoordinates + vec2(-texCoordChange.x, texCoordChange.y), outlineWidth, outlineColor, smoothing);
+    color = color + color2 * color2.a;
+
+    vec4 color3 = getSDFColor(v_textureCoordinates + vec2(-texCoordChange.x, -texCoordChange.y), outlineWidth, outlineColor, smoothing);
+    color = color + color3 * color3.a;
+
+    vec4 color4 = getSDFColor(v_textureCoordinates + vec2(texCoordChange.x, -texCoordChange.y), outlineWidth, outlineColor, smoothing);
+    color = color + color4 * color4.a;
+
     color = czm_gammaCorrect(color);
 #else
     color = czm_gammaCorrect(color);
