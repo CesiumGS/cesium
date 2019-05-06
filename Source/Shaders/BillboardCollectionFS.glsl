@@ -17,7 +17,6 @@ const float SDF_EDGE = 0.75;
 const float SDF_SPREAD = 8.0;
 varying vec4 v_outlineColor;
 varying float v_outlineWidth;
-varying float v_sdfSmoothing;
 #endif
 
 #ifdef FRAGMENT_DEPTH_CHECK
@@ -60,13 +59,16 @@ float getGlobeDepth(vec2 adjustedST, vec2 depthLookupST, bool applyTranslate, ve
 }
 #endif
 
+
+#ifdef SDF
+
 // Get the distance from the edge of a glyph at a given position sampling an SDF texture.
 float getDistance(vec2 position)
 {
     return texture2D(u_atlas, position).r;
 }
 
-#ifdef SDF
+// Samples the sdf texture at the given position and produces a color based on the fill color and the outline.
 vec4 getSDFColor(vec2 position, float outlineWidth, vec4 outlineColor, float smoothing)
 {
     float distance = getDistance(position);
@@ -98,29 +100,26 @@ void main()
 
     // Get the current distance
     float distance = getDistance(v_textureCoordinates);
-    float distanceChange = fwidth(distance);
+    float smoothing = fwidth(distance);
 
-    vec2 texCoordChange = 0.7 * fwidth(v_textureCoordinates);
+    // Get an offset that is approximately half the distance to the neighbor pixels
+    // 0.354 is approximately half of 1/sqrt(2)
+    vec2 sampleOffset = 0.354 * vec2(dFdx(v_textureCoordinates) + dFdy(v_textureCoordinates));
 
-    float smoothing = 0.7 * distanceChange;
+    // Sample the center point
+    vec4 center = getSDFColor(v_textureCoordinates, outlineWidth, outlineColor, smoothing);
 
-    color = vec4(0.0, 0.0, 0.0, 0.0);
+    // Sample the 4 neighbors
+    vec4 color1 = getSDFColor(v_textureCoordinates + vec2(sampleOffset.x, sampleOffset.y), outlineWidth, outlineColor, smoothing);
+    vec4 color2 = getSDFColor(v_textureCoordinates + vec2(-sampleOffset.x, sampleOffset.y), outlineWidth, outlineColor, smoothing);
+    vec4 color3 = getSDFColor(v_textureCoordinates + vec2(-sampleOffset.x, -sampleOffset.y), outlineWidth, outlineColor, smoothing);
+    vec4 color4 = getSDFColor(v_textureCoordinates + vec2(sampleOffset.x, -sampleOffset.y), outlineWidth, outlineColor, smoothing);
 
-    vec4 color0 = getSDFColor(v_textureCoordinates, outlineWidth, outlineColor, smoothing);
-    color = color + color0 * color0.a;
+    // Weight the neighbors at 0.5 weight and the center at 1.
+    //vec4 color = (center + 0.5 * (color1 + color2 + color3 + color4))/3.0;
 
-    vec4 color1 = getSDFColor(v_textureCoordinates + vec2(texCoordChange.x, texCoordChange.y), outlineWidth, outlineColor, smoothing);
-    color = color + color1 * color1.a;
-
-    vec4 color2 = getSDFColor(v_textureCoordinates + vec2(-texCoordChange.x, texCoordChange.y), outlineWidth, outlineColor, smoothing);
-    color = color + color2 * color2.a;
-
-    vec4 color3 = getSDFColor(v_textureCoordinates + vec2(-texCoordChange.x, -texCoordChange.y), outlineWidth, outlineColor, smoothing);
-    color = color + color3 * color3.a;
-
-    vec4 color4 = getSDFColor(v_textureCoordinates + vec2(texCoordChange.x, -texCoordChange.y), outlineWidth, outlineColor, smoothing);
-    color = color + color4 * color4.a;
-
+    // Equally weight the center sample and the 4 neighboring samples
+    color = (center + color1 + color2 + color3 + color4)/5.0;
     color = czm_gammaCorrect(color);
 #else
     color = czm_gammaCorrect(color);

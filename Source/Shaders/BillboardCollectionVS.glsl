@@ -31,8 +31,6 @@ varying vec4 v_color;
 #ifdef SDF
 varying vec4 v_outlineColor;
 varying float v_outlineWidth;
-varying float v_sdfSmoothing;
-const float SDF_SPREAD = 8.0; // Needs to match radius in sdf generator.
 #endif
 
 const float UPPER_BOUND = 32768.0;
@@ -441,9 +439,6 @@ if (lengthSq < disableDepthTestDistance) {
 
     v_outlineWidth = 6.0 * outlineWidth / 255.0;
     v_outlineColor = outlineColor;
-
-    // Dynamic smoothing factor from https://github.com/libgdx/libgdx/wiki/Distance-field-fonts#customizing-the-shader
-    v_sdfSmoothing = 0.25 / (SDF_SPREAD * scale);
 #endif
 
     v_pickColor = pickColor;
