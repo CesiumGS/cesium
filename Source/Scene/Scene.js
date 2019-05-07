@@ -2858,6 +2858,7 @@ define([
             if (defined(skyAtmosphere) && defined(globe)) {
                 skyAtmosphere.setDynamicAtmosphereColor(globe.enableLighting);
                 environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
+                frameState.isReadyForAtmosphere = environmentState.frameState;
             }
             environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
             environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState, scene._hdr) : undefined;
