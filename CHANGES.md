@@ -4,6 +4,7 @@ Change Log
 
 ##### Additions :tada:
 * Added support for new `BingMapsStyle` values `ROAD_ON_DEMAND` and `AERIAL_WITH_LABELS_ON_DEMAND`. The older versions of these, `ROAD` and `AERIAL_WITH_LABELS`, have been deprecated by Bing. [#7808](https://github.com/AnalyticalGraphicsInc/cesium/pull/7808)
+* `BingMapsImageryProvider` now uses `DiscardEmptyTileImagePolicy` by default to detect missing tiles as zero-length responses instead of inspecting pixel values. [#7810](https://github.com/AnalyticalGraphicsInc/cesium/pull/7810)
 
 ### 1.57 - 2019-05-01
 

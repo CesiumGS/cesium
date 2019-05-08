@@ -1,41 +1,37 @@
 defineSuite([
         'Scene/BingMapsImageryProvider',
         'Core/appendForwardSlash',
-        'Core/DefaultProxy',
         'Core/defined',
         'Core/queryToObject',
         'Core/RequestScheduler',
         'Core/Resource',
         'Core/WebMercatorTilingScheme',
         'Scene/BingMapsStyle',
-        'Scene/DiscardMissingTileImagePolicy',
+        'Scene/DiscardEmptyTileImagePolicy',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
         'ThirdParty/Uri',
-        'ThirdParty/when',
-        'Scene/DiscardEmptyTileImagePolicy'
+        'ThirdParty/when'
     ], function(
         BingMapsImageryProvider,
         appendForwardSlash,
-        DefaultProxy,
         defined,
         queryToObject,
         RequestScheduler,
         Resource,
         WebMercatorTilingScheme,
         BingMapsStyle,
-        DiscardMissingTileImagePolicy,
+        DiscardEmptyTileImagePolicy,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
         pollToPromise,
         Uri,
-        when,
-        DiscardEmptyTileImagePolicy) {
+        when) {
     'use strict';
 
     var supportsImageBitmapOptions;
@@ -366,7 +362,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(20);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardEmptyTileImagePolicy);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
             expect(provider.credit).toBeInstanceOf(Object);
 
