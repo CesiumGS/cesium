@@ -671,7 +671,6 @@ define([
         }
 
         var packedLength;
-        var isSampled;
         var unwrappedInterval;
         var unwrappedIntervalLength;
 
@@ -684,6 +683,19 @@ define([
         var isValue = !defined(packetData.reference) && !defined(packetData.velocityReference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
+        if (packetData.delete === true) {
+            // If deleting this property for all time, we can simply set to undefined and return.
+            if (!hasInterval) {
+                object[propertyName] = undefined;
+                return;
+            }
+
+            // Deleting depends on the type of property we have.
+            return removePropertyData(object[propertyName], combinedInterval);
+        }
+
+        var isSampled = false;
+
         if (isValue) {
             unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
             packedLength = defaultValue(type.packedLength, 1);
@@ -691,11 +703,11 @@ define([
             isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && (unwrappedIntervalLength > packedLength) && (type !== Object);
         }
 
-        //Rotation is a special case because it represents a native type (Number)
-        //and therefore does not need to be unpacked when loaded as a constant value.
+        // Rotation is a special case because it represents a native type (Number)
+        // and therefore does not need to be unpacked when loaded as a constant value.
         var needsUnpacking = typeof type.unpack === 'function' && type !== Rotation;
 
-        //Any time a constant value is assigned, it completely blows away anything else.
+        // Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
             if (isValue) {
                 object[propertyName] = new ConstantProperty(needsUnpacking ? type.unpack(unwrappedInterval, 0) : unwrappedInterval);
@@ -713,8 +725,8 @@ define([
             epoch = JulianDate.fromIso8601(packetEpoch);
         }
 
-        //Without an interval, any sampled value is infinite, meaning it completely
-        //replaces any non-sampled property that may exist.
+        // Without an interval, any sampled value is infinite, meaning it completely
+        // replaces any non-sampled property that may exist.
         if (isSampled && !hasInterval) {
             if (!(property instanceof SampledProperty)) {
                 property = new SampledProperty(type);
@@ -727,11 +739,11 @@ define([
 
         var interval;
 
-        //A constant value with an interval is normally part of a TimeIntervalCollection,
-        //However, if the current property is not a time-interval collection, we need
-        //to turn it into a Composite, preserving the old data with the new interval.
+        // A constant value with an interval is normally part of a TimeIntervalCollection,
+        // However, if the current property is not a time-interval collection, we need
+        // to turn it into a Composite, preserving the old data with the new interval.
         if (!isSampled && hasInterval) {
-            //Create a new interval for the constant value.
+            // Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
             if (isValue) {
                 combinedInterval.data = needsUnpacking ? type.unpack(unwrappedInterval, 0) : unwrappedInterval;
@@ -739,7 +751,7 @@ define([
                 combinedInterval.data = createSpecializedProperty(type, entityCollection, packetData);
             }
 
-            //If no property exists, simply use a new interval collection
+            // If no property exists, simply use a new interval collection
             if (!defined(property)) {
                 if (isValue) {
                     property = new TimeIntervalCollectionProperty();
@@ -750,29 +762,28 @@ define([
             }
 
             if (isValue && property instanceof TimeIntervalCollectionProperty) {
-                //If we create a collection, or it already existed, use it.
+                // If we create a collection, or it already existed, use it.
                 property.intervals.addInterval(combinedInterval);
             } else if (property instanceof CompositeProperty) {
-                //If the collection was already a CompositeProperty, use it.
+                // If the collection was already a CompositeProperty, use it.
                 if (isValue) {
                     combinedInterval.data = new ConstantProperty(combinedInterval.data);
                 }
                 property.intervals.addInterval(combinedInterval);
             } else {
-                //Otherwise, create a CompositeProperty but preserve the existing data.
-
-                //Put the old property in an infinite interval.
+                // Otherwise, create a CompositeProperty but preserve the existing data.
+                // Put the old property in an infinite interval.
                 interval = Iso8601.MAXIMUM_INTERVAL.clone();
                 interval.data = property;
 
-                //Create the composite.
+                // Create the composite.
                 property = new CompositeProperty();
                 object[propertyName] = property;
 
-                //add the old property interval
+                // Add the old property interval.
                 property.intervals.addInterval(interval);
 
-                //Change the new data to a ConstantProperty and add it.
+                // Change the new data to a ConstantProperty and add it.
                 if (isValue) {
                     combinedInterval.data = new ConstantProperty(combinedInterval.data);
                 }
@@ -788,31 +799,53 @@ define([
             object[propertyName] = property;
         }
 
-        //create a CompositeProperty but preserve the existing data.
+        // Create a CompositeProperty but preserve the existing data.
         if (!(property instanceof CompositeProperty)) {
-            //Put the old property in an infinite interval.
+            // Put the old property in an infinite interval.
             interval = Iso8601.MAXIMUM_INTERVAL.clone();
             interval.data = property;
 
-            //Create the composite.
+            // Create the composite.
             property = new CompositeProperty();
             object[propertyName] = property;
 
-            //add the old property interval
+            // Add the old property interval.
             property.intervals.addInterval(interval);
         }
 
-        //Check if the interval already exists in the composite
+        // Check if the interval already exists in the composite.
         var intervals = property.intervals;
         interval = intervals.findInterval(combinedInterval);
         if (!defined(interval) || !(interval.data instanceof SampledProperty)) {
-            //If not, create a SampledProperty for it.
+            // If not, create a SampledProperty for it.
             interval = combinedInterval.clone();
             interval.data = new SampledProperty(type);
             intervals.addInterval(interval);
         }
         interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
         updateInterpolationSettings(packetData, interval.data);
+    }
+
+    function removePropertyData(property, interval) {
+        if (property instanceof SampledProperty) {
+            property.removeSamples(interval);
+            return;
+        } else if (property instanceof TimeIntervalCollectionProperty) {
+            property.intervals.removeInterval(interval);
+            return;
+        } else if (property instanceof CompositeProperty) {
+            var intervals = property.intervals;
+            for (var i = 0; i < intervals.length; ++i) {
+                var intersection = TimeInterval.intersect(intervals.get(i), interval, scratchTimeInterval);
+                if (!intersection.isEmpty) {
+                    // remove data from the contained properties
+                    removePropertyData(intersection.data, interval);
+                }
+            }
+            // remove the intervals from the composite
+            intervals.removeInterval(interval);
+            return;
+        }
     }
 
     function processPacketData(type, object, propertyName, packetData, interval, sourceUri, entityCollection) {
@@ -842,14 +875,26 @@ define([
             combinedInterval = constrainedInterval;
         }
 
-        var referenceFrame;
-        var unwrappedInterval;
-        var isSampled = false;
-        var unwrappedIntervalLength;
         var numberOfDerivatives = defined(packetData.cartesianVelocity) ? 1 : 0;
         var packedLength = Cartesian3.packedLength * (numberOfDerivatives + 1);
+        var unwrappedInterval;
+        var unwrappedIntervalLength;
         var isValue = !defined(packetData.reference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
+
+        if (packetData.delete === true) {
+            // If deleting this property for all time, we can simply set to undefined and return.
+            if (!hasInterval) {
+                object[propertyName] = undefined;
+                return;
+            }
+
+            // Deleting depends on the type of property we have.
+            return removePositionPropertyData(object[propertyName], combinedInterval);
+        }
+
+        var referenceFrame;
+        var isSampled = false;
 
         if (isValue) {
             if (defined(packetData.referenceFrame)) {
@@ -861,7 +906,7 @@ define([
             isSampled = unwrappedIntervalLength > packedLength;
         }
 
-        //Any time a constant value is assigned, it completely blows away anything else.
+        // Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
             if (isValue) {
                 object[propertyName] = new ConstantPositionProperty(Cartesian3.unpack(unwrappedInterval), referenceFrame);
@@ -879,8 +924,8 @@ define([
             epoch = JulianDate.fromIso8601(packetEpoch);
         }
 
-        //Without an interval, any sampled value is infinite, meaning it completely
-        //replaces any non-sampled property that may exist.
+        // Without an interval, any sampled value is infinite, meaning it completely
+        // replaces any non-sampled property that may exist.
         if (isSampled && !hasInterval) {
             if (!(property instanceof SampledPositionProperty) || (defined(referenceFrame) && property.referenceFrame !== referenceFrame)) {
                 property = new SampledPositionProperty(referenceFrame, numberOfDerivatives);
@@ -893,11 +938,11 @@ define([
 
         var interval;
 
-        //A constant value with an interval is normally part of a TimeIntervalCollection,
-        //However, if the current property is not a time-interval collection, we need
-        //to turn it into a Composite, preserving the old data with the new interval.
+        // A constant value with an interval is normally part of a TimeIntervalCollection,
+        // However, if the current property is not a time-interval collection, we need
+        // to turn it into a Composite, preserving the old data with the new interval.
         if (!isSampled && hasInterval) {
-            //Create a new interval for the constant value.
+            // Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
             if (isValue) {
                 combinedInterval.data = Cartesian3.unpack(unwrappedInterval);
@@ -905,7 +950,7 @@ define([
                 combinedInterval.data = createReferenceProperty(entityCollection, packetData.reference);
             }
 
-            //If no property exists, simply use a new interval collection
+            // If no property exists, simply use a new interval collection
             if (!defined(property)) {
                 if (isValue) {
                     property = new TimeIntervalCollectionPositionProperty(referenceFrame);
@@ -916,29 +961,29 @@ define([
             }
 
             if (isValue && property instanceof TimeIntervalCollectionPositionProperty && (defined(referenceFrame) && property.referenceFrame === referenceFrame)) {
-                //If we create a collection, or it already existed, use it.
+                // If we create a collection, or it already existed, use it.
                 property.intervals.addInterval(combinedInterval);
             } else if (property instanceof CompositePositionProperty) {
-                //If the collection was already a CompositePositionProperty, use it.
+                // If the collection was already a CompositePositionProperty, use it.
                 if (isValue) {
                     combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
                 }
                 property.intervals.addInterval(combinedInterval);
             } else {
-                //Otherwise, create a CompositePositionProperty but preserve the existing data.
+                // Otherwise, create a CompositePositionProperty but preserve the existing data.
 
-                //Put the old property in an infinite interval.
+                // Put the old property in an infinite interval.
                 interval = Iso8601.MAXIMUM_INTERVAL.clone();
                 interval.data = property;
 
-                //Create the composite.
+                // Create the composite.
                 property = new CompositePositionProperty(property.referenceFrame);
                 object[propertyName] = property;
 
-                //add the old property interval
+                // Add the old property interval.
                 property.intervals.addInterval(interval);
 
-                //Change the new data to a ConstantPositionProperty and add it.
+                // Change the new data to a ConstantPositionProperty and add it.
                 if (isValue) {
                     combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
                 }
@@ -953,20 +998,20 @@ define([
             property = new CompositePositionProperty(referenceFrame);
             object[propertyName] = property;
         } else if (!(property instanceof CompositePositionProperty)) {
-            //create a CompositeProperty but preserve the existing data.
-            //Put the old property in an infinite interval.
+            // Create a CompositeProperty but preserve the existing data.
+            // Put the old property in an infinite interval.
             interval = Iso8601.MAXIMUM_INTERVAL.clone();
             interval.data = property;
 
-            //Create the composite.
+            // Create the composite.
             property = new CompositePositionProperty(property.referenceFrame);
             object[propertyName] = property;
 
-            //add the old property interval
+            // Add the old property interval.
             property.intervals.addInterval(interval);
         }
 
-        //Check if the interval already exists in the composite
+        //Check if the interval already exists in the composite.
         var intervals = property.intervals;
         interval = intervals.findInterval(combinedInterval);
         if (!defined(interval) || !(interval.data instanceof SampledPositionProperty) || (defined(referenceFrame) && interval.data.referenceFrame !== referenceFrame)) {
@@ -977,6 +1022,28 @@ define([
         }
         interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
         updateInterpolationSettings(packetData, interval.data);
+    }
+
+    function removePositionPropertyData(property, interval) {
+        if (property instanceof SampledPositionProperty) {
+            property.removeSamples(interval);
+            return;
+        } else if (property instanceof TimeIntervalCollectionPositionProperty) {
+            property.intervals.removeInterval(interval);
+            return;
+        } else if (property instanceof CompositePositionProperty) {
+            var intervals = property.intervals;
+            for (var i = 0; i < intervals.length; ++i) {
+                var intersection = TimeInterval.intersect(intervals.get(i), interval, scratchTimeInterval);
+                if (!intersection.isEmpty) {
+                    // remove data from the contained properties
+                    removePositionPropertyData(intersection.data, interval);
+                }
+            }
+            // remove the intervals from the composite
+            intervals.removeInterval(interval);
+            return;
+        }
     }
 
     function processPositionPacketData(object, propertyName, packetData, interval, sourceUri, entityCollection) {
