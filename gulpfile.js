@@ -104,7 +104,7 @@ gulp.task('build', function(done) {
 });
 
 gulp.task('build-watch', function() {
-    return gulp.watch(buildFiles, 'build');
+    return gulp.watch(buildFiles, gulp.series('build'));
 });
 
 gulp.task('buildApps', function() {
