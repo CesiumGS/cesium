@@ -7,6 +7,7 @@ Change Log
 * Added support for `parameters` to `ArcGisMapServerImageryProvider`.
 * Hacky fix/workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/7121.
 * Added support for using the imagery splitting system with the terrain and the atmosphere, too.
+* Added support for new "On Demand" Bing Maps styles.
 
 ### 1.57 - 2019-05-01
 
