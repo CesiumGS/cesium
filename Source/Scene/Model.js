@@ -237,21 +237,23 @@ define([
      * Cesium supports glTF assets with the following extensions:
      * <ul>
      * <li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes (glTF 1.0)}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations/README.md|AGI_articulations}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/pull/1302|KHR_blend (draft)}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_blend/README.md|KHR_blend}
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
      * </li>
@@ -617,6 +619,7 @@ define([
 
         this._runtime = {
             animations : undefined,
+            articulations : undefined,
             rootNodes : undefined,
             nodes : undefined,            // Indexed with the node's index
             nodesByName : undefined,      // Indexed with name property in the node
@@ -1282,21 +1285,23 @@ define([
      * Cesium supports glTF assets with the following extensions:
      * <ul>
      * <li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes (glTF 1.0)}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations/README.md|AGI_articulations}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/pull/1302|KHR_blend (draft)}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_blend/README.md|KHR_blend}
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
      * </li>
@@ -1501,6 +1506,126 @@ define([
         return getRuntime(this, 'materialsByName', name);
     };
 
+    /**
+     * Returns a data structure associated with a particular articulation name.
+
+     * @param {String} name The name of the articulation.
+     * @returns {object} The named articulation, or <code>undefined</code> if no match was found.
+     *
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+     */
+    Model.prototype.getArticulation = function(name) {
+        return getRuntime(this, 'articulations', name);
+    };
+
+    var scratchArticulationCartesian = new Cartesian3();
+    var scratchArticulationRotation = new Matrix3();
+
+    /**
+     * Modifies a Matrix4 by applying a transformation for a given value of a stage.  Note this is different usage
+     * from the typical <code>result</code> parameter, in that the incoming value of <code>result</code> is
+     * meaningful if defined.  Various stages of an articulation can be multiplied together, so their
+     * transformations are all merged into a composite Matrix4 representing them all.
+     *
+     * @param {object} stage The stage of an articulation that is being evaluated.
+     * @param {number} value The current value of the stage.
+     * @param {Matrix4} [result] The matrix to be modified.  If undefined, the identity matrix will be used.
+     * @returns {Matrix4} A matrix transformed as requested by the articulation stage.
+     */
+    Model.prototype.applyArticulationStageMatrix = function(stage, value, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('stage', stage);
+        Check.typeOf.number('value', value);
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = Matrix4.clone(Matrix4.IDENTITY);
+        }
+
+        var cartesian = scratchArticulationCartesian;
+        var rotation;
+        switch (stage.type) {
+            case 'xRotate':
+                rotation = Matrix3.fromRotationX(CesiumMath.toRadians(value), scratchArticulationRotation);
+                Matrix4.multiplyByMatrix3(result, rotation, result);
+                break;
+            case 'yRotate':
+                rotation = Matrix3.fromRotationY(CesiumMath.toRadians(value), scratchArticulationRotation);
+                Matrix4.multiplyByMatrix3(result, rotation, result);
+                break;
+            case 'zRotate':
+                rotation = Matrix3.fromRotationZ(CesiumMath.toRadians(value), scratchArticulationRotation);
+                Matrix4.multiplyByMatrix3(result, rotation, result);
+                break;
+            case 'xTranslate':
+                cartesian.x = value;
+                cartesian.y = 0.0;
+                cartesian.z = 0.0;
+                Matrix4.multiplyByTranslation(result, cartesian, result);
+                break;
+            case 'yTranslate':
+                cartesian.x = 0.0;
+                cartesian.y = value;
+                cartesian.z = 0.0;
+                Matrix4.multiplyByTranslation(result, cartesian, result);
+                break;
+            case 'zTranslate':
+                cartesian.x = 0.0;
+                cartesian.y = 0.0;
+                cartesian.z = value;
+                Matrix4.multiplyByTranslation(result, cartesian, result);
+                break;
+            case 'xScale':
+                cartesian.x = value;
+                cartesian.y = 1.0;
+                cartesian.z = 1.0;
+                Matrix4.multiplyByScale(result, cartesian, result);
+                break;
+            case 'yScale':
+                cartesian.x = 1.0;
+                cartesian.y = value;
+                cartesian.z = 1.0;
+                Matrix4.multiplyByScale(result, cartesian, result);
+                break;
+            case 'zScale':
+                cartesian.x = 1.0;
+                cartesian.y = 1.0;
+                cartesian.z = value;
+                Matrix4.multiplyByScale(result, cartesian, result);
+                break;
+            case 'uniformScale':
+                Matrix4.multiplyByUniformScale(result, value, result);
+                break;
+            default:
+                break;
+        }
+        return result;
+    };
+
+    var scratchApplyArticulationTransform = new Matrix4();
+
+    /**
+     * TODO
+     */
+    Model.prototype.applyArticulation = function(articulation) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('articulation', articulation);
+        //>>includeEnd('debug');
+
+        var numNodes = articulation.nodes.length;
+        for (var n = 0; n < numNodes; ++n) {
+            var node = articulation.nodes[n];
+            var transform = Matrix4.clone(node.originalMatrix, scratchApplyArticulationTransform);
+
+            var numStages = articulation.stages.length;
+            for (var s = 0; s < numStages; ++s) {
+                var stage = articulation.stages[s];
+                transform = this.applyArticulationStageMatrix(stage, stage.currentValue, transform);
+            }
+            node.matrix = transform;
+        }
+    };
+
     ///////////////////////////////////////////////////////////////////////////
 
     function addBuffersToLoadResources(model) {
@@ -1631,6 +1756,35 @@ define([
         }
     }
 
+    function parseArticulations(model) {
+        var runtimeArticulations = {};
+        model._runtime.articulations = runtimeArticulations;
+
+        var gltf = model.gltf;
+        if (!hasExtension(gltf, 'AGI_articulations') || !defined(gltf.extensions) || !defined(gltf.extensions.AGI_articulations)) {
+            return;
+        }
+
+        var gltfArticulations = gltf.extensions.AGI_articulations.articulations;
+        if (!defined(gltfArticulations)) {
+            return;
+        }
+
+        var numArticulations = gltfArticulations.length;
+        for (var i = 0; i < numArticulations; ++i) {
+            var articulation = clone(gltfArticulations[i]);
+            articulation.nodes = [];
+            articulation.stagesByName = {};
+            runtimeArticulations[articulation.name] = articulation;
+
+            var numStages = articulation.stages.length;
+            for (var s = 0; s < numStages; ++s) {
+                var stage = articulation.stages[s];
+                articulation.stagesByName[stage.name] = stage;
+            }
+        }
+    }
+
     function imageLoad(model, textureId) {
         return function(image) {
             var loadResources = model._loadResources;
@@ -1733,12 +1887,15 @@ define([
         });
     }
 
+    var scratchArticulationStageInitialTransform = new Matrix4();
+
     function parseNodes(model) {
         var runtimeNodes = {};
         var runtimeNodesByName = {};
         var skinnedNodes = [];
 
         var skinnedNodesIds = model._loadResources.skinnedNodesIds;
+        var runtimeArticulations = model._runtime.articulations;
 
         ForEach.node(model.gltf, function(node, id) {
             var runtimeNode = {
@@ -1785,6 +1942,23 @@ define([
             if (defined(node.skin)) {
                 skinnedNodesIds.push(id);
                 skinnedNodes.push(runtimeNode);
+            }
+
+            if (defined(node.extensions) && defined(node.extensions.AGI_articulations)) {
+                var articulationName = node.extensions.AGI_articulations.articulationName;
+                if (defined(articulationName)) {
+                    var transform = Matrix4.clone(runtimeNode.publicNode.originalMatrix, scratchArticulationStageInitialTransform);
+                    var articulation = runtimeArticulations[articulationName];
+                    articulation.nodes.push(runtimeNode.publicNode);
+
+                    var numStages = articulation.stages.length;
+                    for (var s = 0; s < numStages; ++s) {
+                        var stage = articulation.stages[s];
+                        stage.currentValue = stage.initialValue;
+                        transform = model.applyArticulationStageMatrix(stage, stage.currentValue, transform);
+                    }
+                    runtimeNode.publicNode.matrix = transform;
+                }
             }
         });
 
@@ -4465,6 +4639,7 @@ define([
 
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
+                    parseArticulations(this);
                     parseTechniques(this);
                     if (!this._loadRendererResourcesFromCache) {
                         parseBufferViews(this);
