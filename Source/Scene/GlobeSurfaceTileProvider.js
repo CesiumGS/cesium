@@ -782,7 +782,7 @@ define([
 
     /**
      * Determines the priority for loading this tile. Lower priority values load sooner.
-     * @param {QuatreeTile} tile The tile.
+     * @param {QuadtreeTile} tile The tile.
      * @param {FrameState} frameState The frame state.
      * @returns {Number} The load priority value.
      */
