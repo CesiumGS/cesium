@@ -886,6 +886,20 @@ define([
         },
 
         /**
+         * Gets a dictionary of available articulations and their stages.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {object}
+         * @readonly
+         */
+        articulations : {
+            get : function() {
+                return this._runtime.articulations;
+            }
+        },
+
+        /**
          * When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
          *
          * @memberof Model.prototype
@@ -1531,6 +1545,8 @@ define([
      * @param {number} value The current value of the stage.
      * @param {Matrix4} [result] The matrix to be modified.  If undefined, the identity matrix will be used.
      * @returns {Matrix4} A matrix transformed as requested by the articulation stage.
+     *
+     * @private
      */
     Model.prototype.applyArticulationStageMatrix = function(stage, value, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1544,7 +1560,7 @@ define([
 
         var cartesian = scratchArticulationCartesian;
         var rotation;
-        switch (stage.type) {
+        switch (stage.type) {  // TODO: Optimize by testing the value for 0.0 or 1.0
             case 'xRotate':
                 rotation = Matrix3.fromRotationX(CesiumMath.toRadians(value), scratchArticulationRotation);
                 Matrix4.multiplyByMatrix3(result, rotation, result);
@@ -1605,12 +1621,15 @@ define([
     var scratchApplyArticulationTransform = new Matrix4();
 
     /**
-     * TODO
+     * Applies all of the stages of the named articulation to the matrix of each node that participates
+     * in the articulation.  Note that this will overwrite any nodeTransformations on participating nodes.
+
+     * @param {String} name The name of the articulation to apply to the model.
+     *
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      */
-    Model.prototype.applyArticulation = function(articulation) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.object('articulation', articulation);
-        //>>includeEnd('debug');
+    Model.prototype.applyArticulation = function(name) {
+        var articulation = getRuntime(this, 'articulations', name);
 
         var numNodes = articulation.nodes.length;
         for (var n = 0; n < numNodes; ++n) {
