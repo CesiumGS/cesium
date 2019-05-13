@@ -622,6 +622,55 @@ defineSuite([
         texturedBoxModel.distanceDisplayCondition = undefined;
     });
 
+    it('renders with spherical harmonics', function() {
+        if (!scene.highDynamicRangeSupported) {
+            return;
+        }
+
+        return loadModel(boomBoxUrl).then(function(m) {
+            m.scale = 20.0; // Source model is very small, so scale up a bit
+
+            var L00  = new Cartesian3( 0.692622075009195,  0.454351600181900,  0.369101722992350); // L00, irradiance, pre-scaled base
+            var L1_1 = new Cartesian3( 0.289407068366422,  0.167893101626580,  0.106174907004792); // L1-1, irradiance, pre-scaled base
+            var L10  = new Cartesian3(-0.591502034778913, -0.281524323171190,  0.124647554708491); // L10, irradiance, pre-scaled base
+            var L11  = new Cartesian3( 0.349454581171260,  0.163273486841657, -0.030956435452070); // L11, irradiance, pre-scaled base
+            var L2_2 = new Cartesian3( 0.221711764474260,  0.117719918681220,  0.031381053430064); // L2-2, irradiance, pre-scaled base
+            var L2_1 = new Cartesian3(-0.348955284677868, -0.187256994042823, -0.026299717727617); // L2-1, irradiance, pre-scaled base
+            var L20  = new Cartesian3( 0.119982671127227,  0.076784552175028,  0.055517838847755); // L20, irradiance, pre-scaled base
+            var L21  = new Cartesian3(-0.545546043202299, -0.279787444030397, -0.086854000285261); // L21, irradiance, pre-scaled base
+            var L22  = new Cartesian3( 0.160417569726332,  0.120896423762313,  0.121102528320197); // L22, irradiance, pre-scaled base
+            m.sphericalHarmonicCoefficients = [L00, L1_1, L10, L11, L2_2, L2_1, L20, L21, L22];
+
+            scene.highDynamicRange = true;
+            verifyRender(m);
+            primitives.remove(m);
+            scene.highDynamicRange = false;
+        });
+    });
+
+    it('renders with specular environment map', function() {
+        if (!scene.highDynamicRangeSupported) {
+            return;
+        }
+
+        return loadModel(boomBoxUrl).then(function(m) {
+            m.scale = 20.0; // Source model is very small, so scale up a bit
+            m.specularEnvironmentMaps = './Data/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx';
+
+            return pollToPromise(function() {
+                scene.highDynamicRange = true;
+                scene.render();
+                scene.highDynamicRange = false;
+                return defined(m._specularEnvironmentMapAtlas) && m._specularEnvironmentMapAtlas.ready;
+            }).then(function() {
+                scene.highDynamicRange = true;
+                verifyRender(m);
+                primitives.remove(m);
+                scene.highDynamicRange = false;
+            });
+        });
+    });
+
     it('distanceDisplayCondition throws when ner >= far', function() {
         expect(function() {
             texturedBoxModel.distanceDisplayCondition = new DistanceDisplayCondition(100.0, 10.0);
@@ -947,6 +996,7 @@ defineSuite([
         return loadModel(boxGltf2Url).then(function(m) {
             verifyRender(m);
             m.show = true;
+            m.luminanceAtZenith = undefined;
 
             expect({
                 scene : scene,
@@ -1300,10 +1350,10 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('addAll throws when speedup is less than or equal to zero.', function() {
+    it('addAll throws when multiplier is less than or equal to zero.', function() {
         expect(function() {
             return animBoxesModel.activeAnimations.addAll({
-                speedup : 0.0
+                multiplier : 0.0
             });
         }).toThrowDeveloperError();
     });
@@ -1323,7 +1373,7 @@ defineSuite([
         expect(a.delay).toEqual(0.0);
         expect(a.stopTime).not.toBeDefined();
         expect(a.removeOnStop).toEqual(false);
-        expect(a.speedup).toEqual(1.0);
+        expect(a.multiplier).toEqual(1.0);
         expect(a.reverse).toEqual(false);
         expect(a.loop).toEqual(ModelAnimationLoop.NONE);
         expect(a.start).toBeDefined();
@@ -1398,11 +1448,11 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('add throws when speedup is less than or equal to zero.', function() {
+    it('add throws when multiplier is less than or equal to zero.', function() {
         expect(function() {
             return animBoxesModel.activeAnimations.add({
                 name : 'animation_1',
-                speedup : 0.0
+                multiplier : 0.0
             });
         }).toThrowDeveloperError();
     });
@@ -1512,13 +1562,13 @@ defineSuite([
         animBoxesModel.show = false;
     });
 
-    it('Animates with a speedup', function() {
+    it('Animates with a multiplier', function() {
         var time = JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'));
         var animations = animBoxesModel.activeAnimations;
         var a = animations.add({
             name : 'animation_1',
             startTime : time,
-            speedup : 1.5
+            multiplier : 1.5
         });
 
         var spyUpdate = jasmine.createSpy('listener');

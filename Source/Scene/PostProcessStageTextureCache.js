@@ -111,6 +111,9 @@ define([
         } else {
             for (j = 1; j < length; ++j) {
                 name = getLastStageName(composite.get(j));
+                if (!defined(dependencies[name])) {
+                    dependencies[name] = {};
+                }
                 dependencies[name][originalDependency] = true;
             }
         }

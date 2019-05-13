@@ -15,7 +15,8 @@ var gulpTap = require('gulp-tap');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
 var mkdirp = require('mkdirp');
-var eventStream = require('event-stream');
+var mergeStream = require('merge-stream');
+var streamToPromise = require('stream-to-promise');
 var gulp = require('gulp');
 var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
@@ -72,6 +73,7 @@ var filesToClean = ['Source/Cesium.js',
                     'Specs/SpecList.js',
                     'Apps/Sandcastle/jsHintOptions.js',
                     'Apps/Sandcastle/gallery/gallery-index.js',
+                    'Apps/Sandcastle/templates/bucket.css',
                     'Cesium-*.zip'];
 
 var filesToSortRequires = ['Source/**/*.js',
@@ -98,9 +100,8 @@ gulp.task('build', function(done) {
     glslToJavaScript(minifyShaders, 'Build/minifyShaders.state');
     createCesiumJs();
     createSpecList();
-    createGalleryList();
     createJsHintOptions();
-    done();
+    createGalleryList(done);
 });
 
 gulp.task('build-watch', function() {
@@ -304,7 +305,7 @@ gulp.task('makeZipFile', gulp.series('release', function() {
 
     var indexSrc = gulp.src('index.release.html').pipe(gulpRename('index.html'));
 
-    return eventStream.merge(builtSrc, staticSrc, indexSrc)
+    return mergeStream(builtSrc, staticSrc, indexSrc)
         .pipe(gulpTap(function(file) {
             // Work around an issue with gulp-zip where archives generated on Windows do
             // not properly have their directory executable mode set.
@@ -1116,7 +1117,7 @@ function createSpecList() {
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
-function createGalleryList() {
+function createGalleryList(done) {
     var demoObjects = [];
     var demoJSONs = [];
     var output = path.join('Apps', 'Sandcastle', 'gallery', 'gallery-index.js');
@@ -1137,9 +1138,9 @@ function createGalleryList() {
     // This includes newly staged local demos as well.
     var newDemos = [];
     try {
-        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html').toString().trim().split('\n');
+        newDemos = child_process.execSync('git diff --name-only --diff-filter=A ' + tagVersion + ' Apps/Sandcastle/gallery/*.html', { stdio: ['pipe', 'pipe', 'ignore'] }).toString().trim().split('\n');
     } catch (e) {
-        console.log('Failed to retrieve list of new Sandcastle demos from Git.');
+        // On a Cesium fork, tags don't exist so we can't generate the list.
     }
 
     var helloWorld;
@@ -1185,6 +1186,25 @@ var gallery_demos = [' + demoJSONs.join(', ') + '];\n\
 var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;') + '\n';
 
     fs.writeFileSync(output, contents);
+
+    // Compile CSS for Sandcastle
+    var outputFile = path.join('Apps', 'Sandcastle', 'templates', 'bucket.css');
+
+    requirejs.optimize({
+        cssIn : path.join('Apps', 'Sandcastle', 'templates', 'bucketRaw.css'),
+        out : outputFile,
+        waitSeconds : 0
+    }, function() {
+        var data = fs.readFileSync(outputFile); //read existing contents into data
+        var fd = fs.openSync(outputFile, 'w+');
+        var buffer = new Buffer('/* This file is automatically rebuilt by the Cesium build process. */\n');
+
+        fs.writeSync(fd, buffer, 0, buffer.length, 0); //write new data
+        fs.writeSync(fd, data, 0, data.length, buffer.length); //append old data
+
+        fs.close(fd);
+        done();
+    }, done);
 }
 
 function createJsHintOptions() {
@@ -1204,6 +1224,7 @@ var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';\n';
 function buildSandcastle() {
     var appStream = gulp.src([
             'Apps/Sandcastle/**',
+            '!Apps/Sandcastle/standalone.html',
             '!Apps/Sandcastle/images/**',
             '!Apps/Sandcastle/gallery/**.jpg'
         ])
@@ -1227,7 +1248,14 @@ function buildSandcastle() {
         })
         .pipe(gulp.dest('Build/Apps/Sandcastle'));
 
-    return streamToPromise(eventStream.merge(appStream, imageStream));
+    var standaloneStream = gulp.src([
+        'Apps/Sandcastle/standalone.html'
+        ])
+        .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.20/require.js', '../../../ThirdParty/requirejs-2.1.20/require.js'))
+        .pipe(gulpReplace('Source/Cesium', 'CesiumUnminified'))
+        .pipe(gulp.dest('Build/Apps/Sandcastle'));
+
+    return streamToPromise(mergeStream(appStream, imageStream, standaloneStream));
 }
 
 function buildCesiumViewer() {
@@ -1264,7 +1292,7 @@ function buildCesiumViewer() {
     promise = promise.then(function() {
         var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
 
-        var stream = eventStream.merge(
+        var stream = mergeStream(
             gulp.src(cesiumViewerStartup)
                 .pipe(gulpInsert.prepend(copyrightHeader))
                 .pipe(gulpReplace('../../Source', '.'))
@@ -1332,13 +1360,5 @@ function requirejsOptimize(name, config) {
             }
             resolve();
         });
-    });
-}
-
-function streamToPromise(stream) {
-    return new Promise(function(resolve, reject) {
-        stream.on('finish', resolve);
-        stream.on('end', resolve);
-        stream.on('error', reject);
     });
 }

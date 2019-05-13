@@ -1,4 +1,5 @@
-/*global require,Blob,JSHINT*/
+/*global require,Blob,JSHINT */
+/*global decodeBase64Data, embedInSandcastleTemplate */
 /*global gallery_demos, has_new_gallery_demos, hello_world_index*/// defined in gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
 require({
@@ -102,7 +103,6 @@ require({
         ClipboardJS,
         pako) {
     'use strict';
-
     // attach clipboard handling to our Copy button
     var clipboardjs = new ClipboardJS('.copyButton');
 
@@ -383,7 +383,7 @@ require({
         // make a copy of the options, JSHint modifies the object it's given
         var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
         /*eslint-disable new-cap*/
-        if (!JSHINT(getScriptFromEditor(false), options)) {
+        if (!JSHINT(embedInSandcastleTemplate(jsEditor.getValue(), false), options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
                 var hint = hints[i];
@@ -540,22 +540,6 @@ require({
         }
     });
 
-    function getScriptFromEditor(addExtraLine) {
-        return 'function startup(Cesium) {\n' +
-               '    \'use strict\';\n' +
-               '//Sandcastle_Begin\n' +
-               (addExtraLine ? '\n' : '') +
-               jsEditor.getValue() +
-               '//Sandcastle_End\n' +
-               '    Sandcastle.finishedLoading();\n' +
-               '}\n' +
-               'if (typeof Cesium !== \'undefined\') {\n' +
-               '    startup(Cesium);\n' +
-               '} else if (typeof require === \'function\') {\n' +
-               '    require([\'Cesium\'], startup);\n' +
-               '}\n';
-    }
-
     var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
 
     function activateBucketScripts(bucketDoc) {
@@ -578,6 +562,7 @@ require({
         // Apply user HTML to bucket.
         var htmlElement = bucketDoc.createElement('div');
         htmlElement.innerHTML = htmlEditor.getValue();
+        bucketDoc.body.appendChild(htmlElement);
 
         var onScriptTagError = function() {
             if (bucketFrame.contentDocument === bucketDoc) {
@@ -620,34 +605,12 @@ require({
                 // Firefox line numbers are zero-based, not one-based.
                 var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
 
-                element.textContent = getScriptFromEditor(isFirefox);
+                element.textContent = embedInSandcastleTemplate(jsEditor.getValue(), isFirefox);
                 bucketDoc.body.appendChild(element);
             }
         };
-        // If we just add `htmlElement` to the DOM and run
-        // loadScript(), there's a chance it will inject CSS
-        // before the HTML content is fully loaded, leading to a broken page.
-        // So instead we create an observer instance to watch for when
-        // the element has been added.
-        // See https://github.com/AnalyticalGraphicsInc/cesium/issues/5265
-        var observer = new MutationObserver(function (mutationsList) {
-            // See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
-            var length = mutationsList.length;
-            for (var i = 0; i < length; i++) {
-                var mutation = mutationsList[i];
-                // Watch for an element with the data-sandcastle-loaded attribute.
-                if (defined(mutation.target.dataset) && mutation.target.dataset.sandcastleLoaded === 'yes') {
-                    loadScript();
-                    observer.disconnect();
-                }
-            }
-        });
 
-        // Start observing the target node for configured mutations
-        var config = { attributes: true, childList: true, subtree: true };
-        observer.observe(bucketDoc, config);
-
-        bucketDoc.body.appendChild(htmlElement);
+        loadScript();
     }
 
     function applyBucket() {
@@ -775,20 +738,10 @@ require({
 
                 applyLoadedDemo(code, html);
             } else if (window.location.hash.indexOf('#c=') === 0) {
-                // data stored in the hash as:
-                // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
                 var base64String = window.location.hash.substr(3);
-                // restore padding
-                while (base64String.length % 4 !== 0) {
-                    base64String += '=';
-                }
-                var jsonString = pako.inflate(atob(base64String), { raw: true, to: 'string' });
-                // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
-                jsonString = '["' + jsonString + '"]';
-                json = JSON.parse(jsonString);
-                // index 0 is code, index 1 is html
-                code = json[0];
-                html = json[1];
+                var data = decodeBase64Data(base64String, pako);
+                code = data.code;
+                html = data.html;
 
                 applyLoadedDemo(code, html);
             } else {
@@ -953,17 +906,23 @@ require({
         return location.protocol + '//' + location.host + location.pathname;
     }
 
-    registry.byId('buttonShareDrop').on('click', function() {
-        var code = jsEditor.getValue();
-        var html = htmlEditor.getValue();
-
+    function makeCompressedBase64String(data) {
         // data stored in the hash as:
         // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
-        var jsonString = JSON.stringify([code, html]);
+        var jsonString = JSON.stringify(data);
         // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
         jsonString = jsonString.substr(2, jsonString.length - 4);
         var base64String = btoa(pako.deflate(jsonString, { raw: true, to: 'string', level: 9 }));
         base64String = base64String.replace(/\=+$/, ''); // remove padding
+
+        return base64String;
+    }
+
+    registry.byId('buttonShareDrop').on('click', function() {
+        var code = jsEditor.getValue();
+        var html = htmlEditor.getValue();
+
+        var base64String = makeCompressedBase64String([code, html]);
 
         var shareUrlBox = document.getElementById('shareUrl');
         shareUrlBox.value = getBaseUrl() + '#c=' + base64String;
@@ -1019,7 +978,7 @@ require({
         return local.headers + '\n' +
                htmlEditor.getValue() +
                '<script id="cesium_sandcastle_script">\n' +
-               getScriptFromEditor(false) +
+               embedInSandcastleTemplate(jsEditor.getValue(), false) +
                '</script>\n' +
                '</body>\n' +
                '</html>\n';
@@ -1044,25 +1003,20 @@ require({
     });
 
     registry.byId('buttonNewWindow').on('click', function() {
-        var baseHref = window.location.href;
-
-        //Handle case where demo is in a sub-directory.
-        var searchLen = window.location.search.length;
-        if (searchLen > 0) {
-            baseHref = baseHref.substring(0, baseHref.length - searchLen);
-        }
-
+        //Handle case where demo is in a sub-directory by modifying
+        //the demo's HTML to add a base href.
+        var baseHref = getBaseUrl();
         var pos = baseHref.lastIndexOf('/');
         baseHref = baseHref.substring(0, pos) + '/gallery/';
 
-        var html = getDemoHtml();
-        html = html.replace('<head>', '<head>\n    <base href="' + baseHref + '">');
-        var htmlBlob = new Blob([html], {
-            'type' : 'text/html;charset=utf-8',
-            'endings' : 'native'
-        });
-        var htmlBlobURL = URL.createObjectURL(htmlBlob);
-        window.open(htmlBlobURL, '_blank');
+        var code = jsEditor.getValue();
+        var html = htmlEditor.getValue();
+        var data = makeCompressedBase64String([code, html, baseHref]);
+
+        var url = getBaseUrl();
+        url = url.replace('index.html','') + 'standalone.html' + '#c=' + data;
+
+        window.open(url, '_blank');
         window.focus();
     });
 

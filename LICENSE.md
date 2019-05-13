@@ -204,6 +204,8 @@ Copyright 2011-2018 CesiumJS Contributors
 
 Patents 9153063 and 9865085
 
+Patents pending 15/829,786 and 62/701,099
+
 Third-Party Code
 ================
 

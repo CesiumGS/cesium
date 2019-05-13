@@ -217,14 +217,14 @@ define([
     }
 
     function updateVisibility(tileset, tile, frameState) {
-        if (tile._updatedVisibilityFrame === frameState.frameNumber) {
+        if (tile._updatedVisibilityFrame === tileset._updatedVisibilityFrame) {
             // Return early if visibility has already been checked during the traversal.
             // The visibility may have already been checked if the cullWithChildrenBounds optimization is used.
             return;
         }
 
         tile.updateVisibility(frameState);
-        tile._updatedVisibilityFrame = frameState.frameNumber;
+        tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
     }
 
     function anyChildrenVisible(tileset, tile, frameState) {
@@ -470,7 +470,6 @@ define([
             visitTile(tileset, tile, frameState);
             touchTile(tileset, tile, frameState);
             tile._refines = refines;
-            tile._updatedVisibilityFrame = 0; // Reset so visibility is checked during the next pass which may use a different camera
         }
     }
 
@@ -527,12 +526,8 @@ define([
      * the children's z-depth and the ancestor's z-depth. We cannot rely on Z because we want the child to appear on top
      * of ancestor regardless of true depth. The stencil tests used require children to be drawn first.
      *
-     * NOTE: this will no longer work when there is a chain of selected tiles that is longer than the size of the
-     * stencil buffer (usually 8 bits). In other words, the subset of the tree containing only selected tiles must be
-     * no deeper than 255. It is very, very unlikely this will cause a problem.
-     *
-     * NOTE: when the scene has inverted classification enabled, the stencil buffer will be masked to 4 bits. So, the
-     * selected tiles must be no deeper than 15. This is still very unlikely.
+     * NOTE: 3D Tiles uses 3 bits from the stencil buffer meaning this will not work when there is a chain of
+     * selected tiles that is deeper than 7. This is not very likely.
      */
     function traverseAndSelect(tileset, root, frameState) {
         var stack = selectionTraversal.stack;
