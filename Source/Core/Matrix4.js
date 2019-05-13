@@ -2154,7 +2154,7 @@ define([
      */
     Matrix4.getRotation = function(matrix, result) {
         return Matrix4.getMatrix3(matrix, result);
-    }
+    };
 
     /**
      * Gets the upper left 3x3 rotation matrix of the provided matrix, assuming the matrix is a affine transformation matrix.
