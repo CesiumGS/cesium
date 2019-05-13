@@ -1265,6 +1265,7 @@ define([
 
             var m = uniformState._normal3D;
             Matrix4.getRotation(uniformState.inverseModelView3D, m);
+            Matrix3.getRotation(m, m);
             Matrix3.transpose(m, m);
         }
     }
@@ -1273,6 +1274,7 @@ define([
         if (uniformState._inverseNormalDirty) {
             uniformState._inverseNormalDirty = false;
             Matrix4.getRotation(uniformState.inverseModelView, uniformState._inverseNormal);
+            Matrix3.getRotation(uniformState._inverseNormal, uniformState._inverseNormal);
         }
     }
 
@@ -1280,6 +1282,7 @@ define([
         if (uniformState._inverseNormal3DDirty) {
             uniformState._inverseNormal3DDirty = false;
             Matrix4.getRotation(uniformState.inverseModelView3D, uniformState._inverseNormal3D);
+            Matrix3.getRotation(uniformState._inverseNormal3D, uniformState._inverseNormal3D);
         }
     }
 

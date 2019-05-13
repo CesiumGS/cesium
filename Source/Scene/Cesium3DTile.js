@@ -139,6 +139,7 @@ define([
          * @type {Number}
          * @readonly
          */
+        this.geometricError = header.geometricError;
         this._geometricError = header.geometricError;
 
         if (!defined(this._geometricError)) {

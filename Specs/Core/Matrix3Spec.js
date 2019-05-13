@@ -642,11 +642,18 @@ defineSuite([
     it('getRotation returns matrix without scale', function() {
         var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var result = new Matrix3();
+        var expected = Matrix3.fromArray([
+                0.12309149097933272, 0.4923659639173309, 0.8616404368553291,
+                0.20739033894608505, 0.5184758473652127, 0.8295613557843402,
+                0.26726124191242440, 0.5345224838248488, 0.8017837257372732
+        ]);
         var scale = new Cartesian3();
         var expectedScale = new Cartesian3(1.0, 1.0, 1.0);
         result = Matrix3.getRotation(matrix, result);
+        console.log(result);
         var resultScale = Matrix3.getScale(result, scale);
         expect(resultScale).toEqualEpsilon(expectedScale, CesiumMath.EPSILON14);
+        expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
     });
 
     it('getRotation does not modify rotation matrix', function() {
@@ -659,6 +666,12 @@ defineSuite([
         result = Matrix3.getRotation(rotation, result);
         expect(rotation).toEqualEpsilon(result, CesiumMath.EPSILON14);
         expect(rotation).not.toBe(result);
+    });
+
+    it('getRotation throws without a matrix', function() {
+        expect(function() {
+            return Matrix3.getRotation();
+        }).toThrowDeveloperError();
     });
 
     it('transpose works with a result parameter that is an input result parameter', function() {

@@ -1024,14 +1024,13 @@ define([
     };
 
     var UNIT = new Cartesian3(1, 1, 1);
-    var scaleVector = new Cartesian3();
 
     /**
-     * Factors rotation matrix from arbitrary Matrix3 by dividing components by scale
+     * Extracts the rotation assuming the matrix is an affine transformation.
      *
-     * @param {Matrix3} rotation-scale matrix
-     * @param {Matrix3} result rotation matrix with unit scale
-     * @returns {Matrix3} The modified result parameter.
+     * @param {Matrix3} matrix The matrix.
+     * @param {Matrix3} result The object onto which to store the result.
+     * @returns {Cartesian3} The modified result parameter
      */
     Matrix3.getRotation = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
@@ -1039,7 +1038,7 @@ define([
         Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
-        var inverseScale = Cartesian3.divideComponents(UNIT, Matrix3.getScale(matrix, scaleVector), scaleVector);
+        var inverseScale = Cartesian3.divideComponents(UNIT, Matrix3.getScale(matrix, scratchScale), scratchScale);
         result = Matrix3.multiplyByScale(matrix, inverseScale, result);
 
         return result;
