@@ -2892,7 +2892,7 @@ define([
             var mInverseTranspose = new Matrix3();
             return function() {
                 Matrix4.inverse(runtimeNode.computedMatrix, mInverse);
-                Matrix4.getRotation(mInverse, mInverseTranspose);
+                Matrix4.getMatrix3(mInverse, mInverseTranspose);
                 return Matrix3.transpose(mInverseTranspose, mInverseTranspose);
             };
         },
@@ -2903,7 +2903,7 @@ define([
             return function() {
                 Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mv);
                 Matrix4.inverse(mv, mvInverse);
-                Matrix4.getRotation(mvInverse, mvInverseTranspose);
+                Matrix4.getMatrix3(mvInverse, mvInverseTranspose);
                 return Matrix3.transpose(mvInverseTranspose, mvInverseTranspose);
             };
         },

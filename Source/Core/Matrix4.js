@@ -2150,6 +2150,13 @@ define([
     };
 
     /**
+     * @deprecated moved to Matrix4.getMatrix3
+     */
+    Matrix4.getRotation = function(matrix, result) {
+        return Matrix4.getMatrix3(matrix, result);
+    }
+
+    /**
      * Gets the upper left 3x3 rotation matrix of the provided matrix, assuming the matrix is a affine transformation matrix.
      *
      * @param {Matrix4} matrix The matrix to use.
@@ -2165,13 +2172,13 @@ define([
      * //     [13.0, 17.0, 21.0, 25.0]
      *
      * var b = new Cesium.Matrix3();
-     * Cesium.Matrix4.getRotation(m,b);
+     * Cesium.Matrix4.getMatrix3(m,b);
      *
      * // b = [10.0, 14.0, 18.0]
      * //     [11.0, 15.0, 19.0]
      * //     [12.0, 16.0, 20.0]
      */
-    Matrix4.getRotation = function(matrix, result) {
+    Matrix4.getMatrix3 = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('matrix', matrix);
         Check.typeOf.object('result', result);
@@ -2286,7 +2293,7 @@ define([
         if (Math.abs(det) < CesiumMath.EPSILON21) {
                 // Special case for a zero scale matrix that can occur, for example,
                 // when a model's node has a [0, 0, 0] scale.
-                if (Matrix3.equalsEpsilon(Matrix4.getRotation(matrix, scratchInverseRotation), scratchMatrix3Zero, CesiumMath.EPSILON7) &&
+                if (Matrix3.equalsEpsilon(Matrix4.getMatrix3(matrix, scratchInverseRotation), scratchMatrix3Zero, CesiumMath.EPSILON7) &&
                 Cartesian4.equals(Matrix4.getRow(matrix, 3, scratchBottomRow), scratchExpectedBottomRow)) {
 
                 result[0] = 0.0;
@@ -2353,7 +2360,7 @@ define([
         //>>includeEnd('debug');
 
         //This function is an optimized version of the below 4 lines.
-        //var rT = Matrix3.transpose(Matrix4.getRotation(matrix));
+        //var rT = Matrix3.transpose(Matrix4.getMatrix3(matrix));
         //var rTN = Matrix3.negate(rT);
         //var rTT = Matrix3.multiplyByVector(rTN, Matrix4.getTranslation(matrix));
         //return Matrix4.fromRotationTranslation(rT, rTT, result);

@@ -993,7 +993,7 @@ define([
 
         // Find the transformed center and halfAxes
         center = Matrix4.multiplyByPoint(transform, center, center);
-        var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
+        var rotationScale = Matrix4.getMatrix3(transform, scratchMatrix);
         halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
 
         if (defined(result)) {
@@ -1017,7 +1017,7 @@ define([
         // This is why the transform is calculated as the difference between the initial transform and the current transform.
         transform = Matrix4.multiplyTransformation(transform, Matrix4.inverseTransformation(initialTransform, scratchTransform), scratchTransform);
         center = Matrix4.multiplyByPoint(transform, center, center);
-        var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
+        var rotationScale = Matrix4.getMatrix3(transform, scratchMatrix);
         halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
 
         if (defined(result) && (result instanceof TileOrientedBoundingBox)) {
