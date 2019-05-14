@@ -220,7 +220,7 @@ define([
             backgroundBillboard.horizontalOrigin = HorizontalOrigin.LEFT;
             backgroundBillboard.verticalOrigin = label._verticalOrigin;
             backgroundBillboard.heightReference = label._heightReference;
-            backgroundBillboard.scale = label._scale * label._relativeSize;
+            backgroundBillboard.scale = label.totalScale;
             backgroundBillboard.pickPrimitive = label;
             backgroundBillboard.id = label._id;
             backgroundBillboard.translucencyByDistance = label._translucencyByDistance;
@@ -327,7 +327,7 @@ define([
                 billboard.horizontalOrigin = HorizontalOrigin.LEFT;
                 billboard.verticalOrigin = label._verticalOrigin;
                 billboard.heightReference = label._heightReference;
-                billboard.scale = label._scale * label._relativeSize;
+                billboard.scale = label.totalScale;
                 billboard.pickPrimitive = label;
                 billboard.id = label._id;
                 billboard.image = id;
