@@ -1,4 +1,5 @@
 define([
+        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Check',
         './Credit',
@@ -7,9 +8,9 @@ define([
         './defineProperties',
         './Ion',
         './Resource',
-        './RuntimeError',
-        'ThirdParty/Uri'
+        './RuntimeError'
     ], function(
+        Uri,
         when,
         Check,
         Credit,
@@ -18,8 +19,7 @@ define([
         defineProperties,
         Ion,
         Resource,
-        RuntimeError,
-        Uri) {
+        RuntimeError) {
 'use strict';
 
     /**
