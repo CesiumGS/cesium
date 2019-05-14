@@ -1,7 +1,6 @@
 define([
         '../Core/BingMapsApi',
         '../Core/buildModuleUrl',
-        '../Core/Cartesian2',
         '../Core/Check',
         '../Core/Credit',
         '../Core/defaultValue',
@@ -17,12 +16,11 @@ define([
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './BingMapsStyle',
-        './DiscardMissingTileImagePolicy',
+        './DiscardEmptyTileImagePolicy',
         './ImageryProvider'
     ], function(
         BingMapsApi,
         buildModuleUrl,
-        Cartesian2,
         Check,
         Credit,
         defaultValue,
@@ -38,7 +36,7 @@ define([
         WebMercatorTilingScheme,
         when,
         BingMapsStyle,
-        DiscardMissingTileImagePolicy,
+        DiscardEmptyTilePolicy,
         ImageryProvider) {
     'use strict';
 
@@ -61,15 +59,9 @@ define([
      *        for information on the supported cultures.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
-     *        is invalid and should be discarded.  If this value is not specified, a default
-     *        {@link DiscardMissingTileImagePolicy} is used which requests
-     *        tile 0,0 at the maximum tile level and checks pixels (0,0), (120,140), (130,160),
-     *        (200,50), and (200,200).  If all of these pixels are transparent, the discard check is
-     *        disabled and no tiles are discarded.  If any of them have a non-transparent color, any
-     *        tile that has the same values in these pixel locations is discarded.  The end result of
-     *        these defaults should be correct tile discarding for a standard Bing Maps server.  To ensure
-     *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
-     *        parameter.
+     *        is invalid and should be discarded.  By default, a {@link DiscardEmptyTileImagePolicy}
+     *        will be used, with the expectation that the Bing Maps server will send a zero-length response for missing tiles.
+     *        To ensure that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this parameter.
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
@@ -106,7 +98,12 @@ define([
         this._tileProtocol = options.tileProtocol;
         this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
         this._culture = defaultValue(options.culture, '');
+
         this._tileDiscardPolicy = options.tileDiscardPolicy;
+        if (!defined(this._tileDiscardPolicy)) {
+            this._tileDiscardPolicy = new DiscardEmptyTilePolicy();
+        }
+
         this._proxy = options.proxy;
         this._credit = new Credit('<a href="http://www.bing.com"><img src="' + BingMapsImageryProvider.logoUrl + '" title="Bing Imagery"/></a>');
 
@@ -168,15 +165,6 @@ define([
             }
 
             that._imageUrlTemplate = that._imageUrlTemplate.replace(/^http:/, tileProtocol);
-
-            // Install the default tile discard policy if none has been supplied.
-            if (!defined(that._tileDiscardPolicy)) {
-                that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-                    missingImageUrl : buildImageResource(that, 0, 0, that._maximumLevel).url,
-                    pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
-                    disableCheckIfAllPixelsAreTransparent : true
-                });
-            }
 
             var attributionList = that._attributionList = resource.imageryProviders;
             if (!attributionList) {
@@ -533,7 +521,21 @@ define([
         }
         //>>includeEnd('debug');
 
-        return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
+        var promise = ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
+
+        if (defined(promise)) {
+            return promise.otherwise(function(error) {
+                // One cause of an error here is that the image we tried to load was zero-length.
+                // This isn't actually a problem, since it indicates that there is no tile.
+                // So, in that case we return the EMPTY_IMAGE sentinel value for later discarding.
+                if (defined(error.blob) && error.blob.size === 0) {
+                    return DiscardEmptyTilePolicy.EMPTY_IMAGE;
+                }
+                return when.reject(error);
+            });
+        }
+
+        return undefined;
     };
 
     /**
@@ -654,6 +656,11 @@ define([
                 quadkey: BingMapsImageryProvider.tileXYToQuadKey(x, y, level),
                 subdomain: subdomains[subdomainIndex],
                 culture: imageryProvider._culture
+            },
+            queryParameters: {
+                // this parameter tells the Bing servers to send a zero-length response
+                // instead of a placeholder image for missing tiles.
+                n: 'z'
             }
         });
     }

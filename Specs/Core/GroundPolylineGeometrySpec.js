@@ -112,16 +112,16 @@ defineSuite([
 
         // Expect rightNormalAndTextureCoordinateNormalizationY and texcoordNormalization2D.y to encode if the vertex is on the bottom
         values = rightNormalAndTextureCoordinateNormalizationY.values;
-        expect(values[3] > 1.0).toBe(true);
-        expect(values[1 * 4 + 3] > 1.0).toBe(true);
-        expect(values[4 * 4 + 3] > 1.0).toBe(true);
-        expect(values[5 * 4 + 3] > 1.0).toBe(true);
+        expect(values[3]).toBeGreaterThan(1.0);
+        expect(values[1 * 4 + 3]).toBeGreaterThan(1.0);
+        expect(values[4 * 4 + 3]).toBeGreaterThan(1.0);
+        expect(values[5 * 4 + 3]).toBeGreaterThan(1.0);
 
         values = texcoordNormalization2D.values;
-        expect(values[1] > 1.0).toBe(true);
-        expect(values[1 * 2 + 1] > 1.0).toBe(true);
-        expect(values[4 * 2 + 1] > 1.0).toBe(true);
-        expect(values[5 * 2 + 1] > 1.0).toBe(true);
+        expect(values[1]).toBeGreaterThan(1.0);
+        expect(values[1 * 2 + 1]).toBeGreaterThan(1.0);
+        expect(values[4 * 2 + 1]).toBeGreaterThan(1.0);
+        expect(values[5 * 2 + 1]).toBeGreaterThan(1.0);
 
         // Line segment geometry is encoded as:
         // - start position
@@ -635,8 +635,8 @@ defineSuite([
         var boundingSphere = geometry.boundingSphere;
         var pointsDistance = Cartesian3.distance(positions[0], positions[1]);
 
-        expect(boundingSphere.radius > pointsDistance).toBe(true);
-        expect(boundingSphere.radius > 1000.0).toBe(true); // starting top/bottom height
+        expect(boundingSphere.radius).toBeGreaterThan(pointsDistance);
+        expect(boundingSphere.radius).toBeGreaterThan(1000.0); // starting top/bottom height
     });
 
     var packedInstance = [positions.length];

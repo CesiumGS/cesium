@@ -27,9 +27,17 @@ defineSuite([
         'Core/Transforms',
         'Core/TranslationRotationScale',
         'DataSources/CompositeEntityCollection',
+        'DataSources/CompositePositionProperty',
+        'DataSources/CompositeProperty',
+        'DataSources/ConstantPositionProperty',
+        'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/ReferenceProperty',
+        'DataSources/SampledPositionProperty',
+        'DataSources/SampledProperty',
         'DataSources/StripeOrientation',
+        'DataSources/TimeIntervalCollectionPositionProperty',
+        'DataSources/TimeIntervalCollectionProperty',
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
@@ -66,9 +74,17 @@ defineSuite([
         Transforms,
         TranslationRotationScale,
         CompositeEntityCollection,
+        CompositePositionProperty,
+        CompositeProperty,
+        ConstantPositionProperty,
+        ConstantProperty,
         EntityCollection,
         ReferenceProperty,
+        SampledPositionProperty,
+        SampledProperty,
         StripeOrientation,
+        TimeIntervalCollectionPositionProperty,
+        TimeIntervalCollectionProperty,
         ColorBlendMode,
         HeightReference,
         HorizontalOrigin,
@@ -287,11 +303,11 @@ defineSuite([
     it('process loads data on top of existing', function() {
         var dataSource = new CzmlDataSource();
         return dataSource.process(simple).then(function(dataSource) {
-            expect(dataSource.entities.values.length === 10);
+            expect(dataSource.entities.values.length).toEqual(10);
 
             return dataSource.process(vehicle, vehicleUrl);
         }).then(function(dataSource) {
-            expect(dataSource.entities.values.length === 11);
+            expect(dataSource.entities.values.length).toEqual(11);
         });
     });
 
@@ -535,14 +551,16 @@ defineSuite([
 
     it('can handle aligned axis expressed as a velocity reference', function() {
         var packet = {
-            'position' : {
-                'epoch' : '2016-06-17T12:00:00Z',
-                'cartesian' : [0, 1, 2, 3,
-                               60, 61, 122, 183]
+            position: {
+                epoch: '2016-06-17T12:00:00Z',
+                cartesian: [
+                    0, 1, 2, 3,
+                    60, 61, 122, 183
+                ]
             },
-            'billboard' : {
-                'alignedAxis' : {
-                    'velocityReference' : '#position'
+            billboard: {
+                alignedAxis: {
+                    velocityReference: '#position'
                 }
             }
         };
@@ -562,26 +580,21 @@ defineSuite([
 
     it('can handle aligned axis expressed as a velocity reference within an interval', function() {
         var packet = {
-            'position': {
-                'epoch': '2016-06-17T12:00:00Z',
-                'cartesian': [0, 1, 2, 3,
-                              60, 61, 122, 183]
-            },
-            'billboard': {
-                'alignedAxis': [
-                    {
-                        'interval': '2016-06-17T12:00:00Z/2016-06-17T12:00:30Z',
-                        'unitCartesian': [
-                            0,
-                            1,
-                            0
-                        ]
-                    },
-                    {
-                        'interval': '2016-06-17T12:00:30Z/2016-06-17T12:01:00Z',
-                        'velocityReference': '#position'
-                    }
+            position: {
+                epoch: '2016-06-17T12:00:00Z',
+                cartesian: [
+                    0, 1, 2, 3,
+                    60, 61, 122, 183
                 ]
+            },
+            billboard: {
+                alignedAxis: [{
+                    interval: '2016-06-17T12:00:00Z/2016-06-17T12:00:30Z',
+                    unitCartesian: [0, 1, 0]
+                }, {
+                    interval: '2016-06-17T12:00:30Z/2016-06-17T12:01:00Z',
+                    velocityReference: '#position'
+                }]
             }
         };
 
@@ -1472,13 +1485,13 @@ defineSuite([
 
     it('can handle orientation expressed as a velocity reference', function() {
         var packet = {
-            'position' : {
-                'epoch' : '2016-06-17T12:00:00Z',
-                'cartesian' : [0, 1, 2, 3,
-                               60, 61, 122, 183]
+            position: {
+                epoch: '2016-06-17T12:00:00Z',
+                cartesian: [0, 1, 2, 3,
+                    60, 61, 122, 183]
             },
-            'orientation': {
-                'velocityReference': '#position'
+            orientation: {
+                velocityReference: '#position'
             }
         };
 
@@ -1827,42 +1840,33 @@ defineSuite([
                 custom_array_constant: {
                     array: [1, 2, 3]
                 },
-                custom_array_interval: [
-                    {
-                        interval: interval1,
-                        array: [1, 2, 3]
-                    },
-                    {
-                        interval: interval2,
-                        array: [4, 5, 6]
-                    }
-                ],
+                custom_array_interval: [{
+                    interval: interval1,
+                    array: [1, 2, 3]
+                }, {
+                    interval: interval2,
+                    array: [4, 5, 6]
+                }],
                 custom_boolean_constant: {
                     boolean: true
                 },
-                custom_boolean_interval: [
-                    {
-                        interval: interval1,
-                        boolean: true
-                    },
-                    {
-                        interval: interval2,
-                        boolean: false
-                    }
-                ],
+                custom_boolean_interval: [{
+                    interval: interval1,
+                    boolean: true
+                }, {
+                    interval: interval2,
+                    boolean: false
+                }],
                 custom_boundingRectangle_constant: {
                     boundingRectangle: [20, 30, 10, 11]
                 },
-                custom_boundingRectangle_interval: [
-                    {
-                        interval: interval1,
-                        boundingRectangle: [20, 30, 10, 11]
-                    },
-                    {
-                        interval: interval2,
-                        boundingRectangle: [21, 31, 11, 12]
-                    }
-                ],
+                custom_boundingRectangle_interval: [{
+                    interval: interval1,
+                    boundingRectangle: [20, 30, 10, 11]
+                }, {
+                    interval: interval2,
+                    boundingRectangle: [21, 31, 11, 12]
+                }],
                 custom_boundingRectangle_sampled: {
                     epoch: '2012-06-01',
                     boundingRectangle: [
@@ -1873,16 +1877,13 @@ defineSuite([
                 custom_cartesian2_constant: {
                     cartesian2: [20, 30]
                 },
-                custom_cartesian2_interval: [
-                    {
-                        interval: interval1,
-                        cartesian2: [20, 30]
-                    },
-                    {
-                        interval: interval2,
-                        cartesian2: [21, 31]
-                    }
-                ],
+                custom_cartesian2_interval: [{
+                    interval: interval1,
+                    cartesian2: [20, 30]
+                }, {
+                    interval: interval2,
+                    cartesian2: [21, 31]
+                }],
                 custom_cartesian2_sampled: {
                     epoch: '2012-06-01',
                     cartesian2: [
@@ -1893,16 +1894,13 @@ defineSuite([
                 custom_cartesian_constant: {
                     cartesian: [10, 11, 12]
                 },
-                custom_cartesian_interval: [
-                    {
-                        interval: interval1,
-                        cartesian: [10, 11, 12]
-                    },
-                    {
-                        interval: interval2,
-                        cartesian: [13, 14, 15]
-                    }
-                ],
+                custom_cartesian_interval: [{
+                    interval: interval1,
+                    cartesian: [10, 11, 12]
+                }, {
+                    interval: interval2,
+                    cartesian: [13, 14, 15]
+                }],
                 custom_cartesian_sampled: {
                     epoch: '2012-06-01',
                     cartesian: [
@@ -1913,16 +1911,13 @@ defineSuite([
                 custom_color_constant: {
                     rgbaf: [0.1, 0.2, 0.3, 0.4]
                 },
-                custom_color_interval: [
-                    {
-                        interval: interval1,
-                        rgbaf: [0.1, 0.2, 0.3, 0.4]
-                    },
-                    {
-                        interval: interval2,
-                        rgbaf: [0.5, 0.6, 0.7, 0.8]
-                    }
-                ],
+                custom_color_interval: [{
+                    interval: interval1,
+                    rgbaf: [0.1, 0.2, 0.3, 0.4]
+                }, {
+                    interval: interval2,
+                    rgbaf: [0.5, 0.6, 0.7, 0.8]
+                }],
                 custom_color_sampled: {
                     epoch: '2012-06-01',
                     rgbaf: [
@@ -1933,16 +1928,13 @@ defineSuite([
                 custom_date_constant: {
                     date: '2014-06-01'
                 },
-                custom_date_interval: [
-                    {
-                        interval: interval1,
-                        date: '2014-06-01'
-                    },
-                    {
-                        interval: interval2,
-                        date: '2015-06-01'
-                    }
-                ]
+                custom_date_interval: [{
+                    interval: interval1,
+                    date: '2014-06-01'
+                }, {
+                    interval: interval2,
+                    date: '2015-06-01'
+                }]
             }
         };
 
@@ -2036,6 +2028,552 @@ defineSuite([
             expect(entity.properties.custom_date_interval.getValue(time1)).toEqual(JulianDate.fromIso8601(packet.properties.custom_date_interval[0].date));
             expect(entity.properties.custom_date_interval.getValue(time2)).toEqual(JulianDate.fromIso8601(packet.properties.custom_date_interval[1].date));
         });
+    });
+
+    it('can delete an entire property', function() {
+        function createDataSource() {
+            var packets = [{
+                id: 'document',
+                version: '1.0'
+            }, {
+                id: 'test-constant',
+                billboard: {
+                    scale: 1
+                }
+            }, {
+                id: 'test-interval',
+                billboard: {
+                    scale: [{
+                        interval: '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+                        number: 1
+                    }]
+                }
+            }, {
+                id: 'test-sampled',
+                billboard: {
+                    scale: {
+                        number: ['2012-03-15T10:00:00Z', 1]
+                    }
+                }
+            }];
+            var dataSource = new CzmlDataSource();
+            return dataSource.load(packets);
+        }
+
+        var deletePackets = [{
+            id: 'test-constant',
+            billboard: {
+                scale: {
+                    delete: true
+                }
+            }
+        }, {
+            id: 'test-interval',
+            billboard: {
+                scale: {
+                    delete: true
+                }
+            }
+        }, {
+            id: 'test-sampled',
+            billboard: {
+                scale: {
+                    delete: true
+                }
+            }
+        }];
+
+        var deleteMaxIntervalPackets = [{
+            id: 'test-constant',
+            billboard: {
+                scale: {
+                    interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                    delete: true
+                }
+            }
+        }, {
+            id: 'test-interval',
+            billboard: {
+                scale: {
+                    interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                    delete: true
+                }
+            }
+        }, {
+            id: 'test-sampled',
+            billboard: {
+                scale: {
+                    interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                    delete: true
+                }
+            }
+        }];
+
+        function expectPropertiesToBeDefined(dataSource) {
+            var entity = dataSource.entities.getById('test-constant');
+            expect(entity.billboard.scale).toBeInstanceOf(ConstantProperty);
+            entity = dataSource.entities.getById('test-interval');
+            expect(entity.billboard.scale).toBeInstanceOf(TimeIntervalCollectionProperty);
+            entity = dataSource.entities.getById('test-sampled');
+            expect(entity.billboard.scale).toBeInstanceOf(SampledProperty);
+            return dataSource;
+        }
+
+        function expectPropertiesToBeUndefined(dataSource) {
+            var entity = dataSource.entities.getById('test-constant');
+            expect(entity.billboard.scale).toBeUndefined();
+            entity = dataSource.entities.getById('test-interval');
+            expect(entity.billboard.scale).toBeUndefined();
+            entity = dataSource.entities.getById('test-sampled');
+            expect(entity.billboard.scale).toBeUndefined();
+            return dataSource;
+        }
+
+        return createDataSource()
+            .then(expectPropertiesToBeDefined)
+            .then(function(dataSource) {
+                // delete with no interval specified should delete the properties entirely
+                return dataSource.process(deletePackets);
+            })
+            .then(expectPropertiesToBeUndefined)
+            .then(function(dataSource) {
+                // deleting properties that don't exist should be a no-op
+                return dataSource.process(deletePackets);
+            })
+            .then(expectPropertiesToBeUndefined)
+            .then(createDataSource) // start over with a new data source
+            .then(function(dataSource) {
+                // delete with maximum interval specified should delete the properties entirely
+                return dataSource.process(deleteMaxIntervalPackets);
+            })
+            .then(expectPropertiesToBeUndefined)
+            .then(function(dataSource) {
+                // deleting properties that don't exist should be a no-op
+                return dataSource.process(deleteMaxIntervalPackets);
+            })
+            .then(expectPropertiesToBeUndefined);
+    });
+
+    it('can delete an entire position property', function() {
+        function createDataSource() {
+            var packets = [{
+                id: 'document',
+                version: '1.0'
+            }, {
+                id: 'test-constant',
+                position: {
+                    cartographicDegrees: [34, 117, 10000]
+                }
+            }, {
+                id: 'test-interval',
+                position: [{
+                    interval: '2012-03-15T10:00:00Z/2012-03-16T10:00:00Z',
+                    cartographicDegrees: [34, 117, 10000]
+                }]
+
+            }, {
+                id: 'test-sampled',
+                position: {
+                    cartographicDegrees: ['2012-03-15T10:00:00Z', 34, 117, 10000]
+                }
+            }];
+            var dataSource = new CzmlDataSource();
+            return dataSource.load(packets);
+        }
+
+        var deletePackets = [{
+            id: 'test-constant',
+            position: {
+                delete: true
+            }
+        }, {
+            id: 'test-interval',
+            position: {
+                delete: true
+            }
+        }, {
+            id: 'test-sampled',
+            position: {
+                delete: true
+            }
+        }];
+
+        var deleteMaxIntervalPackets = [{
+            id: 'test-constant',
+            position: {
+                interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                delete: true
+            }
+        }, {
+            id: 'test-interval',
+            position: {
+                interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                delete: true
+            }
+        }, {
+            id: 'test-sampled',
+            position: {
+                interval: TimeInterval.toIso8601(Iso8601.MAXIMUM_INTERVAL),
+                delete: true
+            }
+        }];
+
+        function expectPropertiesToBeDefined(dataSource) {
+            var entity = dataSource.entities.getById('test-constant');
+            expect(entity.billboard.scale).toBeInstanceOf(ConstantProperty);
+            entity = dataSource.entities.getById('test-interval');
+            expect(entity.billboard.scale).toBeInstanceOf(TimeIntervalCollectionProperty);
+            entity = dataSource.entities.getById('test-sampled');
+            expect(entity.billboard.scale).toBeInstanceOf(SampledProperty);
+            return dataSource;
+        }
+
+        function expectPropertiesToBeUndefined(dataSource) {
+            var entity = dataSource.entities.getById('test-constant');
+            expect(entity.billboard.scale).toBeUndefined();
+            entity = dataSource.entities.getById('test-interval');
+            expect(entity.billboard.scale).toBeUndefined();
+            entity = dataSource.entities.getById('test-sampled');
+            expect(entity.billboard.scale).toBeUndefined();
+            return dataSource;
+        }
+
+        createDataSource()
+            .then(expectPropertiesToBeDefined)
+            .then(function(dataSource) {
+                // delete with no interval specified should delete the properties entirely
+                return dataSource.process(deletePackets);
+            })
+            .then(expectPropertiesToBeUndefined)
+            .then(function(dataSource) {
+                // deleting properties that don't exist should be a no-op
+                return dataSource.process(deletePackets);
+            })
+            .then(expectPropertiesToBeUndefined)
+            .then(createDataSource) // start over with a new data source
+            .then(function(dataSource) {
+                // delete with maximum interval specified should delete the properties entirely
+                return dataSource.process(deleteMaxIntervalPackets);
+            })
+            .then(expectPropertiesToBeUndefined)
+            .then(function(dataSource) {
+                // deleting properties that don't exist should be a no-op
+                return dataSource.process(deleteMaxIntervalPackets);
+            })
+            .then(expectPropertiesToBeUndefined);
+    });
+
+    it('can delete samples from a sampled property', function() {
+        var packet = {
+            id: 'id',
+            billboard: {
+                scale: {
+                    number: [
+                        '2012-03-15T10:00:00Z', 1,
+                        '2012-03-15T11:00:00Z', 5,
+                        '2012-03-15T12:00:00Z', 3
+                    ]
+                }
+            }
+        };
+
+        return CzmlDataSource.load(makePacket(packet))
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.billboard.scale).toBeInstanceOf(SampledProperty);
+
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2012-03-15T10:00:00Z'))).toEqual(1);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2012-03-15T11:00:00Z'))).toEqual(5);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2012-03-15T12:00:00Z'))).toEqual(3);
+
+                return dataSource;
+            })
+            .then(function(dataSource) {
+                var deletePacket = {
+                    id: 'id',
+                    billboard: {
+                        scale: {
+                            interval: '2012-03-15T11:00:00Z/2012-03-15T11:00:00Z',
+                            delete: true
+                        }
+                    }
+                };
+                return dataSource.process(deletePacket);
+            })
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.billboard.scale).toBeInstanceOf(SampledProperty);
+
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2012-03-15T10:00:00Z'))).toEqual(1);
+                // deleting sample will cause the property to interpolate from remaining samples
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2012-03-15T11:00:00Z'))).toEqual(2);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2012-03-15T12:00:00Z'))).toEqual(3);
+            });
+    });
+
+    it('can delete samples from a sampled position property', function() {
+        var packet = {
+            id: 'id',
+            position: {
+                epoch: '2016-06-17T12:00:00Z',
+                cartesian: [
+                    0, 1, 2, 3,
+                    60, 61, 122, 183,
+                    120, 3, 4, 5
+                ]
+            }
+        };
+
+        return CzmlDataSource.load(makePacket(packet))
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.position).toBeInstanceOf(SampledPositionProperty);
+
+                expect(entity.position.getValue(JulianDate.fromIso8601('2016-06-17T12:00:00Z'))).toEqual(new Cartesian3(1, 2, 3));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2016-06-17T12:01:00Z'))).toEqual(new Cartesian3(61, 122, 183));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2016-06-17T12:02:00Z'))).toEqual(new Cartesian3(3, 4, 5));
+
+                return dataSource;
+            })
+            .then(function(dataSource) {
+                var deletePacket = {
+                    id: 'id',
+                    position: {
+                        interval: '2016-06-17T12:00:45Z/2016-06-17T12:01:10Z',
+                        delete: true
+                    }
+                };
+                return dataSource.process(deletePacket);
+            })
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.position).toBeInstanceOf(SampledPositionProperty);
+
+                expect(entity.position.getValue(JulianDate.fromIso8601('2016-06-17T12:00:00Z'))).toEqual(new Cartesian3(1, 2, 3));
+                // deleting sample will cause the property to interpolate from remaining samples
+                expect(entity.position.getValue(JulianDate.fromIso8601('2016-06-17T12:01:00Z'))).toEqual(new Cartesian3(2, 3, 4));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2016-06-17T12:02:00Z'))).toEqual(new Cartesian3(3, 4, 5));
+            });
+    });
+
+    it('can delete interval from an interval property', function() {
+        var packet = {
+            id: 'id',
+            billboard: {
+                scale: [{
+                    interval: '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    number: 2
+                }, {
+                    interval: '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    number: 6
+                }]
+            }
+        };
+
+        return CzmlDataSource.load(makePacket(packet))
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.billboard.scale).toBeInstanceOf(TimeIntervalCollectionProperty);
+
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T00:30:00Z'))).toEqual(2);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T01:30:00Z'))).toEqual(6);
+
+                return dataSource;
+            })
+            .then(function(dataSource) {
+                var deletePacket = {
+                    id: 'id',
+                    billboard: {
+                        scale: {
+                            interval: '2013-01-01T00:30:00Z/2013-01-01T01:30:00Z',
+                            delete: true
+                        }
+                    }
+                };
+                return dataSource.process(deletePacket);
+            })
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.billboard.scale).toBeInstanceOf(TimeIntervalCollectionProperty);
+
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T00:30:00Z'))).toBeUndefined();
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T01:30:00Z'))).toBeUndefined();
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T00:29:00Z'))).toEqual(2);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T01:31:00Z'))).toEqual(6);
+            });
+    });
+
+    it('can delete interval from an interval position property', function() {
+        var packet = {
+            id: 'id',
+            position: [{
+                interval: '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                cartesian: [1, 2, 3]
+            }, {
+                interval: '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                cartesian: [4, 5, 6]
+            }]
+        };
+
+        return CzmlDataSource.load(makePacket(packet))
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.position).toBeInstanceOf(TimeIntervalCollectionPositionProperty);
+
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T00:30:00Z'))).toEqual(new Cartesian3(1, 2, 3));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T01:30:00Z'))).toEqual(new Cartesian3(4, 5, 6));
+
+                return dataSource;
+            })
+            .then(function(dataSource) {
+                var deletePacket = {
+                    id: 'id',
+                    position: {
+                        interval: '2013-01-01T00:30:00Z/2013-01-01T01:30:00Z',
+                        delete: true
+                    }
+                };
+                return dataSource.process(deletePacket);
+            })
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.position).toBeInstanceOf(TimeIntervalCollectionPositionProperty);
+
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T00:30:00Z'))).toBeUndefined();
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T01:30:00Z'))).toBeUndefined();
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T00:29:00Z'))).toEqual(new Cartesian3(1, 2, 3));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T01:31:00Z'))).toEqual(new Cartesian3(4, 5, 6));
+            });
+    });
+
+    it('can delete samples from a composite property', function() {
+        var packet = {
+            id: 'id',
+            billboard: {
+                scale: [{
+                    interval: '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                    epoch: '2013-01-01T00:00:00Z',
+                    number: [
+                        0, 1,
+                        30, 6,
+                        60, 3
+                    ]
+                }, {
+                    interval: '2013-01-01T00:02:00Z/2013-01-01T01:00:00Z',
+                    number: 33
+                }, {
+                    interval: '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                    number: [
+                        '2013-01-01T01:00:00Z', 9,
+                        '2013-01-01T01:00:30Z', 19,
+                        '2013-01-01T01:01:00Z', 11
+                    ]
+                }]
+            }
+        };
+
+        return CzmlDataSource.load(makePacket(packet))
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.billboard.scale).toBeInstanceOf(CompositeProperty);
+
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(1);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T00:00:30Z'))).toEqual(6);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T00:01:00Z'))).toEqual(3);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T00:02:00Z'))).toEqual(33);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(9);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T01:00:30Z'))).toEqual(19);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T01:01:00Z'))).toEqual(11);
+
+                return dataSource;
+            })
+            .then(function(dataSource) {
+                var deletePacket = {
+                    id: 'id',
+                    billboard: {
+                        scale: {
+                            interval: '2013-01-01T00:01:00Z/2013-01-01T01:00:00Z',
+                            delete: true
+                        }
+                    }
+                };
+                return dataSource.process(deletePacket);
+            })
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.billboard.scale).toBeInstanceOf(CompositeProperty);
+
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(1);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T00:00:30Z'))).toEqual(6);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T00:01:00Z'))).toBeUndefined();
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T00:02:00Z'))).toBeUndefined();
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toBeUndefined();
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T01:00:30Z'))).toEqual(19);
+                expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2013-01-01T01:01:00Z'))).toEqual(11);
+            });
+    });
+
+    it('can delete samples from a composite position property', function() {
+        var packet = {
+            id: 'id',
+            position: [{
+                interval: '2013-01-01T00:00:00Z/2013-01-01T01:00:00Z',
+                epoch: '2013-01-01T00:00:00Z',
+                cartesian: [
+                    0, 1, 2, 3,
+                    30, 6, 7, 8,
+                    60, 3, 4, 5
+                ]
+            }, {
+                interval: '2013-01-01T00:02:00Z/2013-01-01T01:00:00Z',
+                cartesian: [15, 16, 17]
+            }, {
+                interval: '2013-01-01T01:00:00Z/2013-01-01T02:00:00Z',
+                cartesian: [
+                    '2013-01-01T01:00:00Z', 9, 15, 10,
+                    '2013-01-01T01:00:30Z', 19, 16, 11,
+                    '2013-01-01T01:01:00Z', 11, 17, 12
+                ]
+            }]
+        };
+
+        return CzmlDataSource.load(makePacket(packet))
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.position).toBeInstanceOf(CompositePositionProperty);
+
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(new Cartesian3(1, 2, 3));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T00:00:30Z'))).toEqual(new Cartesian3(6, 7, 8));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T00:01:00Z'))).toEqual(new Cartesian3(3, 4, 5));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T00:02:00Z'))).toEqual(new Cartesian3(15, 16, 17));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toEqual(new Cartesian3(9, 15, 10));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T01:00:30Z'))).toEqual(new Cartesian3(19, 16, 11));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T01:01:00Z'))).toEqual(new Cartesian3(11, 17, 12));
+
+                return dataSource;
+            })
+            .then(function(dataSource) {
+                var deletePacket = {
+                    id: 'id',
+                    position: {
+                        interval: '2013-01-01T00:01:00Z/2013-01-01T01:00:00Z',
+                        delete: true
+                    }
+                };
+                return dataSource.process(deletePacket);
+            })
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.position).toBeInstanceOf(CompositePositionProperty);
+
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T00:00:00Z'))).toEqual(new Cartesian3(1, 2, 3));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T00:00:30Z'))).toEqual(new Cartesian3(6, 7, 8));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T00:01:00Z'))).toBeUndefined();
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T00:02:00Z'))).toBeUndefined();
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T01:00:00Z'))).toBeUndefined();
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T01:00:30Z'))).toEqual(new Cartesian3(19, 16, 11));
+                expect(entity.position.getValue(JulianDate.fromIso8601('2013-01-01T01:01:00Z'))).toEqual(new Cartesian3(11, 17, 12));
+            });
     });
 
     it('handles properties in a way that allows CompositeEntityCollection to work', function() {
@@ -3287,7 +3825,7 @@ defineSuite([
             var targetEntity = dataSource.entities.getById('targetId');
             var referenceObject = dataSource.entities.getById('referenceId');
 
-            expect(referenceObject.point.pixelSize instanceof ReferenceProperty).toBe(true);
+            expect(referenceObject.point.pixelSize).toBeInstanceOf(ReferenceProperty);
             expect(targetEntity.point.pixelSize.getValue(time)).toEqual(referenceObject.point.pixelSize.getValue(time));
         });
     });
@@ -3356,7 +3894,7 @@ defineSuite([
             var targetEntity = dataSource.entities.getById('targetId');
             var referenceObject = dataSource.entities.getById('referenceId');
 
-            expect(referenceObject.position instanceof ReferenceProperty).toBe(true);
+            expect(referenceObject.position).toBeInstanceOf(ReferenceProperty);
             expect(targetEntity.position.getValue(time)).toEqual(referenceObject.position.getValue(time));
         });
     });
@@ -3424,7 +3962,7 @@ defineSuite([
             var targetEntity = dataSource.entities.getById('targetId');
             var referenceObject = dataSource.entities.getById('referenceId');
 
-            expect(referenceObject.point.pixelSize instanceof ReferenceProperty).toBe(true);
+            expect(referenceObject.point.pixelSize).toBeInstanceOf(ReferenceProperty);
             expect(targetEntity.point.pixelSize.getValue(time)).toEqual(referenceObject.point.pixelSize.getValue(time));
         });
     });
@@ -3444,7 +3982,7 @@ defineSuite([
         var dataSource = new CzmlDataSource();
         return dataSource.load(makePacket(packet)).then(function(dataSource) {
             var targetEntity = dataSource.entities.getById('testObject');
-            expect(targetEntity.point.outlineWidth instanceof ReferenceProperty).toBe(true);
+            expect(targetEntity.point.outlineWidth).toBeInstanceOf(ReferenceProperty);
             expect(targetEntity.point.outlineWidth.getValue(time)).toEqual(targetEntity.point.pixelSize.getValue(time));
         });
     });

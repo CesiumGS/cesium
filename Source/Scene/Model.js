@@ -668,7 +668,6 @@ define([
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
 
-        this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
         this._sourceVersion = undefined;
         this._sourceKHRTechniquesWebGL = undefined;
 
@@ -4438,7 +4437,7 @@ define([
                     ModelUtility.updateForwardAxis(this);
 
                     // glTF pipeline updates, not needed if loading from cache
-                    if (!this._loadRendererResourcesFromCache) {
+                    if (!defined(this.gltf.extras.sourceVersion)) {
                         var gltf = this.gltf;
                         // Add the original version so it remains cached
                         gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
@@ -4517,10 +4516,6 @@ define([
             }
 
             if (loadResources.finished()) {
-                if (!this._keepPipelineExtras) {
-                    removePipelineExtras(this.gltf);
-                }
-
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
 
                 var resources = this._rendererResources;

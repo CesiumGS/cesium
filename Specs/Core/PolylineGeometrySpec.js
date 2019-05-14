@@ -39,24 +39,6 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('constructor converts followSurface to arcType', function() {
-        var line = new PolylineGeometry({
-            positions: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
-            followSurface: false
-        });
-
-        expect(line._followSurface).toBe(false);
-        expect(line._arcType).toBe(ArcType.NONE);
-
-        line = new PolylineGeometry({
-            positions: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
-            followSurface: true
-        });
-
-        expect(line._followSurface).toBe(true);
-        expect(line._arcType).toBe(ArcType.GEODESIC);
-    });
-
     it('constructor returns undefined when line width is negative', function() {
         var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
         var line = PolylineGeometry.createGeometry(new PolylineGeometry({

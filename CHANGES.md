@@ -1,5 +1,11 @@
 Change Log
 ==========
+### 1.58 - 2019-06-01
+
+##### Additions :tada:
+* Added support for new `BingMapsStyle` values `ROAD_ON_DEMAND` and `AERIAL_WITH_LABELS_ON_DEMAND`. The older versions of these, `ROAD` and `AERIAL_WITH_LABELS`, have been deprecated by Bing. [#7808](https://github.com/AnalyticalGraphicsInc/cesium/pull/7808)
+* Added syntax to delete data from existing properties via CZML. [#7818](https://github.com/AnalyticalGraphicsInc/cesium/pull/7818)
+* `BingMapsImageryProvider` now uses `DiscardEmptyTileImagePolicy` by default to detect missing tiles as zero-length responses instead of inspecting pixel values. [#7810](https://github.com/AnalyticalGraphicsInc/cesium/pull/7810)
 
 ### 1.58 - 2019-06-03
 
@@ -30,11 +36,13 @@ Change Log
 * Added `CesiumMath.normalize` to convert a scalar value in an arbitrary range to a scalar in the range [0.0, 1.0]. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
 
 ##### Fixes :wrench:
+* Fixed an error when loading the same glTF model in two separate viewers. [#7688](https://github.com/AnalyticalGraphicsInc/cesium/issues/7688)
 * Fixed an error where `clampToHeightMostDetailed` or `sampleHeightMostDetailed` would crash if entities were created when the promise resolved. [#7690](https://github.com/AnalyticalGraphicsInc/cesium/pull/7690)
 * Fixed an issue with compositing merged entity availability. [#7717](https://github.com/AnalyticalGraphicsInc/cesium/issues/7717)
 * Fixed an error where many imagery layers within a single tile would cause parts of the tile to render as black on some platforms. [#7649](https://github.com/AnalyticalGraphicsInc/cesium/issues/7649)
 * Fixed a bug that could cause terrain with a single, global root tile (e.g. that uses `WebMercatorTilingScheme`) to be culled unexpectedly in some views. [#7702](https://github.com/AnalyticalGraphicsInc/cesium/issues/7702)
 * Fixed a problem where instanced 3D models were incorrectly lit when using physically based materials. [#7775](https://github.com/AnalyticalGraphicsInc/cesium/issues/7775)
+* Fixed a bug where glTF models with certain blend modes were rendered incorrectly in browsers that support ImageBitmap. [#7795](https://github.com/AnalyticalGraphicsInc/cesium/issues/7795)
 
 ### 1.56.1 - 2019-04-02
 
