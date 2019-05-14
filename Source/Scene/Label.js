@@ -14,6 +14,7 @@ define([
         './HeightReference',
         './HorizontalOrigin',
         './LabelStyle',
+        './SDFSettings',
         './VerticalOrigin'
     ], function(
         BoundingRectangle,
@@ -31,6 +32,7 @@ define([
         HeightReference,
         HorizontalOrigin,
         LabelStyle,
+        SDFSettings,
         VerticalOrigin) {
     'use strict';
 
@@ -880,16 +882,22 @@ define([
                     for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
-                            glyph.billboard.scale = value;
+                            glyph.billboard.scale = value * this._relativeSize;
                         }
                     }
                     var backgroundBillboard = this._backgroundBillboard;
                     if (defined(backgroundBillboard)) {
-                        backgroundBillboard.scale = value;
+                        backgroundBillboard.scale = value * this._relativeSize;
                     }
 
                     repositionAllGlyphs(this);
                 }
+            }
+        },
+
+        totalScale: {
+            get : function() {
+                return this._scale * this._relativeSize;
             }
         },
 
@@ -1115,7 +1123,7 @@ define([
         var y = 0;
         var width = 0;
         var height = 0;
-        var scale = label.scale * label._relativeSize;
+        var scale = label.totalScale;
         var resolutionScale = label._labelCollection._resolutionScale;
 
         var backgroundBillboard = label._backgroundBillboard;
@@ -1144,6 +1152,8 @@ define([
                     continue;
                 }
 
+                // Todo:  This isn't taking into account any buffer around the text.  Like the translate X could be
+                // really far away b/c of the buffer, like 10 pixels.  So we have to take into account the padding at this point.
                 var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
                 var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
                 var glyphWidth = glyph.dimensions.width * scale;
@@ -1153,6 +1163,14 @@ define([
                     glyphY -= glyphHeight;
                 } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
                     glyphY -= glyphHeight * 0.5;
+                }
+
+                // This takes care of the origin issue, but where should we put the 10?
+                if (label._verticalOrigin === VerticalOrigin.TOP) {
+                    glyphY += SDFSettings.PADDING * scale;
+                }
+                else if (label._verticalOrigin === VerticalOrigin.BOTTOM || label._verticalOrigin === VerticalOrigin.BASELINE) {
+                    glyphY -= SDFSettings.PADDING * scale;
                 }
 
                 x = Math.min(x, glyphX);

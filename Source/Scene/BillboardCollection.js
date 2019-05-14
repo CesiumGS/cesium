@@ -32,6 +32,7 @@ define([
     './HeightReference',
     './HorizontalOrigin',
     './SceneMode',
+    './SDFSettings',
     './TextureAtlas',
     './VerticalOrigin'
 ], function(
@@ -68,6 +69,7 @@ define([
     HeightReference,
     HorizontalOrigin,
     SceneMode,
+    SDFSettings,
     TextureAtlas,
     VerticalOrigin) {
 'use strict';
@@ -1375,7 +1377,8 @@ function writeSDF(billboardCollection, context, textureAtlasCoordinates, vafWrit
     var green = Color.floatToByte(outlineColor.green);
     var blue = Color.floatToByte(outlineColor.blue);
     var compressed0 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
-    outlineWidth = CesiumMath.clamp(outlineWidth / 6.0, 0.0, 1.0);
+    var maxOutlineWidth = (1.0 - SDFSettings.CUTOFF) * SDFSettings.RADIUS;
+    outlineWidth = CesiumMath.clamp(outlineWidth / maxOutlineWidth, 0.0, 1.0);
     var compressed1 = Color.floatToByte(outlineColor.alpha) * LEFT_SHIFT16 + Color.floatToByte(outlineWidth) * LEFT_SHIFT8;
 
     if (billboardCollection._instanced) {

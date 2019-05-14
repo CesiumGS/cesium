@@ -585,12 +585,10 @@ defineSuite([
         expect(scene).toRender([0, 0, 0, 255]);
 
         label.scale = 2.0;
-        // todo: this is broken
-        /*
+        scene.render();
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).toBeGreaterThan(10);
         });
-        */
     });
 
     it('renders label with translucencyByDistance', function() {
@@ -1415,7 +1413,7 @@ defineSuite([
                 scene.renderForSpecs();
 
                 getGlyphBillboards().forEach(function(billboard) {
-                    expect(billboard.scale).toEqual(label.scale);
+                    expect(billboard.scale).toEqual(label.totalScale);
                 });
             });
 
