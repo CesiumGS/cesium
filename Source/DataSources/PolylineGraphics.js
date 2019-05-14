@@ -52,8 +52,6 @@ define([
         this._depthFailMaterialSubscription = undefined;
         this._positions = undefined;
         this._positionsSubscription = undefined;
-        this._followSurface = undefined;
-        this._followSurfaceSubscription = undefined;
         this._arcType = undefined;
         this._arcTypeSubscription = undefined;
         this._clampToGround = undefined;
@@ -136,16 +134,6 @@ define([
         width : createPropertyDescriptor('width'),
 
         /**
-         * Gets or sets the boolean Property specifying whether the line segments
-         * should be great arcs or linearly connected.
-         * @memberof PolylineGraphics.prototype
-         * @type {Property}
-         * @deprecated This property has been deprecated. Use {@link PolylineGraphics#arcType} instead.
-         * @default true
-         */
-        followSurface : createPropertyDescriptor('followSurface'),
-
-        /**
          * Gets or sets the {@link ArcType} Property specifying whether the line segments should be great arcs, rhumb lines or linearly connected.
          * @memberof PolylineGraphics.prototype
          * @type {Property}
@@ -218,7 +206,6 @@ define([
         result.depthFailMaterial = this.depthFailMaterial;
         result.positions = this.positions;
         result.width = this.width;
-        result.followSurface = this.followSurface;
         result.arcType = this.arcType;
         result.clampToGround = this.clampToGround;
         result.granularity = this.granularity;
@@ -248,7 +235,6 @@ define([
         this.depthFailMaterial = defaultValue(this.depthFailMaterial, source.depthFailMaterial);
         this.positions = defaultValue(this.positions, source.positions);
         this.width = defaultValue(this.width, source.width);
-        this.followSurface = defaultValue(this.followSurface, source.followSurface);
         this.arcType = defaultValue(this.arcType, source.arcType);
         this.clampToGround = defaultValue(this.clampToGround, source.clampToGround);
         this.granularity = defaultValue(this.granularity, source.granularity);
