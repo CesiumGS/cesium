@@ -242,7 +242,8 @@ define([
                                      character,
                                      fontInfo.fontFamily,
                                      fontInfo.fontStyle,
-                                     fontInfo.fontWeight
+                                     fontInfo.fontWeight,
+                                     +verticalOrigin
                                     ]);
 
             var glyphTextureInfo = glyphTextureCache[id];
