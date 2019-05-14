@@ -437,7 +437,7 @@ if (lengthSq < disableDepthTestDistance) {
     outlineColor.a = floor(temp);
     outlineColor /= 255.0;
 
-    v_outlineWidth = 6.0 * outlineWidth / 255.0;
+    v_outlineWidth = outlineWidth / 255.0;
     v_outlineColor = outlineColor;
 #endif
 

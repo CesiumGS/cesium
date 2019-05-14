@@ -13,8 +13,6 @@ varying vec4 v_pickColor;
 varying vec4 v_color;
 
 #ifdef SDF
-const float SDF_EDGE = 0.75;
-const float SDF_SPREAD = 8.0;
 varying vec4 v_outlineColor;
 varying float v_outlineWidth;
 #endif
@@ -75,7 +73,8 @@ vec4 getSDFColor(vec2 position, float outlineWidth, vec4 outlineColor, float smo
 
     if (outlineWidth > 0.0)
     {
-        float outlineEdge = SDF_EDGE - (outlineWidth / SDF_SPREAD);
+        // Don't get the outline edge exceed the SDF_EDGE
+        float outlineEdge = clamp(SDF_EDGE - outlineWidth, 0.0, SDF_EDGE);
         float outlineFactor = smoothstep(SDF_EDGE - smoothing, SDF_EDGE + smoothing, distance);
         vec4 sdfColor = mix(outlineColor, v_color, outlineFactor);
         float alpha = smoothstep(outlineEdge - smoothing, outlineEdge + smoothing, distance);

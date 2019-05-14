@@ -1377,9 +1377,10 @@ function writeSDF(billboardCollection, context, textureAtlasCoordinates, vafWrit
     var green = Color.floatToByte(outlineColor.green);
     var blue = Color.floatToByte(outlineColor.blue);
     var compressed0 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
-    var maxOutlineWidth = (1.0 - SDFSettings.CUTOFF) * SDFSettings.RADIUS;
-    outlineWidth = CesiumMath.clamp(outlineWidth / maxOutlineWidth, 0.0, 1.0);
-    var compressed1 = Color.floatToByte(outlineColor.alpha) * LEFT_SHIFT16 + Color.floatToByte(outlineWidth) * LEFT_SHIFT8;
+
+    // Compute the relative outline distance
+    var outlineDistance = outlineWidth / SDFSettings.RADIUS;
+    var compressed1 = Color.floatToByte(outlineColor.alpha) * LEFT_SHIFT16 + Color.floatToByte(outlineDistance) * LEFT_SHIFT8;
 
     if (billboardCollection._instanced) {
         i = billboard._index;
@@ -1797,6 +1798,9 @@ BillboardCollection.prototype.update = function(frameState) {
                 vs.defines.push('FRAGMENT_DEPTH_CHECK');
             }
         }
+
+        var sdfEdge = 1.0 - SDFSettings.CUTOFF;
+
         if (this._sdf) {
             vs.defines.push('SDF');
         }
@@ -1818,6 +1822,7 @@ BillboardCollection.prototype.update = function(frameState) {
 
             if (this._sdf) {
                 fs.defines.push('SDF');
+                fs.defines.push('SDF_EDGE ' + sdfEdge);
             }
 
             this._sp = ShaderProgram.replaceCache({
@@ -1841,6 +1846,7 @@ BillboardCollection.prototype.update = function(frameState) {
             }
             if (this._sdf) {
                 fs.defines.push('SDF');
+                fs.defines.push('SDF_EDGE ' + sdfEdge);
             }
             this._spTranslucent = ShaderProgram.replaceCache({
                 context : context,
@@ -1865,6 +1871,7 @@ BillboardCollection.prototype.update = function(frameState) {
             }
             if (this._sdf) {
                 fs.defines.push('SDF');
+                fs.defines.push('SDF_EDGE ' + sdfEdge);
             }
             this._sp = ShaderProgram.replaceCache({
                 context : context,
@@ -1889,6 +1896,7 @@ BillboardCollection.prototype.update = function(frameState) {
             }
             if (this._sdf) {
                 fs.defines.push('SDF');
+                fs.defines.push('SDF_EDGE ' + sdfEdge);
             }
             this._spTranslucent = ShaderProgram.replaceCache({
                 context : context,
