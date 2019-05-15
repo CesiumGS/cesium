@@ -45,6 +45,7 @@ define([
         './BillboardGraphics',
         './BoxGraphics',
         './CallbackProperty',
+        './CheckerboardMaterialProperty',
         './ColorMaterialProperty',
         './CompositeMaterialProperty',
         './CompositePositionProperty',
@@ -134,6 +135,7 @@ define([
         BillboardGraphics,
         BoxGraphics,
         CallbackProperty,
+        CheckerboardMaterialProperty,
         ColorMaterialProperty,
         CompositeMaterialProperty,
         CompositePositionProperty,
@@ -1168,6 +1170,14 @@ define([
             processPacketData(Color, existingMaterial, 'gapColor', materialData.gapColor, undefined, undefined, entityCollection);
             processPacketData(Number, existingMaterial, 'dashLength', materialData.dashLength, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'dashPattern', materialData.dashPattern, undefined, sourceUri, entityCollection);
+        } else if (defined(packetData.checkerboard)) {
+            if (!(existingMaterial instanceof CheckerboardMaterialProperty)) {
+                existingMaterial = new CheckerboardMaterialProperty();
+            }
+            materialData = packetData.checkerboard;
+            processPacketData(Color, existingMaterial, 'evenColor', materialData.evenColor, undefined, sourceUri, entityCollection);
+            processPacketData(Color, existingMaterial, 'oddColor', materialData.oddColor, undefined, sourceUri, entityCollection);
+            processPacketData(Cartesian2, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
         }
 
         if (defined(existingInterval)) {
