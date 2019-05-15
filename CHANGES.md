@@ -5,6 +5,9 @@ Change Log
 ##### Additions :tada:
 * Added support for new `BingMapsStyle` values `ROAD_ON_DEMAND` and `AERIAL_WITH_LABELS_ON_DEMAND`. The older versions of these, `ROAD` and `AERIAL_WITH_LABELS`, have been deprecated by Bing. [#7808](https://github.com/AnalyticalGraphicsInc/cesium/pull/7808)
 
+##### Fixes :wrench:
+* Fixed an issue where globe tiles were incorrectly clipped, which led to the atmosphere being visible through the Earth when the ground first loads. #[7822](https://github.com/AnalyticalGraphicsInc/cesium/pull/7822)
+
 ### 1.57 - 2019-05-01
 
 ##### Additions :tada:
