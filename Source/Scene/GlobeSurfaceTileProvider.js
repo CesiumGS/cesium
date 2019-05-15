@@ -156,6 +156,14 @@ define([
         this.saturationShift = 0.0;
         this.brightnessShift = 0.0;
 
+        /**
+         * Determines whether logarithmic depth should be used in this frame.
+         * @type {Boolean}
+         * @default undefined
+         * @private
+         */
+        this.disableLogarithmicDepth = undefined;
+
         this._quadtree = undefined;
         this._terrainProvider = options.terrainProvider;
         this._imageryLayers = options.imageryLayers;
@@ -1692,6 +1700,7 @@ define([
         surfaceShaderSetOptions.hasVertexNormals = hasVertexNormals;
         surfaceShaderSetOptions.useWebMercatorProjection = useWebMercatorProjection;
         surfaceShaderSetOptions.clippedByBoundaries = surfaceTile.clippedByBoundaries;
+        surfaceShaderSetOptions.disableLogarithmicDepth = tileProvider.disableLogarithmicDepth;
 
         var tileImageryCollection = surfaceTile.imagery;
         var imageryIndex = 0;
@@ -1943,7 +1952,6 @@ define([
             surfaceShaderSetOptions.colorCorrect = colorCorrect;
             surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
             surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
-            surfaceShaderSetOptions.isReadyForAtmosphere = frameState.isReadyForAtmosphere;
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);
             command.castShadows = castShadows;

@@ -330,6 +330,11 @@ define([
         if (defined(this._tileProvider.update)) {
             this._tileProvider.update(frameState);
         }
+
+        // Force log depth off if there's not enough tiles
+        // and we're close to the surface. This is because large
+        // geometry will be incorrectly clipped with log depth.
+        this._tileProvider.disableLogarithmicDepth = this._tilesToRender.length < 40;
     };
 
     function clearTileLoadQueue(primitive) {
