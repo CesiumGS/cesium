@@ -59,6 +59,7 @@ defineSuite([
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
+        IonImageryProvider._endpointCache = [];
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -114,6 +115,37 @@ defineSuite([
                 expect(provider.errorEvent).toBeDefined();
                 expect(provider.ready).toBe(true);
                 expect(provider._imageryProvider).toBeInstanceOf(UrlTemplateImageryProvider);
+            });
+    });
+
+    it('Uses previously fetched endpoint cache', function() {
+        var endpointData = {
+            type: 'IMAGERY',
+            url: 'http://test.invalid/layer',
+            accessToken: 'not_really_a_refresh_token',
+            attributions: []
+        };
+
+        var assetId = 12335;
+        var options = { assetId: assetId };
+        var endpointResource = IonResource._createEndpointResource(assetId, options);
+        spyOn(IonResource, '_createEndpointResource').and.returnValue(endpointResource);
+        spyOn(endpointResource, 'fetchJson').and.returnValue(when.resolve(endpointData));
+
+        expect(endpointResource.fetchJson.calls.count()).toBe(0);
+        var provider = new IonImageryProvider(options);
+        var provider2;
+        return provider.readyPromise
+            .then(function() {
+                expect(provider.ready).toBe(true);
+                expect(endpointResource.fetchJson.calls.count()).toBe(1);
+                provider2 = new IonImageryProvider(options);
+                return provider2.readyPromise;
+            })
+            .then(function() {
+                //Since the data is caches, fetchJson is not called again.
+                expect(endpointResource.fetchJson.calls.count()).toBe(1);
+                expect(provider2.ready).toBe(true);
             });
     });
 
