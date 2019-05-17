@@ -109,7 +109,7 @@ define([
         var vertexLogDepthDefine = '';
         if (!defined(surfaceTile.vertexArray) || !defined(surfaceTile.terrainData) || surfaceTile.terrainData._createdByUpsampling || disableLogarithmicDepth === true) {
             vertexLogDepth = 1;
-            vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
+            vertexLogDepthDefine = 'ENABLE_GL_POSITION_LOG_DEPTH_AT_HEIGHT';
         }
 
         var cartographicLimitRectangleFlag = 0;

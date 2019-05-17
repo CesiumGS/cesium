@@ -334,7 +334,12 @@ define([
         // Force log depth off if there's not enough tiles
         // and we're close to the surface. This is because large
         // geometry will be incorrectly clipped with log depth.
-        this._tileProvider.disableLogarithmicDepth = this._tilesToRender.length < 40;
+        var camera = frameState.camera;
+        var maxHeight = 2000;
+        var factor = 1.0 - CesiumMath.clamp(camera.positionCartographic.height / maxHeight, 0.0, 1.0);
+        // A maximum of 10 tiles is chosen empirically. See https://github.com/AnalyticalGraphicsInc/cesium/pull/7822
+        var minimumEstimatedTilesRequired = CesiumMath.lerp(0, 10, factor);
+        this._tileProvider.disableLogarithmicDepth = this._tilesToRender.length < minimumEstimatedTilesRequired;
     };
 
     function clearTileLoadQueue(primitive) {
