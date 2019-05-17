@@ -390,6 +390,10 @@ define([
             (defined(backgroundBillboard) ? label._backgroundPadding : Cartesian2.ZERO),
             scratchBackgroundPadding);
 
+        // We need to scale the background padding, which is specified in pixels by the inverse of the relative size so it is scaled properly.
+        backgroundPadding.x /= label._relativeSize;
+        backgroundPadding.y /= label._relativeSize;
+
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             if (text.charAt(glyphIndex) === '\n') {
                 lineWidths.push(lastLineWidth);
