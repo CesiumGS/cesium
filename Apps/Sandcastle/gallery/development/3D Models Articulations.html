@@ -45,8 +45,7 @@
             <tr>
                 <td data-bind="text: name"></td>
                 <td>
-                    <input type="range" min="-3" max="3" step="0.01"
-                           data-bind="value: current,
+                    <input type="range" min="-3" max="3" step="0.01" data-bind="value: current,
                                       valueUpdate: 'input',
                                       attr: {
                                           min: minimum,
@@ -110,10 +109,10 @@ model.readyPromise.then(function(model) {
     var pitch = Cesium.Math.toRadians(-10.0);
     camera.lookAt(center, new Cesium.HeadingPitchRange(heading, pitch, r * 0.8));
 
-    viewModel.articulations = Object.keys(model._runtime.articulations).map(function(articulationName) {
+    viewModel.articulations = Object.keys(model._runtime.articulationsByName).map(function(articulationName) {
         return {
             name: articulationName,
-            stages: model._runtime.articulations[articulationName].stages.map(function(stage) {
+            stages: model._runtime.articulationsByName[articulationName].stages.map(function(stage) {
                 var stageModel = {
                     name: stage.name,
                     minimum: stage.minimumValue,
@@ -131,8 +130,8 @@ model.readyPromise.then(function(model) {
                     }
                 });
                 Cesium.knockout.getObservable(stageModel, 'current').subscribe(function(newValue) {
-                    stage.currentValue = +stageModel.current;
-                    model.applyArticulation(articulationName);
+                    model.setArticulationStage(articulationName + ' ' + stage.name, +stageModel.current);
+                    model.applyArticulations();
                 });
                 return stageModel;
             })

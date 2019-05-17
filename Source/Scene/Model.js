@@ -169,6 +169,8 @@ define([
     // glTF MIME types discussed in https://github.com/KhronosGroup/glTF/issues/412 and https://github.com/KhronosGroup/glTF/issues/943
     var defaultModelAccept = 'model/gltf-binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
 
+    var articulationEpsilon = CesiumMath.EPSILON16;
+
     ///////////////////////////////////////////////////////////////////////////
 
     function setCachedGltf(model, cachedGltf) {
@@ -619,7 +621,9 @@ define([
 
         this._runtime = {
             animations : undefined,
-            articulations : undefined,
+            articulationsByName : undefined,
+            articulationsByStageKey : undefined,
+            stagesByKey : undefined,
             rootNodes : undefined,
             nodes : undefined,            // Indexed with the node's index
             nodesByName : undefined,      // Indexed with name property in the node
@@ -886,16 +890,16 @@ define([
         },
 
         /**
-         * Gets a dictionary of available articulations and their stages.
+         * Gets a list of available articulation and stage names.
          *
          * @memberof Model.prototype
          *
          * @type {object}
          * @readonly
          */
-        articulations : {
+        articulationStageKeys : {
             get : function() {
-                return this._runtime.articulations;
+                return Object.keys(this._runtime.articulationsByStageKey);
             }
         },
 
@@ -1521,15 +1525,30 @@ define([
     };
 
     /**
-     * Returns a data structure associated with a particular articulation name.
-
-     * @param {String} name The name of the articulation.
-     * @returns {object} The named articulation, or <code>undefined</code> if no match was found.
+     * Sets the current value of an articulation stage.  After setting one or multiple stage values, call
+     * Model.applyArticulations() to cause the node matrices to be recalculated.
+     *
+     * @param {String} articulationStageKey The name of the articulation, a space, and the name of the stage.
+     * @param {Number} value The numeric value of this stage of the articulation.
      *
      * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+     *
+     * @see Model#applyArticulations
      */
-    Model.prototype.getArticulation = function(name) {
-        return getRuntime(this, 'articulations', name);
+    Model.prototype.setArticulationStage = function(articulationStageKey, value) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('value', value);
+        //>>includeEnd('debug');
+
+        var stage = getRuntime(this, 'stagesByKey', articulationStageKey);
+        var articulation = getRuntime(this, 'articulationsByStageKey', articulationStageKey);
+        if (defined(stage) && defined(articulation)) {
+            value = Math.max(Math.min(value, stage.maximumValue), stage.minimumValue);
+            if (!CesiumMath.equalsEpsilon(stage.currentValue, value, articulationEpsilon)) {
+                stage.currentValue = value;
+                articulation.isDirty = true;
+            }
+        }
     };
 
     var scratchArticulationCartesian = new Cartesian3();
@@ -1538,26 +1557,22 @@ define([
     /**
      * Modifies a Matrix4 by applying a transformation for a given value of a stage.  Note this is different usage
      * from the typical <code>result</code> parameter, in that the incoming value of <code>result</code> is
-     * meaningful if defined.  Various stages of an articulation can be multiplied together, so their
+     * meaningful.  Various stages of an articulation can be multiplied together, so their
      * transformations are all merged into a composite Matrix4 representing them all.
      *
      * @param {object} stage The stage of an articulation that is being evaluated.
-     * @param {number} value The current value of the stage.
-     * @param {Matrix4} [result] The matrix to be modified.  If undefined, the identity matrix will be used.
+     * @param {Matrix4} result The matrix to be modified.
      * @returns {Matrix4} A matrix transformed as requested by the articulation stage.
      *
      * @private
      */
-    Model.prototype.applyArticulationStageMatrix = function(stage, value, result) {
+    function applyArticulationStageMatrix(stage, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('stage', stage);
-        Check.typeOf.number('value', value);
+        Check.typeOf.object('result', result);
         //>>includeEnd('debug');
 
-        if (!defined(result)) {
-            result = Matrix4.clone(Matrix4.IDENTITY);
-        }
-
+        var value = stage.currentValue;
         var cartesian = scratchArticulationCartesian;
         var rotation;
         switch (stage.type) {  // TODO: Optimize by testing the value for 0.0 or 1.0
@@ -1616,32 +1631,37 @@ define([
                 break;
         }
         return result;
-    };
+    }
 
     var scratchApplyArticulationTransform = new Matrix4();
 
     /**
-     * Applies all of the stages of the named articulation to the matrix of each node that participates
-     * in the articulation.  Note that this will overwrite any nodeTransformations on participating nodes.
-
-     * @param {String} name The name of the articulation to apply to the model.
+     * Applies any modified articulation stages to the matrix of each node that participates
+     * in any articulation.  Note that this will overwrite any nodeTransformations on participating nodes.
      *
      * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
      */
-    Model.prototype.applyArticulation = function(name) {
-        var articulation = getRuntime(this, 'articulations', name);
+    Model.prototype.applyArticulations = function() {
+        var articulationsByName = this._runtime.articulationsByName;
+        for (var articulationName in articulationsByName) {
+            if (articulationsByName.hasOwnProperty(articulationName)) {
+                var articulation = articulationsByName[articulationName];
+                if (articulation.isDirty) {
+                    articulation.isDirty = false;
+                    var numNodes = articulation.nodes.length;
+                    for (var n = 0; n < numNodes; ++n) {
+                        var node = articulation.nodes[n];
+                        var transform = Matrix4.clone(node.originalMatrix, scratchApplyArticulationTransform);
 
-        var numNodes = articulation.nodes.length;
-        for (var n = 0; n < numNodes; ++n) {
-            var node = articulation.nodes[n];
-            var transform = Matrix4.clone(node.originalMatrix, scratchApplyArticulationTransform);
-
-            var numStages = articulation.stages.length;
-            for (var s = 0; s < numStages; ++s) {
-                var stage = articulation.stages[s];
-                transform = this.applyArticulationStageMatrix(stage, stage.currentValue, transform);
+                        var numStages = articulation.stages.length;
+                        for (var s = 0; s < numStages; ++s) {
+                            var stage = articulation.stages[s];
+                            transform = applyArticulationStageMatrix(stage, transform);
+                        }
+                        node.matrix = transform;
+                    }
+                }
             }
-            node.matrix = transform;
         }
     };
 
@@ -1776,8 +1796,13 @@ define([
     }
 
     function parseArticulations(model) {
-        var runtimeArticulations = {};
-        model._runtime.articulations = runtimeArticulations;
+        var articulationsByName = {};
+        var articulationsByStageKey = {};
+        var runtimeStagesByKey = {};
+
+        model._runtime.articulationsByName = articulationsByName;
+        model._runtime.articulationsByStageKey = articulationsByStageKey;
+        model._runtime.stagesByKey = runtimeStagesByKey;
 
         var gltf = model.gltf;
         if (!hasExtension(gltf, 'AGI_articulations') || !defined(gltf.extensions) || !defined(gltf.extensions.AGI_articulations)) {
@@ -1793,13 +1818,17 @@ define([
         for (var i = 0; i < numArticulations; ++i) {
             var articulation = clone(gltfArticulations[i]);
             articulation.nodes = [];
-            articulation.stagesByName = {};
-            runtimeArticulations[articulation.name] = articulation;
+            articulation.isDirty = true;
+            articulationsByName[articulation.name] = articulation;
 
             var numStages = articulation.stages.length;
             for (var s = 0; s < numStages; ++s) {
                 var stage = articulation.stages[s];
-                articulation.stagesByName[stage.name] = stage;
+                stage.currentValue = stage.initialValue;
+
+                var stageKey = articulation.name + ' ' + stage.name;
+                articulationsByStageKey[stageKey] = articulation;
+                runtimeStagesByKey[stageKey] = stage;
             }
         }
     }
@@ -1914,7 +1943,7 @@ define([
         var skinnedNodes = [];
 
         var skinnedNodesIds = model._loadResources.skinnedNodesIds;
-        var runtimeArticulations = model._runtime.articulations;
+        var articulationsByName = model._runtime.articulationsByName;
 
         ForEach.node(model.gltf, function(node, id) {
             var runtimeNode = {
@@ -1967,14 +1996,13 @@ define([
                 var articulationName = node.extensions.AGI_articulations.articulationName;
                 if (defined(articulationName)) {
                     var transform = Matrix4.clone(runtimeNode.publicNode.originalMatrix, scratchArticulationStageInitialTransform);
-                    var articulation = runtimeArticulations[articulationName];
+                    var articulation = articulationsByName[articulationName];
                     articulation.nodes.push(runtimeNode.publicNode);
 
                     var numStages = articulation.stages.length;
                     for (var s = 0; s < numStages; ++s) {
                         var stage = articulation.stages[s];
-                        stage.currentValue = stage.initialValue;
-                        transform = model.applyArticulationStageMatrix(stage, stage.currentValue, transform);
+                        transform = applyArticulationStageMatrix(stage, transform);
                     }
                     runtimeNode.publicNode.matrix = transform;
                 }
