@@ -1160,8 +1160,6 @@ define([
                     continue;
                 }
 
-                // Todo:  This isn't taking into account any buffer around the text.  Like the translate X could be
-                // really far away b/c of the buffer, like 10 pixels.  So we have to take into account the padding at this point.
                 var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
                 var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
                 var glyphWidth = glyph.dimensions.width * scale;
@@ -1173,7 +1171,6 @@ define([
                     glyphY -= glyphHeight * 0.5;
                 }
 
-                // This takes care of the origin issue, but where should we put the 10?
                 if (label._verticalOrigin === VerticalOrigin.TOP) {
                     glyphY += SDFSettings.PADDING * scale;
                 }
