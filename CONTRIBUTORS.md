@@ -124,6 +124,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Xavier Tassin](https://github.com/xtassin/)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
+* [jony89](https://github.com/jony89)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
 * [Ravi Agrawal](https://github.com/macoda)
