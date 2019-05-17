@@ -1575,7 +1575,7 @@ define([
         var value = stage.currentValue;
         var cartesian = scratchArticulationCartesian;
         var rotation;
-        switch (stage.type) {  // TODO: Optimize by testing the value for 0.0 or 1.0
+        switch (stage.type) {
             case 'xRotate':
                 rotation = Matrix3.fromRotationX(CesiumMath.toRadians(value), scratchArticulationRotation);
                 Matrix4.multiplyByMatrix3(result, rotation, result);
