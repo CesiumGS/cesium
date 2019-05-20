@@ -605,6 +605,10 @@ define([
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = surfaceTile.orientedBoundingBox;
 
+        if (!defined(boundingVolume) && defined(surfaceTile.renderedMesh)) {
+            boundingVolume = surfaceTile.renderedMesh.boundingSphere3D;
+        }
+
         // Check if the tile is outside the limit area in cartographic space
         surfaceTile.clippedByBoundaries = false;
         var clippedCartographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, this.cartographicLimitRectangle);
@@ -627,7 +631,7 @@ define([
         }
 
         var clippingPlanes = this._clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+        if (defined(clippingPlanes) && clippingPlanes.enabled && defined(boundingVolume)) {
             var planeIntersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
             tile.isClipped = (planeIntersection !== Intersect.INSIDE);
             if (planeIntersection === Intersect.OUTSIDE) {
@@ -635,9 +639,12 @@ define([
             }
         }
 
-        var intersection = cullingVolume.computeVisibility(boundingVolume);
-        if (intersection === Intersect.OUTSIDE) {
-            return Visibility.NONE;
+        var intersection = Intersect.INTERSECTING;
+        if (defined(boundingVolume)) {
+            intersection = cullingVolume.computeVisibility(boundingVolume);
+            if (intersection === Intersect.OUTSIDE) {
+                return Visibility.NONE;
+            }
         }
 
         var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
@@ -898,14 +905,18 @@ define([
         } else if (surfaceTile.boundingVolumeSourceTile !== heightSource) {
             // Heights are from a new source tile, so update the bounding volume.
             surfaceTile.boundingVolumeSourceTile = heightSource;
-            surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-                tile.rectangle,
-                tileBoundingRegion.minimumHeight,
-                tileBoundingRegion.maximumHeight,
-                tile.tilingScheme.ellipsoid,
-                surfaceTile.orientedBoundingBox);
 
-            surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
+            var rectangle = tile.rectangle;
+            if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+                surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+                    tile.rectangle,
+                    tileBoundingRegion.minimumHeight,
+                    tileBoundingRegion.maximumHeight,
+                    tile.tilingScheme.ellipsoid,
+                    surfaceTile.orientedBoundingBox);
+
+                surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
+            }
         }
 
         var min = tileBoundingRegion.minimumHeight;
@@ -1318,6 +1329,9 @@ define([
             u_hsbShift : function() {
                 return this.properties.hsbShift;
             },
+            u_colorsToAlpha : function() {
+                return this.properties.colorsToAlpha;
+            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -1348,6 +1362,7 @@ define([
                 dayTextureSplit : [],
                 dayTextureCutoutRectangles : [],
                 dayIntensity : 0.0,
+                colorsToAlpha : [],
 
                 southAndNorthLatitude : new Cartesian2(),
                 southMercatorYAndOneOverHeight : new Cartesian2(),
@@ -1525,7 +1540,8 @@ define([
         clippingPlanes : undefined,
         clippedByBoundaries : undefined,
         hasImageryLayerCutout : undefined,
-        colorCorrect : undefined
+        colorCorrect : undefined,
+        colorToAlpha : undefined
     };
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
@@ -1782,6 +1798,7 @@ define([
             var applyAlpha = false;
             var applySplit = false;
             var applyCutout = false;
+            var applyColorToAlpha = false;
 
             while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                 var tileImagery = tileImageryCollection[imageryIndex];
@@ -1860,6 +1877,25 @@ define([
                     dayTextureCutoutRectangle.w = (cutoutRectangle.north - cartographicTileRectangle.south) * inverseTileHeight;
                 }
 
+                // Update color to alpha
+                var colorToAlpha = uniformMapProperties.colorsToAlpha[numberOfDayTextures];
+                if (!defined(colorToAlpha)) {
+                    colorToAlpha = uniformMapProperties.colorsToAlpha[numberOfDayTextures] = new Cartesian4();
+                }
+
+                var hasColorToAlpha = defined(imageryLayer.colorToAlpha) && imageryLayer.colorToAlphaThreshold > 0.0;
+                applyColorToAlpha = applyColorToAlpha || hasColorToAlpha;
+
+                if (hasColorToAlpha) {
+                    var color = imageryLayer.colorToAlpha;
+                    colorToAlpha.x = color.red;
+                    colorToAlpha.y = color.green;
+                    colorToAlpha.z = color.blue;
+                    colorToAlpha.w = imageryLayer.colorToAlphaThreshold;
+                } else {
+                    colorToAlpha.w = -1.0;
+                }
+
                 if (defined(imagery.credits)) {
                     var credits = imagery.credits;
                     for (var creditIndex = 0, creditLength = credits.length; creditIndex < creditLength; ++creditIndex) {
@@ -1906,6 +1942,7 @@ define([
             surfaceShaderSetOptions.hasImageryLayerCutout = applyCutout;
             surfaceShaderSetOptions.colorCorrect = colorCorrect;
             surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
+            surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);
             command.castShadows = castShadows;

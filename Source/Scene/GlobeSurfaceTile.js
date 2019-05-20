@@ -6,6 +6,7 @@ define([
         '../Core/defineProperties',
         '../Core/IndexDatatype',
         '../Core/IntersectionTests',
+        '../Core/OrientedBoundingBox',
         '../Core/PixelFormat',
         '../Core/Request',
         '../Core/RequestState',
@@ -34,6 +35,7 @@ define([
         defineProperties,
         IndexDatatype,
         IntersectionTests,
+        OrientedBoundingBox,
         PixelFormat,
         Request,
         RequestState,
@@ -511,6 +513,8 @@ define([
 
         when(meshPromise, function(mesh) {
             surfaceTile.mesh = mesh;
+            surfaceTile.orientedBoundingBox = OrientedBoundingBox.clone(mesh.orientedBoundingBox, surfaceTile.orientedBoundingBox);
+            surfaceTile.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
             surfaceTile.terrainState = TerrainState.TRANSFORMED;
         }, function() {
             surfaceTile.terrainState = TerrainState.FAILED;

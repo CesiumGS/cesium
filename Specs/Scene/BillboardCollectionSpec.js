@@ -6,6 +6,7 @@ defineSuite([
         'Core/Cartesian3',
         'Core/CesiumTerrainProvider',
         'Core/Color',
+        'Core/createGuid',
         'Core/DistanceDisplayCondition',
         'Core/Math',
         'Core/NearFarScalar',
@@ -31,6 +32,7 @@ defineSuite([
         Cartesian3,
         CesiumTerrainProvider,
         Color,
+        createGuid,
         DistanceDisplayCondition,
         CesiumMath,
         NearFarScalar,
@@ -77,7 +79,8 @@ defineSuite([
             }),
             Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(result) {
                 largeBlueImage = result;
-            }));
+            })
+        );
     });
 
     afterAll(function() {
@@ -174,7 +177,7 @@ defineSuite([
         expect(b.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(b.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
         expect(b.scale).toEqual(2.0);
-        expect(b.image).toEqual(greenImage.src);
+        expect(b.image).toEqual(b._imageId);
         expect(b.color.red).toEqual(1.0);
         expect(b.color.green).toEqual(2.0);
         expect(b.color.blue).toEqual(3.0);
@@ -221,7 +224,7 @@ defineSuite([
         expect(b.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(b.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
         expect(b.scale).toEqual(2.0);
-        expect(b.image).toEqual(greenImage.src);
+        expect(b.image).toEqual(b._imageId);
         expect(b.color.red).toEqual(1.0);
         expect(b.color.green).toEqual(2.0);
         expect(b.color.blue).toEqual(3.0);
@@ -822,7 +825,7 @@ defineSuite([
 
         expect(scene).toRender([0, 255, 0, 255]);
 
-        b.setImage(largeBlueImage.src, largeBlueImage);
+        b.setImage(createGuid(), largeBlueImage);
         expect(scene).toRender([0, 0, 255, 255]);
     });
 
@@ -834,8 +837,10 @@ defineSuite([
 
         expect(scene).toRender([0, 255, 0, 255]);
 
-        billboards.textureAtlas.addImage(largeBlueImage.src, largeBlueImage);
-        b.setImageSubRegion(largeBlueImage.src, new BoundingRectangle(5.0, 5.0, 1.0, 1.0));
+        var guid = createGuid();
+
+        billboards.textureAtlas.addImage(guid, largeBlueImage);
+        b.setImageSubRegion(guid, new BoundingRectangle(5.0, 5.0, 1.0, 1.0));
         expect(scene).toRender([0, 0, 255, 255]);
     });
 

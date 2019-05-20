@@ -89,7 +89,11 @@ define([
             that._isReady = true;
         }
 
-        when(resource.fetchImage(true), success, failure);
+        resource.fetchImage({
+            preferBlob : true,
+            preferImageBitmap : true,
+            flipY : true
+        }).then(success).otherwise(failure);
     }
 
     /**

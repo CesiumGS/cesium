@@ -12,6 +12,16 @@ defineSuite([
         when) {
     'use strict';
 
+    var supportsImageBitmapOptions;
+    beforeAll(function() {
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
+    });
+
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
@@ -39,9 +49,9 @@ defineSuite([
         it('requests the missing image url', function() {
             var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
+            spyOn(Resource, 'createImageBitmapFromBlob').and.callThrough();
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 if (/^blob:/.test(url)) {
-                    // load blob url normally
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
                 } else {
                     expect(url).toEqual(missingImageUrl);
@@ -62,7 +72,11 @@ defineSuite([
             return pollToPromise(function() {
                 return policy.isReady();
             }).then(function() {
-                expect(Resource._Implementations.createImage).toHaveBeenCalled();
+                if (supportsImageBitmapOptions) {
+                    expect(Resource.createImageBitmapFromBlob).toHaveBeenCalled();
+                } else {
+                    expect(Resource._Implementations.createImage).toHaveBeenCalled();
+                }
             });
         });
     });
