@@ -340,7 +340,7 @@ define([
         var factor = 1.0 - CesiumMath.clamp(camera.positionCartographic.height / maxHeight, 0.0, 1.0);
         // A maximum of 20 tiles is chosen empirically. See https://github.com/AnalyticalGraphicsInc/cesium/pull/7822
         var minimumEstimatedTilesRequired = CesiumMath.lerp(0, 20, factor);
- 
+
         if (this._tilesToRender.length === 0) {
             this._isReadyForLogarithmicDepth = false;
         } else if (this._tilesToRender.length >= minimumEstimatedTilesRequired) {
