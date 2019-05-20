@@ -92,10 +92,6 @@ var model = scene.primitives.add(Cesium.Model.fromGltf({
     minimumPixelSize : 128
 }));
 
-window.viewer = viewer;
-window.Cesium = Cesium;
-window.model = model;
-
 model.readyPromise.then(function(model) {
     var camera = viewer.camera;
 
