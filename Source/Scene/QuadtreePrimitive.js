@@ -116,6 +116,7 @@ define([
         this._tileToUpdateHeights = [];
         this._lastTileIndex = 0;
         this._updateHeightsTimeSlice = 2.0;
+        this._isReadyForLogarithmicDepth = false;
 
         // If a culled tile contains _cameraPositionCartographic or _cameraReferenceFrameOriginCartographic, it will be marked
         // TileSelectionResult.CULLED_BUT_NEEDED and added to the list of tiles to update heights,
@@ -337,9 +338,16 @@ define([
         var camera = frameState.camera;
         var maxHeight = 2000;
         var factor = 1.0 - CesiumMath.clamp(camera.positionCartographic.height / maxHeight, 0.0, 1.0);
-        // A maximum of 10 tiles is chosen empirically. See https://github.com/AnalyticalGraphicsInc/cesium/pull/7822
-        var minimumEstimatedTilesRequired = CesiumMath.lerp(0, 10, factor);
-        this._tileProvider.disableLogarithmicDepth = this._tilesToRender.length < minimumEstimatedTilesRequired;
+        // A maximum of 20 tiles is chosen empirically. See https://github.com/AnalyticalGraphicsInc/cesium/pull/7822
+        var minimumEstimatedTilesRequired = CesiumMath.lerp(0, 20, factor);
+ 
+        if (this._tilesToRender.length === 0) {
+            this._isReadyForLogarithmicDepth = false;
+        } else if (this._tilesToRender.length >= minimumEstimatedTilesRequired) {
+            this._isReadyForLogarithmicDepth = true;
+        }
+
+        this._tileProvider.disableLogarithmicDepth = !this._isReadyForLogarithmicDepth;
     };
 
     function clearTileLoadQueue(primitive) {
