@@ -1,5 +1,59 @@
 Change Log
 ==========
+### 1.58 - 2019-06-03
+
+##### Additions :tada:
+* Added support for new `BingMapsStyle` values `ROAD_ON_DEMAND` and `AERIAL_WITH_LABELS_ON_DEMAND`. The older versions of these, `ROAD` and `AERIAL_WITH_LABELS`, have been deprecated by Bing. [#7808](https://github.com/AnalyticalGraphicsInc/cesium/pull/7808)
+* Added syntax to delete data from existing properties via CZML. [#7818](https://github.com/AnalyticalGraphicsInc/cesium/pull/7818)
+* Added `checkerboard` material to CZML. [#7845](https://github.com/AnalyticalGraphicsInc/cesium/pull/7845)
+* `BingMapsImageryProvider` now uses `DiscardEmptyTileImagePolicy` by default to detect missing tiles as zero-length responses instead of inspecting pixel values. [#7810](https://github.com/AnalyticalGraphicsInc/cesium/pull/7810)
+* Reduce the number of Bing transactions and ion Bing sessions used when destroying and recreating the same imagery layer to 1. [#7848](https://github.com/AnalyticalGraphicsInc/cesium/pull/7848)
+
+##### Fixes :wrench:
+* Fixed an edge case where Cesium would provide ion access token credentials to non-ion servers if the actual asset entrypoint was being hosted by ion. [#7839](https://github.com/AnalyticalGraphicsInc/cesium/pull/7839)
+* Fixed a bug that caused Cesium to request non-existent tiles for terrain tilesets lacking tile availability, i.e. a `layer.json` file.
+
+### 1.57 - 2019-05-01
+
+##### Additions :tada:
+* Improved 3D Tiles streaming performance, resulting in ~67% camera tour load time reduction, ~44% camera tour load count reduction. And for general camera movement, ~20% load time reduction with ~27% tile load count reduction. Tile load priority changed to focus on loading tiles in the center of the screen first. Added the following tileset optimizations, which unless stated otherwise are enabled by default. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
+    * Added `Cesium3DTileset.cullRequestsWhileMoving` option to ignore requests for tiles that will likely be out-of-view due to the camera's movement when they come back from the server.
+    * Added `Cesium3DTileset.cullRequestsWhileMovingMultiplier` option to act as a multiplier when used in culling requests while moving. Larger is more aggressive culling, smaller less aggressive culling.
+    * Added `Cesium3DTileset.preloadFlightDestinations` option to preload tiles at the camera's flight destination while the camera is in flight.
+    * Added `Cesium3DTileset.preferLeaves` option to prefer loading of leaves. Good for additive refinement point clouds. Set to `false` by default.
+    * Added `Cesium3DTileset.progressiveResolutionHeightFraction` option to load tiles at a smaller resolution first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
+    * Added `Cesium3DTileset.foveatedScreenSpaceError` option to prioritize loading tiles in the center of the screen.
+    * Added `Cesium3DTileset.foveatedConeSize` option to control the cone size that determines which tiles are deferred for loading. Tiles outside the cone are potentially deferred.
+    * Added `Cesium3DTileset.foveatedMinimumScreenSpaceErrorRelaxation` option to control the starting screen space error relaxation for tiles outside the foveated cone.
+    * Added `Cesium3DTileset.foveatedInterpolationCallback` option to control how screen space error threshold is interpolated for tiles outside the foveated cone.
+    * Added `Cesium3DTileset.foveatedTimeDelay` option to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in.
+* Added new parameter to `PolylineGlowMaterial` called `taperPower`, that works similar to the existing `glowPower` parameter, to taper the back of the line away. [#7626](https://github.com/AnalyticalGraphicsInc/cesium/pull/7626)
+* Added `Cesium3DTileset.preloadWhenHidden` tileset option to preload tiles when `tileset.show` is false. Loads tiles as if the tileset is visible but does not render them. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
+* Added support for the `KHR_texture_transform` glTF extension. [#7549](https://github.com/AnalyticalGraphicsInc/cesium/pull/7549)
+* Added functions to remove samples from `SampledProperty` and `SampledPositionProperty`. [#7723](https://github.com/AnalyticalGraphicsInc/cesium/pull/7723)
+* Added support for color-to-alpha with a threshold on imagery layers. [#7727](https://github.com/AnalyticalGraphicsInc/cesium/pull/7727)
+* Add CZML processing for `heightReference` and `extrudedHeightReference` for geoemtry types that support it.
+* `CesiumMath.toSNorm` documentation changed to reflect the function's implementation. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
+* Added `CesiumMath.normalize` to convert a scalar value in an arbitrary range to a scalar in the range [0.0, 1.0]. [#7774](https://github.com/AnalyticalGraphicsInc/cesium/pull/7774)
+
+##### Fixes :wrench:
+* Fixed an error when loading the same glTF model in two separate viewers. [#7688](https://github.com/AnalyticalGraphicsInc/cesium/issues/7688)
+* Fixed an error where `clampToHeightMostDetailed` or `sampleHeightMostDetailed` would crash if entities were created when the promise resolved. [#7690](https://github.com/AnalyticalGraphicsInc/cesium/pull/7690)
+* Fixed an issue with compositing merged entity availability. [#7717](https://github.com/AnalyticalGraphicsInc/cesium/issues/7717)
+* Fixed an error where many imagery layers within a single tile would cause parts of the tile to render as black on some platforms. [#7649](https://github.com/AnalyticalGraphicsInc/cesium/issues/7649)
+* Fixed a bug that could cause terrain with a single, global root tile (e.g. that uses `WebMercatorTilingScheme`) to be culled unexpectedly in some views. [#7702](https://github.com/AnalyticalGraphicsInc/cesium/issues/7702)
+* Fixed a problem where instanced 3D models were incorrectly lit when using physically based materials. [#7775](https://github.com/AnalyticalGraphicsInc/cesium/issues/7775)
+* Fixed a bug where glTF models with certain blend modes were rendered incorrectly in browsers that support ImageBitmap. [#7795](https://github.com/AnalyticalGraphicsInc/cesium/issues/7795)
+
+### 1.56.1 - 2019-04-02
+
+##### Additions :tada:
+* `Resource.fetchImage` now takes a `preferImageBitmap` option to use `createImageBitmap` when supported to move image decode off the main thread. This option defaults to `false`.
+
+##### Breaking Changes :mega:
+* The following breaking changes are relative to 1.56. The `Resource.fetchImage` behavior is now identical to 1.55 and earlier.
+    * Changed `Resource.fetchImage` back to return an `Image` by default, instead of an `ImageBitmap` when supported. Note that an `ImageBitmap` cannot be flipped during texture upload. Instead, set `flipY : true` during fetch to flip it.
+    * Changed the default `flipY` option in `Resource.fetchImage` to false. This only has an effect when ImageBitmap is used.
 
 ### 1.56 - 2019-04-01
 
@@ -13,18 +67,17 @@ Change Log
 * `Resource.fetchImage` now takes an options object. Use `resource.fetchImage({ preferBlob: true })` instead of `resource.fetchImage(true)`. The previous function definition will no longer work in 1.57. [#7579](https://github.com/AnalyticalGraphicsInc/cesium/pull/7579)
 
 ##### Additions :tada:
+* Added support for touch and hold gesture. The touch and hold delay can be customized by updating `ScreenSpaceEventHandler.touchHoldDelayMilliseconds`. [#7286](https://github.com/AnalyticalGraphicsInc/cesium/pull/7286)
 * `Resource.fetchImage` now has a `flipY` option to vertically flip an image during fetch & decode. It is only valid when `ImageBitmapOptions` is supported by the browser. [#7579](https://github.com/AnalyticalGraphicsInc/cesium/pull/7579)
 * Added `backFaceCulling` and `normalShading` options to `PointCloudShading`. Both options are only applicable for point clouds containing normals. [#7399](https://github.com/AnalyticalGraphicsInc/cesium/pull/7399)
-* Added support for touch and hold gesture. The touch and hold delay can be customized by updating `ScreenSpaceEventHandler.touchHoldDelayMilliseconds`. [#7286](https://github.com/AnalyticalGraphicsInc/cesium/pull/7286)
 * `Cesium3DTileStyle.style` reacts to updates and represents the current state of the style. [#7567](https://github.com/AnalyticalGraphicsInc/cesium/issues/7567)
 
 ##### Fixes :wrench:
 * Fixed the value for `BlendFunction.ONE_MINUS_CONSTANT_COLOR`. [#7624](https://github.com/AnalyticalGraphicsInc/cesium/pull/7624)
-* Fixed `HeadingPitchRoll.pitch` being `NaN` when using `.fromQuaternion` do to a rounding error
-for pitches close to +/- 90°. [#7654](https://github.com/AnalyticalGraphicsInc/cesium/pull/7654)
+* Fixed `HeadingPitchRoll.pitch` being `NaN` when using `.fromQuaternion` due to a rounding error for pitches close to +/- 90°. [#7654](https://github.com/AnalyticalGraphicsInc/cesium/pull/7654)
 * Fixed a type of crash caused by the camera being rotated through terrain. [#6783](https://github.com/AnalyticalGraphicsInc/cesium/issues/6783)
 * Fixed an error in `Resource` when used with template replacements using numeric keys. [#7668](https://github.com/AnalyticalGraphicsInc/cesium/pull/7668)
-* Fixed an error in `Cesium3DTilePointFeature` where `anchorLineColor` used the same color Instance instead of cloning the color [#7686](https://github.com/AnalyticalGraphicsInc/cesium/pull/7686)
+* Fixed an error in `Cesium3DTilePointFeature` where `anchorLineColor` used the same color instance instead of cloning the color [#7686](https://github.com/AnalyticalGraphicsInc/cesium/pull/7686)
 
 ### 1.55 - 2019-03-01
 

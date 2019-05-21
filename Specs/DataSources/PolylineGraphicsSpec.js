@@ -29,7 +29,6 @@ defineSuite([
             positions : [],
             show : true,
             width : 1,
-            followSurface : false,
             clampToGround : true,
             granularity : 2,
             shadows : ShadowMode.DISABLED,
@@ -45,7 +44,6 @@ defineSuite([
         expect(polyline.positions).toBeInstanceOf(ConstantProperty);
         expect(polyline.show).toBeInstanceOf(ConstantProperty);
         expect(polyline.width).toBeInstanceOf(ConstantProperty);
-        expect(polyline.followSurface).toBeInstanceOf(ConstantProperty);
         expect(polyline.clampToGround).toBeInstanceOf(ConstantProperty);
         expect(polyline.granularity).toBeInstanceOf(ConstantProperty);
         expect(polyline.shadows).toBeInstanceOf(ConstantProperty);
@@ -59,7 +57,6 @@ defineSuite([
         expect(polyline.positions.getValue()).toEqual(options.positions);
         expect(polyline.show.getValue()).toEqual(options.show);
         expect(polyline.width.getValue()).toEqual(options.width);
-        expect(polyline.followSurface.getValue()).toEqual(options.followSurface);
         expect(polyline.clampToGround.getValue()).toEqual(options.clampToGround);
         expect(polyline.granularity.getValue()).toEqual(options.granularity);
         expect(polyline.shadows.getValue()).toEqual(options.shadows);
@@ -76,7 +73,6 @@ defineSuite([
         source.positions = new ConstantProperty();
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
-        source.followSurface = new ConstantProperty();
         source.clampToGround = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
@@ -92,7 +88,6 @@ defineSuite([
         expect(target.positions).toBe(source.positions);
         expect(target.width).toBe(source.width);
         expect(target.show).toBe(source.show);
-        expect(target.followSurface).toBe(source.followSurface);
         expect(target.clampToGround).toBe(source.clampToGround);
         expect(target.granularity).toBe(source.granularity);
         expect(target.shadows).toBe(source.shadows);
@@ -109,7 +104,6 @@ defineSuite([
         source.positions = new ConstantProperty();
         source.width = new ConstantProperty();
         source.show = new ConstantProperty();
-        source.followSurface = new ConstantProperty();
         source.clampToGround = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty();
@@ -123,7 +117,6 @@ defineSuite([
         var positions = new ConstantProperty();
         var width = new ConstantProperty();
         var show = new ConstantProperty();
-        var followSurface = new ConstantProperty();
         var clampToGround = new ConstantProperty();
         var granularity = new ConstantProperty();
         var shadows = new ConstantProperty();
@@ -138,7 +131,6 @@ defineSuite([
         target.positions = positions;
         target.width = width;
         target.show = show;
-        target.followSurface = followSurface;
         target.clampToGround = clampToGround;
         target.granularity = granularity;
         target.shadows = shadows;
@@ -153,7 +145,6 @@ defineSuite([
         expect(target.positions).toBe(positions);
         expect(target.width).toBe(width);
         expect(target.show).toBe(show);
-        expect(target.followSurface).toBe(followSurface);
         expect(target.clampToGround).toBe(clampToGround);
         expect(target.granularity).toBe(granularity);
         expect(target.shadows).toBe(shadows);
@@ -170,7 +161,6 @@ defineSuite([
         source.width = new ConstantProperty();
         source.positions = new ConstantProperty();
         source.show = new ConstantProperty();
-        source.followSurface = new ConstantProperty();
         source.clampToGround = new ConstantProperty();
         source.granularity = new ConstantProperty();
         source.shadows = new ConstantProperty();
@@ -185,7 +175,6 @@ defineSuite([
         expect(result.positions).toBe(source.positions);
         expect(result.width).toBe(source.width);
         expect(result.show).toBe(source.show);
-        expect(result.followSurface).toBe(source.followSurface);
         expect(result.clampToGround).toBe(source.clampToGround);
         expect(result.granularity).toBe(source.granularity);
         expect(result.shadows).toBe(source.shadows);
@@ -209,7 +198,6 @@ defineSuite([
         testDefinitionChanged(property, 'show', true, false);
         testDefinitionChanged(property, 'positions', [], []);
         testDefinitionChanged(property, 'width', 3, 4);
-        testDefinitionChanged(property, 'followSurface', false, true);
         testDefinitionChanged(property, 'clampToGround', false, true);
         testDefinitionChanged(property, 'granularity', 2, 1);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);

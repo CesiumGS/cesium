@@ -1168,6 +1168,13 @@ defineSuite([
             });
     });
 
+    it('can load an SVG', function() {
+        return Resource.fetchImage('./Data/Images/Red16x16.svg').then(function(loadedImage) {
+            expect(loadedImage.width).toEqual(16);
+            expect(loadedImage.height).toEqual(16);
+        });
+    });
+
     it('can load an image preferring blob', function() {
         return Resource.fetchImage('./Data/Images/Green.png', true).then(function(loadedImage) {
             expect(loadedImage.width).toEqual(1);
@@ -1183,10 +1190,6 @@ defineSuite([
     });
 
     describe('fetchImage with ImageBitmap', function() {
-        if (!supportsImageBitmapOptions) {
-            return;
-        }
-
         var canvas;
         beforeAll(function() {
             canvas = createCanvas(1, 2);
@@ -1204,6 +1207,10 @@ defineSuite([
         }
 
         it('can call supportsImageBitmapOptions', function() {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
             return Resource.supportsImageBitmapOptions()
                 .then(function(result) {
                     expect(typeof result).toEqual('boolean');
@@ -1211,19 +1218,31 @@ defineSuite([
         });
 
         it('can load and decode an image', function() {
-            return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
+            return Resource.fetchImage({
+                url: './Data/Images/Green.png',
+                preferImageBitmap: true
+            }).then(function(loadedImage) {
                 expect(loadedImage.width).toEqual(1);
                 expect(loadedImage.height).toEqual(1);
-                expect(loadedImage instanceof ImageBitmap);
+                expect(loadedImage).toBeInstanceOf(ImageBitmap);
             });
         });
 
         it('correctly flips image when ImageBitmapOptions are supported', function() {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
             var loadedImage;
 
             return Resource.fetchImage({
                 url: './Data/Images/BlueOverRed.png',
-                flipY: true
+                flipY: true,
+                preferImageBitmap: true
             }).then(function(image) {
                 loadedImage = image;
                 return Resource.supportsImageBitmapOptions();
@@ -1237,11 +1256,16 @@ defineSuite([
         });
 
         it('correctly loads image without flip when ImageBitmapOptions are supported', function() {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
             var loadedImage;
 
             return Resource.fetchImage({
                 url: './Data/Images/BlueOverRed.png',
-                flipY: false
+                flipY: false,
+                preferImageBitmap: true
              }).then(function(image) {
                 loadedImage = image;
                 return Resource.supportsImageBitmapOptions();
@@ -1255,21 +1279,56 @@ defineSuite([
         });
 
         it('does not use ImageBitmap when ImageBitmapOptions are not supported', function() {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
             spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
             spyOn(window, 'createImageBitmap').and.callThrough();
 
-            return Resource.fetchImage('./Data/Images/Green.png').then(function(loadedImage) {
+            return Resource.fetchImage({
+                url: './Data/Images/Green.png',
+                preferImageBitmap: true
+            }).then(function(loadedImage) {
                 expect(window.createImageBitmap).not.toHaveBeenCalledWith();
             });
         });
 
         it('rejects the promise when the image errors', function() {
-            return Resource.fetchImage('http://example.invalid/testuri.png')
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
+            return Resource.fetchImage({
+                url: 'http://example.invalid/testuri.png',
+                preferImageBitmap: true
+            })
                 .then(function() {
                     fail('expected promise to reject');
                 })
                 .otherwise(function(error) {
                    expect(error).toBeInstanceOf(RequestErrorEvent);
+                });
+        });
+
+        it('rejects the promise with extra error information when image errors and options.preferBlob is true', function() {
+            if (!supportsImageBitmapOptions) {
+                return;
+            }
+
+            // Force the fetching of a bad blob that is not an image to trigger the error
+            spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve(new Blob([new Uint8Array([])], { type: 'text/plain' })));
+
+            return Resource.fetchImage({
+                url: 'http://example.invalid/testuri.png',
+                preferImageBitmap: true,
+                preferBlob: true
+            })
+                .then(function() {
+                    fail('expected promise to reject');
+                })
+                .otherwise(function(error) {
+                   expect(error.blob).toBeInstanceOf(Blob);
                 });
         });
     });
@@ -1707,7 +1766,7 @@ defineSuite([
                     }).then(function() {
                         fail('expected promise to reject');
                     }).otherwise(function(err) {
-                        expect(err instanceof RequestErrorEvent).toBe(true);
+                        expect(err).toBeInstanceOf(RequestErrorEvent);
                     });
                 });
 
@@ -1719,7 +1778,7 @@ defineSuite([
                         fail('expected promise to reject');
                     }).otherwise(function(err) {
                         expect(err).toBeDefined();
-                        expect(err instanceof Error).toBe(true);
+                        expect(err).toBeInstanceOf(Error);
                     });
                 });
             });
@@ -1806,7 +1865,7 @@ defineSuite([
 
                     fakeXHR.simulateError();
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
                 });
 
                 it('results in an HTTP status code less than 200', function() {
@@ -1829,7 +1888,7 @@ defineSuite([
 
                     fakeXHR.simulateHttpResponse(199);
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
                 });
 
                 it('resolves undefined for status code 204', function() {
@@ -2002,7 +2061,7 @@ defineSuite([
 
                     fakeXHR.simulateError(); // This fails because we only retry once
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
                 });
 
                 it('rejects after callback returns false', function() {
@@ -2031,7 +2090,7 @@ defineSuite([
 
                     fakeXHR.simulateError(); // This fails because the callback returns false
                     expect(resolvedValue).toBeUndefined();
-                    expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+                    expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
 
                     expect(cb.calls.count()).toEqual(1);
                     var receivedResource = cb.calls.argsFor(0)[0];

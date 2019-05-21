@@ -566,7 +566,7 @@ define([
         //Name, show, and availability are not Property objects and are currently handled differently.
         //source.show is intentionally ignored because this.show always has a value.
         this.name = defaultValue(this.name, source.name);
-        this.availability = defaultValue(source.availability, this.availability);
+        this.availability = defaultValue(this.availability, source.availability);
 
         var propertyNames = this._propertyNames;
         var sourcePropertyNames = defined(source._propertyNames) ? source._propertyNames : Object.keys(source);
