@@ -1,4 +1,5 @@
 define([
+    './BillboardGraphics',
     '../Core/Cartesian2',
     '../Core/Cartesian3',
     '../Core/Cartographic',
@@ -7,10 +8,12 @@ define([
     '../Core/Ellipsoid',
     '../Core/Iso8601',
     '../Core/Math',
+    '../Core/Resource',
     '../Scene/HeightReference',
     '../Scene/HorizontalOrigin',
     '../Scene/VerticalOrigin'
 ], function(
+    BillboardGraphics,
     Cartesian2,
     Cartesian3,
     Cartographic,
@@ -19,6 +22,7 @@ define([
     Ellipsoid,
     Iso8601,
     CesiumMath,
+    Resource,
     HeightReference,
     HorizontalOrigin,
     VerticalOrigin) {
@@ -32,6 +36,10 @@ define([
         function defaultTextureCallback(texture) {
             if (typeof texture === 'string') {
                 return texture;
+            }
+
+            if (texture instanceof Resource) {
+                return texture.url;
             }
 
             if (texture instanceof HTMLCanvasElement) {
@@ -80,17 +88,19 @@ define([
         function recurseEntities(that, parentNode, entities) {
             var kmlDoc = that._kmlDoc;
 
-            var count = Math.min(10, entities.length); // TODO
+            var count = entities.length;
             var geometries;
+            var styles;
             for (var i = 0; i < count; ++i) {
                 var entity = entities[i];
                 geometries = [];
+                styles = [];
 
-                createPoint(that, entity, entity.point, geometries);
-                createPoint(that, entity, entity.billboard, geometries);
-                createLineString(that, entity.polyline, geometries);
-                createPolygon(that, entity.polygon, geometries);
-                createPolygon(that, entity.rectangle, geometries);
+                createPoint(that, entity, entity.point, geometries, styles);
+                createPoint(that, entity, entity.billboard, geometries, styles);
+                createLineString(that, entity.polyline, geometries, styles);
+                createPolygon(that, entity.polygon, geometries, styles);
+                createPolygon(that, entity.rectangle, geometries, styles);
 
                 // TODO: Handle the rest of the geometries
 
@@ -99,18 +109,28 @@ define([
                     var placemark = kmlDoc.createElement('Placemark');
                     placemark.setAttribute('id', entity.id);
 
-                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'name', entity.name));
-                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'visibility', entity.show));
-                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'description', entity.description));
+                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'name', getValue(entity.name)));
+                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'visibility', getValue(entity.show, true)));
+                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'description', getValue(entity.description)));
 
                     parentNode.appendChild(placemark);
+
+                    var styleCount = styles.length;
+                    if (styleCount > 0) {
+                        var style = kmlDoc.createElement('Style');
+                        for (var styleIndex = 0; styleIndex < geometryCount; ++styleIndex) {
+                            style.appendChild(styles[styleIndex]);
+                        }
+
+                        placemark.appendChild(style);
+                    }
 
                     if (geometries.length === 1) {
                         placemark.appendChild(geometries[0]);
                     } else if (geometries.length > 1) {
                         var multigeometry = kmlDoc.createElement('MultiGeometry');
-                        for (var j = 0; j < geometryCount; ++j) {
-                            multigeometry.appendChild(geometries[j]);
+                        for (var geometryIndex = 0; geometryIndex < geometryCount; ++geometryIndex) {
+                            multigeometry.appendChild(geometries[geometryIndex]);
                         }
                         placemark.appendChild(multigeometry);
                     }
@@ -130,7 +150,7 @@ define([
         var scratchCartesian3 = new Cartesian3();
         var scratchCartographic = new Cartographic();
 
-        function createPoint(that, entity, geometry, geometries) {
+        function createPoint(that, entity, geometry, geometries, styles) {
             var kmlDoc = that._kmlDoc;
             var ellipsoid = that._ellipsoid;
 
@@ -157,12 +177,31 @@ define([
             }
 
             pointGeometry.appendChild(coordinates);
-
             geometries.push(pointGeometry);
+
+            // Create style
+            // TODO: Create style cache and use styleUri instead
+            var iconStyle = (geometry instanceof BillboardGraphics) ?
+                createIconStyleFromBillboard(that, geometry) : createIconStyleFromPoint(that, geometry);
+            styles.push(iconStyle);
         }
 
-        function createIconStyleFromPoint(pointGraphics) {
+        function createIconStyleFromPoint(that, pointGraphics) {
+            var kmlDoc = that._kmlDoc;
+            var iconStyle = kmlDoc.createElement('IconStyle');
 
+            var color = getValue(pointGraphics.color);
+            if (defined(color)) {
+                color = colorToString(color);
+
+                iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'color', color));
+                iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'colorMode', 'normal'));
+            }
+
+            var pixelSize = getValue(pointGraphics.pixelSize);
+            if (defined(pixelSize)) {
+                iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'scale', pixelSize / BILLBOARD_SIZE));
+            }
         }
 
         function createIconStyleFromBillboard(that, billboardGraphics) {
@@ -239,14 +278,18 @@ define([
             var rotation = getValue(billboardGraphics.rotation);
             var alignedAxis = getValue(billboardGraphics.alignedAxis);
             if (defined(rotation) && alignedAxis === Cartesian3.UNIT_Z) {
+                rotation = Math.toDegrees(-rotation);
                 if (rotation === 0) {
                     rotation = 360;
                 }
-                rotation = Math.toDegrees(-rotation);
+
+                iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'heading', rotation));
             }
+
+            return iconStyle;
         }
 
-        function createLineString(that, polyline, geometries) {
+        function createLineString(that, polyline, geometries, styles) {
             var kmlDoc = that._kmlDoc;
             var ellipsoid = that._ellipsoid;
 
@@ -258,7 +301,7 @@ define([
             geometries.push(lineStringGeometry);
         }
 
-        function createPolygon(that, polygonOrRectangle, geometries) {
+        function createPolygon(that, polygonOrRectangle, geometries, styles) {
             var kmlDoc = that._kmlDoc;
             var ellipsoid = that._ellipsoid;
 
@@ -273,7 +316,7 @@ define([
         function getAltitudeMode(kmlDoc, heightReferenceProperty) {
             // TODO: Time dynamic
             var heightReference = defined(heightReferenceProperty) ?
-                heightReferenceProperty.getValue(Iso8601.MINIMUM_VALUE) : HeightReference.NONE;
+                heightReferenceProperty.getValue(Iso8601.MINIMUM_VALUE) : HeightReference.CLAMP_TO_GROUND;
             var altitudeModeText;
             switch (heightReference) {
                 case HeightReference.NONE:
@@ -290,7 +333,7 @@ define([
             return altitudeModeText;
         }
 
-        function getCoordinates(kmlDoc, coordinates, ellipsoid) {
+        function getCoordinates(coordinates, ellipsoid) {
             if (!Array.isArray(coordinates)) {
                 coordinates = [coordinates];
             }
@@ -308,16 +351,18 @@ define([
         }
 
         function createBasicElementWithText(kmlDoc, elementName, elementValue, namespace) {
+            elementValue = defaultValue(elementValue, '');
+
             if (typeof elementValue === 'boolean') {
                 elementValue = elementValue ? '1' : '0';
             }
 
-            if (elementValue.indexOf('<') !== -1) {
-                elementValue = '<![CDATA[' + elementValue + ']]>';
-            }
-
+            // Create element with optional namespace
             var element = defined(namespace) ? kmlDoc.createElementNS(namespace, elementName) : kmlDoc.createElement(elementName);
-            var text = kmlDoc.createTextNode(elementValue);
+
+            // Wrap value in CDATA section if it contains HTML
+            var text = ((elementValue === 'string') && (elementValue.indexOf('<') !== -1)) ?
+                kmlDoc.createCDATASection(elementValue) : kmlDoc.createTextNode(elementValue);
 
             element.appendChild(text);
 
