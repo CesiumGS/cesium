@@ -10,6 +10,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed an edge case where Cesium would provide ion access token credentials to non-ion servers if the actual asset entrypoint was being hosted by ion. [#7839](https://github.com/AnalyticalGraphicsInc/cesium/pull/7839)
+* Fixed a bug that caused Cesium to request non-existent tiles for terrain tilesets lacking tile availability, i.e. a `layer.json` file.
 
 ### 1.57 - 2019-05-01
 
