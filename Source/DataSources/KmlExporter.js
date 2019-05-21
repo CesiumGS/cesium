@@ -1,8 +1,11 @@
 define([
     './BillboardGraphics',
+    './ColorMaterialProperty',
+    './PolylineOutlineMaterialProperty',
     '../Core/Cartesian2',
     '../Core/Cartesian3',
     '../Core/Cartographic',
+    '../Core/Color',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/Ellipsoid',
@@ -14,9 +17,12 @@ define([
     '../Scene/VerticalOrigin'
 ], function(
     BillboardGraphics,
+    ColorMaterialProperty,
+    PolylineOutlineMaterialProperty,
     Cartesian2,
     Cartesian3,
     Cartographic,
+    Color,
     defaultValue,
     defined,
     Ellipsoid,
@@ -289,16 +295,66 @@ define([
             return iconStyle;
         }
 
-        function createLineString(that, polyline, geometries, styles) {
+        function createLineString(that, polylineGraphics, geometries, styles) {
             var kmlDoc = that._kmlDoc;
             var ellipsoid = that._ellipsoid;
 
-            if (!defined(polyline)) {
+            if (!defined(polylineGraphics)) {
                 return;
             }
 
             var lineStringGeometry = kmlDoc.createElement('LineString');
+
+            // Set altitude mode
+            var altitudeMode = kmlDoc.createElement('altitudeMode');
+            var clampToGround = getValue(polylineGraphics.clampToGround, false);
+            var altitudeModeText;
+            if (clampToGround) {
+                lineStringGeometry.appendChild(createBasicElementWithText(kmlDoc, 'tesselate', true));
+                altitudeModeText = kmlDoc.createTextNode('clampToGround');
+            } else {
+                altitudeModeText = kmlDoc.createTextNode('absolute');
+            }
+            altitudeMode.appendChild(altitudeModeText);
+            lineStringGeometry.appendChild(altitudeMode);
+
+            // Set coordinates
+            var coordinates;
+            var positionsProperty = polylineGraphics.positions;
+            if (positionsProperty.isConstant) {
+                var cartesians = positionsProperty.getValue(Iso8601.MINIMUM_VALUE);
+                coordinates = createBasicElementWithText(kmlDoc, 'coordinates',
+                    getCoordinates(cartesians, ellipsoid));
+            } else {
+                // TODO: Time dynamic
+            }
+
+            // Set draw order
+            var zIndex = getValue(polylineGraphics.zIndex);
+            if (clampToGround && defined(zIndex)) {
+                lineStringGeometry.appendChild(createBasicElementWithText(kmlDoc, 'drawOrder', zIndex, gxNamespace));
+            }
+
+            lineStringGeometry.appendChild(coordinates);
             geometries.push(lineStringGeometry);
+
+            // Create style
+            // TODO: Create style cache and use styleUri instead
+            var lineStyle = kmlDoc.createElement('LineStyle');
+
+            var width = getValue(polylineGraphics.width);
+            if (defined(width)) {
+                lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'width', width));
+            }
+
+            var material = getValue(polylineGraphics.material);
+            if (defined(material)) {
+                processMaterial(that, material, lineStyle);
+            }
+
+            // TODO: <gx:physicalWidth> and gx:labelVisibility>
+
+            styles.push(lineStyle);
         }
 
         function createPolygon(that, polygonOrRectangle, geometries, styles) {
@@ -311,6 +367,34 @@ define([
 
             var polygonGeometry = kmlDoc.createElement('Polygon');
             geometries.push(polygonGeometry);
+        }
+
+        function processMaterial(that, material, style) {
+            var kmlDoc = that._kmlDoc;
+
+            var color;
+            if (material instanceof ColorMaterialProperty) {
+                color = getValue(material.color, Color.WHITE);
+                color = colorToString(color);
+
+                style.appendChild(createBasicElementWithText(kmlDoc, 'color', color));
+                style.appendChild(createBasicElementWithText(kmlDoc, 'colorMode', 'normal'));
+            } else if (material instanceof PolylineOutlineMaterialProperty) {
+                color = getValue(material.color, Color.WHITE);
+                color = colorToString(color);
+
+                var outlineColor = getValue(material.outlineColor, Color.BLACK);
+                outlineColor = colorToString(outlineColor);
+
+                var outlineWidth = getValue(material.outlineWidth, 1.0);
+
+                style.appendChild(createBasicElementWithText(kmlDoc, 'color', color));
+                style.appendChild(createBasicElementWithText(kmlDoc, 'colorMode', 'normal'));
+                style.appendChild(createBasicElementWithText(kmlDoc, 'outerColor', outlineColor, gxNamespace));
+                style.appendChild(createBasicElementWithText(kmlDoc, 'outerWidth', outlineWidth, gxNamespace));
+            }
+
+            // TODO: Other materials
         }
 
         function getAltitudeMode(kmlDoc, heightReferenceProperty) {
