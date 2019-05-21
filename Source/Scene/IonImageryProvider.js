@@ -161,7 +161,7 @@ define([
         // already retrieved. This exists mainly to support Bing caching to reduce
         // world imagery sessions, but provides a small boost of performance in general
         // if constantly reloading assets
-        var cacheKey = JSON.stringify(options);
+        var cacheKey = options.assetId.toString() + options.accessToken + options.server;
         var promise = IonImageryProvider._endpointCache[cacheKey];
         if (!defined(promise)) {
             promise = endpointResource.fetchJson();

@@ -59,7 +59,7 @@ defineSuite([
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
-        IonImageryProvider._endpointCache = [];
+        IonImageryProvider._endpointCache = {};
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -127,7 +127,7 @@ defineSuite([
         };
 
         var assetId = 12335;
-        var options = { assetId: assetId };
+        var options = { assetId: assetId, accessToken: 'token', server: 'http://test.invalid' };
         var endpointResource = IonResource._createEndpointResource(assetId, options);
         spyOn(IonResource, '_createEndpointResource').and.returnValue(endpointResource);
         spyOn(endpointResource, 'fetchJson').and.returnValue(when.resolve(endpointData));
@@ -139,11 +139,14 @@ defineSuite([
             .then(function() {
                 expect(provider.ready).toBe(true);
                 expect(endpointResource.fetchJson.calls.count()).toBe(1);
-                provider2 = new IonImageryProvider(options);
+
+                // Same as options but in a different order to verify cache is order independant.
+                var options2 = { accessToken: 'token', server: 'http://test.invalid', assetId: assetId };
+                provider2 = new IonImageryProvider(options2);
                 return provider2.readyPromise;
             })
             .then(function() {
-                //Since the data is caches, fetchJson is not called again.
+                //Since the data is cached, fetchJson is not called again.
                 expect(endpointResource.fetchJson.calls.count()).toBe(1);
                 expect(provider2.ready).toBe(true);
             });
