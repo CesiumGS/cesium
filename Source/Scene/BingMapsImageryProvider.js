@@ -55,7 +55,7 @@ define([
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com/}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
-     * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
+     * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
      *        By default, tiles are loaded using the same protocol as the page.
      * @param {BingMapsStyle} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
      * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
@@ -140,11 +140,26 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
+        var tileProtocol = this._tileProtocol;
+
+        // For backward compatibility reasons, the tileProtocol may end with
+        // a `:`. Remove it.
+        if (defined(tileProtocol)) {
+            if (tileProtocol.length > 0 && tileProtocol[tileProtocol.length - 1] === ':') {
+                tileProtocol = tileProtocol.substr(0, tileProtocol.length - 1);
+            }
+        } else {
+            // use http if the document's protocol is http, otherwise use https
+            var documentProtocol = document.location.protocol;
+            tileProtocol = documentProtocol === 'http:' ? 'http' : 'https';
+        }
+
         var metadataResource = this._resource.getDerivedResource({
             url:'REST/v1/Imagery/Metadata/' + this._mapStyle,
             queryParameters: {
                 incl: 'ImageryProviders',
-                key: this._key
+                key: this._key,
+                uriScheme: tileProtocol
             }
         });
         var that = this;
@@ -162,15 +177,6 @@ define([
             that._maximumLevel = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
             that._imageUrlTemplate = resource.imageUrl;
-
-            var tileProtocol = that._tileProtocol;
-            if (!defined(tileProtocol)) {
-                // use the document's protocol, unless it's not http or https
-                var documentProtocol = document.location.protocol;
-                tileProtocol = /^http/.test(documentProtocol) ? documentProtocol : 'http:';
-            }
-
-            that._imageUrlTemplate = that._imageUrlTemplate.replace(/^http:/, tileProtocol);
 
             // Install the default tile discard policy if none has been supplied.
             if (!defined(that._tileDiscardPolicy)) {

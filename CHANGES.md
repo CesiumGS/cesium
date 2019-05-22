@@ -8,6 +8,7 @@ Change Log
 * Hacky fix/workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/7121.
 * Added support for using the imagery splitting system with the terrain and the atmosphere, too.
 * Added support for new "On Demand" Bing Maps styles.
+* Changed `BingMapsImageryProvider` to request `https` from Bing instead of requesting `http` and then rewriting the URL to use `https`.
 
 ### 1.57 - 2019-05-01
 
