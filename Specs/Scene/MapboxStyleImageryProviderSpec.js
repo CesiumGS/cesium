@@ -1,5 +1,5 @@
 defineSuite([
-        'Scene/MapboxStyleProvider',
+        'Scene/MapboxStyleImageryProvider',
         'Core/Math',
         'Core/Rectangle',
         'Core/RequestScheduler',
@@ -11,7 +11,7 @@ defineSuite([
         'Scene/ImageryState',
         'Specs/pollToPromise'
     ], function(
-        MapboxStyleProvider,
+        MapboxStyleImageryProvider,
         CesiumMath,
         Rectangle,
         RequestScheduler,
@@ -33,17 +33,17 @@ defineSuite([
     });
 
     it('conforms to ImageryProvider interface', function() {
-        expect(MapboxStyleProvider).toConformToInterface(ImageryProvider);
+        expect(MapboxStyleImageryProvider).toConformToInterface(ImageryProvider);
     });
 
     it('requires the styleId to be specified', function() {
         expect(function() {
-            return new MapboxStyleProvider({});
+            return new MapboxStyleImageryProvider({});
         }).toThrowDeveloperError('styleId is required');
     });
 
     it('resolves readyPromise', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url : 'made/up/mapbox/server/',
             styleId: 'test-id'
         });
@@ -59,7 +59,7 @@ defineSuite([
             url : 'made/up/mapbox/server/'
         });
 
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url : resource,
             styleId: 'test-id'
         });
@@ -71,7 +71,7 @@ defineSuite([
     });
 
     it('returns valid value for hasAlphaChannel', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url : 'made/up/mapbox/server/',
             styleId: 'test-id'
         });
@@ -84,7 +84,7 @@ defineSuite([
     });
 
     it('supports a slash at the end of the URL', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url : 'made/up/mapbox/server/',
             styleId: 'test-id'
         });
@@ -107,7 +107,7 @@ defineSuite([
     });
 
     it('supports no slash at the endof the URL', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url : 'made/up/mapbox/server',
             styleId: 'test-id'
         });
@@ -130,7 +130,7 @@ defineSuite([
     });
 
     it('requestImage returns a promise for an image and loads it for cross-origin use', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url : 'made/up/mapbox/server/',
             styleId: 'test-id'
         });
@@ -160,7 +160,7 @@ defineSuite([
 
     it('rectangle passed to constructor does not affect tile numbering', function() {
         var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url : 'made/up/mapbox/server/',
             styleId: 'test-id',
             rectangle : rectangle
@@ -191,7 +191,7 @@ defineSuite([
     });
 
     it('uses maximumLevel passed to constructor', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url : 'made/up/mapbox/server/',
             styleId: 'test-id',
             maximumLevel : 5
@@ -200,7 +200,7 @@ defineSuite([
     });
 
     it('uses minimumLevel passed to constructor', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url : 'made/up/mapbox/server/',
             styleId: 'test-id',
             minimumLevel : 1
@@ -209,16 +209,16 @@ defineSuite([
     });
 
     it('when no credit is supplied, the provider adds a default credit', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url : 'made/up/mapbox/server/',
             styleId: 'test-id'
         });
-        expect(provider.credit).toBe(MapboxStyleProvider._defaultCredit);
+        expect(provider.credit).toBe(MapboxStyleImageryProvider._defaultCredit);
     });
 
     it('turns the supplied credit into a logo', function() {
         var creditText = 'Thanks to our awesome made up source of this imagery!';
-        var providerWithCredit = new MapboxStyleProvider({
+        var providerWithCredit = new MapboxStyleImageryProvider({
             url : 'made/up/mapbox/server/',
             styleId: 'test-id',
             credit: creditText
@@ -227,7 +227,7 @@ defineSuite([
     });
 
     it('raises error event when image cannot be loaded', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url : 'made/up/mapbox/server/',
             styleId: 'test-id'
         });
@@ -277,7 +277,7 @@ defineSuite([
     });
 
     it('contains specified url', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             url: 'http://fake.map.com',
             styleId: 'test-id'
         });
@@ -297,7 +297,7 @@ defineSuite([
     });
 
     it('contains specified username', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             styleId: 'test-id',
             username: 'fakeUsername'
         });
@@ -317,7 +317,7 @@ defineSuite([
     });
 
     it('contains specified tilesize', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             styleId: 'test-id',
             tilesize: 256
         });
@@ -337,7 +337,7 @@ defineSuite([
     });
 
     it('enables @2x scale factor', function() {
-        var provider = new MapboxStyleProvider({
+        var provider = new MapboxStyleImageryProvider({
             styleId: 'test-id',
             scaleFactor: true
         });

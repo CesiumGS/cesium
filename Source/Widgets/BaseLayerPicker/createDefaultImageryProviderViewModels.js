@@ -6,7 +6,7 @@ define([
         '../../Scene/createTileMapServiceImageryProvider',
         '../../Scene/createWorldImagery',
         '../../Scene/IonImageryProvider',
-        '../../Scene/MapboxStyleProvider',
+        '../../Scene/MapboxStyleImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,
@@ -16,7 +16,7 @@ define([
         createTileMapServiceImageryProvider,
         createWorldImagery,
         IonImageryProvider,
-        MapboxStyleProvider,
+        MapboxStyleImageryProvider,
         ProviderViewModel) {
     'use strict';
 
@@ -67,7 +67,7 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxSatellite.png'),
             category : 'Other',
             creationFunction: function() {
-                return new MapboxStyleProvider({
+                return new MapboxStyleImageryProvider({
                     styleId: 'satellite-v9'
                 });
             }
@@ -79,7 +79,7 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxTerrain.png'),
             category : 'Other',
             creationFunction: function() {
-                return new MapboxStyleProvider({
+                return new MapboxStyleImageryProvider({
                     styleId: 'satellite-streets-v11'
                 });
             }
@@ -91,7 +91,7 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxStreets.png'),
             category : 'Other',
             creationFunction: function() {
-                return new MapboxStyleProvider({
+                return new MapboxStyleImageryProvider({
                     styleId: 'streets-v11'
                 });
             }

@@ -24,7 +24,7 @@ var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/map
 /**
  * Provides tiled imagery hosted by Mapbox.
  *
- * @alias MapboxStyleProvider
+ * @alias MapboxStyleImageryProvider
  * @constructor
  *
  * @param {Object} [options] Object with the following properties:
@@ -45,7 +45,7 @@ var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/map
  *
  * @example
  * // Mapbox style provider
- * var mapbox = new Cesium.MapboxStyleProvider({
+ * var mapbox = new Cesium.MapboxStyleImageryProvider({
  *     styleId: 'streets-v11',
  *     accessToken: 'thisIsMyAccessToken'
  * });
@@ -53,7 +53,7 @@ var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/map
  * @see {@link https://docs.mapbox.com/api/maps/#styles}
  * @see {@link https://docs.mapbox.com/api/#access-tokens-and-token-scopes}
  */
-function MapboxStyleProvider(options) {
+function MapboxStyleImageryProvider(options) {
     options = defaultValue(options, defaultValue.EMPTY_OBJECT);
     var styleId = options.styleId;
     //>>includeStart('debug', pragmas.debug);
@@ -116,10 +116,10 @@ function MapboxStyleProvider(options) {
     });
 }
 
-defineProperties(MapboxStyleProvider.prototype, {
+defineProperties(MapboxStyleImageryProvider.prototype, {
     /**
      * Gets the URL of the Mapbox server.
-     * @memberof MapboxStyleProvider.prototype
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {String}
      * @readonly
      */
@@ -131,7 +131,7 @@ defineProperties(MapboxStyleProvider.prototype, {
 
     /**
      * Gets a value indicating whether or not the provider is ready for use.
-     * @memberof MapboxStyleProvider.prototype
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {Boolean}
      * @readonly
      */
@@ -143,7 +143,7 @@ defineProperties(MapboxStyleProvider.prototype, {
 
     /**
      * Gets a promise that resolves to true when the provider is ready for use.
-     * @memberof MapboxStyleProvider.prototype
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {Promise.<Boolean>}
      * @readonly
      */
@@ -155,8 +155,8 @@ defineProperties(MapboxStyleProvider.prototype, {
 
     /**
      * Gets the rectangle, in radians, of the imagery provided by the instance.  This function should
-     * not be called before {@link MapboxStyleProvider#ready} returns true.
-     * @memberof MapboxStyleProvider.prototype
+     * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {Rectangle}
      * @readonly
      */
@@ -168,8 +168,8 @@ defineProperties(MapboxStyleProvider.prototype, {
 
     /**
      * Gets the width of each tile, in pixels.  This function should
-     * not be called before {@link MapboxStyleProvider#ready} returns true.
-     * @memberof MapboxStyleProvider.prototype
+     * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {Number}
      * @readonly
      */
@@ -181,8 +181,8 @@ defineProperties(MapboxStyleProvider.prototype, {
 
     /**
      * Gets the height of each tile, in pixels.  This function should
-     * not be called before {@link MapboxStyleProvider#ready} returns true.
-     * @memberof MapboxStyleProvider.prototype
+     * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {Number}
      * @readonly
      */
@@ -194,8 +194,8 @@ defineProperties(MapboxStyleProvider.prototype, {
 
     /**
      * Gets the maximum level-of-detail that can be requested.  This function should
-     * not be called before {@link MapboxStyleProvider#ready} returns true.
-     * @memberof MapboxStyleProvider.prototype
+     * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {Number}
      * @readonly
      */
@@ -207,12 +207,12 @@ defineProperties(MapboxStyleProvider.prototype, {
 
     /**
      * Gets the minimum level-of-detail that can be requested.  This function should
-     * not be called before {@link MapboxStyleProvider#ready} returns true. Generally,
+     * not be called before {@link MapboxStyleImageryProvider#ready} returns true. Generally,
      * a minimum level should only be used when the rectangle of the imagery is small
      * enough that the number of tiles at the minimum level is small.  An imagery
      * provider with more than a few tiles at the minimum level will lead to
      * rendering problems.
-     * @memberof MapboxStyleProvider.prototype
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {Number}
      * @readonly
      */
@@ -224,8 +224,8 @@ defineProperties(MapboxStyleProvider.prototype, {
 
     /**
      * Gets the tiling scheme used by the provider.  This function should
-     * not be called before {@link MapboxStyleProvider#ready} returns true.
-     * @memberof MapboxStyleProvider.prototype
+     * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {TilingScheme}
      * @readonly
      */
@@ -239,8 +239,8 @@ defineProperties(MapboxStyleProvider.prototype, {
      * Gets the tile discard policy.  If not undefined, the discard policy is responsible
      * for filtering out "missing" tiles via its shouldDiscardImage function.  If this function
      * returns undefined, no tiles are filtered.  This function should
-     * not be called before {@link MapboxStyleProvider#ready} returns true.
-     * @memberof MapboxStyleProvider.prototype
+     * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {TileDiscardPolicy}
      * @readonly
      */
@@ -254,7 +254,7 @@ defineProperties(MapboxStyleProvider.prototype, {
      * Gets an event that is raised when the imagery provider encounters an asynchronous error..  By subscribing
      * to the event, you will be notified of the error and can potentially recover from it.  Event listeners
      * are passed an instance of {@link TileProviderError}.
-     * @memberof MapboxStyleProvider.prototype
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {Event}
      * @readonly
      */
@@ -267,8 +267,8 @@ defineProperties(MapboxStyleProvider.prototype, {
     /**
      * Gets the credit to display when this imagery provider is active.  Typically this is used to credit
      * the source of the imagery. This function should
-     * not be called before {@link MapboxStyleProvider#ready} returns true.
-     * @memberof MapboxStyleProvider.prototype
+     * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {Credit}
      * @readonly
      */
@@ -280,7 +280,7 @@ defineProperties(MapboxStyleProvider.prototype, {
 
     /**
      * Gets the proxy used by this provider.
-     * @memberof MapboxStyleProvider.prototype
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {Proxy}
      * @readonly
      */
@@ -296,7 +296,7 @@ defineProperties(MapboxStyleProvider.prototype, {
      * be ignored.  If this property is true, any images without an alpha channel will be treated
      * as if their alpha is 1.0 everywhere.  When this property is false, memory usage
      * and texture upload time are reduced.
-     * @memberof MapboxStyleProvider.prototype
+     * @memberof MapboxStyleImageryProvider.prototype
      * @type {Boolean}
      * @readonly
      */
@@ -317,7 +317,7 @@ defineProperties(MapboxStyleProvider.prototype, {
  *
  * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
  */
-MapboxStyleProvider.prototype.getTileCredits = function(x, y, level) {
+MapboxStyleImageryProvider.prototype.getTileCredits = function(x, y, level) {
     if (defined(this._accessTokenErrorCredit)) {
         return [this._accessTokenErrorCredit];
     }
@@ -325,7 +325,7 @@ MapboxStyleProvider.prototype.getTileCredits = function(x, y, level) {
 
 /**
  * Requests the image for a given tile.  This function should
- * not be called before {@link MapboxStyleProvider#ready} returns true.
+ * not be called before {@link MapboxStyleImageryProvider#ready} returns true.
  *
  * @param {Number} x The tile X coordinate.
  * @param {Number} y The tile Y coordinate.
@@ -338,13 +338,13 @@ MapboxStyleProvider.prototype.getTileCredits = function(x, y, level) {
  *
  * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
  */
-MapboxStyleProvider.prototype.requestImage = function(x, y, level, request) {
+MapboxStyleImageryProvider.prototype.requestImage = function(x, y, level, request) {
     return this._imageryProvider.requestImage(x, y, level, request);
 };
 
 /**
  * Asynchronously determines what features, if any, are located at a given longitude and latitude within
- * a tile.  This function should not be called before {@link MapboxStyleProvider#ready} returns true.
+ * a tile.  This function should not be called before {@link MapboxStyleImageryProvider#ready} returns true.
  * This function is optional, so it may not exist on all ImageryProviders.
  *
  *
@@ -360,12 +360,12 @@ MapboxStyleProvider.prototype.requestImage = function(x, y, level, request) {
  *
  * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
  */
-MapboxStyleProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
+MapboxStyleImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
     return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
 };
 
 // Exposed for tests
-MapboxStyleProvider._defaultCredit = defaultCredit;
+MapboxStyleImageryProvider._defaultCredit = defaultCredit;
 
-return MapboxStyleProvider;
+return MapboxStyleImageryProvider;
 });
