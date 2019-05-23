@@ -890,20 +890,6 @@ define([
         },
 
         /**
-         * Gets a list of available articulation and stage names.
-         *
-         * @memberof Model.prototype
-         *
-         * @type {object}
-         * @readonly
-         */
-        articulationStageKeys : {
-            get : function() {
-                return Object.keys(this._runtime.articulationsByStageKey);
-            }
-        },
-
-        /**
          * When <code>true</code>, each glTF mesh and primitive is pickable with {@link Scene#pick}.  When <code>false</code>, GPU memory is saved.
          *
          * @memberof Model.prototype
