@@ -2,10 +2,13 @@ define([
     './BillboardGraphics',
     './ColorMaterialProperty',
     './CompositeMaterialProperty',
+    './CompositePositionProperty',
     './GridMaterialProperty',
     './ImageMaterialProperty',
     './PolylineGlowMaterialProperty',
     './PolylineOutlineMaterialProperty',
+    './SampledPositionProperty',
+    './SampledProperty',
     './StripeMaterialProperty',
     './RectangleGraphics',
     '../Core/Cartesian2',
@@ -16,6 +19,7 @@ define([
     '../Core/defined',
     '../Core/Ellipsoid',
     '../Core/Iso8601',
+    '../Core/JulianDate',
     '../Core/Math',
     '../Core/Rectangle',
     '../Core/Resource',
@@ -26,10 +30,13 @@ define([
     BillboardGraphics,
     ColorMaterialProperty,
     CompositeMaterialProperty,
+    CompositePositionProperty,
     GridMaterialProperty,
     ImageMaterialProperty,
     PolylineGlowMaterialProperty,
     PolylineOutlineMaterialProperty,
+    SampledPositionProperty,
+    SampledProperty,
     StripeMaterialProperty,
     RectangleGraphics,
     Cartesian2,
@@ -40,6 +47,7 @@ define([
     defined,
     Ellipsoid,
     Iso8601,
+    JulianDate,
     CesiumMath,
     Rectangle,
     Resource,
@@ -80,11 +88,13 @@ define([
          * @param {EntityCollection} entities The EntityCollection to export as KML
          * @param {Object} options An object with the following properties:
          * @param {Function} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file
+         * @param {JulianDate} [options.time=JulianDate.fromIso8601(Iso8601.MINIMUM_VALUE)] The time value to use to get properties that are not time varying in KML
          * @param {Function} [options.textureCallback] A callback that will be called with an image, URI or Canvas. By default it will use the URI or a data URI of the image or canvas
          */
         function KmlExporter(entities, options) {
             options = defaultValue(options, defaultValue.EMPTY_OBJECT);
             this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+            this._time = defined(options.time) ? options.time.toIso8601() : Iso8601.MINIMUM_VALUE; // TODO
             this._textureCallback = defaultValue(options.textureCallback, defaultTextureCallback);
 
             var kmlDoc = this._kmlDoc = document.implementation.createDocument(kmlNamespace, 'kml');
@@ -129,9 +139,14 @@ define([
                     var placemark = kmlDoc.createElement('Placemark');
                     placemark.setAttribute('id', entity.id);
 
-                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'name', getValue(entity.name)));
-                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'visibility', getValue(entity.show, true)));
-                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'description', getValue(entity.description)));
+                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'name', entity.name));
+                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'visibility', entity.show));
+                    placemark.appendChild(createBasicElementWithText(kmlDoc, 'description', entity.description));
+
+                    var availability = entity.availability;
+                    if (defined(availability)) {
+                        // TODO: TimeSpan
+                    }
 
                     parentNode.appendChild(placemark);
 
@@ -179,13 +194,6 @@ define([
                 return;
             }
 
-            var pointGeometry = kmlDoc.createElement('Point');
-
-            // Set altitude mode
-            var altitudeMode = kmlDoc.createElement('altitudeMode');
-            altitudeMode.appendChild(getAltitudeMode(kmlDoc, geometry.heightReference));
-            pointGeometry.appendChild(altitudeMode);
-
             // Set coordinates
             var coordinates;
             var positionProperty = entity.position;
@@ -193,9 +201,20 @@ define([
                 positionProperty.getValue(Iso8601.MINIMUM_VALUE, scratchCartesian3);
                 coordinates = createBasicElementWithText(kmlDoc, 'coordinates',
                     getCoordinates(scratchCartesian3, ellipsoid));
+            } else if (positionProperty instanceof SampledPositionProperty || positionProperty instanceof SampledProperty) {
+                return createTrack(that, entity, geometries, styles);
+            } else if (positionProperty instanceof CompositePositionProperty) {
+                // TODO: Multitrack
             } else {
-                // TODO: Time dynamic
+                // TODO: Something else time dynamic
             }
+
+            var pointGeometry = kmlDoc.createElement('Point');
+
+            // Set altitude mode
+            var altitudeMode = kmlDoc.createElement('altitudeMode');
+            altitudeMode.appendChild(getAltitudeMode(kmlDoc, geometry.heightReference));
+            pointGeometry.appendChild(altitudeMode);
 
             pointGeometry.appendChild(coordinates);
             geometries.push(pointGeometry);
@@ -205,6 +224,52 @@ define([
             var iconStyle = (geometry instanceof BillboardGraphics) ?
                 createIconStyleFromBillboard(that, geometry) : createIconStyleFromPoint(that, geometry);
             styles.push(iconStyle);
+        }
+
+        function createTrack(that, entity, geometry, geometries, styles) {
+            var kmlDoc = that._kmlDoc;
+            var ellipsoid = that._ellipsoid;
+
+            var trackGeometry = kmlDoc.createElementNS(gxNamespace, 'Track');
+
+            var positions = entity.position;
+            var positionTimes = positions._times;
+            var positionValues = positions._values;
+            var count = positionTimes.length;
+
+            for (var i = 0; i < count; ++i) {
+                var when = createBasicElementWithText(kmlDoc, 'when', JulianDate.toIso8601(positionTimes[i]));
+                var coord = createBasicElementWithText(kmlDoc, 'coord', getCoordinates(positionValues[i], ellipsoid), gxNamespace);
+
+                trackGeometry.appendChild(when);
+                trackGeometry.appendChild(coord);
+            }
+
+            geometries.push(trackGeometry);
+
+            // Create style
+            // TODO: Create style cache and use styleUri instead
+            var iconStyle = (geometry instanceof BillboardGraphics) ?
+                createIconStyleFromBillboard(that, geometry) : createIconStyleFromPoint(that, geometry);
+            styles.push(iconStyle);
+
+            // See if we have a line that needs to be drawn
+            var path = entity.path;
+            if (defined(path)) {
+                var width = getValue(path.width);
+                var material = getValue(path.material);
+                if (defined(material) || defined(width)) {
+                    var lineStyle = kmlDoc.createElement('LineStyle');
+                    if (defined(width)) {
+                        lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'width', width));
+                    }
+
+                    if (defined(material)) {
+                        processMaterial(that, material, lineStyle);
+                    }
+                    styles.push(lineStyle);
+                }
+            }
         }
 
         function createIconStyleFromPoint(that, pointGraphics) {
@@ -383,7 +448,7 @@ define([
                 var coordinateStrings = [];
                 var cornerFunction = [Rectangle.northeast, Rectangle.southeast, Rectangle.southwest, Rectangle.northwest];
 
-                for (var i=0;i<4;++i) {
+                for (var i = 0; i < 4; ++i) {
                     cornerFunction[i](rectangle, scratchCartographic);
                     coordinateStrings.push(CesiumMath.toDegrees(scratchCartographic.longitude) + ',' +
                         CesiumMath.toDegrees(scratchCartographic.latitude) + ',' + height);
@@ -408,11 +473,11 @@ define([
 
             var coordinateStrings = [];
             var positionCount = positions.length;
-            for (var i=0;i<positionCount;++i) {
+            for (var i = 0; i < positionCount; ++i) {
                 Cartographic.fromCartesian(positions[i], ellipsoid, scratchCartographic);
                 coordinateStrings.push(CesiumMath.toDegrees(scratchCartographic.longitude) + ',' +
                     CesiumMath.toDegrees(scratchCartographic.latitude) + ',' +
-                    (perPositionHeight ? scratchCartographic.height : height) );
+                    (perPositionHeight ? scratchCartographic.height : height));
             }
 
             var coordinates = createBasicElementWithText(kmlDoc, 'coordinates', coordinateStrings.join(' '));
@@ -441,7 +506,7 @@ define([
                 // Hole boundaries
                 var holes = hierarchy.holes;
                 var holeCount = holes.length;
-                for (var i=0;i<holeCount;++i) {
+                for (var i = 0; i < holeCount; ++i) {
                     var innerBoundaryIs = kmlDoc.createElement('innerBoundaryIs');
                     innerBoundaryIs.appendChild(getLinearRing(that, holes[i].positions, height, perPositionHeight));
                     boundaries.push(innerBoundaryIs);
@@ -469,7 +534,7 @@ define([
                 getRectangleBoundaries(kmlDoc, geometry) : getPolygonBoundaries(kmlDoc, geometry);
 
             var boundaryCount = boundaries.length;
-            for(var i=0;i<boundaryCount;++i) {
+            for (var i = 0; i < boundaryCount; ++i) {
                 polygonGeometry.appendChild(boundaries[i]);
             }
 
@@ -548,7 +613,7 @@ define([
                 style.appendChild(createBasicElementWithText(kmlDoc, 'outerWidth', outlineWidth, gxNamespace));
             } else if (materialProperty instanceof StripeMaterialProperty) {
                 // TODO
-            }  else {
+            } else {
                 // TODO: Unknown Material
             }
 
@@ -617,7 +682,7 @@ define([
         function colorToString(color) {
             var result = '';
             var bytes = color.toBytes();
-            for (var i=3;i>=0;--i) {
+            for (var i = 3; i >= 0; --i) {
                 result += (bytes[i] < 16) ? ('0' + bytes[i].toString(16)) : bytes[i].toString(16);
             }
 
