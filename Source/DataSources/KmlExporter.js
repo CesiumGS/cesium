@@ -81,6 +81,62 @@ define([
             return '';
         }
 
+        function ValueGetter(time) {
+            this._time = time;
+        }
+
+        ValueGetter.prototype.get = function(property, defaultVal) {
+            var value;
+            if (defined(property)) {
+                value = property.getValue(this._time);
+            }
+
+            return defaultValue(value, defaultVal);
+        };
+
+        ValueGetter.prototype.getColor = function(property, defaultVal) {
+            var result = this.get(property, defaultVal);
+            if (defined(result)) {
+                return colorToString(result);
+            }
+        };
+
+        function StyleCache() {
+            this._ids = {};
+            this._styles = {};
+            this._count = 0;
+        }
+
+        StyleCache.prototype.get = function(element) {
+            // TODO: Recursively sort for better caching
+
+            var ids = this._ids;
+            var key = element.innerHTML; // TODO: Maybe use hash
+            if (defined(ids[key])) {
+                return ids[key];
+            }
+
+            var styleId = 'style-' + (++this._count);
+            element.setAttribute('id', styleId);
+
+            // Store with #
+            styleId = '#' + styleId;
+            ids[key] = styleId;
+            this._styles[key] = element;
+
+            return styleId;
+        };
+
+        StyleCache.prototype.save = function(parentElement) {
+            var styles = this._styles;
+
+            for (var key in styles) {
+                if (styles.hasOwnProperty(key)) {
+                    parentElement.appendChild(styles[key]);
+                }
+            }
+        };
+
         /**
          * @alias KmlExporter
          * @constructor
@@ -94,7 +150,8 @@ define([
         function KmlExporter(entities, options) {
             options = defaultValue(options, defaultValue.EMPTY_OBJECT);
             this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-            this._time = defined(options.time) ? options.time.toIso8601() : Iso8601.MINIMUM_VALUE; // TODO
+            this._valueGetter = new ValueGetter(defined(options.time) ? options.time.toIso8601() : Iso8601.MINIMUM_VALUE);
+            var styleCache = this._styleCache = new StyleCache();
             this._textureCallback = defaultValue(options.textureCallback, defaultTextureCallback);
 
             var kmlDoc = this._kmlDoc = document.implementation.createDocument(kmlNamespace, 'kml');
@@ -108,6 +165,8 @@ define([
                 return !defined(entity.parent);
             });
             recurseEntities(this, kmlDocumentElement, rootEntities);
+
+            styleCache.save(kmlDocumentElement);
         }
 
         KmlExporter.prototype.toString = function() {
@@ -117,6 +176,7 @@ define([
 
         function recurseEntities(that, parentNode, entities) {
             var kmlDoc = that._kmlDoc;
+            var styleCache = that._styleCache;
 
             var count = entities.length;
             var geometries;
@@ -145,7 +205,13 @@ define([
 
                     var availability = entity.availability;
                     if (defined(availability)) {
-                        // TODO: TimeSpan
+                        var timeSpan = kmlDoc.createElement('TimeSpan');
+                        timeSpan.appendChild(createBasicElementWithText(kmlDoc, 'begin',
+                            JulianDate.toIso8601(availability.start)));
+                        timeSpan.appendChild(createBasicElementWithText(kmlDoc, 'end',
+                            JulianDate.toIso8601(availability.stop)));
+
+                        placemark.appendChild(timeSpan);
                     }
 
                     parentNode.appendChild(placemark);
@@ -153,12 +219,13 @@ define([
                     var styleCount = styles.length;
                     if (styleCount > 0) {
                         // TODO: Merge if we went up with multiple of same type
+                        // TODO: Multigeometries may need to be split up
                         var style = kmlDoc.createElement('Style');
                         for (var styleIndex = 0; styleIndex < geometryCount; ++styleIndex) {
                             style.appendChild(styles[styleIndex]);
                         }
 
-                        placemark.appendChild(style);
+                        placemark.appendChild(createBasicElementWithText(kmlDoc, 'styleUrl', styleCache.get(style)));
                     }
 
                     if (geometries.length === 1) {
@@ -213,14 +280,13 @@ define([
 
             // Set altitude mode
             var altitudeMode = kmlDoc.createElement('altitudeMode');
-            altitudeMode.appendChild(getAltitudeMode(kmlDoc, geometry.heightReference));
+            altitudeMode.appendChild(getAltitudeMode(that, geometry.heightReference));
             pointGeometry.appendChild(altitudeMode);
 
             pointGeometry.appendChild(coordinates);
             geometries.push(pointGeometry);
 
             // Create style
-            // TODO: Create style cache and use styleUri instead
             var iconStyle = (geometry instanceof BillboardGraphics) ?
                 createIconStyleFromBillboard(that, geometry) : createIconStyleFromPoint(that, geometry);
             styles.push(iconStyle);
@@ -229,6 +295,7 @@ define([
         function createTrack(that, entity, geometry, geometries, styles) {
             var kmlDoc = that._kmlDoc;
             var ellipsoid = that._ellipsoid;
+            var valueGetter = that._valueGetter;
 
             var trackGeometry = kmlDoc.createElementNS(gxNamespace, 'Track');
 
@@ -248,7 +315,6 @@ define([
             geometries.push(trackGeometry);
 
             // Create style
-            // TODO: Create style cache and use styleUri instead
             var iconStyle = (geometry instanceof BillboardGraphics) ?
                 createIconStyleFromBillboard(that, geometry) : createIconStyleFromPoint(that, geometry);
             styles.push(iconStyle);
@@ -256,17 +322,15 @@ define([
             // See if we have a line that needs to be drawn
             var path = entity.path;
             if (defined(path)) {
-                var width = getValue(path.width);
-                var material = getValue(path.material);
+                var width = valueGetter.get(path.width);
+                var material = path.material;
                 if (defined(material) || defined(width)) {
                     var lineStyle = kmlDoc.createElement('LineStyle');
                     if (defined(width)) {
                         lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'width', width));
                     }
 
-                    if (defined(material)) {
-                        processMaterial(that, material, lineStyle);
-                    }
+                    processMaterial(that, material, lineStyle);
                     styles.push(lineStyle);
                 }
             }
@@ -274,9 +338,11 @@ define([
 
         function createIconStyleFromPoint(that, pointGraphics) {
             var kmlDoc = that._kmlDoc;
+            var valueGetter = that._valueGetter;
+
             var iconStyle = kmlDoc.createElement('IconStyle');
 
-            var color = getValue(pointGraphics.color);
+            var color = valueGetter.get(pointGraphics.color);
             if (defined(color)) {
                 color = colorToString(color);
 
@@ -284,7 +350,7 @@ define([
                 iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'colorMode', 'normal'));
             }
 
-            var pixelSize = getValue(pointGraphics.pixelSize);
+            var pixelSize = valueGetter.get(pointGraphics.pixelSize);
             if (defined(pixelSize)) {
                 iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'scale', pixelSize / BILLBOARD_SIZE));
             }
@@ -292,16 +358,18 @@ define([
 
         function createIconStyleFromBillboard(that, billboardGraphics) {
             var kmlDoc = that._kmlDoc;
+            var valueGetter = that._valueGetter;
+
             var iconStyle = kmlDoc.createElement('IconStyle');
 
-            var image = getValue(billboardGraphics.image);
+            var image = valueGetter.get(billboardGraphics.image);
             if (defined(image)) {
                 image = that._textureCallback(image);
 
                 var icon = kmlDoc.createElement('Icon');
                 icon.appendChild(createBasicElementWithText(kmlDoc, 'href', image));
 
-                var imageSubRegion = getValue(billboardGraphics.imageSubRegion);
+                var imageSubRegion = valueGetter.get(billboardGraphics.imageSubRegion);
                 if (defined(imageSubRegion)) {
                     icon.appendChild(createBasicElementWithText(kmlDoc, 'x', imageSubRegion.x, gxNamespace));
                     icon.appendChild(createBasicElementWithText(kmlDoc, 'y', imageSubRegion.y, gxNamespace));
@@ -312,30 +380,28 @@ define([
                 iconStyle.appendChild(icon);
             }
 
-            var color = getValue(billboardGraphics.color);
+            var color = valueGetter.getColor(billboardGraphics.color);
             if (defined(color)) {
-                color = colorToString(color);
-
                 iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'color', color));
                 iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'colorMode', 'normal'));
             }
 
-            var scale = getValue(billboardGraphics.scale, 1.0);
+            var scale = valueGetter.get(billboardGraphics.scale, 1.0);
             if (defined(scale)) {
                 iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'scale', scale));
             }
 
-            var pixelOffset = getValue(billboardGraphics.pixelOffset);
+            var pixelOffset = valueGetter.get(billboardGraphics.pixelOffset);
             if (defined(pixelOffset)) {
                 Cartesian2.divideByScalar(pixelOffset, scale, pixelOffset);
 
-                var width = getValue(billboardGraphics.width, BILLBOARD_SIZE);
-                var height = getValue(billboardGraphics.height, BILLBOARD_SIZE);
+                var width = valueGetter.get(billboardGraphics.width, BILLBOARD_SIZE);
+                var height = valueGetter.get(billboardGraphics.height, BILLBOARD_SIZE);
 
                 // KML Hotspots are from the bottom left, but we work from the top left
 
                 // Move to left
-                var horizontalOrigin = getValue(billboardGraphics.horizontalOrigin, HorizontalOrigin.CENTER);
+                var horizontalOrigin = valueGetter.get(billboardGraphics.horizontalOrigin, HorizontalOrigin.CENTER);
                 if (horizontalOrigin === HorizontalOrigin.CENTER) {
                     pixelOffset.x -= width * 0.5;
                 } else if (horizontalOrigin === HorizontalOrigin.RIGHT) {
@@ -343,7 +409,7 @@ define([
                 }
 
                 // Move to bottom
-                var verticalOrigin = getValue(billboardGraphics.verticalOrigin, VerticalOrigin.CENTER);
+                var verticalOrigin = valueGetter.get(billboardGraphics.verticalOrigin, VerticalOrigin.CENTER);
                 if (verticalOrigin === VerticalOrigin.TOP) {
                     pixelOffset.y += height;
                 } else if (verticalOrigin === VerticalOrigin.CENTER) {
@@ -361,8 +427,8 @@ define([
 
             // We can only specify heading so if axis isn't Z, then we skip the rotation
             // GE treats a heading of zero as no heading but can still point north using a 360 degree angle
-            var rotation = getValue(billboardGraphics.rotation);
-            var alignedAxis = getValue(billboardGraphics.alignedAxis);
+            var rotation = valueGetter.get(billboardGraphics.rotation);
+            var alignedAxis = valueGetter.get(billboardGraphics.alignedAxis);
             if (defined(rotation) && alignedAxis === Cartesian3.UNIT_Z) {
                 rotation = Math.toDegrees(-rotation);
                 if (rotation === 0) {
@@ -378,6 +444,7 @@ define([
         function createLineString(that, polylineGraphics, geometries, styles) {
             var kmlDoc = that._kmlDoc;
             var ellipsoid = that._ellipsoid;
+            var valueGetter = that._valueGetter;
 
             if (!defined(polylineGraphics)) {
                 return;
@@ -387,7 +454,7 @@ define([
 
             // Set altitude mode
             var altitudeMode = kmlDoc.createElement('altitudeMode');
-            var clampToGround = getValue(polylineGraphics.clampToGround, false);
+            var clampToGround = valueGetter.get(polylineGraphics.clampToGround, false);
             var altitudeModeText;
             if (clampToGround) {
                 lineStringGeometry.appendChild(createBasicElementWithText(kmlDoc, 'tesselate', true));
@@ -411,7 +478,7 @@ define([
             lineStringGeometry.appendChild(coordinates);
 
             // Set draw order
-            var zIndex = getValue(polylineGraphics.zIndex);
+            var zIndex = valueGetter.get(polylineGraphics.zIndex);
             if (clampToGround && defined(zIndex)) {
                 lineStringGeometry.appendChild(createBasicElementWithText(kmlDoc, 'drawOrder', zIndex, gxNamespace));
             }
@@ -419,27 +486,26 @@ define([
             geometries.push(lineStringGeometry);
 
             // Create style
-            // TODO: Create style cache and use styleUri instead
             var lineStyle = kmlDoc.createElement('LineStyle');
 
-            var width = getValue(polylineGraphics.width);
+            var width = valueGetter.get(polylineGraphics.width);
             if (defined(width)) {
                 lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'width', width));
             }
 
-            var material = getValue(polylineGraphics.material);
-            if (defined(material)) {
-                processMaterial(that, material, lineStyle);
-            }
+            processMaterial(that, polylineGraphics.material, lineStyle);
 
             // TODO: <gx:physicalWidth> and gx:labelVisibility>
 
             styles.push(lineStyle);
         }
 
-        function getRectangleBoundaries(kmlDoc, rectangleGraphics) {
+        function getRectangleBoundaries(that, rectangleGraphics) {
+            var kmlDoc = that._kmlDoc;
+            var valueGetter = that._valueGetter;
+
             var coordinates;
-            var height = getValue(rectangleGraphics.height, 0.0);
+            var height = valueGetter.get(rectangleGraphics.height, 0.0);
 
             var coordinatesProperty = rectangleGraphics.coordinates;
             if (coordinatesProperty.isConstant) {
@@ -489,9 +555,10 @@ define([
 
         function getPolygonBoundaries(that, polygonGraphics) {
             var kmlDoc = that._kmlDoc;
+            var valueGetter = that._valueGetter;
 
-            var height = getValue(polygonGraphics.height, 0.0);
-            var perPositionHeight = getValue(polygonGraphics.perPositionHeight, false);
+            var height = valueGetter.get(polygonGraphics.height, 0.0);
+            var perPositionHeight = valueGetter.get(polygonGraphics.perPositionHeight, false);
 
             var boundaries = [];
             var hierarchyProperty = polygonGraphics.hierarchy;
@@ -520,6 +587,7 @@ define([
 
         function createPolygon(that, geometry, geometries, styles) {
             var kmlDoc = that._kmlDoc;
+            var valueGetter = that._valueGetter;
 
             if (!defined(geometry)) {
                 return;
@@ -531,7 +599,7 @@ define([
 
             // Set boundaries
             var boundaries = (geometry instanceof RectangleGraphics) ?
-                getRectangleBoundaries(kmlDoc, geometry) : getPolygonBoundaries(kmlDoc, geometry);
+                getRectangleBoundaries(that, geometry) : getPolygonBoundaries(kmlDoc, geometry);
 
             var boundaryCount = boundaries.length;
             for (var i = 0; i < boundaryCount; ++i) {
@@ -540,11 +608,11 @@ define([
 
             // Set altitude mode
             var altitudeMode = kmlDoc.createElement('altitudeMode');
-            altitudeMode.appendChild(getAltitudeMode(kmlDoc, geometry.heightReference));
+            altitudeMode.appendChild(getAltitudeMode(that, geometry.heightReference));
             polygonGeometry.appendChild(altitudeMode);
 
             // Set draw order
-            var zIndex = getValue(geometry.zIndex);
+            var zIndex = valueGetter.get(geometry.zIndex);
             if (defined(zIndex)) {
                 polygonGeometry.appendChild(createBasicElementWithText(kmlDoc, 'drawOrder', zIndex, gxNamespace));
             }
@@ -554,30 +622,26 @@ define([
             geometries.push(polygonGeometry);
 
             // Create style
-            // TODO: Create style cache and use styleUri instead
             var polyStyle = kmlDoc.createElement('PolyStyle');
 
-            var fill = getValue(geometry.fill, false);
+            var fill = valueGetter.get(geometry.fill, false);
             if (fill) {
                 polyStyle.appendChild(createBasicElementWithText(kmlDoc, 'width', fill));
             }
 
-            var material = getValue(geometry.material);
-            if (defined(material)) {
-                processMaterial(that, material, polyStyle);
-            }
+            processMaterial(that, geometry.material, polyStyle);
 
-            var outline = getValue(geometry.outline, false);
+            var outline = valueGetter.get(geometry.outline, false);
             if (outline) {
                 polyStyle.appendChild(createBasicElementWithText(kmlDoc, 'outline', outline));
 
                 // Outline uses LineStyle
                 var lineStyle = kmlDoc.createElement('LineStyle');
 
-                var outlineWidth = getValue(geometry.outlineWidth, 1.0);
+                var outlineWidth = valueGetter.get(geometry.outlineWidth, 1.0);
                 lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'width', outlineWidth));
 
-                var outlineColor = getValue(geometry.outlineColor, Color.BLACK);
+                var outlineColor = valueGetter.get(geometry.outlineColor, Color.BLACK);
                 lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'color', outlineColor));
                 lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'colorMode', 'normal'));
 
@@ -589,8 +653,17 @@ define([
 
         function processMaterial(that, materialProperty, style) {
             var kmlDoc = that._kmlDoc;
+            var valueGetter = that._valueGetter;
 
-            var material = getValue(materialProperty);
+            if (!defined(materialProperty)) {
+                return;
+            }
+
+            var material = valueGetter.get(materialProperty);
+            if (!defined(material)) {
+                return;
+            }
+
             var color;
             if (materialProperty instanceof ColorMaterialProperty) {
                 color = colorToString(material.color);
@@ -623,10 +696,11 @@ define([
             }
         }
 
-        function getAltitudeMode(kmlDoc, heightReferenceProperty) {
-            // TODO: Time dynamic
-            var heightReference = defined(heightReferenceProperty) ?
-                heightReferenceProperty.getValue(Iso8601.MINIMUM_VALUE) : HeightReference.CLAMP_TO_GROUND;
+        function getAltitudeMode(that, heightReferenceProperty) {
+            var kmlDoc = that._kmlDoc;
+            var valueGetter = that._valueGetter;
+
+            var heightReference = valueGetter.get(heightReferenceProperty, HeightReference.CLAMP_TO_GROUND);
             var altitudeModeText;
             switch (heightReference) {
                 case HeightReference.NONE:
@@ -687,19 +761,6 @@ define([
             }
 
             return result;
-        }
-
-        function getValue(property, defaultVal) {
-            var value;
-            if (defined(property)) {
-                if (property.isConstant) {
-                    value = property.getValue(Iso8601.MINIMUM_VALUE);
-                } else {
-                    // TODO
-                }
-            }
-
-            return defaultValue(value, defaultVal);
         }
 
         return KmlExporter;
