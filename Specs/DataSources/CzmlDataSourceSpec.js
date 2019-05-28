@@ -2154,6 +2154,58 @@ defineSuite([
             .then(expectPropertiesToBeUndefined);
     });
 
+    it('can delete a custom property', function() {
+        function createDataSource() {
+            var packets = [{
+                id: 'document',
+                version: '1.0'
+            }, {
+                id: 'test',
+                properties: {
+                    custom: {
+                        number: ['2012-03-15T10:00:00Z', 1]
+                    }
+                }
+            }];
+            var dataSource = new CzmlDataSource();
+            return dataSource.load(packets);
+        }
+
+        var deletePackets = [{
+            id: 'test',
+            properties: {
+                custom: {
+                    delete: true
+                }
+            }
+        }];
+
+        function expectPropertiesToBeDefined(dataSource) {
+            var entity = dataSource.entities.getById('test');
+            expect(entity.properties.custom).toBeInstanceOf(SampledProperty);
+            return dataSource;
+        }
+
+        function expectPropertiesToBeUndefined(dataSource) {
+            var entity = dataSource.entities.getById('test');
+            expect(entity.properties.custom).toBeUndefined();
+            return dataSource;
+        }
+
+        return createDataSource()
+            .then(expectPropertiesToBeDefined)
+            .then(function(dataSource) {
+                // delete with no interval specified should delete the properties entirely
+                return dataSource.process(deletePackets);
+            })
+            .then(expectPropertiesToBeUndefined)
+            .then(function(dataSource) {
+                // deleting properties that don't exist should be a no-op
+                return dataSource.process(deletePackets);
+            })
+            .then(expectPropertiesToBeUndefined);
+    });
+
     it('can delete an entire position property', function() {
         function createDataSource() {
             var packets = [{
@@ -2308,6 +2360,54 @@ defineSuite([
                 // deleting sample will cause the property to interpolate from remaining samples
                 expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2012-03-15T11:00:00Z'))).toEqual(2);
                 expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2012-03-15T12:00:00Z'))).toEqual(3);
+            });
+    });
+
+    it('can delete samples from a sampled custom property', function() {
+        var packet = {
+            id: 'id',
+            properties: {
+                custom: {
+                    number: [
+                        '2012-03-15T10:00:00Z', 1,
+                        '2012-03-15T11:00:00Z', 5,
+                        '2012-03-15T12:00:00Z', 3
+                    ]
+                }
+            }
+        };
+
+        return CzmlDataSource.load(makePacket(packet))
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.properties.custom).toBeInstanceOf(SampledProperty);
+
+                expect(entity.properties.custom.getValue(JulianDate.fromIso8601('2012-03-15T10:00:00Z'))).toEqual(1);
+                expect(entity.properties.custom.getValue(JulianDate.fromIso8601('2012-03-15T11:00:00Z'))).toEqual(5);
+                expect(entity.properties.custom.getValue(JulianDate.fromIso8601('2012-03-15T12:00:00Z'))).toEqual(3);
+
+                return dataSource;
+            })
+            .then(function(dataSource) {
+                var deletePacket = {
+                    id: 'id',
+                    properties: {
+                        custom: {
+                            interval: '2012-03-15T11:00:00Z/2012-03-15T11:00:00Z',
+                            delete: true
+                        }
+                    }
+                };
+                return dataSource.process(deletePacket);
+            })
+            .then(function(dataSource) {
+                var entity = dataSource.entities.getById('id');
+                expect(entity.properties.custom).toBeInstanceOf(SampledProperty);
+
+                expect(entity.properties.custom.getValue(JulianDate.fromIso8601('2012-03-15T10:00:00Z'))).toEqual(1);
+                // deleting sample will cause the property to interpolate from remaining samples
+                expect(entity.properties.custom.getValue(JulianDate.fromIso8601('2012-03-15T11:00:00Z'))).toEqual(2);
+                expect(entity.properties.custom.getValue(JulianDate.fromIso8601('2012-03-15T12:00:00Z'))).toEqual(3);
             });
     });
 

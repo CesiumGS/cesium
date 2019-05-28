@@ -174,8 +174,14 @@ define([
             for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
                 var attribution = attributionList[attributionIndex];
 
-                attribution.credit = new Credit(attribution.attribution);
+                if (attribution.credit instanceof Credit) {
+                    // If attribution.credit has already been created
+                    // then we are using a cached value, which means
+                    // none of the remaining processing needs to be done.
+                    break;
+                }
 
+                attribution.credit = new Credit(attribution.attribution);
                 var coverageAreas = attribution.coverageAreas;
 
                 for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; areaIndex < areaLength; ++areaIndex) {
@@ -200,12 +206,19 @@ define([
             that._readyPromise.reject(new RuntimeError(message));
         }
 
+        var cacheKey = metadataResource.url;
         function requestMetadata() {
-            var metadata = metadataResource.fetchJsonp('jsonp');
-            when(metadata, metadataSuccess, metadataFailure);
+            var promise = metadataResource.fetchJsonp('jsonp');
+            BingMapsImageryProvider._metadataCache[cacheKey] = promise;
+            promise.then(metadataSuccess).otherwise(metadataFailure);
         }
 
-        requestMetadata();
+        var promise = BingMapsImageryProvider._metadataCache[cacheKey];
+        if (defined(promise)) {
+            promise.then(metadataSuccess).otherwise(metadataFailure);
+        } else {
+            requestMetadata();
+        }
     }
 
     defineProperties(BingMapsImageryProvider.prototype, {
@@ -696,6 +709,9 @@ define([
 
         return result;
     }
+
+    // Exposed for testing
+    BingMapsImageryProvider._metadataCache = {};
 
     return BingMapsImageryProvider;
 });

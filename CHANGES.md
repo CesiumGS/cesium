@@ -1,5 +1,11 @@
 Change Log
 ==========
+
+### 1.59 - 2019-07-01
+
+##### Additions :tada:
+* Reworked label rendering to use signed distance fields for crisper text. [#7730](https://github.com/AnalyticalGraphicsInc/cesium/pull/7730)
+
 ### 1.58 - 2019-06-03
 
 ##### Additions :tada:
@@ -7,10 +13,11 @@ Change Log
 * Added syntax to delete data from existing properties via CZML. [#7818](https://github.com/AnalyticalGraphicsInc/cesium/pull/7818)
 * Added `checkerboard` material to CZML. [#7845](https://github.com/AnalyticalGraphicsInc/cesium/pull/7845)
 * `BingMapsImageryProvider` now uses `DiscardEmptyTileImagePolicy` by default to detect missing tiles as zero-length responses instead of inspecting pixel values. [#7810](https://github.com/AnalyticalGraphicsInc/cesium/pull/7810)
-* Reworked label rendering to use signed distance fields for crisper text. [#7730](https://github.com/AnalyticalGraphicsInc/cesium/pull/7730)
+* Reduce the number of Bing transactions and ion Bing sessions used when destroying and recreating the same imagery layer to 1. [#7848](https://github.com/AnalyticalGraphicsInc/cesium/pull/7848)
 
 ##### Fixes :wrench:
 * Fixed an edge case where Cesium would provide ion access token credentials to non-ion servers if the actual asset entrypoint was being hosted by ion. [#7839](https://github.com/AnalyticalGraphicsInc/cesium/pull/7839)
+* Fixed a bug that caused Cesium to request non-existent tiles for terrain tilesets lacking tile availability, i.e. a `layer.json` file.
 
 ### 1.57 - 2019-05-01
 
