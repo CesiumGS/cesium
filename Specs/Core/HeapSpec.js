@@ -68,7 +68,7 @@ defineSuite([
             pass = pass && checkHeap(heap, comparator);
         }
         expect(pass).toBe(true);
-        expect(heap.length <= heap.maximumLength).toBe(true);
+        expect(heap.length).toBeLessThanOrEqualTo(heap.maximumLength);
         // allowed one extra slot for swapping
         expect(heap.internalArray.length).toBeLessThanOrEqualTo(heap.maximumLength + 1);
     });

@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -49,6 +51,28 @@ var czml = [{
             "solidColor" : {
                 "color" : {
                     "rgba" : [255, 0, 0, 255]
+                }
+            }
+        }
+    }
+}, {
+    "id" : "checkerboardPolygon",
+    "name" : "Checkerboard polygon on surface",
+    "polygon" : {
+        "positions" : {
+            "cartographicDegrees" : [
+                -94.0, 37.0, 0,
+                -95.0, 32.0, 0,
+                -87.0, 33.0, 0
+            ]
+        },
+        "material" : {
+            "checkerboard" : {
+                "evenColor" : {
+                    "rgba" : [255, 0, 0, 255]
+                },
+                "oddColor" : {
+                    "rgba" : [0, 128, 128, 255]
                 }
             }
         }

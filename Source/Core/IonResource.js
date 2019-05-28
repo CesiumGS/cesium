@@ -1,4 +1,5 @@
 define([
+        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Check',
         './Credit',
@@ -9,6 +10,7 @@ define([
         './Resource',
         './RuntimeError'
     ], function(
+        Uri,
         when,
         Check,
         Credit,
@@ -64,6 +66,7 @@ define([
 
         // The asset endpoint data returned from ion.
         this._ionEndpoint = endpoint;
+        this._ionEndpointDomain = isExternal ? undefined : new Uri(endpoint.url).authority;
 
         // The endpoint resource to fetch when a new token is needed
         this._ionEndpointResource = endpointResource;
@@ -180,7 +183,8 @@ define([
     };
 
     IonResource.prototype._makeRequest = function(options) {
-        if (this._isExternal) {
+        // Don't send ion access token to non-ion servers.
+        if (this._isExternal || new Uri(this.url).authority !== this._ionEndpointDomain) {
             return Resource.prototype._makeRequest.call(this, options);
         }
 
