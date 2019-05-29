@@ -7,8 +7,7 @@ define([
     /**
      * Settings for the generation of signed distance field glyphs
      *
-     * @exports SDFSettings
-     *
+     * @private
      */
     var SDFSettings = {
         /**
