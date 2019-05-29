@@ -3198,12 +3198,9 @@ define([
     }
 
     function prePassesUpdate(scene) {
-        var frameState = scene._frameState;
-        frameState.creditDisplay.update();
-        frameState.creditDisplay.beginFrame();
-
         scene._jobScheduler.resetBudgets();
 
+        var frameState = scene._frameState;
         var primitives = scene.primitives;
         primitives.prePassesUpdate(frameState);
 
@@ -3212,6 +3209,7 @@ define([
         }
 
         scene._pickPositionCacheDirty = true;
+        frameState.creditDisplay.update();
     }
 
     function postPassesUpdate(scene) {
@@ -3220,7 +3218,6 @@ define([
         primitives.postPassesUpdate(frameState);
 
         RequestScheduler.update();
-        frameState.creditDisplay.endFrame();
     }
 
     var scratchBackgroundColor = new Color();
@@ -3247,6 +3244,8 @@ define([
             backgroundColor.blue = Math.pow(backgroundColor.blue, scene.gamma);
         }
         frameState.backgroundColor = backgroundColor;
+
+        frameState.creditDisplay.beginFrame();
 
         scene.fog.update(frameState);
 
@@ -3293,6 +3292,7 @@ define([
             }
         }
 
+        frameState.creditDisplay.endFrame();
         context.endFrame();
     }
 
