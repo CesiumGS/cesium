@@ -1727,15 +1727,6 @@ define([
         cancelOutOfViewRequests(this, frameState);
         raiseLoadProgressEvent(this, frameState);
         this._cache.unloadTiles(this, unloadTile);
-
-        var statistics = this._statisticsPerPass[Cesium3DTilePass.RENDER];
-        var credits = this._credits;
-        if (defined(credits) && statistics.selected !== 0) {
-            var length = credits.length;
-            for (var i = 0; i < length; ++i) {
-                frameState.creditDisplay.addCredit(credits[i]);
-            }
-        }
     };
 
     /**
@@ -2253,6 +2244,16 @@ define([
 
         // Update pass statistics
         Cesium3DTilesetStatistics.clone(statistics, passStatistics);
+
+        if (isRender) {
+            var credits = tileset._credits;
+            if (defined(credits) && statistics.selected !== 0) {
+                var length = credits.length;
+                for (var i = 0; i < length; ++i) {
+                    frameState.creditDisplay.addCredit(credits[i]);
+                }
+            }
+        }
 
         return ready;
     }
