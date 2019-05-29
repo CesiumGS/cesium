@@ -3198,9 +3198,12 @@ define([
     }
 
     function prePassesUpdate(scene) {
+        var frameState = scene._frameState;
+        frameState.creditDisplay.update();
+        frameState.creditDisplay.beginFrame();
+
         scene._jobScheduler.resetBudgets();
 
-        var frameState = scene._frameState;
         var primitives = scene.primitives;
         primitives.prePassesUpdate(frameState);
 
@@ -3209,8 +3212,6 @@ define([
         }
 
         scene._pickPositionCacheDirty = true;
-        frameState.creditDisplay.update();
-        frameState.creditDisplay.beginFrame();
     }
 
     function postPassesUpdate(scene) {
