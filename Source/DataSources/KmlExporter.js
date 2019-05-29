@@ -130,6 +130,7 @@ define([
         StyleCache.prototype.save = function(parentElement) {
             var styles = this._styles;
 
+            // TODO: Put in beginning
             for (var key in styles) {
                 if (styles.hasOwnProperty(key)) {
                     parentElement.appendChild(styles[key]);
@@ -242,7 +243,12 @@ define([
                 var children = entity._children;
                 if (children.length > 0) {
                     var folderNode = kmlDoc.createElement('Folder');
-                    folderNode.setAttribute('name', entity.name);
+                    // TODO: Maybe id, but can't duplicate if there is a Placemark
+
+                    folderNode.appendChild(createBasicElementWithText(kmlDoc, 'name', entity.name));
+                    folderNode.appendChild(createBasicElementWithText(kmlDoc, 'visibility', entity.show));
+                    folderNode.appendChild(createBasicElementWithText(kmlDoc, 'description', entity.description));
+
                     parentNode.appendChild(folderNode);
 
                     recurseEntities(that, folderNode, children);
@@ -354,6 +360,8 @@ define([
             if (defined(pixelSize)) {
                 iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'scale', pixelSize / BILLBOARD_SIZE));
             }
+
+            return iconStyle;
         }
 
         function createIconStyleFromBillboard(that, billboardGraphics) {
