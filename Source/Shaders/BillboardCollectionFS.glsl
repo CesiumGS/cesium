@@ -114,9 +114,6 @@ void main()
     vec4 color3 = getSDFColor(v_textureCoordinates + vec2(-sampleOffset.x, -sampleOffset.y), outlineWidth, outlineColor, smoothing);
     vec4 color4 = getSDFColor(v_textureCoordinates + vec2(sampleOffset.x, -sampleOffset.y), outlineWidth, outlineColor, smoothing);
 
-    // Weight the neighbors at 0.5 weight and the center at 1.
-    //vec4 color = (center + 0.5 * (color1 + color2 + color3 + color4))/3.0;
-
     // Equally weight the center sample and the 4 neighboring samples
     color = (center + color1 + color2 + color3 + color4)/5.0;
     color = czm_gammaCorrect(color);
