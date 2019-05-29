@@ -28,7 +28,7 @@ var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/map
  * @constructor
  *
  * @param {Object} [options] Object with the following properties:
- * @param {String} [options.url='https://api.mapbox.com/styles/v1/'] The Mapbox server url.
+ * @param {Resource|String} [options.url='https://api.mapbox.com/styles/v1/'] The Mapbox server url.
  * @param {String} [options.username='mapbox'] The username of the map account.
  * @param {String} options.styleId The Mapbox Style ID.
  * @param {String} [options.accessToken] The public access token for the imagery.
