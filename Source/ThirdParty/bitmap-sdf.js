@@ -1,3 +1,8 @@
+/*
+* https://github.com/dy/bitmap-sdf
+* Calculate SDF for image/bitmap/bw data
+* This project is a fork of MapBox's TinySDF that works directly on an input Canvas instead of generating the glyphs themselves.
+*/
 define([], function() {
 
     'use strict'
