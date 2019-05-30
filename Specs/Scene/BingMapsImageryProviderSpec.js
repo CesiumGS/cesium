@@ -46,6 +46,7 @@ defineSuite([
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
+        BingMapsImageryProvider._metadataCache = {};
     });
 
     afterEach(function() {
@@ -245,6 +246,56 @@ defineSuite([
             expect(result).toBe(true);
             expect(provider.ready).toBe(true);
         });
+    });
+
+    it('Uses cached metadata result', function() {
+        var url = 'http://fake.fake.invalid';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+        var provider2;
+        var provider3;
+
+        return provider.readyPromise
+            .then(function(result) {
+                expect(result).toBe(true);
+                expect(provider.ready).toBe(true);
+
+                installFakeMetadataRequest(url, mapStyle);
+                installFakeImageRequest();
+                provider2 = new BingMapsImageryProvider({
+                    url: url,
+                    mapStyle: mapStyle
+                });
+                return provider2.readyPromise;
+            })
+            .then(function(result) {
+                expect(result).toBe(true);
+                expect(provider2.ready).toBe(true);
+
+                //These are the same instance only if the cache has been used
+                expect(provider._attributionList).toBe(provider2._attributionList);
+
+                installFakeMetadataRequest(url, BingMapsStyle.AERIAL);
+                installFakeImageRequest();
+                provider3 = new BingMapsImageryProvider({
+                    url: url,
+                    mapStyle: BingMapsStyle.AERIAL
+                });
+                return provider3.readyPromise;
+            })
+            .then(function(result) {
+                expect(result).toBe(true);
+                expect(provider3.ready).toBe(true);
+
+                // Because the road is different, a non-cached request should have happened
+                expect(provider3._attributionList).not.toBe(provider._attributionList);
+            });
     });
 
     it('resolves readyPromise with a path', function() {
