@@ -201,6 +201,7 @@ define([
                     placemark.setAttribute('id', entity.id);
 
                     placemark.appendChild(createBasicElementWithText(kmlDoc, 'name', entity.name));
+                    // TODO: Graphics show property
                     placemark.appendChild(createBasicElementWithText(kmlDoc, 'visibility', entity.show));
                     placemark.appendChild(createBasicElementWithText(kmlDoc, 'description', entity.description));
 
@@ -243,7 +244,10 @@ define([
                 var children = entity._children;
                 if (children.length > 0) {
                     var folderNode = kmlDoc.createElement('Folder');
-                    // TODO: Maybe id, but can't duplicate if there is a Placemark
+                    // The Placemark and Folder can't have the same ID
+                    if (geometryCount === 0) {
+                        folderNode.setAttribute('id', entity.id);
+                    }
 
                     folderNode.appendChild(createBasicElementWithText(kmlDoc, 'name', entity.name));
                     folderNode.appendChild(createBasicElementWithText(kmlDoc, 'visibility', entity.show));
