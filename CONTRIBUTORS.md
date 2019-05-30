@@ -122,7 +122,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Daniel Cooper](https://github.com/moodragon46)
 * [GeoFS](https://www.geo-fs.com)
    * [Xavier Tassin](https://github.com/xtassin/)
-
+* [Northrop Grumman](http://www.northropgrumman.com)
+   * [Joseph Stein](https://github.com/nahgrin)
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
