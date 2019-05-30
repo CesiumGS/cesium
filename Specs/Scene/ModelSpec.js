@@ -1068,10 +1068,7 @@ defineSuite([
                 1, 3, -2, 1
             ];
 
-            var matrix = node.matrix;
-            for (var i = 0; i < 16; ++i) {
-                expect(matrix[i]).toEqualEpsilon(expected[i], CesiumMath.EPSILON14);
-            }
+            expect(node.matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
 
             primitives.remove(m);
         });

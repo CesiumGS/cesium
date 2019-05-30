@@ -1529,7 +1529,7 @@ define([
         var stage = getRuntime(this, 'stagesByKey', articulationStageKey);
         var articulation = getRuntime(this, 'articulationsByStageKey', articulationStageKey);
         if (defined(stage) && defined(articulation)) {
-            value = Math.max(Math.min(value, stage.maximumValue), stage.minimumValue);
+            value = CesiumMath.clamp(value, stage.minimumValue, stage.maximumValue);
             if (!CesiumMath.equalsEpsilon(stage.currentValue, value, articulationEpsilon)) {
                 stage.currentValue = value;
                 articulation.isDirty = true;
