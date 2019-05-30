@@ -360,7 +360,7 @@ define([
 
         var batchIds = getBatchIds(featureTableJson, featureTableBinary);
 
-        byteOffset += byteOffset % 4;
+        byteOffset += (4 - (byteOffset % 4)) % 4;
 
         if (numberOfPolygons > 0) {
             var indices = new Uint32Array(arrayBuffer, byteOffset, indicesByteLength / sizeOfUint32);
