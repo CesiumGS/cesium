@@ -8,6 +8,7 @@ Change Log
 * Added syntax to delete data from existing properties via CZML. [#7818](https://github.com/AnalyticalGraphicsInc/cesium/pull/7818)
 * Added `checkerboard` material to CZML. [#7845](https://github.com/AnalyticalGraphicsInc/cesium/pull/7845)
 * `BingMapsImageryProvider` now uses `DiscardEmptyTileImagePolicy` by default to detect missing tiles as zero-length responses instead of inspecting pixel values. [#7810](https://github.com/AnalyticalGraphicsInc/cesium/pull/7810)
+* Added support for the [AGI_articulations](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations) vendor extension of glTF 2.0 to the Model primitive graphics API. [#7835](https://github.com/AnalyticalGraphicsInc/cesium/pull/7835)
 * Reduce the number of Bing transactions and ion Bing sessions used when destroying and recreating the same imagery layer to 1. [#7848](https://github.com/AnalyticalGraphicsInc/cesium/pull/7848)
 
 ##### Fixes :wrench:
