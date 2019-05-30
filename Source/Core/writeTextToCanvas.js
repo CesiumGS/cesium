@@ -32,6 +32,7 @@ define([
      * @returns {Canvas} A new canvas with the given text drawn into it.  The dimensions object
      *                   from measureText will also be added to the returned canvas. If text is
      *                   blank, returns undefined.
+     * @exports writeTextToCanvas
      */
     function writeTextToCanvas(text, options) {
         //>>includeStart('debug', pragmas.debug);

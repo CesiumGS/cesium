@@ -223,6 +223,12 @@ define([
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
             instance = updater.createOutlineGeometryInstance(time);
             expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+
+            graphics.height = undefined;
+            graphics.extrudedHeight = undefined;
+            updater._onEntityPropertyChanged(entity, geometryPropertyName);
+            instance = updater.createFillGeometryInstance(time);
+            expect(instance.geometry._offsetAttribute).toBeUndefined();
         });
 
         it('color material sets onTerrain to true', function() {

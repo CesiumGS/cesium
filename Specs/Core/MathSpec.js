@@ -78,6 +78,27 @@ defineSuite([
     });
 
     //////////////////////////////////////////////////////////////////////
+    it('normalize 0 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(0, -10, 10)).toEqual(0.5);
+    });
+
+    it('normalize 10 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(10, -10, 10)).toEqual(1.0);
+    });
+
+    it('normalize -10 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(-10, -10, 10)).toEqual(0.0);
+    });
+
+    it('normalize -10.0001 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(-10.0001, -10, 10)).toEqual(0.0);
+    });
+
+    it('normalize 10.00001 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(10.00001, -10, 10)).toEqual(1.0);
+    });
+
+    //////////////////////////////////////////////////////////////////////
 
     it('cosh', function() {
         expect(CesiumMath.cosh(0.0)).toEqual(1.0);
@@ -251,6 +272,110 @@ defineSuite([
     it('equalsEpsilon throws for undefined', function() {
         expect(function() {
             CesiumMath.equalsEpsilon();
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThan works', function() {
+        expect(CesiumMath.lessThan(1.0, 2.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThan(2.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.0, 1.2, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.2, 1.0, 0.2)).toBe(false);
+    });
+
+    it('lessThan throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.lessThan(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThan throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.lessThan(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThan throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.lessThan(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThanOrEquals works', function() {
+        expect(CesiumMath.lessThanOrEquals(1.0, 2.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(2.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThanOrEquals(1.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(1.0, 1.2, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(1.2, 1.0, 0.2)).toBe(true);
+    });
+
+    it('lessThanOrEquals throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.lessThanOrEquals(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThanOrEquals throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.lessThanOrEquals(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThanOrEquals throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.lessThanOrEquals(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThan works', function() {
+        expect(CesiumMath.greaterThan(1.0, 2.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(2.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThan(1.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(1.0, 1.2, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(1.2, 1.0, 0.2)).toBe(false);
+    });
+
+    it('greaterThan throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.greaterThan(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThan throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.greaterThan(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThan throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.greaterThan(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThanOrEquals works', function() {
+        expect(CesiumMath.greaterThanOrEquals(1.0, 2.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThanOrEquals(2.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.0, 1.2, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.2, 1.0, 0.2)).toBe(true);
+    });
+
+    it('greaterThanOrEquals throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.greaterThanOrEquals(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThanOrEquals throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.greaterThanOrEquals(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThanOrEquals throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.greaterThanOrEquals(1.0, 5.0, undefined);
         }).toThrowDeveloperError();
     });
 

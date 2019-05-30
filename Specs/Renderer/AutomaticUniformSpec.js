@@ -1340,4 +1340,34 @@ defineSuite([
         }).contextToRender();
     });
 
+    it('has czm_gamma', function() {
+        context.uniformState.gamma = 1.0;
+        var fs =
+            'void main() {' +
+            '  gl_FragColor = vec4(czm_gamma == 1.0);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
+    it('has czm_sunColor', function() {
+        var us = context.uniformState;
+        var frameState = createFrameState(context, createMockCamera());
+        frameState.sunColor = new Cartesian3(1.0, 2.0, 3.0);
+        us.update(frameState);
+        var fs =
+            'void main() {' +
+            '  bool b0 = czm_sunColor.x == 1.0;' +
+            '  bool b1 = czm_sunColor.y == 2.0;' +
+            '  bool b2 = czm_sunColor.z == 3.0;' +
+            '  gl_FragColor = vec4(b0 && b1 && b2);' +
+            '}';
+        expect({
+            context : context,
+            fragmentShader : fs
+        }).contextToRender();
+    });
+
 }, 'WebGL');

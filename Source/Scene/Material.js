@@ -18,6 +18,7 @@ define([
         '../Core/Resource',
         '../Renderer/CubeMap',
         '../Renderer/Texture',
+        '../Shaders/Materials/AspectRampMaterial',
         '../Shaders/Materials/BumpMapMaterial',
         '../Shaders/Materials/CheckerboardMaterial',
         '../Shaders/Materials/DotMaterial',
@@ -55,6 +56,7 @@ define([
         Resource,
         CubeMap,
         Texture,
+        AspectRampMaterial,
         BumpMapMaterial,
         CheckerboardMaterial,
         DotMaterial,
@@ -225,6 +227,7 @@ define([
      *  <ul>
      *      <li><code>color</code>: color and maximum alpha for the glow on the line.</li>
      *      <li><code>glowPower</code>: strength of the glow, as a percentage of the total line width (less than 1.0).</li>
+     *      <li><code>taperPower</code>: strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.</li>
      *  </ul>
      *  <li>PolylineOutline</li>
      *  <ul>
@@ -246,7 +249,11 @@ define([
      *  </ul>
      *  <li>SlopeRamp</li>
      *  <ul>
-     *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
+     *      <li><code>image</code>: color ramp image to use for coloring the terrain by slope.</li>
+     *  </ul>
+     *  <li>AspectRamp</li>
+     *  <ul>
+     *      <li><code>image</code>: color ramp image to use for color the terrain by aspect.</li>
      *  </ul>
      * </ul>
      * </ul>
@@ -404,7 +411,7 @@ define([
 
     /**
      * Gets whether or not this material is translucent.
-     * @returns <code>true</code> if this material is translucent, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if this material is translucent, <code>false</code> otherwise.
      */
     Material.prototype.isTranslucent = function() {
         if (defined(this.translucent)) {
@@ -695,7 +702,13 @@ define([
             if (defined(components)) {
                 for ( var component in components) {
                     if (components.hasOwnProperty(component)) {
-                        material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
+                        if (component === 'diffuse' || component === 'emission') {
+                            material.shaderSource += 'material.' + component + ' = czm_gammaCorrect(' + components[component] + '); \n';
+                        } else if (component === 'alpha') {
+                            material.shaderSource += 'material.alpha = czm_gammaCorrect(vec4(vec3(0.0), ' + components.alpha + ')).a; \n';
+                        } else {
+                            material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
+                        }
                     }
                 }
             }
@@ -1471,7 +1484,8 @@ define([
             type : Material.PolylineGlowType,
             uniforms : {
                 color : new Color(0.0, 0.5, 1.0, 1.0),
-                glowPower : 0.25
+                glowPower : 0.25,
+                taperPower : 1.0
             },
             source : PolylineGlowMaterial
         },
@@ -1548,9 +1562,26 @@ define([
         fabric : {
             type : Material.SlopeRampMaterialType,
             uniforms : {
-                image: Material.DefaultImageId
+                image : Material.DefaultImageId
             },
             source : SlopeRampMaterial
+        },
+        translucent : false
+    });
+
+    /**
+     * Gets the name of the aspect ramp material.
+     * @type {String}
+     * @readonly
+     */
+    Material.AspectRampMaterialType = 'AspectRamp';
+    Material._materialCache.addMaterial(Material.AspectRampMaterialType, {
+        fabric: {
+            type : Material.AspectRampMaterialType,
+            uniforms : {
+                image : Material.DefaultImageId
+            },
+            source : AspectRampMaterial
         },
         translucent : false
     });

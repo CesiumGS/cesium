@@ -54,10 +54,12 @@ void main (void)
     float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
     float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
 
-    const float exposure = 2.0;
-
     vec3 rgb = rayleighPhase * v_rayleighColor + miePhase * v_mieColor;
+
+#ifndef HDR
+    const float exposure = 1.1;
     rgb = vec3(1.0) - exp(-exposure * rgb);
+#endif
 
 #ifdef COLOR_CORRECT
     // Convert rgb color to hsb

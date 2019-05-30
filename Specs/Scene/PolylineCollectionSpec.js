@@ -343,6 +343,21 @@ defineSuite([
         expect(polylines._polylinesToUpdate.length).toEqual(1);
     });
 
+    it('only adds polyline to the update list once', function() {
+        var firstPolyline = polylines.add();
+        var secondPolyline = polylines.add();
+
+        firstPolyline.width = 4;
+        secondPolyline.width = 5;
+        secondPolyline.width = 7;
+
+        expect(polylines._polylinesToUpdate.length).toEqual(2);
+
+        polylines.remove(secondPolyline);
+
+        expect(polylines._polylinesToUpdate.length).toEqual(1);
+    });
+
     it('can check if it contains a polyline', function() {
         var polyline = polylines.add();
 

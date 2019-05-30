@@ -8,6 +8,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
+        '../Core/FeatureDetection',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
         '../Core/Rectangle',
@@ -35,6 +36,7 @@ define([
         defineProperties,
         destroyObject,
         Ellipsoid,
+        FeatureDetection,
         IndexDatatype,
         Matrix4,
         Rectangle,
@@ -410,7 +412,7 @@ define([
         var fsSource = batchTable.getFragmentShaderCallback()(PolylineFS, false, undefined);
 
         var vs = new ShaderSource({
-            defines : ['VECTOR_TILE'],
+            defines : ['VECTOR_TILE', !FeatureDetection.isInternetExplorer() ? 'CLIP_POLYLINE' : ''],
             sources : [PolylineCommon, vsSource]
         });
         var fs = new ShaderSource({

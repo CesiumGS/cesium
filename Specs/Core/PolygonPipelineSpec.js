@@ -193,4 +193,92 @@ defineSuite([
         expect(subdivision.indices[1]).toEqual(1);
         expect(subdivision.indices[2]).toEqual(2);
     });
+
+    ///////////////////////////////////////////////////////////////////////
+
+    it('computeRhumbLineSubdivision throws without ellipsoid', function() {
+        expect(function() {
+            PolygonPipeline.computeRhumbLineSubdivision();
+        }).toThrowDeveloperError();
+    });
+
+    it('computeRhumbLineSubdivision throws without positions', function() {
+        expect(function() {
+            PolygonPipeline.computeRhumbLineSubdivision(Ellipsoid.WGS84);
+        }).toThrowDeveloperError();
+    });
+
+    it('computeRhumbLineSubdivision throws without indices', function() {
+        expect(function() {
+            PolygonPipeline.computeRhumbLineSubdivision(Ellipsoid.WGS84, []);
+        }).toThrowDeveloperError();
+    });
+
+    it('computeRhumbLineSubdivision throws with less than 3 indices', function() {
+        expect(function() {
+            PolygonPipeline.computeRhumbLineSubdivision(Ellipsoid.WGS84, [], [1, 2]);
+        }).toThrowDeveloperError();
+    });
+
+    it('computeRhumbLineSubdivision throws without a multiple of 3 indices', function() {
+        expect(function() {
+            PolygonPipeline.computeRhumbLineSubdivision(Ellipsoid.WGS84, [], [1, 2, 3, 4]);
+        }).toThrowDeveloperError();
+    });
+
+    it('computeRhumbLineSubdivision throws with negative granularity', function() {
+        expect(function() {
+            PolygonPipeline.computeRhumbLineSubdivision(Ellipsoid.WGS84, [], [1, 2, 3], -1.0);
+        }).toThrowDeveloperError();
+    });
+
+    it('computeRhumbLineSubdivision', function() {
+        var positions = Cartesian3.fromDegreesArray([
+                        0, 0,
+                        1, 0,
+                        1, 1
+                        ]);
+        var indices = [0, 1, 2];
+        var subdivision = PolygonPipeline.computeRhumbLineSubdivision(Ellipsoid.WGS84, positions, indices, 2 * CesiumMath.RADIANS_PER_DEGREE);
+
+        expect(subdivision.attributes.position.values[0]).toEqual(positions[0].x);
+        expect(subdivision.attributes.position.values[1]).toEqual(positions[0].y);
+        expect(subdivision.attributes.position.values[2]).toEqual(positions[0].y);
+        expect(subdivision.attributes.position.values[3]).toEqual(positions[1].x);
+        expect(subdivision.attributes.position.values[4]).toEqual(positions[1].y);
+        expect(subdivision.attributes.position.values[5]).toEqual(positions[1].z);
+        expect(subdivision.attributes.position.values[6]).toEqual(positions[2].x);
+        expect(subdivision.attributes.position.values[7]).toEqual(positions[2].y);
+        expect(subdivision.attributes.position.values[8]).toEqual(positions[2].z);
+
+        expect(subdivision.indices[0]).toEqual(0);
+        expect(subdivision.indices[1]).toEqual(1);
+        expect(subdivision.indices[2]).toEqual(2);
+    });
+
+    it('computeRhumbLineSubdivision with subdivisions', function() {
+        var positions = Cartesian3.fromDegreesArray([
+                        0, 0,
+                        1, 0,
+                        1, 1
+                        ]);
+        var indices = [0, 1, 2];
+        var subdivision = PolygonPipeline.computeRhumbLineSubdivision(Ellipsoid.WGS84, positions, indices,  0.5 * CesiumMath.RADIANS_PER_DEGREE);
+
+        expect(subdivision.attributes.position.values.length).toEqual(36); // 12 vertices
+        expect(subdivision.indices.length).toEqual(36); // 12 triangles
+    });
+
+    it('computeRhumbLineSubdivision with subdivisions across the IDL', function() {
+        var positions = Cartesian3.fromDegreesArray([
+                        178, 0,
+                        -178, 0,
+                        -178, 1
+                        ]);
+        var indices = [0, 1, 2];
+        var subdivision = PolygonPipeline.computeRhumbLineSubdivision(Ellipsoid.WGS84, positions, indices,  0.5 * CesiumMath.RADIANS_PER_DEGREE);
+
+        expect(subdivision.attributes.position.values.length).toEqual(180); // 60 vertices
+        expect(subdivision.indices.length).toEqual(252); // 84 triangles
+    });
 });

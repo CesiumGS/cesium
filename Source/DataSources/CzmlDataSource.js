@@ -1,4 +1,5 @@
 define([
+        '../Core/ArcType',
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -43,6 +44,8 @@ define([
         '../ThirdParty/when',
         './BillboardGraphics',
         './BoxGraphics',
+        './CallbackProperty',
+        './CheckerboardMaterialProperty',
         './ColorMaterialProperty',
         './CompositeMaterialProperty',
         './CompositePositionProperty',
@@ -86,6 +89,7 @@ define([
         './VelocityVectorProperty',
         './WallGraphics'
     ], function(
+        ArcType,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -130,6 +134,8 @@ define([
         when,
         BillboardGraphics,
         BoxGraphics,
+        CallbackProperty,
+        CheckerboardMaterialProperty,
         ColorMaterialProperty,
         CompositeMaterialProperty,
         CompositePositionProperty,
@@ -209,6 +215,12 @@ define([
         }
 
         throw new RuntimeError(JSON.stringify(packetData) + ' is not valid CZML.');
+    }
+
+    function createAdapterProperty(property, adapterFunction) {
+        return new CallbackProperty(function(time, result) {
+            return adapterFunction(property.getValue(time, result));
+        }, property.isConstant);
     }
 
     var scratchCartesian = new Cartesian3();
@@ -501,6 +513,8 @@ define([
         } else if (czmlInterval.hasOwnProperty('rgba') ||
                    czmlInterval.hasOwnProperty('rgbaf')) {
             return Color;
+        } else if (czmlInterval.hasOwnProperty('arcType')) {
+            return ArcType;
         } else if (czmlInterval.hasOwnProperty('colorBlendMode')) {
             return ColorBlendMode;
         } else if (czmlInterval.hasOwnProperty('cornerType')) {
@@ -546,6 +560,8 @@ define([
         // The associations in this function need to be kept in sync with the
         // associations in getPropertyType
         switch (type) {
+            case ArcType:
+                return ArcType[defaultValue(czmlInterval.arcType, czmlInterval)];
             case Array:
                 return czmlInterval.array;
             case Boolean:
@@ -657,7 +673,6 @@ define([
         }
 
         var packedLength;
-        var isSampled;
         var unwrappedInterval;
         var unwrappedIntervalLength;
 
@@ -670,6 +685,19 @@ define([
         var isValue = !defined(packetData.reference) && !defined(packetData.velocityReference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
 
+        if (packetData.delete === true) {
+            // If deleting this property for all time, we can simply set to undefined and return.
+            if (!hasInterval) {
+                object[propertyName] = undefined;
+                return;
+            }
+
+            // Deleting depends on the type of property we have.
+            return removePropertyData(object[propertyName], combinedInterval);
+        }
+
+        var isSampled = false;
+
         if (isValue) {
             unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
             packedLength = defaultValue(type.packedLength, 1);
@@ -677,11 +705,11 @@ define([
             isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && (unwrappedIntervalLength > packedLength) && (type !== Object);
         }
 
-        //Rotation is a special case because it represents a native type (Number)
-        //and therefore does not need to be unpacked when loaded as a constant value.
+        // Rotation is a special case because it represents a native type (Number)
+        // and therefore does not need to be unpacked when loaded as a constant value.
         var needsUnpacking = typeof type.unpack === 'function' && type !== Rotation;
 
-        //Any time a constant value is assigned, it completely blows away anything else.
+        // Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
             if (isValue) {
                 object[propertyName] = new ConstantProperty(needsUnpacking ? type.unpack(unwrappedInterval, 0) : unwrappedInterval);
@@ -699,8 +727,8 @@ define([
             epoch = JulianDate.fromIso8601(packetEpoch);
         }
 
-        //Without an interval, any sampled value is infinite, meaning it completely
-        //replaces any non-sampled property that may exist.
+        // Without an interval, any sampled value is infinite, meaning it completely
+        // replaces any non-sampled property that may exist.
         if (isSampled && !hasInterval) {
             if (!(property instanceof SampledProperty)) {
                 property = new SampledProperty(type);
@@ -713,11 +741,11 @@ define([
 
         var interval;
 
-        //A constant value with an interval is normally part of a TimeIntervalCollection,
-        //However, if the current property is not a time-interval collection, we need
-        //to turn it into a Composite, preserving the old data with the new interval.
+        // A constant value with an interval is normally part of a TimeIntervalCollection,
+        // However, if the current property is not a time-interval collection, we need
+        // to turn it into a Composite, preserving the old data with the new interval.
         if (!isSampled && hasInterval) {
-            //Create a new interval for the constant value.
+            // Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
             if (isValue) {
                 combinedInterval.data = needsUnpacking ? type.unpack(unwrappedInterval, 0) : unwrappedInterval;
@@ -725,7 +753,7 @@ define([
                 combinedInterval.data = createSpecializedProperty(type, entityCollection, packetData);
             }
 
-            //If no property exists, simply use a new interval collection
+            // If no property exists, simply use a new interval collection
             if (!defined(property)) {
                 if (isValue) {
                     property = new TimeIntervalCollectionProperty();
@@ -736,29 +764,28 @@ define([
             }
 
             if (isValue && property instanceof TimeIntervalCollectionProperty) {
-                //If we create a collection, or it already existed, use it.
+                // If we create a collection, or it already existed, use it.
                 property.intervals.addInterval(combinedInterval);
             } else if (property instanceof CompositeProperty) {
-                //If the collection was already a CompositeProperty, use it.
+                // If the collection was already a CompositeProperty, use it.
                 if (isValue) {
                     combinedInterval.data = new ConstantProperty(combinedInterval.data);
                 }
                 property.intervals.addInterval(combinedInterval);
             } else {
-                //Otherwise, create a CompositeProperty but preserve the existing data.
-
-                //Put the old property in an infinite interval.
+                // Otherwise, create a CompositeProperty but preserve the existing data.
+                // Put the old property in an infinite interval.
                 interval = Iso8601.MAXIMUM_INTERVAL.clone();
                 interval.data = property;
 
-                //Create the composite.
+                // Create the composite.
                 property = new CompositeProperty();
                 object[propertyName] = property;
 
-                //add the old property interval
+                // Add the old property interval.
                 property.intervals.addInterval(interval);
 
-                //Change the new data to a ConstantProperty and add it.
+                // Change the new data to a ConstantProperty and add it.
                 if (isValue) {
                     combinedInterval.data = new ConstantProperty(combinedInterval.data);
                 }
@@ -774,31 +801,53 @@ define([
             object[propertyName] = property;
         }
 
-        //create a CompositeProperty but preserve the existing data.
+        // Create a CompositeProperty but preserve the existing data.
         if (!(property instanceof CompositeProperty)) {
-            //Put the old property in an infinite interval.
+            // Put the old property in an infinite interval.
             interval = Iso8601.MAXIMUM_INTERVAL.clone();
             interval.data = property;
 
-            //Create the composite.
+            // Create the composite.
             property = new CompositeProperty();
             object[propertyName] = property;
 
-            //add the old property interval
+            // Add the old property interval.
             property.intervals.addInterval(interval);
         }
 
-        //Check if the interval already exists in the composite
+        // Check if the interval already exists in the composite.
         var intervals = property.intervals;
         interval = intervals.findInterval(combinedInterval);
         if (!defined(interval) || !(interval.data instanceof SampledProperty)) {
-            //If not, create a SampledProperty for it.
+            // If not, create a SampledProperty for it.
             interval = combinedInterval.clone();
             interval.data = new SampledProperty(type);
             intervals.addInterval(interval);
         }
         interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
         updateInterpolationSettings(packetData, interval.data);
+    }
+
+    function removePropertyData(property, interval) {
+        if (property instanceof SampledProperty) {
+            property.removeSamples(interval);
+            return;
+        } else if (property instanceof TimeIntervalCollectionProperty) {
+            property.intervals.removeInterval(interval);
+            return;
+        } else if (property instanceof CompositeProperty) {
+            var intervals = property.intervals;
+            for (var i = 0; i < intervals.length; ++i) {
+                var intersection = TimeInterval.intersect(intervals.get(i), interval, scratchTimeInterval);
+                if (!intersection.isEmpty) {
+                    // remove data from the contained properties
+                    removePropertyData(intersection.data, interval);
+                }
+            }
+            // remove the intervals from the composite
+            intervals.removeInterval(interval);
+            return;
+        }
     }
 
     function processPacketData(type, object, propertyName, packetData, interval, sourceUri, entityCollection) {
@@ -828,14 +877,26 @@ define([
             combinedInterval = constrainedInterval;
         }
 
-        var referenceFrame;
-        var unwrappedInterval;
-        var isSampled = false;
-        var unwrappedIntervalLength;
         var numberOfDerivatives = defined(packetData.cartesianVelocity) ? 1 : 0;
         var packedLength = Cartesian3.packedLength * (numberOfDerivatives + 1);
+        var unwrappedInterval;
+        var unwrappedIntervalLength;
         var isValue = !defined(packetData.reference);
         var hasInterval = defined(combinedInterval) && !combinedInterval.equals(Iso8601.MAXIMUM_INTERVAL);
+
+        if (packetData.delete === true) {
+            // If deleting this property for all time, we can simply set to undefined and return.
+            if (!hasInterval) {
+                object[propertyName] = undefined;
+                return;
+            }
+
+            // Deleting depends on the type of property we have.
+            return removePositionPropertyData(object[propertyName], combinedInterval);
+        }
+
+        var referenceFrame;
+        var isSampled = false;
 
         if (isValue) {
             if (defined(packetData.referenceFrame)) {
@@ -847,7 +908,7 @@ define([
             isSampled = unwrappedIntervalLength > packedLength;
         }
 
-        //Any time a constant value is assigned, it completely blows away anything else.
+        // Any time a constant value is assigned, it completely blows away anything else.
         if (!isSampled && !hasInterval) {
             if (isValue) {
                 object[propertyName] = new ConstantPositionProperty(Cartesian3.unpack(unwrappedInterval), referenceFrame);
@@ -865,8 +926,8 @@ define([
             epoch = JulianDate.fromIso8601(packetEpoch);
         }
 
-        //Without an interval, any sampled value is infinite, meaning it completely
-        //replaces any non-sampled property that may exist.
+        // Without an interval, any sampled value is infinite, meaning it completely
+        // replaces any non-sampled property that may exist.
         if (isSampled && !hasInterval) {
             if (!(property instanceof SampledPositionProperty) || (defined(referenceFrame) && property.referenceFrame !== referenceFrame)) {
                 property = new SampledPositionProperty(referenceFrame, numberOfDerivatives);
@@ -879,11 +940,11 @@ define([
 
         var interval;
 
-        //A constant value with an interval is normally part of a TimeIntervalCollection,
-        //However, if the current property is not a time-interval collection, we need
-        //to turn it into a Composite, preserving the old data with the new interval.
+        // A constant value with an interval is normally part of a TimeIntervalCollection,
+        // However, if the current property is not a time-interval collection, we need
+        // to turn it into a Composite, preserving the old data with the new interval.
         if (!isSampled && hasInterval) {
-            //Create a new interval for the constant value.
+            // Create a new interval for the constant value.
             combinedInterval = combinedInterval.clone();
             if (isValue) {
                 combinedInterval.data = Cartesian3.unpack(unwrappedInterval);
@@ -891,7 +952,7 @@ define([
                 combinedInterval.data = createReferenceProperty(entityCollection, packetData.reference);
             }
 
-            //If no property exists, simply use a new interval collection
+            // If no property exists, simply use a new interval collection
             if (!defined(property)) {
                 if (isValue) {
                     property = new TimeIntervalCollectionPositionProperty(referenceFrame);
@@ -902,29 +963,29 @@ define([
             }
 
             if (isValue && property instanceof TimeIntervalCollectionPositionProperty && (defined(referenceFrame) && property.referenceFrame === referenceFrame)) {
-                //If we create a collection, or it already existed, use it.
+                // If we create a collection, or it already existed, use it.
                 property.intervals.addInterval(combinedInterval);
             } else if (property instanceof CompositePositionProperty) {
-                //If the collection was already a CompositePositionProperty, use it.
+                // If the collection was already a CompositePositionProperty, use it.
                 if (isValue) {
                     combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
                 }
                 property.intervals.addInterval(combinedInterval);
             } else {
-                //Otherwise, create a CompositePositionProperty but preserve the existing data.
+                // Otherwise, create a CompositePositionProperty but preserve the existing data.
 
-                //Put the old property in an infinite interval.
+                // Put the old property in an infinite interval.
                 interval = Iso8601.MAXIMUM_INTERVAL.clone();
                 interval.data = property;
 
-                //Create the composite.
+                // Create the composite.
                 property = new CompositePositionProperty(property.referenceFrame);
                 object[propertyName] = property;
 
-                //add the old property interval
+                // Add the old property interval.
                 property.intervals.addInterval(interval);
 
-                //Change the new data to a ConstantPositionProperty and add it.
+                // Change the new data to a ConstantPositionProperty and add it.
                 if (isValue) {
                     combinedInterval.data = new ConstantPositionProperty(combinedInterval.data, referenceFrame);
                 }
@@ -939,20 +1000,20 @@ define([
             property = new CompositePositionProperty(referenceFrame);
             object[propertyName] = property;
         } else if (!(property instanceof CompositePositionProperty)) {
-            //create a CompositeProperty but preserve the existing data.
-            //Put the old property in an infinite interval.
+            // Create a CompositeProperty but preserve the existing data.
+            // Put the old property in an infinite interval.
             interval = Iso8601.MAXIMUM_INTERVAL.clone();
             interval.data = property;
 
-            //Create the composite.
+            // Create the composite.
             property = new CompositePositionProperty(property.referenceFrame);
             object[propertyName] = property;
 
-            //add the old property interval
+            // Add the old property interval.
             property.intervals.addInterval(interval);
         }
 
-        //Check if the interval already exists in the composite
+        //Check if the interval already exists in the composite.
         var intervals = property.intervals;
         interval = intervals.findInterval(combinedInterval);
         if (!defined(interval) || !(interval.data instanceof SampledPositionProperty) || (defined(referenceFrame) && interval.data.referenceFrame !== referenceFrame)) {
@@ -963,6 +1024,28 @@ define([
         }
         interval.data.addSamplesPackedArray(unwrappedInterval, epoch);
         updateInterpolationSettings(packetData, interval.data);
+    }
+
+    function removePositionPropertyData(property, interval) {
+        if (property instanceof SampledPositionProperty) {
+            property.removeSamples(interval);
+            return;
+        } else if (property instanceof TimeIntervalCollectionPositionProperty) {
+            property.intervals.removeInterval(interval);
+            return;
+        } else if (property instanceof CompositePositionProperty) {
+            var intervals = property.intervals;
+            for (var i = 0; i < intervals.length; ++i) {
+                var intersection = TimeInterval.intersect(intervals.get(i), interval, scratchTimeInterval);
+                if (!intersection.isEmpty) {
+                    // remove data from the contained properties
+                    removePositionPropertyData(intersection.data, interval);
+                }
+            }
+            // remove the intervals from the composite
+            intervals.removeInterval(interval);
+            return;
+        }
     }
 
     function processPositionPacketData(object, propertyName, packetData, interval, sourceUri, entityCollection) {
@@ -1071,6 +1154,7 @@ define([
             materialData = packetData.polylineGlow;
             processPacketData(Color, existingMaterial, 'color', materialData.color, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'glowPower', materialData.glowPower, undefined, sourceUri, entityCollection);
+            processPacketData(Number, existingMaterial, 'taperPower', materialData.taperPower, undefined, sourceUri, entityCollection);
         } else if (defined(packetData.polylineArrow)) {
             if (!(existingMaterial instanceof PolylineArrowMaterialProperty)) {
                 existingMaterial = new PolylineArrowMaterialProperty();
@@ -1086,6 +1170,14 @@ define([
             processPacketData(Color, existingMaterial, 'gapColor', materialData.gapColor, undefined, undefined, entityCollection);
             processPacketData(Number, existingMaterial, 'dashLength', materialData.dashLength, undefined, sourceUri, entityCollection);
             processPacketData(Number, existingMaterial, 'dashPattern', materialData.dashPattern, undefined, sourceUri, entityCollection);
+        } else if (defined(packetData.checkerboard)) {
+            if (!(existingMaterial instanceof CheckerboardMaterialProperty)) {
+                existingMaterial = new CheckerboardMaterialProperty();
+            }
+            materialData = packetData.checkerboard;
+            processPacketData(Color, existingMaterial, 'evenColor', materialData.evenColor, undefined, sourceUri, entityCollection);
+            processPacketData(Color, existingMaterial, 'oddColor', materialData.oddColor, undefined, sourceUri, entityCollection);
+            processPacketData(Cartesian2, existingMaterial, 'repeat', materialData.repeat, undefined, sourceUri, entityCollection);
         }
 
         if (defined(existingInterval)) {
@@ -1382,6 +1474,8 @@ define([
         processPacketData(Number, corridor, 'width', corridorData.width, interval, sourceUri, entityCollection);
         processPacketData(Number, corridor, 'height', corridorData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, corridor, 'extrudedHeight', corridorData.extrudedHeight, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, corridor, 'heightReference', corridorData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, corridor, 'extrudedHeightReference', corridorData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(CornerType, corridor, 'cornerType', corridorData.cornerType, interval, sourceUri, entityCollection);
         processPacketData(Number, corridor, 'granularity', corridorData.granularity, interval, sourceUri, entityCollection);
         processPacketData(Boolean, corridor, 'fill', corridorData.fill, interval, sourceUri, entityCollection);
@@ -1495,6 +1589,8 @@ define([
         processPacketData(Number, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'height', ellipseData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'extrudedHeight', ellipseData.extrudedHeight, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, ellipse, 'heightReference', ellipseData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, ellipse, 'extrudedHeightReference', ellipseData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(Rotation, ellipse, 'rotation', ellipseData.rotation, interval, sourceUri, entityCollection);
         processPacketData(Rotation, ellipse, 'stRotation', ellipseData.stRotation, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'granularity', ellipseData.granularity, interval, sourceUri, entityCollection);
@@ -1760,6 +1856,8 @@ define([
         processPositions(polygon, 'hierarchy', polygonData.positions, entityCollection);
         processPacketData(Number, polygon, 'height', polygonData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'extrudedHeight', polygonData.extrudedHeight, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, polygon, 'heightReference', polygonData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, polygon, 'extrudedHeightReference', polygonData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(Rotation, polygon, 'stRotation', polygonData.stRotation, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'granularity', polygonData.granularity, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'fill', polygonData.fill, interval, sourceUri, entityCollection);
@@ -1770,9 +1868,14 @@ define([
         processPacketData(Boolean, polygon, 'perPositionHeight', polygonData.perPositionHeight, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'closeTop', polygonData.closeTop, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polygon, 'closeBottom', polygonData.closeBottom, interval, sourceUri, entityCollection);
+        processPacketData(ArcType, polygon, 'arcType', polygonData.arcType, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polygon, 'shadows', polygonData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polygon, 'distanceDisplayCondition', polygonData.distanceDisplayCondition, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'zIndex', polygonData.zIndex, interval, sourceUri, entityCollection);
+    }
+
+    function adaptFollowSurfaceToArcType(followSurface) {
+        return followSurface ? ArcType.GEODESIC : ArcType.NONE;
     }
 
     function processPolyline(entity, packet, entityCollection, sourceUri) {
@@ -1799,11 +1902,18 @@ define([
         processPacketData(Number, polyline, 'granularity', polylineData.granularity, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'material', polylineData.material, interval, sourceUri, entityCollection);
         processMaterialPacketData(polyline, 'depthFailMaterial', polylineData.depthFailMaterial, interval, sourceUri, entityCollection);
-        processPacketData(Boolean, polyline, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+        processPacketData(ArcType, polyline, 'arcType', polylineData.arcType, interval, sourceUri, entityCollection);
         processPacketData(Boolean, polyline, 'clampToGround', polylineData.clampToGround, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polyline, 'shadows', polylineData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polyline, 'distanceDisplayCondition', polylineData.distanceDisplayCondition, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'zIndex', polylineData.zIndex, interval, sourceUri, entityCollection);
+
+        // for backwards compatibility, adapt CZML followSurface to arcType.
+        if (defined(polylineData.followSurface) && !defined(polylineData.arcType)) {
+            var tempObj = {};
+            processPacketData(Boolean, tempObj, 'followSurface', polylineData.followSurface, interval, sourceUri, entityCollection);
+            polyline.arcType = createAdapterProperty(tempObj.followSurface, adaptFollowSurfaceToArcType);
+        }
     }
 
     function processRectangle(entity, packet, entityCollection, sourceUri) {
@@ -1828,6 +1938,8 @@ define([
         processPacketData(Rectangle, rectangle, 'coordinates', rectangleData.coordinates, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'height', rectangleData.height, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'extrudedHeight', rectangleData.extrudedHeight, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, rectangle, 'heightReference', rectangleData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, rectangle, 'extrudedHeightReference', rectangleData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(Rotation, rectangle, 'rotation', rectangleData.rotation, interval, sourceUri, entityCollection);
         processPacketData(Rotation, rectangle, 'stRotation', rectangleData.stRotation, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'granularity', rectangleData.granularity, interval, sourceUri, entityCollection);

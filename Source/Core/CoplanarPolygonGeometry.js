@@ -10,6 +10,7 @@ define([
         './CoplanarPolygonGeometryLibrary',
         './defaultValue',
         './defined',
+        './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
@@ -34,6 +35,7 @@ define([
         CoplanarPolygonGeometryLibrary,
         defaultValue,
         defined,
+        Ellipsoid,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
@@ -62,6 +64,7 @@ define([
     var quaternionScratch = new Quaternion();
     var textureMatrixScratch = new Matrix3();
     var tangentRotationScratch = new Matrix3();
+    var surfaceNormalScratch = new Cartesian3();
 
     function createGeometryFromPolygon(polygon, vertexFormat, boundingRectangle, stRotation, projectPointTo2D, normal, tangent, bitangent) {
         var positions = polygon.positions;
@@ -208,6 +211,7 @@ define([
      * @param {PolygonHierarchy} options.polygonHierarchy A polygon hierarchy that can include holes.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      *
      * @example
      * var polygon = new Cesium.CoplanarPolygonGeometry({
@@ -233,13 +237,14 @@ define([
         this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._polygonHierarchy = polygonHierarchy;
         this._stRotation = defaultValue(options.stRotation, 0.0);
+        this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._workerName = 'createCoplanarPolygonGeometry';
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + VertexFormat.packedLength + 2;
+        this.packedLength = PolygonGeometryLibrary.computeHierarchyPackedLength(polygonHierarchy) + VertexFormat.packedLength + Ellipsoid.packedLength + 2;
     }
 
     /**
@@ -249,6 +254,7 @@ define([
      * @param {Cartesian3[]} options.positions An array of positions that defined the corner points of the polygon.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Number} [options.stRotation=0.0] The rotation of the texture coordinates, in radians. A positive rotation is counter-clockwise.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      * @returns {CoplanarPolygonGeometry}
      *
      * @example
@@ -278,7 +284,8 @@ define([
                 positions : options.positions
             },
             vertexFormat : options.vertexFormat,
-            stRotation : options.stRotation
+            stRotation : options.stRotation,
+            ellipsoid : options.ellipsoid
         };
         return new CoplanarPolygonGeometry(newOptions);
     };
@@ -302,6 +309,9 @@ define([
 
         startingIndex = PolygonGeometryLibrary.packPolygonHierarchy(value._polygonHierarchy, array, startingIndex);
 
+        Ellipsoid.pack(value._ellipsoid, array, startingIndex);
+        startingIndex += Ellipsoid.packedLength;
+
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
@@ -311,6 +321,7 @@ define([
         return array;
     };
 
+    var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
     var scratchOptions = {
         polygonHierarchy : {}
@@ -334,6 +345,9 @@ define([
         startingIndex = polygonHierarchy.startingIndex;
         delete polygonHierarchy.startingIndex;
 
+        var ellipsoid = Ellipsoid.unpack(array, startingIndex, scratchEllipsoid);
+        startingIndex += Ellipsoid.packedLength;
+
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
@@ -345,6 +359,7 @@ define([
         }
 
         result._polygonHierarchy = polygonHierarchy;
+        result._ellipsoid = Ellipsoid.clone(ellipsoid, result._ellipsoid);
         result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._stRotation = stRotation;
         result.packedLength = packedLength;
@@ -371,22 +386,33 @@ define([
         var normal = scratchNormal;
         var tangent = scratchTangent;
         var bitangent = scratchBitangent;
+        var axis1 = axis1Scratch;
+        var axis2 = axis2Scratch;
 
-        var validGeometry = CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments(outerPositions, centerScratch, axis1Scratch, axis2Scratch);
+        var validGeometry = CoplanarPolygonGeometryLibrary.computeProjectTo2DArguments(outerPositions, centerScratch, axis1, axis2);
         if (!validGeometry) {
             return undefined;
         }
-        var projectPoints = CoplanarPolygonGeometryLibrary.createProjectPointsTo2DFunction(centerScratch, axis1Scratch, axis2Scratch);
-        var projectPoint = CoplanarPolygonGeometryLibrary.createProjectPointTo2DFunction(centerScratch, axis1Scratch, axis2Scratch);
 
-        normal = Cartesian3.cross(axis1Scratch, axis2Scratch, normal);
+        normal = Cartesian3.cross(axis1, axis2, normal);
         normal = Cartesian3.normalize(normal, normal);
 
+        if (!Cartesian3.equalsEpsilon(centerScratch, Cartesian3.ZERO, CesiumMath.EPSILON6)) {
+            var surfaceNormal = polygonGeometry._ellipsoid.geodeticSurfaceNormal(centerScratch, surfaceNormalScratch);
+            if (Cartesian3.dot(normal, surfaceNormal) < 0) {
+                normal = Cartesian3.negate(normal, normal);
+                axis1 = Cartesian3.negate(axis1, axis1);
+            }
+        }
+
+        var projectPoints = CoplanarPolygonGeometryLibrary.createProjectPointsTo2DFunction(centerScratch, axis1, axis2);
+        var projectPoint = CoplanarPolygonGeometryLibrary.createProjectPointTo2DFunction(centerScratch, axis1, axis2);
+
         if (vertexFormat.tangent) {
-            tangent = Cartesian3.clone(axis1Scratch, tangent);
+            tangent = Cartesian3.clone(axis1, tangent);
         }
         if (vertexFormat.bitangent) {
-            bitangent = Cartesian3.clone(axis2Scratch, bitangent);
+            bitangent = Cartesian3.clone(axis2, bitangent);
         }
 
         var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, projectPoints, false);

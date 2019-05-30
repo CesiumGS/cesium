@@ -1121,6 +1121,23 @@ defineSuite([
         expect(actualTranslation).toEqualEpsilon(expectedTranslation, CesiumMath.EPSILON14);
     });
 
+    it('fixedFrameToHeadingPitchRoll returns heading/pitch/roll from a transform', function () {
+        var expected = new HeadingPitchRoll(0.5, 0.6, 0.7);
+
+        var transform = Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0, 0));
+        var transform2 = Matrix4.fromTranslationQuaternionRotationScale(new Cartesian3(), Quaternion.fromHeadingPitchRoll(expected), new Cartesian3(1, 1, 1));
+        transform = Matrix4.multiply(transform, transform2, transform2);
+
+        var actual = Transforms.fixedFrameToHeadingPitchRoll(transform);
+        expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON10);
+    });
+
+    it('fixedFrameToHeadingPitchRoll throws with no transform', function() {
+        expect(function() {
+            return Transforms.fixedFrameToHeadingPitchRoll();
+        }).toThrowDeveloperError();
+    });
+
     it('eastNorthUpToFixedFrame throws without an origin', function() {
         expect(function() {
             Transforms.eastNorthUpToFixedFrame(undefined, Ellipsoid.WGS84);

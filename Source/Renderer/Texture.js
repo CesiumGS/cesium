@@ -36,6 +36,9 @@ define([
         TextureMinificationFilter) {
     'use strict';
 
+    /**
+     * @private
+    */
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -189,10 +192,15 @@ define([
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
 
-        // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
+
+        var unpackAlignment = 4;
+        if (defined(source) && defined(source.arrayBufferView) && !isCompressed) {
+            unpackAlignment = PixelFormat.alignmentInBytes(pixelFormat, pixelDatatype, width);
+        }
+
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
         if (defined(source)) {
             if (defined(source.arrayBufferView)) {
@@ -263,6 +271,15 @@ define([
 
         this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
     }
+
+    /**
+     * This function is identical to using the Texture constructor except that it can be
+     * replaced with a mock/spy in tests.
+     * @private
+     */
+    Texture.create = function(options) {
+        return new Texture(options);
+    };
 
     /**
      * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
@@ -506,8 +523,6 @@ define([
         var gl = this._context._gl;
         var target = this._textureTarget;
 
-        // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
@@ -522,6 +537,13 @@ define([
 
         var preMultiplyAlpha = this._preMultiplyAlpha;
         var flipY = this._flipY;
+
+        var unpackAlignment = 4;
+        if (defined(arrayBufferView)) {
+            unpackAlignment = PixelFormat.alignmentInBytes(pixelFormat, pixelDatatype, width);
+        }
+
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
         var uploaded = false;
         if (!this._initialized) {
@@ -555,7 +577,7 @@ define([
         }
 
         if (!uploaded) {
-            if (arrayBufferView) {
+            if (defined(arrayBufferView)) {
                 gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 

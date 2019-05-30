@@ -1,7 +1,9 @@
 defineSuite([
         'DataSources/PolygonGeometryUpdater',
         'Core/ApproximateTerrainHeights',
+        'Core/ArcType',
         'Core/Cartesian3',
+        'Core/Color',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
@@ -19,6 +21,7 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'Scene/GroundPrimitive',
+        'Scene/HeightReference',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
         'Specs/createDynamicProperty',
@@ -28,7 +31,9 @@ defineSuite([
     ], function(
         PolygonGeometryUpdater,
         ApproximateTerrainHeights,
+        ArcType,
         Cartesian3,
+        Color,
         Ellipsoid,
         GeometryOffsetAttribute,
         JulianDate,
@@ -46,6 +51,7 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         GroundPrimitive,
+        HeightReference,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
@@ -223,6 +229,16 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
+    it('A time-varying arcType causes geometry to be dynamic', function() {
+        var entity = createBasicPolygon();
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        entity.polygon.arcType = new SampledProperty(Number);
+        entity.polygon.arcType.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
     it('Creates geometry with expected properties', function() {
         var options = {
             height : 431,
@@ -230,8 +246,9 @@ defineSuite([
             granularity : 0.97,
             stRotation : 12,
             perPositionHeight : false,
-            closeTop: true,
-            closeBottom: false
+            closeTop : true,
+            closeBottom : false,
+            arcType : ArcType.GEODESIC
         };
 
         var entity = createBasicPolygon();
@@ -245,6 +262,7 @@ defineSuite([
         polygon.height = new ConstantProperty(options.height);
         polygon.extrudedHeight = new ConstantProperty(options.extrudedHeight);
         polygon.granularity = new ConstantProperty(options.granularity);
+        polygon.arcType = new ConstantProperty(options.arcType);
 
         var updater = new PolygonGeometryUpdater(entity, scene);
 
@@ -259,6 +277,7 @@ defineSuite([
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
         expect(geometry._closeTop).toEqual(options.closeTop);
         expect(geometry._closeBottom).toEqual(options.closeBottom);
+        expect(geometry._arcType).toEqual(options.arcType);
         expect(geometry._offsetAttribute).toBeUndefined();
 
         instance = updater.createOutlineGeometryInstance(time);
@@ -318,6 +337,27 @@ defineSuite([
         }
     });
 
+    it('Checks that a polygon without per position heights does not use a height reference', function() {
+        var entity = createBasicPolygon();
+        var graphics = entity.polygon;
+        graphics.perPositionHeight = new ConstantProperty(true);
+        graphics.outline = true;
+        graphics.outlineColor = Color.BLACK;
+        graphics.height = undefined;
+        graphics.extrudedHeight = undefined;
+        var updater = new PolygonGeometryUpdater(entity, scene);
+
+        var instance;
+
+        graphics.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+        graphics.extrudedHeightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+    });
+
     it('dynamic updater sets properties', function() {
         var polygon = new PolygonGraphics();
         polygon.hierarchy = createDynamicProperty(new PolygonHierarchy(Cartesian3.fromRadiansArray([
@@ -333,6 +373,7 @@ defineSuite([
         polygon.stRotation = createDynamicProperty(1);
         polygon.closeTop = createDynamicProperty(false);
         polygon.closeBottom = createDynamicProperty(false);
+        polygon.arcType = createDynamicProperty(ArcType.RHUMB);
 
         var entity = new Entity();
         entity.polygon = polygon;
@@ -351,6 +392,7 @@ defineSuite([
         expect(options.stRotation).toEqual(polygon.stRotation.getValue());
         expect(options.closeTop).toEqual(polygon.closeTop.getValue());
         expect(options.closeBottom).toEqual(polygon.closeBottom.getValue());
+        expect(options.arcType).toEqual(polygon.arcType.getValue());
         expect(options.offsetAttribute).toBeUndefined();
     });
 

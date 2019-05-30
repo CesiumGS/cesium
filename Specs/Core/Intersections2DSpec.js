@@ -288,4 +288,58 @@ defineSuite([
             expect(result3.z).toBeGreaterThan(0.0);
         });
     });
+
+    describe('computeLineSegmentLineSegmentIntersection', function() {
+        it('returns the correct result for intersection point', function() {
+            var intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 2.0, -1.0, 1.0, 1.0, 1.0);
+            expect(intersection0.x).toEqualEpsilon(0.0, 1e-15);
+            expect(intersection0.y).toEqualEpsilon(1.0, 1e-15);
+
+            var intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 10.0, 5.0, 0.0, 5.0, 10.0, 0.0);
+            expect(intersection1.x).toEqualEpsilon(5.0, 1e-15);
+            expect(intersection1.y).toEqualEpsilon(2.5, 1e-15);
+
+            var intersection2 = Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, -5.0, 4.0, 3.0, -2.0, 1.0, 4.0, -2.0);
+            expect(intersection2.x).toEqualEpsilon(2.0, 1e-15);
+            expect(intersection2.y).toEqualEpsilon(-1.0, 1e-15);
+        });
+
+        it('returns the correct result for intersection point on a vertex', function() {
+            var intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 2.0, -1.0, 0.0, 1.0, 0.0);
+            expect(intersection0.x).toEqualEpsilon(0.0, 1e-15);
+            expect(intersection0.y).toEqualEpsilon(0.0, 1e-15);
+
+            var intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.0);
+            expect(intersection1.x).toEqualEpsilon(1.0, 1e-15);
+            expect(intersection1.y).toEqualEpsilon(1.0, 1e-15);
+
+            var intersection2 = Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 4.0, 3.0, 5.0, 0.0, 4.0, 3.0);
+            expect(intersection2.x).toEqualEpsilon(4.0, 1e-15);
+            expect(intersection2.y).toEqualEpsilon(3.0, 1e-15);
+        });
+
+        it('returns undefined for non-intersecting lines', function() {
+            var intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 5.0, 0.1, 4.8, 5.0, 0.0);
+            expect(intersection0).toBeUndefined();
+
+            var intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(10.0, 0.0, 0.0, -10.0, 0.0, 0.0, -8.0, -8.0);
+            expect(intersection1).toBeUndefined();
+        });
+
+        it('returns undefined for parallel lines', function() {
+            var intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 2.0, 1.0, 1.0, 1.0, 4.0);
+            expect(intersection0).toBeUndefined();
+
+            var intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(1.0, 1.0, 4.0, 4.0, 0.0, 0.0, 3.0, 3.0);
+            expect(intersection1).toBeUndefined();
+        });
+
+        it('returns undefined for coincident lines', function() {
+            var intersection0 = Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 2.0, 0.0, 1.0, 0.0, 4.0);
+            expect(intersection0).toBeUndefined();
+
+            var intersection1 = Intersections2D.computeLineSegmentLineSegmentIntersection(0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 2.0);
+            expect(intersection1).toBeUndefined();
+        });
+    });
 });

@@ -105,6 +105,25 @@ defineSuite([
         expect(p.indices.length).toEqual(numTriangles * 3);
     });
 
+    it('flips normal to roughly match surface normal', function() {
+        var p = CoplanarPolygonGeometry.createGeometry(CoplanarPolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.ALL,
+            positions : Cartesian3.fromDegreesArrayHeights([
+                90.0, -1.0, 0.0,
+                90.0, 1.0, 0.0,
+                92.0, 1.0, 0.0,
+                92.0, -1.0, 0.0
+            ])
+        }));
+
+        var center = Cartesian3.fromDegrees(91.0, 0.0);
+        var expectedNormal = Ellipsoid.WGS84.geodeticSurfaceNormal(center);
+
+        var actual = Cartesian3.unpack(p.attributes.normal.values);
+
+        expect(expectedNormal).toEqualEpsilon(actual, CesiumMath.EPSILON6);
+    });
+
     var positions = Cartesian3.fromDegreesArray([
         -12.4, 3.5,
         -12.0, 3.5,
@@ -148,7 +167,8 @@ defineSuite([
     addPositions(packedInstance, holePositions0);
     packedInstance.push(3.0, 0.0);
     addPositions(packedInstance, holePositions1);
-    packedInstance.push(1, 0, 0, 0, 0, 0, 0, 41);
+    packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
+    packedInstance.push(1, 0, 0, 0, 0, 0, 0, 44);
     createPackableSpecs(CoplanarPolygonGeometry, polygon, packedInstance);
 });
 

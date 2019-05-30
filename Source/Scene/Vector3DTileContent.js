@@ -511,6 +511,7 @@ define([
         var ready = true;
         if (defined(this._polygons)) {
             this._polygons.classificationType = this._tileset.classificationType;
+            this._polygons.debugWireframe = this._tileset.debugWireframe;
             this._polygons.update(frameState);
             ready = ready && this._polygons._ready;
         }

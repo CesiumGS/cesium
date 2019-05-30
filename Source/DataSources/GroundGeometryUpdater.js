@@ -1,37 +1,39 @@
 define([
-    '../Core/ApproximateTerrainHeights',
-    '../Core/Cartesian3',
-    '../Core/Check',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/GeometryOffsetAttribute',
-    '../Core/Iso8601',
-    '../Core/oneTimeWarning',
-    '../Scene/HeightReference',
-    './CallbackProperty',
-    './ConstantProperty',
-    './GeometryUpdater',
-    './Property',
-    './TerrainOffsetProperty'
-], function(
-    ApproximateTerrainHeights,
-    Cartesian3,
-    Check,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    GeometryOffsetAttribute,
-    Iso8601,
-    oneTimeWarning,
-    HeightReference,
-    CallbackProperty,
-    ConstantProperty,
-    GeometryUpdater,
-    Property,
-    TerrainOffsetProperty) {
+        '../Core/ApproximateTerrainHeights',
+        '../Core/Cartesian3',
+        '../Core/Check',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/GeometryOffsetAttribute',
+        '../Core/Iso8601',
+        '../Core/oneTimeWarning',
+        '../Scene/GroundPrimitive',
+        '../Scene/HeightReference',
+        './CallbackProperty',
+        './ConstantProperty',
+        './GeometryUpdater',
+        './Property',
+        './TerrainOffsetProperty'
+    ], function(
+        ApproximateTerrainHeights,
+        Cartesian3,
+        Check,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        GeometryOffsetAttribute,
+        Iso8601,
+        oneTimeWarning,
+        GroundPrimitive,
+        HeightReference,
+        CallbackProperty,
+        ConstantProperty,
+        GeometryUpdater,
+        Property,
+        TerrainOffsetProperty) {
     'use strict';
 
     var defaultZIndex = new ConstantProperty(0);
@@ -39,7 +41,7 @@ define([
     /**
      * An abstract class for updating ground geometry entities.
      * @constructor
-     *
+     * @alias GroundGeometryUpdater
      * @param {Object} options An object with the following properties:
      * @param {Entity} options.entity The entity containing the geometry to be visualized.
      * @param {Scene} options.scene The scene where visualization is taking place.
@@ -85,6 +87,16 @@ define([
         }
     });
 
+    GroundGeometryUpdater.prototype._isOnTerrain = function(entity, geometry) {
+        return this._fillEnabled && !defined(geometry.height) && !defined(geometry.extrudedHeight) && GroundPrimitive.isSupported(this._scene);
+    };
+
+    GroundGeometryUpdater.prototype._getIsClosed = function(options) {
+        var height = options.height;
+        var extrudedHeight = options.extrudedHeight;
+        return height === 0 || (defined(extrudedHeight) && extrudedHeight !== height);
+    };
+
     GroundGeometryUpdater.prototype._computeCenter = DeveloperError.throwInstantiationError;
 
     GroundGeometryUpdater.prototype._onEntityPropertyChanged = function(entity, propertyName, newValue, oldValue) {
@@ -118,12 +130,35 @@ define([
     };
 
     /**
+     * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
+    GroundGeometryUpdater.prototype.destroy = function() {
+        if (defined(this._terrainOffsetProperty)) {
+            this._terrainOffsetProperty.destroy();
+            this._terrainOffsetProperty = undefined;
+        }
+
+        GeometryUpdater.prototype.destroy.call(this);
+    };
+
+    /**
      * @private
      */
-    GroundGeometryUpdater.getGeometryHeight = function(heightProperty, heightReferenceProperty, time) {
-        var heightReference = Property.getValueOrDefault(heightReferenceProperty, time, HeightReference.NONE);
+    GroundGeometryUpdater.getGeometryHeight = function(height, heightReference) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('heightReference', heightReference);
+        //>>includeEnd('debug');
+        if (!defined(height)) {
+            if (heightReference !== HeightReference.NONE) {
+                oneTimeWarning(oneTimeWarning.geometryHeightReference);
+            }
+            return;
+        }
+
         if (heightReference !== HeightReference.CLAMP_TO_GROUND) {
-            return Property.getValueOrUndefined(heightProperty, time);
+            return height;
         }
         return 0.0;
     };
@@ -131,10 +166,18 @@ define([
     /**
      * @private
      */
-    GroundGeometryUpdater.getGeometryExtrudedHeight = function(extrudedHeightProperty, extrudedHeightReferenceProperty, time) {
-        var heightReference = Property.getValueOrDefault(extrudedHeightReferenceProperty, time, HeightReference.NONE);
-        if (heightReference !== HeightReference.CLAMP_TO_GROUND) {
-            return Property.getValueOrUndefined(extrudedHeightProperty, time);
+    GroundGeometryUpdater.getGeometryExtrudedHeight = function(extrudedHeight, extrudedHeightReference) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('extrudedHeightReference', extrudedHeightReference);
+        //>>includeEnd('debug');
+        if (!defined(extrudedHeight)) {
+            if (extrudedHeightReference !== HeightReference.NONE) {
+                oneTimeWarning(oneTimeWarning.geometryExtrudedHeightReference);
+            }
+            return;
+        }
+        if (extrudedHeightReference !== HeightReference.CLAMP_TO_GROUND) {
+            return extrudedHeight;
         }
 
         return GroundGeometryUpdater.CLAMP_TO_GROUND;
@@ -148,10 +191,13 @@ define([
     /**
      * @private
      */
-    GroundGeometryUpdater.computeGeometryOffsetAttribute = function(heightReferenceProperty, extrudedHeightReferenceProperty, time) {
-        var heightReference = Property.getValueOrDefault(heightReferenceProperty, time, HeightReference.NONE);
-        var extrudedHeightReference = Property.getValueOrDefault(extrudedHeightReferenceProperty, time, HeightReference.NONE);
-
+    GroundGeometryUpdater.computeGeometryOffsetAttribute = function(height, heightReference, extrudedHeight, extrudedHeightReference) {
+        if (!defined(height) || !defined(heightReference)) {
+            heightReference = HeightReference.NONE;
+        }
+        if (!defined(extrudedHeight) || !defined(extrudedHeightReference)) {
+            extrudedHeightReference = HeightReference.NONE;
+        }
         var n = 0;
         if (heightReference !== HeightReference.NONE) {
             n++;

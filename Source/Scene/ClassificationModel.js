@@ -958,6 +958,12 @@ define([
             return;
         }
 
+        if (!FeatureDetection.supportsWebP.initialized) {
+            FeatureDetection.supportsWebP.initialize();
+            return;
+        }
+        var supportsWebP = FeatureDetection.supportsWebP();
+
         if ((this._state === ModelState.NEEDS_LOAD) && defined(this.gltf)) {
             this._state = ModelState.LOADING;
             if (this._state !== ModelState.FAILED) {
@@ -991,7 +997,7 @@ define([
             // Transition from LOADING -> LOADED once resources are downloaded and created.
             // Textures may continue to stream in while in the LOADED state.
             if (loadResources.pendingBufferLoads === 0) {
-                ModelUtility.checkSupportedExtensions(this.extensionsRequired);
+                ModelUtility.checkSupportedExtensions(this.extensionsRequired, supportsWebP);
 
                 addBuffersToLoadResources(this);
                 parseBufferViews(this);

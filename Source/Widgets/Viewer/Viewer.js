@@ -299,7 +299,7 @@ define([
      * @param {ShadowMode} [options.terrainShadows=ShadowMode.RECEIVE_ONLY] Determines if the terrain casts or receives shadows from the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
      * @param {Boolean} [options.projectionPicker=false] If set to true, the ProjectionPicker widget will be created.
-     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
+     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling reduces the CPU/GPU usage of your application and uses less battery on mobile, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      *
      * @exception {DeveloperError} Element with id "container" does not exist in the document.
@@ -750,6 +750,8 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
                 } else {
                     that.zoomTo(entity);
                 }
+            } else if (defined(that.trackedEntity)) {
+                that.trackedEntity = undefined;
             }
         }
 
@@ -1982,14 +1984,9 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         }
 
         // If zoomTarget was an ImageryLayer
-        var isCartographic = target instanceof Cartographic;
-        if (target instanceof Rectangle || isCartographic) {
-            var destination = target;
-            if (isCartographic) {
-                destination = scene.mapProjection.ellipsoid.cartographicToCartesian(destination);
-            }
+        if (target instanceof Cartographic) {
             options = {
-                destination : destination,
+                destination : scene.mapProjection.ellipsoid.cartographicToCartesian(target),
                 duration : zoomOptions.duration,
                 maximumHeight : zoomOptions.maximumHeight,
                 complete : function() {

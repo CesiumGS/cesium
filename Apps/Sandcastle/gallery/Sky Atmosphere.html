@@ -66,6 +66,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var scene = viewer.scene;
 var skyAtmosphere = scene.skyAtmosphere;
+var globe = scene.globe;
 
 // The viewModel tracks the state of our mini application.
 var viewModel = {
@@ -81,20 +82,21 @@ var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
 // Make the skyAtmosphere's HSB parameters subscribers of the viewModel.
-function subscribeParameter(name) {
+function subscribeParameter(name, globeName) {
     Cesium.knockout.getObservable(viewModel, name).subscribe(
         function(newValue) {
             skyAtmosphere[name] = newValue;
+            globe[globeName] = newValue;
         }
     );
 }
 
-subscribeParameter('hueShift');
-subscribeParameter('saturationShift');
-subscribeParameter('brightnessShift');
+subscribeParameter('hueShift', 'atmosphereHueShift');
+subscribeParameter('saturationShift', 'atmosphereSaturationShift');
+subscribeParameter('brightnessShift', 'atmosphereBrightnessShift');
 
-Sandcastle.addToggleButton('Lighting', scene.globe.enableLighting, function(checked) {
-    scene.globe.enableLighting = checked;
+Sandcastle.addToggleButton('Lighting', globe.enableLighting, function(checked) {
+    globe.enableLighting = checked;
 });
 
 Sandcastle.addToggleButton('Fog', scene.fog.enabled, function(checked) {

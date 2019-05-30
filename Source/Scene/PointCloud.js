@@ -38,7 +38,8 @@ define([
         './getClipAndStyleCode',
         './getClippingFunction',
         './SceneMode',
-        './ShadowMode'
+        './ShadowMode',
+        './StencilConstants'
     ], function(
         arraySlice,
         BoundingSphere,
@@ -79,7 +80,8 @@ define([
         getClipAndStyleCode,
         getClippingFunction,
         SceneMode,
-        ShadowMode) {
+        ShadowMode,
+        StencilConstants) {
     'use strict';
 
     // Bail out if the browser doesn't support typed arrays, to prevent the setup function
@@ -188,7 +190,7 @@ define([
         // If defined, use this matrix to position the clipping planes instead of the modelMatrix.
         // This is so that when point clouds are part of a tileset they all get clipped relative
         // to the root tile.
-        this.clippingPlaneOffsetMatrix = undefined;
+        this.clippingPlanesOriginMatrix = undefined;
 
         this.attenuation = false;
         this._attenuation = false;
@@ -514,7 +516,7 @@ define([
         return boundingSphere;
     }
 
-    function prepareVertexAttribute(typedArray) {
+    function prepareVertexAttribute(typedArray, name) {
         // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
         var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
         if (componentDatatype === ComponentDatatype.INT || componentDatatype === ComponentDatatype.UNSIGNED_INT || componentDatatype === ComponentDatatype.DOUBLE) {
@@ -571,7 +573,7 @@ define([
             for (var name in styleableProperties) {
                 if (styleableProperties.hasOwnProperty(name)) {
                     var property = styleableProperties[name];
-                    var typedArray = prepareVertexAttribute(property.typedArray);
+                    var typedArray = prepareVertexAttribute(property.typedArray, name);
                     componentsPerAttribute = property.componentCount;
                     componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
 
@@ -632,7 +634,7 @@ define([
 
         var batchIdsVertexBuffer;
         if (hasBatchIds) {
-            batchIds = prepareVertexAttribute(batchIds);
+            batchIds = prepareVertexAttribute(batchIds, 'batchIds');
             batchIdsVertexBuffer = Buffer.createVertexBuffer({
                 context : context,
                 typedArray : batchIds,
@@ -737,11 +739,18 @@ define([
             attributes : attributes
         });
 
-        pointCloud._opaqueRenderState = RenderState.fromCache({
+        var opaqueRenderState = {
             depthTest : {
                 enabled : true
             }
-        });
+        };
+
+        if (pointCloud._opaquePass === Pass.CESIUM_3D_TILE) {
+            opaqueRenderState.stencilTest = StencilConstants.setCesium3DTileBit();
+            opaqueRenderState.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+        }
+
+        pointCloud._opaqueRenderState = RenderState.fromCache(opaqueRenderState);
 
         pointCloud._translucentRenderState = RenderState.fromCache({
             depthTest : {
@@ -824,8 +833,8 @@ define([
                     return Matrix4.IDENTITY;
                 }
 
-                var clippingPlaneOffsetMatrix = defaultValue(pointCloud.clippingPlaneOffsetMatrix, pointCloud._modelMatrix);
-                Matrix4.multiply(context.uniformState.view3D, clippingPlaneOffsetMatrix, scratchClippingPlaneMatrix);
+                var clippingPlanesOriginMatrix = defaultValue(pointCloud.clippingPlanesOriginMatrix, pointCloud._modelMatrix);
+                Matrix4.multiply(context.uniformState.view3D, clippingPlanesOriginMatrix, scratchClippingPlaneMatrix);
                 return Matrix4.multiply(scratchClippingPlaneMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
             }
         };
@@ -1128,6 +1137,7 @@ define([
             } else {
                 vs += '    vec3 normal = a_normal; \n';
             }
+            vs += '    vec3 normalEC = czm_normal * normal; \n';
         } else {
             vs += '    vec3 normal = vec3(1.0); \n';
         }
@@ -1154,8 +1164,7 @@ define([
         vs += '    color = color * u_highlightColor; \n';
 
         if (usesNormals && normalShading) {
-            vs += '    normal = czm_normal * normal; \n' +
-                  '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
+            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
                   '    color.xyz *= diffuseStrength; \n';
         }
@@ -1164,7 +1173,7 @@ define([
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
         if (usesNormals && backFaceCulling) {
-            vs += '    float visible = step(-normal.z, 0.0); \n' +
+            vs += '    float visible = step(-normalEC.z, 0.0); \n' +
                   '    gl_Position *= visible; \n' +
                   '    gl_PointSize *= visible; \n';
         }
@@ -1189,7 +1198,7 @@ define([
 
         fs +=  'void main() \n' +
                '{ \n' +
-               '    gl_FragColor = v_color; \n';
+               '    gl_FragColor = czm_gammaCorrect(v_color); \n';
 
         if (hasClippedContent) {
             fs += getClipAndStyleCode('u_clippingPlanes', 'u_clippingPlanesMatrix', 'u_clippingPlanesEdgeStyle');

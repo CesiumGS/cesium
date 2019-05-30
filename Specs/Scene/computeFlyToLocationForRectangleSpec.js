@@ -84,7 +84,7 @@ defineSuite([
         return sampleTest(SceneMode.COLUMBUS_VIEW);
     });
 
-    it('returns original rectangle in 2D', function() {
+    it('returns height above ellipsoid when in 2D', function() {
         var terrainProvider = new EllipsoidTerrainProvider();
         terrainProvider.availability = {};
 
@@ -93,25 +93,27 @@ defineSuite([
         scene.mode = SceneMode.SCENE2D;
 
         var rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);
-        spyOn(computeFlyToLocationForRectangle, '_sampleTerrainMostDetailed');
+        var expectedResult = scene.mapProjection.unproject(scene.camera.getRectangleCameraCoordinates(rectangle));
 
+        spyOn(computeFlyToLocationForRectangle, '_sampleTerrainMostDetailed');
         return computeFlyToLocationForRectangle(rectangle, scene)
             .then(function(result) {
-                expect(result).toBe(rectangle);
+                expect(result).toEqual(expectedResult);
                 expect(computeFlyToLocationForRectangle._sampleTerrainMostDetailed).not.toHaveBeenCalled();
             });
     });
 
-    it('returns original rectangle when terrain not available', function() {
+    it('returns height above ellipsoid when terrain not available', function() {
         scene.globe = new Globe();
         scene.terrainProvider = new EllipsoidTerrainProvider();
 
         var rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);
         spyOn(computeFlyToLocationForRectangle, '_sampleTerrainMostDetailed');
 
+        var expectedResult = scene.mapProjection.ellipsoid.cartesianToCartographic(scene.camera.getRectangleCameraCoordinates(rectangle));
         return computeFlyToLocationForRectangle(rectangle, scene)
             .then(function(result) {
-                expect(result).toBe(rectangle);
+                expect(result).toEqual(expectedResult);
                 expect(computeFlyToLocationForRectangle._sampleTerrainMostDetailed).not.toHaveBeenCalled();
             });
     });
@@ -124,21 +126,23 @@ defineSuite([
         scene.terrainProvider = terrainProvider;
 
         var rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);
+        var expectedResult = scene.mapProjection.ellipsoid.cartesianToCartographic(scene.camera.getRectangleCameraCoordinates(rectangle));
         return computeFlyToLocationForRectangle(rectangle, scene)
             .then(function(result) {
-                expect(result).toBe(rectangle);
+                expect(result).toEqual(expectedResult);
                 expect(terrainProvider.readyPromise.then).toHaveBeenCalled();
             });
     });
 
-    it('returns original rectangle when terrain undefined', function() {
+    it('returns height above ellipsoid when terrain undefined', function() {
         scene.terrainProvider = undefined;
         var rectangle = new Rectangle(0.2, 0.4, 0.6, 0.8);
         spyOn(computeFlyToLocationForRectangle, '_sampleTerrainMostDetailed');
 
+        var expectedResult = scene.mapProjection.ellipsoid.cartesianToCartographic(scene.camera.getRectangleCameraCoordinates(rectangle));
         return computeFlyToLocationForRectangle(rectangle, scene)
             .then(function(result) {
-                expect(result).toBe(rectangle);
+                expect(result).toEqual(expectedResult);
                 expect(computeFlyToLocationForRectangle._sampleTerrainMostDetailed).not.toHaveBeenCalled();
             });
     });

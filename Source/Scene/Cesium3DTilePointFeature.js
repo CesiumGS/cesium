@@ -463,7 +463,7 @@ define([
                 return this._polyline.material.uniforms.color;
             },
             set : function(value) {
-                this._polyline.material.uniforms.color = value;
+                this._polyline.material.uniforms.color = Color.clone(value, this._polyline.material.uniforms.color);
             }
         },
 

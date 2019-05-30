@@ -610,6 +610,7 @@ defineSuite([
             return new Request({
                 url : 'http://test.invalid/1',
                 requestFunction : requestFunction,
+                throttle : throttleByServer,
                 throttleByServer : throttleByServer
             });
         }
@@ -678,21 +679,23 @@ defineSuite([
             });
         }
 
-        var requestToCancel = createRequest();
-        RequestScheduler.request(createRequest());
-        RequestScheduler.request(createRequest());
-        RequestScheduler.request(requestToCancel);
+        var requests = [createRequest(),
+                        createRequest(),
+                        createRequest()];
+        RequestScheduler.request(requests[0]);
+        RequestScheduler.request(requests[1]);
+        RequestScheduler.request(requests[2]);
+        RequestScheduler.update();
+
+        deferreds[0].reject();
+        requests[0].cancel();
+        requests[1].cancel();
+        requests[2].cancel();
         RequestScheduler.update();
 
         expect(console.log).toHaveBeenCalledWith('Number of attempted requests: 3');
-        expect(console.log).toHaveBeenCalledWith('Number of active requests: 3');
-
-        deferreds[0].reject();
-        requestToCancel.cancel();
-        RequestScheduler.update();
-
-        expect(console.log).toHaveBeenCalledWith('Number of cancelled requests: 1');
-        expect(console.log).toHaveBeenCalledWith('Number of cancelled active requests: 1');
+        expect(console.log).toHaveBeenCalledWith('Number of cancelled requests: 3');
+        expect(console.log).toHaveBeenCalledWith('Number of cancelled active requests: 2');
         expect(console.log).toHaveBeenCalledWith('Number of failed requests: 1');
 
         var length = deferreds.length;

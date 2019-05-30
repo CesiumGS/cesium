@@ -65,7 +65,7 @@ if (!Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
 }
 
 // Power Plant design model provided by Bentley Systems
-var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5743) });
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(8564) });
 tileset.readyPromise.then(function(tileset) {
     viewer.scene.primitives.add(tileset);
 }).otherwise(function(error) {

@@ -384,7 +384,12 @@ define([
                 uniformMapLoaded : batchTable.getUniformMapCallback(),
                 pickIdLoaded : getPickIdCallback(content),
                 addBatchIdToGeneratedShaders : (batchLength > 0), // If the batch table has values in it, generated shaders will need a batchId attribute
-                pickObject : pickObject
+                pickObject : pickObject,
+                imageBasedLightingFactor : tileset.imageBasedLightingFactor,
+                lightColor : tileset.lightColor,
+                luminanceAtZenith : tileset.luminanceAtZenith,
+                sphericalHarmonicCoefficients : tileset.sphericalHarmonicCoefficients,
+                specularEnvironmentMaps : tileset.specularEnvironmentMaps
             });
         } else {
             // This transcodes glTF to an internal representation for geometry so we can take advantage of the re-batching of vector data.
@@ -444,8 +449,17 @@ define([
         }
     };
 
+    var scratchColor = new Color();
+
     Batched3DModel3DTileContent.prototype.applyStyle = function(style) {
-        this._batchTable.applyStyle(style);
+        if (this.featuresLength === 0) {
+            var hasColorStyle = defined(style) && defined(style.color);
+            var hasShowStyle = defined(style) && defined(style.show);
+            this._model.color = hasColorStyle ? style.color.evaluateColor(undefined, scratchColor) : Color.WHITE;
+            this._model.show = hasShowStyle ? style.show.evaluate(undefined) : true;
+        } else {
+            this._batchTable.applyStyle(style);
+        }
     };
 
     Batched3DModel3DTileContent.prototype.update = function(tileset, frameState) {
@@ -460,12 +474,17 @@ define([
         this._model.modelMatrix = this._contentModelMatrix;
 
         this._model.shadows = this._tileset.shadows;
+        this._model.imageBasedLightingFactor = this._tileset.imageBasedLightingFactor;
+        this._model.lightColor = this._tileset.lightColor;
+        this._model.luminanceAtZenith = this._tileset.luminanceAtZenith;
+        this._model.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
+        this._model.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
         this._model.debugWireframe = this._tileset.debugWireframe;
 
         // Update clipping planes
         var tilesetClippingPlanes = this._tileset.clippingPlanes;
-        if (this._tile.clippingPlanesDirty && defined(tilesetClippingPlanes)) {
-            this._model.clippingPlaneOffsetMatrix = this._tileset.clippingPlaneOffsetMatrix;
+        this._model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
+        if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
             // Dereference the clipping planes from the model if they are irrelevant.
             // Link/Dereference directly to avoid ownership checks.
             // This will also trigger synchronous shader regeneration to remove or add the clipping plane and color blending code.

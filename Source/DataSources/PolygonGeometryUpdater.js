@@ -1,5 +1,6 @@
 define([
         '../Core/ApproximateTerrainHeights',
+        '../Core/ArcType',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Check',
@@ -15,6 +16,7 @@ define([
         '../Core/GeometryOffsetAttribute',
         '../Core/isArray',
         '../Core/Iso8601',
+        '../Core/oneTimeWarning',
         '../Core/OffsetGeometryInstanceAttribute',
         '../Core/PolygonGeometry',
         '../Core/PolygonHierarchy',
@@ -32,6 +34,7 @@ define([
         './Property'
     ], function(
         ApproximateTerrainHeights,
+        ArcType,
         Cartesian2,
         Cartesian3,
         Check,
@@ -47,6 +50,7 @@ define([
         GeometryOffsetAttribute,
         isArray,
         Iso8601,
+        oneTimeWarning,
         OffsetGeometryInstanceAttribute,
         PolygonGeometry,
         PolygonHierarchy,
@@ -63,6 +67,9 @@ define([
         GroundGeometryUpdater,
         Property) {
     'use strict';
+
+    var heightAndPerPositionHeightWarning = 'Entity polygons cannot have both height and perPositionHeight.  height will be ignored';
+    var heightReferenceAndPerPositionHeightWarning = 'heightReference is not supported for entity polygons with perPositionHeight. heightReference will be ignored';
 
     var scratchColor = new Color();
     var defaultOffset = Cartesian3.ZERO;
@@ -83,6 +90,7 @@ define([
         this.granularity = undefined;
         this.stRotation = undefined;
         this.offsetAttribute = undefined;
+        this.arcType = undefined;
     }
 
     /**
@@ -253,10 +261,10 @@ define([
     };
 
     PolygonGeometryUpdater.prototype._isOnTerrain = function(entity, polygon) {
+        var onTerrain = GroundGeometryUpdater.prototype._isOnTerrain.call(this, entity, polygon);
         var perPositionHeightProperty = polygon.perPositionHeight;
         var perPositionHeightEnabled = defined(perPositionHeightProperty) && (perPositionHeightProperty.isConstant ? perPositionHeightProperty.getValue(Iso8601.MINIMUM_VALUE) : true);
-        return this._fillEnabled && !defined(polygon.height) && !defined(polygon.extrudedHeight) &&
-               !perPositionHeightEnabled && GroundPrimitive.isSupported(this._scene);
+        return onTerrain && !perPositionHeightEnabled;
     };
 
     PolygonGeometryUpdater.prototype._isDynamic = function(entity, polygon) {
@@ -270,6 +278,7 @@ define([
                !Property.isConstant(polygon.closeTop) || //
                !Property.isConstant(polygon.closeBottom) || //
                !Property.isConstant(polygon.zIndex) || //
+               !Property.isConstant(polygon.arcType) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 
@@ -284,17 +293,29 @@ define([
             hierarchyValue = new PolygonHierarchy(hierarchyValue);
         }
 
-        var height = polygon.height;
-        var heightReference = polygon.heightReference;
-        var extrudedHeight = polygon.extrudedHeight;
-        var extrudedHeightReference = polygon.extrudedHeightReference;
+        var heightValue = Property.getValueOrUndefined(polygon.height, Iso8601.MINIMUM_VALUE);
+        var heightReferenceValue = Property.getValueOrDefault(polygon.heightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE);
+        var extrudedHeightValue = Property.getValueOrUndefined(polygon.extrudedHeight, Iso8601.MINIMUM_VALUE);
+        var extrudedHeightReferenceValue = Property.getValueOrDefault(polygon.extrudedHeightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE);
+        var perPositionHeightValue = Property.getValueOrDefault(polygon.perPositionHeight, Iso8601.MINIMUM_VALUE, false);
 
-        var heightValue = GroundGeometryUpdater.getGeometryHeight(height, heightReference, Iso8601.MINIMUM_VALUE);
-        var extrudedHeightValue = Property.getValueOrUndefined(extrudedHeight, Iso8601.MINIMUM_VALUE);
-        var perPositionHeightValue = Property.getValueOrUndefined(polygon.perPositionHeight, Iso8601.MINIMUM_VALUE);
+        heightValue = GroundGeometryUpdater.getGeometryHeight(heightValue, heightReferenceValue);
 
-        if (defined(extrudedHeightValue) && !defined(heightValue) && !defined(perPositionHeightValue)) {
-            heightValue = 0;
+        var offsetAttribute;
+        if (perPositionHeightValue) {
+            if (defined(heightValue)) {
+                heightValue = undefined;
+                oneTimeWarning(heightAndPerPositionHeightWarning);
+            }
+            if (heightReferenceValue !== HeightReference.NONE && perPositionHeightValue) {
+                heightValue = undefined;
+                oneTimeWarning(heightReferenceAndPerPositionHeightWarning);
+            }
+        } else {
+            if (defined(extrudedHeightValue) && !defined(heightValue)) {
+                heightValue = 0;
+            }
+            offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightValue, heightReferenceValue, extrudedHeightValue, extrudedHeightReferenceValue);
         }
 
         options.polygonHierarchy = hierarchyValue;
@@ -303,12 +324,13 @@ define([
         options.perPositionHeight = perPositionHeightValue;
         options.closeTop = Property.getValueOrDefault(polygon.closeTop, Iso8601.MINIMUM_VALUE, true);
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, Iso8601.MINIMUM_VALUE, true);
-        options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightReference, extrudedHeightReference, Iso8601.MINIMUM_VALUE);
+        options.offsetAttribute = offsetAttribute;
         options.height = heightValue;
+        options.arcType = Property.getValueOrDefault(polygon.arcType, Iso8601.MINIMUM_VALUE, ArcType.GEODESIC);
 
-        extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeight, extrudedHeightReference, Iso8601.MINIMUM_VALUE);
+        extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
-            extrudedHeightValue = ApproximateTerrainHeights.getApproximateTerrainHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
+            extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
         }
 
         options.extrudedHeight = extrudedHeightValue;
@@ -341,10 +363,6 @@ define([
 
     DyanmicPolygonGeometryUpdater.prototype._setOptions = function(entity, polygon, time) {
         var options = this._options;
-        var height = polygon.height;
-        var heightReference = polygon.heightReference;
-        var extrudedHeight = polygon.extrudedHeight;
-        var extrudedHeightReference = polygon.extrudedHeightReference;
 
         var hierarchy = Property.getValueOrUndefined(polygon.hierarchy, time);
         if (isArray(hierarchy)) {
@@ -353,12 +371,30 @@ define([
             options.polygonHierarchy = hierarchy;
         }
 
-        var heightValue = GroundGeometryUpdater.getGeometryHeight(height, heightReference, time);
-        var extrudedHeightValue = Property.getValueOrUndefined(extrudedHeight, time);
+        var heightValue = Property.getValueOrUndefined(polygon.height, time);
+        var heightReferenceValue = Property.getValueOrDefault(polygon.heightReference, time, HeightReference.NONE);
+        var extrudedHeightReferenceValue = Property.getValueOrDefault(polygon.extrudedHeightReference, time, HeightReference.NONE);
+        var extrudedHeightValue = Property.getValueOrUndefined(polygon.extrudedHeight, time);
         var perPositionHeightValue = Property.getValueOrUndefined(polygon.perPositionHeight, time);
 
-        if (defined(extrudedHeightValue) && !defined(heightValue) && !defined(perPositionHeightValue)) {
-            heightValue = 0;
+        heightValue = GroundGeometryUpdater.getGeometryHeight(heightValue, extrudedHeightReferenceValue);
+
+        var offsetAttribute;
+        if (perPositionHeightValue) {
+            if (defined(heightValue)) {
+                heightValue = undefined;
+                oneTimeWarning(heightAndPerPositionHeightWarning);
+            }
+            if (heightReferenceValue !== HeightReference.NONE && perPositionHeightValue) {
+                heightValue = undefined;
+                oneTimeWarning(heightReferenceAndPerPositionHeightWarning);
+            }
+        } else {
+            if (defined(extrudedHeightValue) && !defined(heightValue)) {
+                heightValue = 0;
+            }
+
+            offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightValue, heightReferenceValue, extrudedHeightValue, extrudedHeightReferenceValue);
         }
 
         options.granularity = Property.getValueOrUndefined(polygon.granularity, time);
@@ -366,12 +402,13 @@ define([
         options.perPositionHeight = Property.getValueOrUndefined(polygon.perPositionHeight, time);
         options.closeTop = Property.getValueOrDefault(polygon.closeTop, time, true);
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, time, true);
-        options.offsetAttribute = GroundGeometryUpdater.computeGeometryOffsetAttribute(heightReference, extrudedHeightReference, time);
+        options.offsetAttribute = offsetAttribute;
         options.height = heightValue;
+        options.arcType = Property.getValueOrDefault(polygon.arcType, time, ArcType.GEODESIC);
 
-        extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeight, extrudedHeightReference, time);
+        extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
-            extrudedHeightValue = ApproximateTerrainHeights.getApproximateTerrainHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
+            extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
         }
 
         options.extrudedHeight = extrudedHeightValue;

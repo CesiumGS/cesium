@@ -115,4 +115,23 @@ defineSuite([
             expect(FeatureDetection.imageRenderingValue()).not.toBeDefined();
         }
     });
+
+    it('supportWebP throws when it has not been initialized', function() {
+        FeatureDetection.supportsWebP._promise = undefined;
+        FeatureDetection.supportsWebP._result = undefined;
+        expect(function() {
+            FeatureDetection.supportsWebP();
+        }).toThrowDeveloperError();
+    });
+
+    it('detects WebP support', function() {
+        FeatureDetection.supportsWebP._promise = undefined;
+        FeatureDetection.supportsWebP._result = undefined;
+
+        return FeatureDetection.supportsWebP.initialize()
+            .then(function(supportsWebP) {
+                expect(typeof supportsWebP).toEqual('boolean');
+                expect(FeatureDetection.supportsWebP()).toEqual(supportsWebP);
+            });
+    });
 });

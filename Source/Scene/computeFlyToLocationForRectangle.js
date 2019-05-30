@@ -13,27 +13,38 @@ define([
 'use strict';
 
     /**
-     * Computes the final camera location to view a rectangle adjusted for terrain.
+     * Computes the final camera location to view a rectangle adjusted for the current terrain.
+     * If the terrain does not support availability, the height above the ellipsoid is used.
      *
      * @param {Rectangle} rectangle The rectangle being zoomed to.
      * @param {Scene} scene The scene being used.
      *
-     * @returns {Cartographic|Rectangle} The location to place the camera or the original rectangle if terrain does not have availability.
+     * @returns {Cartographic} The optimal location to place the camera so that the entire rectangle is in view.
      *
      * @private
      */
     function computeFlyToLocationForRectangle(rectangle, scene) {
         var terrainProvider = scene.terrainProvider;
+        var mapProjection = scene.mapProjection;
+        var ellipsoid = mapProjection.ellipsoid;
+
+        var positionWithoutTerrain;
+        var tmp = scene.camera.getRectangleCameraCoordinates(rectangle);
+        if (scene.mode === SceneMode.SCENE3D) {
+            positionWithoutTerrain = ellipsoid.cartesianToCartographic(tmp);
+        } else {
+            positionWithoutTerrain = mapProjection.unproject(tmp);
+        }
 
         if (!defined(terrainProvider)) {
-            return when.resolve(rectangle);
+            return when.resolve(positionWithoutTerrain);
         }
 
         return terrainProvider.readyPromise.then(function() {
             var availability = terrainProvider.availability;
 
             if (!defined(availability) || scene.mode === SceneMode.SCENE2D) {
-                return rectangle;
+                return positionWithoutTerrain;
             }
 
             var cartographics = [
@@ -50,18 +61,7 @@ define([
                         return Math.max(item.height, currentMax);
                     }, -Number.MAX_VALUE);
 
-                    var finalPosition;
-
-                    var camera = scene.camera;
-                    var mapProjection = scene.mapProjection;
-                    var ellipsoid = mapProjection.ellipsoid;
-                    var tmp = camera.getRectangleCameraCoordinates(rectangle);
-                    if (scene.mode === SceneMode.SCENE3D) {
-                        finalPosition = ellipsoid.cartesianToCartographic(tmp);
-                    } else {
-                        finalPosition = mapProjection.unproject(tmp);
-                    }
-
+                    var finalPosition = positionWithoutTerrain;
                     finalPosition.height += maxHeight;
                     return finalPosition;
                 });

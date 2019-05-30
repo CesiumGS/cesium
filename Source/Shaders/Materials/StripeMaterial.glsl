@@ -12,12 +12,13 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float coord = mix(materialInput.st.s, materialInput.st.t, float(horizontal));
     float value = fract((coord - offset) * (repeat * 0.5));
     float dist = min(value, min(abs(value - 0.5), 1.0 - value));
-    
+
     vec4 currentColor = mix(evenColor, oddColor, step(0.5, value));
     vec4 color = czm_antialias(evenColor, oddColor, currentColor, dist);
-    
+    color = czm_gammaCorrect(color);
+
     material.diffuse = color.rgb;
     material.alpha = color.a;
-    
+
     return material;
 }

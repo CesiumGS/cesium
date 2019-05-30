@@ -2,6 +2,7 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
+        '../Core/FeatureDetection',
         '../Core/VertexFormat',
         '../Shaders/Appearances/PolylineMaterialAppearanceVS',
         '../Shaders/PolylineCommon',
@@ -12,6 +13,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
+        FeatureDetection,
         VertexFormat,
         PolylineMaterialAppearanceVS,
         PolylineCommon,
@@ -22,6 +24,10 @@ define([
 
     var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineMaterialAppearanceVS;
     var defaultFragmentShaderSource = PolylineFS;
+
+    if (!FeatureDetection.isInternetExplorer()) {
+        defaultVertexShaderSource = '#define CLIP_POLYLINE \n' + defaultVertexShaderSource;
+    }
 
     /**
      * An appearance for {@link PolylineGeometry} that supports shading with materials.

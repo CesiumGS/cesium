@@ -1,8 +1,10 @@
 define([
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
@@ -18,6 +20,7 @@ define([
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
+        '../Core/isArray',
         '../Core/loadCRN',
         '../Core/loadImageFromTypedArray',
         '../Core/loadKTX',
@@ -68,15 +71,18 @@ define([
         './ModelMesh',
         './ModelNode',
         './ModelUtility',
+        './OctahedralProjectedCubeMap',
         './processModelMaterialsCommon',
         './processPbrMaterials',
         './SceneMode',
         './ShadowMode'
     ], function(
         BoundingSphere,
+        Cartesian2,
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Check,
         clone,
         Color,
         combine,
@@ -92,6 +98,7 @@ define([
         getMagic,
         getStringFromTypedArray,
         IndexDatatype,
+        isArray,
         loadCRN,
         loadImageFromTypedArray,
         loadKTX,
@@ -142,6 +149,7 @@ define([
         ModelMesh,
         ModelNode,
         ModelUtility,
+        OctahedralProjectedCubeMap,
         processModelMaterialsCommon,
         processPbrMaterials,
         SceneMode,
@@ -244,6 +252,8 @@ define([
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
      * </li>
      * </ul>
      * </p>
@@ -282,6 +292,11 @@ define([
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+     * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
+     * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade the model.
+     * @param {Number} [options.luminanceAtZenith=0.5] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+     * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
+     * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
      *
      * @see Model.fromGltf
      *
@@ -434,8 +449,6 @@ define([
         /**
          * Returns the height reference of the model
          *
-         * @memberof Model.prototype
-         *
          * @type {HeightReference}
          *
          * @default HeightReference.NONE
@@ -531,7 +544,7 @@ define([
         // If defined, use this matrix to position the clipping planes instead of the modelMatrix.
         // This is so that when models are part of a tileset they all get clipped relative
         // to the root tile.
-        this.clippingPlaneOffsetMatrix = undefined;
+        this.clippingPlanesOriginMatrix = undefined;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -655,7 +668,25 @@ define([
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
 
-        this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
+        this._sourceVersion = undefined;
+        this._sourceKHRTechniquesWebGL = undefined;
+
+        this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+        Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
+        this._lightColor = Cartesian3.clone(options.lightColor);
+
+        this._luminanceAtZenith = undefined;
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.5);
+
+        this._sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
+        this._specularEnvironmentMaps = options.specularEnvironmentMaps;
+        this._shouldUpdateSpecularMapAtlas = true;
+        this._specularEnvironmentMapAtlas = undefined;
+
+        this._useDefaultSphericalHarmonics = false;
+        this._useDefaultSpecularMaps = false;
+
+        this._shouldRegenerateShaders = false;
     }
 
     defineProperties(Model.prototype, {
@@ -820,7 +851,7 @@ define([
          * // Play all animations at half-speed when the model is ready to render
          * Cesium.when(model.readyPromise).then(function(model) {
          *   model.activeAnimations.addAll({
-         *     speedup : 0.5
+         *     multiplier : 0.5
          *   });
          * }).otherwise(function(error){
          *   window.alert(error);
@@ -1073,6 +1104,141 @@ define([
             get : function() {
                 return this._pickIds;
             }
+        },
+
+        /**
+         * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
+         * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Cartesian2}
+         * @default Cartesian2(1.0, 1.0)
+         */
+        imageBasedLightingFactor : {
+            get : function() {
+                return this._imageBasedLightingFactor;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('imageBasedLightingFactor', value);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.x', value.x, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.x', value.x, 1.0);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.y', value.y, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.y', value.y, 1.0);
+                //>>includeEnd('debug');
+                var imageBasedLightingFactor = this._imageBasedLightingFactor;
+                if ((value === imageBasedLightingFactor) || Cartesian2.equals(value, imageBasedLightingFactor)) {
+                    return;
+                }
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (this._imageBasedLightingFactor.x > 0.0 && value.x === 0.0) || (this._imageBasedLightingFactor.x === 0.0 && value.x > 0.0);
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (this._imageBasedLightingFactor.y > 0.0 && value.y === 0.0) || (this._imageBasedLightingFactor.y === 0.0 && value.y > 0.0);
+                Cartesian2.clone(value, this._imageBasedLightingFactor);
+            }
+        },
+
+        /**
+         * The color and intensity of the sunlight used to shade the model.
+         * <p>
+         * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cesium.Cartesian2(0.0, 0.0)</code> will make the
+         * model much darker. Here, increasing the intensity of the light source will make the model brighter.
+         * </p>
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Cartesian3}
+         * @default undefined
+         */
+        lightColor : {
+            get : function() {
+                return this._lightColor;
+            },
+            set : function(value) {
+                var lightColor = this._lightColor;
+                if (value === lightColor || Cartesian3.equals(value, lightColor)) {
+                    return;
+                }
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (defined(lightColor) && !defined(value)) || (defined(value) && !defined(lightColor));
+                this._lightColor = Cartesian3.clone(value, lightColor);
+            }
+        },
+
+        /**
+         * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+         * This is used when {@link Model#specularEnvironmentMaps} and {@link Model#sphericalHarmonicCoefficients} are not defined.
+         *
+         * @memberof Model.prototype
+         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @type {Number}
+         * @default 0.5
+         */
+        luminanceAtZenith : {
+            get : function() {
+                return this._luminanceAtZenith;
+            },
+            set : function(value) {
+                var lum = this._luminanceAtZenith;
+                if (value === lum) {
+                    return;
+                }
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (defined(lum) && !defined(value)) || (defined(value) && !defined(lum));
+                this._luminanceAtZenith = value;
+            }
+        },
+
+        /**
+         * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
+         * computed from the atmosphere color is used.
+         * <p>
+         * There are nine <code>Cartesian3</code> coefficients.
+         * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21</sub>, L<sub>22</sub>
+         * </p>
+         *
+         * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
+         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * supplied to {@link Model#specularEnvironmentMaps}.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Cartesian3[]}
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
+         */
+        sphericalHarmonicCoefficients : {
+            get : function() {
+                return this._sphericalHarmonicCoefficients;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && (!isArray(value) || value.length !== 9)) {
+                    throw new DeveloperError('sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.');
+                }
+                //>>includeEnd('debug');
+                if (value === this._sphericalHarmonicCoefficients) {
+                    return;
+                }
+                this._sphericalHarmonicCoefficients = value;
+                this._shouldRegenerateShaders = true;
+            }
+        },
+
+        /**
+         * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+         *
+         * @memberof Model.prototype
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @type {String}
+         * @see Model#sphericalHarmonicCoefficients
+         */
+        specularEnvironmentMaps : {
+            get : function() {
+                return this._specularEnvironmentMaps;
+            },
+            set : function(value) {
+                this._shouldUpdateSpecularMapAtlas = this._shouldUpdateSpecularMapAtlas || value !== this._specularEnvironmentMaps;
+                this._specularEnvironmentMaps = value;
+            }
         }
     });
 
@@ -1086,7 +1252,7 @@ define([
 
     function isClippingEnabled(model) {
         var clippingPlanes = model._clippingPlanes;
-        return defined(clippingPlanes) && clippingPlanes.enabled;
+        return defined(clippingPlanes) && clippingPlanes.enabled && clippingPlanes.length !== 0;
     }
 
     /**
@@ -1131,6 +1297,8 @@ define([
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
      * </li>
      * </ul>
      * </p>
@@ -1256,7 +1424,7 @@ define([
                     var json = getStringFromTypedArray(array);
                     cachedGltf.makeReady(JSON.parse(json));
                 }
-            }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', url));
+            }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', modelResource.url));
         } else if (!cachedGltf.ready) {
             // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
             ++cachedGltf.count;
@@ -1481,12 +1649,17 @@ define([
     var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
     var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
 
-    function parseTextures(model, context) {
+    function parseTextures(model, context, supportsWebP) {
         var gltf = model.gltf;
         var images = gltf.images;
         var uri;
         ForEach.texture(gltf, function(texture, id) {
             var imageId = texture.source;
+
+            if (defined(texture.extensions) && defined(texture.extensions.EXT_texture_webp) && supportsWebP) {
+                imageId = texture.extensions.EXT_texture_webp.source;
+            }
+
             var gltfImage = images[imageId];
             var extras = gltfImage.extras;
 
@@ -1839,7 +2012,10 @@ define([
             }
         }
 
-        var result = shader;
+        // This is not needed after the program is processed, free the memory
+        model._programPrimitives[programName] = undefined;
+
+        var result;
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
             result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
             model._quantizedUniforms[programName] = result.uniforms;
@@ -1847,11 +2023,10 @@ define([
             var decodedData = model._decodedData[primitiveId];
             if (defined(decodedData)) {
                 result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
+            } else {
+                return shader;
             }
         }
-
-        // This is not needed after the program is processed, free the memory
-        model._programPrimitives[programName] = undefined;
 
         return result.shader;
     }
@@ -1936,6 +2111,51 @@ define([
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
         }
 
+        var useIBL = model._imageBasedLightingFactor.x > 0.0 || model._imageBasedLightingFactor.y > 0.0;
+        if (useIBL) {
+            drawFS = '#define USE_IBL_LIGHTING \n\n' + drawFS;
+        }
+
+        if (defined(model._lightColor)) {
+            drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
+        }
+
+        if (model._sourceVersion !== '2.0' || model._sourceKHRTechniquesWebGL) {
+            drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
+            drawFS =
+                drawFS +
+                '\n' +
+                'void main() { \n' +
+                '    non_gamma_corrected_main(); \n' +
+                '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
+                '} \n';
+        }
+
+        if (OctahedralProjectedCubeMap.isSupported(context)) {
+            var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
+            var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
+            var addMatrix = usesSH || usesSM || useIBL;
+            if (addMatrix) {
+                drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
+            }
+
+            if (defined(model._sphericalHarmonicCoefficients)) {
+                drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+            } else if (model._useDefaultSphericalHarmonics) {
+                drawFS = '#define DIFFUSE_IBL \n' + drawFS;
+            }
+
+            if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
+                drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+            } else if (model._useDefaultSpecularMaps) {
+                drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            }
+        }
+
+        if (defined(model._luminanceAtZenith)) {
+            drawFS = '#define USE_SUN_LUMINANCE \n' + 'uniform float gltf_luminanceAtZenith;\n' + drawFS;
+        }
+
         createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
     }
 
@@ -1976,6 +2196,51 @@ define([
 
         if (!defined(model._uniformMapLoaded)) {
             drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
+        }
+
+        var useIBL = model._imageBasedLightingFactor.x > 0.0 || model._imageBasedLightingFactor.y > 0.0;
+        if (useIBL) {
+            drawFS = '#define USE_IBL_LIGHTING \n\n' + drawFS;
+        }
+
+        if (defined(model._lightColor)) {
+            drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
+        }
+
+        if (model._sourceVersion !== '2.0' || model._sourceKHRTechniquesWebGL) {
+            drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
+            drawFS =
+                drawFS +
+                '\n' +
+                'void main() { \n' +
+                '    non_gamma_corrected_main(); \n' +
+                '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
+                '} \n';
+        }
+
+        if (OctahedralProjectedCubeMap.isSupported(context)) {
+            var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
+            var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
+            var addMatrix = !addClippingPlaneCode && (usesSH || usesSM || useIBL);
+            if (addMatrix) {
+                drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
+            }
+
+            if (defined(model._sphericalHarmonicCoefficients)) {
+                drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+            } else if (model._useDefaultSphericalHarmonics) {
+                drawFS = '#define DIFFUSE_IBL \n' + drawFS;
+            }
+
+            if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
+                drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+            } else if (model._useDefaultSpecularMaps) {
+                drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            }
+        }
+
+        if (defined(model._luminanceAtZenith)) {
+            drawFS = '#define USE_SUN_LUMINANCE \n' + 'uniform float gltf_luminanceAtZenith;\n' + drawFS;
         }
 
         createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
@@ -2063,7 +2328,11 @@ define([
                 ++model._loadResources.pendingTextureLoads;
             } else {
                 var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
-                loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType)
+                loadImageFromTypedArray({
+                    uint8Array: loadResources.getBuffer(bufferView),
+                    format: gltfTexture.mimeType,
+                    flipY: false
+                })
                     .then(onload).otherwise(onerror);
                 ++loadResources.pendingBufferViewToImage;
             }
@@ -2113,24 +2382,67 @@ define([
 
         var rendererSamplers = model._rendererResources.samplers;
         var sampler = rendererSamplers[texture.sampler];
-        sampler = defaultValue(sampler, new Sampler({
-            wrapS : TextureWrap.REPEAT,
-            wrapT : TextureWrap.REPEAT
-        }));
+        if (!defined(sampler)) {
+            sampler = new Sampler({
+                wrapS : TextureWrap.REPEAT,
+                wrapT : TextureWrap.REPEAT
+            });
+        }
+
+        var usesTextureTransform = false;
+        var materials = model.gltf.materials;
+        var materialsLength = materials.length;
+        for (var i = 0; i < materialsLength; ++i) {
+            var material = materials[i];
+            if (defined(material.extensions) && defined(material.extensions.KHR_techniques_webgl)) {
+                var values = material.extensions.KHR_techniques_webgl.values;
+                for (var valueName in values) {
+                    if (values.hasOwnProperty(valueName) && valueName.indexOf('Texture') !== -1) {
+                        var value = values[valueName];
+                        if (value.index === gltfTexture.id && defined(value.extensions) && defined(value.extensions.KHR_texture_transform)) {
+                            usesTextureTransform = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (usesTextureTransform) {
+                break;
+            }
+        }
+
+        var wrapS = sampler.wrapS;
+        var wrapT = sampler.wrapT;
+        var minFilter = sampler.minificationFilter;
+
+        if (usesTextureTransform && minFilter !== TextureMinificationFilter.LINEAR && minFilter !== TextureMinificationFilter.NEAREST) {
+            if (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST || minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) {
+                minFilter = TextureMinificationFilter.NEAREST;
+            } else {
+                minFilter = TextureMinificationFilter.LINEAR;
+            }
+
+            sampler = new Sampler({
+                wrapS : sampler.wrapS,
+                wrapT : sampler.wrapT,
+                textureMinificationFilter : minFilter,
+                textureMagnificationFilter : sampler.magnificationFilter
+            });
+        }
 
         var internalFormat = gltfTexture.internalFormat;
 
         var mipmap =
             (!(defined(internalFormat) && PixelFormat.isCompressedFormat(internalFormat))) &&
-            ((sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
-             (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
-             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
-             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
+            ((minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+             (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+             (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+             (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
         var requiresNpot = mipmap ||
-           (sampler.wrapS === TextureWrap.REPEAT) ||
-           (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
-           (sampler.wrapT === TextureWrap.REPEAT) ||
-           (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
+           (wrapS === TextureWrap.REPEAT) ||
+           (wrapS === TextureWrap.MIRRORED_REPEAT) ||
+           (wrapT === TextureWrap.REPEAT) ||
+           (wrapT === TextureWrap.MIRRORED_REPEAT);
 
         var tx;
         var source = gltfTexture.image;
@@ -2813,10 +3125,11 @@ define([
     function createClippingPlanesMatrixFunction(model) {
         return function() {
             var clippingPlanes = model.clippingPlanes;
-            if (!defined(clippingPlanes)) {
+            if (!defined(clippingPlanes) && !defined(model._sphericalHarmonicCoefficients) && !defined(model._specularEnvironmentMaps)) {
                 return Matrix4.IDENTITY;
             }
-            return Matrix4.multiply(model._clippingPlaneModelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
+            var modelMatrix = defined(clippingPlanes) ? clippingPlanes.modelMatrix : Matrix4.IDENTITY;
+            return Matrix4.multiply(model._clippingPlaneModelViewMatrix, modelMatrix, scratchClippingPlaneMatrix);
         };
     }
 
@@ -2843,6 +3156,48 @@ define([
     function createColorBlendFunction(model) {
         return function() {
             return ColorBlendMode.getColorBlend(model.colorBlendMode, model.colorBlendAmount);
+        };
+    }
+
+    function createIBLFactorFunction(model) {
+        return function() {
+            return model._imageBasedLightingFactor;
+        };
+    }
+
+    function createLightColorFunction(model) {
+        return function() {
+            return model._lightColor;
+        };
+    }
+
+    function createLuminanceAtZenithFunction(model) {
+        return function() {
+            return model.luminanceAtZenith;
+        };
+    }
+
+    function createSphericalHarmonicCoefficientsFunction(model) {
+        return function() {
+            return model._sphericalHarmonicCoefficients;
+        };
+    }
+
+    function createSpecularEnvironmentMapFunction(model) {
+        return function() {
+            return model._specularEnvironmentMapAtlas.texture;
+        };
+    }
+
+    function createSpecularEnvironmentMapSizeFunction(model) {
+        return function() {
+            return model._specularEnvironmentMapAtlas.texture.dimensions;
+        };
+    }
+
+    function createSpecularEnvironmentMapLOD(model) {
+        return function() {
+            return model._specularEnvironmentMapAtlas.maximumMipmapLevel;
         };
     }
 
@@ -2936,9 +3291,16 @@ define([
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
-                gltf_clippingPlanes: createClippingPlanesFunction(model),
-                gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model),
-                gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model)
+                gltf_clippingPlanes : createClippingPlanesFunction(model),
+                gltf_clippingPlanesEdgeStyle : createClippingPlanesEdgeStyleFunction(model),
+                gltf_clippingPlanesMatrix : createClippingPlanesMatrixFunction(model),
+                gltf_iblFactor : createIBLFactorFunction(model),
+                gltf_lightColor : createLightColorFunction(model),
+                gltf_sphericalHarmonicCoefficients : createSphericalHarmonicCoefficientsFunction(model),
+                gltf_specularMap : createSpecularEnvironmentMapFunction(model),
+                gltf_specularMapSize : createSpecularEnvironmentMapSizeFunction(model),
+                gltf_maxSpecularLOD : createSpecularEnvironmentMapLOD(model),
+                gltf_luminanceAtZenith : createLuminanceAtZenithFunction(model)
             });
 
             // Allow callback to modify the uniformMap
@@ -3562,7 +3924,7 @@ define([
             'uniform vec4 gltf_silhouetteColor; \n' +
             'void main() \n' +
             '{ \n' +
-            '    gl_FragColor = gltf_silhouetteColor; \n' +
+            '    gl_FragColor = czm_gammaCorrect(gltf_silhouetteColor); \n' +
             '}';
 
         return ShaderProgram.fromCache({
@@ -3991,6 +4353,12 @@ define([
             return;
         }
 
+        if (!FeatureDetection.supportsWebP.initialized) {
+            FeatureDetection.supportsWebP.initialize();
+            return;
+        }
+        var supportsWebP = FeatureDetection.supportsWebP();
+
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 
@@ -4065,14 +4433,18 @@ define([
                 if (!loadResources.initialized) {
                     frameState.brdfLutGenerator.update(frameState);
 
-                    ModelUtility.checkSupportedExtensions(this.extensionsRequired);
+                    ModelUtility.checkSupportedExtensions(this.extensionsRequired, supportsWebP);
                     ModelUtility.updateForwardAxis(this);
 
                     // glTF pipeline updates, not needed if loading from cache
-                    if (!this._loadRendererResourcesFromCache) {
+                    if (!defined(this.gltf.extras.sourceVersion)) {
                         var gltf = this.gltf;
                         // Add the original version so it remains cached
                         gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
+                        gltf.extras.sourceKHRTechniquesWebGL = defined(ModelUtility.getUsedExtensions(gltf).KHR_techniques_webgl);
+
+                        this._sourceVersion = gltf.extras.sourceVersion;
+                        this._sourceKHRTechniquesWebGL = gltf.extras.sourceKHRTechniquesWebGL;
 
                         updateVersion(gltf);
                         addDefaults(gltf);
@@ -4085,6 +4457,9 @@ define([
                         processPbrMaterials(gltf, options);
                     }
 
+                    this._sourceVersion = this.gltf.extras.sourceVersion;
+                    this._sourceKHRTechniquesWebGL = this.gltf.extras.sourceKHRTechniquesWebGL;
+
                     // Skip dequantizing in the shader if not encoded
                     this._dequantizeInShader = this._dequantizeInShader && DracoLoader.hasExtension(this);
 
@@ -4095,7 +4470,7 @@ define([
                         parseBufferViews(this);
                         parseShaders(this);
                         parsePrograms(this);
-                        parseTextures(this, context);
+                        parseTextures(this, context, supportsWebP);
                     }
                     parseMaterials(this);
                     parseMeshes(this);
@@ -4141,10 +4516,6 @@ define([
             }
 
             if (loadResources.finished()) {
-                if (!this._keepPipelineExtras) {
-                    removePipelineExtras(this.gltf);
-                }
-
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
 
                 var resources = this._rendererResources;
@@ -4173,6 +4544,38 @@ define([
                 }
             }
         }
+
+        var iblSupported = OctahedralProjectedCubeMap.isSupported(context);
+        if (this._shouldUpdateSpecularMapAtlas && iblSupported) {
+            this._shouldUpdateSpecularMapAtlas = false;
+            this._specularEnvironmentMapAtlas = this._specularEnvironmentMapAtlas && this._specularEnvironmentMapAtlas.destroy();
+            this._specularEnvironmentMapAtlas = undefined;
+            if (defined(this._specularEnvironmentMaps)) {
+                this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(this._specularEnvironmentMaps);
+                var that = this;
+                this._specularEnvironmentMapAtlas.readyPromise.then(function() {
+                    that._shouldRegenerateShaders = true;
+                });
+            }
+
+            // Regenerate shaders to not use an environment map. Will be set to true again if there was a new environment map and it is ready.
+            this._shouldRegenerateShaders = true;
+        }
+
+        if (defined(this._specularEnvironmentMapAtlas)) {
+            this._specularEnvironmentMapAtlas.update(frameState);
+        }
+
+        var recompileWithDefaultAtlas = !defined(this._specularEnvironmentMapAtlas) && defined(frameState.specularEnvironmentMaps) && !this._useDefaultSpecularMaps;
+        var recompileWithoutDefaultAtlas = !defined(frameState.specularEnvironmentMaps) && this._useDefaultSpecularMaps;
+
+        var recompileWithDefaultSHCoeffs = !defined(this._sphericalHarmonicCoefficients) && defined(frameState.sphericalHarmonicCoefficients) && !this._useDefaultSphericalHarmonics;
+        var recompileWithoutDefaultSHCoeffs = !defined(frameState.sphericalHarmonicCoefficients) && this._useDefaultSphericalHarmonics;
+
+        this._shouldRegenerateShaders = this._shouldRegenerateShaders || recompileWithDefaultAtlas || recompileWithoutDefaultAtlas || recompileWithDefaultSHCoeffs || recompileWithoutDefaultSHCoeffs;
+
+        this._useDefaultSpecularMaps = !defined(this._specularEnvironmentMapAtlas) && defined(frameState.specularEnvironmentMaps);
+        this._useDefaultSphericalHarmonics = !defined(this._sphericalHarmonicCoefficients) && defined(frameState.sphericalHarmonicCoefficients);
 
         var silhouette = hasSilhouette(this, frameState);
         var translucent = isTranslucent(this);
@@ -4250,13 +4653,20 @@ define([
             // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
             var clippingPlanes = this._clippingPlanes;
             var currentClippingPlanesState = 0;
-            if (defined(clippingPlanes) && clippingPlanes.enabled) {
-                var clippingPlaneOffsetMatrix = defaultValue(this.clippingPlaneOffsetMatrix, modelMatrix);
-                Matrix4.multiply(context.uniformState.view3D, clippingPlaneOffsetMatrix, this._clippingPlaneModelViewMatrix);
+            var useClippingPlanes = defined(clippingPlanes) && clippingPlanes.enabled && clippingPlanes.length > 0;
+            var usesSH = defined(this._sphericalHarmonicCoefficients) || this._useDefaultSphericalHarmonics;
+            var usesSM = (defined(this._specularEnvironmentMapAtlas) && this._specularEnvironmentMapAtlas.ready) || this._useDefaultSpecularMaps;
+            if (useClippingPlanes || usesSH || usesSM) {
+                var clippingPlanesOriginMatrix = defaultValue(this.clippingPlanesOriginMatrix, modelMatrix);
+                Matrix4.multiply(context.uniformState.view3D, clippingPlanesOriginMatrix, this._clippingPlaneModelViewMatrix);
+            }
+
+            if (useClippingPlanes) {
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
-            var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
+            var shouldRegenerateShaders = this._shouldRegenerateShaders;
+            shouldRegenerateShaders = shouldRegenerateShaders || this._clippingPlanesState !== currentClippingPlanesState;
             this._clippingPlanesState = currentClippingPlanesState;
 
             // Regenerate shaders if color shading changed from last update
@@ -4365,7 +4775,9 @@ define([
         destroyIfNotCached(rendererResources, cachedRendererResources);
 
         var programId;
-        if (isClippingEnabled(model) || isColorShadingEnabled(model)) {
+        if (isClippingEnabled(model) || isColorShadingEnabled(model) || model._shouldRegenerateShaders) {
+            model._shouldRegenerateShaders = false;
+
             rendererResources.programs = {};
             rendererResources.silhouettePrograms = {};
 
@@ -4483,6 +4895,8 @@ define([
             clippingPlaneCollection.destroy();
         }
         this._clippingPlanes = undefined;
+
+        this._specularEnvironmentMapAtlas = this._specularEnvironmentMapAtlas && this._specularEnvironmentMapAtlas.destroy();
 
         return destroyObject(this);
     };

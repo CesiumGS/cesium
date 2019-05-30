@@ -49,7 +49,7 @@ define([
          * @type {Number}
          * @default 0.1
          */
-        this.minimumBrightness = 0.1;
+        this.minimumBrightness = 0.03;
     }
 
     // These values were found by sampling the density at certain views and finding at what point culled tiles impacted the view at the horizon.
