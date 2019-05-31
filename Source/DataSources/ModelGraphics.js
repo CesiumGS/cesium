@@ -46,7 +46,7 @@ define([
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
      * @param {Property} [options.clampAnimations=true] A boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
-     * @param {PropertyBag} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
+     * @param {PropertyBag} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied before the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
@@ -201,6 +201,7 @@ define([
         /**
          * Gets or sets the set of node transformations to apply to this model.  This is represented as an {@link PropertyBag}, where keys are
          * names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
+         * The transformation is applied before the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
          * @memberof ModelGraphics.prototype
          * @type {PropertyBag}
          */
