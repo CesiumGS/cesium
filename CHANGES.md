@@ -14,8 +14,9 @@ Change Log
 ##### Fixes :wrench:
 * Fixed an edge case where Cesium would provide ion access token credentials to non-ion servers if the actual asset entrypoint was being hosted by ion. [#7839](https://github.com/AnalyticalGraphicsInc/cesium/pull/7839)
 * Fixed a bug that caused Cesium to request non-existent tiles for terrain tilesets lacking tile availability, i.e. a `layer.json` file.
-* Fixed memory leak when removing entities that had a `HeightReference` of `CLAMP_TO_GROUND` or `RELATIVE_TO_GROUND`. This includes when removing a `DataSource`. 
+* Fixed memory leak when removing entities that had a `HeightReference` of `CLAMP_TO_GROUND` or `RELATIVE_TO_GROUND`. This includes when removing a `DataSource`.
 * Fixed 3D Tiles credits not being shown in the data attribution box. [#7877](https://github.com/AnalyticalGraphicsInc/cesium/pull/7877)
+* Fixed a bug that caused missing segments for ground polylines with coplanar points over large distances. [#7855](https://github.com/AnalyticalGraphicsInc/cesium/issues/7855)
 
 ### 1.57 - 2019-05-01
 
