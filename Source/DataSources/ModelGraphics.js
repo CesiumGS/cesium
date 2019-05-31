@@ -26,6 +26,14 @@ define([
         return new PropertyBag(value, createNodeTransformationProperty);
     }
 
+    function createArticulationStageProperty(value) {
+        return createPropertyDescriptor('value');
+    }
+
+    function createArticulationStagePropertyBag(value) {
+        return new PropertyBag(value, createArticulationStageProperty);
+    }
+
     /**
      * A 3D model based on {@link https://github.com/KhronosGroup/glTF|glTF}, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
      * The position and orientation of the model is determined by the containing {@link Entity}.
@@ -47,6 +55,7 @@ define([
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
      * @param {Property} [options.clampAnimations=true] A boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
      * @param {PropertyBag} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
+     * @param {PropertyBag} [options.articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
@@ -82,6 +91,8 @@ define([
         this._runAnimationsSubscription = undefined;
         this._nodeTransformations = undefined;
         this._nodeTransformationsSubscription = undefined;
+        this._articulations = undefined;
+        this._articulationsSubscription = undefined;
         this._heightReference = undefined;
         this._heightReferenceSubscription = undefined;
         this._distanceDisplayCondition = undefined;
@@ -207,6 +218,14 @@ define([
         nodeTransformations : createPropertyDescriptor('nodeTransformations', undefined, createNodeTransformationPropertyBag),
 
         /**
+         * Gets or sets the set of articulation values to apply to this model.  This is represented as an {@link PropertyBag}, where keys are
+         * composed as the name of the articulation, a single space, and the name of the stage.
+         * @memberof ModelGraphics.prototype
+         * @type {PropertyBag}
+         */
+        articulations : createPropertyDescriptor('articulations', undefined, createArticulationStagePropertyBag),
+
+        /**
          * Gets or sets the Property specifying the {@link HeightReference}.
          * @memberof ModelGraphics.prototype
          * @type {Property}
@@ -305,6 +324,7 @@ define([
         result.runAnimations = this.runAnimations;
         result.clampAnimations = this.clampAnimations;
         result.nodeTransformations = this.nodeTransformations;
+        result.articulations = this.articulations;
         result.heightReference = this._heightReference;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         result.silhouetteColor = this.silhouetteColor;
@@ -359,6 +379,16 @@ define([
                 targetNodeTransformations.merge(sourceNodeTransformations);
             } else {
                 this.nodeTransformations = new PropertyBag(sourceNodeTransformations, createNodeTransformationProperty);
+            }
+        }
+
+        var sourceArticulations = source.articulations;
+        if (defined(sourceArticulations)) {
+            var targetArticulations = this.articulations;
+            if (defined(targetArticulations)) {
+                targetArticulations.merge(sourceArticulations);
+            } else {
+                this.articulations = new PropertyBag(sourceArticulations, createArticulationStageProperty);
             }
         }
     };
