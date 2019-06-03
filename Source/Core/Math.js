@@ -723,8 +723,8 @@ define([
 
         var length = factorials.length;
         if (n >= length) {
-            var sum = factorials[length - 1];
             for (var i = length; i <= n; i++) {
+                var sum = factorials[factorials.length - 1];
                 factorials.push(sum * i);
             }
         }
