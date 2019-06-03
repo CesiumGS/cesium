@@ -781,12 +781,12 @@ defineSuite([
         var positions = [];
         for ( var i = 0; i < CesiumMath.SIXTY_FOUR_KILOBYTES; ++i) {
             positions.push({
-                x : -1000000,
+                x : 0,
                 y : -1000000,
                 z : 0
             });
             positions.push({
-                x : -1000000,
+                x : 0,
                 y : 1000000,
                 z : 0
             });
