@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="High-resolution arctic terrain from the Arctic DEM project (Release 4) and hosted by Cesium ion.">
+    <meta name="description" content="Point cloud of the city of Montreal, Canada captured in 2015 with a resolution of 20 cm. Tiled and hosted by Cesium ion.">
     <meta name="cesium-sandcastle-labels" content="ion Assets">
     <title>Montreal Point Cloud</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -19,10 +19,51 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
     @import url(../templates/bucket.css);
+    #toolbar {
+        background: rgba(42, 42, 42, 0.8);
+        padding: 4px;
+        border-radius: 4px;
+    }
+    #toolbar input {
+        vertical-align: middle;
+        padding-top: 2px;
+        padding-bottom: 2px;
+    }
+    #toolbar .header {
+        font-weight: bold;
+    }
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
-<div id="toolbar"></div>
+<div id="toolbar">
+    <table><tbody>
+    <tr><td class="header">Classification Types</td></tr>
+    <tr>
+        <td>Ground</td>
+        <td><input type="checkbox" data-bind="checked: ground"></td>
+    </tr>
+    <tr>
+        <td>Low Vegetation</td>
+        <td><input type="checkbox" data-bind="checked: low_vegetation"></td>
+    </tr>
+    <tr>
+        <td>Medium Vegetation</td>
+        <td><input type="checkbox" data-bind="checked: medium_vegetation"></td>
+    </tr>
+    <tr>
+        <td>High Vegetation</td>
+        <td><input type="checkbox" data-bind="checked: high_vegetation"></td>
+    </tr>
+    <tr>
+        <td>Buildings</td>
+        <td><input type="checkbox" data-bind="checked: buildings"></td>
+    </tr>
+    <tr>
+        <td>Other/Unclassified</td>
+        <td><input type="checkbox" data-bind="checked: other"></td>
+    </tr>
+    </tbody></table>
+</div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -31,7 +72,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider: Cesium.createWorldTerrain()
 });
 
-// A ~10 billion point cloud of the city of Montreal, Canada captured in 2015 with a resolution of 20 cm. Tiled and hosted by Cesium ion.
+// A ~10 billion point 3D Tileset of the city of Montreal, Canada captured in 2015 with a resolution of 20 cm. Tiled and hosted by Cesium ion.
 var tileset = viewer.scene.primitives.add(
     new Cesium.Cesium3DTileset({
         url: Cesium.IonResource.fromAssetId(28945),
