@@ -3,6 +3,9 @@ Change Log
 
 ### 1.59 - 2019-07-01
 
+##### Additions :tada:
+* Added CZML support for `heightReference` to `box`, `cylinder`, and `ellipsoid`, and added CZML support for `classificationType` to `corridor`, `ellipse`, `polygon`, `polyline`, and `rectangle`. [#7899](https://github.com/AnalyticalGraphicsInc/cesium/pull/7899)
+
 ##### Fixes :wrench:
 * Fixed a bug that caused missing segments for ground polylines with coplanar points over large distances and problems with polylines containing duplicate points. [#7885](https://github.com/AnalyticalGraphicsInc/cesium//pull/7885)
 * Fixed a bug where billboards were not pickable when zoomed out completely in 2D View. [#7908](https://github.com/AnalyticalGraphicsInc/cesium/pull/7908)

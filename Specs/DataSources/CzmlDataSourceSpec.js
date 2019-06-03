@@ -38,6 +38,7 @@ defineSuite([
         'DataSources/StripeOrientation',
         'DataSources/TimeIntervalCollectionPositionProperty',
         'DataSources/TimeIntervalCollectionProperty',
+        'Scene/ClassificationType',
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
@@ -85,6 +86,7 @@ defineSuite([
         StripeOrientation,
         TimeIntervalCollectionPositionProperty,
         TimeIntervalCollectionProperty,
+        ClassificationType,
         ColorBlendMode,
         HeightReference,
         HorizontalOrigin,
@@ -1131,7 +1133,8 @@ defineSuite([
                 },
                 outlineWidth : 6,
                 shadows : 'ENABLED',
-                zIndex: 8
+                zIndex: 8,
+                classificationType : 'TERRAIN'
             }
         };
 
@@ -1148,6 +1151,7 @@ defineSuite([
             expect(entity.ellipse.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
             expect(entity.ellipse.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
             expect(entity.ellipse.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(8);
+            expect(entity.ellipse.classificationType.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ClassificationType.TERRAIN);
         });
     });
 
@@ -3013,7 +3017,8 @@ defineSuite([
                 closeTop : false,
                 closeBottom : false,
                 shadows : 'ENABLED',
-                zIndex: 3
+                zIndex: 3,
+                classificationType : 'TERRAIN'
             }
         };
 
@@ -3035,6 +3040,7 @@ defineSuite([
             expect(entity.polygon.closeBottom.getValue(Iso8601.MINIMUM_VALUE)).toEqual(false);
             expect(entity.polygon.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
             expect(entity.polygon.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3);
+            expect(entity.polygon.classificationType.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ClassificationType.TERRAIN);
         });
     });
 
@@ -3090,7 +3096,8 @@ defineSuite([
                 },
                 width : 1.0,
                 show : true,
-                shadows : 'ENABLED'
+                shadows : 'ENABLED',
+                classificationType : 'CESIUM_3D_TILE'
             }
         };
 
@@ -3105,6 +3112,7 @@ defineSuite([
             expect(entity.polyline.material.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(1.0);
             expect(entity.polyline.show.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
             expect(entity.polyline.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
+            expect(entity.polyline.classificationType.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ClassificationType.CESIUM_3D_TILE);
         });
     });
 
@@ -3569,7 +3577,8 @@ defineSuite([
                 },
                 outlineWidth : 6,
                 shadows : 'ENABLED',
-                zIndex : 6
+                zIndex : 6,
+                classificationType : 'TERRAIN'
             }
         };
 
@@ -3593,6 +3602,7 @@ defineSuite([
             expect(entity.rectangle.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
             expect(entity.rectangle.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
             expect(entity.rectangle.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
+            expect(entity.rectangle.classificationType.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ClassificationType.TERRAIN);
         });
     });
 
@@ -3857,7 +3867,8 @@ defineSuite([
                 },
                 outlineWidth : 6,
                 shadows : 'ENABLED',
-                zIndex: 5
+                zIndex: 5,
+                classificationType : 'TERRAIN'
             }
         };
 
@@ -3881,6 +3892,7 @@ defineSuite([
             expect(entity.corridor.outlineWidth.getValue(Iso8601.MINIMUM_VALUE)).toEqual(6);
             expect(entity.corridor.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
             expect(entity.corridor.zIndex.getValue(Iso8601.MINIMUM_VALUE)).toEqual(5);
+            expect(entity.corridor.classificationType.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ClassificationType.TERRAIN);
         });
     });
 
