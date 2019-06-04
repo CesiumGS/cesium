@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### 1.58.1 - 2018-06-03
+_This is an npm-only release to fix a publishing issue__
+
 ### 1.58 - 2019-06-03
 
 ##### Additions :tada:
