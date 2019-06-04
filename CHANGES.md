@@ -1,7 +1,12 @@
 Change Log
 ==========
 
-### 1.58.1 - 2018-06-03
+### 1.59 - 2019-07-01
+
+##### Fixes :wrench:
+* Fixed a bug that caused missing segments for ground polylines with coplanar points over large distances and problems with polylines containing duplicate points. [#7885](https://github.com/AnalyticalGraphicsInc/cesium//pull/7885)
+
+### 1.58.1 - 2019-06-03
 _This is an npm-only release to fix a publishing issue__
 
 ### 1.58 - 2019-06-03
@@ -19,7 +24,6 @@ _This is an npm-only release to fix a publishing issue__
 * Fixed a bug that caused Cesium to request non-existent tiles for terrain tilesets lacking tile availability, i.e. a `layer.json` file.
 * Fixed memory leak when removing entities that had a `HeightReference` of `CLAMP_TO_GROUND` or `RELATIVE_TO_GROUND`. This includes when removing a `DataSource`.
 * Fixed 3D Tiles credits not being shown in the data attribution box. [#7877](https://github.com/AnalyticalGraphicsInc/cesium/pull/7877)
-* Fixed a bug that caused missing segments for ground polylines with coplanar points over large distances. [#7855](https://github.com/AnalyticalGraphicsInc/cesium/issues/7855)
 
 ### 1.57 - 2019-05-01
 
