@@ -26,12 +26,8 @@ define([
         return new PropertyBag(value, createNodeTransformationProperty);
     }
 
-    function createArticulationStageProperty(value) {
-        return createPropertyDescriptor('value');
-    }
-
     function createArticulationStagePropertyBag(value) {
-        return new PropertyBag(value, createArticulationStageProperty);
+        return new PropertyBag(value);
     }
 
     /**
@@ -388,7 +384,7 @@ define([
             if (defined(targetArticulations)) {
                 targetArticulations.merge(sourceArticulations);
             } else {
-                this.articulations = new PropertyBag(sourceArticulations, createArticulationStageProperty);
+                this.articulations = new PropertyBag(sourceArticulations);
             }
         }
     };
