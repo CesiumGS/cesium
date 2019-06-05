@@ -398,13 +398,15 @@ define([
                 iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'colorMode', 'normal'));
             }
 
-            var scale = valueGetter.get(billboardGraphics.scale, 1.0);
+            var scale = valueGetter.get(billboardGraphics.scale);
             if (defined(scale)) {
                 iconStyle.appendChild(createBasicElementWithText(kmlDoc, 'scale', scale));
             }
 
             var pixelOffset = valueGetter.get(billboardGraphics.pixelOffset);
             if (defined(pixelOffset)) {
+                scale = defaultValue(scale, 1.0);
+
                 Cartesian2.divideByScalar(pixelOffset, scale, pixelOffset);
 
                 var width = valueGetter.get(billboardGraphics.width, BILLBOARD_SIZE);
@@ -441,8 +443,8 @@ define([
             // GE treats a heading of zero as no heading but can still point north using a 360 degree angle
             var rotation = valueGetter.get(billboardGraphics.rotation);
             var alignedAxis = valueGetter.get(billboardGraphics.alignedAxis);
-            if (defined(rotation) && alignedAxis === Cartesian3.UNIT_Z) {
-                rotation = Math.toDegrees(-rotation);
+            if (defined(rotation) && Cartesian3.equals(Cartesian3.UNIT_Z, alignedAxis)) {
+                rotation = CesiumMath.toDegrees(-rotation);
                 if (rotation === 0) {
                     rotation = 360;
                 }

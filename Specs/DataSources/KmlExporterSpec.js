@@ -1,5 +1,7 @@
 defineSuite([
     'DataSources/KmlExporter',
+    'Core/BoundingRectangle',
+    'Core/Cartesian2',
     'Core/Cartesian3',
     'Core/Color',
     'Core/defined',
@@ -11,9 +13,12 @@ defineSuite([
     'DataSources/EntityCollection',
     'DataSources/KmlDataSource',
     'Scene/HeightReference',
-    'Specs/pollToPromise'
+    'Scene/HorizontalOrigin',
+    'Scene/VerticalOrigin'
 ], function(
     KmlExporter,
+    BoundingRectangle,
+    Cartesian2,
     Cartesian3,
     Color,
     defined,
@@ -25,7 +30,8 @@ defineSuite([
     EntityCollection,
     KmlDataSource,
     HeightReference,
-    pollToPromise) {
+    HorizontalOrigin,
+    VerticalOrigin) {
         'use strict';
 
         function download(filename, data) {
@@ -73,6 +79,15 @@ defineSuite([
                 });
         });
 
+        function checkKmlDoc(kmlDoc, properties) {
+            var kml = kmlDoc.documentElement;
+            var kmlChildNodes = kml.childNodes;
+            expect(kml.localName).toEqual('kml');
+            expect(kmlChildNodes.length).toBe(1);
+
+            checkTagWithProperties(kml, properties);
+        }
+
         function checkTagWithProperties(element, properties) {
             var numberOfProperties = Object.keys(properties).length;
             var attributes = properties._;
@@ -84,7 +99,14 @@ defineSuite([
                 for (var j = 0; j < elementAttributes.length; ++j) {
                     var nodeAttribute = elementAttributes[j];
                     var attribute = attributes[nodeAttribute.name];
-                    expect(attribute).toEqual(nodeAttribute.value);
+
+                    if (typeof attribute === 'string') {
+                        expect(nodeAttribute.value).toEqual(attribute);
+                    } else if (typeof attribute === 'number') {
+                        expect(Number(nodeAttribute.value)).toEqualEpsilon(attribute, CesiumMath.EPSILON7);
+                    } else {
+                        fail();
+                    }
                 }
             }
 
@@ -123,29 +145,68 @@ defineSuite([
             }
         }
 
+        var counter = 0;
+        var expectedPointPosition = [-75.59777, 40.03883, 12];
+        var pointPosition = Cartesian3.fromDegrees(expectedPointPosition[0], expectedPointPosition[1], expectedPointPosition[2]);
+        function createEntity(properties) {
+            ++counter;
+            var options = {
+                id: 'e' + counter,
+                name: 'entity' + counter,
+                show: true,
+                description: 'This is entity number ' + counter,
+                position: pointPosition
+            };
+
+            if (defined(properties)) {
+                for (var propertyName in properties) {
+                    if (properties.hasOwnProperty(propertyName)) {
+                        options[propertyName] = properties[propertyName];
+                    }
+                }
+            }
+
+            return new Entity(options);
+        }
+
+        function createExpectResult(entity) {
+            return {
+                Document: {
+                    Style: {
+                        _: {
+                            id: 'style-1'
+                        }
+                    },
+                    Placemark: {
+                        _: {
+                            id: entity.id
+                        },
+                        name: entity.name,
+                        visibility: entity.show ? 1 : 0,
+                        description: entity.description,
+                        styleUrl: '#style-1'
+                    }
+                }
+            };
+        }
+
+        beforeEach(function() {
+            counter = 0;
+        });
+
         it('Hierarchy', function() {
-            var entity1 = new Entity({
-                id: 'e1',
-                name: 'entity1',
+            var entity1 = createEntity({
                 show: false,
-                description: 'This is an entity'
+                position: undefined
             });
 
-            var entity2 = new Entity({
-                id: 'e2',
-                name: 'entity2',
-                show: true,
-                description: 'This is another entity',
+            var entity2 = createEntity({
+                position: undefined,
                 parent: entity1
             });
 
-            var entity3 = new Entity({
-                id: 'e3',
-                name: 'entity3',
-                show: true,
-                description: 'This is an entity with geometry',
+            var entity3 = createEntity({
                 parent: entity2,
-                position: Cartesian3.fromDegrees(-75.59777, 40.03883),
                 point: {}
             });
 
@@ -153,16 +214,6 @@ defineSuite([
             entities.add(entity1);
             entities.add(entity2);
             entities.add(entity3);
-
-            var kmlExporter = new KmlExporter(entities);
-
-            var kmlDoc = kmlExporter._kmlDoc;
-
-            // <kml>
-            var kml = kmlDoc.documentElement;
-            var kmlChildNodes = kml.childNodes;
-            expect(kml.localName).toEqual('kml');
-            expect(kmlChildNodes.length).toBe(1);
 
             var hierarchy = {
                 Document: {
@@ -192,7 +243,7 @@ defineSuite([
                                 },
                                 Point: {
                                     altitudeMode: 'clampToGround',
-                                    coordinates: [-75.59777, 40.03883, 0]
+                                    coordinates: expectedPointPosition
                                 },
                                 name: entity3.name,
                                 visibility: '1',
@@ -204,19 +255,13 @@ defineSuite([
                 }
             };
 
-            checkTagWithProperties(kml, hierarchy);
+            var kmlExporter = new KmlExporter(entities);
+            checkKmlDoc(kmlExporter._kmlDoc, hierarchy);
         });
 
         describe('Points', function() {
             it('Constant Postion', function() {
-                var entities = new EntityCollection();
-
-                var entity1 = new Entity({
-                    id: 'e1',
-                    name: 'entity1',
-                    show: true,
-                    description: 'This is an entity',
-                    position: Cartesian3.fromDegrees(-75.59777, 40.03883, 12),
+                var entity1 = createEntity({
                     point: {
                         color: Color.LINEN,
                         pixelSize: 3,
@@ -224,56 +269,232 @@ defineSuite([
                     }
                 });
 
+                var entities = new EntityCollection();
                 entities.add(entity1);
 
-                var kmlExporter = new KmlExporter(entities);
-
-                var kmlDoc = kmlExporter._kmlDoc;
-
-                // <kml>
-                var kml = kmlDoc.documentElement;
-                var kmlChildNodes = kml.childNodes;
-                expect(kml.localName).toEqual('kml');
-                expect(kmlChildNodes.length).toBe(1);
-
-                var hierarchy = {
-                    Document: {
-                        Style: {
-                            _: {
-                                id: 'style-1'
-                            },
-                            IconStyle: {
-                                color: 'ffe6f0fa',
-                                colorMode: 'normal',
-                                scale: 3 / 32
-                            }
-                        },
-                        Placemark: {
-                            _: {
-                                id: entity1.id
-                            },
-                            Point: {
-                                altitudeMode: 'clampToGround',
-                                coordinates: [-75.59777, 40.03883, 12]
-                            },
-                            name: entity1.name,
-                            visibility: '1',
-                            description: entity1.description,
-                            styleUrl: '#style-1'
-                        }
-                    }
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {
+                    color: 'ffe6f0fa',
+                    colorMode: 'normal',
+                    scale: 3 / 32
+                };
+                expectedResult.Document.Placemark.Point = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
                 };
 
-                checkTagWithProperties(kml, hierarchy);
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
-            it('Altitude modes', function() {
-
+            it('Time-dynamic tracks', function() {
+                // TODO
             });
         });
 
         describe('Billboards', function() {
+            it('Constant Postion', function() {
+                var entity1 = createEntity({
+                    billboard: {
+                        image: 'http://test.invalid/image.jpg',
+                        imageSubRegion: new BoundingRectangle(12,0,24,36),
+                        color: Color.LINEN,
+                        scale: 2,
+                        pixelOffset: new Cartesian2(2, 3),
+                        width: 24,
+                        height: 36,
+                        horizontalOrigin: HorizontalOrigin.LEFT,
+                        verticalOrigin: VerticalOrigin.BOTTOM,
+                        rotation: CesiumMath.toRadians(10),
+                        alignedAxis: Cartesian3.UNIT_Z,
+                        heightReference: HeightReference.CLAMP_TO_GROUND
+                    }
+                });
 
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {
+                    Icon: {
+                        href: 'http://test.invalid/image.jpg',
+                        x: 12,
+                        y: 0,
+                        w: 24,
+                        h: 36
+                    },
+                    color: 'ffe6f0fa',
+                    colorMode: 'normal',
+                    scale: 2,
+                    hotSpot: {
+                        _: {
+                            x: -2 / 2,
+                            y: 3 / 2,
+                            xunits: 'pixels',
+                            yunits: 'pixels'
+                        }
+                    },
+                    heading: -10
+                };
+                expectedResult.Document.Placemark.Point = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('Aligned Axis not Z', function() {
+                var entity1 = createEntity({
+                    billboard: {
+                        rotation: CesiumMath.toRadians(10),
+                        alignedAxis: Cartesian3.UNIT_Y
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {};
+                expectedResult.Document.Placemark.Point = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('0 degree heading should be 360', function() {
+                var entity1 = createEntity({
+                    billboard: {
+                        rotation: CesiumMath.toRadians(0),
+                        alignedAxis: Cartesian3.UNIT_Z
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {
+                    heading: 360
+                };
+                expectedResult.Document.Placemark.Point = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('HotSpot Center', function() {
+                var entity1 = createEntity({
+                    billboard: {
+                        pixelOffset: new Cartesian2(2, 3),
+                        width: 24,
+                        height: 36,
+                        horizontalOrigin: HorizontalOrigin.CENTER,
+                        verticalOrigin: VerticalOrigin.CENTER
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {
+                    hotSpot: {
+                        _: {
+                            x: -(2 - 12),
+                            y: 3 + 18,
+                            xunits: 'pixels',
+                            yunits: 'pixels'
+                        }
+                    }
+                };
+                expectedResult.Document.Placemark.Point = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('HotSpot TopRight', function() {
+                var entity1 = createEntity({
+                    billboard: {
+                        pixelOffset: new Cartesian2(2, 3),
+                        width: 24,
+                        height: 36,
+                        horizontalOrigin: HorizontalOrigin.RIGHT,
+                        verticalOrigin: VerticalOrigin.TOP
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {
+                    hotSpot: {
+                        _: {
+                            x: -(2 - 24),
+                            y: 3 + 36,
+                            xunits: 'pixels',
+                            yunits: 'pixels'
+                        }
+                    }
+                };
+                expectedResult.Document.Placemark.Point = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('Canvas image', function() {
+                var entity1 = createEntity({
+                    billboard: {
+                        image: document.createElement('canvas')
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {
+                    Icon: {
+                        href: 'http://test.invalid/images/myTexture.jpg'
+                    }
+                };
+                expectedResult.Document.Placemark.Point = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities, {
+                    textureCallback: function(texture) {
+                        if (texture instanceof HTMLCanvasElement) {
+                            return 'http://test.invalid/images/myTexture.jpg';
+                        }
+
+                        fail();
+                    }
+                });
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('Time-dynamic tracks', function() {
+                // TODO
+            });
         });
 
         describe('Polylines', function() {
