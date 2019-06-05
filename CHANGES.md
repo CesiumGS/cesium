@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.59 - 2019-07-01
+
+##### Additions :tada:
+* Added support for the [AGI_articulations](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations) vendor extension of glTF 2.0 to the Entity API and CZML. [#7907](https://github.com/AnalyticalGraphicsInc/cesium/pull/7907)
+
 ### 1.58.1 - 2018-06-03
 _This is an npm-only release to fix a publishing issue__
 
