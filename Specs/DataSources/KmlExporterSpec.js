@@ -69,8 +69,8 @@ defineSuite([
             }
         };
 
-        xit('test', function() {
-            return KmlDataSource.load('../Apps/SampleData/kml/facilities/facilities.kml', options)
+        it('test', function() {
+            return KmlDataSource.load('../Apps/SampleData/kml/bikeRide.kml', options)
                 .then(function(datasource) {
                     var exporter = new KmlExporter(datasource.entities);
 
@@ -259,8 +259,8 @@ defineSuite([
             checkKmlDoc(kmlExporter._kmlDoc, hierarchy);
         });
 
-        describe('Points', function() {
-            it('Constant Postion', function() {
+        describe('Point Geometry', function() {
+            it('Point with constant position', function() {
                 var entity1 = createEntity({
                     point: {
                         color: Color.LINEN,
@@ -287,13 +287,7 @@ defineSuite([
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
-            it('Time-dynamic tracks', function() {
-                // TODO
-            });
-        });
-
-        describe('Billboards', function() {
-            it('Constant Postion', function() {
+            it('Billboard with constant position', function() {
                 var entity1 = createEntity({
                     billboard: {
                         image: 'http://test.invalid/image.jpg',
@@ -345,7 +339,7 @@ defineSuite([
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
-            it('Aligned Axis not Z', function() {
+            it('Billboard with AlignedAxis not Z', function() {
                 var entity1 = createEntity({
                     billboard: {
                         rotation: CesiumMath.toRadians(10),
@@ -367,7 +361,7 @@ defineSuite([
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
-            it('0 degree heading should be 360', function() {
+            it('Billboard with 0 degree heading should be 360', function() {
                 var entity1 = createEntity({
                     billboard: {
                         rotation: CesiumMath.toRadians(0),
@@ -391,7 +385,7 @@ defineSuite([
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
-            it('HotSpot Center', function() {
+            it('Billboard with HotSpot at the center', function() {
                 var entity1 = createEntity({
                     billboard: {
                         pixelOffset: new Cartesian2(2, 3),
@@ -425,7 +419,7 @@ defineSuite([
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
-            it('HotSpot TopRight', function() {
+            it('Billboard with HotSpot at the TopRight', function() {
                 var entity1 = createEntity({
                     billboard: {
                         pixelOffset: new Cartesian2(2, 3),
@@ -459,7 +453,7 @@ defineSuite([
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
-            it('Canvas image', function() {
+            it('Billboard with a Canvas image', function() {
                 var entity1 = createEntity({
                     billboard: {
                         image: document.createElement('canvas')
@@ -491,8 +485,14 @@ defineSuite([
                 });
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
+        });
 
-            it('Time-dynamic tracks', function() {
+        describe('Tracks', function() {
+            it('Point', function() {
+                // TODO
+            });
+
+            it('Billboard', function() {
                 // TODO
             });
         });
@@ -506,6 +506,10 @@ defineSuite([
         });
 
         describe('Polygons', function() {
+
+        });
+
+        describe('Models', function() {
 
         });
     });
