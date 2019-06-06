@@ -278,7 +278,8 @@ void main()
     float fadeOutDist = u_lightingFadeDistance.x;
     float fadeInDist = u_lightingFadeDistance.y;
     if (czm_sceneMode != czm_sceneMode3D) {
-        vec3 radii = czm_getWgs84EllipsoidEC().radii;
+        czm_getWgs84EllipsoidEC();
+        vec3 radii = czm_ellipsoid_radii;
         float maxRadii = max(radii.x, max(radii.y, radii.z));
         fadeOutDist -= maxRadii;
         fadeInDist -= maxRadii;
@@ -376,7 +377,7 @@ void main()
     }
 
 #if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
-    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
+    czm_getWgs84EllipsoidEC();
 
     float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0));
     vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
@@ -385,7 +386,7 @@ void main()
     vec3 direction = normalize(vec3(xy, -czm_currentFrustum.x));
     czm_ray ray = czm_ray(vec3(0.0), direction);
 
-    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
+    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, czm_ellipsoid_center, czm_ellipsoid_inverseRadii);
 
     vec3 ellipsoidPosition = czm_pointAlongRay(ray, intersection.start);
     ellipsoidPosition = (czm_inverseView * vec4(ellipsoidPosition, 1.0)).xyz;

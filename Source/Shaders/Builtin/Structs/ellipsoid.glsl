@@ -1,12 +1,8 @@
-/** DOC_TBA
- *
- * @name czm_ellipsoid
- * @glslStruct
- */
-struct czm_ellipsoid
-{
-    vec3 center;
-    vec3 radii;
-    vec3 inverseRadii;
-    vec3 inverseRadiiSquared;
-};
+/**
+*
+struct ellipsoid
+*/
+vec3 czm_ellipsoid_center;
+vec3 czm_ellipsoid_radii;
+vec3 czm_ellipsoid_inverseRadii;
+vec3 czm_ellipsoid_inverseRadiiSquared;
