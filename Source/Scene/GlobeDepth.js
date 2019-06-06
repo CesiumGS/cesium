@@ -290,6 +290,8 @@ define([
             });
         }
 
+        globeDepth._copyColorCommand.renderState = globeDepth._rs;
+
         if (!defined(globeDepth._tempCopyDepthCommand)) {
             globeDepth._tempCopyDepthCommand = context.createViewportQuadCommand(PassThroughDepth, {
                 uniformMap : {
