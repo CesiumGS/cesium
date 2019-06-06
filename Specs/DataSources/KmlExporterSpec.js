@@ -3,15 +3,20 @@ defineSuite([
     'Core/BoundingRectangle',
     'Core/Cartesian2',
     'Core/Cartesian3',
+    'Core/Cartographic',
     'Core/Color',
     'Core/defined',
     'Core/Iso8601',
+    'Core/JulianDate',
     'Core/Math',
     'Core/PerspectiveFrustum',
     'Core/Rectangle',
+    'Core/TimeInterval',
+    'DataSources/CallbackProperty',
     'DataSources/Entity',
     'DataSources/EntityCollection',
     'DataSources/KmlDataSource',
+    'DataSources/SampledPositionProperty',
     'Scene/HeightReference',
     'Scene/HorizontalOrigin',
     'Scene/VerticalOrigin'
@@ -20,15 +25,20 @@ defineSuite([
     BoundingRectangle,
     Cartesian2,
     Cartesian3,
+    Cartographic,
     Color,
     defined,
     Iso8601,
+    JulianDate,
     CesiumMath,
     PerspectiveFrustum,
     Rectangle,
+    TimeInterval,
+    CallbackProperty,
     Entity,
     EntityCollection,
     KmlDataSource,
+    SampledPositionProperty,
     HeightReference,
     HorizontalOrigin,
     VerticalOrigin) {
@@ -69,7 +79,7 @@ defineSuite([
             }
         };
 
-        it('test', function() {
+        xit('test', function() {
             return KmlDataSource.load('../Apps/SampleData/kml/bikeRide.kml', options)
                 .then(function(datasource) {
                     var exporter = new KmlExporter(datasource.entities);
@@ -89,11 +99,8 @@ defineSuite([
         }
 
         function checkTagWithProperties(element, properties) {
-            var numberOfProperties = Object.keys(properties).length;
             var attributes = properties._;
             if (defined(attributes)) {
-                --numberOfProperties; // Attributes
-
                 var elementAttributes = element.attributes;
                 expect(elementAttributes.length).toBe(Object.keys(attributes).length);
                 for (var j = 0; j < elementAttributes.length; ++j) {
@@ -111,7 +118,6 @@ defineSuite([
             }
 
             var childNodes = element.childNodes;
-            expect(childNodes.length).toBe(numberOfProperties);
             for (var i = 0; i < childNodes.length; ++i) {
                 var node = childNodes[i];
                 var property = properties[node.tagName];
@@ -121,7 +127,9 @@ defineSuite([
                     property = property.getValue(Iso8601.MINIMUM_VALUE);
                 }
 
-                if (Array.isArray(property)) {
+                if (typeof property === 'function') {
+                    expect(property(node.textContent)).toBe(true);
+                } else if (Array.isArray(property)) {
                     var values = node.textContent.split(/\s*,\s*/);
                     expect(values.length).toBe(property.length);
                     for (var k = 0; k < property.length; ++k) {
@@ -488,12 +496,103 @@ defineSuite([
         });
 
         describe('Tracks', function() {
-            it('Point', function() {
-                // TODO
+            var times = [
+                JulianDate.fromIso8601('2019-06-17'),
+                JulianDate.fromIso8601('2019-06-18'),
+                JulianDate.fromIso8601('2019-06-19')
+            ];
+            var positions = [
+                Cartesian3.fromDegrees(-75.59777, 40.03883, 12),
+                Cartesian3.fromDegrees(-76.59777, 39.03883, 12),
+                Cartesian3.fromDegrees(-77.59777, 38.03883, 12)
+            ];
+
+            function checkWhen(textContent) {
+                var count = times.length;
+                for (var i=0;i<count;++i) {
+                    if (textContent === JulianDate.toIso8601(times[i])) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            function checkCoord(textContent) {
+                var values = textContent.split(/\s*,\s*/);
+                expect(values.length).toBe(3);
+
+                var cartographic1 = new Cartographic();
+                var cartographic2 = new Cartographic();
+                var count = positions.length;
+                for (var i=0;i<count;++i) {
+                    Cartographic.fromCartesian(positions[i], undefined, cartographic1);
+                    Cartographic.fromDegrees(Number(values[0]), Number(values[1]), Number(values[2]), cartographic2);
+                    if (Cartographic.equalsEpsilon(cartographic1, cartographic2, CesiumMath.EPSILON7)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
+            it('SampledPosition', function() {
+                var position = new SampledPositionProperty();
+                position.addSamples(times, positions);
+
+                var entity1 = createEntity({
+                    position: position,
+                    point: {}
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {};
+                expectedResult.Document.Placemark.Track = {
+                    altitudeMode: 'clampToGround',
+                    when: checkWhen,
+                    coord: checkCoord
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
-            it('Billboard', function() {
-                // TODO
+            it('CallbackProperty', function() {
+                var index = 0;
+                var position = new CallbackProperty(function(time) {
+                    expect(index < times.length);
+                    expect(JulianDate.equals(time, times[index])).toBe(true);
+
+                    return positions[index++];
+                }, false);
+
+                var entity1 = createEntity({
+                    position: position,
+                    point: {}
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {};
+                expectedResult.Document.Placemark.Track = {
+                    altitudeMode: 'clampToGround',
+                    when: checkWhen,
+                    coord: checkCoord
+                };
+
+                var kmlExporter = new KmlExporter(entities, {
+                    defaultAvailability: new TimeInterval({
+                        start: times[0],
+                        stop: times[2]
+                    }),
+                    sampleDuration: JulianDate.secondsDifference(times[1], times[0])
+                });
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
         });
 
