@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 7.0.0 - 2019-05-03
+* Update Node ecmaVersion to '2019'.
+* Enable [no-tabs](https://eslint.org/docs/rules/no-tabs).
+* Enabled [no-restricted-globals](https://eslint.org/docs/rules/no-restricted-globals) for jasmine `fit` and `fdescribe`.
+
 ### 6.0.1 - 2019-01-23
 * Allow ES6 global variables in Node.js code.
 
