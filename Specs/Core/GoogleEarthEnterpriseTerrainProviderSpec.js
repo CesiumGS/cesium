@@ -141,8 +141,7 @@ defineSuite([
         return pollToPromise(function() {
             return terrainProvider.ready;
         }).then(function() {
-            var tilingScheme = terrainProvider.tilingScheme;
-            expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
+            expect(terrainProvider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
         });
     });
 

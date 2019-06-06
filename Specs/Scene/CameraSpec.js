@@ -3024,11 +3024,11 @@ defineSuite([
     });
 
     it('switches projections', function() {
-        expect(camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(PerspectiveFrustum);
         camera.switchToOrthographicFrustum();
-        expect(camera.frustum instanceof OrthographicFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicFrustum);
         camera.switchToPerspectiveFrustum();
-        expect(camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(PerspectiveFrustum);
     });
 
     it('does not switch projection in 2D', function() {
@@ -3048,11 +3048,11 @@ defineSuite([
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
 
-        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicOffCenterFrustum);
         camera.switchToOrthographicFrustum();
-        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicOffCenterFrustum);
         camera.switchToPerspectiveFrustum();
-        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicOffCenterFrustum);
     });
 
     it('normalizes WC members', function() {

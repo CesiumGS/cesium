@@ -1,37 +1,37 @@
 defineSuite([
         'Scene/BingMapsImageryProvider',
         'Core/appendForwardSlash',
-        'Core/DefaultProxy',
         'Core/defined',
         'Core/queryToObject',
         'Core/RequestScheduler',
         'Core/Resource',
         'Core/WebMercatorTilingScheme',
         'Scene/BingMapsStyle',
-        'Scene/DiscardMissingTileImagePolicy',
+        'Scene/DiscardEmptyTileImagePolicy',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise',
-        'ThirdParty/Uri'
+        'ThirdParty/Uri',
+        'ThirdParty/when'
     ], function(
         BingMapsImageryProvider,
         appendForwardSlash,
-        DefaultProxy,
         defined,
         queryToObject,
         RequestScheduler,
         Resource,
         WebMercatorTilingScheme,
         BingMapsStyle,
-        DiscardMissingTileImagePolicy,
+        DiscardEmptyTileImagePolicy,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
         pollToPromise,
-        Uri) {
+        Uri,
+        when) {
     'use strict';
 
     var supportsImageBitmapOptions;
@@ -46,6 +46,7 @@ defineSuite([
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
+        BingMapsImageryProvider._metadataCache = {};
     });
 
     afterEach(function() {
@@ -247,6 +248,56 @@ defineSuite([
         });
     });
 
+    it('Uses cached metadata result', function() {
+        var url = 'http://fake.fake.invalid';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+        var provider2;
+        var provider3;
+
+        return provider.readyPromise
+            .then(function(result) {
+                expect(result).toBe(true);
+                expect(provider.ready).toBe(true);
+
+                installFakeMetadataRequest(url, mapStyle);
+                installFakeImageRequest();
+                provider2 = new BingMapsImageryProvider({
+                    url: url,
+                    mapStyle: mapStyle
+                });
+                return provider2.readyPromise;
+            })
+            .then(function(result) {
+                expect(result).toBe(true);
+                expect(provider2.ready).toBe(true);
+
+                //These are the same instance only if the cache has been used
+                expect(provider._attributionList).toBe(provider2._attributionList);
+
+                installFakeMetadataRequest(url, BingMapsStyle.AERIAL);
+                installFakeImageRequest();
+                provider3 = new BingMapsImageryProvider({
+                    url: url,
+                    mapStyle: BingMapsStyle.AERIAL
+                });
+                return provider3.readyPromise;
+            })
+            .then(function(result) {
+                expect(result).toBe(true);
+                expect(provider3.ready).toBe(true);
+
+                // Because the road is different, a non-cached request should have happened
+                expect(provider3._attributionList).not.toBe(provider._attributionList);
+            });
+    });
+
     it('resolves readyPromise with a path', function() {
         var url = 'http://fake.fake.invalid/some/subdirectory';
         var mapStyle = BingMapsStyle.ROAD;
@@ -362,7 +413,7 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(20);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardEmptyTileImagePolicy);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
             expect(provider.credit).toBeInstanceOf(Object);
 
@@ -494,6 +545,43 @@ defineSuite([
             }).then(function() {
                 expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
+                imagery.releaseReference();
+            });
+        });
+    });
+
+    it('correctly handles empty tiles', function() {
+        var url = 'http://foo.bar.invalid';
+        var mapStyle = BingMapsStyle.ROAD_ON_DEMAND;
+
+        installFakeMetadataRequest(url, mapStyle);
+
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+
+        var layer = new ImageryLayer(provider);
+
+        // Fake ImageryProvider.loadImage's expected output in the case of an empty tile
+        var e = new Error();
+        e.blob = {size: 0};
+        var errorPromise = when.reject(e);
+
+        spyOn(ImageryProvider, 'loadImage').and.returnValue(errorPromise);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                expect(imagery.image).toBe(DiscardEmptyTileImagePolicy.EMPTY_IMAGE);
                 imagery.releaseReference();
             });
         });

@@ -31,7 +31,7 @@ define([
             define(deps, function() {
                 var args = arguments;
                 if (focus) {
-                    fdescribe(name, function() {
+                    fdescribe(name, function() { //eslint-disable-line
                         suite.apply(null, args);
                     }, categories);
                 } else {
