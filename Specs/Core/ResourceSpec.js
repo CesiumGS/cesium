@@ -1892,6 +1892,10 @@ defineSuite([
                 });
 
                 it('is an image with status code 204 with preferImageBitmap', function() {
+                    if (!supportsImageBitmapOptions) {
+                        return;
+                    }
+
                     var promise = Resource.fetchImage({
                         url: './Data/Images/Green.png',
                         preferImageBitmap: true
