@@ -13,9 +13,11 @@ defineSuite([
     'Core/Rectangle',
     'Core/TimeInterval',
     'DataSources/CallbackProperty',
+    'DataSources/ColorMaterialProperty',
     'DataSources/Entity',
     'DataSources/EntityCollection',
     'DataSources/KmlDataSource',
+    'DataSources/PolylineOutlineMaterialProperty',
     'DataSources/SampledPositionProperty',
     'Scene/HeightReference',
     'Scene/HorizontalOrigin',
@@ -35,9 +37,11 @@ defineSuite([
     Rectangle,
     TimeInterval,
     CallbackProperty,
+    ColorMaterialProperty,
     Entity,
     EntityCollection,
     KmlDataSource,
+    PolylineOutlineMaterialProperty,
     SampledPositionProperty,
     HeightReference,
     HorizontalOrigin,
@@ -80,7 +84,7 @@ defineSuite([
         };
 
         xit('test', function() {
-            return KmlDataSource.load('../Apps/SampleData/kml/bikeRide.kml', options)
+            return KmlDataSource.load('../Apps/SampleData/kml/facilities/facilities.kml', options)
                 .then(function(datasource) {
                     var exporter = new KmlExporter(datasource.entities);
 
@@ -597,15 +601,236 @@ defineSuite([
         });
 
         describe('Polylines', function() {
+            var positions = [
+                Cartesian3.fromDegrees(-1, -1, 12),
+                Cartesian3.fromDegrees(1, -1, 12),
+                Cartesian3.fromDegrees(1, 1, 12),
+                Cartesian3.fromDegrees(-1, 1, 12)
+            ];
 
-        });
+            it('Clamped to ground', function() {
+                var entity1 = createEntity({
+                    polyline: {
+                        positions: positions,
+                        clampToGround: true,
+                        material: new ColorMaterialProperty(Color.GREEN),
+                        width: 5,
+                        zIndex: 2
+                    }
+                });
 
-        describe('Rectangles', function() {
+                var entities = new EntityCollection();
+                entities.add(entity1);
 
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.LineStyle = {
+
+                };
+                expectedResult.Document.Placemark.Polyline = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('Not clamped to ground', function() {
+                var entity1 = createEntity({
+                    polyline: {
+                        positions: positions,
+                        clampToGround: false,
+                        material: new ColorMaterialProperty(Color.GREEN),
+                        width: 5,
+                        zIndex: 2
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.LineStyle = {
+
+                };
+                expectedResult.Document.Placemark.Polyline = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('With outline', function() {
+                var entity1 = createEntity({
+                    polyline: {
+                        positions: positions,
+                        clampToGround: false,
+                        material: new PolylineOutlineMaterialProperty({
+                            color: Color.GREEN,
+                            outlineColor: Color.BLUE,
+                            outlineWidth: 2
+                        }),
+                        width: 5,
+                        zIndex: 2
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.LineStyle = {
+
+                };
+                expectedResult.Document.Placemark.Polyline = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
         });
 
         describe('Polygons', function() {
+            var positions = [
+                Cartesian3.fromDegrees(-1, -1, 12),
+                Cartesian3.fromDegrees(1, -1, 12),
+                Cartesian3.fromDegrees(1, 1, 12),
+                Cartesian3.fromDegrees(-1, 1, 12)
+            ];
 
+            it('Polygon with outline', function(){
+                var entity1 = createEntity({
+                    polygon: {
+                        hierarchy: positions,
+                        height: 10,
+                        perPositionHeight: false,
+                        heightReference: HeightReference.CLAMP_TO_GROUND,
+                        extrudedHeight: 0,
+                        fill: true,
+                        material: new ColorMaterialProperty(Color.GREEN),
+                        outline: true,
+                        outlineWidth: 5,
+                        outlineColor: Color.BLUE,
+                        zIndex: 2
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.PolyStyle = {
+
+                };
+                expectedResult.Document.Style.LineStyle = {
+
+                };
+                expectedResult.Document.Placemark.Polygon = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('Polygon with extrusion', function(){
+                var entity1 = createEntity({
+                    polygon: {
+                        hierarchy: positions,
+                        height: 10,
+                        perPositionHeight: false,
+                        extrudedHeight: 20
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.PolyStyle = {
+
+                };
+                expectedResult.Document.Style.LineStyle = {
+
+                };
+                expectedResult.Document.Placemark.Polygon = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('Polygon with extrusion and perPositionHeights', function(){
+                var entity1 = createEntity({
+                    polygon: {
+                        hierarchy: positions,
+                        height: 10,
+                        perPositionHeight: true,
+                        extrudedHeight: 20
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.PolyStyle = {
+
+                };
+                expectedResult.Document.Style.LineStyle = {
+
+                };
+                expectedResult.Document.Placemark.Polygon = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('Rectangle', function(){
+                var entity1 = createEntity({
+                    rectangle: {
+                        hierarchy: Rectangle.fromDegrees(-1, -1, 1, 1),
+                        height: 10,
+                        perPositionHeight: false,
+                        heightReference: HeightReference.CLAMP_TO_GROUND,
+                        extrudedHeight: 0,
+                        fill: true,
+                        material: new ColorMaterialProperty(Color.GREEN),
+                        outline: true,
+                        outlineWidth: 5,
+                        outlineColor: Color.BLUE,
+                        zIndex: 2
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.PolyStyle = {
+
+                };
+                expectedResult.Document.Style.LineStyle = {
+
+                };
+                expectedResult.Document.Placemark.Polygon = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: expectedPointPosition
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
         });
 
         describe('Models', function() {

@@ -807,7 +807,7 @@ define([
                 polygonGeometry.appendChild(createBasicElementWithText(kmlDoc, 'drawOrder', zIndex, gxNamespace));
             }
 
-            // TODO: extrudedHeight, stRotation
+            // TODO: stRotation
 
             geometries.push(polygonGeometry);
 
@@ -904,7 +904,7 @@ define([
             var kmlDoc = that._kmlDoc;
             var valueGetter = that._valueGetter;
 
-            var heightReference = valueGetter.get(heightReferenceProperty, HeightReference.CLAMP_TO_GROUND);
+            var heightReference = valueGetter.get(heightReferenceProperty, HeightReference.NONE);
             var altitudeModeText;
             switch (heightReference) {
                 case HeightReference.NONE:
