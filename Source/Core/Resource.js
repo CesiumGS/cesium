@@ -981,7 +981,6 @@ define([
             }
 
             var deferred = when.defer();
-
             Resource._Implementations.createImage(url, crossOrigin, deferred, flipY, preferImageBitmap);
 
             return deferred.promise;
@@ -1869,24 +1868,26 @@ define([
 
                 return Resource.fetchBlob({
                     url: url
-                });
-            })
-            .then(function(blob) {
-                if (!defined(blob)) {
-                    return;
-                }
+                })
+                .then(function(blob) {
+                    if (!defined(blob)) {
+                        deferred.reject('Failed to fetch blob.');
+                        return;
+                    }
 
-                return Resource.createImageBitmapFromBlob(blob, {
-                    flipY: flipY,
-                    premultiplyAlpha: false
-                });
-            })
-            .then(function(imageBitmap) {
-                if (!defined(imageBitmap)) {
-                    return;
-                }
+                    return Resource.createImageBitmapFromBlob(blob, {
+                        flipY: flipY,
+                        premultiplyAlpha: false
+                    });
+                })
+                .then(function(imageBitmap) {
+                    if (!defined(imageBitmap)) {
+                        deferred.reject('Failed to create imageBitmap from blob.');
+                        return;
+                    }
 
-                deferred.resolve(imageBitmap);
+                    deferred.resolve(imageBitmap);
+                });
             })
             .otherwise(deferred.reject);
     };
