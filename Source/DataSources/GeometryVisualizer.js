@@ -364,6 +364,13 @@ define([
             subscriptions[i]();
         }
         this._subscriptions.removeAll();
+
+        var updaterSets = this._updaterSets.values;
+        length = updaterSets.length;
+        for (i = 0; i < length; i++) {
+            updaterSets[i].destroy();
+        }
+        this._updaterSets.removeAll();
         return destroyObject(this);
     };
 

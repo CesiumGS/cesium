@@ -137,7 +137,6 @@ define([
                     url : resource.url,
                     animationsRunning : false,
                     nodeTransformationsScratch : {},
-                    originalNodeMatrixHash : {},
                     loadFail : false
                 };
                 modelHash[entity.id] = modelData;
@@ -179,7 +178,6 @@ define([
                 // Apply node transformations
                 var nodeTransformations = Property.getValueOrUndefined(modelGraphics._nodeTransformations, time, modelData.nodeTransformationsScratch);
                 if (defined(nodeTransformations)) {
-                    var originalNodeMatrixHash = modelData.originalNodeMatrixHash;
                     var nodeNames = Object.keys(nodeTransformations);
                     for (var nodeIndex = 0, nodeLength = nodeNames.length; nodeIndex < nodeLength; ++nodeIndex) {
                         var nodeName = nodeNames[nodeIndex];
@@ -194,14 +192,8 @@ define([
                             continue;
                         }
 
-                        var originalNodeMatrix = originalNodeMatrixHash[nodeName];
-                        if (!defined(originalNodeMatrix)) {
-                            originalNodeMatrix = modelNode.matrix.clone();
-                            originalNodeMatrixHash[nodeName] = originalNodeMatrix;
-                        }
-
                         var transformationMatrix = Matrix4.fromTranslationRotationScale(nodeTransformation, nodeMatrixScratch);
-                        modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformationMatrix, transformationMatrix);
+                        modelNode.matrix = Matrix4.multiply(modelNode.originalMatrix, transformationMatrix, transformationMatrix);
                     }
                 }
             }

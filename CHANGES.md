@@ -10,6 +10,26 @@ Change Log
 * Added support for new "On Demand" Bing Maps styles.
 * Changed `BingMapsImageryProvider` to request `https` from Bing instead of requesting `http` and then rewriting the URL to use `https`.
 
+### 1.58.1 - 2018-06-03
+_This is an npm-only release to fix a publishing issue__
+
+### 1.58 - 2019-06-03
+
+##### Additions :tada:
+* Added support for new `BingMapsStyle` values `ROAD_ON_DEMAND` and `AERIAL_WITH_LABELS_ON_DEMAND`. The older versions of these, `ROAD` and `AERIAL_WITH_LABELS`, have been deprecated by Bing. [#7808](https://github.com/AnalyticalGraphicsInc/cesium/pull/7808)
+* Added syntax to delete data from existing properties via CZML. [#7818](https://github.com/AnalyticalGraphicsInc/cesium/pull/7818)
+* Added `checkerboard` material to CZML. [#7845](https://github.com/AnalyticalGraphicsInc/cesium/pull/7845)
+* `BingMapsImageryProvider` now uses `DiscardEmptyTileImagePolicy` by default to detect missing tiles as zero-length responses instead of inspecting pixel values. [#7810](https://github.com/AnalyticalGraphicsInc/cesium/pull/7810)
+* Added support for the [AGI_articulations](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations) vendor extension of glTF 2.0 to the Model primitive graphics API. [#7835](https://github.com/AnalyticalGraphicsInc/cesium/pull/7835)
+* Reduce the number of Bing transactions and ion Bing sessions used when destroying and recreating the same imagery layer to 1. [#7848](https://github.com/AnalyticalGraphicsInc/cesium/pull/7848)
+
+##### Fixes :wrench:
+* Fixed an edge case where Cesium would provide ion access token credentials to non-ion servers if the actual asset entrypoint was being hosted by ion. [#7839](https://github.com/AnalyticalGraphicsInc/cesium/pull/7839)
+* Fixed a bug that caused Cesium to request non-existent tiles for terrain tilesets lacking tile availability, i.e. a `layer.json` file.
+* Fixed memory leak when removing entities that had a `HeightReference` of `CLAMP_TO_GROUND` or `RELATIVE_TO_GROUND`. This includes when removing a `DataSource`. 
+* Fixed 3D Tiles credits not being shown in the data attribution box. [#7877](https://github.com/AnalyticalGraphicsInc/cesium/pull/7877)
+
+
 ### 1.57 - 2019-05-01
 
 ##### Additions :tada:
