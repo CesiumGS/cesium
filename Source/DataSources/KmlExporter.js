@@ -91,10 +91,10 @@ define([
             this._time = time;
         }
 
-        ValueGetter.prototype.get = function(property, defaultVal) {
+        ValueGetter.prototype.get = function(property, defaultVal, result) {
             var value;
             if (defined(property)) {
-                value = defined(property.getValue) ? property.getValue(this._time) : property;
+                value = defined(property.getValue) ? property.getValue(this._time, result) : property;
             }
 
             return defaultValue(value, defaultVal);
@@ -112,7 +112,7 @@ define([
                 return;
             }
 
-            return property.getValue(this._time);
+            return property.getType(this._time);
         };
 
         function StyleCache() {
@@ -334,6 +334,7 @@ define([
         function createPoint(that, entity, geometries, styles) {
             var kmlDoc = that._kmlDoc;
             var ellipsoid = that._ellipsoid;
+            var valueGetter = that._valueGetter;
 
             var pointGraphics = defaultValue(entity.billboard, entity.point);
             if (!defined(pointGraphics) && !defined(entity.path)) {
@@ -347,7 +348,7 @@ define([
                 return;
             }
 
-            entityPositionProperty.getValue(Iso8601.MINIMUM_VALUE, scratchCartesian3);
+            valueGetter.get(entityPositionProperty, undefined, scratchCartesian3);
             var coordinates = createBasicElementWithText(kmlDoc, 'coordinates',
                 getCoordinates(scratchCartesian3, ellipsoid));
 
@@ -412,7 +413,7 @@ define([
                 var positionValues = [];
 
                 if (positionProperty.isConstant) {
-                    positionProperty.getValue(Iso8601.MINIMUM_VALUE, scratchCartesian3);
+                    valueGetter.get(positionProperty, undefined, scratchCartesian3);
                     var constCoordinates = createBasicElementWithText(kmlDoc, 'coordinates',
                         getCoordinates(scratchCartesian3, ellipsoid));
 
@@ -633,7 +634,7 @@ define([
             var clampToGround = valueGetter.get(polylineGraphics.clampToGround, false);
             var altitudeModeText;
             if (clampToGround) {
-                lineStringGeometry.appendChild(createBasicElementWithText(kmlDoc, 'tesselate', true));
+                lineStringGeometry.appendChild(createBasicElementWithText(kmlDoc, 'tessellate', true));
                 altitudeModeText = kmlDoc.createTextNode('clampToGround');
             } else {
                 altitudeModeText = kmlDoc.createTextNode('absolute');
@@ -861,6 +862,7 @@ define([
         function createModel(that, entity, modelGraphics, geometries, styles) {
             var kmlDoc = that._kmlDoc;
             var ellipsoid = that._ellipsoid;
+            var valueGetter = that._valueGetter;
 
             if (!defined(modelGraphics)) {
                 return;
@@ -880,11 +882,13 @@ define([
             altitudeMode.appendChild(getAltitudeMode(that, modelGraphics.heightReference));
             modelGeometry.appendChild(altitudeMode);
 
-            entityPositionProperty.getValue(Iso8601.MINIMUM_VALUE, scratchCartesian3);
-            var coordinates = createBasicElementWithText(kmlDoc, 'coordinates',
-                getCoordinates(scratchCartesian3, ellipsoid));
-
-            modelGeometry.appendChild(coordinates);
+            valueGetter.get(entityPositionProperty, undefined, scratchCartesian3);
+            Cartographic.fromCartesian(scratchCartesian3, ellipsoid, scratchCartographic);
+            var location = kmlDoc.createElement('Location');
+            location.appendChild(createBasicElementWithText(kmlDoc, 'longitude', CesiumMath.toDegrees(scratchCartographic.longitude)));
+            location.appendChild(createBasicElementWithText(kmlDoc, 'latitude', CesiumMath.toDegrees(scratchCartographic.latitude)));
+            location.appendChild(createBasicElementWithText(kmlDoc, 'altitude', scratchCartographic.height));
+            modelGeometry.appendChild(location);
 
             geometries.push(modelGeometry);
         }
@@ -908,6 +912,8 @@ define([
                 case 'Color':
                 case 'Grid':
                 case 'PolylineGlow':
+                case 'PolylineArrow':
+                case 'PolylineDash':
                     color = colorToString(material.color);
                     break;
                 case 'PolylineOutline':

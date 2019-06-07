@@ -674,14 +674,14 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.LineStyle = {
-                    color: 'ff00ff00',
+                    color: 'ff008000',
                     colorMode: 'normal',
                     width: 5
                 };
                 expectedResult.Document.Placemark.LineString = {
                     altitudeMode: 'clampToGround',
                     coordinates: checkCoords,
-                    tesselate: true,
+                    tessellate: true,
                     drawOrder: 2
                 };
 
@@ -705,7 +705,7 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.LineStyle = {
-                    color: 'ff00ff00',
+                    color: 'ff008000',
                     colorMode: 'normal',
                     width: 5
                 };
@@ -738,11 +738,11 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.LineStyle = {
-                    color: 'ff00ff00',
+                    color: 'ff008000',
                     colorMode: 'normal',
                     width: 5,
-                    outlineColor: 'ffff0000',
-                    outlineWidth: 2
+                    outerColor: 'ffff0000',
+                    outerWidth: 2
                 };
                 expectedResult.Document.Placemark.LineString = {
                     altitudeMode: 'absolute',
@@ -810,7 +810,7 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.PolyStyle = {
-                    color: 'ff00ff00',
+                    color: 'ff008000',
                     colorMode: 'normal',
                     fill: true,
                     outline: true
@@ -947,7 +947,7 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.PolyStyle = {
-                    color: 'ff00ff00',
+                    color: 'ff008000',
                     colorMode: 'normal',
                     fill: true,
                     outline: true
@@ -986,7 +986,7 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.PolyStyle = {
-                    color: 'ff00ff00',
+                    color: 'ff008000',
                     colorMode: 'normal'
                 };
                 expectedResult.Document.Placemark.Polygon = {
@@ -1016,10 +1016,15 @@ defineSuite([
                 var entities = new EntityCollection();
                 entities.add(entity1);
 
+                var cartographic = Cartographic.fromCartesian(pointPosition);
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Placemark.Model = {
                     altitudeMode: 'clampToGround',
-                    coordinates: checkPointCoord,
+                    Location: {
+                        longitude: CesiumMath.toDegrees(cartographic.longitude),
+                        latitude: CesiumMath.toDegrees(cartographic.latitude),
+                        altitude: cartographic.height
+                    },
                     Link: {
                         href: 'http://test.invalid/test.dae'
                     },
