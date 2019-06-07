@@ -598,6 +598,36 @@ defineSuite([
                 });
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
+
+            it('With Model', function() {
+                var position = new SampledPositionProperty();
+                position.addSamples(times, positions);
+
+                var entity1 = createEntity({
+                    position: position,
+                    model: {
+                        uri: 'http://test.invalid/test'
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Placemark.Track = {
+                    altitudeMode: 'absolute',
+                    when: checkWhen,
+                    coord: checkCoord,
+                    Model: {
+                        Link: {
+                            href: 'http://test.invalid/test'
+                        }
+                    }
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
         });
 
         describe('Polylines', function() {
@@ -974,6 +1004,38 @@ defineSuite([
         });
 
         describe('Models', function() {
+            it('Model with constant position', function() {
+                var entity1 = createEntity({
+                    model: {
+                        uri: 'http://test.invalid/test.glb',
+                        scale: 3,
+                        heightReference: HeightReference.CLAMP_TO_GROUND
+                    }
+                });
 
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Placemark.Model = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: checkPointCoord,
+                    Link: {
+                        href: 'http://test.invalid/test.dae'
+                    },
+                    scale: {
+                        x: 3,
+                        y: 3,
+                        z: 3
+                    }
+                };
+
+                var kmlExporter = new KmlExporter(entities, {
+                    modelCallback: function(model, time) {
+                        return model.uri.getValue(time).replace('.glb', '.dae');
+                    }
+                });
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
         });
     });

@@ -1,16 +1,10 @@
 define([
     './BillboardGraphics',
-    './ColorMaterialProperty',
-    './CompositeMaterialProperty',
     './CompositePositionProperty',
-    './GridMaterialProperty',
-    './ImageMaterialProperty',
-    './PolylineGlowMaterialProperty',
-    './PolylineOutlineMaterialProperty',
+    './ModelGraphics',
     './SampledPositionProperty',
     './SampledProperty',
     './ScaledPositionProperty',
-    './StripeMaterialProperty',
     './RectangleGraphics',
     '../Core/Cartesian2',
     '../Core/Cartesian3',
@@ -32,17 +26,11 @@ define([
     '../Scene/VerticalOrigin'
 ], function(
     BillboardGraphics,
-    ColorMaterialProperty,
-    CompositeMaterialProperty,
     CompositePositionProperty,
-    GridMaterialProperty,
-    ImageMaterialProperty,
-    PolylineGlowMaterialProperty,
-    PolylineOutlineMaterialProperty,
+    ModelGraphics,
     SampledPositionProperty,
     SampledProperty,
     ScaledPositionProperty,
-    StripeMaterialProperty,
     RectangleGraphics,
     Cartesian2,
     Cartesian3,
@@ -82,11 +70,21 @@ define([
                 return texture.toDataURL();
             }
 
-            if (texture instanceof HTMLImageElement) {
-                return ''; // TODO
+            return '';
+        }
+
+        function defaultModelCallback(model, time) {
+            var uri = model.uri;
+            if (!defined(uri)) {
+                return '';
             }
 
-            return '';
+            uri = uri.getValue(time);
+            if (typeof uri !== 'string') {
+                uri = uri.url;
+            }
+
+            return uri;
         }
 
         function ValueGetter(time) {
@@ -170,11 +168,13 @@ define([
 
             var styleCache = this._styleCache = new StyleCache();
             this._textureCallback = defaultValue(options.textureCallback, defaultTextureCallback);
+            this._modelCallback = defaultValue(options.modelCallback, defaultModelCallback);
 
             // Use the start time as the default because just in case they define
             //  properties with an interval even if they don't change.
             var entityAvailability = entities.computeAvailability();
-            this._valueGetter = new ValueGetter(defined(options.time) ? options.time : entityAvailability.start);
+            var time = this._time = (defined(options.time) ? options.time : entityAvailability.start);
+            this._valueGetter = new ValueGetter(time);
 
             // Figure out how we will sample dynamic position properties
             var defaultAvailability = defaultValue(options.defaultAvailability, entityAvailability);
@@ -234,7 +234,7 @@ define([
                 createLineString(that, entity.polyline, geometries, styles);
                 createPolygon(that, entity.rectangle, geometries, styles);
                 createPolygon(that, entity.polygon, geometries, styles);
-                createModel(that, entity.model, geometries, styles);
+                createModel(that, entity, entity.model, geometries, styles);
 
                 var geometryCount = geometries.length;
                 if (geometryCount > 0) {
@@ -289,7 +289,6 @@ define([
 
                     var styleCount = styles.length;
                     if (styleCount > 0) {
-                        // TODO: Merge if we went up with multiple of same type
                         var style = kmlDoc.createElement('Style');
                         for (var styleIndex = 0; styleIndex < styleCount; ++styleIndex) {
                             style.appendChild(styles[styleIndex]);
@@ -383,6 +382,8 @@ define([
                 intervals = defaultValue(entity.availability, that._defaultAvailability);
             }
 
+            var isModel = (pointGraphics instanceof ModelGraphics);
+
             var i;
             var tracks = [];
             for (i = 0; i < intervals.length; ++i) {
@@ -465,6 +466,10 @@ define([
                     trackGeometry.appendChild(coord);
                 }
 
+                if (isModel) {
+                    trackGeometry.appendChild(createModelGeometry(that, pointGraphics));
+                }
+
                 tracks.push(trackGeometry);
             }
 
@@ -482,7 +487,7 @@ define([
             }
 
             // Create style
-            if (defined(pointGraphics)) {
+            if (defined(pointGraphics) && !isModel) {
                 var iconStyle = (pointGraphics instanceof BillboardGraphics) ?
                     createIconStyleFromBillboard(that, pointGraphics) : createIconStyleFromPoint(that, pointGraphics);
                 styles.push(iconStyle);
@@ -637,15 +642,10 @@ define([
             lineStringGeometry.appendChild(altitudeMode);
 
             // Set coordinates
-            var coordinates;
             var positionsProperty = polylineGraphics.positions;
-            if (positionsProperty.isConstant) {
-                var cartesians = positionsProperty.getValue(Iso8601.MINIMUM_VALUE);
-                coordinates = createBasicElementWithText(kmlDoc, 'coordinates',
-                    getCoordinates(cartesians, ellipsoid));
-            } else {
-                // TODO: Time dynamic
-            }
+            var cartesians = valueGetter.get(positionsProperty);
+            var coordinates = createBasicElementWithText(kmlDoc, 'coordinates',
+                getCoordinates(cartesians, ellipsoid));
             lineStringGeometry.appendChild(coordinates);
 
             // Set draw order
@@ -685,22 +685,18 @@ define([
             }
 
             var coordinatesProperty = rectangleGraphics.coordinates;
-            if (coordinatesProperty.isConstant) {
-                var rectangle = coordinatesProperty.getValue(Iso8601.MINIMUM_VALUE);
+            var rectangle = valueGetter.get(coordinatesProperty);
 
-                var coordinateStrings = [];
-                var cornerFunction = [Rectangle.northeast, Rectangle.southeast, Rectangle.southwest, Rectangle.northwest];
+            var coordinateStrings = [];
+            var cornerFunction = [Rectangle.northeast, Rectangle.southeast, Rectangle.southwest, Rectangle.northwest];
 
-                for (var i = 0; i < 4; ++i) {
-                    cornerFunction[i](rectangle, scratchCartographic);
-                    coordinateStrings.push(CesiumMath.toDegrees(scratchCartographic.longitude) + ',' +
-                        CesiumMath.toDegrees(scratchCartographic.latitude) + ',' + height);
-                }
-
-                coordinates = createBasicElementWithText(kmlDoc, 'coordinates', coordinateStrings.join(' '));
-            } else {
-                // TODO: Time dynamic
+            for (var i = 0; i < 4; ++i) {
+                cornerFunction[i](rectangle, scratchCartographic);
+                coordinateStrings.push(CesiumMath.toDegrees(scratchCartographic.longitude) + ',' +
+                    CesiumMath.toDegrees(scratchCartographic.latitude) + ',' + height);
             }
+
+            coordinates = createBasicElementWithText(kmlDoc, 'coordinates', coordinateStrings.join(' '));
 
             var outerBoundaryIs = kmlDoc.createElement('outerBoundaryIs');
             var linearRing = kmlDoc.createElement('LinearRing');
@@ -745,29 +741,25 @@ define([
 
             var boundaries = [];
             var hierarchyProperty = polygonGraphics.hierarchy;
-            if (hierarchyProperty.isConstant) {
-                var hierarchy = valueGetter.get(hierarchyProperty);
+            var hierarchy = valueGetter.get(hierarchyProperty);
 
-                // Polygon hierarchy can sometimes just be an array of positions
-                var positions = isArray(hierarchy) ? hierarchy : hierarchy.positions;
+            // Polygon hierarchy can sometimes just be an array of positions
+            var positions = isArray(hierarchy) ? hierarchy : hierarchy.positions;
 
-                // Polygon boundaries
-                var outerBoundaryIs = kmlDoc.createElement('outerBoundaryIs');
-                outerBoundaryIs.appendChild(getLinearRing(that, positions, height, perPositionHeight));
-                boundaries.push(outerBoundaryIs);
+            // Polygon boundaries
+            var outerBoundaryIs = kmlDoc.createElement('outerBoundaryIs');
+            outerBoundaryIs.appendChild(getLinearRing(that, positions, height, perPositionHeight));
+            boundaries.push(outerBoundaryIs);
 
-                // Hole boundaries
-                var holes = hierarchy.holes;
-                if (defined(holes)) {
-                    var holeCount = holes.length;
-                    for (var i = 0; i < holeCount; ++i) {
-                        var innerBoundaryIs = kmlDoc.createElement('innerBoundaryIs');
-                        innerBoundaryIs.appendChild(getLinearRing(that, holes[i].positions, height, perPositionHeight));
-                        boundaries.push(innerBoundaryIs);
-                    }
+            // Hole boundaries
+            var holes = hierarchy.holes;
+            if (defined(holes)) {
+                var holeCount = holes.length;
+                for (var i = 0; i < holeCount; ++i) {
+                    var innerBoundaryIs = kmlDoc.createElement('innerBoundaryIs');
+                    innerBoundaryIs.appendChild(getLinearRing(that, holes[i].positions, height, perPositionHeight));
+                    boundaries.push(innerBoundaryIs);
                 }
-            } else {
-                // TODO: Time dynamic
             }
 
             return boundaries;
@@ -842,16 +834,57 @@ define([
             styles.push(polyStyle);
         }
 
-        function createModel(that, geometry, geometries, styles) {
+        function createModelGeometry(that, modelGraphics) {
             var kmlDoc = that._kmlDoc;
-
-            if (!defined(geometry)) {
-                return;
-            }
+            var valueGetter = that._valueGetter;
 
             var modelGeometry = kmlDoc.createElement('Model');
 
-            // TODO: Populate info - fire callback
+            var scale = valueGetter.get(modelGraphics.scale);
+            if (defined(scale)) {
+                var scaleElement = kmlDoc.createElement('scale');
+                scaleElement.appendChild(createBasicElementWithText(kmlDoc, 'x', scale));
+                scaleElement.appendChild(createBasicElementWithText(kmlDoc, 'y', scale));
+                scaleElement.appendChild(createBasicElementWithText(kmlDoc, 'z', scale));
+                modelGeometry.appendChild(scaleElement);
+            }
+
+            var link = kmlDoc.createElement('Link');
+            var uri = that._modelCallback(modelGraphics, that._time);
+
+            link.appendChild(createBasicElementWithText(kmlDoc, 'href', uri));
+            modelGeometry.appendChild(link);
+
+            return modelGeometry;
+        }
+
+        function createModel(that, entity, modelGraphics, geometries, styles) {
+            var kmlDoc = that._kmlDoc;
+            var ellipsoid = that._ellipsoid;
+
+            if (!defined(modelGraphics)) {
+                return;
+            }
+
+            // If the point isn't constant then create gx:Track or gx:MultiTrack
+            var entityPositionProperty = entity.position;
+            if (!entityPositionProperty.isConstant) {
+                createTracks(that, entity, modelGraphics, geometries, styles);
+                return;
+            }
+
+            var modelGeometry = createModelGeometry(that, modelGraphics);
+
+            // Set altitude mode
+            var altitudeMode = kmlDoc.createElement('altitudeMode');
+            altitudeMode.appendChild(getAltitudeMode(that, modelGraphics.heightReference));
+            modelGeometry.appendChild(altitudeMode);
+
+            entityPositionProperty.getValue(Iso8601.MINIMUM_VALUE, scratchCartesian3);
+            var coordinates = createBasicElementWithText(kmlDoc, 'coordinates',
+                getCoordinates(scratchCartesian3, ellipsoid));
+
+            modelGeometry.appendChild(coordinates);
 
             geometries.push(modelGeometry);
         }
