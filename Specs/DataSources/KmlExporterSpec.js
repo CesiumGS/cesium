@@ -10,6 +10,7 @@ defineSuite([
     'Core/JulianDate',
     'Core/Math',
     'Core/PerspectiveFrustum',
+    'Core/PolygonHierarchy',
     'Core/Rectangle',
     'Core/TimeInterval',
     'DataSources/CallbackProperty',
@@ -34,6 +35,7 @@ defineSuite([
     JulianDate,
     CesiumMath,
     PerspectiveFrustum,
+    PolygonHierarchy,
     Rectangle,
     TimeInterval,
     CallbackProperty,
@@ -133,24 +135,12 @@ defineSuite([
 
                 if (typeof property === 'function') {
                     expect(property(node.textContent)).toBe(true);
-                } else if (Array.isArray(property)) {
-                    var values = node.textContent.split(/\s*,\s*/);
-                    expect(values.length).toBe(property.length);
-                    for (var k = 0; k < property.length; ++k) {
-                        var p = property[k];
-                        var v = values[k];
-                        if (typeof p === 'string') {
-                            expect(v).toEqual(p);
-                        } else if (typeof p === 'number') {
-                            expect(Number(v)).toEqualEpsilon(p, CesiumMath.EPSILON7);
-                        } else {
-                            fail();
-                        }
-                    }
                 } else if (typeof property === 'string') {
                     expect(node.textContent).toEqual(property);
                 } else if (typeof property === 'number') {
                     expect(Number(node.textContent)).toEqualEpsilon(property, CesiumMath.EPSILON7);
+                } else if (typeof property === 'boolean') {
+                    expect(Number(node.textContent)).toBe(property ? 1 : 0);
                 } else {
                     checkTagWithProperties(node, property);
                 }
@@ -158,8 +148,16 @@ defineSuite([
         }
 
         var counter = 0;
-        var expectedPointPosition = [-75.59777, 40.03883, 12];
-        var pointPosition = Cartesian3.fromDegrees(expectedPointPosition[0], expectedPointPosition[1], expectedPointPosition[2]);
+        var pointPosition = Cartesian3.fromDegrees(-75.59777, 40.03883, 12);
+        function checkPointCoord(textContent) {
+            var values = textContent.split(/\s*,\s*/);
+            expect(values.length).toBe(3);
+
+            var cartographic1 = Cartographic.fromCartesian(pointPosition);
+            var cartographic2 = Cartographic.fromDegrees(Number(values[0]), Number(values[1]), Number(values[2]));
+            return Cartographic.equalsEpsilon(cartographic1, cartographic2, CesiumMath.EPSILON7);
+        }
+
         function createEntity(properties) {
             ++counter;
             var options = {
@@ -247,18 +245,18 @@ defineSuite([
                                 id: entity2.id
                             },
                             name: entity2.name,
-                            visibility: '1',
+                            visibility: true,
                             description: entity2.description,
                             Placemark: {
                                 _: {
                                     id: entity3.id
                                 },
                                 Point: {
-                                    altitudeMode: 'clampToGround',
-                                    coordinates: expectedPointPosition
+                                    altitudeMode: 'absolute',
+                                    coordinates: checkPointCoord
                                 },
                                 name: entity3.name,
-                                visibility: '1',
+                                visibility: true,
                                 description: entity3.description,
                                 styleUrl: '#style-1'
                             }
@@ -292,7 +290,7 @@ defineSuite([
                 };
                 expectedResult.Document.Placemark.Point = {
                     altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    coordinates: checkPointCoord
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -344,7 +342,7 @@ defineSuite([
                 };
                 expectedResult.Document.Placemark.Point = {
                     altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    coordinates: checkPointCoord
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -365,8 +363,8 @@ defineSuite([
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {};
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    altitudeMode: 'absolute',
+                    coordinates: checkPointCoord
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -389,8 +387,8 @@ defineSuite([
                     heading: 360
                 };
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    altitudeMode: 'absolute',
+                    coordinates: checkPointCoord
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -423,8 +421,8 @@ defineSuite([
                     }
                 };
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    altitudeMode: 'absolute',
+                    coordinates: checkPointCoord
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -457,8 +455,8 @@ defineSuite([
                     }
                 };
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    altitudeMode: 'absolute',
+                    coordinates: checkPointCoord
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -482,8 +480,8 @@ defineSuite([
                     }
                 };
                 expectedResult.Document.Placemark.Point = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    altitudeMode: 'absolute',
+                    coordinates: checkPointCoord
                 };
 
                 var kmlExporter = new KmlExporter(entities, {
@@ -546,7 +544,9 @@ defineSuite([
 
                 var entity1 = createEntity({
                     position: position,
-                    point: {}
+                    point: {
+                        heightReference: HeightReference.CLAMP_TO_GROUND
+                    }
                 });
 
                 var entities = new EntityCollection();
@@ -584,7 +584,7 @@ defineSuite([
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {};
                 expectedResult.Document.Placemark.Track = {
-                    altitudeMode: 'clampToGround',
+                    altitudeMode: 'absolute',
                     when: checkWhen,
                     coord: checkCoord
                 };
@@ -608,6 +608,26 @@ defineSuite([
                 Cartesian3.fromDegrees(-1, 1, 12)
             ];
 
+            function checkCoords(textContent) {
+                var coordinates = textContent.split(' ');
+                expect(coordinates.length).toBe(4);
+
+                var cartographic1 = new Cartographic();
+                var cartographic2 = new Cartographic();
+                var count = positions.length;
+                for (var i=0;i<count;++i) {
+                    Cartographic.fromCartesian(positions[i], undefined, cartographic1);
+                    var values = coordinates[i].split(',');
+                    expect(values.length).toBe(3);
+                    Cartographic.fromDegrees(Number(values[0]), Number(values[1]), Number(values[2]), cartographic2);
+                    if (Cartographic.equalsEpsilon(cartographic1, cartographic2, CesiumMath.EPSILON7)) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
             it('Clamped to ground', function() {
                 var entity1 = createEntity({
                     polyline: {
@@ -624,11 +644,15 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.LineStyle = {
-
+                    color: 'ff00ff00',
+                    colorMode: 'normal',
+                    width: 5
                 };
-                expectedResult.Document.Placemark.Polyline = {
+                expectedResult.Document.Placemark.LineString = {
                     altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    coordinates: checkCoords,
+                    tesselate: true,
+                    drawOrder: 2
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -651,11 +675,14 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.LineStyle = {
-
+                    color: 'ff00ff00',
+                    colorMode: 'normal',
+                    width: 5
                 };
-                expectedResult.Document.Placemark.Polyline = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                expectedResult.Document.Placemark.LineString = {
+                    altitudeMode: 'absolute',
+                    coordinates: checkCoords,
+                    drawOrder: 2
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -672,8 +699,7 @@ defineSuite([
                             outlineColor: Color.BLUE,
                             outlineWidth: 2
                         }),
-                        width: 5,
-                        zIndex: 2
+                        width: 5
                     }
                 });
 
@@ -682,11 +708,15 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.LineStyle = {
-
+                    color: 'ff00ff00',
+                    colorMode: 'normal',
+                    width: 5,
+                    outlineColor: 'ffff0000',
+                    outlineWidth: 2
                 };
-                expectedResult.Document.Placemark.Polyline = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                expectedResult.Document.Placemark.LineString = {
+                    altitudeMode: 'absolute',
+                    coordinates: checkCoords
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -701,6 +731,32 @@ defineSuite([
                 Cartesian3.fromDegrees(1, 1, 12),
                 Cartesian3.fromDegrees(-1, 1, 12)
             ];
+
+            function getCheckCoords(height) {
+                return function(textContent) {
+                    var coordinates = textContent.split(' ');
+                    expect(coordinates.length).toBe(4);
+
+                    var cartographic1 = new Cartographic();
+                    var cartographic2 = new Cartographic();
+                    var count = positions.length;
+                    for (var i=0;i<count;++i) {
+                        Cartographic.fromCartesian(positions[i], undefined, cartographic1);
+                        if (defined(height)) {
+                            cartographic1.height = height;
+                        }
+
+                        var values = coordinates[i].split(',');
+                        expect(values.length).toBe(3);
+                        Cartographic.fromDegrees(Number(values[0]), Number(values[1]), Number(values[2]), cartographic2);
+                        if (Cartographic.equalsEpsilon(cartographic1, cartographic2, CesiumMath.EPSILON7)) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                };
+            }
 
             it('Polygon with outline', function(){
                 var entity1 = createEntity({
@@ -724,14 +780,23 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.PolyStyle = {
-
+                    color: 'ff00ff00',
+                    colorMode: 'normal',
+                    fill: true,
+                    outline: true
                 };
                 expectedResult.Document.Style.LineStyle = {
-
+                    color: 'ffff0000',
+                    colorMode: 'normal',
+                    width: 5
                 };
                 expectedResult.Document.Placemark.Polygon = {
                     altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    outerBoundaryIs: {
+                        LinearRing: {
+                            coordinates: getCheckCoords(10)
+                        }
+                    }
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -753,14 +818,15 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.PolyStyle = {
-
-                };
-                expectedResult.Document.Style.LineStyle = {
-
                 };
                 expectedResult.Document.Placemark.Polygon = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    altitudeMode: 'absolute',
+                    outerBoundaryIs: {
+                        LinearRing: {
+                            coordinates: getCheckCoords(20) // We use extrudedHeight
+                        }
+                    },
+                    extrude: true
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -782,28 +848,61 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.PolyStyle = {
-
-                };
-                expectedResult.Document.Style.LineStyle = {
-
                 };
                 expectedResult.Document.Placemark.Polygon = {
-                    altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    altitudeMode: 'absolute',
+                    outerBoundaryIs: {
+                        LinearRing: {
+                            coordinates: getCheckCoords() // Use per position height
+                        }
+                    },
+                    extrude: true
                 };
 
                 var kmlExporter = new KmlExporter(entities);
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
-            it('Rectangle', function(){
+            it('Polygon with holes', function() {
+                var entity1 = createEntity({
+                    polygon: {
+                        hierarchy: new PolygonHierarchy(positions, [new PolygonHierarchy(positions)]),
+                        height: 10
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.PolyStyle = {
+                };
+                expectedResult.Document.Placemark.Polygon = {
+                    altitudeMode: 'absolute',
+                    outerBoundaryIs: {
+                        LinearRing: {
+                            coordinates: getCheckCoords(10)
+                        }
+                    },
+                    innerBoundaryIs: {
+                        LinearRing: {
+                            coordinates: getCheckCoords(10)
+                        }
+                    }
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('Rectangle extruded', function(){
                 var entity1 = createEntity({
                     rectangle: {
-                        hierarchy: Rectangle.fromDegrees(-1, -1, 1, 1),
+                        coordinates: Rectangle.fromDegrees(-1, -1, 1, 1),
                         height: 10,
                         perPositionHeight: false,
                         heightReference: HeightReference.CLAMP_TO_GROUND,
-                        extrudedHeight: 0,
+                        extrudedHeight: 20,
                         fill: true,
                         material: new ColorMaterialProperty(Color.GREEN),
                         outline: true,
@@ -818,14 +917,55 @@ defineSuite([
 
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.PolyStyle = {
-
+                    color: 'ff00ff00',
+                    colorMode: 'normal',
+                    fill: true,
+                    outline: true
                 };
                 expectedResult.Document.Style.LineStyle = {
-
+                    color: 'ffff0000',
+                    colorMode: 'normal',
+                    width: 5
                 };
                 expectedResult.Document.Placemark.Polygon = {
                     altitudeMode: 'clampToGround',
-                    coordinates: expectedPointPosition
+                    outerBoundaryIs: {
+                        LinearRing: {
+                            coordinates: getCheckCoords(20)
+                        }
+                    },
+                    extrude: true
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('Rectangle not extruded', function(){
+                var entity1 = createEntity({
+                    rectangle: {
+                        coordinates: Rectangle.fromDegrees(-1, -1, 1, 1),
+                        height: 10,
+                        heightReference: HeightReference.CLAMP_TO_GROUND,
+                        material: new ColorMaterialProperty(Color.GREEN)
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.PolyStyle = {
+                    color: 'ff00ff00',
+                    colorMode: 'normal'
+                };
+                expectedResult.Document.Placemark.Polygon = {
+                    altitudeMode: 'clampToGround',
+                    outerBoundaryIs: {
+                        LinearRing: {
+                            coordinates: getCheckCoords(10)
+                        }
+                    }
                 };
 
                 var kmlExporter = new KmlExporter(entities);

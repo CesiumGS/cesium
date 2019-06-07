@@ -109,6 +109,14 @@ define([
             }
         };
 
+        ValueGetter.prototype.getMaterialType = function(property) {
+            if (!defined(property)) {
+                return;
+            }
+
+            return property.getValue(this._time);
+        };
+
         function StyleCache() {
             this._ids = {};
             this._styles = {};
@@ -116,10 +124,8 @@ define([
         }
 
         StyleCache.prototype.get = function(element) {
-            // TODO: Recursively sort for better caching
-
             var ids = this._ids;
-            var key = element.innerHTML; // TODO: Maybe use hash
+            var key = element.innerHTML;
             if (defined(ids[key])) {
                 return ids[key];
             }
@@ -138,10 +144,10 @@ define([
         StyleCache.prototype.save = function(parentElement) {
             var styles = this._styles;
 
-            // TODO: Put in beginning
+            var firstElement = parentElement.childNodes[0];
             for (var key in styles) {
                 if (styles.hasOwnProperty(key)) {
-                    parentElement.appendChild(styles[key]);
+                    parentElement.insertBefore(styles[key], firstElement);
                 }
             }
         };
@@ -230,8 +236,6 @@ define([
                 createPolygon(that, entity.polygon, geometries, styles);
                 createModel(that, entity.model, geometries, styles);
 
-                // TODO: Labels
-
                 var geometryCount = geometries.length;
                 if (geometryCount > 0) {
                     var placemark = kmlDoc.createElement('Placemark');
@@ -261,7 +265,6 @@ define([
                     }
 
                     placemark.appendChild(createBasicElementWithText(kmlDoc, 'name', name));
-                    // TODO: Graphics show property
                     placemark.appendChild(createBasicElementWithText(kmlDoc, 'visibility', entity.show));
                     placemark.appendChild(createBasicElementWithText(kmlDoc, 'description', entity.description));
 
@@ -663,7 +666,7 @@ define([
 
             processMaterial(that, polylineGraphics.material, lineStyle);
 
-            // TODO: <gx:physicalWidth> and gx:labelVisibility>
+            // TODO: <gx:physicalWidth>?
 
             styles.push(lineStyle);
         }
@@ -778,7 +781,13 @@ define([
                 return;
             }
 
-            // TODO: Detect textured quads and use ground overlays instead
+            // Detect textured quads and use ground overlays instead
+            var isRectangle = (geometry instanceof RectangleGraphics);
+            if (isRectangle && valueGetter.getMaterialType(geometry.material) === 'Image') {
+                // TODO
+                // TODO: stRotation
+                return;
+            }
 
             var polygonGeometry = kmlDoc.createElement('Polygon');
 
@@ -788,8 +797,8 @@ define([
             }
 
             // Set boundaries
-            var boundaries = (geometry instanceof RectangleGraphics) ?
-                getRectangleBoundaries(that, geometry, extrudedHeight) : getPolygonBoundaries(that, geometry, extrudedHeight);
+            var boundaries = isRectangle ? getRectangleBoundaries(that, geometry, extrudedHeight) :
+                getPolygonBoundaries(that, geometry, extrudedHeight);
 
             var boundaryCount = boundaries.length;
             for (var i = 0; i < boundaryCount; ++i) {
@@ -801,14 +810,6 @@ define([
             altitudeMode.appendChild(getAltitudeMode(that, geometry.heightReference));
             polygonGeometry.appendChild(altitudeMode);
 
-            // Set draw order
-            var zIndex = valueGetter.get(geometry.zIndex);
-            if (defined(zIndex)) {
-                polygonGeometry.appendChild(createBasicElementWithText(kmlDoc, 'drawOrder', zIndex, gxNamespace));
-            }
-
-            // TODO: stRotation
-
             geometries.push(polygonGeometry);
 
             // Create style
@@ -816,7 +817,7 @@ define([
 
             var fill = valueGetter.get(geometry.fill, false);
             if (fill) {
-                polyStyle.appendChild(createBasicElementWithText(kmlDoc, 'width', fill));
+                polyStyle.appendChild(createBasicElementWithText(kmlDoc, 'fill', fill));
             }
 
             processMaterial(that, geometry.material, polyStyle);
@@ -831,7 +832,7 @@ define([
                 var outlineWidth = valueGetter.get(geometry.outlineWidth, 1.0);
                 lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'width', outlineWidth));
 
-                var outlineColor = valueGetter.get(geometry.outlineColor, Color.BLACK);
+                var outlineColor = valueGetter.getColor(geometry.outlineColor, Color.BLACK);
                 lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'color', outlineColor));
                 lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'colorMode', 'normal'));
 
@@ -869,29 +870,24 @@ define([
             }
 
             var color;
-            if (materialProperty instanceof ColorMaterialProperty) {
-                color = colorToString(material.color);
-            } else if (materialProperty instanceof CompositeMaterialProperty) {
-                // TODO
-            } else if (materialProperty instanceof GridMaterialProperty) {
-                color = colorToString(material.color);
+            var type = valueGetter.getMaterialType(materialProperty);
+            switch(type) {
+                case 'Color':
+                case 'Grid':
+                case 'PolylineGlow':
+                    color = colorToString(material.color);
+                    break;
+                case 'PolylineOutline':
+                    color = colorToString(material.color);
 
-                // TODO
-            } else if (materialProperty instanceof ImageMaterialProperty) {
-                // TODO: We'll need to use GroundOverlays for this
-            } else if (materialProperty instanceof PolylineGlowMaterialProperty) {
-                // TODO
-            } else if (materialProperty instanceof PolylineOutlineMaterialProperty) {
-                color = colorToString(material.color);
-
-                var outlineColor = colorToString(material.outlineColor);
-                var outlineWidth = material.outlineWidth;
-                style.appendChild(createBasicElementWithText(kmlDoc, 'outerColor', outlineColor, gxNamespace));
-                style.appendChild(createBasicElementWithText(kmlDoc, 'outerWidth', outlineWidth, gxNamespace));
-            } else if (materialProperty instanceof StripeMaterialProperty) {
-                // TODO
-            } else {
-                // TODO: Unknown Material
+                    var outlineColor = colorToString(material.outlineColor);
+                    var outlineWidth = material.outlineWidth;
+                    style.appendChild(createBasicElementWithText(kmlDoc, 'outerColor', outlineColor, gxNamespace));
+                    style.appendChild(createBasicElementWithText(kmlDoc, 'outerWidth', outlineWidth, gxNamespace));
+                    break;
+                case 'Stripe':
+                    color = colorToString(material.oddColor);
+                    break;
             }
 
             if (defined(color)) {
