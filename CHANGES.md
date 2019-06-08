@@ -6,6 +6,7 @@ Change Log
 ##### Fixes :wrench:
 * Fixed a bug that caused missing segments for ground polylines with coplanar points over large distances and problems with polylines containing duplicate points. [#7885](https://github.com/AnalyticalGraphicsInc/cesium//pull/7885)
 * Fixed a bug where billboards were not pickable when zoomed out completely in 2D View. [#7908](https://github.com/AnalyticalGraphicsInc/cesium/pull/7908)
+* Fixed polyline colors when `scene.highDynamicRange` is enabled. [#7924](https://github.com/AnalyticalGraphicsInc/cesium/pull/7924)
 
 ### 1.58.1 - 2018-06-03
 _This is an npm-only release to fix a publishing issue_
