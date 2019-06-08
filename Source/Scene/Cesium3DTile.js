@@ -1127,7 +1127,7 @@ define([
         // but may be transformed by additional transforms applied in Cesium.
         // This is why the transform is calculated as the difference between the initial transform and the current transform.
         transform = Matrix4.multiplyTransformation(transform, Matrix4.inverseTransformation(initialTransform, scratchTransform), scratchTransform);
-        center = Matrix4.multiplyByPoint(transform, center, center);
+        //center = Matrix4.multiplyByPoint(transform, center, center);
         var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
         halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
 
