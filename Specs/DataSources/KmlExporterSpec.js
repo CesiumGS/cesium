@@ -17,6 +17,7 @@ defineSuite([
     'DataSources/ColorMaterialProperty',
     'DataSources/Entity',
     'DataSources/EntityCollection',
+    'DataSources/ImageMaterialProperty',
     'DataSources/KmlDataSource',
     'DataSources/PolylineOutlineMaterialProperty',
     'DataSources/SampledPositionProperty',
@@ -42,6 +43,7 @@ defineSuite([
     ColorMaterialProperty,
     Entity,
     EntityCollection,
+    ImageMaterialProperty,
     KmlDataSource,
     PolylineOutlineMaterialProperty,
     SampledPositionProperty,
@@ -1040,6 +1042,53 @@ defineSuite([
                         return model.uri.getValue(time).replace('.glb', '.dae');
                     }
                 });
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+        });
+
+        describe('GroundOverlays', function() {
+            it('Rectangle', function(){
+                var entity = createEntity({
+                    rectangle: {
+                        coordinates: Rectangle.fromDegrees(-1, -1, 1, 1),
+                        height: 10,
+                        heightReference: HeightReference.CLAMP_TO_GROUND,
+                        material: new ImageMaterialProperty({
+                            image: '../images/logo.jpg',
+                            color: Color.GREEN
+                        })
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity);
+
+                var expectedResult = {
+                    Document: {
+                        GroundOverlay: {
+                            _: {
+                                id: entity.id
+                            },
+                            name: entity.name,
+                            visibility: entity.show ? 1 : 0,
+                            description: entity.description,
+                            altitude: 10,
+                            altitudeMode: 'clampToGround',
+                            LatLonBox: {
+                                north: 1,
+                                south: -1,
+                                east: 1,
+                                west: -1
+                            },
+                            Icon: {
+                                href: '../images/logo.jpg'
+                            },
+                            color: 'ff008000'
+                        }
+                    }
+                };
+
+                var kmlExporter = new KmlExporter(entities);
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
         });

@@ -10,6 +10,7 @@ define([
     '../Core/Cartesian3',
     '../Core/Cartographic',
     '../Core/Color',
+    '../Core/createGuid',
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/Ellipsoid',
@@ -36,6 +37,7 @@ define([
     Cartesian3,
     Cartographic,
     Color,
+    createGuid,
     defaultValue,
     defined,
     Ellipsoid,
@@ -150,6 +152,24 @@ define([
             }
         };
 
+        function IdManager() {
+            this._ids = {};
+        }
+
+        IdManager.prototype.get = function(id) {
+            if (!defined(id)) {
+                return this.get(createGuid());
+            }
+
+            var ids = this._ids;
+            if (!defined(ids[id])) {
+                ids[id] = 0;
+                return id;
+            }
+
+            return id.toString() + '-' + (++ids[id]);
+        };
+
         /**
          * @alias KmlExporter
          * @constructor
@@ -157,7 +177,8 @@ define([
          * @param {EntityCollection} entities The EntityCollection to export as KML
          * @param {Object} options An object with the following properties:
          * @param {Function} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file
-         * @param {Function} [options.textureCallback] A callback that will be called with an image, URI or Canvas. By default it will use the URI or a data URI of the image or canvas.
+         * @param {Function} [options.textureCallback] A callback that will be called with an image, URI or Canvas and should return the URI to use in the KML. By default it will use the URI or a data URI of the image or canvas.
+         * @param {Function} [options.modelCallback] A callback that will be called with a ModelGraphics instance and should return the URI to use in the KML. By default it will just return the model's uri property directly.
          * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
          * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
          * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
@@ -165,6 +186,7 @@ define([
         function KmlExporter(entities, options) {
             options = defaultValue(options, defaultValue.EMPTY_OBJECT);
             this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+            this._idManager = new IdManager();
 
             var styleCache = this._styleCache = new StyleCache();
             this._textureCallback = defaultValue(options.textureCallback, defaultTextureCallback);
@@ -187,11 +209,11 @@ define([
                     defaultAvailability = new TimeInterval();
                 } else {
                     // No start time, so just sample 10 times before the stop
-                    JulianDate.addSeconds(defaultAvailability.stop, -10*sampleDuration, defaultAvailability.start);
+                    JulianDate.addSeconds(defaultAvailability.stop, -10 * sampleDuration, defaultAvailability.start);
                 }
             } else if (defaultAvailability.stop === Iso8601.MAXIMUM_VALUE) {
                 // No stop time, so just sample 10 times after the start
-                JulianDate.addSeconds(defaultAvailability.start, 10*sampleDuration, defaultAvailability.stop);
+                JulianDate.addSeconds(defaultAvailability.start, 10 * sampleDuration, defaultAvailability.stop);
             }
 
             // Wrap it in a TimeIntervalCollection because that is what entity.availability is
@@ -221,25 +243,59 @@ define([
             var kmlDoc = that._kmlDoc;
             var styleCache = that._styleCache;
             var valueGetter = that._valueGetter;
+            var idManager = that._idManager;
 
             var count = entities.length;
+            var overlays;
             var geometries;
             var styles;
             for (var i = 0; i < count; ++i) {
                 var entity = entities[i];
+                overlays = [];
                 geometries = [];
                 styles = [];
 
                 createPoint(that, entity, geometries, styles);
                 createLineString(that, entity.polyline, geometries, styles);
-                createPolygon(that, entity.rectangle, geometries, styles);
-                createPolygon(that, entity.polygon, geometries, styles);
+                createPolygon(that, entity.rectangle, geometries, styles, overlays);
+                createPolygon(that, entity.polygon, geometries, styles, overlays);
                 createModel(that, entity, entity.model, geometries, styles);
+
+                var timeSpan;
+                var availability = entity.availability;
+                if (defined(availability)) {
+                    timeSpan = kmlDoc.createElement('TimeSpan');
+
+                    if (!JulianDate.equals(availability.start, Iso8601.MINIMUM_VALUE)) {
+                        timeSpan.appendChild(createBasicElementWithText(kmlDoc, 'begin',
+                            JulianDate.toIso8601(availability.start)));
+                    }
+
+                    if (!JulianDate.equals(availability.stop, Iso8601.MAXIMUM_VALUE)) {
+                        timeSpan.appendChild(createBasicElementWithText(kmlDoc, 'end',
+                            JulianDate.toIso8601(availability.stop)));
+                    }
+                }
+
+                for (var overlayIndex = 0; overlayIndex < overlays.length; ++overlayIndex) {
+                    var overlay = overlays[overlayIndex];
+
+                    overlay.setAttribute('id', idManager.get(entity.id));
+                    overlay.appendChild(createBasicElementWithText(kmlDoc, 'name', entity.name));
+                    overlay.appendChild(createBasicElementWithText(kmlDoc, 'visibility', entity.show));
+                    overlay.appendChild(createBasicElementWithText(kmlDoc, 'description', entity.description));
+
+                    if (defined(timeSpan)) {
+                        overlay.appendChild(timeSpan);
+                    }
+
+                    parentNode.appendChild(overlay);
+                }
 
                 var geometryCount = geometries.length;
                 if (geometryCount > 0) {
                     var placemark = kmlDoc.createElement('Placemark');
-                    placemark.setAttribute('id', entity.id);
+                    placemark.setAttribute('id', idManager.get(entity.id));
 
                     var name = entity.name;
                     var labelGraphics = entity.label;
@@ -268,20 +324,7 @@ define([
                     placemark.appendChild(createBasicElementWithText(kmlDoc, 'visibility', entity.show));
                     placemark.appendChild(createBasicElementWithText(kmlDoc, 'description', entity.description));
 
-                    var availability = entity.availability;
-                    if (defined(availability)) {
-                        var timeSpan = kmlDoc.createElement('TimeSpan');
-
-                        if (!JulianDate.equals(availability.start, Iso8601.MINIMUM_VALUE)) {
-                            timeSpan.appendChild(createBasicElementWithText(kmlDoc, 'begin',
-                                JulianDate.toIso8601(availability.start)));
-                        }
-
-                        if (!JulianDate.equals(availability.stop, Iso8601.MAXIMUM_VALUE)) {
-                            timeSpan.appendChild(createBasicElementWithText(kmlDoc, 'end',
-                                JulianDate.toIso8601(availability.stop)));
-                        }
-
+                    if (defined(timeSpan)) {
                         placemark.appendChild(timeSpan);
                     }
 
@@ -311,11 +354,7 @@ define([
                 var children = entity._children;
                 if (children.length > 0) {
                     var folderNode = kmlDoc.createElement('Folder');
-                    // The Placemark and Folder can't have the same ID
-                    if (geometryCount === 0) {
-                        folderNode.setAttribute('id', entity.id);
-                    }
-
+                    folderNode.setAttribute('id', idManager.get(entity.id));
                     folderNode.appendChild(createBasicElementWithText(kmlDoc, 'name', entity.name));
                     folderNode.appendChild(createBasicElementWithText(kmlDoc, 'visibility', entity.show));
                     folderNode.appendChild(createBasicElementWithText(kmlDoc, 'description', entity.description));
@@ -397,7 +436,7 @@ define([
                 if (positionProperty instanceof ScaledPositionProperty) {
                     positionProperty = positionProperty._value;
                     trackAltitudeMode.appendChild(getAltitudeMode(that, HeightReference.CLAMP_TO_GROUND));
-                } else if (defined(pointGraphics)){
+                } else if (defined(pointGraphics)) {
                     trackAltitudeMode.appendChild(getAltitudeMode(that, pointGraphics.heightReference));
                 } else {
                     // Path graphics only, which has no height reference
@@ -428,7 +467,7 @@ define([
 
                     for (var j = 0; j < times.length; ++j) {
                         positionTimes.push(JulianDate.toIso8601(times[j]));
-                        Cartesian3.fromArray(values, j*3, scratchCartesian3);
+                        Cartesian3.fromArray(values, j * 3, scratchCartesian3);
                         positionValues.push(getCoordinates(scratchCartesian3, ellipsoid));
                     }
                 } else {
@@ -766,7 +805,7 @@ define([
             return boundaries;
         }
 
-        function createPolygon(that, geometry, geometries, styles) {
+        function createPolygon(that, geometry, geometries, styles, overlays) {
             var kmlDoc = that._kmlDoc;
             var valueGetter = that._valueGetter;
 
@@ -777,8 +816,7 @@ define([
             // Detect textured quads and use ground overlays instead
             var isRectangle = (geometry instanceof RectangleGraphics);
             if (isRectangle && valueGetter.getMaterialType(geometry.material) === 'Image') {
-                // TODO
-                // TODO: stRotation
+                createGroundOverlay(that, geometry, overlays);
                 return;
             }
 
@@ -833,6 +871,45 @@ define([
             }
 
             styles.push(polyStyle);
+        }
+
+        function createGroundOverlay(that, rectangleGraphics, overlays) {
+            var kmlDoc = that._kmlDoc;
+            var valueGetter = that._valueGetter;
+
+            var groundOverlay = kmlDoc.createElement('GroundOverlay');
+
+            // Set altitude mode
+            var altitudeMode = kmlDoc.createElement('altitudeMode');
+            altitudeMode.appendChild(getAltitudeMode(that, rectangleGraphics.heightReference));
+            groundOverlay.appendChild(altitudeMode);
+
+            var height = valueGetter.get(rectangleGraphics.height);
+            if (defined(height)) {
+                groundOverlay.appendChild(createBasicElementWithText(kmlDoc, 'altitude', height));
+            }
+
+            var rectangle = valueGetter.get(rectangleGraphics.coordinates);
+            var latLonBox = kmlDoc.createElement('LatLonBox');
+            latLonBox.appendChild(createBasicElementWithText(kmlDoc, 'north', CesiumMath.toDegrees(rectangle.north)));
+            latLonBox.appendChild(createBasicElementWithText(kmlDoc, 'south', CesiumMath.toDegrees(rectangle.south)));
+            latLonBox.appendChild(createBasicElementWithText(kmlDoc, 'east', CesiumMath.toDegrees(rectangle.east)));
+            latLonBox.appendChild(createBasicElementWithText(kmlDoc, 'west', CesiumMath.toDegrees(rectangle.west)));
+            groundOverlay.appendChild(latLonBox);
+
+            // We should only end up here if we have an ImageMaterialProperty
+            var material = valueGetter.get(rectangleGraphics.material);
+            var href = that._textureCallback(material.image);
+            var icon = kmlDoc.createElement('Icon');
+            icon.appendChild(createBasicElementWithText(kmlDoc, 'href', href));
+            groundOverlay.appendChild(icon);
+
+            var color = material.color;
+            if (defined(color)) {
+                groundOverlay.appendChild(createBasicElementWithText(kmlDoc, 'color', colorToString(material.color)));
+            }
+
+            overlays.push(groundOverlay);
         }
 
         function createModelGeometry(that, modelGraphics) {
@@ -908,7 +985,7 @@ define([
 
             var color;
             var type = valueGetter.getMaterialType(materialProperty);
-            switch(type) {
+            switch (type) {
                 case 'Color':
                 case 'Grid':
                 case 'PolylineGlow':
