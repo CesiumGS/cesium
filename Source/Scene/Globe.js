@@ -675,7 +675,11 @@ define([
         if (!defined(rayOrigin)) {
             // intersection point is outside the ellipsoid, try other value
             // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
-            var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0), -11500.0);
+            var minimumHeight;
+            if (defined(tile.data.tileBoundingRegion)) {
+                minimumHeight = tile.data.tileBoundingRegion.minimumHeight;
+            }
+            var magnitude = Math.min(defaultValue(minimumHeight, 0.0), -11500.0);
 
             // multiply by the *positive* value of the magnitude
             var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchGetHeightIntersection);
