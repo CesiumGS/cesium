@@ -2,7 +2,7 @@ defineSuite([
         'Core/oneTimeWarning'
     ], function(
         oneTimeWarning) {
-    "use strict";
+    'use strict';
 
     it('logs a warning', function() {
         spyOn(console, 'warn');

@@ -175,6 +175,42 @@ defineSuite([
         expect(pixelSize.y).toEqual(2.0);
     });
 
+    it('equals', function() {
+        var frustum2 = new OrthographicFrustum();
+        frustum2.near = 1.0;
+        frustum2.far = 3.0;
+        frustum2.width = 2.0;
+        frustum2.aspectRatio = 1.0;
+        expect(frustum.equals(frustum2)).toEqual(true);
+    });
+
+    it('equals epsilon', function() {
+        var frustum2 = new OrthographicFrustum();
+        frustum2.near = 1.0;
+        frustum2.far = 3.0;
+        frustum2.width = 2.0;
+        frustum2.aspectRatio = 1.0;
+        expect(frustum.equalsEpsilon(frustum2, CesiumMath.EPSILON7)).toEqual(true);
+
+        var frustum3 = new OrthographicFrustum();
+        frustum3.near = 1.01;
+        frustum3.far = 3.01;
+        frustum3.width = 2.01;
+        frustum3.aspectRatio = 1.01;
+        expect(frustum.equalsEpsilon(frustum3, CesiumMath.EPSILON1)).toEqual(true);
+
+        var frustum4 = new OrthographicFrustum();
+        frustum4.near = 1.0;
+        frustum4.far = 3.0;
+        frustum4.width = 2.0;
+        frustum4.aspectRatio = 1.1;
+        expect(frustum.equalsEpsilon(frustum4, CesiumMath.EPSILON2)).toEqual(false);
+    });
+
+    it('equals undefined', function() {
+        expect(frustum.equals()).toEqual(false);
+    });
+
     it('throws with undefined frustum parameters', function() {
         var frustum = new OrthographicFrustum();
         expect(function() {

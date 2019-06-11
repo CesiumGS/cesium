@@ -329,6 +329,9 @@ define([
         // WEBGL_compressed_texture_etc1
         COMPRESSED_RGB_ETC1_WEBGL : 0x8D64,
 
+        // EXT_color_buffer_half_float
+        HALF_FLOAT_OES : 0x8D61,
+
         // Desktop OpenGL
         DOUBLE : 0x140A,
 

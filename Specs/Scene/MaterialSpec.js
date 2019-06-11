@@ -8,6 +8,7 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
+        'Core/Resource',
         'Scene/MaterialAppearance',
         'Scene/PolylineCollection',
         'Scene/Primitive',
@@ -23,6 +24,7 @@ defineSuite([
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
+        Resource,
         MaterialAppearance,
         PolylineCollection,
         Primitive,
@@ -328,6 +330,19 @@ defineSuite([
                 type : 'DiffuseMap',
                 uniforms : {
                     image :  './Data/Images/Blue.png'
+                }
+            }
+        });
+        renderMaterial(material);
+    });
+
+    it('creates a material with an image resource uniform', function () {
+        var material = new Material({
+            strict : true,
+            fabric : {
+                type : 'DiffuseMap',
+                uniforms : {
+                    image :  new Resource('./Data/Images/Blue.png')
                 }
             }
         });

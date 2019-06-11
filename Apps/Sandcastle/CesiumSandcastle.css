@@ -69,7 +69,7 @@ html, body {
     white-space: nowrap;
 }
 
-.demoTileThumbnail {	
+.demoTileThumbnail {
     max-height: 150px;
     max-width: 225px;
     height: 100px;
@@ -138,7 +138,7 @@ html, body {
     height: 100%;
     transition-property: transform;
     transition-duration: 0.5s;
-    transform-origin: 200px 150px;
+    transform-origin: 200px 152px;  /* These numbers should be divisible by 4 because of scaling in .makeThumbnail */
 }
 
 .makeThumbnail {
@@ -172,6 +172,11 @@ a.linkButton:focus, a.linkButton:hover {
 .claro .bottomPanel {
     padding: 0;
     overflow: hidden;
+}
+
+.bottomPanel #innerPanel_tablist {
+    max-height: 28px;
+    overflow: auto !important;
 }
 
 .claro .dijitTabContainerTop-tabs .dijitTabChecked .dijitTabContent {

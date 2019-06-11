@@ -1,5 +1,6 @@
 define([
         '../Core/Cartesian3',
+        '../Core/Cartographic',
         '../Core/Check',
         '../Core/createGuid',
         '../Core/defaultValue',
@@ -7,10 +8,14 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Quaternion',
         '../Core/Transforms',
+        '../Scene/HeightReference',
+        '../Scene/GroundPrimitive',
+        '../Scene/GroundPolylinePrimitive',
         './BillboardGraphics',
         './BoxGraphics',
         './ConstantPositionProperty',
@@ -23,6 +28,7 @@ define([
         './LabelGraphics',
         './ModelGraphics',
         './PathGraphics',
+        './PlaneGraphics',
         './PointGraphics',
         './PolygonGraphics',
         './PolylineGraphics',
@@ -33,6 +39,7 @@ define([
         './WallGraphics'
     ], function(
         Cartesian3,
+        Cartographic,
         Check,
         createGuid,
         defaultValue,
@@ -40,10 +47,14 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        CesiumMath,
         Matrix3,
         Matrix4,
         Quaternion,
         Transforms,
+        HeightReference,
+        GroundPrimitive,
+        GroundPolylinePrimitive,
         BillboardGraphics,
         BoxGraphics,
         ConstantPositionProperty,
@@ -56,6 +67,7 @@ define([
         LabelGraphics,
         ModelGraphics,
         PathGraphics,
+        PlaneGraphics,
         PointGraphics,
         PolygonGraphics,
         PolylineGraphics,
@@ -65,6 +77,8 @@ define([
         RectangleGraphics,
         WallGraphics) {
     'use strict';
+
+    var cartoScratch = new Cartographic();
 
     function createConstantPositionProperty(value) {
         return new ConstantPositionProperty(value);
@@ -109,6 +123,7 @@ define([
      * @param {LabelGraphics} [options.label] A options.label to associate with this entity.
      * @param {ModelGraphics} [options.model] A model to associate with this entity.
      * @param {PathGraphics} [options.path] A path to associate with this entity.
+     * @param {PlaneGraphics} [options.plane] A plane to associate with this entity.
      * @param {PointGraphics} [options.point] A point to associate with this entity.
      * @param {PolygonGraphics} [options.polygon] A polygon to associate with this entity.
      * @param {PolylineGraphics} [options.polyline] A polyline to associate with this entity.
@@ -117,7 +132,7 @@ define([
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link http://cesiumjs.org/2015/02/02/Visualizing-Spatial-Data/|Visualizing Spatial Data}
+     * @see {@link https://cesiumjs.org/tutorials/Visualizing-Spatial-Data/|Visualizing Spatial Data}
      */
     function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -134,7 +149,7 @@ define([
         this._show = defaultValue(options.show, true);
         this._parent = undefined;
         this._propertyNames = ['billboard', 'box', 'corridor', 'cylinder', 'description', 'ellipse', //
-                               'ellipsoid', 'label', 'model', 'orientation', 'path', 'point', 'polygon', //
+                               'ellipsoid', 'label', 'model', 'orientation', 'path', 'plane', 'point', 'polygon', //
                                'polyline', 'polylineVolume', 'position', 'properties', 'rectangle', 'viewFrom', 'wall'];
 
         this._billboard = undefined;
@@ -159,6 +174,8 @@ define([
         this._orientationSubscription = undefined;
         this._path = undefined;
         this._pathSubscription = undefined;
+        this._plane = undefined;
+        this._planeSubscription = undefined;
         this._point = undefined;
         this._pointSubscription = undefined;
         this._polygon = undefined;
@@ -399,6 +416,12 @@ define([
          */
         path : createPropertyTypeDescriptor('path', PathGraphics),
         /**
+         * Gets or sets the plane.
+         * @memberof Entity.prototype
+         * @type {PlaneGraphics}
+         */
+        plane : createPropertyTypeDescriptor('plane', PlaneGraphics),
+        /**
          * Gets or sets the point graphic.
          * @memberof Entity.prototype
          * @type {PointGraphics}
@@ -441,8 +464,9 @@ define([
          */
         rectangle : createPropertyTypeDescriptor('rectangle', RectangleGraphics),
         /**
-         * Gets or sets the suggested initial offset for viewing this object
-         * with the camera.  The offset is defined in the east-north-up reference frame.
+         * Gets or sets the suggested initial offset when tracking this object.
+         * The offset is typically defined in the east-north-up reference frame,
+         * but may be another frame depending on the object's velocity.
          * @memberof Entity.prototype
          * @type {Property}
          */
@@ -542,7 +566,7 @@ define([
         //Name, show, and availability are not Property objects and are currently handled differently.
         //source.show is intentionally ignored because this.show always has a value.
         this.name = defaultValue(this.name, source.name);
-        this.availability = defaultValue(source.availability, this.availability);
+        this.availability = defaultValue(this.availability, source.availability);
 
         var propertyNames = this._propertyNames;
         var sourcePropertyNames = defined(source._propertyNames) ? source._propertyNames : Object.keys(source);
@@ -592,11 +616,14 @@ define([
      * @returns {Matrix4} The modified result parameter or a new Matrix4 instance if one was not provided. Result is undefined if position or orientation are undefined.
      */
     Entity.prototype.computeModelMatrix = function(time, result) {
+        //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('time', time);
+        //>>includeEnd('debug');
         var position = Property.getValueOrUndefined(this._position, time, positionScratch);
         if (!defined(position)) {
             return undefined;
         }
+
         var orientation = Property.getValueOrUndefined(this._orientation, time, orientationScratch);
         if (!defined(orientation)) {
             result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
@@ -604,6 +631,60 @@ define([
             result = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, result);
         }
         return result;
+    };
+
+    /**
+     * @private
+     */
+    Entity.prototype.computeModelMatrixForHeightReference = function(time, heightReferenceProperty, heightOffset, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('time', time);
+        //>>includeEnd('debug');
+        var heightReference = Property.getValueOrDefault(heightReferenceProperty, time, HeightReference.NONE);
+        var position = Property.getValueOrUndefined(this._position, time, positionScratch);
+        if (heightReference === HeightReference.NONE || !defined(position) || Cartesian3.equalsEpsilon(position, Cartesian3.ZERO, CesiumMath.EPSILON8)) {
+            return this.computeModelMatrix(time, result);
+        }
+
+        var carto = ellipsoid.cartesianToCartographic(position, cartoScratch);
+        if (heightReference === HeightReference.CLAMP_TO_GROUND) {
+            carto.height = heightOffset;
+        } else {
+            carto.height += heightOffset;
+        }
+        position = ellipsoid.cartographicToCartesian(carto, position);
+
+        var orientation = Property.getValueOrUndefined(this._orientation, time, orientationScratch);
+        if (!defined(orientation)) {
+            result = Transforms.eastNorthUpToFixedFrame(position, undefined, result);
+        } else {
+            result = Matrix4.fromRotationTranslation(Matrix3.fromQuaternion(orientation, matrix3Scratch), position, result);
+        }
+        return result;
+    };
+
+    /**
+     * Checks if the given Scene supports materials besides Color on Entities draped on terrain or 3D Tiles.
+     * If this feature is not supported, Entities with non-color materials but no `height` will
+     * instead be rendered as if height is 0.
+     *
+     * @param {Scene} scene The current scene.
+     * @returns {Boolean} Whether or not the current scene supports materials for entities on terrain.
+     */
+    Entity.supportsMaterialsforEntitiesOnTerrain = function(scene) {
+        return GroundPrimitive.supportsMaterials(scene);
+    };
+
+    /**
+     * Checks if the given Scene supports polylines clamped to terrain or 3D Tiles.
+     * If this feature is not supported, Entities with PolylineGraphics will be rendered with vertices at
+     * the provided heights and using the `arcType` parameter instead of clamped to the ground.
+     *
+     * @param {Scene} scene The current scene.
+     * @returns {Boolean} Whether or not the current scene supports polylines on terrain or 3D TIles.
+     */
+    Entity.supportsPolylinesOnTerrain = function(scene) {
+        return GroundPolylinePrimitive.isSupported(scene);
     };
 
     return Entity;

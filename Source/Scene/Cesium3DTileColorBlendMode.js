@@ -11,6 +11,10 @@ define([
      * When <code>REPLACE</code> or <code>MIX</code> are used and the source color is a glTF material, the technique must assign the
      * <code>_3DTILESDIFFUSE</code> semantic to the diffuse color parameter. Otherwise only <code>HIGHLIGHT</code> is supported.
      * </p>
+     * <p>
+     * A feature whose color evaluates to white (1.0, 1.0, 1.0) is always rendered without color blending, regardless of the
+     * tileset's color blend mode.
+     * </p>
      * <pre><code>
      * "techniques": {
      *   "technique0": {

@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -7,6 +8,7 @@ define([
         './TextureMinificationFilter',
         './TextureWrap'
     ], function(
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -45,9 +47,7 @@ define([
             throw new DeveloperError('Invalid sampler.magnificationFilter.');
         }
 
-        if (maximumAnisotropy < 1.0) {
-            throw new DeveloperError('sampler.maximumAnisotropy must be greater than or equal to one.');
-        }
+        Check.typeOf.number.greaterThanOrEquals('maximumAnisotropy', maximumAnisotropy, 1.0);
         //>>includeEnd('debug');
 
         this._wrapS = wrapS;
@@ -84,6 +84,17 @@ define([
             }
         }
     });
+
+    Sampler.equals = function(left, right) {
+        return (left === right) ||
+               ((defined(left)) &&
+                (defined(right)) &&
+                (left._wrapS === right._wrapS) &&
+                (left._wrapT === right._wrapT) &&
+                (left._minificationFilter === right._minificationFilter) &&
+                (left._magnificationFilter === right._magnificationFilter) &&
+                (left._maximumAnisotropy === right._maximumAnisotropy));
+    };
 
     return Sampler;
 });

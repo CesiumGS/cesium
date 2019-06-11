@@ -1,30 +1,37 @@
-/*global require,Blob,JSHINT*/
-/*global gallery_demos*/// defined by gallery/gallery-index.js, created by build
-/*global hello_world_index*/// defined in gallery/gallery-index.js, created by build
+/*global require,Blob,JSHINT */
+/*global decodeBase64Data, embedInSandcastleTemplate */
+/*global gallery_demos, has_new_gallery_demos, hello_world_index*/// defined in gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
 require({
-    baseUrl : '../../Source',
-    packages : [{
-        name : 'dojo',
-        location : '../ThirdParty/dojo-release-1.10.4/dojo'
+    baseUrl: '../../Source',
+    packages: [{
+        name: 'dojo',
+        location: '../ThirdParty/dojo-release-1.10.4/dojo'
     }, {
-        name : 'dijit',
-        location : '../ThirdParty/dojo-release-1.10.4/dijit'
+        name: 'dijit',
+        location: '../ThirdParty/dojo-release-1.10.4/dijit'
     }, {
-        name : 'Sandcastle',
-        location : '../Apps/Sandcastle'
+        name: 'Sandcastle',
+        location: '../Apps/Sandcastle'
     }, {
-        name : 'Source',
-        location : '.'
+        name: 'Source',
+        location: '.'
     }, {
-        name : 'CodeMirror',
-        location : '../ThirdParty/codemirror-4.6'
+        name: 'CesiumUnminified',
+        location: '../Build/CesiumUnminified',
+        main: 'Cesium'
+    }, {
+        name: 'CodeMirror',
+        location: '../ThirdParty/codemirror-4.6'
+    }, {
+        name: 'ThirdParty',
+        location: '../Apps/Sandcastle/ThirdParty'
     }]
 }, [
-        "dijit/Dialog",
-        "dijit/form/Button",
-        "dijit/form/Form",
-        "dijit/form/Textarea",
+        'dijit/Dialog',
+        'dijit/form/Button',
+        'dijit/form/Form',
+        'dijit/form/Textarea',
         'CodeMirror/lib/codemirror',
         'dijit/layout/ContentPane',
         'dijit/popup',
@@ -44,6 +51,10 @@ require({
         'dojo/when',
         'Sandcastle/LinkButton',
         'Source/Cesium',
+        'Source/Core/defined',
+        'Source/Core/Resource',
+        'ThirdParty/clipboard.min',
+        'ThirdParty/pako.min',
         'CodeMirror/addon/hint/show-hint',
         'CodeMirror/addon/hint/javascript-hint',
         'CodeMirror/mode/javascript/javascript',
@@ -86,11 +97,19 @@ require({
         query,
         when,
         LinkButton,
-        Cesium) {
+        Cesium,
+        defined,
+        Resource,
+        ClipboardJS,
+        pako) {
     'use strict';
+    // attach clipboard handling to our Copy button
+    var clipboardjs = new ClipboardJS('.copyButton');
 
     //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
-    window.Cesium = Cesium;
+    if (!defined(window.Cesium)) {
+        window.Cesium = Cesium;
+    }
 
     parser.parse();
 
@@ -159,16 +178,12 @@ require({
     var searchTerm = '';
     var searchRegExp;
     var hintTimer;
-    var currentTab = '';
+    var defaultDemo = 'Hello World';
+    var defaultLabel = 'Showcases';
+    var currentTab = defaultLabel;
     var newDemo;
     var demoHtml = '';
     var demoCode = '';
-    var previousCode = '';
-    var previousHtml = '';
-    var runGist = false;
-    var gistCode;
-    var gistHtml;
-    var sandcastleUrl = '';
 
     var defaultHtml = '<style>\n@import url(../templates/bucket.css);\n</style>\n<div id=\"cesiumContainer\" class=\"fullSize\"></div>\n<div id=\"loadingOverlay\"><h1>Loading...</h1></div>\n<div id=\"toolbar\"></div>';
 
@@ -214,7 +229,7 @@ require({
     }
 
     function openDocTab(title, link) {
-        if (!Cesium.defined(docTabs[title])) {
+        if (!defined(docTabs[title])) {
             docTabs[title] = new ContentPane({
                 title : title,
                 focused : true,
@@ -271,7 +286,7 @@ require({
 
     function onCursorActivity() {
         docNode.style.left = '-999px';
-        if (Cesium.defined(docTimer)) {
+        if (defined(docTimer)) {
             window.clearTimeout(docTimer);
         }
         docTimer = window.setTimeout(showDocPopup, 500);
@@ -295,7 +310,7 @@ require({
     }
 
     function closeGalleryTooltip() {
-        if (Cesium.defined(activeGalleryTooltipDemo)) {
+        if (defined(activeGalleryTooltipDemo)) {
             popup.close(demoTooltips[activeGalleryTooltipDemo.name]);
             activeGalleryTooltipDemo = undefined;
         }
@@ -312,7 +327,7 @@ require({
             suffix = 'searchDemo';
         }
 
-        if (Cesium.defined(activeGalleryTooltipDemo)) {
+        if (defined(activeGalleryTooltipDemo)) {
             popup.open({
                 popup : demoTooltips[activeGalleryTooltipDemo.name],
                 around : dom.byId(activeGalleryTooltipDemo.name + suffix),
@@ -324,7 +339,7 @@ require({
     function scheduleGalleryTooltip(demo) {
         if (demo !== activeGalleryTooltipDemo) {
             activeGalleryTooltipDemo = demo;
-            if (Cesium.defined(galleryTooltipTimer)) {
+            if (defined(galleryTooltipTimer)) {
                 window.clearTimeout(galleryTooltipTimer);
             }
             galleryTooltipTimer = window.setTimeout(openGalleryTooltip, 220);
@@ -368,11 +383,11 @@ require({
         // make a copy of the options, JSHint modifies the object it's given
         var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
         /*eslint-disable new-cap*/
-        if (!JSHINT(getScriptFromEditor(false), options)) {
+        if (!JSHINT(embedInSandcastleTemplate(jsEditor.getValue(), false), options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
                 var hint = hints[i];
-                if (hint !== null && Cesium.defined(hint.reason) && hint.line > 0) {
+                if (hint !== null && defined(hint.reason) && hint.line > 0) {
                     line = jsEditor.setGutterMarker(scriptLineToEditorLine(hint.line), 'hintGutter', makeLineLabel(hint.reason, 'hintMarker'));
                     jsEditor.addLineClass(line, 'text', 'hintLine');
                     errorLines.push(line);
@@ -383,7 +398,7 @@ require({
     }
 
     function scheduleHint() {
-        if (Cesium.defined(hintTimer)) {
+        if (defined(hintTimer)) {
             window.clearTimeout(hintTimer);
         }
         hintTimer = setTimeout(clearErrorsAddHints, 550);
@@ -391,14 +406,14 @@ require({
     }
 
     function scheduleHintNoChange() {
-        if (Cesium.defined(hintTimer)) {
+        if (defined(hintTimer)) {
             window.clearTimeout(hintTimer);
         }
         hintTimer = setTimeout(clearErrorsAddHints, 550);
     }
 
     function scrollToLine(lineNumber) {
-        if (Cesium.defined(lineNumber)) {
+        if (defined(lineNumber)) {
             jsEditor.setCursor(lineNumber);
             // set selection twice in order to force the editor to scroll
             // to this location if the cursor is already there
@@ -457,13 +472,13 @@ require({
     function registerScroll(demoContainer) {
         if (document.onmousewheel !== undefined) {
             demoContainer.addEventListener('mousewheel', function(e) {
-                if (Cesium.defined(e.wheelDelta) && e.wheelDelta) {
+                if (defined(e.wheelDelta) && e.wheelDelta) {
                     demoContainer.scrollLeft -= e.wheelDelta * 70 / 120;
                 }
             }, false);
         } else {
             demoContainer.addEventListener('DOMMouseScroll', function(e) {
-                if (Cesium.defined(e.detail) && e.detail) {
+                if (defined(e.detail) && e.detail) {
                     demoContainer.scrollLeft += e.detail * 70 / 3;
                 }
             }, false);
@@ -524,22 +539,6 @@ require({
             htmlEditor.focus();
         }
     });
-
-    function getScriptFromEditor(addExtraLine) {
-        return 'function startup(Cesium) {\n' +
-               '    \'use strict\';\n' +
-               '//Sandcastle_Begin\n' +
-               (addExtraLine ? '\n' : '') +
-               jsEditor.getValue() +
-               '//Sandcastle_End\n' +
-               '    Sandcastle.finishedLoading();\n' +
-               '}\n' +
-               'if (typeof Cesium !== "undefined") {\n' +
-               '    startup(Cesium);\n' +
-               '} else if (typeof require === "function") {\n' +
-               '    require(["Cesium"], startup);\n' +
-               '}\n';
-    }
 
     var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
 
@@ -606,10 +605,11 @@ require({
                 // Firefox line numbers are zero-based, not one-based.
                 var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
 
-                element.textContent = getScriptFromEditor(isFirefox);
+                element.textContent = embedInSandcastleTemplate(jsEditor.getValue(), isFirefox);
                 bucketDoc.body.appendChild(element);
             }
         };
+
         loadScript();
     }
 
@@ -662,7 +662,7 @@ require({
     function loadBucket(bucketName) {
         if (local.bucketName !== bucketName) {
             local.bucketName = bucketName;
-            if (Cesium.defined(bucketTypes[bucketName])) {
+            if (defined(bucketTypes[bucketName])) {
                 local.headers = bucketTypes[bucketName];
             } else {
                 local.headers = '<html><head></head><body data-sandcastle-bucket-loaded="no">';
@@ -683,18 +683,14 @@ require({
     }
 
     var queryObject = {};
-    var gistId = ioQuery.queryToObject(window.location.search.substring(1)).gist;
     if (window.location.search) {
         queryObject = ioQuery.queryToObject(window.location.search.substring(1));
-        if (Cesium.defined(gistId)) {
-            queryObject.gistId = gistId;
-        }
-    } else {
-        queryObject.src = 'Hello World.html';
-        queryObject.label = 'Showcases';
-        if (Cesium.defined(gistId)) {
-            queryObject.gistId = gistId;
-        }
+    }
+    if (!defined(queryObject.src)) {
+        queryObject.src = defaultDemo + '.html';
+    }
+    if (!defined(queryObject.label)) {
+        queryObject.label = defaultLabel;
     }
 
     function loadFromGallery(demo) {
@@ -703,77 +699,80 @@ require({
         registry.byId('description').set('value', decodeHTML(demo.description).replace(/\\n/g, '\n'));
         registry.byId('label').set('value', decodeHTML(demo.label).replace(/\\n/g, '\n'));
 
-        if (demo.name === 'Gist Import') {
-            jsEditor.setValue(gistCode);
-            htmlEditor.setValue(gistHtml);
-            document.title = 'Gist Import - Cesium Sandcastle';
-            CodeMirror.commands.runCesium(jsEditor);
-            return;
-        }
         return requestDemo(demo.name).then(function(value) {
             demo.code = value;
-
-            var parser = new DOMParser();
-            var doc = parser.parseFromString(demo.code, 'text/html');
-
-            var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
-            if (!script) {
-                appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
-                return;
-            }
-
-            var scriptMatch = scriptCodeRegex.exec(script.textContent);
-            if (!scriptMatch) {
-                appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
-                return;
-            }
-
-            var scriptCode = scriptMatch[1];
-            demoCode = scriptCode.replace(/\s/g, '');
-
-            if (Cesium.defined(queryObject.gistId)) {
-                Cesium.loadJsonp('https://api.github.com/gists/' + queryObject.gistId + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60')
-                    .then(function(data) {
-                        var files = data.data.files;
-                        var code = files['Cesium-Sandcastle.js'].content;
-                        var htmlFile = files['Cesium-Sandcastle.html'];
-                        var html = Cesium.defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
-                        jsEditor.setValue(code);
-                        htmlEditor.setValue(html);
-                        demoCode = code.replace(/\s/g, '');
-                        demoHtml = html.replace(/\s/g, '');
-                        gistCode = code;
-                        gistHtml = html;
-                        previousCode = code;
-                        previousHtml = html;
-                        sandcastleUrl = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + gistId;
-                        CodeMirror.commands.runCesium(jsEditor);
-                        clearRun();
-                    }).otherwise(function(error) {
-                        appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + gistId , true);
-                        console.log(error);
-                });
-            } else {
-                jsEditor.setValue(scriptCode);
-            }
-            jsEditor.clearHistory();
-
-            var htmlText = '';
-            var childIndex = 0;
-            var childNode = doc.body.childNodes[childIndex];
-            while (childIndex < doc.body.childNodes.length && childNode !== script) {
-                htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
-                childNode = doc.body.childNodes[++childIndex];
-            }
-            htmlText = htmlText.replace(/^\s+/, '');
-            demoHtml = htmlText.replace(/\s/g, '');
-            htmlEditor.setValue(htmlText);
-            htmlEditor.clearHistory();
 
             if (typeof demo.bucket === 'string') {
                 loadBucket(demo.bucket);
             }
-            CodeMirror.commands.runCesium(jsEditor);
+
+            function applyLoadedDemo(code, html) {
+                jsEditor.setValue(code);
+                jsEditor.clearHistory();
+                htmlEditor.setValue(html);
+                htmlEditor.clearHistory();
+                demoCode = code.replace(/\s/g, '');
+                demoHtml = html.replace(/\s/g, '');
+                CodeMirror.commands.runCesium(jsEditor);
+                clearRun();
+            }
+
+            var json, code, html;
+            if (defined(queryObject.gist)) {
+                Resource.fetchJsonp('https://api.github.com/gists/' + queryObject.gist + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60')
+                    .then(function(data) {
+                        var files = data.data.files;
+                        var code = files['Cesium-Sandcastle.js'].content;
+                        var htmlFile = files['Cesium-Sandcastle.html'];
+                        var html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
+                        applyLoadedDemo(code, html);
+                    }).otherwise(function(error) {
+                        appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
+                        console.log(error);
+                    });
+            } else if (defined(queryObject.code)) {
+                //The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
+                json = JSON.parse(window.atob(queryObject.code));
+                code = json.code;
+                html = json.html;
+
+                applyLoadedDemo(code, html);
+            } else if (window.location.hash.indexOf('#c=') === 0) {
+                var base64String = window.location.hash.substr(3);
+                var data = decodeBase64Data(base64String, pako);
+                code = data.code;
+                html = data.html;
+
+                applyLoadedDemo(code, html);
+            } else {
+                var parser = new DOMParser();
+                var doc = parser.parseFromString(demo.code, 'text/html');
+
+                var script = doc.querySelector('script[id="cesium_sandcastle_script"]');
+                if (!script) {
+                    appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
+                    return;
+                }
+
+                var scriptMatch = scriptCodeRegex.exec(script.textContent);
+                if (!scriptMatch) {
+                    appendConsole('consoleError', 'Error reading source file: ' + demo.name, true);
+                    return;
+                }
+
+                var scriptCode = scriptMatch[1];
+
+                var htmlText = '';
+                var childIndex = 0;
+                var childNode = doc.body.childNodes[childIndex];
+                while (childIndex < doc.body.childNodes.length && childNode !== script) {
+                    htmlText += childNode.nodeType === 1 ? childNode.outerHTML : childNode.nodeValue;
+                    childNode = doc.body.childNodes[++childIndex];
+                }
+                htmlText = htmlText.replace(/^\s+/, '');
+
+                applyLoadedDemo(scriptCode, htmlText);
+            }
         });
     }
 
@@ -813,14 +812,14 @@ require({
                     appendConsole('consoleLog', 'Unable to load demo named ' + queryObject.src.replace('.html', '') + '. Redirecting to HelloWorld.\n', true);
                 }
             }
-        } else if (Cesium.defined(e.data.log)) {
+        } else if (defined(e.data.log)) {
             // Console log messages from the iframe display in Sandcastle.
             appendConsole('consoleLog', e.data.log, false);
-        } else if (Cesium.defined(e.data.error)) {
+        } else if (defined(e.data.error)) {
             // Console error messages from the iframe display in Sandcastle
             var errorMsg = e.data.error;
             var lineNumber = e.data.lineNumber;
-            if (Cesium.defined(lineNumber)) {
+            if (defined(lineNumber)) {
                 errorMsg += ' (on line ';
 
                 if (e.data.url) {
@@ -835,10 +834,10 @@ require({
                 }
             }
             appendConsole('consoleError', errorMsg, true);
-        } else if (Cesium.defined(e.data.warn)) {
+        } else if (defined(e.data.warn)) {
             // Console warning messages from the iframe display in Sandcastle.
             appendConsole('consoleWarn', e.data.warn, true);
-        } else if (Cesium.defined(e.data.highlight)) {
+        } else if (defined(e.data.highlight)) {
             // Hovering objects in the embedded Cesium window.
             highlightLine(e.data.highlight);
         }
@@ -902,52 +901,55 @@ require({
         }
     }
 
+    function getBaseUrl() {
+        // omits query string and hash
+        return location.protocol + '//' + location.host + location.pathname;
+    }
+
+    function makeCompressedBase64String(data) {
+        // data stored in the hash as:
+        // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
+        var jsonString = JSON.stringify(data);
+        // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
+        jsonString = jsonString.substr(2, jsonString.length - 4);
+        var base64String = btoa(pako.deflate(jsonString, { raw: true, to: 'string', level: 9 }));
+        base64String = base64String.replace(/\=+$/, ''); // remove padding
+
+        return base64String;
+    }
+
     registry.byId('buttonShareDrop').on('click', function() {
-        var textArea = document.getElementById('link');
-        textArea.value = '\n\n';
         var code = jsEditor.getValue();
         var html = htmlEditor.getValue();
-        if (code === previousCode && html === previousHtml) {
-            textArea.value = sandcastleUrl;
-            textArea.select();
-            return;
-        }
-        previousCode = code;
-        previousHtml = html;
-        var data = {
-            public : true,
-            files : {
-                'Cesium-Sandcastle.js' : {
-                    content : code
-                },
-                'Cesium-Sandcastle.html' : {
-                    content : html
-                }
-            }
-        };
-        return Cesium.loadWithXhr({
-            url : 'https://api.github.com/gists',
-            data : JSON.stringify(data),
-            method : 'POST'
-        }).then(function(content) {
-            sandcastleUrl = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + JSON.parse(content).id;
-            textArea.value = sandcastleUrl;
-            textArea.select();
-        }).otherwise(function(error) {
-            appendConsole('consoleError', 'Unable to POST to GitHub API. This could be due to too many POST requests, try again in an hour.', true);
-            console.log(error);
-        });
+
+        var base64String = makeCompressedBase64String([code, html]);
+
+        var shareUrlBox = document.getElementById('shareUrl');
+        shareUrlBox.value = getBaseUrl() + '#c=' + base64String;
+        shareUrlBox.select();
     });
 
     registry.byId('buttonImport').on('click', function() {
-        gistId = document.getElementById("gistId").value;
+        var gistId = document.getElementById('gistId').value;
         var gistParameter = '&gist=';
         var gistIndex = gistId.indexOf(gistParameter);
         if (gistIndex !== -1) {
             gistId = gistId.substring(gistIndex + gistParameter.length);
         }
-        window.location.href = Cesium.getBaseUri(window.location.href) + '?src=Hello%20World.html&label=Showcases&gist=' + gistId;
+        window.location.href = getBaseUrl() + '?gist=' + gistId;
     });
+
+    function getPushStateUrl(demo) {
+        var obj = {};
+        if (demo.name !== defaultDemo) {
+            obj.src = demo.name + '.html';
+        }
+        if (currentTab !== defaultLabel) {
+            obj.label = currentTab;
+        }
+        var query = ioQuery.objectToQuery(obj);
+        return query === '' ? query : '?' + query;
+    }
 
     registry.byId('buttonNew').on('click', function() {
         var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
@@ -957,24 +959,14 @@ require({
             confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
         }
         if (confirmChange) {
+            window.history.pushState(newDemo, newDemo.name, getPushStateUrl(newDemo));
             loadFromGallery(newDemo).then(function() {
-                var demoSrc = newDemo.name + '.html';
-                var queries = window.location.search.substring(1).split('&');
-                for (var i = 0; i < queries.length; i++) {
-                    var key = queries[i].split('=')[0];
-                    if (key === "src") {
-                        if (demoSrc !== queries[i].split('=')[1].replace('%20', ' ')) {
-                            window.history.pushState(newDemo, newDemo.name, '?src=' + demoSrc + '&label=' + currentTab);
-                        }
-                    }
-                }
                 document.title = newDemo.name + ' - Cesium Sandcastle';
             });
         }
     });
     // Clicking the 'Run' button simply reloads the iframe.
     registry.byId('buttonRun').on('click', function() {
-        runGist = true;
         CodeMirror.commands.runCesium(jsEditor);
     });
 
@@ -986,14 +978,14 @@ require({
         return local.headers + '\n' +
                htmlEditor.getValue() +
                '<script id="cesium_sandcastle_script">\n' +
-               getScriptFromEditor(false) +
+               embedInSandcastleTemplate(jsEditor.getValue(), false) +
                '</script>\n' +
                '</body>\n' +
                '</html>\n';
     }
 
     registry.byId('dropDownSaveAs').on('show', function() {
-        var currentDemoName = ioQuery.queryToObject(window.location.search.substring(1)).src;
+        var currentDemoName = queryObject.src;
         currentDemoName = currentDemoName.replace('.html', '');
         var description = encodeHTML(registry.byId('description').get('value').replace(/\n/g, '\\n')).replace(/\"/g, '&quot;');
         var label = encodeHTML(registry.byId('label').get('value').replace(/\n/g, '\\n')).replace(/\"/g, '&quot;');
@@ -1011,25 +1003,20 @@ require({
     });
 
     registry.byId('buttonNewWindow').on('click', function() {
-        var baseHref = window.location.href;
-
-        //Handle case where demo is in a sub-directory.
-        var searchLen = window.location.search.length;
-        if (searchLen > 0) {
-            baseHref = baseHref.substring(0, baseHref.length - searchLen);
-        }
-
+        //Handle case where demo is in a sub-directory by modifying
+        //the demo's HTML to add a base href.
+        var baseHref = getBaseUrl();
         var pos = baseHref.lastIndexOf('/');
         baseHref = baseHref.substring(0, pos) + '/gallery/';
 
-        var html = getDemoHtml();
-        html = html.replace('<head>', '<head>\n    <base href="' + baseHref + '">');
-        var htmlBlob = new Blob([html], {
-            'type' : 'text/html;charset=utf-8',
-            'endings' : 'native'
-        });
-        var htmlBlobURL = URL.createObjectURL(htmlBlob);
-        window.open(htmlBlobURL, '_blank');
+        var code = jsEditor.getValue();
+        var html = htmlEditor.getValue();
+        var data = makeCompressedBase64String([code, html, baseHref]);
+
+        var url = getBaseUrl();
+        url = url.replace('index.html','') + 'standalone.html' + '#c=' + data;
+
+        window.open(url, '_blank');
         window.focus();
     });
 
@@ -1062,17 +1049,17 @@ require({
 
     function requestDemo(name) {
         return xhr.get({
-            url : 'gallery/' + name + '.html',
-            handleAs : 'text',
-            error : function(error) {
-                    loadFromGallery(gallery_demos[hello_world_index])
-                        .then(function() {
-                            deferredLoadError = true;
-                        });
+            url: 'gallery/' + name + '.html',
+            handleAs: 'text',
+            error: function(error) {
+                loadFromGallery(gallery_demos[hello_world_index]).then(function() {
+                    deferredLoadError = true;
+                });
             }
         });
     }
 
+    var newInLabel = 'New in ' + window.Cesium.VERSION;
     function loadDemoFromFile(demo) {
         return requestDemo(demo.name).then(function(value) {
             // Store the file contents for later searching.
@@ -1090,22 +1077,20 @@ require({
 
             var labelsMeta = doc.querySelector('meta[name="cesium-sandcastle-labels"]');
             var labels = labelsMeta && labelsMeta.getAttribute('content');
-            demo.label = labels ? labels : '';
+            if (demo.isNew) {
+                demo.label = labels ? labels + ',' + newInLabel : newInLabel;
+            } else {
+                demo.label = labels ? labels : '';
+            }
 
             // Select the demo to load upon opening based on the query parameter.
-            if (Cesium.defined(queryObject.src)) {
-                var gistDemo = {
-                    name : 'Gist Import',
-                    code : demo.code,
-                    description: 'Code imported from GitHub Gist'
-                };
+            if (defined(queryObject.src)) {
                 if (demo.name === queryObject.src.replace('.html', '')) {
                     loadFromGallery(demo).then(function() {
-                        if (Cesium.defined(queryObject.gistId)) {
-                            window.history.replaceState(gistDemo, gistDemo.name, '?src=Hello World.html&label=' + queryObject.label + '&gist=' + queryObject.gistId);
+                        window.history.replaceState(demo, demo.name, getPushStateUrl(demo));
+                        if (defined(queryObject.gist)) {
                             document.title = 'Gist Import - Cesium Sandcastle';
                         } else {
-                            window.history.replaceState(demo, demo.name, '?src=' + demo.name + '.html&label=' + queryObject.label);
                             document.title = demo.name + ' - Cesium Sandcastle';
                         }
                     });
@@ -1126,7 +1111,7 @@ require({
 
     var loading = true;
     function setSubtab(tabName) {
-        currentTab = Cesium.defined(tabName) && !loading ? tabName : queryObject.label;
+        currentTab = defined(tabName) && !loading ? tabName : queryObject.label;
         queryObject.label = tabName;
         loading = false;
     }
@@ -1178,7 +1163,7 @@ require({
 
     function createGalleryButton(demo, tabName) {
         var imgSrc = 'templates/Gallery_tile.jpg';
-        if (Cesium.defined(demo.img)) {
+        if (defined(demo.img)) {
             imgSrc = 'gallery/' + demo.img;
         }
 
@@ -1187,14 +1172,13 @@ require({
         demoLink.className = 'linkButton';
         demoLink.href = 'gallery/' + encodeURIComponent(demo.name) + '.html';
 
-        if (demo.name === "Hello World") {
+        if (demo.name === 'Hello World') {
             newDemo = demo;
         }
         demoLink.onclick = function(e) {
             if (mouse.isMiddle(e)) {
                 window.open('gallery/' + demo.name + '.html');
             } else {
-                delete queryObject.gistId;
                 var htmlText = (htmlEditor.getValue()).replace(/\s/g, '');
                 var jsText = (jsEditor.getValue()).replace(/\s/g, '');
                 var confirmChange = true;
@@ -1202,11 +1186,11 @@ require({
                     confirmChange = window.confirm('You have unsaved changes. Are you sure you want to navigate away from this demo?');
                 }
                 if (confirmChange) {
+                    delete queryObject.gist;
+                    delete queryObject.code;
+
+                    window.history.pushState(demo, demo.name, getPushStateUrl(demo));
                     loadFromGallery(demo).then(function() {
-                        var demoSrc = demo.name + '.html';
-                        if (demoSrc !== window.location.search.substring(1)) {
-                            window.history.pushState(demo, demo.name, '?src=' + demoSrc + '&label=' + currentTab);
-                        }
                         document.title = demo.name + ' - Cesium Sandcastle';
                     });
                 }
@@ -1231,7 +1215,7 @@ require({
     }
 
     var promise;
-    if (!Cesium.defined(gallery_demos)) {
+    if (!defined(gallery_demos)) {
         galleryErrorMsg.textContent = 'No demos found, please run the build script.';
         galleryErrorMsg.style.display = 'inline-block';
     } else {
@@ -1245,6 +1229,18 @@ require({
         }).placeAt('innerPanel');
         subtabs[label] = cp;
         registerScroll(dom.byId('showcasesContainer'));
+
+        if (has_new_gallery_demos) {
+            var name = 'New in ' + window.Cesium.VERSION;
+            subtabs[name] = new ContentPane({
+                content: '<div id="' + name + 'Container" class="demosContainer"><div class="demos" id="' + name + 'Demos"></div></div>',
+                title: name,
+                onShow: function() {
+                    setSubtab(this.title);
+                }
+            }).placeAt('innerPanel');
+            registerScroll(dom.byId(name + 'Container'));
+        }
 
         var i;
         var len = gallery_demos.length;

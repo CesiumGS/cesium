@@ -20,6 +20,11 @@ defineSuite([
         expect(typeof supportsTypedArrays).toEqual('boolean');
     });
 
+    it('detects web assembly support', function() {
+        var supportsWebAssembly = FeatureDetection.supportsWebAssembly();
+        expect(typeof supportsWebAssembly).toEqual('boolean');
+    });
+
     function checkVersionArray(array) {
         expect(Array.isArray(array)).toEqual(true);
         array.forEach(function(d) {
@@ -109,5 +114,24 @@ defineSuite([
         } else {
             expect(FeatureDetection.imageRenderingValue()).not.toBeDefined();
         }
+    });
+
+    it('supportWebP throws when it has not been initialized', function() {
+        FeatureDetection.supportsWebP._promise = undefined;
+        FeatureDetection.supportsWebP._result = undefined;
+        expect(function() {
+            FeatureDetection.supportsWebP();
+        }).toThrowDeveloperError();
+    });
+
+    it('detects WebP support', function() {
+        FeatureDetection.supportsWebP._promise = undefined;
+        FeatureDetection.supportsWebP._result = undefined;
+
+        return FeatureDetection.supportsWebP.initialize()
+            .then(function(supportsWebP) {
+                expect(typeof supportsWebP).toEqual('boolean');
+                expect(FeatureDetection.supportsWebP()).toEqual(supportsWebP);
+            });
     });
 });

@@ -1,5 +1,6 @@
 define([
         '../Core/binarySearch',
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -10,6 +11,7 @@ define([
         '../Core/LinearApproximation'
     ], function(
         binarySearch,
+        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -166,9 +168,7 @@ define([
      */
     function SampledProperty(type, derivativeTypes) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(type)) {
-            throw new DeveloperError('type is required.');
-        }
+        Check.defined('type', type);
         //>>includeEnd('debug');
 
         var innerType = type;
@@ -250,7 +250,7 @@ define([
         /**
          * Gets the type of property.
          * @memberof SampledProperty.prototype
-         * @type {Object}
+         * @type {*}
          */
         type : {
             get : function() {
@@ -372,9 +372,7 @@ define([
      */
     SampledProperty.prototype.getValue = function(time, result) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
         var times = this._times;
@@ -531,7 +529,7 @@ define([
     };
 
     /**
-     * Adds a new sample
+     * Adds a new sample.
      *
      * @param {JulianDate} time The sample time.
      * @param {Packable} value The value at the provided time.
@@ -542,14 +540,10 @@ define([
         var hasDerivatives = defined(innerDerivativeTypes);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-        if (!defined(value)) {
-            throw new DeveloperError('value is required.');
-        }
-        if (hasDerivatives && !defined(derivatives)) {
-            throw new DeveloperError('derivatives is required.');
+        Check.defined('time', time);
+        Check.defined('value', value);
+        if (hasDerivatives) {
+            Check.defined('derivatives', derivatives);
         }
         //>>includeEnd('debug');
 
@@ -570,7 +564,7 @@ define([
     };
 
     /**
-     * Adds an array of samples
+     * Adds an array of samples.
      *
      * @param {JulianDate[]} times An array of JulianDate instances where each index is a sample time.
      * @param {Packable[]} values The array of values, where each value corresponds to the provided times index.
@@ -584,12 +578,8 @@ define([
         var hasDerivatives = defined(innerDerivativeTypes);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(times)) {
-            throw new DeveloperError('times is required.');
-        }
-        if (!defined(values)) {
-            throw new DeveloperError('values is required.');
-        }
+        Check.defined('times', times);
+        Check.defined('values', values);
         if (times.length !== values.length) {
             throw new DeveloperError('times and values must be the same length.');
         }
@@ -627,14 +617,66 @@ define([
      */
     SampledProperty.prototype.addSamplesPackedArray = function(packedSamples, epoch) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(packedSamples)) {
-            throw new DeveloperError('packedSamples is required.');
-        }
+        Check.defined('packedSamples', packedSamples);
         //>>includeEnd('debug');
 
         mergeNewSamples(epoch, this._times, this._values, packedSamples, this._packedLength);
         this._updateTableLength = true;
         this._definitionChanged.raiseEvent(this);
+    };
+
+    /**
+     * Removes a sample at the given time, if present.
+     *
+     * @param {JulianDate} time The sample time.
+     * @returns {Boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
+     */
+    SampledProperty.prototype.removeSample = function(time) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('time', time);
+        //>>includeEnd('debug');
+
+        var index = binarySearch(this._times, time, JulianDate.compare);
+        if (index < 0) {
+            return false;
+        }
+        removeSamples(this, index, 1);
+        return true;
+    };
+
+    function removeSamples(property, startIndex, numberToRemove) {
+        var packedLength = property._packedLength;
+        property._times.splice(startIndex, numberToRemove);
+        property._values.splice(startIndex * packedLength, numberToRemove * packedLength);
+        property._updateTableLength = true;
+        property._definitionChanged.raiseEvent(property);
+    }
+
+    /**
+     * Removes all samples for the given time interval.
+     *
+     * @param {TimeInterval} time The time interval for which to remove all samples.
+     */
+    SampledProperty.prototype.removeSamples = function(timeInterval) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('timeInterval', timeInterval);
+        //>>includeEnd('debug');
+
+        var times = this._times;
+        var startIndex = binarySearch(times, timeInterval.start, JulianDate.compare);
+        if (startIndex < 0) {
+            startIndex = ~startIndex;
+        } else if (!timeInterval.isStartIncluded) {
+            ++startIndex;
+        }
+        var stopIndex = binarySearch(times, timeInterval.stop, JulianDate.compare);
+        if (stopIndex < 0) {
+            stopIndex = ~stopIndex;
+        } else if (timeInterval.isStopIncluded) {
+            ++stopIndex;
+        }
+
+        removeSamples(this, startIndex, stopIndex - startIndex);
     };
 
     /**

@@ -66,7 +66,7 @@ define([
      * exists, it is overwritten with the new value.
      *
      * @param {String|Number} key A unique identifier.
-     * @param {Object} value The value to associate with the provided key.
+     * @param {*} value The value to associate with the provided key.
      */
     AssociativeArray.prototype.set = function(key, value) {
         //>>includeStart('debug', pragmas.debug);
@@ -87,7 +87,7 @@ define([
      * Retrieves the value associated with the provided key.
      *
      * @param {String|Number} key The key whose value is to be retrieved.
-     * @returns {Object} The associated value, or undefined if the key does not exist in the collection.
+     * @returns {*} The associated value, or undefined if the key does not exist in the collection.
      */
     AssociativeArray.prototype.get = function(key) {
         //>>includeStart('debug', pragmas.debug);

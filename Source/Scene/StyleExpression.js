@@ -8,7 +8,7 @@ define([
      * An expression for a style applied to a {@link Cesium3DTileset}.
      * <p>
      * Derived classes of this interface evaluate expressions in the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}.
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}.
      * </p>
      * <p>
      * This type describes an interface and is not intended to be instantiated directly.
@@ -26,19 +26,18 @@ define([
     /**
      * Evaluates the result of an expression, optionally using the provided feature's properties. If the result of
      * the expression in the
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
      * is of type <code>Boolean</code>, <code>Number</code>, or <code>String</code>, the corresponding JavaScript
      * primitive type will be returned. If the result is a <code>RegExp</code>, a Javascript <code>RegExp</code>
      * object will be returned. If the result is a <code>Cartesian2</code>, <code>Cartesian3</code>, or <code>Cartesian4</code>,
      * a {@link Cartesian2}, {@link Cartesian3}, or {@link Cartesian4} object will be returned. If the <code>result</code> argument is
      * a {@link Color}, the {@link Cartesian4} value is converted to a {@link Color} and then returned.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
      * @param {Object} [result] The object onto which to store the result.
      * @returns {Boolean|Number|String|RegExp|Cartesian2|Cartesian3|Cartesian4|Color} The result of evaluating the expression.
      */
-    StyleExpression.prototype.evaluate = function(frameState, feature, result) {
+    StyleExpression.prototype.evaluate = function(feature, result) {
         DeveloperError.throwInstantiationError();
     };
 
@@ -48,12 +47,11 @@ define([
      * This is equivalent to {@link StyleExpression#evaluate} but always returns a {@link Color} object.
      * </p>
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileFeature} feature The feature whose properties may be used as variables in the expression.
      * @param {Color} [result] The object in which to store the result.
      * @returns {Color} The modified result parameter or a new Color instance if one was not provided.
      */
-    StyleExpression.prototype.evaluateColor = function(frameState, feature, result) {
+    StyleExpression.prototype.evaluateColor = function(feature, result) {
         DeveloperError.throwInstantiationError();
     };
 

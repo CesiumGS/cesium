@@ -2,18 +2,24 @@ defineSuite([
         'Core/Geometry',
         'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/Math',
         'Core/ComponentDatatype',
+        'Core/Ellipsoid',
         'Core/GeometryAttribute',
         'Core/GeometryType',
-        'Core/PrimitiveType'
+        'Core/PrimitiveType',
+        'Core/Rectangle'
     ], function(
         Geometry,
         BoundingSphere,
         Cartesian3,
+        CesiumMath,
         ComponentDatatype,
+        Ellipsoid,
         GeometryAttribute,
         GeometryType,
-        PrimitiveType) {
+        PrimitiveType,
+        Rectangle) {
     'use strict';
 
     it('constructor', function() {
@@ -129,4 +135,21 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('computes textureCoordinateRotationPoints for collections of points', function() {
+        var positions = Cartesian3.fromDegreesArrayHeights([
+            -10.0, -10.0, 0,
+            -10.0, 10.0, 0,
+            10.0, -10.0, 0,
+            10.0, 10.0, 0
+        ]);
+        var boundingRectangle = Rectangle.fromCartesianArray(positions);
+        var textureCoordinateRotationPoints = Geometry._textureCoordinateRotationPoints(positions, 0.0, Ellipsoid.WGS84, boundingRectangle);
+        expect(textureCoordinateRotationPoints.length).toEqual(6);
+        expect(textureCoordinateRotationPoints[0]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[1]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[2]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[3]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
+        expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
+    });
 });

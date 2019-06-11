@@ -1,45 +1,58 @@
 defineSuite([
         'Scene/BingMapsImageryProvider',
-        'Core/DefaultProxy',
+        'Core/appendForwardSlash',
         'Core/defined',
-        'Core/loadImage',
-        'Core/loadJsonp',
-        'Core/loadWithXhr',
+        'Core/queryToObject',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/WebMercatorTilingScheme',
         'Scene/BingMapsStyle',
-        'Scene/DiscardMissingTileImagePolicy',
+        'Scene/DiscardEmptyTileImagePolicy',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'ThirdParty/Uri',
+        'ThirdParty/when'
     ], function(
         BingMapsImageryProvider,
-        DefaultProxy,
+        appendForwardSlash,
         defined,
-        loadImage,
-        loadJsonp,
-        loadWithXhr,
+        queryToObject,
         RequestScheduler,
+        Resource,
         WebMercatorTilingScheme,
         BingMapsStyle,
-        DiscardMissingTileImagePolicy,
+        DiscardEmptyTileImagePolicy,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
-        pollToPromise) {
+        pollToPromise,
+        Uri,
+        when) {
     'use strict';
+
+    var supportsImageBitmapOptions;
+    beforeAll(function() {
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
+    });
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
+        BingMapsImageryProvider._metadataCache = {};
     });
 
     afterEach(function() {
-        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
-        loadImage.createImage = loadImage.defaultCreateImage;
-        loadWithXhr.load = loadWithXhr.defaultLoad;
+        Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
+        Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
+        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
     });
 
     it('tileXYToQuadKey works for examples in Bing Maps documentation', function() {
@@ -100,60 +113,68 @@ defineSuite([
         }
 
         return {
-            "authenticationResultCode" : "ValidCredentials",
-            "brandLogoUri" : "http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png",
-            "copyright" : "Copyright © 2014 Microsoft and its suppliers. All rights reserved. This API cannot be accessed and the content and any results may not be used, reproduced or transmitted in any manner without express written permission from Microsoft Corporation.",
-            "resourceSets" : [{
-                "estimatedTotal" : 1,
-                "resources" : [{
-                    "__type" : "ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1",
-                    "imageHeight" : 256,
-                    "imageUrl" : "http:\/\/ecn.{subdomain}.tiles.virtualearth.net.fake.invalid\/tiles\/" + stylePrefix + "{quadkey}.jpeg?g=3031&mkt={culture}",
-                    "imageUrlSubdomains" : ["t0", "t1", "t2", "t3"],
-                    "imageWidth" : 256,
-                    "imageryProviders" : [{
-                        "attribution" : "© 2014 DigitalGlobe",
-                        "coverageAreas" : [{
-                            "bbox" : [-67, -179.99, 27, 0],
-                            "zoomMax" : 21,
-                            "zoomMin" : 14
+            'authenticationResultCode' : 'ValidCredentials',
+            'brandLogoUri' : 'http:\/\/dev.virtualearth.net\/Branding\/logo_powered_by.png',
+            'copyright' : 'Copyright © 2014 Microsoft and its suppliers. All rights reserved. This API cannot be accessed and the content and any results may not be used, reproduced or transmitted in any manner without express written permission from Microsoft Corporation.',
+            'resourceSets' : [{
+                'estimatedTotal' : 1,
+                'resources' : [{
+                    '__type' : 'ImageryMetadata:http:\/\/schemas.microsoft.com\/search\/local\/ws\/rest\/v1',
+                    'imageHeight' : 256,
+                    'imageUrl' : 'http:\/\/ecn.{subdomain}.tiles.virtualearth.net.fake.invalid\/tiles\/' + stylePrefix + '{quadkey}.jpeg?g=3031&mkt={culture}',
+                    'imageUrlSubdomains' : ['t0', 't1', 't2', 't3'],
+                    'imageWidth' : 256,
+                    'imageryProviders' : [{
+                        'attribution' : '© 2014 DigitalGlobe',
+                        'coverageAreas' : [{
+                            'bbox' : [-67, -179.99, 27, 0],
+                            'zoomMax' : 21,
+                            'zoomMin' : 14
                         }, {
-                            "bbox" : [27, -179.99, 87, -126.5],
-                            "zoomMax" : 21,
-                            "zoomMin" : 14
+                            'bbox' : [27, -179.99, 87, -126.5],
+                            'zoomMax' : 21,
+                            'zoomMin' : 14
                         }, {
-                            "bbox" : [48.4, -126.5, 87, -5.75],
-                            "zoomMax" : 21,
-                            "zoomMin" : 14
+                            'bbox' : [48.4, -126.5, 87, -5.75],
+                            'zoomMax' : 21,
+                            'zoomMin' : 14
                         }]
                     }, {
-                        "attribution" : "Image courtesy of NASA",
-                        "coverageAreas" : [{
-                            "bbox" : [-90, -180, 90, 180],
-                            "zoomMax" : 8,
-                            "zoomMin" : 1
+                        'attribution' : 'Image courtesy of NASA',
+                        'coverageAreas' : [{
+                            'bbox' : [-90, -180, 90, 180],
+                            'zoomMax' : 8,
+                            'zoomMin' : 1
                         }]
                     }],
-                    "vintageEnd" : null,
-                    "vintageStart" : null,
-                    "zoomMax" : 21,
-                    "zoomMin" : 1
+                    'vintageEnd' : null,
+                    'vintageStart' : null,
+                    'zoomMax' : 21,
+                    'zoomMin' : 1
                 }]
             }],
-            "statusCode" : 200,
-            "statusDescription" : "OK",
-            "traceId" : "ea754a48ccdb4dd297c8f35350e0f0d9|BN20130533|02.00.106.1600|"
+            'statusCode' : 200,
+            'statusDescription' : 'OK',
+            'traceId' : 'ea754a48ccdb4dd297c8f35350e0f0d9|BN20130533|02.00.106.1600|'
         };
     }
 
     function installFakeMetadataRequest(url, mapStyle, proxy) {
-        var expectedUrl = url + '/REST/v1/Imagery/Metadata/' + mapStyle + '?incl=ImageryProviders&key=';
-        if (defined(proxy)) {
-            expectedUrl = proxy.getURL(expectedUrl);
-        }
+        var expectedUri = new Uri('REST/v1/Imagery/Metadata/' + mapStyle).resolve(new Uri(appendForwardSlash(url)));
 
-        loadJsonp.loadAndExecuteScript = function(url, functionName) {
-            expect(url).toStartWith(expectedUrl);
+        Resource._Implementations.loadAndExecuteScript = function(url, functionName) {
+            var uri = new Uri(url);
+            if (proxy) {
+                uri = new Uri(decodeURIComponent(uri.query));
+            }
+
+            var query = queryToObject(uri.query);
+            expect(query.jsonp).toBeDefined();
+            expect(query.incl).toEqual('ImageryProviders');
+            expect(query.key).toBeDefined();
+
+            uri.query = undefined;
+            expect(uri.toString()).toStartWith(expectedUri.toString());
 
             setTimeout(function() {
                 window[functionName](createFakeMetadataResponse(mapStyle));
@@ -161,27 +182,51 @@ defineSuite([
         };
     }
 
-    function installFakeImageRequest(expectedUrl) {
-        loadImage.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url)) {
-                // load blob url normally
-                loadImage.defaultCreateImage(url, crossOrigin, deferred);
+    function installFakeImageRequest(expectedUrl, expectedParams, proxy) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            if (/^blob:/.test(url) || supportsImageBitmapOptions) {
+                // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
             } else {
                 if (defined(expectedUrl)) {
-                    expect(url).toEqual(expectedUrl);
+                    var uri = new Uri(url);
+                    if (proxy) {
+                        uri = new Uri(decodeURIComponent(uri.query));
+                    }
+
+                    var query = queryToObject(uri.query);
+                    uri.query = undefined;
+                    expect(uri.toString()).toEqual(expectedUrl);
+                    for(var param in expectedParams) {
+                        if (expectedParams.hasOwnProperty(param)) {
+                            expect(query[param]).toEqual(expectedParams[param]);
+                        }
+                    }
                 }
                 // Just return any old image.
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             }
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (defined(expectedUrl)) {
-                expect(url).toEqual(expectedUrl);
+                var uri = new Uri(url);
+                if (proxy) {
+                    uri = new Uri(decodeURIComponent(uri.query));
+                }
+
+                var query = queryToObject(uri.query);
+                uri.query = undefined;
+                expect(uri.toString()).toEqual(expectedUrl);
+                for(var param in expectedParams) {
+                    if (expectedParams.hasOwnProperty(param)) {
+                        expect(query[param]).toEqual(expectedParams[param]);
+                    }
+                }
             }
 
             // Just return any old image.
-            loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+            Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
         };
     }
 
@@ -203,8 +248,116 @@ defineSuite([
         });
     });
 
+    it('Uses cached metadata result', function() {
+        var url = 'http://fake.fake.invalid';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+        var provider2;
+        var provider3;
+
+        return provider.readyPromise
+            .then(function(result) {
+                expect(result).toBe(true);
+                expect(provider.ready).toBe(true);
+
+                installFakeMetadataRequest(url, mapStyle);
+                installFakeImageRequest();
+                provider2 = new BingMapsImageryProvider({
+                    url: url,
+                    mapStyle: mapStyle
+                });
+                return provider2.readyPromise;
+            })
+            .then(function(result) {
+                expect(result).toBe(true);
+                expect(provider2.ready).toBe(true);
+
+                //These are the same instance only if the cache has been used
+                expect(provider._attributionList).toBe(provider2._attributionList);
+
+                installFakeMetadataRequest(url, BingMapsStyle.AERIAL);
+                installFakeImageRequest();
+                provider3 = new BingMapsImageryProvider({
+                    url: url,
+                    mapStyle: BingMapsStyle.AERIAL
+                });
+                return provider3.readyPromise;
+            })
+            .then(function(result) {
+                expect(result).toBe(true);
+                expect(provider3.ready).toBe(true);
+
+                // Because the road is different, a non-cached request should have happened
+                expect(provider3._attributionList).not.toBe(provider._attributionList);
+            });
+    });
+
+    it('resolves readyPromise with a path', function() {
+        var url = 'http://fake.fake.invalid/some/subdirectory';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with a path ending with a slash', function() {
+        var url = 'http://fake.fake.invalid/some/subdirectory/';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
+    it('resolves readyPromise with Resource', function() {
+        var url = 'http://fake.fake.invalid';
+        var mapStyle = BingMapsStyle.ROAD;
+
+        installFakeMetadataRequest(url, mapStyle);
+        installFakeImageRequest();
+
+        var resource = new Resource({
+            url : url
+        });
+
+        var provider = new BingMapsImageryProvider({
+            url : resource,
+            mapStyle : mapStyle
+        });
+
+        return provider.readyPromise.then(function(result) {
+            expect(result).toBe(true);
+            expect(provider.ready).toBe(true);
+        });
+    });
+
     it('rejects readyPromise on error', function() {
-        var url = 'host.invalid';
+        var url = 'http://host.invalid';
         var provider = new BingMapsImageryProvider({
             url : url
         });
@@ -245,10 +398,11 @@ defineSuite([
 
         var provider = new BingMapsImageryProvider({
             url : url,
-            mapStyle : mapStyle
+            mapStyle : mapStyle,
+            key: 'fake Key'
         });
 
-        expect(provider.url).toEqual(url);
+        expect(provider.url).toStartWith(url);
         expect(provider.key).toBeDefined();
         expect(provider.mapStyle).toEqual(mapStyle);
 
@@ -259,14 +413,17 @@ defineSuite([
             expect(provider.tileHeight).toEqual(256);
             expect(provider.maximumLevel).toEqual(20);
             expect(provider.tilingScheme).toBeInstanceOf(WebMercatorTilingScheme);
-            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardEmptyTileImagePolicy);
             expect(provider.rectangle).toEqual(new WebMercatorTilingScheme().rectangle);
             expect(provider.credit).toBeInstanceOf(Object);
 
-            installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg?g=3031&mkt=');
+            installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg', {
+                g : '3031',
+                mkt : ''
+            });
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -291,45 +448,19 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/h0.jpeg?g=3031&mkt=ja-jp');
-
-            return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+            installFakeImageRequest('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/h0.jpeg', {
+                g: '3031',
+                mkt: 'ja-jp'
             });
-        });
-    });
-
-    it('routes requests through a proxy if one is specified', function() {
-        var url = 'http://foo.bar.invalid';
-        var mapStyle = BingMapsStyle.ROAD;
-
-        var proxy = new DefaultProxy('/proxy/');
-
-        installFakeMetadataRequest(url, mapStyle, proxy);
-        installFakeImageRequest();
-
-        var provider = new BingMapsImageryProvider({
-            url : url,
-            mapStyle : mapStyle,
-            proxy : proxy
-        });
-
-        expect(provider.url).toEqual(url);
-        expect(provider.proxy).toEqual(proxy);
-
-        return pollToPromise(function() {
-            return provider.ready;
-        }).then(function() {
-            installFakeImageRequest(proxy.getURL('http://ecn.t0.tiles.virtualearth.net.fake.invalid/tiles/r0.jpeg?g=3031&mkt='));
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
 
     it('raises error on invalid url', function() {
-        var url = 'host.invalid';
+        var url = 'http://host.invalid';
         var provider = new BingMapsImageryProvider({
             url : url
         });
@@ -374,13 +505,13 @@ defineSuite([
             }, 1);
         });
 
-        loadImage.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
             if (/^blob:/.test(url)) {
                 // load blob url normally
-                loadImage.defaultCreateImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
             } else if (tries === 2) {
                 // Succeed after 2 tries
-                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -389,10 +520,10 @@ defineSuite([
             }
         };
 
-        loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+        Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+                Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -412,8 +543,45 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
+                imagery.releaseReference();
+            });
+        });
+    });
+
+    it('correctly handles empty tiles', function() {
+        var url = 'http://foo.bar.invalid';
+        var mapStyle = BingMapsStyle.ROAD_ON_DEMAND;
+
+        installFakeMetadataRequest(url, mapStyle);
+
+        var provider = new BingMapsImageryProvider({
+            url : url,
+            mapStyle : mapStyle
+        });
+
+        var layer = new ImageryLayer(provider);
+
+        // Fake ImageryProvider.loadImage's expected output in the case of an empty tile
+        var e = new Error();
+        e.blob = {size: 0};
+        var errorPromise = when.reject(e);
+
+        spyOn(ImageryProvider, 'loadImage').and.returnValue(errorPromise);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            var imagery = new Imagery(layer, 0, 0, 0);
+            imagery.addReference();
+            layer._requestImagery(imagery);
+            RequestScheduler.update();
+
+            return pollToPromise(function() {
+                return imagery.state === ImageryState.RECEIVED;
+            }).then(function() {
+                expect(imagery.image).toBe(DiscardEmptyTileImagePolicy.EMPTY_IMAGE);
                 imagery.releaseReference();
             });
         });

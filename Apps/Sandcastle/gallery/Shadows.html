@@ -28,18 +28,13 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    infoBox : false,
-    selectionIndicator : false,
-    shadows : true,
-    terrainShadows : Cesium.ShadowMode.ENABLED
-});
-
-viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestWaterMask : true,
-    requestVertexNormals : true
+    infoBox: false,
+    selectionIndicator: false,
+    shadows: true,
+    terrainShadows: Cesium.ShadowMode.ENABLED,
+    shouldAnimate: true,
+    terrainProvider: Cesium.createWorldTerrain()
 });
 
 var shadowMap = viewer.shadowMap;
@@ -57,7 +52,7 @@ var groundVehicle = viewer.entities.add({
     name : 'Ground Vehicle',
     height : 0.0,
     model : {
-        uri : '../../SampleData/models/CesiumGround/Cesium_Ground.glb'
+        uri : '../../SampleData/models/GroundVehicle/GroundVehicle.glb'
     }
 });
 
@@ -275,10 +270,10 @@ setEntity(cesiumAir);
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

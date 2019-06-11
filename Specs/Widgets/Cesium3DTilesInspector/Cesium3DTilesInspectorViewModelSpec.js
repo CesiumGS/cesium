@@ -1,7 +1,5 @@
 defineSuite([
         'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel',
-        'Core/defined',
-        'Core/Math',
         'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/Globe',
@@ -9,8 +7,6 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         Cesium3DTilesInspectorViewModel,
-        defined,
-        CesiumMath,
         Cesium3DTileset,
         Cesium3DTileStyle,
         Globe,
@@ -19,7 +15,7 @@ defineSuite([
     'use strict';
 
     // Parent tile with content and four child tiles with content
-    var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/';
+    var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/tileset.json';
 
     var scene;
     var viewModel;
@@ -165,6 +161,55 @@ defineSuite([
             viewModel.showUrl = false;
             expect(viewModel.tileset.debugShowUrl).toBe(false);
         });
+
+        it('pointCloudShading', function() {
+            viewModel.pointCloudShading = true;
+            expect(viewModel.tileset.pointCloudShading.attenuation).toBe(true);
+            viewModel.pointCloudShading = false;
+            expect(viewModel.tileset.pointCloudShading.attenuation).toBe(false);
+        });
+
+        it('geometricErrorScale', function() {
+            viewModel.geometricErrorScale = 1.0;
+            expect(viewModel.tileset.pointCloudShading.geometricErrorScale).toBe(1.0);
+            viewModel.geometricErrorScale = 0.0;
+            expect(viewModel.tileset.pointCloudShading.geometricErrorScale).toBe(0.0);
+        });
+
+        it('maximumAttenuation', function() {
+            viewModel.maximumAttenuation = 1.0;
+            expect(viewModel.tileset.pointCloudShading.maximumAttenuation).toBe(1.0);
+            viewModel.maximumAttenuation = 0.0;
+            expect(viewModel.tileset.pointCloudShading.maximumAttenuation).not.toBeDefined();
+        });
+
+        it('baseResolution', function() {
+            viewModel.baseResolution = 1.0;
+            expect(viewModel.tileset.pointCloudShading.baseResolution).toBe(1.0);
+            viewModel.baseResolution = 0.0;
+            expect(viewModel.tileset.pointCloudShading.baseResolution).not.toBeDefined();
+        });
+
+        it('eyeDomeLighting', function() {
+            viewModel.eyeDomeLighting = true;
+            expect(viewModel.tileset.pointCloudShading.eyeDomeLighting).toBe(true);
+            viewModel.eyeDomeLighting = false;
+            expect(viewModel.tileset.pointCloudShading.eyeDomeLighting).toBe(false);
+        });
+
+        it('eyeDomeLightingStrength', function() {
+            viewModel.eyeDomeLightingStrength = 1.0;
+            expect(viewModel.tileset.pointCloudShading.eyeDomeLightingStrength).toBe(1.0);
+            viewModel.eyeDomeLightingStrength = 0.0;
+            expect(viewModel.tileset.pointCloudShading.eyeDomeLightingStrength).toBe(0.0);
+        });
+
+        it('eyeDomeLightingRadius', function() {
+            viewModel.eyeDomeLightingRadius = 1.0;
+            expect(viewModel.tileset.pointCloudShading.eyeDomeLightingRadius).toBe(1.0);
+            viewModel.eyeDomeLightingRadius = 0.0;
+            expect(viewModel.tileset.pointCloudShading.eyeDomeLightingRadius).toBe(0.0);
+        });
     });
 
     describe('update options', function() {
@@ -211,13 +256,13 @@ defineSuite([
             style = new Cesium3DTileStyle({
                 color : {
                     conditions : [
-                        ["${Height} >= 83", "color('purple', 0.5)"],
-                        ["${Height} >= 80", "color('red')"],
-                        ["${Height} >= 70", "color('orange')"],
-                        ["${Height} >= 12", "color('yellow')"],
-                        ["${Height} >= 7", "color('lime')"],
-                        ["${Height} >= 1", "color('cyan')"],
-                        ["true", "color('blue')"]
+                        ['${Height} >= 83', "color('purple', 0.5)"],
+                        ['${Height} >= 80', "color('red')"],
+                        ['${Height} >= 70', "color('orange')"],
+                        ['${Height} >= 12', "color('yellow')"],
+                        ['${Height} >= 7', "color('lime')"],
+                        ['${Height} >= 1', "color('cyan')"],
+                        ['true', "color('blue')"]
                     ]
                 },
                 meta : {

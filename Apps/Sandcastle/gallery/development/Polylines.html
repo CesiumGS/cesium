@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -64,7 +66,8 @@ function createPrimitives(scene) {
                                                             -85.0, 40.0])
         }),
         material : Cesium.Material.fromType(Cesium.Material.PolylineGlowType, {
-            glowPower : 0.25,
+            glowPower : 0.2,
+            taperPower : 0.2,
             color : new Cesium.Color(1.0, 0.5, 0.0, 1.0)
         }),
         width : 10.0
@@ -119,6 +122,20 @@ function createPrimitives(scene) {
         })
     });
     Sandcastle.declare(fadingPolyline); // For highlighting on mouseover in Sandcastle.
+
+    // A rhumb line with two points.
+    var rhumbLine = polylines.add({
+        positions : Cesium.PolylinePipeline.generateCartesianRhumbArc({
+            positions : Cesium.Cartesian3.fromDegreesArray([-130.0, 30.0,
+                                                            -75.0, 30.0])
+        }),
+        width: 5,
+        material : Cesium.Material.fromType('Color', {
+            color : new Cesium.Color(0.0, 1.0, 0.0, 1.0)
+        })
+    });
+    Sandcastle.declare(rhumbLine); // For highlighting on mouseover in Sandcastle.
+
 }
 
 var viewer = new Cesium.Viewer('cesiumContainer');
@@ -131,10 +148,10 @@ createPrimitives(viewer.scene);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

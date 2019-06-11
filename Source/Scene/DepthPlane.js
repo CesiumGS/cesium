@@ -12,10 +12,10 @@ define([
         '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
+        '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/DepthPlaneFS',
         '../Shaders/DepthPlaneVS',
-        './DepthFunction',
         './SceneMode'
     ], function(
         BoundingSphere,
@@ -31,10 +31,10 @@ define([
         Pass,
         RenderState,
         ShaderProgram,
+        ShaderSource,
         VertexArray,
         DepthPlaneFS,
         DepthPlaneVS,
-        DepthFunction,
         SceneMode) {
     'use strict';
 
@@ -47,6 +47,7 @@ define([
         this._va = undefined;
         this._command = undefined;
         this._mode = undefined;
+        this._useLogDepth = false;
     }
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
@@ -110,6 +111,7 @@ define([
 
         var context = frameState.context;
         var ellipsoid = frameState.mapProjection.ellipsoid;
+        var useLogDepth = frameState.useLogDepth;
 
         if (!defined(this._command)) {
             this._rs = RenderState.fromCache({ // Write depth, not color
@@ -127,22 +129,46 @@ define([
                 }
             });
 
-            this._sp = ShaderProgram.fromCache({
+            this._command = new DrawCommand({
+                renderState : this._rs,
+                boundingVolume : new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius),
+                pass : Pass.OPAQUE,
+                owner : this
+            });
+        }
+
+        if (!defined(this._sp) || this._useLogDepth !== useLogDepth) {
+            this._useLogDepth = useLogDepth;
+
+            var vs = new ShaderSource({
+                sources : [DepthPlaneVS]
+            });
+            var fs = new ShaderSource({
+                sources : [DepthPlaneFS]
+            });
+            if (useLogDepth) {
+                var extension =
+                    '#ifdef GL_EXT_frag_depth \n' +
+                    '#extension GL_EXT_frag_depth : enable \n' +
+                    '#endif \n\n';
+
+                fs.sources.push(extension);
+                fs.defines.push('LOG_DEPTH');
+                vs.defines.push('LOG_DEPTH');
+                vs.defines.push('DISABLE_GL_POSITION_LOG_DEPTH');
+            }
+
+            this._sp = ShaderProgram.replaceCache({
+                shaderProgram : this._sp,
                 context : context,
-                vertexShaderSource : DepthPlaneVS,
-                fragmentShaderSource : DepthPlaneFS,
+                vertexShaderSource : vs,
+                fragmentShaderSource : fs,
                 attributeLocations : {
                     position : 0
                 }
             });
 
-            this._command = new DrawCommand({
-                renderState : this._rs,
-                shaderProgram : this._sp,
-                boundingVolume : new BoundingSphere(Cartesian3.ZERO, ellipsoid.maximumRadius),
-                pass : Pass.OPAQUE,
-                owner : this
-            });
+            this._command.shaderProgram = this._sp;
         }
 
         // update depth plane

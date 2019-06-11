@@ -26,6 +26,10 @@ code {
     font-size: 12px;
 }
 
+#ClassList > li {
+    font-family: Consolas, "Liberation Mono", Menlo, "Courier New", Courier, Monaco, monospace;
+}
+
 .description code {
     border-radius: 3px;
     background-color: #f8f8f8;
@@ -55,7 +59,7 @@ a:visited {
 
 a:hover,
 a:focus {
-    color: ##004AB8;
+    color: #004AB8;
     text-decoration: underline;
 }
 
@@ -165,7 +169,7 @@ div.menu
     height: 35px;
 }
 
-div.nav 
+div.nav
 {
     overflow-x: hidden;
     overflow-y: auto;
@@ -211,7 +215,7 @@ div.nav div.divider
     line-height: 1.0em;
 }
 
-form 
+form
 {
     display: block;
 }
@@ -341,6 +345,7 @@ footer {
     background-color: #f4f4ff;
     margin: 0;
     border-bottom: 1px solid #ccc;
+    font-family: Consolas, "Liberation Mono", Menlo, "Courier New", Courier, Monaco, monospace;
 }
 
 #mainIndex .page-title {
@@ -412,6 +417,11 @@ h6
     text-decoration: none;
 }
 
+.clear
+{
+    clear: both;
+}
+
 .important
 {
     font-weight: normal;
@@ -428,6 +438,9 @@ h6
 
 .nameContainer .signature {
     font-weight: normal;
+}
+.nameContainer .name {
+    font-family: Consolas, "Liberation Mono", Menlo, "Courier New", Courier, Monaco, monospace;
 }
 
 .details { margin-top: 14px; }
@@ -600,4 +613,18 @@ h4 .doc-link {
 
 h4:hover .doc-link {
     opacity: 0.7;
+}
+
+div.tag-experimental {
+    margin-left: -10px;
+    padding: 10px;
+    background-color: #ffd4a8;
+    color: #925415;
+}
+div.tag-experimental > h5 {
+    font-weight: bold;
+    margin-top: 0;
+}
+div.tag-experimental > p {
+    margin: 0 0 5px;
 }

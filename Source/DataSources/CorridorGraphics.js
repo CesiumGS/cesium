@@ -29,7 +29,9 @@ define([
      * @param {Property} [options.width] A numeric Property specifying the distance between the edges of the corridor.
      * @param {Property} [options.cornerType=CornerType.ROUNDED] A {@link CornerType} Property specifying the style of the corners.
      * @param {Property} [options.height=0] A numeric Property specifying the altitude of the corridor relative to the ellipsoid surface.
+     * @param {Property} [options.heightReference] A Property specifying what the height is relative to.
      * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the corridor's extruded face relative to the ellipsoid surface.
+     * @param {Property} [options.extrudedHeightReference] A Property specifying what the extrudedHeight is relative to.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the corridor.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the corridor is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the corridor.
@@ -39,9 +41,11 @@ define([
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the distance between each latitude and longitude.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the corridor casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this corridor will be displayed.
+     * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this corridor will classify terrain, 3D Tiles, or both when on the ground.
+     * @param {ConstantProperty} [options.zIndex] A Property specifying the zIndex of the corridor, used for ordering.  Only has an effect if height and extrudedHeight are undefined, and if the corridor is static.
      *
      * @see Entity
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
      */
     function CorridorGraphics(options) {
         this._show = undefined;
@@ -52,8 +56,12 @@ define([
         this._positionsSubscription = undefined;
         this._height = undefined;
         this._heightSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
         this._extrudedHeight = undefined;
         this._extrudedHeightSubscription = undefined;
+        this._extrudedHeightReference = undefined;
+        this._extrudedHeightReferenceSubscription = undefined;
         this._granularity = undefined;
         this._granularitySubscription = undefined;
         this._width = undefined;
@@ -72,6 +80,10 @@ define([
         this._shadowsSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
+        this._classificationType = undefined;
+        this._classificationTypeSubscription = undefined;
+        this._zIndex = undefined;
+        this._zIndexSubscription = undefined;
         this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
@@ -122,6 +134,14 @@ define([
         height : createPropertyDescriptor('height'),
 
         /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof CorridorGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
          * Gets or sets the numeric Property specifying the altitude of the corridor extrusion.
          * Setting this property creates a corridor shaped volume starting at height and ending
          * at this altitude.
@@ -129,6 +149,14 @@ define([
          * @type {Property}
          */
         extrudedHeight : createPropertyDescriptor('extrudedHeight'),
+
+        /**
+         * Gets or sets the Property specifying the extruded {@link HeightReference}.
+         * @memberof CorridorGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        extrudedHeightReference : createPropertyDescriptor('extrudedHeightReference'),
 
         /**
          * Gets or sets the numeric Property specifying the sampling distance between each latitude and longitude point.
@@ -199,7 +227,23 @@ define([
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
-        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition')
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the {@link ClassificationType} Property specifying whether this corridor will classify terrain, 3D Tiles, or both when on the ground.
+         * @memberof CorridorGraphics.prototype
+         * @type {Property}
+         * @default ClassificationType.BOTH
+         */
+        classificationType : createPropertyDescriptor('classificationType'),
+
+        /**
+         * Gets or sets the zIndex Property specifying the ordering of the corridor.  Only has an effect if the coridor is static and neither height or exturdedHeight are specified.
+         * @memberof CorridorGraphics.prototype
+         * @type {ConstantProperty}
+         * @default 0
+         */
+        zIndex: createPropertyDescriptor('zIndex')
     });
 
     /**
@@ -216,7 +260,9 @@ define([
         result.material = this.material;
         result.positions = this.positions;
         result.height = this.height;
+        result.heightReference = this.heightReference;
         result.extrudedHeight = this.extrudedHeight;
+        result.extrudedHeightReference = this.extrudedHeightReference;
         result.granularity = this.granularity;
         result.width = this.width;
         result.fill = this.fill;
@@ -226,6 +272,8 @@ define([
         result.cornerType = this.cornerType;
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.classificationType = this.classificationType;
+        result.zIndex = this.zIndex;
         return result;
     };
 
@@ -246,7 +294,9 @@ define([
         this.material = defaultValue(this.material, source.material);
         this.positions = defaultValue(this.positions, source.positions);
         this.height = defaultValue(this.height, source.height);
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.extrudedHeight = defaultValue(this.extrudedHeight, source.extrudedHeight);
+        this.extrudedHeightReference = defaultValue(this.extrudedHeightReference,  source.extrudedHeightReference);
         this.granularity = defaultValue(this.granularity, source.granularity);
         this.width = defaultValue(this.width, source.width);
         this.fill = defaultValue(this.fill, source.fill);
@@ -256,6 +306,8 @@ define([
         this.cornerType = defaultValue(this.cornerType, source.cornerType);
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
+        this.classificationType = defaultValue(this.classificationType, source.classificationType);
+        this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
 
     return CorridorGraphics;

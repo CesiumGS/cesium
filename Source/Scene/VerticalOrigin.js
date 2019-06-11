@@ -11,7 +11,7 @@ define([
      * the anchor position.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
+     * <img src='Images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
      * </div>
      *
      * @exports VerticalOrigin

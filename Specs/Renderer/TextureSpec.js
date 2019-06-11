@@ -2,9 +2,10 @@ defineSuite([
         'Renderer/Texture',
         'Core/Cartesian2',
         'Core/Color',
-        'Core/loadImage',
+        'Core/FeatureDetection',
         'Core/loadKTX',
         'Core/PixelFormat',
+        'Core/Resource',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
         'Renderer/PixelDatatype',
@@ -18,9 +19,10 @@ defineSuite([
         Texture,
         Cartesian2,
         Color,
-        loadImage,
+        FeatureDetection,
         loadKTX,
         PixelFormat,
+        Resource,
         ClearCommand,
         ContextLimits,
         PixelDatatype,
@@ -37,6 +39,7 @@ defineSuite([
     var blueImage;
     var blueAlphaImage;
     var blueOverRedImage;
+    var blueOverRedFlippedImage;
     var red16x16Image;
 
     var greenDXTImage;
@@ -46,6 +49,9 @@ defineSuite([
     var fs =
         'uniform sampler2D u_texture;' +
         'void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
+    var fsLuminanceAlpha =
+        'uniform sampler2D u_texture;' +
+        'void main() { gl_FragColor = vec4(texture2D(u_texture, vec2(0.0)).ra, 0.0, 1.0); }';
     var texture;
     var uniformMap = {
         u_texture : function() {
@@ -55,21 +61,27 @@ defineSuite([
 
     beforeAll(function() {
         context = createContext();
-
         var promises = [];
-        promises.push(loadImage('./Data/Images/Green.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
             greenImage = image;
         }));
-        promises.push(loadImage('./Data/Images/Blue.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
             blueImage = image;
         }));
-        promises.push(loadImage('./Data/Images/BlueAlpha.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueAlpha.png').then(function(image) {
             blueAlphaImage = image;
         }));
-        promises.push(loadImage('./Data/Images/BlueOverRed.png').then(function(image) {
+        promises.push(Resource.fetchImage('./Data/Images/BlueOverRed.png').then(function(image) {
             blueOverRedImage = image;
         }));
-        promises.push(loadImage('./Data/Images/Red16x16.png').then(function(image) {
+        // Load this image as an ImageBitmap
+        promises.push(Resource.fetchImage({
+            url: './Data/Images/BlueOverRed.png',
+            preferImageBitmap: true
+        }).then(function(image) {
+            blueOverRedFlippedImage = image;
+        }));
+        promises.push(Resource.fetchImage('./Data/Images/Red16x16.png').then(function(image) {
             red16x16Image = image;
         }));
         promises.push(loadKTX('./Data/Images/Green4x4DXT1.ktx').then(function(image) {
@@ -99,6 +111,7 @@ defineSuite([
             source : blueImage
         });
 
+        expect(texture.id).toBeDefined();
         expect(texture.pixelFormat).toEqual(PixelFormat.RGBA);
         expect(texture.pixelDatatype).toEqual(PixelDatatype.UNSIGNED_BYTE);
     });
@@ -117,7 +130,7 @@ defineSuite([
         var expectedHeight = context.canvas.clientHeight;
         expect(texture.width).toEqual(expectedWidth);
         expect(texture.height).toEqual(expectedHeight);
-        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * 4);
+        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * PixelFormat.componentsLength(texture.pixelFormat));
 
         command.color = Color.WHITE;
         command.execute(context);
@@ -157,7 +170,7 @@ defineSuite([
         var expectedHeight = context.canvas.clientHeight;
         expect(texture.width).toEqual(expectedWidth);
         expect(texture.height).toEqual(expectedHeight);
-        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * 4);
+        expect(texture.sizeInBytes).toEqual(expectedWidth * expectedHeight * PixelFormat.componentsLength(texture.pixelFormat));
 
         // Clear to white
         command.color = Color.WHITE;
@@ -186,29 +199,199 @@ defineSuite([
         }).contextToRender([0, 0, 255, 255]);
     });
 
-    it('draws the expected floating-point texture color', function() {
-        if (context.floatingPointTexture) {
-            var color = new Color(0.2, 0.4, 0.6, 1.0);
-            var floats = new Float32Array([color.red, color.green, color.blue, color.alpha]);
+    it('cannot flip texture when using ImageBitmap', function() {
+        var topColor = new Color(0.0, 0.0, 1.0, 1.0);
+        var bottomColor = new Color(1.0, 0.0, 0.0, 1.0);
 
-            texture = new Texture({
-                context : context,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : PixelDatatype.FLOAT,
-                source : {
-                    width : 1,
-                    height : 1,
-                    arrayBufferView : floats
+        return Resource.supportsImageBitmapOptions()
+            .then(function(supportsImageBitmapOptions) {
+                if (supportsImageBitmapOptions) {
+                    // When imageBitmapOptions is supported, flipY on texture upload is ignored.
+                    bottomColor = topColor;
                 }
+
+                texture = new Texture({
+                    context : context,
+                    source : blueOverRedFlippedImage,
+                    pixelFormat : PixelFormat.RGBA,
+                    flipY : false
+                });
+
+                expect({
+                    context : context,
+                    fragmentShader : fs,
+                    uniformMap : uniformMap
+                }).contextToRender(topColor.toBytes());
+
+                // Flip the texture.
+                texture = new Texture({
+                    context : context,
+                    source : blueOverRedFlippedImage,
+                    pixelFormat : PixelFormat.RGBA,
+                    flipY : true
+                });
+
+                expect({
+                    context : context,
+                    fragmentShader : fs,
+                    uniformMap : uniformMap
+                }).contextToRender(bottomColor.toBytes());
             });
+    });
 
-            expect(texture.sizeInBytes).toEqual(16);
+    it('draws the expected floating-point texture color', function() {
+        if (!context.floatingPointTexture) {
+            return;
+        }
 
+        var color = new Color(0.2, 0.4, 0.6, 1.0);
+        var floats = new Float32Array([color.red, color.green, color.blue, color.alpha]);
+
+        texture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                width : 1,
+                height : 1,
+                arrayBufferView : floats
+            }
+        });
+
+        expect(texture.sizeInBytes).toEqual(16);
+
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender(color.toBytes());
+    });
+
+    it('draws the expected floating-point texture color with linear filtering', function() {
+        if (!context.floatingPointTexture) {
+            return;
+        }
+
+        var color0 = new Color(0.2, 0.4, 0.6, 1.0);
+        var color1 = new Color(0.1, 0.3, 0.5, 1.0);
+        var floats = new Float32Array([color0.red, color0.green, color0.blue, color0.alpha,
+                                       color1.red, color1.green, color1.blue, color1.alpha]);
+
+        texture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                width : 2,
+                height : 1,
+                arrayBufferView : floats
+            },
+            sampler : new Sampler({
+                wrapS : TextureWrap.CLAMP_TO_EDGE,
+                wrapT : TextureWrap.CLAMP_TO_EDGE,
+                minificationFilter : TextureMinificationFilter.LINEAR,
+                magnificationFilter : TextureMagnificationFilter.LINEAR
+            })
+        });
+
+        expect(texture.sizeInBytes).toEqual(32);
+
+        var fs =
+            'uniform sampler2D u_texture;' +
+            'void main() { gl_FragColor = texture2D(u_texture, vec2(0.5, 0.0)); }';
+
+        if (!context.textureFloatLinear) {
+            expect({
+                context : context,
+                fragmentShader : fs,
+                uniformMap : uniformMap,
+                epsilon : 1
+            }).contextToRender(color1.toBytes());
+        } else {
+            Color.multiplyByScalar(color0, 1.0 - 0.5, color0);
+            Color.multiplyByScalar(color1, 0.5, color1);
+            Color.add(color0, color1, color1);
             expect({
                 context : context,
                 fragmentShader : fs,
                 uniformMap : uniformMap
-            }).contextToRender(color.toBytes());
+            }).contextToRender(color1.toBytes());
+        }
+    });
+
+    it('draws the expected half floating-point texture color', function() {
+        if (!context.halfFloatingPointTexture) {
+            return;
+        }
+
+        var color = new Color(0.2, 0.4, 0.6, 1.0);
+        var floats = new Uint16Array([12902, 13926, 14541, 15360]);
+
+        texture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.HALF_FLOAT,
+            source : {
+                width : 1,
+                height : 1,
+                arrayBufferView : floats
+            },
+            flipY : false
+        });
+
+        expect(texture.sizeInBytes).toEqual(8);
+
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender(color.toBytes());
+    });
+
+    it('draws the expected half floating-point texture color with linear filtering', function() {
+        if (!context.halfFloatingPointTexture) {
+            return;
+        }
+
+        var color0 = new Color(0.2, 0.4, 0.6, 1.0);
+        var color1 = new Color(0.1, 0.3, 0.5, 1.0);
+        var floats = new Uint16Array([12902, 13926, 14541, 15360,
+                                      11878, 13517, 14336, 15360]);
+
+        texture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.RGBA,
+            pixelDatatype : PixelDatatype.HALF_FLOAT,
+            source : {
+                width : 2,
+                height : 1,
+                arrayBufferView : floats
+            },
+            flipY : false
+        });
+
+        expect(texture.sizeInBytes).toEqual(16);
+
+        var fs =
+            'uniform sampler2D u_texture;' +
+            'void main() { gl_FragColor = texture2D(u_texture, vec2(0.5, 0.0)); }';
+
+        if (!context.textureHalfFloatLinear) {
+            expect({
+                context : context,
+                fragmentShader : fs,
+                uniformMap : uniformMap,
+                epsilon : 1
+            }).contextToRender(color1.toBytes());
+        } else {
+            Color.multiplyByScalar(color0, 1.0 - 0.5, color0);
+            Color.multiplyByScalar(color1, 0.5, color1);
+            Color.add(color0, color1, color1);
+            expect({
+                context : context,
+                fragmentShader : fs,
+                uniformMap : uniformMap
+            }).contextToRender(color1.toBytes());
         }
     });
 
@@ -353,6 +536,52 @@ defineSuite([
         }).contextToRender([255, 0, 0, 255]);
     });
 
+    it('draws the expected luminance texture color', function() {
+        var color = new Color(0.6, 0.6, 0.6, 1.0);
+        var arrayBufferView = new Uint8Array([153]);
+
+        texture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.LUMINANCE,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            source : {
+                width : 1,
+                height : 1,
+                arrayBufferView : arrayBufferView
+            },
+            flipY : false
+        });
+
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender(color.toBytes());
+    });
+
+    it('draws the expected luminance alpha texture color', function() {
+        var color = new Color(0.6, 0.8, 0.0, 1.0);
+        var arrayBufferView = new Uint8Array([153, 204]);
+
+        texture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.LUMINANCE_ALPHA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            source : {
+                width : 1,
+                height : 1,
+                arrayBufferView : arrayBufferView
+            },
+            flipY : false
+        });
+
+        expect({
+            context : context,
+            fragmentShader : fsLuminanceAlpha,
+            uniformMap : uniformMap
+        }).contextToRender(color.toBytes());
+    });
+
     it('can be created from a typed array', function() {
         var bytes = new Uint8Array([0, 255, 0, 255]);
 
@@ -403,6 +632,25 @@ defineSuite([
             fragmentShader : fs,
             uniformMap : uniformMap
         }).contextToRender(Color.NAVY.toBytes());
+    });
+
+    it('can copy from a DOM element', function() {
+        texture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.RGB,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            width : blueImage.width,
+            height : blueImage.height
+        });
+
+        texture.copyFrom(blueImage);
+
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap,
+            epsilon : 1
+        }).contextToRender([0, 0, 255, 255]);
     });
 
     it('can replace a subset of a texture', function() {
@@ -582,7 +830,7 @@ defineSuite([
 
         // Uncompressed formats
         expectTextureByteSize(16, 16, PixelFormat.ALPHA, PixelDatatype.UNSIGNED_BYTE, 256);
-        expectTextureByteSize(16, 16, PixelFormat.RGB, PixelDatatype.UNSIGNED_BYTE, 256 * 4);
+        expectTextureByteSize(16, 16, PixelFormat.RGB, PixelDatatype.UNSIGNED_BYTE, 256 * 3);
         expectTextureByteSize(16, 16, PixelFormat.RGBA, PixelDatatype.UNSIGNED_BYTE, 256 * 4);
         expectTextureByteSize(16, 16, PixelFormat.LUMINANCE, PixelDatatype.UNSIGNED_BYTE, 256);
         expectTextureByteSize(16, 16, PixelFormat.LUMINANCE_ALPHA, PixelDatatype.UNSIGNED_BYTE, 256 * 2);
@@ -747,6 +995,20 @@ defineSuite([
                     height : 1,
                     pixelFormat : PixelFormat.RGBA,
                     pixelDatatype : PixelDatatype.FLOAT
+                });
+            }).toThrowDeveloperError();
+        }
+    });
+
+    it('throws when creating if pixelDatatype = HALF_FLOAT, and OES_texture_half_float is not supported', function() {
+        if (!context.halfFloatingPointTexture) {
+            expect(function() {
+                texture = new Texture({
+                    context : context,
+                    width : 1,
+                    height : 1,
+                    pixelFormat : PixelDatatype.RGBA,
+                    pixelDatatype : PixelDatatype.HALF_FLOAT
                 });
             }).toThrowDeveloperError();
         }
@@ -933,6 +1195,22 @@ defineSuite([
                 height : 1,
                 pixelFormat : PixelFormat.RGBA,
                 pixelDatatype : PixelDatatype.FLOAT
+            });
+
+            expect(function() {
+                texture.copyFromFramebuffer();
+            }).toThrowDeveloperError();
+        }
+    });
+
+    it('throws when copying to a texture from the framebuffer with a HALF_FLOAT pixel data type', function() {
+        if (context.halfFloatingPointTexture) {
+            texture = new Texture({
+                context : context,
+                width : 1,
+                height : 1,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : PixelDatatype.HALF_FLOAT
             });
 
             expect(function() {

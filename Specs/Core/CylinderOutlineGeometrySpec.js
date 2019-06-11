@@ -1,8 +1,12 @@
 defineSuite([
         'Core/CylinderOutlineGeometry',
+        'Core/arrayFill',
+        'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
         CylinderOutlineGeometry,
+        arrayFill,
+        GeometryOffsetAttribute,
         createPackableSpecs) {
     'use strict';
 
@@ -50,6 +54,25 @@ defineSuite([
 
         expect(m.attributes.position.values.length).toEqual(6 * 3); // 3 top + 3 bottom
         expect(m.indices.length).toEqual(9 * 2); // 3 top + 3 bottom + 3 sides
+    });
+
+    it('computes offset attribute', function() {
+        var m = CylinderOutlineGeometry.createGeometry(new CylinderOutlineGeometry({
+            length: 1,
+            topRadius: 1,
+            bottomRadius: 1,
+            slices: 3,
+            offsetAttribute: GeometryOffsetAttribute.ALL
+        }));
+
+        var numVertices = 6;
+        expect(m.attributes.position.values.length).toEqual(numVertices * 3);
+
+        var offset = m.attributes.applyOffset.values;
+        expect(offset.length).toEqual(numVertices);
+        var expected = new Array(offset.length);
+        expected = arrayFill(expected, 1);
+        expect(offset).toEqual(expected);
     });
 
     it('computes positions with no lines along the length', function() {
@@ -115,6 +138,6 @@ defineSuite([
         slices: 3,
         numberOfVerticalLines: 0
     });
-    var packedInstance = [1.0, 1.0, 0.0, 3.0, 0.0];
+    var packedInstance = [1.0, 1.0, 0.0, 3.0, 0.0, -1.0];
     createPackableSpecs(CylinderOutlineGeometry, cylinder, packedInstance);
 });

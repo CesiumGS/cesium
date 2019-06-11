@@ -536,6 +536,57 @@ defineSuite([
         expect(compositeObject.billboard.show).toBeUndefined();
     });
 
+    it('per-entity availability works', function() {
+        var id = 'test';
+        var collection1 = new EntityCollection();
+        var availability1 = new TimeIntervalCollection();
+        availability1.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2019-01-01/2019-01-04'
+        }));
+        var entity1 = new Entity({
+            id : id,
+            availability : availability1
+        });
+        collection1.add(entity1);
+
+        var collection2 = new EntityCollection();
+        var availability2 = new TimeIntervalCollection();
+        availability2.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2019-01-02/2019-01-05'
+        }));
+        var entity2 = new Entity({
+            id : id,
+            availability : availability2
+        });
+        collection2.add(entity2);
+
+        var collection3 = new EntityCollection();
+        var availability3 = new TimeIntervalCollection();
+        availability3.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2019-01-03/2019-01-06'
+        }));
+        var entity3 = new Entity({
+            id : id,
+            availability : availability3
+        });
+        collection3.add(entity3);
+
+        //Add collections in reverse order to lower numbers of priority
+        var composite = new CompositeEntityCollection();
+        composite.addCollection(collection3);
+        composite.addCollection(collection2);
+        composite.addCollection(collection1);
+
+        var compositeObject = composite.getById(id);
+        expect(compositeObject.availability.start).toEqual(JulianDate.fromIso8601('2019-01-01'));
+
+        composite.removeCollection(collection1);
+        expect(compositeObject.availability.start).toEqual(JulianDate.fromIso8601('2019-01-02'));
+
+        composite.removeCollection(collection2);
+        expect(compositeObject.availability.start).toEqual(JulianDate.fromIso8601('2019-01-03'));
+    });
+
     it('works when collection being composited suspends updates', function() {
         var collection = new EntityCollection();
         var composite = new CompositeEntityCollection([collection]);

@@ -89,10 +89,11 @@ defineSuite([
         var viewModel = new CesiumInspectorViewModel(scene, performanceContainer);
         viewModel.frustums = true;
         expect(viewModel.scene.debugShowFrustums).toBe(true);
-        setTimeout(function(){
-            viewModel.frustums = false;
-            expect(viewModel.scene.debugShowFrustums).toBe(false);
-        }, 250);
+
+        scene.render();
+
+        viewModel.frustums = false;
+        expect(viewModel.scene.debugShowFrustums).toBe(false);
     });
 
     it('show performance', function() {

@@ -1,30 +1,26 @@
 define([
-        '../Core/combine',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/freezeObject',
         '../Core/GeographicTilingScheme',
-        '../Core/objectToQuery',
-        '../Core/queryToObject',
-        '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/Uri',
+        '../Core/Resource',
+        '../Core/WebMercatorProjection',
         './GetFeatureInfoFormat',
+        './TimeDynamicImagery',
         './UrlTemplateImageryProvider'
     ], function(
-        combine,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         freezeObject,
         GeographicTilingScheme,
-        objectToQuery,
-        queryToObject,
-        WebMercatorTilingScheme,
-        Uri,
+        Resource,
+        WebMercatorProjection,
         GetFeatureInfoFormat,
+        TimeDynamicImagery,
         UrlTemplateImageryProvider) {
     'use strict';
 
@@ -35,12 +31,10 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
+     * @param {Resource|String} options.url The URL of the WMS service. The URL supports the same keywords as the {@link UrlTemplateImageryProvider}.
      * @param {String} options.layers The layers to include, separated by commas.
-     * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters
-     *        to pass to the WMS server in the GetMap URL.
-     * @param {Object} [options.getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional
-     *        parameters to pass to the WMS server in the GetFeatureInfo URL.
+     * @param {Object} [options.parameters=WebMapServiceImageryProvider.DefaultParameters] Additional parameters to pass to the WMS server in the GetMap URL.
+     * @param {Object} [options.getFeatureInfoParameters=WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters] Additional parameters to pass to the WMS server in the GetFeatureInfo URL.
      * @param {Boolean} [options.enablePickFeatures=true] If true, {@link WebMapServiceImageryProvider#pickFeatures} will invoke
      *        the GetFeatureInfo operation on the WMS server and return the features included in the response.  If false,
      *        {@link WebMapServiceImageryProvider#pickFeatures} will immediately return undefined (indicating no pickable features)
@@ -61,12 +55,14 @@ define([
      *        likely to result in rendering problems.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
      *        If not specified, there is no limit.
+     * @param {String} [options.crs] CRS specification, for use with WMS specification >= 1.3.0.
+     * @param {String} [options.srs] SRS specification, for use with WMS specification 1.1.0 or 1.1.1
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is
-     *        expected to have a getURL function which returns the proxied URL, if needed.
      * @param {String|String[]} [options.subdomains='abc'] The subdomains to use for the <code>{s}</code> placeholder in the URL template.
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
+     * @param {Clock} [options.clock] A Clock instance that is used when determining the value for the time dimension. Required when options.times is specified.
+     * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
@@ -101,97 +97,112 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = options.url;
-        this._layers = options.layers;
-
-        var getFeatureInfoFormats = defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats);
-
-        // Build the template URLs for tiles and pickFeatures.
-        var uri = new Uri(options.url);
-        var queryOptions = queryToObject(defaultValue(uri.query, ''));
-        var parameters = combine(objectToLowercase(defaultValue(options.parameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.DefaultParameters);
-        queryOptions = combine(parameters, queryOptions);
-
-        var pickFeaturesUri;
-        var pickFeaturesQueryOptions;
-
-        pickFeaturesUri = new Uri(options.url);
-        pickFeaturesQueryOptions = queryToObject(defaultValue(pickFeaturesUri.query, ''));
-        var pickFeaturesParameters = combine(objectToLowercase(defaultValue(options.getFeatureInfoParameters, defaultValue.EMPTY_OBJECT)), WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters);
-        pickFeaturesQueryOptions = combine(pickFeaturesParameters, pickFeaturesQueryOptions);
-
-        function setParameter(name, value) {
-            if (!defined(queryOptions[name])) {
-                queryOptions[name] = value;
-            }
-
-            if (defined(pickFeaturesQueryOptions) && !defined(pickFeaturesQueryOptions[name])) {
-                pickFeaturesQueryOptions[name] = value;
-            }
+        if (defined(options.times) && !defined(options.clock)) {
+            throw new DeveloperError('options.times was specified, so options.clock is required.');
         }
 
-        setParameter('layers', options.layers);
+        var resource = Resource.createIfNeeded(options.url);
+
+        var pickFeatureResource = resource.clone();
+
+        resource.setQueryParameters(WebMapServiceImageryProvider.DefaultParameters, true);
+        pickFeatureResource.setQueryParameters(WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters, true);
+
+        if (defined(options.parameters)) {
+            resource.setQueryParameters(objectToLowercase(options.parameters));
+        }
+
+        if (defined(options.getFeatureInfoParameters)) {
+            pickFeatureResource.setQueryParameters(objectToLowercase(options.getFeatureInfoParameters));
+        }
+
+        var that = this;
+        this._reload = undefined;
+        if (defined(options.times)) {
+            this._timeDynamicImagery = new TimeDynamicImagery({
+                clock : options.clock,
+                times : options.times,
+                requestImageFunction : function(x, y, level, request, interval) {
+                    return requestImage(that, x, y, level, request, interval);
+                },
+                reloadFunction : function() {
+                    if (defined(that._reload)) {
+                        that._reload();
+                    }
+                }
+            });
+        }
+
+        var parameters = {};
+        parameters.layers = options.layers;
+        parameters.bbox = '{westProjected},{southProjected},{eastProjected},{northProjected}';
+        parameters.width = '{width}';
+        parameters.height = '{height}';
 
         // Use SRS or CRS based on the WMS version.
-        if (parseFloat(parameters.version) >= 1.3) {
-          // Use CRS with 1.3.0 and going forward.
-          // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
-          // bbox requests.
-          setParameter('crs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'CRS:84');
+        if (parseFloat(resource.queryParameters.version) >= 1.3) {
+            // Use CRS with 1.3.0 and going forward.
+            // For GeographicTilingScheme, use CRS:84 vice EPSG:4326 to specify lon, lat (x, y) ordering for
+            // bbox requests.
+            parameters.crs = defaultValue(options.crs, options.tilingScheme && options.tilingScheme.projection instanceof WebMercatorProjection ? 'EPSG:3857' : 'CRS:84');
+        } else {
+            // SRS for WMS 1.1.0 or 1.1.1.
+            parameters.srs = defaultValue(options.srs, options.tilingScheme && options.tilingScheme.projection instanceof WebMercatorProjection ? 'EPSG:3857' : 'EPSG:4326');
         }
-        else {
-          // SRS for WMS 1.1.0 or 1.1.1.
-          setParameter('srs', options.tilingScheme instanceof WebMercatorTilingScheme ? 'EPSG:3857' : 'EPSG:4326');
-        }
 
-        setParameter('bbox', '{westProjected},{southProjected},{eastProjected},{northProjected}');
-        setParameter('width', '{width}');
-        setParameter('height', '{height}');
+        resource.setQueryParameters(parameters, true);
+        pickFeatureResource.setQueryParameters(parameters, true);
 
-        uri.query = objectToQuery(queryOptions);
+        var pickFeatureParams = {
+            query_layers: options.layers,
+            x: '{i}',
+            y: '{j}',
+            info_format: '{format}'
+        };
+        pickFeatureResource.setQueryParameters(pickFeatureParams, true);
 
-        // objectToQuery escapes the placeholders.  Undo that.
-        var templateUrl = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
-
-        var pickFeaturesTemplateUrl;
-        if (defined(pickFeaturesQueryOptions)) {
-            if (!defined(pickFeaturesQueryOptions.query_layers)) {
-                pickFeaturesQueryOptions.query_layers = options.layers;
-            }
-
-            if (!defined(pickFeaturesQueryOptions.x)) {
-                pickFeaturesQueryOptions.x = '{i}';
-            }
-
-            if (!defined(pickFeaturesQueryOptions.y)) {
-                pickFeaturesQueryOptions.y = '{j}';
-            }
-
-            if (!defined(pickFeaturesQueryOptions.info_format)) {
-                pickFeaturesQueryOptions.info_format = '{format}';
-            }
-
-            pickFeaturesUri.query = objectToQuery(pickFeaturesQueryOptions);
-            pickFeaturesTemplateUrl = pickFeaturesUri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
-        }
+        this._resource = resource;
+        this._pickFeaturesResource = pickFeatureResource;
+        this._layers = options.layers;
 
         // Let UrlTemplateImageryProvider do the actual URL building.
         this._tileProvider = new UrlTemplateImageryProvider({
-            url : templateUrl,
-            pickFeaturesUrl : pickFeaturesTemplateUrl,
+            url : resource,
+            pickFeaturesUrl : pickFeatureResource,
             tilingScheme : defaultValue(options.tilingScheme, new GeographicTilingScheme({ ellipsoid : options.ellipsoid})),
             rectangle : options.rectangle,
             tileWidth : options.tileWidth,
             tileHeight : options.tileHeight,
             minimumLevel : options.minimumLevel,
             maximumLevel : options.maximumLevel,
-            proxy : options.proxy,
             subdomains: options.subdomains,
             tileDiscardPolicy : options.tileDiscardPolicy,
             credit : options.credit,
-            getFeatureInfoFormats : getFeatureInfoFormats,
+            getFeatureInfoFormats : defaultValue(options.getFeatureInfoFormats, WebMapServiceImageryProvider.DefaultGetFeatureInfoFormats),
             enablePickFeatures: options.enablePickFeatures
         });
+    }
+
+    function requestImage(imageryProvider, col, row, level, request, interval) {
+        var dynamicIntervalData = defined(interval) ? interval.data : undefined;
+        var tileProvider = imageryProvider._tileProvider;
+
+        if (defined(dynamicIntervalData)) {
+            // We set the query parameters within the tile provider, because it is managing the query.
+            tileProvider._resource.setQueryParameters(dynamicIntervalData);
+        }
+        return tileProvider.requestImage(col, row, level, request);
+    }
+
+    function pickFeatures(imageryProvider, x, y, level, longitude, latitude, interval) {
+        var dynamicIntervalData = defined(interval) ? interval.data : undefined;
+        var tileProvider = imageryProvider._tileProvider;
+
+        if (defined(dynamicIntervalData)) {
+            // We set the query parameters within the tile provider, because it is managing the query.
+            tileProvider._pickFeaturesResource.setQueryParameters(dynamicIntervalData);
+        }
+        return tileProvider.pickFeatures(x, y, level, longitude, latitude);
     }
 
     defineProperties(WebMapServiceImageryProvider.prototype, {
@@ -203,7 +214,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource._url;
             }
         },
 
@@ -215,7 +226,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._tileProvider.proxy;
+                return this._resource.proxy;
             }
         },
 
@@ -408,6 +419,35 @@ define([
             set : function(enablePickFeatures)  {
                 this._tileProvider.enablePickFeatures = enablePickFeatures;
             }
+        },
+
+        /**
+         * Gets or sets a clock that is used to get keep the time used for time dynamic parameters.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {Clock}
+         */
+        clock : {
+            get : function() {
+                return this._timeDynamicImagery.clock;
+            },
+            set : function(value) {
+                this._timeDynamicImagery.clock = value;
+            }
+        },
+        /**
+         * Gets or sets a time interval collection that is used to get time dynamic parameters. The data of each
+         * TimeInterval is an object containing the keys and values of the properties that are used during
+         * tile requests.
+         * @memberof WebMapServiceImageryProvider.prototype
+         * @type {TimeIntervalCollection}
+         */
+        times : {
+            get : function() {
+                return this._timeDynamicImagery.times;
+            },
+            set : function(value) {
+                this._timeDynamicImagery.times = value;
+            }
         }
     });
 
@@ -441,7 +481,28 @@ define([
      * @exception {DeveloperError} <code>requestImage</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.requestImage = function(x, y, level, request) {
-        return this._tileProvider.requestImage(x, y, level, request);
+        var result;
+        var timeDynamicImagery = this._timeDynamicImagery;
+        var currentInterval;
+
+        // Try and load from cache
+        if (defined(timeDynamicImagery)) {
+            currentInterval = timeDynamicImagery.currentInterval;
+            result = timeDynamicImagery.getFromCache(x, y, level, request);
+        }
+
+        // Couldn't load from cache
+        if (!defined(result)) {
+            result = requestImage(this, x, y, level, request, currentInterval);
+        }
+
+        // If we are approaching an interval, preload this tile in the next interval
+        if (defined(result) && defined(timeDynamicImagery)) {
+            timeDynamicImagery.checkApproachingInterval(x, y, level, request);
+        }
+
+        return result;
+
     };
 
     /**
@@ -460,7 +521,10 @@ define([
      * @exception {DeveloperError} <code>pickFeatures</code> must not be called before the imagery provider is ready.
      */
     WebMapServiceImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
-        return this._tileProvider.pickFeatures(x, y, level, longitude, latitude);
+        var timeDynamicImagery = this._timeDynamicImagery;
+        var currentInterval = defined(timeDynamicImagery) ? timeDynamicImagery.currentInterval : undefined;
+
+        return pickFeatures(this, x, y, level, longitude, latitude, currentInterval);
     };
 
     /**
@@ -472,6 +536,7 @@ define([
      *    format=image/jpeg
      *
      * @constant
+     * @type {Object}
      */
     WebMapServiceImageryProvider.DefaultParameters = freezeObject({
         service : 'WMS',
@@ -488,6 +553,7 @@ define([
      *     request=GetFeatureInfo
      *
      * @constant
+     * @type {Object}
      */
     WebMapServiceImageryProvider.GetFeatureInfoDefaultParameters = freezeObject({
         service : 'WMS',

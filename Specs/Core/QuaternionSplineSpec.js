@@ -79,9 +79,8 @@ defineSuite([
         var time = (times[2] + times[1]) * 0.5;
         var t = (time - times[1]) / (times[2] - times[1]);
 
-        var quads = qs.innerQuadrangles;
         var actual = qs.evaluate(time);
-        var expected = Quaternion.squad(points[1], points[2], quads[1], quads[2], t, new Quaternion());
+        var expected = Quaternion.slerp(points[1], points[2], t, new Quaternion());
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
 

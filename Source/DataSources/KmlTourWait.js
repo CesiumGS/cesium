@@ -1,8 +1,7 @@
 define([
         '../Core/defined'
     ], function(
-        defined
-    ) {
+        defined) {
     'use strict';
     /**
      * @alias KmlTourWait

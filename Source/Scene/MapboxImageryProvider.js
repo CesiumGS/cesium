@@ -5,6 +5,7 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/MapboxApi',
+        '../Core/Resource',
         './UrlTemplateImageryProvider'
     ], function(
         Credit,
@@ -13,12 +14,12 @@ define([
         defineProperties,
         DeveloperError,
         MapboxApi,
+        Resource,
         UrlTemplateImageryProvider) {
     'use strict';
 
     var trailingSlashRegex = /\/$/;
-    var defaultCredit1 = new Credit('© Mapbox © OpenStreetMap', undefined, 'https://www.mapbox.com/about/maps/');
-    var defaultCredit2 = [new Credit('Improve this map', undefined, 'https://www.mapbox.com/map-feedback/')];
+    var defaultCredit = new Credit('&copy; <a href="https://www.mapbox.com/about/maps/">Mapbox</a> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> <strong><a href="https://www.mapbox.com/map-feedback/">Improve this map</a></strong>');
 
     /**
      * Provides tiled imagery hosted by Mapbox.
@@ -31,7 +32,6 @@ define([
      * @param {String} options.mapId The Mapbox Map ID.
      * @param {String} [options.accessToken] The public access token for the imagery.
      * @param {String} [options.format='png'] The format of the image request.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.  Take care when specifying
      *                 this that the number of tiles at the minimum level is small, such as four or less.  A larger number is likely
@@ -60,39 +60,50 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = defaultValue(options.url, 'https://api.mapbox.com/v4/');
+        var url = options.url;
+        if (!defined(url)) {
+            url = 'https://{s}.tiles.mapbox.com/v4/';
+        }
         this._url = url;
+
+        var resource = Resource.createIfNeeded(url);
+
+        var accessToken = MapboxApi.getAccessToken(options.accessToken);
         this._mapId = mapId;
-        this._accessToken = MapboxApi.getAccessToken(options.accessToken);
-        this._accessTokenErrorCredit = MapboxApi.getErrorCredit(options.accessToken);
+        this._accessToken = accessToken;
+
+        this._accessTokenErrorCredit = Credit.clone(MapboxApi.getErrorCredit(options.accessToken));
         var format = defaultValue(options.format, 'png');
         if (!/\./.test(format)) {
             format = '.' + format;
         }
         this._format = format;
 
-        var templateUrl = url;
-        if (!trailingSlashRegex.test(url)) {
+        var templateUrl = resource.getUrlComponent();
+        if (!trailingSlashRegex.test(templateUrl)) {
             templateUrl += '/';
         }
         templateUrl += mapId + '/{z}/{x}/{y}' + this._format;
-        if (defined(this._accessToken)) {
-            templateUrl += '?access_token=' + this._accessToken;
-        }
+        resource.url = templateUrl;
 
+        resource.setQueryParameters({
+            access_token: accessToken
+        });
+
+        var credit;
         if (defined(options.credit)) {
-            var credit = options.credit;
+            credit = options.credit;
             if (typeof credit === 'string') {
                 credit = new Credit(credit);
             }
-            defaultCredit1 = credit;
-            defaultCredit2.length = 0;
+        } else {
+            credit = defaultCredit;
         }
 
+        this._resource = resource;
         this._imageryProvider = new UrlTemplateImageryProvider({
-            url: templateUrl,
-            proxy: options.proxy,
-            credit: defaultCredit1,
+            url: resource,
+            credit: credit,
             ellipsoid: options.ellipsoid,
             minimumLevel: options.minimumLevel,
             maximumLevel: options.maximumLevel,
@@ -302,11 +313,9 @@ define([
      * @exception {DeveloperError} <code>getTileCredits</code> must not be called before the imagery provider is ready.
      */
     MapboxImageryProvider.prototype.getTileCredits = function(x, y, level) {
-        var credits = defaultCredit2.slice();
         if (defined(this._accessTokenErrorCredit)) {
-            credits.push(this._accessTokenErrorCredit);
+            return [this._accessTokenErrorCredit];
         }
-        return credits;
     };
 
     /**
@@ -349,6 +358,9 @@ define([
     MapboxImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
     };
+
+    // Exposed for tests
+    MapboxImageryProvider._defaultCredit = defaultCredit;
 
     return MapboxImageryProvider;
 });
