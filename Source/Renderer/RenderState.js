@@ -6,7 +6,8 @@ define([
         '../Core/DeveloperError',
         '../Core/WebGLConstants',
         '../Core/WindingOrder',
-        './ContextLimits'
+        './ContextLimits',
+        './freezeRenderState'
     ], function(
         BoundingRectangle,
         Color,
@@ -15,7 +16,8 @@ define([
         DeveloperError,
         WebGLConstants,
         WindingOrder,
-        ContextLimits) {
+        ContextLimits,
+        freezeRenderState) {
     'use strict';
 
     function validateBlendEquation(blendEquation) {
@@ -61,7 +63,7 @@ define([
                 (depthFunction === WebGLConstants.ALWAYS));
     }
 
-    function validateStencilFunction (stencilFunction) {
+    function validateStencilFunction(stencilFunction) {
         return ((stencilFunction === WebGLConstants.NEVER) ||
                 (stencilFunction === WebGLConstants.LESS) ||
                 (stencilFunction === WebGLConstants.EQUAL) ||
@@ -175,8 +177,8 @@ define([
 
         //>>includeStart('debug', pragmas.debug);
         if ((this.lineWidth < ContextLimits.minimumAliasedLineWidth) ||
-                (this.lineWidth > ContextLimits.maximumAliasedLineWidth)) {
-                throw new DeveloperError('renderState.lineWidth is out of range.  Check minimumAliasedLineWidth and maximumAliasedLineWidth.');
+            (this.lineWidth > ContextLimits.maximumAliasedLineWidth)) {
+            throw new DeveloperError('renderState.lineWidth is out of range.  Check minimumAliasedLineWidth and maximumAliasedLineWidth.');
         }
         if (!WindingOrder.validate(this.frontFace)) {
             throw new DeveloperError('Invalid renderState.frontFace.');
@@ -411,7 +413,9 @@ define([
         cachedState = renderStateCache[fullKey];
         if (!defined(cachedState)) {
             states.id = nextRenderStateId++;
-
+            //>>includeStart('debug', pragmas.debug);
+            states = freezeRenderState(states);
+            //>>includeEnd('debug');
             cachedState = {
                 referenceCount : 0,
                 state : states
@@ -622,6 +626,7 @@ define([
     }
 
     var scratchViewport = new BoundingRectangle();
+
     function applyViewport(gl, renderState, passState) {
         var viewport = defaultValue(renderState.viewport, passState.viewport);
         if (!defined(viewport)) {
@@ -667,8 +672,8 @@ define([
         }
 
         if ((previousState.polygonOffset.enabled !== nextState.polygonOffset.enabled) ||
-                (previousState.polygonOffset.factor !== nextState.polygonOffset.factor) ||
-                (previousState.polygonOffset.units !== nextState.polygonOffset.units)) {
+            (previousState.polygonOffset.factor !== nextState.polygonOffset.factor) ||
+            (previousState.polygonOffset.units !== nextState.polygonOffset.units)) {
             funcs.push(applyPolygonOffset);
         }
 
@@ -681,9 +686,9 @@ define([
         }
 
         if ((previousState.colorMask.red !== nextState.colorMask.red) ||
-                (previousState.colorMask.green !== nextState.colorMask.green) ||
-                (previousState.colorMask.blue !== nextState.colorMask.blue) ||
-                (previousState.colorMask.alpha !== nextState.colorMask.alpha)) {
+            (previousState.colorMask.green !== nextState.colorMask.green) ||
+            (previousState.colorMask.blue !== nextState.colorMask.blue) ||
+            (previousState.colorMask.alpha !== nextState.colorMask.alpha)) {
             funcs.push(applyColorMask);
         }
 
@@ -696,21 +701,21 @@ define([
         }
 
         if ((previousState.stencilTest.enabled !== nextState.stencilTest.enabled) ||
-                (previousState.stencilTest.frontFunction !== nextState.stencilTest.frontFunction) ||
-                (previousState.stencilTest.backFunction !== nextState.stencilTest.backFunction) ||
-                (previousState.stencilTest.reference !== nextState.stencilTest.reference) ||
-                (previousState.stencilTest.mask !== nextState.stencilTest.mask) ||
-                (previousState.stencilTest.frontOperation.fail !== nextState.stencilTest.frontOperation.fail) ||
-                (previousState.stencilTest.frontOperation.zFail !== nextState.stencilTest.frontOperation.zFail) ||
-                (previousState.stencilTest.backOperation.fail !== nextState.stencilTest.backOperation.fail) ||
-                (previousState.stencilTest.backOperation.zFail !== nextState.stencilTest.backOperation.zFail) ||
-                (previousState.stencilTest.backOperation.zPass !== nextState.stencilTest.backOperation.zPass)) {
+            (previousState.stencilTest.frontFunction !== nextState.stencilTest.frontFunction) ||
+            (previousState.stencilTest.backFunction !== nextState.stencilTest.backFunction) ||
+            (previousState.stencilTest.reference !== nextState.stencilTest.reference) ||
+            (previousState.stencilTest.mask !== nextState.stencilTest.mask) ||
+            (previousState.stencilTest.frontOperation.fail !== nextState.stencilTest.frontOperation.fail) ||
+            (previousState.stencilTest.frontOperation.zFail !== nextState.stencilTest.frontOperation.zFail) ||
+            (previousState.stencilTest.backOperation.fail !== nextState.stencilTest.backOperation.fail) ||
+            (previousState.stencilTest.backOperation.zFail !== nextState.stencilTest.backOperation.zFail) ||
+            (previousState.stencilTest.backOperation.zPass !== nextState.stencilTest.backOperation.zPass)) {
             funcs.push(applyStencilTest);
         }
 
         if ((previousState.sampleCoverage.enabled !== nextState.sampleCoverage.enabled) ||
-                (previousState.sampleCoverage.value !== nextState.sampleCoverage.value) ||
-                (previousState.sampleCoverage.invert !== nextState.sampleCoverage.invert)) {
+            (previousState.sampleCoverage.value !== nextState.sampleCoverage.value) ||
+            (previousState.sampleCoverage.invert !== nextState.sampleCoverage.invert)) {
             funcs.push(applySampleCoverage);
         }
 
@@ -749,7 +754,7 @@ define([
         var previousBlendingEnabled = (defined(previousPassState.blendingEnabled)) ? previousPassState.blendingEnabled : previousRenderState.blending.enabled;
         var blendingEnabled = (defined(passState.blendingEnabled)) ? passState.blendingEnabled : renderState.blending.enabled;
         if ((previousBlendingEnabled !== blendingEnabled) ||
-                (blendingEnabled && (previousRenderState.blending !== renderState.blending))) {
+            (blendingEnabled && (previousRenderState.blending !== renderState.blending))) {
             applyBlending(gl, renderState, passState);
         }
 

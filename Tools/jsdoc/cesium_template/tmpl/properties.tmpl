@@ -1,5 +1,6 @@
 <?js
-    var props = obj;
+    var data = obj;
+    var props = data.subprops || data.properties;
 
     /* sort subprops under their parent props (like opts.classname) */
     var parentProp = null;
@@ -32,7 +33,7 @@
             props.hasName = true;
         }
 
-        if (typeof prop.defaultvalue !== 'undefined') {
+        if (typeof prop.defaultvalue !== 'undefined' && !data.isEnum) {
             props.hasDefault = true;
         }
     });
@@ -98,7 +99,7 @@
             <?js } ?>
 
             <td class="description last"><?js= prop.description ?><?js if (prop.subprops) { ?>
-                <h6>Properties</h6><?js= self.partial('properties.tmpl', prop.subprops) ?>
+                <h6>Properties</h6><?js= self.partial('properties.tmpl', prop) ?>
             <?js } ?></td>
         </tr>
 

@@ -13,6 +13,7 @@ defineSuite([
         service.geocode(query).then(function(results) {
             expect(results.length).toEqual(1);
             expect(results[0].destination).toEqual(Cartesian3.fromDegrees(-75.0, 35.0, 300.0));
+            done();
         });
     });
 
@@ -21,6 +22,7 @@ defineSuite([
         service.geocode(query).then(function(results) {
             expect(results.length).toEqual(1);
             expect(results[0].destination).toEqual(Cartesian3.fromDegrees(-75.0, 35.0, 300.0));
+            done();
         });
     });
 

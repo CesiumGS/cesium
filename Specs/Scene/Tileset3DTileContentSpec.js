@@ -1,15 +1,11 @@
 defineSuite([
-        'Scene/Tileset3DTileContent',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
-        'Scene/Cesium3DTileContentState',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
-    ], function(
-        Tileset3DTileContent,
+    ], 'Scene/Tileset3DTileContent', function(
         Cartesian3,
         HeadingPitchRange,
-        Cesium3DTileContentState,
         Cesium3DTilesTester,
         createScene) {
     'use strict';
@@ -18,7 +14,7 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var tilesetOfTilesetsUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/';
+    var tilesetOfTilesetsUrl = './Data/Cesium3DTiles/Tilesets/TilesetOfTilesets/tileset.json';
 
     beforeAll(function() {
         scene = createScene();
@@ -46,7 +42,7 @@ defineSuite([
 
     it('gets properties', function() {
         return Cesium3DTilesTester.loadTileset(scene, tilesetOfTilesetsUrl).then(function(tileset) {
-            var tile = tileset._root;
+            var tile = tileset.root;
             var content = tile.content;
             expect(content.featuresLength).toBe(0);
             expect(content.pointsLength).toBe(0);

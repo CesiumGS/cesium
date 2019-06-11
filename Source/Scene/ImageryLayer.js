@@ -5,7 +5,9 @@ define([
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/FeatureDetection',
+        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/IndexDatatype',
         '../Core/Math',
@@ -45,7 +47,9 @@ define([
         defined,
         defineProperties,
         destroyObject,
+        DeveloperError,
         FeatureDetection,
+        GeographicProjection,
         GeographicTilingScheme,
         IndexDatatype,
         CesiumMath,
@@ -136,6 +140,14 @@ define([
      *                          the gamma value to use for the tile.  The function is executed for every
      *                          frame and for every tile, so it must be fast.
      * @param {ImagerySplitDirection|Function} [options.splitDirection=ImagerySplitDirection.NONE] The {@link ImagerySplitDirection} split to apply to this layer.
+     * @param {TextureMinificationFilter} [options.minificationFilter=TextureMinificationFilter.LINEAR] The
+     *                                    texture minification filter to apply to this layer. Possible values
+     *                                    are <code>TextureMinificationFilter.LINEAR</code> and
+     *                                    <code>TextureMinificationFilter.NEAREST</code>.
+     * @param {TextureMagnificationFilter} [options.magnificationFilter=TextureMagnificationFilter.LINEAR] The
+     *                                     texture minification filter to apply to this layer. Possible values
+     *                                     are <code>TextureMagnificationFilter.LINEAR</code> and
+     *                                     <code>TextureMagnificationFilter.NEAREST</code>.
      * @param {Boolean} [options.show=true] True if the layer is shown; otherwise, false.
      * @param {Number} [options.maximumAnisotropy=maximum supported] The maximum anisotropy level to use
      *        for texture filtering.  If this parameter is not specified, the maximum anisotropy supported
@@ -145,6 +157,9 @@ define([
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
+     * @param {Rectangle} [options.cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
+     * @param {Color} [options.colorToAlpha] Color to be used as alpha.
+     * @param {Number} [options.colorToAlphaThreshold=0.004] Threshold for color-to-alpha.
      */
     function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
@@ -212,6 +227,32 @@ define([
         this.splitDirection = defaultValue(options.splitDirection, defaultValue(imageryProvider.defaultSplit, ImageryLayer.DEFAULT_SPLIT));
 
         /**
+         * The {@link TextureMinificationFilter} to apply to this layer.
+         * Possible values are {@link TextureMinificationFilter.LINEAR} (the default)
+         * and {@link TextureMinificationFilter.NEAREST}.
+         *
+         * To take effect, this property must be set immediately after adding the imagery layer.
+         * Once a texture is loaded it won't be possible to change the texture filter used.
+         *
+         * @type {TextureMinificationFilter}
+         * @default {@link ImageryLayer.DEFAULT_MINIFICATION_FILTER}
+         */
+        this.minificationFilter = defaultValue(options.minificationFilter, defaultValue(imageryProvider.defaultMinificationFilter, ImageryLayer.DEFAULT_MINIFICATION_FILTER));
+
+        /**
+         * The {@link TextureMagnificationFilter} to apply to this layer.
+         * Possible values are {@link TextureMagnificationFilter.LINEAR} (the default)
+         * and {@link TextureMagnificationFilter.NEAREST}.
+         *
+         * To take effect, this property must be set immediately after adding the imagery layer.
+         * Once a texture is loaded it won't be possible to change the texture filter used.
+         *
+         * @type {TextureMagnificationFilter}
+         * @default {@link ImageryLayer.DEFAULT_MAGNIFICATION_FILTER}
+         */
+        this.magnificationFilter = defaultValue(options.magnificationFilter, defaultValue(imageryProvider.defaultMagnificationFilter, ImageryLayer.DEFAULT_MAGNIFICATION_FILTER));
+
+        /**
          * Determines if this layer is shown.
          *
          * @type {Boolean}
@@ -241,6 +282,27 @@ define([
         this._requestImageError = undefined;
 
         this._reprojectComputeCommands = [];
+
+        /**
+         * Rectangle cutout in this layer of imagery.
+         *
+         * @type {Rectangle}
+         */
+        this.cutoutRectangle = options.cutoutRectangle;
+
+        /**
+         * Color value that should be set to transparent.
+         *
+         * @type {Color}
+         */
+        this.colorToAlpha = options.colorToAlpha;
+
+        /**
+         * Normalized (0-1) threshold for color-to-alpha.
+         *
+         * @type {Number}
+         */
+        this.colorToAlphaThreshold = defaultValue(options.colorToAlphaThreshold, ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD);
     }
 
     defineProperties(ImageryLayer.prototype, {
@@ -270,7 +332,6 @@ define([
             }
         }
     });
-
 
     /**
      * This value is used as the default brightness for the imagery layer if one is not provided during construction
@@ -309,12 +370,36 @@ define([
     ImageryLayer.DEFAULT_GAMMA = 1.0;
 
     /**
-     * This value is used as the default spliat for the imagery layer if one is not provided during construction
+     * This value is used as the default split for the imagery layer if one is not provided during construction
      * or by the imagery provider.
      * @type {ImagerySplitDirection}
      * @default ImagerySplitDirection.NONE
      */
     ImageryLayer.DEFAULT_SPLIT = ImagerySplitDirection.NONE;
+
+    /**
+     * This value is used as the default texture minification filter for the imagery layer if one is not provided
+     * during construction or by the imagery provider.
+     * @type {TextureMinificationFilter}
+     * @default TextureMinificationFilter.LINEAR
+     */
+    ImageryLayer.DEFAULT_MINIFICATION_FILTER = TextureMinificationFilter.LINEAR;
+
+    /**
+     * This value is used as the default texture magnification filter for the imagery layer if one is not provided
+     * during construction or by the imagery provider.
+     * @type {TextureMagnificationFilter}
+     * @default TextureMagnificationFilter.LINEAR
+     */
+    ImageryLayer.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
+
+    /**
+     * This value is used as the default threshold for color-to-alpha if one is not provided
+     * during construction or by the imagery provider.
+     * @type {Number}
+     * @default 0.004
+     */
+    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
 
     /**
      * Gets a value indicating whether this layer is the base layer in the
@@ -350,8 +435,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -431,7 +514,7 @@ define([
         // Use Web Mercator for our texture coordinate computations if this imagery layer uses
         // that projection and the terrain tile falls entirely inside the valid bounds of the
         // projection.
-        var useWebMercatorT = imageryProvider.tilingScheme instanceof WebMercatorTilingScheme &&
+        var useWebMercatorT = imageryProvider.tilingScheme.projection instanceof WebMercatorProjection &&
                               tile.rectangle.north < WebMercatorProjection.MaximumLatitude &&
                               tile.rectangle.south > -WebMercatorProjection.MaximumLatitude;
 
@@ -661,9 +744,8 @@ define([
      * @private
      *
      * @param {Imagery} imagery The imagery to request.
-     * @param {Function} [priorityFunction] The priority function used for sorting the imagery request.
      */
-    ImageryLayer.prototype._requestImagery = function(imagery, priorityFunction) {
+    ImageryLayer.prototype._requestImagery = function(imagery) {
         var imageryProvider = this._imageryProvider;
 
         var that = this;
@@ -706,10 +788,9 @@ define([
 
         function doRequest() {
             var request = new Request({
-                throttle : true,
+                throttle : false,
                 throttleByServer : true,
-                type : RequestType.IMAGERY,
-                priorityFunction : priorityFunction
+                type : RequestType.IMAGERY
             });
             imagery.request = request;
             imagery.state = ImageryState.TRANSITIONING;
@@ -730,6 +811,34 @@ define([
         }
 
         doRequest();
+    };
+
+    ImageryLayer.prototype._createTextureWebGL = function(context, imagery) {
+        var sampler = new Sampler({
+            minificationFilter : this.minificationFilter,
+            magnificationFilter : this.magnificationFilter
+        });
+
+        var image = imagery.image;
+
+        if (defined(image.internalFormat)) {
+            return new Texture({
+                context : context,
+                pixelFormat : image.internalFormat,
+                width : image.width,
+                height : image.height,
+                source : {
+                    arrayBufferView : image.bufferView
+                },
+                sampler : sampler
+            });
+        }
+        return new Texture({
+            context : context,
+            source : image,
+            pixelFormat : this._imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB,
+            sampler : sampler
+        });
     };
 
     /**
@@ -764,27 +873,17 @@ define([
             }
         }
 
-        // Imagery does not need to be discarded, so upload it to WebGL.
-        var texture;
-        if (defined(image.internalFormat)) {
-            texture = new Texture({
-                context : context,
-                pixelFormat : image.internalFormat,
-                width : image.width,
-                height : image.height,
-                source : {
-                    arrayBufferView : image.bufferView
-                }
-            });
-        } else {
-            texture = new Texture({
-                context : context,
-                source : image,
-                pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB
-            });
+        //>>includeStart('debug', pragmas.debug);
+        if (this.minificationFilter !== TextureMinificationFilter.NEAREST &&
+            this.minificationFilter !== TextureMinificationFilter.LINEAR) {
+            throw new DeveloperError('ImageryLayer minification filter must be NEAREST or LINEAR');
         }
+        //>>includeEnd('debug');
 
-        if (imageryProvider.tilingScheme instanceof WebMercatorTilingScheme) {
+        // Imagery does not need to be discarded, so upload it to WebGL.
+        var texture = this._createTextureWebGL(context, imagery);
+
+        if (imageryProvider.tilingScheme.projection instanceof WebMercatorProjection) {
             imagery.textureWebMercator = texture;
         } else {
             imagery.texture = texture;
@@ -793,37 +892,57 @@ define([
         imagery.state = ImageryState.TEXTURE_LOADED;
     };
 
-    function finalizeReprojectTexture(imageryLayer, context, imagery, texture) {
+    function getSamplerKey(minificationFilter, magnificationFilter, maximumAnisotropy) {
+        return minificationFilter + ':' + magnificationFilter + ':' + maximumAnisotropy;
+    }
+
+    ImageryLayer.prototype._finalizeReprojectTexture = function(context, texture) {
+        var minificationFilter = this.minificationFilter;
+        var magnificationFilter = this.magnificationFilter;
+        var usesLinearTextureFilter = minificationFilter === TextureMinificationFilter.LINEAR && magnificationFilter === TextureMagnificationFilter.LINEAR;
         // Use mipmaps if this texture has power-of-two dimensions.
-        if (!PixelFormat.isCompressedFormat(texture.pixelFormat) && CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
-            var mipmapSampler = context.cache.imageryLayer_mipmapSampler;
+        // In addition, mipmaps are only generated if the texture filters are both LINEAR.
+        if (usesLinearTextureFilter && !PixelFormat.isCompressedFormat(texture.pixelFormat) && CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
+            minificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
+            var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
+            var maximumAnisotropy = Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy));
+            var mipmapSamplerKey = getSamplerKey(minificationFilter, magnificationFilter, maximumAnisotropy);
+            var mipmapSamplers = context.cache.imageryLayerMipmapSamplers;
+            if (!defined(mipmapSamplers)) {
+                mipmapSamplers = {};
+                context.cache.imageryLayerMipmapSamplers = mipmapSamplers;
+            }
+            var mipmapSampler = mipmapSamplers[mipmapSamplerKey];
             if (!defined(mipmapSampler)) {
-                var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
-                mipmapSampler = context.cache.imageryLayer_mipmapSampler = new Sampler({
+                mipmapSampler = mipmapSamplers[mipmapSamplerKey] = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.LINEAR_MIPMAP_LINEAR,
-                    magnificationFilter : TextureMagnificationFilter.LINEAR,
-                    maximumAnisotropy : Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy))
+                    minificationFilter : minificationFilter,
+                    magnificationFilter : magnificationFilter,
+                    maximumAnisotropy : maximumAnisotropy
                 });
             }
             texture.generateMipmap(MipmapHint.NICEST);
             texture.sampler = mipmapSampler;
         } else {
-            var nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler;
+            var nonMipmapSamplerKey = getSamplerKey(minificationFilter, magnificationFilter, 0);
+            var nonMipmapSamplers = context.cache.imageryLayerNonMipmapSamplers;
+            if (!defined(nonMipmapSamplers)) {
+                nonMipmapSamplers = {};
+                context.cache.imageryLayerNonMipmapSamplers = nonMipmapSamplers;
+            }
+            var nonMipmapSampler = nonMipmapSamplers[nonMipmapSamplerKey];
             if (!defined(nonMipmapSampler)) {
-                nonMipmapSampler = context.cache.imageryLayer_nonMipmapSampler = new Sampler({
+                nonMipmapSampler = nonMipmapSamplers[nonMipmapSamplerKey] = new Sampler({
                     wrapS : TextureWrap.CLAMP_TO_EDGE,
                     wrapT : TextureWrap.CLAMP_TO_EDGE,
-                    minificationFilter : TextureMinificationFilter.LINEAR,
-                    magnificationFilter : TextureMagnificationFilter.LINEAR
+                    minificationFilter : minificationFilter,
+                    magnificationFilter : magnificationFilter
                 });
             }
             texture.sampler = nonMipmapSampler;
         }
-
-        imagery.state = ImageryState.READY;
-    }
+    };
 
     /**
      * Enqueues a command re-projecting a texture to a {@link GeographicProjection} on the next update, if necessary, and generate
@@ -847,7 +966,7 @@ define([
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
         if (needGeographicProjection &&
-            !(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
+            !(this._imageryProvider.tilingScheme.projection instanceof GeographicProjection) &&
             rectangle.width / texture.width > 1e-5) {
                 var that = this;
                 imagery.addReference();
@@ -861,7 +980,8 @@ define([
                     },
                     postExecute : function(outputTexture) {
                         imagery.texture = outputTexture;
-                        finalizeReprojectTexture(that, context, imagery, outputTexture);
+                        that._finalizeReprojectTexture(context, outputTexture);
+                        imagery.state = ImageryState.READY;
                         imagery.releaseReference();
                     }
                 });
@@ -870,7 +990,8 @@ define([
             if (needGeographicProjection) {
                 imagery.texture = texture;
             }
-            finalizeReprojectTexture(this, context, imagery, texture);
+            this._finalizeReprojectTexture(context, texture);
+            imagery.state = ImageryState.READY;
         }
     };
 
@@ -1125,7 +1246,7 @@ define([
         var imageryProvider = layer._imageryProvider;
         var tilingScheme = imageryProvider.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
-        var latitudeFactor = !(layer._imageryProvider.tilingScheme instanceof GeographicTilingScheme) ? Math.cos(latitudeClosestToEquator) : 1.0;
+        var latitudeFactor = !(layer._imageryProvider.tilingScheme.projection instanceof GeographicProjection) ? Math.cos(latitudeClosestToEquator) : 1.0;
         var tilingSchemeRectangle = tilingScheme.rectangle;
         var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * tilingSchemeRectangle.width * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.getNumberOfXTilesAtLevel(0));
 

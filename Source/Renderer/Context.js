@@ -1,4 +1,5 @@
 define([
+        '../Core/Check',
         '../Core/clone',
         '../Core/Color',
         '../Core/ComponentDatatype',
@@ -11,6 +12,7 @@ define([
         '../Core/Geometry',
         '../Core/GeometryAttribute',
         '../Core/Matrix4',
+        '../Core/PixelFormat',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
         '../Core/WebGLConstants',
@@ -21,14 +23,16 @@ define([
         './CubeMap',
         './DrawCommand',
         './PassState',
-        './PickFramebuffer',
+        './PixelDatatype',
         './RenderState',
         './ShaderCache',
         './ShaderProgram',
         './Texture',
+        './TextureCache',
         './UniformState',
         './VertexArray'
     ], function(
+        Check,
         clone,
         Color,
         ComponentDatatype,
@@ -41,6 +45,7 @@ define([
         Geometry,
         GeometryAttribute,
         Matrix4,
+        PixelFormat,
         PrimitiveType,
         RuntimeError,
         WebGLConstants,
@@ -51,37 +56,39 @@ define([
         CubeMap,
         DrawCommand,
         PassState,
-        PickFramebuffer,
+        PixelDatatype,
         RenderState,
         ShaderCache,
         ShaderProgram,
         Texture,
+        TextureCache,
         UniformState,
         VertexArray) {
     'use strict';
     /*global WebGLRenderingContext*/
+
     /*global WebGL2RenderingContext*/
 
     function errorToString(gl, error) {
         var message = 'WebGL Error:  ';
         switch (error) {
-        case gl.INVALID_ENUM:
-            message += 'INVALID_ENUM';
-            break;
-        case gl.INVALID_VALUE:
-            message += 'INVALID_VALUE';
-            break;
-        case gl.INVALID_OPERATION:
-            message += 'INVALID_OPERATION';
-            break;
-        case gl.OUT_OF_MEMORY:
-            message += 'OUT_OF_MEMORY';
-            break;
-        case gl.CONTEXT_LOST_WEBGL:
-            message += 'CONTEXT_LOST_WEBGL lost';
-            break;
-        default:
-            message += 'Unknown (' + error + ')';
+            case gl.INVALID_ENUM:
+                message += 'INVALID_ENUM';
+                break;
+            case gl.INVALID_VALUE:
+                message += 'INVALID_VALUE';
+                break;
+            case gl.INVALID_OPERATION:
+                message += 'INVALID_OPERATION';
+                break;
+            case gl.OUT_OF_MEMORY:
+                message += 'OUT_OF_MEMORY';
+                break;
+            case gl.CONTEXT_LOST_WEBGL:
+                message += 'CONTEXT_LOST_WEBGL lost';
+                break;
+            default:
+                message += 'Unknown (' + error + ')';
         }
 
         return message;
@@ -90,7 +97,7 @@ define([
     function createErrorMessage(gl, glFunc, glFuncArguments, error) {
         var message = errorToString(gl, error) + ': ' + glFunc.name + '(';
 
-        for ( var i = 0; i < glFuncArguments.length; ++i) {
+        for (var i = 0; i < glFuncArguments.length; ++i) {
             if (i !== 0) {
                 message += ', ';
             }
@@ -178,9 +185,7 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(canvas)) {
-            throw new DeveloperError('canvas is required.');
-        }
+        Check.defined('canvas', canvas);
         //>>includeEnd('debug');
 
         this._canvas = canvas;
@@ -194,8 +199,7 @@ define([
         webglOptions.alpha = defaultValue(webglOptions.alpha, false); // WebGL default is true
         webglOptions.stencil = defaultValue(webglOptions.stencil, true); // WebGL default is false
 
-        var defaultToWebgl2 = false;
-        var requestWebgl2 = defaultToWebgl2 && (typeof WebGL2RenderingContext !== 'undefined');
+        var requestWebgl2 = defaultValue(options.requestWebgl2, false) && (typeof WebGL2RenderingContext !== 'undefined');
         var webgl2 = false;
 
         var glContext;
@@ -232,6 +236,7 @@ define([
         this._throwOnWebGLError = false;
 
         this._shaderCache = new ShaderCache(this);
+        this._textureCache = new TextureCache();
 
         var gl = glContext;
 
@@ -272,11 +277,17 @@ define([
         this._blendMinmax = !!getExtension(gl, ['EXT_blend_minmax']);
         this._elementIndexUint = !!getExtension(gl, ['OES_element_index_uint']);
         this._depthTexture = !!getExtension(gl, ['WEBGL_depth_texture', 'WEBKIT_WEBGL_depth_texture']);
-        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
         this._fragDepth = !!getExtension(gl, ['EXT_frag_depth']);
         this._debugShaders = getExtension(gl, ['WEBGL_debug_shaders']);
 
-        this._colorBufferFloat = this._webgl2 && !!getExtension(gl, ['EXT_color_buffer_float']);
+        this._textureFloat = !!getExtension(gl, ['OES_texture_float']);
+        this._textureHalfFloat = !!getExtension(gl, ['OES_texture_half_float']);
+
+        this._textureFloatLinear = !!getExtension(gl, ['OES_texture_float_linear']);
+        this._textureHalfFloatLinear = !!getExtension(gl, ['OES_texture_half_float_linear']);
+
+        this._colorBufferFloat = !!getExtension(gl, ['EXT_color_buffer_float', 'WEBGL_color_buffer_float']);
+        this._colorBufferHalfFloat = !!getExtension(gl, ['EXT_color_buffer_half_float']);
 
         this._s3tc = !!getExtension(gl, ['WEBGL_compressed_texture_s3tc', 'MOZ_WEBGL_compressed_texture_s3tc', 'WEBKIT_WEBGL_compressed_texture_s3tc']);
         this._pvrtc = !!getExtension(gl, ['WEBGL_compressed_texture_pvrtc', 'WEBKIT_WEBGL_compressed_texture_pvrtc']);
@@ -303,33 +314,61 @@ define([
         if (webgl2) {
             var that = this;
 
-            glCreateVertexArray = function () { return that._gl.createVertexArray(); };
-            glBindVertexArray = function(vao) { that._gl.bindVertexArray(vao); };
-            glDeleteVertexArray = function(vao) { that._gl.deleteVertexArray(vao); };
+            glCreateVertexArray = function() {
+                return that._gl.createVertexArray();
+            };
+            glBindVertexArray = function(vao) {
+                that._gl.bindVertexArray(vao);
+            };
+            glDeleteVertexArray = function(vao) {
+                that._gl.deleteVertexArray(vao);
+            };
 
-            glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { gl.drawElementsInstanced(mode, count, type, offset, instanceCount); };
-            glDrawArraysInstanced = function(mode, first, count, instanceCount) { gl.drawArraysInstanced(mode, first, count, instanceCount); };
-            glVertexAttribDivisor = function(index, divisor) { gl.vertexAttribDivisor(index, divisor); };
+            glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) {
+                gl.drawElementsInstanced(mode, count, type, offset, instanceCount);
+            };
+            glDrawArraysInstanced = function(mode, first, count, instanceCount) {
+                gl.drawArraysInstanced(mode, first, count, instanceCount);
+            };
+            glVertexAttribDivisor = function(index, divisor) {
+                gl.vertexAttribDivisor(index, divisor);
+            };
 
-            glDrawBuffers = function(buffers) { gl.drawBuffers(buffers); };
+            glDrawBuffers = function(buffers) {
+                gl.drawBuffers(buffers);
+            };
         } else {
             vertexArrayObject = getExtension(gl, ['OES_vertex_array_object']);
             if (defined(vertexArrayObject)) {
-                glCreateVertexArray = function() { return vertexArrayObject.createVertexArrayOES(); };
-                glBindVertexArray = function(vertexArray) { vertexArrayObject.bindVertexArrayOES(vertexArray); };
-                glDeleteVertexArray = function(vertexArray) { vertexArrayObject.deleteVertexArrayOES(vertexArray); };
+                glCreateVertexArray = function() {
+                    return vertexArrayObject.createVertexArrayOES();
+                };
+                glBindVertexArray = function(vertexArray) {
+                    vertexArrayObject.bindVertexArrayOES(vertexArray);
+                };
+                glDeleteVertexArray = function(vertexArray) {
+                    vertexArrayObject.deleteVertexArrayOES(vertexArray);
+                };
             }
 
             instancedArrays = getExtension(gl, ['ANGLE_instanced_arrays']);
             if (defined(instancedArrays)) {
-                glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) { instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount); };
-                glDrawArraysInstanced = function(mode, first, count, instanceCount) { instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount); };
-                glVertexAttribDivisor = function(index, divisor) { instancedArrays.vertexAttribDivisorANGLE(index, divisor); };
+                glDrawElementsInstanced = function(mode, count, type, offset, instanceCount) {
+                    instancedArrays.drawElementsInstancedANGLE(mode, count, type, offset, instanceCount);
+                };
+                glDrawArraysInstanced = function(mode, first, count, instanceCount) {
+                    instancedArrays.drawArraysInstancedANGLE(mode, first, count, instanceCount);
+                };
+                glVertexAttribDivisor = function(index, divisor) {
+                    instancedArrays.vertexAttribDivisorANGLE(index, divisor);
+                };
             }
 
             drawBuffers = getExtension(gl, ['WEBGL_draw_buffers']);
             if (defined(drawBuffers)) {
-                glDrawBuffers = function(buffers) { drawBuffers.drawBuffersWEBGL(buffers); };
+                glDrawBuffers = function(buffers) {
+                    drawBuffers.drawBuffersWEBGL(buffers);
+                };
             }
         }
 
@@ -433,6 +472,11 @@ define([
                 return this._shaderCache;
             }
         },
+        textureCache : {
+            get : function() {
+                return this._textureCache;
+            }
+        },
         uniformState : {
             get : function() {
                 return this._us;
@@ -532,18 +576,64 @@ define([
         },
 
         /**
-         * <code>true</code> if OES_texture_float is supported.  This extension provides
+         * <code>true</code> if OES_texture_float is supported. This extension provides
          * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
          * @memberof Context.prototype
          * @type {Boolean}
-         * @see {@link http://www.khronos.org/registry/gles/extensions/OES/OES_texture_float.txt|OES_texture_float}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
          */
         floatingPointTexture : {
             get : function() {
-                return this._textureFloat || this._colorBufferFloat;
+                return this._webgl2 || this._textureFloat;
             }
         },
 
+        /**
+         * <code>true</code> if OES_texture_half_float is supported. This extension provides
+         * access to floating point textures that, for example, can be attached to framebuffers for high dynamic range.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
+         */
+        halfFloatingPointTexture : {
+            get : function() {
+                return this._webgl2 || this._textureHalfFloat;
+            }
+        },
+
+        /**
+         * <code>true</code> if OES_texture_float_linear is supported. This extension provides
+         * access to linear sampling methods for minification and magnification filters of floating-point textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float_linear/}
+         */
+        textureFloatLinear : {
+            get : function() {
+                return this._textureFloatLinear;
+            }
+        },
+
+        /**
+         * <code>true</code> if OES_texture_half_float_linear is supported. This extension provides
+         * access to linear sampling methods for minification and magnification filters of half floating-point textures.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_half_float_linear/}
+         */
+        textureHalfFloatLinear : {
+            get : function() {
+                return (this._webgl2 && this._textureFloatLinear) || (!this._webgl2 && this._textureHalfFloatLinear);
+            }
+        },
+
+        /**
+         * <code>true</code> if EXT_texture_filter_anisotropic is supported. This extension provides
+         * access to anisotropic filtering for textured surfaces at an oblique angle from the viewer.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_texture_filter_anisotropic/}
+         */
         textureFilterAnisotropic : {
             get : function() {
                 return !!this._textureFilterAnisotropic;
@@ -633,15 +723,29 @@ define([
 
         /**
          * <code>true</code> if the EXT_color_buffer_float extension is supported.  This
-         * extension makes the formats gl.R16F, gl.RG16F, gl.RGBA16F, gl.R32F, gl.RG32F,
-         * gl.RGBA32F, gl.R11F_G11F_B10F color renderable.
+         * extension makes the gl.RGBA32F format color renderable.
          * @memberof Context.prototype
          * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/WEBGL_color_buffer_float/}
          * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
          */
         colorBufferFloat : {
             get : function() {
                 return this._colorBufferFloat;
+            }
+        },
+
+        /**
+         * <code>true</code> if the EXT_color_buffer_half_float extension is supported.  This
+         * extension makes the format gl.RGBA16F format color renderable.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_half_float/}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/EXT_color_buffer_float/}
+         */
+        colorBufferHalfFloat : {
+            get : function() {
+                return (this._webgl2 && this._colorBufferFloat) || (!this._webgl2 && this._colorBufferHalfFloat);
             }
         },
 
@@ -692,7 +796,8 @@ define([
                             width : 1,
                             height : 1,
                             arrayBufferView : new Uint8Array([255, 255, 255, 255])
-                        }
+                        },
+                        flipY : false
                     });
                 }
 
@@ -725,7 +830,8 @@ define([
                             negativeY : face,
                             positiveZ : face,
                             negativeZ : face
-                        }
+                        },
+                        flipY : false
                     });
                 }
 
@@ -761,7 +867,7 @@ define([
         /**
          * Gets an object representing the currently bound framebuffer.  While this instance is not an actual
          * {@link Framebuffer}, it is used to represent the default framebuffer in calls to
-         * {@link Texture.FromFramebuffer}.
+         * {@link Texture.fromFramebuffer}.
          * @memberof Context.prototype
          * @type {Object}
          */
@@ -787,18 +893,18 @@ define([
                 var message;
 
                 switch (status) {
-                case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
-                    message = 'Framebuffer is not complete.  Incomplete attachment: at least one attachment point with a renderbuffer or texture attached has its attached object no longer in existence or has an attached image with a width or height of zero, or the color attachment point has a non-color-renderable image attached, or the depth attachment point has a non-depth-renderable image attached, or the stencil attachment point has a non-stencil-renderable image attached.  Color-renderable formats include GL_RGBA4, GL_RGB5_A1, and GL_RGB565. GL_DEPTH_COMPONENT16 is the only depth-renderable format. GL_STENCIL_INDEX8 is the only stencil-renderable format.';
-                    break;
-                case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
-                    message = 'Framebuffer is not complete.  Incomplete dimensions: not all attached images have the same width and height.';
-                    break;
-                case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
-                    message = 'Framebuffer is not complete.  Missing attachment: no images are attached to the framebuffer.';
-                    break;
-                case gl.FRAMEBUFFER_UNSUPPORTED:
-                    message = 'Framebuffer is not complete.  Unsupported: the combination of internal formats of the attached images violates an implementation-dependent set of restrictions.';
-                    break;
+                    case gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+                        message = 'Framebuffer is not complete.  Incomplete attachment: at least one attachment point with a renderbuffer or texture attached has its attached object no longer in existence or has an attached image with a width or height of zero, or the color attachment point has a non-color-renderable image attached, or the depth attachment point has a non-depth-renderable image attached, or the stencil attachment point has a non-stencil-renderable image attached.  Color-renderable formats include GL_RGBA4, GL_RGB5_A1, and GL_RGB565. GL_DEPTH_COMPONENT16 is the only depth-renderable format. GL_STENCIL_INDEX8 is the only stencil-renderable format.';
+                        break;
+                    case gl.FRAMEBUFFER_INCOMPLETE_DIMENSIONS:
+                        message = 'Framebuffer is not complete.  Incomplete dimensions: not all attached images have the same width and height.';
+                        break;
+                    case gl.FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+                        message = 'Framebuffer is not complete.  Missing attachment: no images are attached to the framebuffer.';
+                        break;
+                    case gl.FRAMEBUFFER_UNSUPPORTED:
+                        message = 'Framebuffer is not complete.  Unsupported: the combination of internal formats of the attached images violates an implementation-dependent set of restrictions.';
+                        break;
                 }
 
                 throw new DeveloperError(message);
@@ -890,27 +996,22 @@ define([
         gl.clear(bitmask);
     };
 
-    function beginDraw(context, framebuffer, drawCommand, passState) {
-        var rs = defaultValue(drawCommand._renderState, context._defaultRenderState);
-
+    function beginDraw(context, framebuffer, passState, shaderProgram, renderState) {
         //>>includeStart('debug', pragmas.debug);
-        if (defined(framebuffer) && rs.depthTest) {
-            if (rs.depthTest.enabled && !framebuffer.hasDepthAttachment) {
+        if (defined(framebuffer) && renderState.depthTest) {
+            if (renderState.depthTest.enabled && !framebuffer.hasDepthAttachment) {
                 throw new DeveloperError('The depth test can not be enabled (drawCommand.renderState.depthTest.enabled) because the framebuffer (drawCommand.framebuffer) does not have a depth or depth-stencil renderbuffer.');
             }
         }
         //>>includeEnd('debug');
 
         bindFramebuffer(context, framebuffer);
-
-        applyRenderState(context, rs, passState, false);
-
-        var sp = drawCommand._shaderProgram;
-        sp._bind();
-        context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, sp.maximumTextureUnitIndex);
+        applyRenderState(context, renderState, passState, false);
+        shaderProgram._bind();
+        context._maxFrameTextureUnitIndex = Math.max(context._maxFrameTextureUnitIndex, shaderProgram.maximumTextureUnitIndex);
     }
 
-    function continueDraw(context, drawCommand) {
+    function continueDraw(context, drawCommand, shaderProgram, uniformMap) {
         var primitiveType = drawCommand._primitiveType;
         var va = drawCommand._vertexArray;
         var offset = drawCommand._offset;
@@ -922,29 +1023,19 @@ define([
             throw new DeveloperError('drawCommand.primitiveType is required and must be valid.');
         }
 
-        if (!defined(va)) {
-            throw new DeveloperError('drawCommand.vertexArray is required.');
+        Check.defined('drawCommand.vertexArray', va);
+        Check.typeOf.number.greaterThanOrEquals('drawCommand.offset', offset, 0);
+        if (defined(count)) {
+            Check.typeOf.number.greaterThanOrEquals('drawCommand.count', count, 0);
         }
-
-        if (offset < 0) {
-            throw new DeveloperError('drawCommand.offset must be greater than or equal to zero.');
-        }
-
-        if (count < 0) {
-            throw new DeveloperError('drawCommand.count must be greater than or equal to zero.');
-        }
-
-        if (instanceCount < 0) {
-            throw new DeveloperError('drawCommand.instanceCount must be greater than or equal to zero.');
-        }
-
+        Check.typeOf.number.greaterThanOrEquals('drawCommand.instanceCount', instanceCount, 0);
         if (instanceCount > 0 && !context.instancedArrays) {
             throw new DeveloperError('Instanced arrays extension is not supported');
         }
         //>>includeEnd('debug');
 
         context._us.model = defaultValue(drawCommand._modelMatrix, Matrix4.IDENTITY);
-        drawCommand._shaderProgram._setUniforms(drawCommand._uniformMap, context._us, context.validateShaderProgram);
+        shaderProgram._setUniforms(uniformMap, context._us, context.validateShaderProgram);
 
         va._bind();
         var indexBuffer = va.indexBuffer;
@@ -969,23 +1060,21 @@ define([
         va._unBind();
     }
 
-    Context.prototype.draw = function(drawCommand, passState) {
+    Context.prototype.draw = function(drawCommand, passState, shaderProgram, uniformMap) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(drawCommand)) {
-            throw new DeveloperError('drawCommand is required.');
-        }
-
-        if (!defined(drawCommand._shaderProgram)) {
-            throw new DeveloperError('drawCommand.shaderProgram is required.');
-        }
+        Check.defined('drawCommand', drawCommand);
+        Check.defined('drawCommand.shaderProgram', drawCommand._shaderProgram);
         //>>includeEnd('debug');
 
         passState = defaultValue(passState, this._defaultPassState);
         // The command's framebuffer takes presidence over the pass' framebuffer, e.g., for off-screen rendering.
         var framebuffer = defaultValue(drawCommand._framebuffer, passState.framebuffer);
+        var renderState = defaultValue(drawCommand._renderState, this._defaultRenderState);
+        shaderProgram = defaultValue(shaderProgram, drawCommand._shaderProgram);
+        uniformMap = defaultValue(uniformMap, drawCommand._uniformMap);
 
-        beginDraw(this, framebuffer, drawCommand, passState);
-        continueDraw(this, drawCommand);
+        beginDraw(this, framebuffer, passState, shaderProgram, renderState);
+        continueDraw(this, drawCommand, shaderProgram, uniformMap);
     };
 
     Context.prototype.endFrame = function() {
@@ -1013,28 +1102,28 @@ define([
     Context.prototype.readPixels = function(readState) {
         var gl = this._gl;
 
-        readState = readState || {};
-        var x = Math.max(readState.x || 0, 0);
-        var y = Math.max(readState.y || 0, 0);
-        var width = readState.width || gl.drawingBufferWidth;
-        var height = readState.height || gl.drawingBufferHeight;
+        readState = defaultValue(readState, defaultValue.EMPTY_OBJECT);
+        var x = Math.max(defaultValue(readState.x, 0), 0);
+        var y = Math.max(defaultValue(readState.y, 0), 0);
+        var width = defaultValue(readState.width, gl.drawingBufferWidth);
+        var height = defaultValue(readState.height, gl.drawingBufferHeight);
         var framebuffer = readState.framebuffer;
 
         //>>includeStart('debug', pragmas.debug);
-        if (width <= 0) {
-            throw new DeveloperError('readState.width must be greater than zero.');
-        }
-
-        if (height <= 0) {
-            throw new DeveloperError('readState.height must be greater than zero.');
-        }
+        Check.typeOf.number.greaterThan('readState.width', width, 0);
+        Check.typeOf.number.greaterThan('readState.height', height, 0);
         //>>includeEnd('debug');
 
-        var pixels = new Uint8Array(4 * width * height);
+        var pixelDatatype = PixelDatatype.UNSIGNED_BYTE;
+        if (defined(framebuffer) && framebuffer.numberOfColorAttachments > 0) {
+            pixelDatatype = framebuffer.getColorTexture(0).pixelDatatype;
+        }
+
+        var pixels = PixelFormat.createTypedArray(PixelFormat.RGBA, pixelDatatype, width, height);
 
         bindFramebuffer(this, framebuffer);
 
-        gl.readPixels(x, y, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+        gl.readPixels(x, y, width, height, PixelFormat.RGBA, pixelDatatype, pixels);
 
         return pixels;
     };
@@ -1055,10 +1144,10 @@ define([
                         componentDatatype : ComponentDatatype.FLOAT,
                         componentsPerAttribute : 2,
                         values : [
-                           -1.0, -1.0,
+                            -1.0, -1.0,
                             1.0, -1.0,
-                            1.0,  1.0,
-                           -1.0,  1.0
+                            1.0, 1.0,
+                            -1.0, 1.0
                         ]
                     }),
 
@@ -1112,10 +1201,6 @@ define([
         });
     };
 
-    Context.prototype.createPickFramebuffer = function() {
-        return new PickFramebuffer(this);
-    };
-
     /**
      * Gets the object associated with a pick color.
      *
@@ -1129,9 +1214,7 @@ define([
      */
     Context.prototype.getObjectByPickColor = function(pickColor) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(pickColor)) {
-            throw new DeveloperError('pickColor is required.');
-        }
+        Check.defined('pickColor', pickColor);
         //>>includeEnd('debug');
 
         return this._pickObjects[pickColor.toRgba()];
@@ -1180,9 +1263,7 @@ define([
      */
     Context.prototype.createPickId = function(object) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(object)) {
-            throw new DeveloperError('object is required.');
-        }
+        Check.defined('object', object);
         //>>includeEnd('debug');
 
         // the increment and assignment have to be separate statements to
@@ -1215,6 +1296,7 @@ define([
         }
 
         this._shaderCache = this._shaderCache.destroy();
+        this._textureCache = this._textureCache.destroy();
         this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
         this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
 

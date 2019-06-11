@@ -1,20 +1,23 @@
 define([
+        '../Core/appendForwardSlash',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/DeveloperError',
         '../Core/Rectangle',
+        '../Core/Resource',
         '../Core/WebMercatorTilingScheme',
         './UrlTemplateImageryProvider'
     ], function(
+        appendForwardSlash,
         Credit,
         defaultValue,
         DeveloperError,
         Rectangle,
+        Resource,
         WebMercatorTilingScheme,
         UrlTemplateImageryProvider) {
     'use strict';
 
-    var trailingSlashRegex = /\/$/;
     var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
 
     /**
@@ -28,7 +31,6 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {String} [options.url='https://a.tile.openstreetmap.org'] The OpenStreetMap server url.
      * @param {String} [options.fileExtension='png'] The file extension for images on the server.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle of the layer.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
@@ -60,12 +62,9 @@ define([
         options = defaultValue(options, {});
 
         var url = defaultValue(options.url, 'https://a.tile.openstreetmap.org/');
-
-        if (!trailingSlashRegex.test(url)) {
-            url = url + '/';
-        }
-
-        var fileExtension = defaultValue(options.fileExtension, 'png');
+        url = appendForwardSlash(url);
+        url += '{z}/{x}/{y}.' + defaultValue(options.fileExtension, 'png');
+        var resource = Resource.createIfNeeded(url);
 
         var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
@@ -94,11 +93,8 @@ define([
             credit = new Credit(credit);
         }
 
-        var templateUrl = url + '{z}/{x}/{y}.' + fileExtension;
-
         return new UrlTemplateImageryProvider({
-            url: templateUrl,
-            proxy: options.proxy,
+            url: resource,
             credit: credit,
             tilingScheme: tilingScheme,
             tileWidth: tileWidth,

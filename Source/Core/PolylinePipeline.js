@@ -6,6 +6,7 @@ define([
         './DeveloperError',
         './Ellipsoid',
         './EllipsoidGeodesic',
+        './EllipsoidRhumbLine',
         './IntersectionTests',
         './isArray',
         './Math',
@@ -19,6 +20,7 @@ define([
         DeveloperError,
         Ellipsoid,
         EllipsoidGeodesic,
+        EllipsoidRhumbLine,
         IntersectionTests,
         isArray,
         CesiumMath,
@@ -34,6 +36,11 @@ define([
     PolylinePipeline.numberOfPoints = function(p0, p1, minDistance) {
         var distance = Cartesian3.distance(p0, p1);
         return Math.ceil(distance / minDistance);
+    };
+
+    PolylinePipeline.numberOfPointsRhumbLine = function(p0, p1, granularity) {
+        var radiansDistanceSquared = Math.pow((p0.longitude - p1.longitude), 2) + Math.pow((p0.latitude - p1.latitude), 2);
+        return Math.ceil(Math.sqrt(radiansDistanceSquared / (granularity * granularity)));
     };
 
     var cartoScratch = new Cartographic();
@@ -87,6 +94,7 @@ define([
     var scaleFirst = new Cartesian3();
     var scaleLast = new Cartesian3();
     var ellipsoidGeodesic = new EllipsoidGeodesic();
+    var ellipsoidRhumb = new EllipsoidRhumbLine();
 
     //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
     //Result includes p1, but not include p2.  This function is called for a sequence of line segments,
@@ -110,6 +118,41 @@ define([
 
         for (var i = 1; i < numPoints; i++) {
             var carto = ellipsoidGeodesic.interpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints, carto2);
+            carto.height = heights[i];
+            cart = ellipsoid.cartographicToCartesian(carto, cartesian);
+            Cartesian3.pack(cart, array, index);
+            index += 3;
+        }
+
+        return index;
+    }
+
+    //Returns subdivided line scaled to ellipsoid surface starting at p1 and ending at p2.
+    //Result includes p1, but not include p2.  This function is called for a sequence of line segments,
+    //and this prevents duplication of end point.
+    function generateCartesianRhumbArc(p0, p1, granularity, ellipsoid, h0, h1, array, offset) {
+        var first = ellipsoid.scaleToGeodeticSurface(p0, scaleFirst);
+        var last = ellipsoid.scaleToGeodeticSurface(p1, scaleLast);
+        var start = ellipsoid.cartesianToCartographic(first, carto1);
+        var end = ellipsoid.cartesianToCartographic(last, carto2);
+
+        var numPoints = PolylinePipeline.numberOfPointsRhumbLine(start, end, granularity);
+        var heights = subdivideHeights(numPoints, h0, h1);
+
+        if (!ellipsoidRhumb.ellipsoid.equals(ellipsoid)) {
+            ellipsoidRhumb = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
+        }
+        ellipsoidRhumb.setEndPoints(start, end);
+        var surfaceDistanceBetweenPoints = ellipsoidRhumb.surfaceDistance / numPoints;
+
+        var index = offset;
+        start.height = h0;
+        var cart = ellipsoid.cartographicToCartesian(start, cartesian);
+        Cartesian3.pack(cart, array, index);
+        index += 3;
+
+        for (var i = 1; i < numPoints; i++) {
+            var carto = ellipsoidRhumb.interpolateUsingSurfaceDistance(i * surfaceDistanceBetweenPoints, carto2);
             carto.height = heights[i];
             cart = ellipsoid.cartographicToCartesian(carto, cartesian);
             Cartesian3.pack(cart, array, index);
@@ -201,6 +244,7 @@ define([
 
     /**
      * Subdivides polyline and raises all points to the specified height.  Returns an array of numbers to represent the positions.
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
      * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
      * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -286,8 +330,100 @@ define([
         return newPositions;
     };
 
+    var scratchCartographic0 = new Cartographic();
+    var scratchCartographic1 = new Cartographic();
+
+    /**
+     * Subdivides polyline and raises all points to the specified height using Rhumb lines.  Returns an array of numbers to represent the positions.
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
+     * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
+     * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @returns {Number[]} A new array of positions of type {Number} that have been subdivided and raised to the surface of the ellipsoid.
+     *
+     * @example
+     * var positions = Cesium.Cartesian3.fromDegreesArray([
+     *   -105.0, 40.0,
+     *   -100.0, 38.0,
+     *   -105.0, 35.0,
+     *   -100.0, 32.0
+     * ]);
+     * var surfacePositions = Cesium.PolylinePipeline.generateRhumbArc({
+     *   positons: positions
+     * });
+     */
+    PolylinePipeline.generateRhumbArc = function(options) {
+        if (!defined(options)) {
+            options = {};
+        }
+        var positions = options.positions;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(positions)) {
+            throw new DeveloperError('options.positions is required.');
+        }
+        //>>includeEnd('debug');
+
+        var length = positions.length;
+        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+        var height = defaultValue(options.height, 0);
+        var hasHeightArray = isArray(height);
+
+        if (length < 1) {
+            return [];
+        } else if (length === 1) {
+            var p = ellipsoid.scaleToGeodeticSurface(positions[0], scaleFirst);
+            height = hasHeightArray ? height[0] : height;
+            if (height !== 0) {
+                var n = ellipsoid.geodeticSurfaceNormal(p, cartesian);
+                Cartesian3.multiplyByScalar(n, height, n);
+                Cartesian3.add(p, n, p);
+            }
+
+            return [p.x, p.y, p.z];
+        }
+
+        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+
+        var numPoints = 0;
+        var i;
+
+        var c0 = ellipsoid.cartesianToCartographic(positions[0], scratchCartographic0);
+        var c1;
+        for (i = 0; i < length - 1; i++) {
+            c1 = ellipsoid.cartesianToCartographic(positions[i + 1], scratchCartographic1);
+            numPoints += PolylinePipeline.numberOfPointsRhumbLine(c0, c1, granularity);
+            c0 = Cartographic.clone(c1, scratchCartographic0);
+        }
+
+        var arrayLength = (numPoints + 1) * 3;
+        var newPositions = new Array(arrayLength);
+        var offset = 0;
+
+        for (i = 0; i < length - 1; i++) {
+            var p0 = positions[i];
+            var p1 = positions[i + 1];
+
+            var h0 = hasHeightArray ? height[i] : height;
+            var h1 = hasHeightArray ? height[i + 1] : height;
+
+            offset = generateCartesianRhumbArc(p0, p1, granularity, ellipsoid, h0, h1, newPositions, offset);
+        }
+
+        subdivideHeightsScratchArray.length = 0;
+
+        var lastPoint = positions[length - 1];
+        var carto = ellipsoid.cartesianToCartographic(lastPoint, carto1);
+        carto.height = hasHeightArray ? height[length - 1] : height;
+        var cart = ellipsoid.cartographicToCartesian(carto, cartesian);
+        Cartesian3.pack(cart, newPositions, arrayLength - 3);
+
+        return newPositions;
+    };
+
     /**
      * Subdivides polyline and raises all points to the specified height. Returns an array of new {Cartesian3} positions.
+     * @param {Object} options Object with the following properties:
      * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
      * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
      * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
@@ -307,6 +443,36 @@ define([
      */
     PolylinePipeline.generateCartesianArc = function(options) {
         var numberArray = PolylinePipeline.generateArc(options);
+        var size = numberArray.length/3;
+        var newPositions = new Array(size);
+        for (var i = 0; i < size; i++) {
+            newPositions[i] = Cartesian3.unpack(numberArray, i*3);
+        }
+        return newPositions;
+    };
+
+    /**
+     * Subdivides polyline and raises all points to the specified height using Rhumb Lines. Returns an array of new {Cartesian3} positions.
+     * @param {Object} options Object with the following properties:
+     * @param {Cartesian3[]} options.positions The array of type {Cartesian3} representing positions.
+     * @param {Number|Number[]} [options.height=0.0] A number or array of numbers representing the heights of each position.
+     * @param {Number} [options.granularity = CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude. Determines the number of positions in the buffer.
+     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the positions lie.
+     * @returns {Cartesian3[]} A new array of cartesian3 positions that have been subdivided and raised to the surface of the ellipsoid.
+     *
+     * @example
+     * var positions = Cesium.Cartesian3.fromDegreesArray([
+     *   -105.0, 40.0,
+     *   -100.0, 38.0,
+     *   -105.0, 35.0,
+     *   -100.0, 32.0
+     * ]);
+     * var surfacePositions = Cesium.PolylinePipeline.generateCartesianRhumbArc({
+     *   positons: positions
+     * });
+     */
+    PolylinePipeline.generateCartesianRhumbArc = function(options) {
+        var numberArray = PolylinePipeline.generateRhumbArc(options);
         var size = numberArray.length/3;
         var newPositions = new Array(size);
         for (var i = 0; i < size; i++) {

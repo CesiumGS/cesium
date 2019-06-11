@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "properties": {
     "id": {
@@ -17,7 +17,7 @@
     },
     "Height": {
       "minimum": 6.161747192963958,
-      "maximum": 84.83180232718587
+      "maximum": 85.41026367992163
     }
   },
   "geometricError": 240,
@@ -33,7 +33,7 @@
       ]
     },
     "geometricError": 70,
-    "refine": "add",
+    "refine": "ADD",
     "content": {
       "boundingVolume": {
         "region": [
@@ -45,7 +45,7 @@
           88
         ]
       },
-      "url": "parent.b3dm"
+      "uri": "parent.b3dm"
     },
     "children": [
       {
@@ -64,7 +64,7 @@
         },
         "geometricError": 70,
         "content": {
-          "url": "subtree.json"
+          "uri": "subtree.json"
         }
       }
     ]

@@ -1,5 +1,7 @@
 define([
         '../Core/Cartesian2',
+        '../Core/Check',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -16,6 +18,8 @@ define([
         './TextureMinificationFilter'
     ], function(
         Cartesian2,
+        Check,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -32,13 +36,14 @@ define([
         TextureMinificationFilter) {
     'use strict';
 
+    /**
+     * @private
+    */
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         var context = options.context;
@@ -87,6 +92,21 @@ define([
                         internalFormat = WebGLConstants.R32F;
                         break;
                 }
+            } else if (pixelDatatype === PixelDatatype.HALF_FLOAT) {
+                switch (pixelFormat) {
+                    case PixelFormat.RGBA:
+                        internalFormat = WebGLConstants.RGBA16F;
+                        break;
+                    case PixelFormat.RGB:
+                        internalFormat = WebGLConstants.RGB16F;
+                        break;
+                    case PixelFormat.RG:
+                        internalFormat = WebGLConstants.RG16F;
+                        break;
+                    case PixelFormat.R:
+                        internalFormat = WebGLConstants.R16F;
+                        break;
+                }
             }
         }
 
@@ -95,17 +115,13 @@ define([
             throw new DeveloperError('options requires a source field to create an initialized texture or width and height fields to create a blank texture.');
         }
 
-        if (width <= 0) {
-            throw new DeveloperError('Width must be greater than zero.');
-        }
+        Check.typeOf.number.greaterThan('width', width, 0);
 
         if (width > ContextLimits.maximumTextureSize) {
             throw new DeveloperError('Width must be less than or equal to the maximum texture size (' + ContextLimits.maximumTextureSize + ').  Check maximumTextureSize.');
         }
 
-        if (height <= 0) {
-            throw new DeveloperError('Height must be greater than zero.');
-        }
+        Check.typeOf.number.greaterThan('height', height, 0);
 
         if (height > ContextLimits.maximumTextureSize) {
             throw new DeveloperError('Height must be less than or equal to the maximum texture size (' + ContextLimits.maximumTextureSize + ').  Check maximumTextureSize.');
@@ -130,6 +146,10 @@ define([
 
         if ((pixelDatatype === PixelDatatype.FLOAT) && !context.floatingPointTexture) {
             throw new DeveloperError('When options.pixelDatatype is FLOAT, this WebGL implementation must support the OES_texture_float extension.  Check context.floatingPointTexture.');
+        }
+
+        if ((pixelDatatype === PixelDatatype.HALF_FLOAT) && !context.halfFloatingPointTexture) {
+            throw new DeveloperError('When options.pixelDatatype is HALF_FLOAT, this WebGL implementation must support the OES_texture_half_float extension. Check context.halfFloatingPointTexture.');
         }
 
         if (PixelFormat.isDepthFormat(pixelFormat)) {
@@ -166,6 +186,8 @@ define([
         var preMultiplyAlpha = options.preMultiplyAlpha || pixelFormat === PixelFormat.RGB || pixelFormat === PixelFormat.LUMINANCE;
         var flipY = defaultValue(options.flipY, true);
 
+        var initialized = true;
+
         var gl = context._gl;
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
@@ -173,19 +195,32 @@ define([
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
 
-        if (defined(source)) {
-            // TODO: _gl.pixelStorei(_gl._UNPACK_ALIGNMENT, 4);
-            gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
-            gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+        var unpackAlignment = 4;
+        if (defined(source) && defined(source.arrayBufferView) && !isCompressed) {
+            unpackAlignment = PixelFormat.alignmentInBytes(pixelFormat, pixelDatatype, width);
+        }
 
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+
+        if (defined(source)) {
             if (defined(source.arrayBufferView)) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
                 // Source: typed array
+                var arrayBufferView = source.arrayBufferView;
                 if (isCompressed) {
-                    gl.compressedTexImage2D(textureTarget, 0, internalFormat, width, height, 0, source.arrayBufferView);
+                    gl.compressedTexImage2D(textureTarget, 0, internalFormat, width, height, 0, arrayBufferView);
                 } else {
-                    gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, source.arrayBufferView);
+                    if (flipY) {
+                        arrayBufferView = PixelFormat.flipY(arrayBufferView, pixelFormat, pixelDatatype, width, height);
+                    }
+                    gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, arrayBufferView);
                 }
             } else if (defined(source.framebuffer)) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
                 // Source: framebuffer
                 if (source.framebuffer !== context.defaultFramebuffer) {
                     source.framebuffer._bind();
@@ -197,11 +232,16 @@ define([
                     source.framebuffer._unBind();
                 }
             } else {
+                // Only valid for DOM-Element uploads
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
                 // Source: ImageData, HTMLImageElement, HTMLCanvasElement, or HTMLVideoElement
                 gl.texImage2D(textureTarget, 0, internalFormat, pixelFormat, pixelDatatype, source);
             }
         } else {
             gl.texImage2D(textureTarget, 0, internalFormat, width, height, 0, pixelFormat, pixelDatatype, null);
+            initialized = false;
         }
         gl.bindTexture(textureTarget, null);
 
@@ -212,6 +252,7 @@ define([
             sizeInBytes = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, height);
         }
 
+        this._id = createGuid();
         this._context = context;
         this._textureFilterAnisotropic = context._textureFilterAnisotropic;
         this._textureTarget = textureTarget;
@@ -225,10 +266,20 @@ define([
         this._sizeInBytes = sizeInBytes;
         this._preMultiplyAlpha = preMultiplyAlpha;
         this._flipY = flipY;
+        this._initialized = initialized;
         this._sampler = undefined;
 
         this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
     }
+
+    /**
+     * This function is identical to using the Texture constructor except that it can be
+     * replaced with a mock/spy in tests.
+     * @private
+     */
+    Texture.create = function(options) {
+        return new Texture(options);
+    };
 
     /**
      * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
@@ -267,9 +318,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('options.context is required.');
-        }
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
         var context = options.context;
@@ -283,21 +332,15 @@ define([
         var framebuffer = options.framebuffer;
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(options.context)) {
-            throw new DeveloperError('context is required.');
-        }
         if (!PixelFormat.validate(pixelFormat)) {
             throw new DeveloperError('Invalid pixelFormat.');
         }
         if (PixelFormat.isDepthFormat(pixelFormat) || PixelFormat.isCompressedFormat(pixelFormat)) {
             throw new DeveloperError('pixelFormat cannot be DEPTH_COMPONENT, DEPTH_STENCIL or a compressed format.');
         }
-        if (framebufferXOffset < 0) {
-            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
-        }
-        if (framebufferYOffset < 0) {
-            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
-        }
+        Check.defined('options.context', options.context);
+        Check.typeOf.number.greaterThanOrEquals('framebufferXOffset', framebufferXOffset, 0);
+        Check.typeOf.number.greaterThanOrEquals('framebufferYOffset', framebufferYOffset, 0);
         if (framebufferXOffset + width > gl.drawingBufferWidth) {
             throw new DeveloperError('framebufferXOffset + width must be less than or equal to drawingBufferWidth');
         }
@@ -325,10 +368,22 @@ define([
 
     defineProperties(Texture.prototype, {
         /**
+         * A unique id for the texture
+         * @memberof Texture.prototype
+         * @type {String}
+         * @readonly
+         * @private
+         */
+        id : {
+            get : function() {
+                return this._id;
+            }
+        },
+        /**
          * The sampler to use when sampling this texture.
          * Create a sampler by calling {@link Sampler}.  If this
          * parameter is not specified, a default sampler is used.  The default sampler clamps texture
-         * coordinates in both directions, uses linear filtering for both magnification and minifcation,
+         * coordinates in both directions, uses linear filtering for both magnification and minification,
          * and uses a maximum anisotropy of 1.0.
          * @memberof Texture.prototype
          * @type {Object}
@@ -347,13 +402,16 @@ define([
                     (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
                     (minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR);
 
-                // float textures only support nearest filtering, so override the sampler's settings
-                if (this._pixelDatatype === PixelDatatype.FLOAT) {
+                var context = this._context;
+                var pixelDatatype = this._pixelDatatype;
+
+                // float textures only support nearest filtering unless the linear extensions are supported, so override the sampler's settings
+                if ((pixelDatatype === PixelDatatype.FLOAT && !context.textureFloatLinear) || (pixelDatatype === PixelDatatype.HALF_FLOAT && !context.textureHalfFloatLinear)) {
                     minificationFilter = mipmap ? TextureMinificationFilter.NEAREST_MIPMAP_NEAREST : TextureMinificationFilter.NEAREST;
                     magnificationFilter = TextureMagnificationFilter.NEAREST;
                 }
 
-                var gl = this._context._gl;
+                var gl = context._gl;
                 var target = this._textureTarget;
 
                 gl.activeTexture(gl.TEXTURE0);
@@ -449,42 +507,91 @@ define([
         yOffset = defaultValue(yOffset, 0);
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(source)) {
-            throw new DeveloperError('source is required.');
-        }
+        Check.defined('source', source);
         if (PixelFormat.isDepthFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFrom when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.');
         }
         if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFrom with a compressed texture pixel format.');
         }
-        if (xOffset < 0) {
-            throw new DeveloperError('xOffset must be greater than or equal to zero.');
-        }
-        if (yOffset < 0) {
-            throw new DeveloperError('yOffset must be greater than or equal to zero.');
-        }
-        if (xOffset + source.width > this._width) {
-            throw new DeveloperError('xOffset + source.width must be less than or equal to width.');
-        }
-        if (yOffset + source.height > this._height) {
-            throw new DeveloperError('yOffset + source.height must be less than or equal to height.');
-        }
+        Check.typeOf.number.greaterThanOrEquals('xOffset', xOffset, 0);
+        Check.typeOf.number.greaterThanOrEquals('yOffset', yOffset, 0);
+        Check.typeOf.number.lessThanOrEquals('xOffset + source.width', xOffset + source.width, this._width);
+        Check.typeOf.number.lessThanOrEquals('yOffset + source.height', yOffset + source.height, this._height);
         //>>includeEnd('debug');
 
         var gl = this._context._gl;
         var target = this._textureTarget;
 
-        // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-        gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this._preMultiplyAlpha);
-        gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this._flipY);
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
-        if (source.arrayBufferView) {
-            gl.texSubImage2D(target, 0, xOffset, yOffset, source.width, source.height, this._pixelFormat, this._pixelDatatype, source.arrayBufferView);
-        } else {
-            gl.texSubImage2D(target, 0, xOffset, yOffset, this._pixelFormat, this._pixelDatatype, source);
+        var width = source.width;
+        var height = source.height;
+        var arrayBufferView = source.arrayBufferView;
+
+        var textureWidth = this._width;
+        var textureHeight = this._height;
+        var pixelFormat = this._pixelFormat;
+        var pixelDatatype = this._pixelDatatype;
+
+        var preMultiplyAlpha = this._preMultiplyAlpha;
+        var flipY = this._flipY;
+
+        var unpackAlignment = 4;
+        if (defined(arrayBufferView)) {
+            unpackAlignment = PixelFormat.alignmentInBytes(pixelFormat, pixelDatatype, width);
+        }
+
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
+
+        var uploaded = false;
+        if (!this._initialized) {
+            if (xOffset === 0 && yOffset === 0 && width === textureWidth && height === textureHeight) {
+                // initialize the entire texture
+                if (defined(arrayBufferView)) {
+                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+                    if (flipY) {
+                        arrayBufferView = PixelFormat.flipY(arrayBufferView, pixelFormat, pixelDatatype, textureWidth, textureHeight);
+                    }
+                    gl.texImage2D(target, 0, pixelFormat, textureWidth, textureHeight, 0, pixelFormat, pixelDatatype, arrayBufferView);
+                } else {
+                    // Only valid for DOM-Element uploads
+                    gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+                    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
+                    gl.texImage2D(target, 0, pixelFormat, pixelFormat, pixelDatatype, source);
+                }
+                uploaded = true;
+            } else {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+                // initialize the entire texture to zero
+                var bufferView = PixelFormat.createTypedArray(pixelFormat, pixelDatatype, textureWidth, textureHeight);
+                gl.texImage2D(target, 0, pixelFormat, textureWidth, textureHeight, 0, pixelFormat, pixelDatatype, bufferView);
+            }
+            this._initialized = true;
+        }
+
+        if (!uploaded) {
+            if (defined(arrayBufferView)) {
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+
+                if (flipY) {
+                    arrayBufferView = PixelFormat.flipY(arrayBufferView, pixelFormat, pixelDatatype, width, height);
+                }
+                gl.texSubImage2D(target, 0, xOffset, yOffset, width, height, pixelFormat, pixelDatatype, arrayBufferView);
+            } else {
+                // Only valid for DOM-Element uploads
+                gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, preMultiplyAlpha);
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, flipY);
+
+                gl.texSubImage2D(target, 0, xOffset, yOffset, pixelFormat, pixelDatatype, source);
+            }
         }
 
         gl.bindTexture(target, null);
@@ -500,6 +607,7 @@ define([
      *
      * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel format is DEPTH_COMPONENT or DEPTH_STENCIL.
      * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.
+     * @exception {DeveloperError} Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.
      * @exception {DeveloperError} Cannot call copyFrom with a compressed texture pixel format.
      * @exception {DeveloperError} This texture was destroyed, i.e., destroy() was called.
      * @exception {DeveloperError} xOffset must be greater than or equal to zero.
@@ -524,27 +632,19 @@ define([
         if (this._pixelDatatype === PixelDatatype.FLOAT) {
             throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel data type is FLOAT.');
         }
+        if (this._pixelDatatype === PixelDatatype.HALF_FLOAT) {
+            throw new DeveloperError('Cannot call copyFromFramebuffer when the texture pixel data type is HALF_FLOAT.');
+        }
         if (PixelFormat.isCompressedFormat(this._pixelFormat)) {
             throw new DeveloperError('Cannot call copyFrom with a compressed texture pixel format.');
         }
-        if (xOffset < 0) {
-            throw new DeveloperError('xOffset must be greater than or equal to zero.');
-        }
-        if (yOffset < 0) {
-            throw new DeveloperError('yOffset must be greater than or equal to zero.');
-        }
-        if (framebufferXOffset < 0) {
-            throw new DeveloperError('framebufferXOffset must be greater than or equal to zero.');
-        }
-        if (framebufferYOffset < 0) {
-            throw new DeveloperError('framebufferYOffset must be greater than or equal to zero.');
-        }
-        if (xOffset + width > this._width) {
-            throw new DeveloperError('xOffset + width must be less than or equal to width.');
-        }
-        if (yOffset + height > this._height) {
-            throw new DeveloperError('yOffset + height must be less than or equal to height.');
-        }
+
+        Check.typeOf.number.greaterThanOrEquals('xOffset', xOffset, 0);
+        Check.typeOf.number.greaterThanOrEquals('yOffset', yOffset, 0);
+        Check.typeOf.number.greaterThanOrEquals('framebufferXOffset', framebufferXOffset, 0);
+        Check.typeOf.number.greaterThanOrEquals('framebufferYOffset', framebufferYOffset, 0);
+        Check.typeOf.number.lessThanOrEquals('xOffset + width', xOffset + width, this._width);
+        Check.typeOf.number.lessThanOrEquals('yOffset + height', yOffset + height, this._height);
         //>>includeEnd('debug');
 
         var gl = this._context._gl;
@@ -554,6 +654,7 @@ define([
         gl.bindTexture(target, this._texture);
         gl.copyTexSubImage2D(target, 0, xOffset, yOffset, framebufferXOffset, framebufferYOffset, width, height);
         gl.bindTexture(target, null);
+        this._initialized = true;
     };
 
     /**

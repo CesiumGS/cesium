@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -30,12 +32,24 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var redLine = viewer.entities.add({
-    name : 'Red line on the surface',
+    name : 'Red line on terrain',
     polyline : {
         positions : Cesium.Cartesian3.fromDegreesArray([-75, 35,
                                                         -125, 35]),
         width : 5,
-        material : Cesium.Color.RED
+        material : Cesium.Color.RED,
+        clampToGround : true
+    }
+});
+
+var greenRhumbLine = viewer.entities.add({
+    name : 'Green rhumb line',
+    polyline : {
+        positions : Cesium.Cartesian3.fromDegreesArray([-75, 35,
+                                                        -125, 35]),
+        width : 5,
+        arcType : Cesium.ArcType.RHUMB,
+        material : Cesium.Color.GREEN
     }
 });
 
@@ -47,7 +61,8 @@ var glowingLine = viewer.entities.add({
         width : 10,
         material : new Cesium.PolylineGlowMaterialProperty({
             glowPower : 0.2,
-            color : Cesium.Color.BLUE
+            taperPower : 0.5,
+            color : Cesium.Color.CORNFLOWERBLUE
         })
     }
 });
@@ -72,7 +87,7 @@ var purpleArrow = viewer.entities.add({
         positions : Cesium.Cartesian3.fromDegreesArrayHeights([-75, 43, 500000,
                                                                -125, 43, 500000]),
         width : 10,
-        followSurface : false,
+        arcType : Cesium.ArcType.NONE,
         material : new Cesium.PolylineArrowMaterialProperty(Cesium.Color.PURPLE)
     }
 });
@@ -91,12 +106,12 @@ var dashedLine = viewer.entities.add({
 
 viewer.zoomTo(viewer.entities);
 //Sandcastle_End
-Sandcastle.finishedLoading();
+    Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

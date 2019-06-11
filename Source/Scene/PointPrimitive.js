@@ -52,8 +52,9 @@ define([
      * @see PointPrimitiveCollection#add
      *
      * @internalConstructor
+     * @class
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
      */
     function PointPrimitive(options, pointPrimitiveCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -422,9 +423,9 @@ define([
         },
 
         /**
-         * Gets or sets the user-defined object returned when the point is picked.
+         * Gets or sets the user-defined value returned when the point is picked.
          * @memberof PointPrimitive.prototype
-         * @type {Object}
+         * @type {*}
          */
         id : {
             get : function() {
@@ -435,6 +436,15 @@ define([
                 if (defined(this._pickId)) {
                     this._pickId.object.id = value;
                 }
+            }
+        },
+
+        /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._pickId;
             }
         },
 

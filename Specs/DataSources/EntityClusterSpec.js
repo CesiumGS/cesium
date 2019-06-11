@@ -11,7 +11,6 @@ defineSuite([
         'DataSources/Entity',
         'Scene/SceneTransforms',
         'Specs/createCanvas',
-        'Specs/createGlobe',
         'Specs/createScene'
     ], function(
         EntityCluster,
@@ -26,12 +25,13 @@ defineSuite([
         Entity,
         SceneTransforms,
         createCanvas,
-        createGlobe,
         createScene) {
     'use strict';
 
     var scene;
     var cluster;
+    var depth;
+    var farDepth;
 
     beforeAll(function() {
         scene = createScene({
@@ -50,8 +50,11 @@ defineSuite([
                     tilesWaitingForChildren : 0
                 }
             },
+            terrainProviderChanged : new Event(),
+            imageryLayersUpdatedEvent : new Event(),
             beginFrame : function() {},
             update : function() {},
+            render : function() {},
             endFrame : function() {}
 
         };
@@ -82,6 +85,13 @@ defineSuite([
 
         scene.initializeFrame();
         scene.render();
+
+        if (scene.logarithmicDepthBuffer) {
+            depth = farDepth = 0.1;
+        } else {
+            depth = 0.5;
+            farDepth = 0.9;
+        }
     });
 
     afterAll(function() {
@@ -135,7 +145,7 @@ defineSuite([
 
         var context2D = canvas.getContext('2d');
         context2D.clearRect(0, 0, length, length);
-        context2D.fillStyle="#FF0000";
+        context2D.fillStyle='#FF0000';
         context2D.fillRect(0, 0, length, length);
 
         return canvas;
@@ -149,13 +159,13 @@ defineSuite([
         var billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth);
 
         entity = new Entity();
         billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth);
 
         var frameState = scene.frameState;
         cluster.update(frameState);
@@ -182,13 +192,13 @@ defineSuite([
         var billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth);
 
         entity = new Entity();
         billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth);
 
         cluster.enabled = true;
         cluster.update(scene.frameState);
@@ -205,13 +215,13 @@ defineSuite([
         var label = cluster.getLabel(entity);
         label.id = entity;
         label.text = 'a';
-        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth);
 
         entity = new Entity();
         label = cluster.getLabel(entity);
         label.id = entity;
         label.text = 'b';
-        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth);
 
         var frameState = scene.frameState;
         cluster.update(frameState);
@@ -238,13 +248,13 @@ defineSuite([
         var label = cluster.getLabel(entity);
         label.id = entity;
         label.text = 'a';
-        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth);
 
         entity = new Entity();
         label = cluster.getLabel(entity);
         label.id = entity;
         label.text = 'b';
-        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+        label.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth);
 
         cluster.enabled = true;
         cluster.update(scene.frameState);
@@ -261,13 +271,13 @@ defineSuite([
         var point = cluster.getPoint(entity);
         point.id = entity;
         point.pixelSize = 1;
-        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth);
 
         entity = new Entity();
         point = cluster.getPoint(entity);
         point.id = entity;
         point.pixelSize = 1;
-        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth);
 
         var frameState = scene.frameState;
         cluster.update(frameState);
@@ -294,13 +304,13 @@ defineSuite([
         var point = cluster.getPoint(entity);
         point.id = entity;
         point.pixelSize = 1;
-        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth);
 
         entity = new Entity();
         point = cluster.getPoint(entity);
         point.id = entity;
         point.pixelSize = 1;
-        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth);
 
         cluster.enabled = true;
         cluster.update(scene.frameState);
@@ -317,13 +327,13 @@ defineSuite([
         var point = cluster.getPoint(entity);
         point.id = entity;
         point.pixelSize = 1;
-        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth);
 
         entity = new Entity();
         point = cluster.getPoint(entity);
         point.id = entity;
         point.pixelSize = 1;
-        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth);
 
         var frameState = scene.frameState;
         cluster.update(frameState);
@@ -403,7 +413,6 @@ defineSuite([
         expect(cluster._pointCollection).toBeDefined();
     });
 
-
     it('does not remove entity collection indices when at least one of billboard, label and point remain', function() {
         cluster = new EntityCluster();
         cluster._initialize(scene);
@@ -427,13 +436,13 @@ defineSuite([
         var billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth);
 
         entity = new Entity();
         billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth);
 
         var frameState = scene.frameState;
         cluster.update(frameState);
@@ -460,25 +469,25 @@ defineSuite([
         var billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.5);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth);
 
         entity = new Entity();
         billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, 0), 0.5);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, 0), depth);
 
         entity = new Entity();
         billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0, scene.canvas.clientHeight), 0.5);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0, scene.canvas.clientHeight), depth);
 
         entity = new Entity();
         billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.5);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth);
 
         var frameState = scene.frameState;
         cluster.update(frameState);
@@ -505,13 +514,13 @@ defineSuite([
         var billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.9);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), farDepth);
 
         entity = new Entity();
         billboard = cluster.getBillboard(entity);
         billboard.id = entity;
         billboard.image = createBillboardImage();
-        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.9);
+        billboard.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), farDepth);
 
         var frameState = scene.frameState;
         cluster.update(frameState);
@@ -549,13 +558,13 @@ defineSuite([
         var point = cluster.getPoint(entity);
         point.id = entity;
         point.pixelSize = 1;
-        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.9);
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), farDepth);
 
         entity = new Entity();
         point = cluster.getPoint(entity);
         point.id = entity;
         point.pixelSize = 1;
-        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.9);
+        point.position = SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), farDepth);
 
         var frameState = scene.frameState;
         cluster.update(frameState);
@@ -586,7 +595,7 @@ defineSuite([
         var entityCollection = dataSource.entities;
 
         entityCollection.add({
-            position : SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), 0.9),
+            position : SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(0.0, 0.0), depth),
             billboard : {
                 image : createBillboardImage()
             },
@@ -596,7 +605,7 @@ defineSuite([
         });
 
         entityCollection.add({
-            position : SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), 0.9),
+            position : SceneTransforms.drawingBufferToWgs84Coordinates(scene, new Cartesian2(scene.canvas.clientWidth, scene.canvas.clientHeight), depth),
             billboard : {
                 image : createBillboardImage()
             },

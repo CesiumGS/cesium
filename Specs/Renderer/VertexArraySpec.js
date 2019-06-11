@@ -510,7 +510,7 @@ defineSuite([
             attributes : [{
                 vertexBuffer : Buffer.createVertexBuffer({
                     context : context,
-                    sizeInBytes : new Float32Array([0, 0, 0, 1]),
+                    sizeInBytes : new Float32Array([0, 0, 0, 1]).byteLength,
                     usage : BufferUsage.STATIC_DRAW
                 }),
                 componentsPerAttribute : 4

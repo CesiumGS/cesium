@@ -1,10 +1,8 @@
 define([
         './Check',
-        './defined',
         './RuntimeError'
     ], function(
         Check,
-        defined,
         RuntimeError) {
     'use strict';
 

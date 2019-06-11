@@ -72,7 +72,6 @@ define([
 
     var timelineMonthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
-
     /**
      * The Timeline is a widget for displaying and controlling the current scene time.
      * @alias Timeline

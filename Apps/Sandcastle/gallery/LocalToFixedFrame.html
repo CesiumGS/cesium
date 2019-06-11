@@ -98,7 +98,7 @@ var localFrames = [
         pos : Cesium.Cartesian3.fromDegrees(-123.075, 44.040000, 5500.0),
         converter : Cesium.Transforms.localFrameToFixedFrameGenerator('down', 'east'),
         comments : 'Down East South\nlocal Frame'
-    },
+    }
 ];
 
 var primitives = [];
@@ -142,7 +142,7 @@ for (var i = 0; i < localFrames.length; i++) {
 primitives[0].primitive.readyPromise.then(function(model) {
     // Play and loop all animations at half-speed
     model.activeAnimations.addAll({
-        speedup : 0.5,
+        multiplier : 0.5,
         loop : Cesium.ModelAnimationLoop.REPEAT
     });
 
@@ -212,11 +212,7 @@ var headingSpan = document.getElementById('heading');
 var pitchSpan = document.getElementById('pitch');
 var rollSpan = document.getElementById('roll');
 
-viewer.scene.preRender.addEventListener(function(scene, time) {
-    headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(1);
-    pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
-    rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
-
+viewer.scene.preUpdate.addEventListener(function(scene, time) {
     for (var i = 0; i < primitives.length; i++) {
         var primitive = primitives[i].primitive;
         var converter = primitives[i].converter;
@@ -224,13 +220,19 @@ viewer.scene.preRender.addEventListener(function(scene, time) {
         Cesium.Transforms.headingPitchRollToFixedFrame(position, hpRoll, Cesium.Ellipsoid.WGS84, converter, primitive.modelMatrix);
     }
 });
+
+viewer.scene.preRender.addEventListener(function(scene, time) {
+    headingSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.heading).toFixed(1);
+    pitchSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.pitch).toFixed(1);
+    rollSpan.innerHTML = Cesium.Math.toDegrees(hpRoll.roll).toFixed(1);
+});
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

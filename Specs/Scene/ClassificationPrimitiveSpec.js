@@ -5,20 +5,22 @@ defineSuite([
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/destroyObject',
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/Ellipsoid',
         'Core/GeometryInstance',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/Matrix4',
         'Core/PolygonGeometry',
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
         'Core/Transforms',
         'Renderer/Pass',
+        'Renderer/RenderState',
+        'Scene/ClassificationType',
+        'Scene/InvertClassification',
+        'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
+        'Scene/ShadowVolumeAppearance',
+        'Scene/StencilConstants',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
@@ -28,20 +30,22 @@ defineSuite([
         Color,
         ColorGeometryInstanceAttribute,
         destroyObject,
-        DistanceDisplayConditionGeometryInstanceAttribute,
         Ellipsoid,
         GeometryInstance,
-        HeadingPitchRange,
-        CesiumMath,
-        Matrix4,
         PolygonGeometry,
         Rectangle,
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
         Transforms,
         Pass,
+        RenderState,
+        ClassificationType,
+        InvertClassification,
+        MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowVolumeAppearance,
+        StencilConstants,
         createScene,
         pollToPromise) {
     'use strict';
@@ -56,53 +60,28 @@ defineSuite([
 
     var boxInstance;
     var primitive;
-    var depthPrimitive;
+    var globePrimitive;
+    var tilesetPrimitive;
+    var reusableGlobePrimitive;
+    var reusableTilesetPrimitive;
 
-    beforeAll(function() {
-        scene = createScene();
-        scene.fxaa = false;
-
-        ellipsoid = Ellipsoid.WGS84;
-    });
-
-    afterAll(function() {
-        scene.destroyForSpecs();
-    });
-
-    function MockGlobePrimitive(primitive) {
-        this._primitive = primitive;
-    }
-    MockGlobePrimitive.prototype.update = function(frameState) {
-        var commandList = frameState.commandList;
-        var startLength = commandList.length;
-        this._primitive.update(frameState);
-
-        for (var i = startLength; i < commandList.length; ++i) {
-            var command = commandList[i];
-            command.pass = Pass.GLOBE;
+    function createPrimitive(rectangle, pass) {
+        var renderState;
+        if (pass === Pass.CESIUM_3D_TILE) {
+            renderState = RenderState.fromCache({
+                stencilTest : StencilConstants.setCesium3DTileBit(),
+                stencilMask : StencilConstants.CESIUM_3D_TILE_MASK,
+                depthTest : {
+                    enabled : true
+                }
+            });
         }
-    };
-
-    MockGlobePrimitive.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    MockGlobePrimitive.prototype.destroy = function() {
-        this._primitive.destroy();
-        return destroyObject(this);
-    };
-
-    beforeEach(function() {
-        scene.morphTo3D(0);
-
-        rectangle = Rectangle.fromDegrees(-80.0, 20.0, -70.0, 30.0);
-
         var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 0.0, 1.0, 1.0));
         depthColor = depthColorAttribute.value;
-        var primitive = new Primitive({
+        return new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new RectangleGeometry({
-                    ellipsoid : ellipsoid,
+                    ellipsoid : Ellipsoid.WGS84,
                     rectangle : rectangle
                 }),
                 id : 'depth rectangle',
@@ -112,13 +91,66 @@ defineSuite([
             }),
             appearance : new PerInstanceColorAppearance({
                 translucent : false,
-                flat : true
+                flat : true,
+                renderState : renderState
             }),
             asynchronous : false
         });
+    }
 
-        // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
-        depthPrimitive = new MockGlobePrimitive(primitive);
+    function MockPrimitive(primitive, pass) {
+        this._primitive = primitive;
+        this._pass = pass;
+        this.show = true;
+    }
+
+    MockPrimitive.prototype.update = function(frameState) {
+        if (!this.show) {
+            return;
+        }
+
+        var commandList = frameState.commandList;
+        var startLength = commandList.length;
+        this._primitive.update(frameState);
+
+        for (var i = startLength; i < commandList.length; ++i) {
+            var command = commandList[i];
+            command.pass = this._pass;
+        }
+    };
+
+    MockPrimitive.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    MockPrimitive.prototype.destroy = function() {
+        return destroyObject(this);
+    };
+
+    beforeAll(function() {
+        scene = createScene();
+        scene.postProcessStages.fxaa.enabled = false;
+
+        ellipsoid = Ellipsoid.WGS84;
+
+        rectangle = Rectangle.fromDegrees(-75.0, 25.0, -70.0, 30.0);
+        reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
+        reusableTilesetPrimitive = createPrimitive(rectangle, Pass.CESIUM_3D_TILE);
+    });
+
+    afterAll(function() {
+        reusableGlobePrimitive.destroy();
+        reusableTilesetPrimitive.destroy();
+        scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        scene.morphTo3D(0);
+        scene.render(); // clear any afterRender commands
+
+        // wrap rectangle primitive so it gets executed during the globe pass and 3D Tiles pass to lay down depth
+        globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
+        tilesetPrimitive = new MockPrimitive(reusableTilesetPrimitive, Pass.CESIUM_3D_TILE);
 
         var center = Rectangle.center(rectangle);
         var origin = ellipsoid.cartographicToCartesian(center);
@@ -141,9 +173,11 @@ defineSuite([
     });
 
     afterEach(function() {
+        scene.primitives.removeAll();
         scene.groundPrimitives.removeAll();
         primitive = primitive && !primitive.isDestroyed() && primitive.destroy();
-        depthPrimitive = depthPrimitive && !depthPrimitive.isDestroyed() && depthPrimitive.destroy();
+        globePrimitive = globePrimitive && !globePrimitive.isDestroyed() && globePrimitive.destroy();
+        tilesetPrimitive = tilesetPrimitive && !tilesetPrimitive.isDestroyed() && tilesetPrimitive.destroy();
     });
 
     it('default constructs', function() {
@@ -286,6 +320,29 @@ defineSuite([
         expect(frameState.commandList.length).toEqual(0);
     });
 
+    it('becomes ready when show is false', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = scene.groundPrimitives.add(new ClassificationPrimitive({
+            geometryInstances : boxInstance
+        }));
+        primitive.show = false;
+
+        var ready = false;
+        primitive.readyPromise.then(function() {
+            ready = true;
+        });
+
+        return pollToPromise(function() {
+            scene.render();
+            return ready;
+        }).then(function() {
+            expect(ready).toEqual(true);
+        });
+    });
+
     it('does not render other than for the color or pick pass', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
@@ -304,17 +361,53 @@ defineSuite([
         expect(frameState.commandList.length).toEqual(0);
     });
 
-    function verifyClassificationPrimitiveRender(primitive, color) {
-        scene.camera.setView({ destination : rectangle });
+    function expectRender(color) {
+        expect(scene).toRender(color);
+    }
 
-        scene.groundPrimitives.add(depthPrimitive);
+    function expectRenderBlank() {
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);
             expect(rgba[0]).toEqual(0);
         });
+    }
+
+    function verifyClassificationPrimitiveRender(primitive, color) {
+        scene.camera.setView({ destination : rectangle });
+
+        scene.primitives.add(globePrimitive);
+        scene.primitives.add(tilesetPrimitive);
+
+        expectRenderBlank();
 
         scene.groundPrimitives.add(primitive);
-        expect(scene).toRender(color);
+
+        primitive.classificationType = ClassificationType.BOTH;
+        globePrimitive.show = false;
+        tilesetPrimitive.show = true;
+        expectRender(color);
+        globePrimitive.show = true;
+        tilesetPrimitive.show = false;
+        expectRender(color);
+
+        primitive.classificationType = ClassificationType.CESIUM_3D_TILE;
+        globePrimitive.show = false;
+        tilesetPrimitive.show = true;
+        expectRender(color);
+        globePrimitive.show = true;
+        tilesetPrimitive.show = false;
+        expectRenderBlank();
+
+        primitive.classificationType = ClassificationType.TERRAIN;
+        globePrimitive.show = false;
+        tilesetPrimitive.show = true;
+        expectRenderBlank();
+        globePrimitive.show = true;
+        tilesetPrimitive.show = false;
+        expectRender(color);
+
+        globePrimitive.show = true;
+        tilesetPrimitive.show = true;
     }
 
     it('renders in 3D', function() {
@@ -330,7 +423,9 @@ defineSuite([
         verifyClassificationPrimitiveRender(primitive, boxColor);
     });
 
-    it('renders in Columbus view when scene3DOnly is false', function() {
+    // Rendering in 2D/CV is broken:
+    // https://github.com/AnalyticalGraphicsInc/cesium/issues/6308
+    xit('renders in Columbus view when scene3DOnly is false', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
@@ -344,7 +439,7 @@ defineSuite([
         verifyClassificationPrimitiveRender(primitive, boxColor);
     });
 
-    it('renders in 2D when scene3DOnly is false', function() {
+    xit('renders in 2D when scene3DOnly is false', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
@@ -414,6 +509,80 @@ defineSuite([
             asynchronous : false
         });
         verifyClassificationPrimitiveRender(primitive, boxColorAttribute.value);
+    });
+
+    it('renders with invert classification and an opaque color', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        scene.invertClassification = true;
+        scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 1.0);
+
+        boxInstance.attributes.show = new ShowGeometryInstanceAttribute(true);
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
+            asynchronous : false
+        });
+
+        scene.camera.setView({ destination : rectangle });
+
+        var invertedColor = new Array(4);
+        invertedColor[0] = Color.floatToByte(Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red);
+        invertedColor[1] = Color.floatToByte(Color.byteToFloat(depthColor[1]) * scene.invertClassificationColor.green);
+        invertedColor[2] = Color.floatToByte(Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue);
+        invertedColor[3] = 255;
+
+        scene.primitives.add(tilesetPrimitive);
+        expect(scene).toRender(invertedColor);
+
+        scene.groundPrimitives.add(primitive);
+        expect(scene).toRender(boxColor);
+
+        primitive.getGeometryInstanceAttributes('box').show = [0];
+        expect(scene).toRender(depthColor);
+
+        scene.invertClassification = false;
+    });
+
+    it('renders with invert classification and a translucent color', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        if (!InvertClassification.isTranslucencySupported(scene.context)) {
+            return;
+        }
+
+        scene.invertClassification = true;
+        scene.invertClassificationColor = new Color(0.25, 0.25, 0.25, 0.25);
+
+        boxInstance.attributes.show = new ShowGeometryInstanceAttribute(true);
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
+            asynchronous : false
+        });
+
+        scene.camera.setView({ destination : rectangle });
+
+        var invertedColor = new Array(4);
+        invertedColor[0] = Color.floatToByte(Color.byteToFloat(depthColor[0]) * scene.invertClassificationColor.red  * scene.invertClassificationColor.alpha);
+        invertedColor[1] = Color.floatToByte(Color.byteToFloat(depthColor[1]) * scene.invertClassificationColor.green * scene.invertClassificationColor.alpha);
+        invertedColor[2] = Color.floatToByte(Color.byteToFloat(depthColor[2]) * scene.invertClassificationColor.blue * scene.invertClassificationColor.alpha);
+        invertedColor[3] = 255;
+
+        scene.primitives.add(tilesetPrimitive);
+        expect(scene).toRender(invertedColor);
+
+        scene.groundPrimitives.add(primitive);
+        expect(scene).toRender(boxColor);
+
+        primitive.getGeometryInstanceAttributes('box').show = [0];
+        expect(scene).toRender(depthColor);
+
+        scene.invertClassification = false;
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
@@ -486,6 +655,10 @@ defineSuite([
 
         verifyClassificationPrimitiveRender(primitive, boxColor);
 
+        scene.primitives.destroyPrimitives = false;
+        scene.primitives.removeAll();
+        scene.primitives.destroyPrimitives = true;
+
         scene.groundPrimitives.destroyPrimitives = false;
         scene.groundPrimitives.removeAll();
         scene.groundPrimitives.destroyPrimitives = true;
@@ -511,6 +684,10 @@ defineSuite([
         });
 
         verifyClassificationPrimitiveRender(primitive, boxColor);
+
+        scene.primitives.destroyPrimitives = false;
+        scene.primitives.removeAll();
+        scene.primitives.destroyPrimitives = true;
 
         scene.groundPrimitives.destroyPrimitives = false;
         scene.groundPrimitives.removeAll();
@@ -573,6 +750,26 @@ defineSuite([
         });
     });
 
+    it('drill picking', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : boxInstance,
+            asynchronous : false
+        });
+
+        verifyClassificationPrimitiveRender(primitive, boxColor);
+
+        expect(scene).toDrillPickAndCall(function(pickedObjects) {
+            expect(pickedObjects.length).toEqual(3);
+            expect(pickedObjects[0].primitive).toEqual(primitive);
+            expect(pickedObjects[1].primitive).toEqual(globePrimitive._primitive);
+            expect(pickedObjects[2].primitive).toEqual(tilesetPrimitive._primitive);
+        });
+    });
+
     it('does not pick when allowPicking is false', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
@@ -609,12 +806,11 @@ defineSuite([
         var frameState = scene.frameState;
         frameState.afterRender.length = 0;
         return pollToPromise(function() {
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
-                return true;
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
             }
             primitive.update(frameState);
-            return false;
+            return primitive.ready;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
                 expect(arg).toBe(primitive);
@@ -644,8 +840,8 @@ defineSuite([
         var frameState = scene.frameState;
         frameState.afterRender.length = 0;
         return pollToPromise(function() {
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
                 return true;
             }
             primitive.update(frameState);
@@ -658,7 +854,7 @@ defineSuite([
         });
     });
 
-    it('update throws when batched instance colors are different', function() {
+    it('update throws when batched instance colors are different and no culling attributes are provided', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
         }
@@ -777,6 +973,96 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('update throws when no batched instance colors are given for a PerInstanceColorAppearance', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        var neCarto = Rectangle.northeast(rectangle);
+        var nwCarto = Rectangle.northwest(rectangle);
+
+        var ne = ellipsoid.cartographicToCartesian(neCarto);
+        var nw = ellipsoid.cartographicToCartesian(nwCarto);
+
+        var direction = Cartesian3.subtract(ne, nw, new Cartesian3());
+        var distance = Cartesian3.magnitude(direction) * 0.25;
+        Cartesian3.normalize(direction, direction);
+        Cartesian3.multiplyByScalar(direction, distance, direction);
+
+        var center = Rectangle.center(rectangle);
+        var origin = ellipsoid.cartographicToCartesian(center);
+
+        var origin1 = Cartesian3.add(origin, direction, new Cartesian3());
+        var modelMatrix = Transforms.eastNorthUpToFixedFrame(origin1);
+
+        var dimensions = new Cartesian3(500000.0, 1000000.0, 1000000.0);
+
+        var boxInstance1 = new GeometryInstance({
+            geometry : BoxGeometry.fromDimensions({
+                dimensions : dimensions
+            }),
+            modelMatrix : modelMatrix,
+            id : 'box1'
+        });
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : [boxInstance1],
+            asynchronous : false,
+            appearance : new PerInstanceColorAppearance()
+        });
+
+        var boxColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(0.0, 1.0, 1.0, 1.0));
+
+        expect(function() {
+            verifyClassificationPrimitiveRender(primitive, boxColorAttribute.value);
+        }).toThrowDeveloperError();
+    });
+
+    it('update throws when the given Appearance is incompatible with the geometry instance attributes', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : [boxInstance],
+            asynchronous : false,
+            appearance : new MaterialAppearance()
+        });
+
+        expect(function() {
+            verifyClassificationPrimitiveRender(primitive, [255, 255, 255, 255]);
+        }).toThrowDeveloperError();
+    });
+
+    it('update throws when an incompatible Appearance is set', function() {
+        if (!ClassificationPrimitive.isSupported(scene)) {
+            return;
+        }
+
+        primitive = new ClassificationPrimitive({
+            geometryInstances : [boxInstance],
+            asynchronous : false,
+            appearance : new PerInstanceColorAppearance()
+        });
+
+        scene.camera.setView({ destination : rectangle });
+        scene.primitives.add(globePrimitive);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba).not.toEqual([0, 0, 0, 255]);
+            expect(rgba[0]).toEqual(0);
+        });
+
+        scene.groundPrimitives.add(primitive);
+        expect(scene).toRender([255, 255, 0, 255]);
+
+        // become incompatible
+        primitive.appearance = new MaterialAppearance();
+
+        expect(function() {
+            expect(scene).toRender([255, 255, 255, 255]);
+        }).toThrowDeveloperError();
+    });
+
     it('setting per instance attribute throws when value is undefined', function() {
         if (!ClassificationPrimitive.isSupported(scene)) {
             return;
@@ -811,8 +1097,8 @@ defineSuite([
 
         return pollToPromise(function() {
             primitive.update(frameState);
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
             }
             return primitive.ready;
         }).then(function() {
@@ -886,8 +1172,8 @@ defineSuite([
 
         return pollToPromise(function() {
             primitive.update(frameState);
-            if (frameState.afterRender.length > 0) {
-                frameState.afterRender[0]();
+            for (var i = 0; i < frameState.afterRender.length; ++i) {
+                frameState.afterRender[i]();
             }
             return primitive.ready;
         }).then(function() {
@@ -906,4 +1192,5 @@ defineSuite([
         primitive.destroy();
         expect(primitive.isDestroyed()).toEqual(true);
     });
+
 }, 'WebGL');

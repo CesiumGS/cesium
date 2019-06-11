@@ -8,13 +8,9 @@ define([
         '../Core/Event',
         '../Core/freezeObject',
         '../Core/isArray',
-        '../Core/objectToQuery',
-        '../Core/queryToObject',
         '../Core/Rectangle',
-        '../Core/Request',
-        '../Core/RequestType',
+        '../Core/Resource',
         '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/Uri',
         '../ThirdParty/when',
         './ImageryProvider',
         './TimeDynamicImagery'
@@ -28,17 +24,19 @@ define([
         Event,
         freezeObject,
         isArray,
-        objectToQuery,
-        queryToObject,
         Rectangle,
-        Request,
-        RequestType,
+        Resource,
         WebMercatorTilingScheme,
-        Uri,
         when,
         ImageryProvider,
         TimeDynamicImagery) {
     'use strict';
+
+    var defaultParameters = freezeObject({
+        service : 'WMTS',
+        version : '1.0.0',
+        request : 'GetTile'
+    });
 
     /**
      * Provides tiled imagery served by {@link http://www.opengeospatial.org/standards/wmts|WMTS 1.0.0} compliant servers.
@@ -48,19 +46,18 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server. The &#123;s&#125; keyword may be used to specify subdomains.
+     * @param {Resource|String} options.url The base URL for the WMTS GetTile operation (for KVP-encoded requests) or the tile-URL template (for RESTful requests). The tile-URL template should contain the following variables: &#123;style&#125;, &#123;TileMatrixSet&#125;, &#123;TileMatrix&#125;, &#123;TileRow&#125;, &#123;TileCol&#125;. The first two are optional if actual values are hardcoded or not required by the server. The &#123;s&#125; keyword may be used to specify subdomains.
      * @param {String} [options.format='image/jpeg'] The MIME type for images to retrieve from the server.
      * @param {String} options.layer The layer name for WMTS requests.
      * @param {String} options.style The style name for WMTS requests.
      * @param {String} options.tileMatrixSetID The identifier of the TileMatrixSet to use for WMTS requests.
      * @param {Array} [options.tileMatrixLabels] A list of identifiers in the TileMatrix to use for WMTS requests, one per TileMatrix level.
      * @param {Clock} [options.clock] A Clock instance that is used when determining the value for the time dimension. Required when options.times is specified.
-     * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its data property being an object containing time dynamic dimension and their values.
+     * @param {TimeIntervalCollection} [options.times] TimeIntervalCollection with its <code>data</code> property being an object containing time dynamic dimension and their values.
      * @param {Object} [options.dimensions] A object containing static dimensions and their values.
      * @param {Number} [options.tileWidth=256] The tile width in pixels.
      * @param {Number} [options.tileHeight=256] The tile height in pixels.
      * @param {TilingScheme} [options.tilingScheme] The tiling scheme corresponding to the organization of the tiles in the TileMatrixSet.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL.
      * @param {Rectangle} [options.rectangle=Rectangle.MAX_VALUE] The rectangle covered by the layer.
      * @param {Number} [options.minimumLevel=0] The minimum level-of-detail supported by the imagery provider.
      * @param {Number} [options.maximumLevel] The maximum level-of-detail supported by the imagery provider, or undefined if there is no limit.
@@ -70,7 +67,7 @@ define([
      *                          If this parameter is a single string, each character in the string is a subdomain.  If it is
      *                          an array, each element in the array is a subdomain.
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
      *
      * @example
      * // Example 1. USGS shaded relief tiles (KVP)
@@ -152,13 +149,31 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = options.url;
+        var resource = Resource.createIfNeeded(options.url);
+
+        var style = options.style;
+        var tileMatrixSetID = options.tileMatrixSetID;
+        var url = resource.url;
+        if (url.indexOf('{') >= 0) {
+            var templateValues = {
+                style : style,
+                Style : style,
+                TileMatrixSet : tileMatrixSetID
+            };
+
+            resource.setTemplateValues(templateValues);
+            this._useKvp = false;
+        } else {
+            resource.setQueryParameters(defaultParameters);
+            this._useKvp = true;
+        }
+
+        this._resource = resource;
         this._layer = options.layer;
-        this._style = options.style;
-        this._tileMatrixSetID = options.tileMatrixSetID;
+        this._style = style;
+        this._tileMatrixSetID = tileMatrixSetID;
         this._tileMatrixLabels = options.tileMatrixLabels;
         this._format = defaultValue(options.format, 'image/jpeg');
-        this._proxy = options.proxy;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
 
         this._tilingScheme = defined(options.tilingScheme) ? options.tilingScheme : new WebMercatorTilingScheme({ellipsoid : options.ellipsoid});
@@ -217,90 +232,59 @@ define([
         }
     }
 
-    var defaultParameters = freezeObject({
-        service : 'WMTS',
-        version : '1.0.0',
-        request : 'GetTile'
-    });
-
     function requestImage(imageryProvider, col, row, level, request, interval) {
         var labels = imageryProvider._tileMatrixLabels;
         var tileMatrix = defined(labels) ? labels[level] : level.toString();
         var subdomains = imageryProvider._subdomains;
-        var url;
-        var key;
         var staticDimensions = imageryProvider._dimensions;
         var dynamicIntervalData = defined(interval) ? interval.data : undefined;
 
-        if (imageryProvider._url.indexOf('{') >= 0) {
-            // resolve tile-URL template
-            url = imageryProvider._url
-                .replace('{style}', imageryProvider._style)
-                .replace('{Style}', imageryProvider._style)
-                .replace('{TileMatrixSet}', imageryProvider._tileMatrixSetID)
-                .replace('{TileMatrix}', tileMatrix)
-                .replace('{TileRow}', row.toString())
-                .replace('{TileCol}', col.toString())
-                .replace('{s}', subdomains[(col + row + level) % subdomains.length]);
+        var resource;
+        if (!imageryProvider._useKvp) {
+            var templateValues = {
+                TileMatrix: tileMatrix,
+                TileRow: row.toString(),
+                TileCol: col.toString(),
+                s: subdomains[(col + row + level) % subdomains.length]
+            };
+
+            resource = imageryProvider._resource.getDerivedResource({
+                request: request
+            });
+            resource.setTemplateValues(templateValues);
 
             if (defined(staticDimensions)) {
-                for (key in staticDimensions) {
-                    if (staticDimensions.hasOwnProperty(key)) {
-                        url = url.replace('{' + key + '}', staticDimensions[key]);
-                    }
-                }
+                resource.setTemplateValues(staticDimensions);
             }
 
             if (defined(dynamicIntervalData)) {
-                for (key in dynamicIntervalData) {
-                    if (dynamicIntervalData.hasOwnProperty(key)) {
-                        url = url.replace('{' + key + '}', dynamicIntervalData[key]);
-                    }
-                }
+                resource.setTemplateValues(dynamicIntervalData);
             }
-        }
-        else {
+        } else {
             // build KVP request
-            var uri = new Uri(imageryProvider._url);
-            var queryOptions = queryToObject(defaultValue(uri.query, ''));
-
-            queryOptions = combine(defaultParameters, queryOptions);
-
-            queryOptions.tilematrix = tileMatrix;
-            queryOptions.layer = imageryProvider._layer;
-            queryOptions.style = imageryProvider._style;
-            queryOptions.tilerow = row;
-            queryOptions.tilecol = col;
-            queryOptions.tilematrixset = imageryProvider._tileMatrixSetID;
-            queryOptions.format = imageryProvider._format;
+            var query = {};
+            query.tilematrix = tileMatrix;
+            query.layer = imageryProvider._layer;
+            query.style = imageryProvider._style;
+            query.tilerow = row;
+            query.tilecol = col;
+            query.tilematrixset = imageryProvider._tileMatrixSetID;
+            query.format = imageryProvider._format;
 
             if (defined(staticDimensions)) {
-                for (key in staticDimensions) {
-                    if (staticDimensions.hasOwnProperty(key)) {
-                        queryOptions[key] = staticDimensions[key];
-                    }
-                }
+                query = combine(query, staticDimensions);
             }
 
             if (defined(dynamicIntervalData)) {
-                for (key in dynamicIntervalData) {
-                    if (dynamicIntervalData.hasOwnProperty(key)) {
-                        queryOptions[key] = dynamicIntervalData[key];
-                    }
-                }
+                query = combine(query, dynamicIntervalData);
             }
-
-            uri.query = objectToQuery(queryOptions);
-
-            url = uri.toString();
+            resource = imageryProvider._resource.getDerivedResource({
+                queryParameters: query,
+                request: request
+            });
         }
 
-        var proxy = imageryProvider._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        return ImageryProvider.loadImage(imageryProvider, url, request);
+        return ImageryProvider.loadImage(imageryProvider, resource);
     }
 
     defineProperties(WebMapTileServiceImageryProvider.prototype, {
@@ -312,7 +296,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._resource.url;
             }
         },
 
@@ -324,7 +308,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._proxy;
+                return this._resource.proxy;
             }
         },
 

@@ -314,7 +314,6 @@ entities.add({
     }
 });
 
-
 for (i = 0; i < 5; ++i) {
     height = 200000.0 * i;
 
@@ -491,10 +490,10 @@ viewer.zoomTo(viewer.entities);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

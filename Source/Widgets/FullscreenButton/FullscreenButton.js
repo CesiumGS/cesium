@@ -39,7 +39,6 @@ define([
         }
         //>>includeEnd('debug');
 
-
         container = getElement(container);
 
         var viewModel = new FullscreenButtonViewModel(fullscreenElement);

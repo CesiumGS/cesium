@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Add bloom effect to the scene.">
+    <meta name="cesium-sandcastle-labels" content="Showcases, Post Processing">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <table><tbody>
+        <tr>
+            <td>Bloom</td>
+            <td><input type="checkbox" data-bind="checked: show"></td>
+        </tr>
+        <tr>
+            <td>Glow only</td>
+            <td><input type="checkbox" data-bind="checked: glowOnly"></td>
+        </tr>
+        <tr>
+            <td>Contrast</td>
+            <td><input type="range" min="-255.0" max="255.0" step="0.01" data-bind="value: contrast, valueUpdate: 'input'"></td>
+        </tr>
+        <tr>
+            <td>Brightness</td>
+            <td><input type="range" min="-1.0" max="1.0" step="0.01" data-bind="value: brightness, valueUpdate: 'input'"></td>
+        </tr>
+        <tr>
+            <td>Delta</td>
+            <td><input type="range" min="1" max="5" step="0.01" data-bind="value: delta, valueUpdate: 'input'"/></td>
+        </tr>
+        <tr>
+            <td>Sigma</td>
+            <td><input type="range" min="1" max="10" step="0.01" data-bind="value: sigma, valueUpdate: 'input'"/></td>
+        </tr>
+        <tr>
+            <td>Step Size</td>
+            <td><input type="range" min="0" max="7" step="0.01" data-bind="value: stepSize, valueUpdate: 'input'"/></td>
+        </tr>
+    </tbody></table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+function createModel(url, x, y, height) {
+    var position = Cesium.Cartesian3.fromDegrees(x, y, height);
+    viewer.entities.add({
+        name : url,
+        position : position,
+        model : {
+            uri : url
+        }
+    });
+}
+
+var numberOfBalloons = 13;
+var lonIncrement = 0.00025;
+var initialLon = -122.99875;
+var lat = 44.0503706;
+var height = 100.0;
+
+var url = '../../SampleData/models/CesiumBalloon/CesiumBalloon.glb';
+
+for (var i = 0; i < numberOfBalloons; ++i) {
+    var lon = initialLon + i * lonIncrement;
+    createModel(url, lon, lat, height);
+}
+
+var viewModel = {
+    show : true,
+    glowOnly : false,
+    contrast : 128,
+    brightness : -0.3,
+    delta : 1.0,
+    sigma : 3.78,
+    stepSize : 5.0
+};
+
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+for (var name in viewModel) {
+    if (viewModel.hasOwnProperty(name)) {
+        Cesium.knockout.getObservable(viewModel, name).subscribe(updatePostProcess);
+    }
+}
+
+function updatePostProcess() {
+    var bloom = viewer.scene.postProcessStages.bloom;
+    bloom.enabled = Boolean(viewModel.show);
+    bloom.uniforms.glowOnly = Boolean(viewModel.glowOnly);
+    bloom.uniforms.contrast = Number(viewModel.contrast);
+    bloom.uniforms.brightness = Number(viewModel.brightness);
+    bloom.uniforms.delta = Number(viewModel.delta);
+    bloom.uniforms.sigma = Number(viewModel.sigma);
+    bloom.uniforms.stepSize = Number(viewModel.stepSize);
+}
+updatePostProcess();
+
+var target = Cesium.Cartesian3.fromDegrees(initialLon + lonIncrement, lat, height + 7.5);
+var offset = new Cesium.Cartesian3(-37.048378684557974, -24.852967044804245, 4.352023653686047);
+viewer.scene.camera.lookAt(target, offset);
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    startup(Cesium);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
+}
+</script>
+</body>
+</html>

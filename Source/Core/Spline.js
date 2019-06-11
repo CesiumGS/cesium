@@ -1,11 +1,15 @@
 define([
+        './Check',
         './defaultValue',
         './defined',
-        './DeveloperError'
+        './DeveloperError',
+        './Math'
     ], function(
+        Check,
         defaultValue,
         defined,
-        DeveloperError) {
+        DeveloperError,
+        CesiumMath) {
     'use strict';
 
     /**
@@ -43,8 +47,8 @@ define([
      * @function
      *
      * @param {Number} time The time at which to evaluate the curve.
-     * @param {Cartesian3|Quaternion} [result] The object onto which to store the result.
-     * @returns {Cartesian3|Quaternion} The modified result parameter or a new instance of the point on the curve at the given time.
+     * @param {Cartesian3|Quaternion|Number[]} [result] The object onto which to store the result.
+     * @returns {Cartesian3|Quaternion|Number[]} The modified result parameter or a new instance of the point on the curve at the given time.
      *
      * @exception {DeveloperError} time must be in the range <code>[t<sub>0</sub>, t<sub>n</sub>]</code>, where <code>t<sub>0</sub></code>
      *                             is the first element in the array <code>times</code> and <code>t<sub>n</sub></code> is the last element
@@ -115,6 +119,50 @@ define([
         }
 
         return i;
+    };
+
+    /**
+     * Wraps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, wrapped around the animation period.
+     */
+    Spline.prototype.wrapTime = function(time) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('time', time);
+        //>>includeEnd('debug');
+
+        var times = this.times;
+        var timeEnd = times[times.length - 1];
+        var timeStart = times[0];
+        var timeStretch = timeEnd - timeStart;
+        var divs;
+        if (time < timeStart) {
+            divs = Math.floor((timeStart - time) / timeStretch) + 1;
+            time += divs * timeStretch;
+        }
+        if (time > timeEnd) {
+            divs = Math.floor((time - timeEnd) / timeStretch) + 1;
+            time -= divs * timeStretch;
+        }
+        return time;
+    };
+
+    /**
+     * Clamps the given time to the period covered by the spline.
+     * @function
+     *
+     * @param {Number} time The time.
+     * @return {Number} The time, clamped to the animation period.
+     */
+    Spline.prototype.clampTime = function(time) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('time', time);
+        //>>includeEnd('debug');
+
+        var times = this.times;
+        return CesiumMath.clamp(time, times[0], times[times.length - 1]);
     };
 
     return Spline;

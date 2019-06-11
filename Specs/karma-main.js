@@ -1,6 +1,6 @@
 (function() {
     /*global __karma__,require*/
-    "use strict";
+    'use strict';
 
     var included = '';
     var excluded = '';
@@ -20,12 +20,14 @@
 
     if (release) {
         require.config({
-            baseUrl : '/base/Build/Cesium'
+            baseUrl : '/base/Build/Cesium',
+            waitSeconds : 0
         });
         toRequire.push('../Stubs/paths');
     } else {
         require.config({
-           baseUrl : '/base/Source'
+            baseUrl : '/base/Source',
+            waitSeconds : 0
         });
     }
 

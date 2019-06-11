@@ -4,6 +4,7 @@ defineSuite([
         'Core/Request',
         'Core/RequestErrorEvent',
         'Core/RequestScheduler',
+        'Core/Resource',
         'Core/RuntimeError'
     ], function(
         loadKTX,
@@ -11,6 +12,7 @@ defineSuite([
         Request,
         RequestErrorEvent,
         RequestScheduler,
+        Resource,
         RuntimeError) {
     'use strict';
 
@@ -24,11 +26,7 @@ defineSuite([
     beforeEach(function() {
         fakeXHR = jasmine.createSpyObj('XMLHttpRequest', ['send', 'open', 'setRequestHeader', 'abort', 'getAllResponseHeaders']);
         fakeXHR.simulateLoad = function(response) {
-            fakeXHR.status = 200;
-            fakeXHR.response = response;
-            if (typeof fakeXHR.onload === 'function') {
-                fakeXHR.onload();
-            }
+            fakeXHR.simulateHttpResponse(200, response);
         };
         fakeXHR.simulateError = function() {
             fakeXHR.response = '';
@@ -36,7 +34,7 @@ defineSuite([
                 fakeXHR.onerror();
             }
         };
-        fakeXHR.simulateHttpError = function(statusCode, response) {
+        fakeXHR.simulateHttpResponse = function(statusCode, response) {
             fakeXHR.status = statusCode;
             fakeXHR.response = response;
             if (typeof fakeXHR.onload === 'function') {
@@ -62,20 +60,6 @@ defineSuite([
         expect(fakeXHR.send).toHaveBeenCalled();
     });
 
-    it('creates and sends request with custom headers', function() {
-        var testUrl = 'http://example.invalid/testuri';
-        loadKTX(testUrl, {
-            'Accept' : 'application/json',
-            'Cache-Control' : 'no-cache'
-        });
-
-        expect(fakeXHR.open).toHaveBeenCalledWith('GET', testUrl, true);
-        expect(fakeXHR.setRequestHeader.calls.count()).toEqual(2);
-        expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Accept', 'application/json');
-        expect(fakeXHR.setRequestHeader).toHaveBeenCalledWith('Cache-Control', 'no-cache');
-        expect(fakeXHR.send).toHaveBeenCalled();
-    });
-
     it('returns a promise that rejects when the request errors', function() {
         var testUrl = 'http://example.invalid/testuri';
         var promise = loadKTX(testUrl);
@@ -95,7 +79,7 @@ defineSuite([
 
         fakeXHR.simulateError();
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+        expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
         expect(rejectedError.statusCode).toBeUndefined();
         expect(rejectedError.response).toBeUndefined();
     });
@@ -118,11 +102,36 @@ defineSuite([
         expect(rejectedError).toBeUndefined();
 
         var error = 'some error';
-        fakeXHR.simulateHttpError(404, error);
+        fakeXHR.simulateHttpResponse(404, error);
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+        expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
         expect(rejectedError.statusCode).toEqual(404);
         expect(rejectedError.response).toEqual(error);
+    });
+
+    it('returns a promise that resolves with undefined when the status code is 204', function() {
+        var testUrl = 'http://example.invalid/testuri';
+        var promise = loadKTX(testUrl);
+
+        expect(promise).toBeDefined();
+
+        var resolved = false;
+        var resolvedValue;
+        var rejectedError;
+        promise.then(function(value) {
+            resolved = true;
+            resolvedValue = value;
+        }, function(error) {
+            rejectedError = error;
+        });
+
+        expect(resolvedValue).toBeUndefined();
+        expect(rejectedError).toBeUndefined();
+
+        fakeXHR.simulateHttpResponse(204);
+        expect(resolved).toBe(true);
+        expect(resolvedValue).toBeUndefined();
+        expect(rejectedError).toBeUndefined();
     });
 
     it('returns a promise that resolves to an uncompressed texture when the request loads', function() {
@@ -152,7 +161,7 @@ defineSuite([
         expect(rejectedError).toBeUndefined();
     });
 
-    it('returns a promise that resolves to an uncompressed texture containing the first mip level of the original texture', function() {
+    it('returns a promise that resolves to an uncompressed texture containing all mip levels of the original texture', function() {
         var testUrl = 'http://example.invalid/testuri';
         var promise = loadKTX(testUrl);
 
@@ -172,10 +181,11 @@ defineSuite([
         var response = validUncompressedMipmap.buffer;
         fakeXHR.simulateLoad(response);
         expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(4);
-        expect(resolvedValue.height).toEqual(4);
-        expect(PixelFormat.isCompressedFormat(resolvedValue.internalFormat)).toEqual(false);
-        expect(resolvedValue.bufferView).toBeDefined();
+        expect(resolvedValue.length).toEqual(3);
+        expect(resolvedValue[0].width).toEqual(4);
+        expect(resolvedValue[0].height).toEqual(4);
+        expect(PixelFormat.isCompressedFormat(resolvedValue[0].internalFormat)).toEqual(false);
+        expect(resolvedValue[0].bufferView).toBeDefined();
         expect(rejectedError).toBeUndefined();
     });
 
@@ -206,7 +216,7 @@ defineSuite([
         expect(rejectedError).toBeUndefined();
     });
 
-    it('returns a promise that resolves to a compressed texture containing the first mip level of the original texture', function() {
+    it('returns a promise that resolves to a compressed texture containing the all mip levels of the original texture', function() {
         var testUrl = 'http://example.invalid/testuri';
         var promise = loadKTX(testUrl);
 
@@ -226,13 +236,13 @@ defineSuite([
         var response = validCompressedMipmap.buffer;
         fakeXHR.simulateLoad(response);
         expect(resolvedValue).toBeDefined();
-        expect(resolvedValue.width).toEqual(4);
-        expect(resolvedValue.height).toEqual(4);
-        expect(PixelFormat.isCompressedFormat(resolvedValue.internalFormat)).toEqual(true);
-        expect(resolvedValue.bufferView).toBeDefined();
+        expect(resolvedValue.length).toEqual(3);
+        expect(resolvedValue[0].width).toEqual(4);
+        expect(resolvedValue[0].height).toEqual(4);
+        expect(PixelFormat.isCompressedFormat(resolvedValue[0].internalFormat)).toEqual(true);
+        expect(resolvedValue[0].bufferView).toBeDefined();
         expect(rejectedError).toBeUndefined();
     });
-
 
     it('cannot parse invalid KTX buffer', function() {
         var invalidKTX = new Uint8Array(validCompressed);
@@ -249,7 +259,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('Invalid KTX file.');
     });
 
@@ -269,7 +279,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('File is the wrong endianness.');
     });
 
@@ -289,7 +299,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('glInternalFormat is not a valid format.');
     });
 
@@ -309,7 +319,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('glType must be zero when the texture is compressed.');
     });
 
@@ -329,7 +339,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('The type size for compressed textures must be 1.');
     });
 
@@ -349,7 +359,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('The base internal format must be the same as the format for uncompressed textures.');
     });
 
@@ -369,7 +379,7 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('3D textures are unsupported.');
     });
 
@@ -389,40 +399,32 @@ defineSuite([
         });
 
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
+        expect(rejectedError).toBeInstanceOf(RuntimeError);
         expect(rejectedError.message).toEqual('Texture arrays are unsupported.');
     });
 
-    it('cubemaps are unsupported', function() {
+    it('cubemaps are supported', function() {
         var reinterprestBuffer = new Uint32Array(validUncompressed.buffer);
-        var invalidKTX = new Uint32Array(reinterprestBuffer);
-        invalidKTX[13] = 6;
+        var cubemapKTX = new Uint32Array(reinterprestBuffer);
+        cubemapKTX[13] = 6;
 
-        var promise = loadKTX(invalidKTX.buffer);
+        var promise = loadKTX(cubemapKTX.buffer);
 
-        var resolvedValue;
-        var rejectedError;
         promise.then(function(value) {
-            resolvedValue = value;
-        }, function(error) {
-            rejectedError = error;
+            expect(value).toBeDefined();
         });
-
-        expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RuntimeError).toEqual(true);
-        expect(rejectedError.message).toEqual('Cubemaps are unsupported.');
     });
 
     it('returns undefined if the request is throttled', function() {
         var oldMaximumRequests = RequestScheduler.maximumRequests;
         RequestScheduler.maximumRequests = 0;
 
-        var request = new Request({
-            throttle : true
-        });
-
-        var testUrl = 'http://example.invalid/testuri';
-        var promise = loadKTX(testUrl, undefined, request);
+        var promise = loadKTX(new Resource({
+            url: 'http://example.invalid/testuri',
+            request: new Request({
+                throttle: true
+            })
+        }));
         expect(promise).toBeUndefined();
 
         RequestScheduler.maximumRequests = oldMaximumRequests;

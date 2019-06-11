@@ -48,10 +48,13 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float sRim = smoothstep(0.8, 1.0, dRim);
     value *= (1.0 - sRim);
 
-    vec3 halfColor = color.rgb * 0.5;
-    material.diffuse = halfColor;
-    material.emission = halfColor;
-    material.alpha = color.a * (1.0 - ((1.0 - cellAlpha) * value));
+    vec4 halfColor;
+    halfColor.rgb = color.rgb * 0.5;
+    halfColor.a = color.a * (1.0 - ((1.0 - cellAlpha) * value));
+    halfColor = czm_gammaCorrect(halfColor);
+    material.diffuse = halfColor.rgb;
+    material.emission = halfColor.rgb;
+    material.alpha = halfColor.a;
 
     return material;
 }

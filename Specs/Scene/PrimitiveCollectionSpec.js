@@ -202,6 +202,22 @@ defineSuite([
         expect(primitives.contains(labels1)).toEqual(false);
     });
 
+    it('does not contain removed primitive', function() {
+        var labels0 = createLabels();
+        primitives.add(labels0);
+        primitives.remove(labels0);
+
+        expect(primitives.contains(labels0)).toEqual(false);
+    });
+
+    it('does not contain all removed primitives', function() {
+        var labels0 = createLabels();
+        primitives.add(labels0);
+        primitives.removeAll();
+
+        expect(primitives.contains(labels0)).toEqual(false);
+    });
+
     it('does not contain undefined', function() {
         expect(primitives.contains()).toEqual(false);
     });

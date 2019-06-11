@@ -8,7 +8,8 @@ defineSuite([
         'Core/LagrangePolynomialApproximation',
         'Core/LinearApproximation',
         'Core/Math',
-        'Core/Quaternion'
+        'Core/Quaternion',
+        'Core/TimeInterval'
     ], function(
         SampledProperty,
         Cartesian3,
@@ -19,7 +20,8 @@ defineSuite([
         LagrangePolynomialApproximation,
         LinearApproximation,
         CesiumMath,
-        Quaternion) {
+        Quaternion,
+        TimeInterval) {
     'use strict';
 
     it('constructor sets expected defaults', function() {
@@ -70,8 +72,8 @@ defineSuite([
     });
 
     it('addSample works', function() {
-        var values = [7, 8, 9];
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var values = [7, 8, 9];
 
         var property = new SampledProperty(Number);
         var listener = jasmine.createSpy('listener');
@@ -96,8 +98,8 @@ defineSuite([
     });
 
     it('addSamples works', function() {
-        var values = [7, 8, 9];
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var values = [7, 8, 9];
 
         var property = new SampledProperty(Number);
         var listener = jasmine.createSpy('listener');
@@ -109,6 +111,169 @@ defineSuite([
         expect(property.getValue(times[1])).toEqual(values[1]);
         expect(property.getValue(times[2])).toEqual(values[2]);
         expect(property.getValue(new JulianDate(0.5, 0))).toEqual(7.5);
+    });
+
+    it('can remove a sample at a date', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var values = [1, 8, 3];
+
+        var property = new SampledProperty(Number);
+        property.addSamples(times, values);
+        expect(property.getValue(times[0])).toEqual(values[0]);
+        expect(property.getValue(times[1])).toEqual(values[1]);
+        expect(property.getValue(times[2])).toEqual(values[2]);
+
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.removeSample(times[1]);
+
+        expect(listener).toHaveBeenCalledWith(property);
+
+        expect(property._times.length).toEqual(2);
+        expect(property._values.length).toEqual(2);
+
+        expect(property.getValue(times[0])).toEqual(values[0]);
+        // by deleting the sample at times[1] we now linearly interpolate from the remaining samples
+        expect(property.getValue(times[1])).toEqual((values[0] + values[2]) / 2);
+        expect(property.getValue(times[2])).toEqual(values[2]);
+    });
+
+    function arraySubset(array, startIndex, count) {
+        array = array.slice();
+        array.splice(startIndex, count);
+        return array;
+    }
+
+    it('can remove samples for a time interval', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0), new JulianDate(3, 0), new JulianDate(4, 0)];
+        var values = [1, 8, 13, 1, 3];
+
+        function createProperty() {
+            var property = new SampledProperty(Number);
+            property.addSamples(times, values);
+            expect(property.getValue(times[0])).toEqual(values[0]);
+            expect(property.getValue(times[1])).toEqual(values[1]);
+            expect(property.getValue(times[2])).toEqual(values[2]);
+            expect(property.getValue(times[3])).toEqual(values[3]);
+            expect(property.getValue(times[4])).toEqual(values[4]);
+            return property;
+        }
+
+        var property = createProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.removeSamples(new TimeInterval({
+            start: times[1],
+            stop: times[3]
+        }));
+
+        expect(listener).toHaveBeenCalledWith(property);
+        expect(property._times.length).toEqual(2);
+        expect(property._values.length).toEqual(2);
+        expect(property._times).toEqual(arraySubset(times, 1, 3));
+        expect(property._values).toEqual(arraySubset(values, 1, 3));
+
+        expect(property.getValue(times[0])).toEqual(values[0]);
+        // by deleting the samples we now linearly interpolate from the remaining samples
+        expect(property.getValue(times[2])).toEqual((values[0] + values[4]) / 2);
+        expect(property.getValue(times[4])).toEqual(values[4]);
+
+        property = createProperty();
+        listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        // remove using a start time just after a sample
+        property.removeSamples(new TimeInterval({
+            start: JulianDate.addSeconds(times[1], 4, new JulianDate()),
+            stop: times[3]
+        }));
+
+        expect(listener).toHaveBeenCalledWith(property);
+        expect(property._times.length).toEqual(3);
+        expect(property._values.length).toEqual(3);
+        expect(property._times).toEqual(arraySubset(times, 2, 2));
+        expect(property._values).toEqual(arraySubset(values, 2, 2));
+
+        property = createProperty();
+        listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        // remove using a stop time just before a sample
+        property.removeSamples(new TimeInterval({
+            start: JulianDate.addSeconds(times[1], 4, new JulianDate()),
+            stop: JulianDate.addSeconds(times[3], -4, new JulianDate())
+        }));
+
+        expect(listener).toHaveBeenCalledWith(property);
+        expect(property._times.length).toEqual(4);
+        expect(property._values.length).toEqual(4);
+        expect(property._times).toEqual(arraySubset(times, 2, 1));
+        expect(property._values).toEqual(arraySubset(values, 2, 1));
+    });
+
+    it('can remove samples for a time interval with start or stop not included', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0), new JulianDate(3, 0), new JulianDate(4, 0)];
+        var values = [1, 8, 13, 1, 3];
+
+        function createProperty() {
+            var property = new SampledProperty(Number);
+            property.addSamples(times, values);
+            expect(property.getValue(times[0])).toEqual(values[0]);
+            expect(property.getValue(times[1])).toEqual(values[1]);
+            expect(property.getValue(times[2])).toEqual(values[2]);
+            expect(property.getValue(times[3])).toEqual(values[3]);
+            expect(property.getValue(times[4])).toEqual(values[4]);
+            return property;
+        }
+
+        var property = createProperty();
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.removeSamples(new TimeInterval({
+            start: times[1],
+            stop: times[3],
+            isStartIncluded: false,
+            isStopIncluded: true
+        }));
+
+        expect(listener).toHaveBeenCalledWith(property);
+        expect(property._times).toEqual(arraySubset(times, 2, 2));
+        expect(property._values).toEqual(arraySubset(values, 2, 2));
+
+        property = createProperty();
+
+        listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.removeSamples(new TimeInterval({
+            start: times[1],
+            stop: times[3],
+            isStartIncluded: true,
+            isStopIncluded: false
+        }));
+
+        expect(listener).toHaveBeenCalledWith(property);
+        expect(property._times).toEqual(arraySubset(times, 1, 2));
+        expect(property._values).toEqual(arraySubset(values, 1, 2));
+
+        property = createProperty();
+
+        listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.removeSamples(new TimeInterval({
+            start: times[1],
+            stop: times[3],
+            isStartIncluded: false,
+            isStopIncluded: false
+        }));
+
+        expect(listener).toHaveBeenCalledWith(property);
+        expect(property._times).toEqual(arraySubset(times, 2, 1));
+        expect(property._values).toEqual(arraySubset(values, 2, 1));
     });
 
     it('works with PackableForInterpolation', function() {
@@ -143,8 +308,8 @@ defineSuite([
             return result;
         };
 
-        var values = [new CustomType(0), new CustomType(2), new CustomType(4)];
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var values = [new CustomType(0), new CustomType(2), new CustomType(4)];
 
         var property = new SampledProperty(CustomType);
         property.addSample(times[0], values[0]);
@@ -364,10 +529,10 @@ defineSuite([
     });
 
     var interwovenData = [{
-        epoch : JulianDate.fromIso8601("20130205T150405.704999999999927Z"),
+        epoch : JulianDate.fromIso8601('20130205T150405.704999999999927Z'),
         values : [0.0, 1, 120.0, 2, 240.0, 3, 360.0, 4, 480.0, 6, 600.0, 8, 720.0, 10, 840.0, 12, 960.0, 14, 1080.0, 16]
     }, {
-        epoch : JulianDate.fromIso8601("20130205T151151.60499999999956Z"),
+        epoch : JulianDate.fromIso8601('20130205T151151.60499999999956Z'),
         values : [0.0, 5, 120.0, 7, 240.0, 9, 360.0, 11, 480.0, 13, 600.0, 15, 720.0, 17, 840.0, 18, 960.0, 19, 1080.0, 20]
     }];
 

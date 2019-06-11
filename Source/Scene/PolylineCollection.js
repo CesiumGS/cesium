@@ -5,6 +5,7 @@ define([
         '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Color',
+        '../Core/combine',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
         '../Core/defined',
@@ -12,6 +13,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EncodedCartesian3',
+        '../Core/FeatureDetection',
         '../Core/IndexDatatype',
         '../Core/Intersect',
         '../Core/Math',
@@ -26,6 +28,7 @@ define([
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Renderer/Texture',
         '../Renderer/VertexArray',
         '../Shaders/PolylineCommon',
         '../Shaders/PolylineFS',
@@ -42,6 +45,7 @@ define([
         Cartesian4,
         Cartographic,
         Color,
+        combine,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -49,6 +53,7 @@ define([
         destroyObject,
         DeveloperError,
         EncodedCartesian3,
+        FeatureDetection,
         IndexDatatype,
         Intersect,
         CesiumMath,
@@ -63,6 +68,7 @@ define([
         RenderState,
         ShaderProgram,
         ShaderSource,
+        Texture,
         VertexArray,
         PolylineCommon,
         PolylineFS,
@@ -104,7 +110,7 @@ define([
      * A renderable collection of polylines.
      * <br /><br />
      * <div align="center">
-     * <img src="images/Polyline.png" width="400" height="300" /><br />
+     * <img src="Images/Polyline.png" width="400" height="300" /><br />
      * Example polylines
      * </div>
      * <br /><br />
@@ -181,7 +187,6 @@ define([
         this._translucentRS = undefined;
 
         this._colorCommands = [];
-        this._pickCommands = [];
 
         this._polylinesUpdated = false;
         this._polylinesRemoved = false;
@@ -202,6 +207,17 @@ define([
 
         this._batchTable = undefined;
         this._createBatchTable = false;
+
+        // Only used by Vector3DTilePoints
+        this._useHighlightColor = false;
+        this._highlightColor = Color.clone(Color.WHITE);
+
+        var that = this;
+        this._uniformMap = {
+            u_highlightColor : function() {
+                return that._highlightColor;
+            }
+        };
     }
 
     defineProperties(PolylineCollection.prototype, {
@@ -284,13 +300,18 @@ define([
     PolylineCollection.prototype.remove = function(polyline) {
         if (this.contains(polyline)) {
             this._polylines[polyline._index] = undefined; // Removed later
+
+            var polylineUpdateIndex = this._polylinesToUpdate.indexOf(polyline);
+            if (polylineUpdateIndex !== -1) {
+                this._polylinesToUpdate.splice(polylineUpdateIndex, 1);
+            }
+
             this._polylinesRemoved = true;
             this._createVertexArray = true;
             this._createBatchTable = true;
             if (defined(polyline._bucket)) {
                 var bucket = polyline._bucket;
                 bucket.shaderProgram = bucket.shaderProgram && bucket.shaderProgram.destroy();
-                bucket.pickShaderProgram = bucket.pickShaderProgram && bucket.pickShaderProgram.destroy();
             }
             polyline._destroy();
             return true;
@@ -549,21 +570,16 @@ define([
 
         this._batchTable.update(frameState);
 
-        if (pass.render) {
+        if (pass.render || pass.pick) {
             var colorList = this._colorCommands;
-            createCommandLists(this, frameState, colorList, modelMatrix, true);
-        }
-
-        if (pass.pick) {
-            var pickList = this._pickCommands;
-            createCommandLists(this, frameState, pickList, modelMatrix, false);
+            createCommandLists(this, frameState, colorList, modelMatrix);
         }
     };
 
     var boundingSphereScratch = new BoundingSphere();
     var boundingSphereScratch2 = new BoundingSphere();
 
-    function createCommandLists(polylineCollection, frameState, commands, modelMatrix, renderPass) {
+    function createCommandLists(polylineCollection, frameState, commands, modelMatrix) {
         var context = frameState.context;
         var commandList = frameState.commandList;
 
@@ -587,7 +603,7 @@ define([
                 var bucketLocator = buckets[n];
 
                 var offset = bucketLocator.offset;
-                var sp = renderPass ? bucketLocator.bucket.shaderProgram : bucketLocator.bucket.pickShaderProgram;
+                var sp = bucketLocator.bucket.shaderProgram;
 
                 var polylines = bucketLocator.bucket.polylines;
                 var polylineLength = polylines.length;
@@ -595,6 +611,7 @@ define([
                 var currentMaterial;
                 var count = 0;
                 var command;
+                var uniformMap;
 
                 for (var s = 0; s < polylineLength; ++s) {
                     var polyline = polylines[s];
@@ -614,15 +631,18 @@ define([
 
                             ++commandIndex;
 
+                            uniformMap = combine(uniformCallback(currentMaterial._uniforms), polylineCollection._uniformMap);
+
                             command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                             command.modelMatrix = modelMatrix;
                             command.shaderProgram = sp;
                             command.vertexArray = va.va;
                             command.renderState = translucent ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
                             command.pass = translucent ? Pass.TRANSLUCENT : Pass.OPAQUE;
-                            command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
+                            command.debugShowBoundingVolume = debugShowBoundingVolume;
+                            command.pickId = 'v_pickColor';
 
-                            command.uniformMap = uniformCallback(currentMaterial._uniforms);
+                            command.uniformMap = uniformMap;
                             command.count = count;
                             command.offset = offset;
 
@@ -681,15 +701,18 @@ define([
 
                     ++commandIndex;
 
+                    uniformMap = combine(uniformCallback(currentMaterial._uniforms), polylineCollection._uniformMap);
+
                     command.boundingVolume = BoundingSphere.clone(boundingSphereScratch, command.boundingVolume);
                     command.modelMatrix = modelMatrix;
                     command.shaderProgram = sp;
                     command.vertexArray = va.va;
                     command.renderState = currentMaterial.isTranslucent() ? polylineCollection._translucentRS : polylineCollection._opaqueRS;
                     command.pass = currentMaterial.isTranslucent() ? Pass.TRANSLUCENT : Pass.OPAQUE;
-                    command.debugShowBoundingVolume = renderPass ? debugShowBoundingVolume : false;
+                    command.debugShowBoundingVolume = debugShowBoundingVolume;
+                    command.pickId = 'v_pickColor';
 
-                    command.uniformMap = uniformCallback(currentMaterial._uniforms);
+                    command.uniformMap = uniformMap;
                     command.count = count;
                     command.offset = offset;
 
@@ -726,8 +749,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -782,6 +803,7 @@ define([
         var indices = totalIndices[0];
 
         var batchTable = collection._batchTable;
+        var useHighlightColor = collection._useHighlightColor;
 
         //used to determine the vertexBuffer offset if the indicesArray goes over 64k.
         //if it's the same polyline while it goes over 64k, the offset needs to backtrack componentsPerAttribute * componentDatatype bytes
@@ -797,7 +819,7 @@ define([
         for (x in polylineBuckets) {
             if (polylineBuckets.hasOwnProperty(x)) {
                 bucket = polylineBuckets[x];
-                bucket.updateShader(context, batchTable);
+                bucket.updateShader(context, batchTable, useHighlightColor);
                 totalLength += bucket.lengthOfPositions;
             }
         }
@@ -1010,6 +1032,14 @@ define([
         }
     }
 
+    function replacer(key, value) {
+        if (value instanceof Texture) {
+            return value.id;
+        }
+
+        return value;
+    }
+
     var scratchUniformArray = [];
     function createMaterialId(material) {
         var uniforms = Material._uniformList[material.type];
@@ -1024,7 +1054,7 @@ define([
             index += 2;
         }
 
-        return material.type + ':' + JSON.stringify(scratchUniformArray);
+        return material.type + ':' + JSON.stringify(scratchUniformArray, replacer);
     }
 
     function sortPolylinesIntoBuckets(collection) {
@@ -1100,7 +1130,9 @@ define([
 
     PolylineCollection.prototype._updatePolyline = function(polyline, propertyChanged) {
         this._polylinesUpdated = true;
-        this._polylinesToUpdate.push(polyline);
+        if (!polyline._dirty) {
+            this._polylinesToUpdate.push(polyline);
+        }
         ++this._propertiesChanged[propertyChanged];
     };
 
@@ -1125,7 +1157,6 @@ define([
         this.lengthOfPositions = 0;
         this.material = material;
         this.shaderProgram = undefined;
-        this.pickShaderProgram = undefined;
         this.mode = mode;
         this.modelMatrix = modelMatrix;
     }
@@ -1138,21 +1169,29 @@ define([
         p._bucket = this;
     };
 
-    PolylineBucket.prototype.updateShader = function(context, batchTable) {
+    PolylineBucket.prototype.updateShader = function(context, batchTable, useHighlightColor) {
         if (defined(this.shaderProgram)) {
             return;
         }
 
         var defines = ['DISTANCE_DISPLAY_CONDITION'];
-
-        var fs = new ShaderSource({
-            sources : [this.material.shaderSource, PolylineFS]
-        });
+        if (useHighlightColor) {
+            defines.push('VECTOR_TILE');
+        }
 
         // Check for use of v_polylineAngle in material shader
         if (this.material.shaderSource.search(/varying\s+float\s+v_polylineAngle;/g) !== -1) {
             defines.push('POLYLINE_DASH');
         }
+
+        if (!FeatureDetection.isInternetExplorer()) {
+            defines.push('CLIP_POLYLINE');
+        }
+
+        var fs = new ShaderSource({
+            defines : defines,
+            sources : ['varying vec4 v_pickColor;\n', this.material.shaderSource, PolylineFS]
+        });
 
         var vsSource = batchTable.getVertexShaderCallback()(PolylineVS);
         var vs = new ShaderSource({
@@ -1160,22 +1199,10 @@ define([
             sources : [PolylineCommon, vsSource]
         });
 
-        var fsPick = new ShaderSource({
-            sources : fs.sources,
-            pickColorQualifier : 'varying'
-        });
-
         this.shaderProgram = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : vs,
             fragmentShaderSource : fs,
-            attributeLocations : attributeLocations
-        });
-
-        this.pickShaderProgram = ShaderProgram.fromCache({
-            context : context,
-            vertexShaderSource : vs,
-            fragmentShaderSource : fsPick,
             attributeLocations : attributeLocations
         });
     };
@@ -1457,7 +1484,7 @@ define([
                 for ( var j = 0; j < numberOfSegments; ++j) {
                     var segmentLength = segments[j] - 1.0;
                     for ( var k = 0; k < segmentLength; ++k) {
-                        if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
+                        if (indicesCount + 4 > CesiumMath.SIXTY_FOUR_KILOBYTES) {
                             polyline._locatorBuckets.push({
                                 locator : bucketLocator,
                                 count : segmentIndexCount
@@ -1489,7 +1516,7 @@ define([
                     count : segmentIndexCount
                 });
 
-                if (indicesCount + 4 >= CesiumMath.SIXTY_FOUR_KILOBYTES - 2) {
+                if (indicesCount + 4 > CesiumMath.SIXTY_FOUR_KILOBYTES) {
                     vertexBufferOffset.push(0);
                     indices = [];
                     totalIndices.push(indices);

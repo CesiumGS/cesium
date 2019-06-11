@@ -1,17 +1,11 @@
 define([
         '../ThirdParty/when',
         './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties'
+        './Check'
     ], function(
         when,
         Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties) {
+        Check) {
     'use strict';
 
     /**
@@ -28,7 +22,7 @@ define([
      * @function
      *
      * @param {String} query The query to be sent to the geocoder service
-     * @returns {Promise<GeocoderResult[]>}
+     * @returns {Promise<GeocoderService~Result[]>}
      */
     CartographicGeocoderService.prototype.geocode = function(query) {
         //>>includeStart('debug', pragmas.debug);

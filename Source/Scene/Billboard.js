@@ -13,6 +13,7 @@ define([
         '../Core/DistanceDisplayCondition',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
+        '../Core/Resource',
         './HeightReference',
         './HorizontalOrigin',
         './SceneMode',
@@ -33,6 +34,7 @@ define([
         DistanceDisplayCondition,
         Matrix4,
         NearFarScalar,
+        Resource,
         HeightReference,
         HorizontalOrigin,
         SceneMode,
@@ -46,7 +48,7 @@ define([
      * properties are set by calling {@link BillboardCollection#add}.
      * <br /><br />
      * <div align='center'>
-     * <img src='images/Billboard.png' width='400' height='300' /><br />
+     * <img src='Images/Billboard.png' width='400' height='300' /><br />
      * Example billboards
      * </div>
      *
@@ -69,8 +71,9 @@ define([
      * @see Label
      *
      * @internalConstructor
+     * @class
      *
-     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     function Billboard(options, billboardCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -138,7 +141,7 @@ define([
         this._pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
         this._sizeInMeters = defaultValue(options.sizeInMeters, false);
         this._distanceDisplayCondition = distanceDisplayCondition;
-        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
+        this._disableDepthTestDistance = options.disableDepthTestDistance;
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -147,6 +150,7 @@ define([
         this._billboardCollection = billboardCollection;
         this._dirty = false;
         this._index = -1; //Used only by BillboardCollection
+        this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
 
         this._imageIndex = -1;
         this._imageIndexPromise = undefined;
@@ -155,6 +159,10 @@ define([
         this._imageSubRegion = undefined;
         this._imageWidth = undefined;
         this._imageHeight = undefined;
+
+        this._labelDimensions = undefined;
+        this._labelHorizontalOrigin = undefined;
+        this._labelTranslate = undefined;
 
         var image = options.image;
         var imageId = options.imageId;
@@ -207,7 +215,8 @@ define([
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
     var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE = 15;
-    Billboard.NUMBER_OF_PROPERTIES = 16;
+    Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
+    Billboard.NUMBER_OF_PROPERTIES = 17;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -303,8 +312,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, 25);</code><br/><img src='images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
+         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, 25);</code><br/><img src='Images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
          * </tr></table>
          * The billboard's origin is indicated by the yellow point.
          * </div>
@@ -468,8 +477,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
-         * <td align='center'><img src='images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.one.png' width='250' height='188' /></td>
+         * <td align='center'><img src='Images/Billboard.setEyeOffset.two.png' width='250' height='188' /></td>
          * </tr></table>
          * <code>b.eyeOffset = new Cartesian3(0.0, 8000000.0, 0.0);</code><br /><br />
          * </div>
@@ -500,7 +509,7 @@ define([
          * to the left, center, or right of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
+         * <img src='Images/Billboard.setHorizontalOrigin.png' width='648' height='196' /><br />
          * </div>
          * @memberof Billboard.prototype
          * @type {HorizontalOrigin}
@@ -532,7 +541,7 @@ define([
          * to the above, below, or at the center of its anchor position.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
+         * <img src='Images/Billboard.setVerticalOrigin.png' width='695' height='175' /><br />
          * </div>
          * @memberof Billboard.prototype
          * @type {VerticalOrigin}
@@ -566,7 +575,7 @@ define([
          * the billboard.
          * <br /><br />
          * <div align='center'>
-         * <img src='images/Billboard.setScale.png' width='400' height='300' /><br/>
+         * <img src='Images/Billboard.setScale.png' width='400' height='300' /><br/>
          * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>,
          * and <code>2.0</code>.
          * </div>
@@ -599,8 +608,8 @@ define([
          * <br /><br />
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='images/Billboard.setColor.Alpha255.png' width='250' height='188' /></td>
-         * <td align='center'><code>alpha : 0.5</code><br/><img src='images/Billboard.setColor.Alpha127.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setColor.Alpha255.png' width='250' height='188' /></td>
+         * <td align='center'><code>alpha : 0.5</code><br/><img src='Images/Billboard.setColor.Alpha127.png' width='250' height='188' /></td>
          * </tr></table>
          * </div>
          * <br />
@@ -781,7 +790,6 @@ define([
          * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
          * @memberof Billboard.prototype
          * @type {Number}
-         * @default 0.0
          */
         disableDepthTestDistance : {
             get : function() {
@@ -790,7 +798,7 @@ define([
             set : function(value) {
                 if (this._disableDepthTestDistance !== value) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (!defined(value) || value < 0.0) {
+                    if (defined(value) && value < 0.0) {
                         throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
                     }
                     //>>includeEnd('debug');
@@ -835,6 +843,15 @@ define([
         },
 
         /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._pickId;
+            }
+        },
+
+        /**
          * <p>
          * Gets or sets the image to be used for this billboard.  If a texture has already been created for the
          * given image, the existing texture is used.
@@ -868,6 +885,8 @@ define([
                     makeDirty(this, IMAGE_INDEX_INDEX);
                 } else if (typeof value === 'string') {
                     this.setImage(value, value);
+                } else if (value instanceof Resource) {
+                    this.setImage(value.url, value);
                 } else if (defined(value.src)) {
                     this.setImage(value.src, value);
                 } else {
@@ -949,10 +968,10 @@ define([
 
     Billboard._updateClamping = function(collection, owner) {
         var scene = collection._scene;
-        if (!defined(scene)) {
+        if (!defined(scene) || !defined(scene.globe)) {
             //>>includeStart('debug', pragmas.debug);
             if (owner._heightReference !== HeightReference.NONE) {
-                throw new DeveloperError('Height reference is not supported without a scene.');
+                throw new DeveloperError('Height reference is not supported without a scene and globe.');
             }
             //>>includeEnd('debug');
             return;
@@ -1071,7 +1090,7 @@ define([
      * </p>
      *
      * @param {String} id The id of the image.  This can be any string that uniquely identifies the image.
-     * @param {Image|Canvas|String|Billboard~CreateImageCallback} image The image to load.  This parameter
+     * @param {Image|Canvas|String|Resource|Billboard~CreateImageCallback} image The image to load.  This parameter
      *        can either be a loaded Image or Canvas, a URL which will be loaded as an Image automatically,
      *        or a function which will be called to create the image if it hasn't been loaded already.
      * @example

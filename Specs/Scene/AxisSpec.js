@@ -2,13 +2,11 @@ defineSuite([
         'Scene/Axis',
         'Core/Cartesian4',
         'Core/Math',
-        'Core/Matrix3',
         'Core/Matrix4'
     ], function(
         Axis,
         Cartesian4,
         CesiumMath,
-        Matrix3,
         Matrix4) {
     'use strict';
 
