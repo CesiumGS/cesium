@@ -44,7 +44,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [William Ho](https://github.com/williamkho)
    * [Srinivas Kaza](https://github.com/AnimatedRNG)
 * [Novetta](https://www.novetta.com/)
-   * [Joshua Bernstein] (https://github.com/josh-bernstein)
+   * [Joshua Bernstein](https://github.com/josh-bernstein)
 * [NICTA](http://www.nicta.com.au/)
    * [Chris Cooper](https://github.com/chris-cooper)
    * [Kevin Ring](https://github.com/kring)
