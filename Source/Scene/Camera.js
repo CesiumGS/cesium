@@ -2764,6 +2764,18 @@ define([
         }
         //>>includeEnd('debug');
 
+
+       // Convert destination values to numeric
+       destination.x = Number(destination.x);
+       destination.y = Number(destination.y);
+       destination.z = Number(destination.z);
+        
+        // Convert orientation angle values to numeric
+        options.orientation.heading = Number(orientation.heading);
+        options.orientation.pitch = Number(orientation.pitch);
+        options.orientation.roll = Number(orientation.roll);
+
+
         var mode = this._mode;
         if (mode === SceneMode.MORPHING) {
             return;
