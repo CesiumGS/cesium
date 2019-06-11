@@ -3196,7 +3196,7 @@ defineSuite([
                 scale : 3.0,
                 minimumPixelSize : 5.0,
                 maximumScale : 4.0,
-                gltf : './Data/Models/Box/CesiumBoxTest.gltf',
+                gltf : './Data/Models/Box-Articulations/Box-Articulations.gltf',
                 incrementallyLoadTextures : true,
                 shadows : 'ENABLED',
                 heightReference : 'CLAMP_TO_GROUND',
@@ -3221,6 +3221,11 @@ defineSuite([
                             unitQuaternion : [0.0, 0.707, 0.0, 0.707]
                         }
                     }
+                },
+                articulations : {
+                    'SampleArticulation Yaw' : 30,
+                    'SampleArticulation Pitch' : 45,
+                    'SampleArticulation Roll' : 60
                 }
             }
         };
@@ -3234,7 +3239,7 @@ defineSuite([
             expect(entity.model.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(3.0);
             expect(entity.model.minimumPixelSize.getValue(Iso8601.MINIMUM_VALUE)).toEqual(5.0);
             expect(entity.model.maximumScale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(4.0);
-            expect(entity.model.uri.getValue(Iso8601.MINIMUM_VALUE).url).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
+            expect(entity.model.uri.getValue(Iso8601.MINIMUM_VALUE).url).toEqual('./Data/Models/Box-Articulations/Box-Articulations.gltf');
             expect(entity.model.incrementallyLoadTextures.getValue(Iso8601.MINIMUM_VALUE)).toEqual(true);
             expect(entity.model.shadows.getValue(Iso8601.MINIMUM_VALUE)).toEqual(ShadowMode.ENABLED);
             expect(entity.model.heightReference.getValue(Iso8601.MINIMUM_VALUE)).toEqual(HeightReference.CLAMP_TO_GROUND);
@@ -3256,6 +3261,12 @@ defineSuite([
             expect(entity.model.nodeTransformations.Mesh.scale.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(1.0, 2.0, 3.0));
             expect(entity.model.nodeTransformations.Mesh.translation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(new Cartesian3(4.0, 5.0, 6.0));
             expect(entity.model.nodeTransformations.Mesh.rotation.getValue(Iso8601.MINIMUM_VALUE)).toEqual(expectedRotation);
+
+            var articulations = entity.model.articulations.getValue(Iso8601.MINIMUM_VALUE);
+            expect(articulations).toBeDefined();
+            expect(articulations['SampleArticulation Yaw']).toEqual(30);
+            expect(articulations['SampleArticulation Pitch']).toEqual(45);
+            expect(articulations['SampleArticulation Roll']).toEqual(60);
         });
     });
 
@@ -3266,7 +3277,7 @@ defineSuite([
                 show : true,
                 scale : 3.0,
                 minimumPixelSize : 5.0,
-                gltf : './Data/Models/Box/CesiumBoxTest.gltf',
+                gltf : './Data/Models/Box-Articulations/Box-Articulations.gltf',
                 incrementallyLoadTextures : true,
                 shadows : 'ENABLED',
                 heightReference: 'CLAMP_TO_GROUND',
@@ -3291,6 +3302,11 @@ defineSuite([
                             unitQuaternion : [0.0, 0.707, 0.0, 0.707]
                         }
                     }
+                },
+                articulations : {
+                    'SampleArticulation Yaw' : 30,
+                    'SampleArticulation Pitch' : 45,
+                    'SampleArticulation Roll' : 60
                 }
             }
         };
@@ -3308,7 +3324,7 @@ defineSuite([
             expect(entity.model.show.getValue(validTime)).toEqual(true);
             expect(entity.model.scale.getValue(validTime)).toEqual(3.0);
             expect(entity.model.minimumPixelSize.getValue(validTime)).toEqual(5.0);
-            expect(entity.model.uri.getValue(validTime).url).toEqual('./Data/Models/Box/CesiumBoxTest.gltf');
+            expect(entity.model.uri.getValue(validTime).url).toEqual('./Data/Models/Box-Articulations/Box-Articulations.gltf');
             expect(entity.model.incrementallyLoadTextures.getValue(validTime)).toEqual(true);
             expect(entity.model.shadows.getValue(validTime)).toEqual(ShadowMode.ENABLED);
             expect(entity.model.heightReference.getValue(validTime)).toEqual(HeightReference.CLAMP_TO_GROUND);
@@ -3331,6 +3347,12 @@ defineSuite([
             expect(entity.model.nodeTransformations.Mesh.translation.getValue(validTime)).toEqual(new Cartesian3(4.0, 5.0, 6.0));
             expect(entity.model.nodeTransformations.Mesh.rotation.getValue(validTime)).toEqual(expectedRotation);
 
+            var articulations = entity.model.articulations.getValue(validTime);
+            expect(articulations).toBeDefined();
+            expect(articulations['SampleArticulation Yaw']).toEqual(30);
+            expect(articulations['SampleArticulation Pitch']).toEqual(45);
+            expect(articulations['SampleArticulation Roll']).toEqual(60);
+
             expect(entity.model.show.getValue(invalidTime)).toBeUndefined();
             expect(entity.model.scale.getValue(invalidTime)).toBeUndefined();
             expect(entity.model.minimumPixelSize.getValue(invalidTime)).toBeUndefined();
@@ -3348,6 +3370,12 @@ defineSuite([
             expect(entity.model.nodeTransformations.Mesh.scale.getValue(invalidTime)).toBeUndefined();
             expect(entity.model.nodeTransformations.Mesh.translation.getValue(invalidTime)).toBeUndefined();
             expect(entity.model.nodeTransformations.Mesh.rotation.getValue(invalidTime)).toBeUndefined();
+
+            var invalidArticulations = entity.model.articulations.getValue(invalidTime);
+            expect(invalidArticulations).toBeDefined();
+            expect(invalidArticulations['SampleArticulation Yaw']).toBeUndefined();
+            expect(invalidArticulations['SampleArticulation Pitch']).toBeUndefined();
+            expect(invalidArticulations['SampleArticulation Roll']).toBeUndefined();
         });
     });
 
