@@ -81,6 +81,7 @@ define([
          * @default Color.WHITE
          */
         color : createPropertyDescriptor('color'),
+
         /**
          * Gets or sets the Property specifying the {@link Color} of the outline.
          * @memberof PolylineOutlineMaterialProperty.prototype
@@ -88,6 +89,7 @@ define([
          * @default Color.BLACK
          */
         outlineColor : createPropertyDescriptor('outlineColor'),
+
         /**
          * Gets or sets the numeric Property specifying the width of the outline.
          * @memberof PolylineOutlineMaterialProperty.prototype
