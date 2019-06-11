@@ -1724,14 +1724,26 @@ define([
         processPacketData(Number, model, 'colorBlendAmount', modelData.colorBlendAmount, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, model, 'distanceDisplayCondition', modelData.distanceDisplayCondition, interval, sourceUri, entityCollection);
 
+        var i, len;
         var nodeTransformationsData = modelData.nodeTransformations;
         if (defined(nodeTransformationsData)) {
             if (isArray(nodeTransformationsData)) {
-                for (var i = 0, len = nodeTransformationsData.length; i < len; i++) {
+                for (i = 0, len = nodeTransformationsData.length; i < len; i++) {
                     processNodeTransformations(model, nodeTransformationsData[i], interval, sourceUri, entityCollection);
                 }
             } else {
                 processNodeTransformations(model, nodeTransformationsData, interval, sourceUri, entityCollection);
+            }
+        }
+
+        var articulationsData = modelData.articulations;
+        if (defined(articulationsData)) {
+            if (isArray(articulationsData)) {
+                for (i = 0, len = articulationsData.length; i < len; i++) {
+                    processArticulations(model, articulationsData[i], interval, sourceUri, entityCollection);
+                }
+            } else {
+                processArticulations(model, articulationsData, interval, sourceUri, entityCollection);
             }
         }
     }
@@ -1780,6 +1792,46 @@ define([
             processPacketData(Cartesian3, nodeTransformation, 'translation', nodeTransformationData.translation, combinedInterval, sourceUri, entityCollection);
             processPacketData(Quaternion, nodeTransformation, 'rotation', nodeTransformationData.rotation, combinedInterval, sourceUri, entityCollection);
             processPacketData(Cartesian3, nodeTransformation, 'scale', nodeTransformationData.scale, combinedInterval, sourceUri, entityCollection);
+        }
+    }
+
+    function processArticulations(model, articulationsData, constrainedInterval, sourceUri, entityCollection) {
+        var combinedInterval;
+        var packetInterval = articulationsData.interval;
+        if (defined(packetInterval)) {
+            iso8601Scratch.iso8601 = packetInterval;
+            combinedInterval = TimeInterval.fromIso8601(iso8601Scratch);
+            if (defined(constrainedInterval)) {
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval, scratchTimeInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        var articulations = model.articulations;
+        var keys = Object.keys(articulationsData);
+        for (var i = 0, len = keys.length; i < len; ++i) {
+            var key = keys[i];
+
+            if (key === 'interval') {
+                continue;
+            }
+
+            var articulationStageData = articulationsData[key];
+
+            if (!defined(articulationStageData)) {
+                continue;
+            }
+
+            if (!defined(articulations)) {
+                model.articulations = articulations = new PropertyBag();
+            }
+
+            if (!articulations.hasProperty(key)) {
+                articulations.addProperty(key);
+            }
+
+            processPacketData(Number, articulations, key, articulationStageData, combinedInterval, sourceUri, entityCollection);
         }
     }
 

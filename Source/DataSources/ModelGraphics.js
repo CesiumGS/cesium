@@ -26,6 +26,10 @@ define([
         return new PropertyBag(value, createNodeTransformationProperty);
     }
 
+    function createArticulationStagePropertyBag(value) {
+        return new PropertyBag(value);
+    }
+
     /**
      * A 3D model based on {@link https://github.com/KhronosGroup/glTF|glTF}, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
      * The position and orientation of the model is determined by the containing {@link Entity}.
@@ -57,6 +61,7 @@ define([
      * @param {Property} [options.lightColor] A property specifying the light color to use when shading the model. The default sun light color will be used when <code>undefined</code>.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
      * @param {PropertyBag} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
+     * @param {PropertyBag} [options.articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
      * @param {Property} [options.clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      *
      * @see {@link https://cesiumjs.org/tutorials/3D-Models-Tutorial/|3D Models Tutorial}
@@ -102,6 +107,8 @@ define([
         this._distanceDisplayConditionSubscription = undefined;
         this._nodeTransformations = undefined;
         this._nodeTransformationsSubscription = undefined;
+        this._articulations = undefined;
+        this._articulationsSubscription = undefined;
         this._clippingPlanes = undefined;
         this._clippingPlanesSubscription = undefined;
 
@@ -280,6 +287,14 @@ define([
         nodeTransformations : createPropertyDescriptor('nodeTransformations', undefined, createNodeTransformationPropertyBag),
 
         /**
+         * Gets or sets the set of articulation values to apply to this model.  This is represented as an {@link PropertyBag}, where keys are
+         * composed as the name of the articulation, a single space, and the name of the stage.
+         * @memberof ModelGraphics.prototype
+         * @type {PropertyBag}
+         */
+        articulations : createPropertyDescriptor('articulations', undefined, createArticulationStagePropertyBag),
+
+        /**
          * A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
          * @memberof ModelGraphics.prototype
          * @type {Property}
@@ -305,7 +320,6 @@ define([
         result.incrementallyLoadTextures = this.incrementallyLoadTextures;
         result.runAnimations = this.runAnimations;
         result.clampAnimations = this.clampAnimations;
-        result.shadows = this.shadows;
         result.heightReference = this._heightReference;
         result.silhouetteColor = this.silhouetteColor;
         result.silhouetteSize = this.silhouetteSize;
@@ -316,6 +330,7 @@ define([
         result.lightColor = this.lightColor;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         result.nodeTransformations = this.nodeTransformations;
+        result.articulations = this.articulations;
         result.clippingPlanes = this.clippingPlanes;
         return result;
     };
@@ -360,6 +375,16 @@ define([
                 targetNodeTransformations.merge(sourceNodeTransformations);
             } else {
                 this.nodeTransformations = new PropertyBag(sourceNodeTransformations, createNodeTransformationProperty);
+            }
+        }
+
+        var sourceArticulations = source.articulations;
+        if (defined(sourceArticulations)) {
+            var targetArticulations = this.articulations;
+            if (defined(targetArticulations)) {
+                targetArticulations.merge(sourceArticulations);
+            } else {
+                this.articulations = new PropertyBag(sourceArticulations);
             }
         }
     };
