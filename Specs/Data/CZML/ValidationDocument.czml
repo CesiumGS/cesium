@@ -374,6 +374,9 @@
             ]
           }
         }
+      },
+      "articulations":{
+        "prop":25496
       }
     },
     "path":{
@@ -7655,6 +7658,11 @@
           "scale":{
             "reference":"Constant#model.nodeTransformations.prop.scale"
           }
+        }
+      },
+      "articulations":{
+        "referenceProp":{
+          "reference":"Constant#model.articulations.prop"
         }
       }
     },

@@ -4486,6 +4486,7 @@ defineSuite([
             expect(e.model.nodeTransformations.prop.translation.getValue(date)).toEqual(new Cartesian3(18548, 48456, 21181));
             expect(e.model.nodeTransformations.prop.rotation.getValue(date)).toEqualEpsilon(new Quaternion(0.527960606328925, 0.567156704919186, 0.624812964569899, 0.0959146992664751), 1e-14);
             expect(e.model.nodeTransformations.prop.scale.getValue(date)).toEqual(new Cartesian3(53739, 37841, 41107));
+            expect(e.model.articulations.prop.getValue(date)).toEqual(25496.0);
             expect(e.path.show.getValue(date)).toEqual(true);
             expect(e.path.leadTime.getValue(date)).toEqual(5997.0);
             expect(e.path.trailTime.getValue(date)).toEqual(52915.0);
@@ -5457,6 +5458,7 @@ defineSuite([
             expect(e.model.nodeTransformations.referenceProp.translation.getValue(date)).toEqual(constant.model.nodeTransformations.prop.translation.getValue(date));
             expect(e.model.nodeTransformations.referenceProp.rotation.getValue(date)).toEqual(constant.model.nodeTransformations.prop.rotation.getValue(date));
             expect(e.model.nodeTransformations.referenceProp.scale.getValue(date)).toEqual(constant.model.nodeTransformations.prop.scale.getValue(date));
+            expect(e.model.articulations.referenceProp.getValue(date)).toEqual(constant.model.articulations.prop.getValue(date));
             expect(e.path.show.getValue(date)).toEqual(constant.path.show.getValue(date));
             expect(e.path.leadTime.getValue(date)).toEqual(constant.path.leadTime.getValue(date));
             expect(e.path.trailTime.getValue(date)).toEqual(constant.path.trailTime.getValue(date));
