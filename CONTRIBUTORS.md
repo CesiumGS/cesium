@@ -208,3 +208,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Alexander Popiak](https://github.com/apopiak)
 * [Trubie Turner](https://github.com/flexei)
 * [Merijn Wijngaard](https://github.com/mwijngaard)
+* [Dennis Adams](https://github.com/dennisadams)
