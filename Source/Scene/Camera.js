@@ -2775,7 +2775,6 @@ define([
         options.orientation.pitch = Number(orientation.pitch);
         options.orientation.roll = Number(orientation.roll);
 
-
         var mode = this._mode;
         if (mode === SceneMode.MORPHING) {
             return;
