@@ -1683,9 +1683,7 @@ define([
         processPacketData(Cartesian3, label, 'eyeOffset', labelData.eyeOffset, interval, sourceUri, entityCollection);
         processPacketData(HorizontalOrigin, label, 'horizontalOrigin', labelData.horizontalOrigin, interval, sourceUri, entityCollection);
         processPacketData(VerticalOrigin, label, 'verticalOrigin', labelData.verticalOrigin, interval, sourceUri, entityCollection);
-        processPacketData(
-          
-          , label, 'heightReference', labelData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, label, 'heightReference', labelData.heightReference, interval, sourceUri, entityCollection);
         processPacketData(Color, label, 'fillColor', labelData.fillColor, interval, sourceUri, entityCollection);
         processPacketData(Color, label, 'outlineColor', labelData.outlineColor, interval, sourceUri, entityCollection);
         processPacketData(Number, label, 'outlineWidth', labelData.outlineWidth, interval, sourceUri, entityCollection);
