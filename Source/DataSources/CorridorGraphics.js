@@ -25,20 +25,20 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the corridor.
      * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions that define the centerline of the corridor.
      * @param {Property} [options.width] A numeric Property specifying the distance between the edges of the corridor.
-     * @param {Property} [options.cornerType=CornerType.ROUNDED] A {@link CornerType} Property specifying the style of the corners.
      * @param {Property} [options.height=0] A numeric Property specifying the altitude of the corridor relative to the ellipsoid surface.
      * @param {Property} [options.heightReference] A Property specifying what the height is relative to.
      * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the corridor's extruded face relative to the ellipsoid surface.
      * @param {Property} [options.extrudedHeightReference] A Property specifying what the extrudedHeight is relative to.
-     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the corridor.
+     * @param {Property} [options.cornerType=CornerType.ROUNDED] A {@link CornerType} Property specifying the style of the corners.
+     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the distance between each latitude and longitude.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the corridor is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the corridor.
      * @param {Property} [options.outline=false] A boolean Property specifying whether the corridor is outlined.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
-     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the distance between each latitude and longitude.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the corridor casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this corridor will be displayed.
      * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this corridor will classify terrain, 3D Tiles, or both when on the ground.
@@ -48,12 +48,13 @@ define([
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
      */
     function CorridorGraphics(options) {
+        this._definitionChanged = new Event();
         this._show = undefined;
         this._showSubscription = undefined;
-        this._material = undefined;
-        this._materialSubscription = undefined;
         this._positions = undefined;
         this._positionsSubscription = undefined;
+        this._width = undefined;
+        this._widthSubscription = undefined;
         this._height = undefined;
         this._heightSubscription = undefined;
         this._heightReference = undefined;
@@ -62,14 +63,14 @@ define([
         this._extrudedHeightSubscription = undefined;
         this._extrudedHeightReference = undefined;
         this._extrudedHeightReferenceSubscription = undefined;
-        this._granularity = undefined;
-        this._granularitySubscription = undefined;
-        this._width = undefined;
-        this._widthSubscription = undefined;
         this._cornerType = undefined;
         this._cornerTypeSubscription = undefined;
+        this._granularity = undefined;
+        this._granularitySubscription = undefined;
         this._fill = undefined;
         this._fillSubscription = undefined;
+        this._material = undefined;
+        this._materialSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
@@ -84,7 +85,6 @@ define([
         this._classificationTypeSubscription = undefined;
         this._zIndex = undefined;
         this._zIndexSubscription = undefined;
-        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -111,19 +111,18 @@ define([
         show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the Property specifying the material used to fill the corridor.
-         * @memberof CorridorGraphics.prototype
-         * @type {MaterialProperty}
-         * @default Color.WHITE
-         */
-        material : createMaterialPropertyDescriptor('material'),
-
-        /**
          * Gets or sets a Property specifying the array of {@link Cartesian3} positions that define the centerline of the corridor.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          */
         positions : createPropertyDescriptor('positions'),
+
+        /**
+         * Gets or sets the numeric Property specifying the width of the corridor.
+         * @memberof CorridorGraphics.prototype
+         * @type {Property}
+         */
+        width : createPropertyDescriptor('width'),
 
         /**
          * Gets or sets the numeric Property specifying the altitude of the corridor.
@@ -159,6 +158,14 @@ define([
         extrudedHeightReference : createPropertyDescriptor('extrudedHeightReference'),
 
         /**
+         * Gets or sets the {@link CornerType} Property specifying how corners are styled.
+         * @memberof CorridorGraphics.prototype
+         * @type {Property}
+         * @default CornerType.ROUNDED
+         */
+        cornerType : createPropertyDescriptor('cornerType'),
+
+        /**
          * Gets or sets the numeric Property specifying the sampling distance between each latitude and longitude point.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
@@ -167,19 +174,20 @@ define([
         granularity : createPropertyDescriptor('granularity'),
 
         /**
-         * Gets or sets the numeric Property specifying the width of the corridor.
-         * @memberof CorridorGraphics.prototype
-         * @type {Property}
-         */
-        width : createPropertyDescriptor('width'),
-
-        /**
          * Gets or sets the boolean Property specifying whether the corridor is filled with the provided material.
          * @memberof CorridorGraphics.prototype
          * @type {Property}
          * @default true
          */
         fill : createPropertyDescriptor('fill'),
+
+        /**
+         * Gets or sets the Property specifying the material used to fill the corridor.
+         * @memberof CorridorGraphics.prototype
+         * @type {MaterialProperty}
+         * @default Color.WHITE
+         */
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Property specifying whether the corridor is outlined.
@@ -204,14 +212,6 @@ define([
          * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth'),
-
-        /**
-         * Gets or sets the {@link CornerType} Property specifying how corners are styled.
-         * @memberof CorridorGraphics.prototype
-         * @type {Property}
-         * @default CornerType.ROUNDED
-         */
-        cornerType : createPropertyDescriptor('cornerType'),
 
         /**
          * Get or sets the enum Property specifying whether the corridor
@@ -257,19 +257,19 @@ define([
             return new CorridorGraphics(this);
         }
         result.show = this.show;
-        result.material = this.material;
         result.positions = this.positions;
+        result.width = this.width;
         result.height = this.height;
         result.heightReference = this.heightReference;
         result.extrudedHeight = this.extrudedHeight;
         result.extrudedHeightReference = this.extrudedHeightReference;
+        result.cornerType = this.cornerType;
         result.granularity = this.granularity;
-        result.width = this.width;
         result.fill = this.fill;
+        result.material = this.material;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
-        result.cornerType = this.cornerType;
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         result.classificationType = this.classificationType;
@@ -291,19 +291,19 @@ define([
         //>>includeEnd('debug');
 
         this.show = defaultValue(this.show, source.show);
-        this.material = defaultValue(this.material, source.material);
         this.positions = defaultValue(this.positions, source.positions);
+        this.width = defaultValue(this.width, source.width);
         this.height = defaultValue(this.height, source.height);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.extrudedHeight = defaultValue(this.extrudedHeight, source.extrudedHeight);
         this.extrudedHeightReference = defaultValue(this.extrudedHeightReference,  source.extrudedHeightReference);
+        this.cornerType = defaultValue(this.cornerType, source.cornerType);
         this.granularity = defaultValue(this.granularity, source.granularity);
-        this.width = defaultValue(this.width, source.width);
         this.fill = defaultValue(this.fill, source.fill);
+        this.material = defaultValue(this.material, source.material);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-        this.cornerType = defaultValue(this.cornerType, source.cornerType);
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.classificationType = defaultValue(this.classificationType, source.classificationType);
