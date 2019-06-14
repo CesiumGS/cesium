@@ -1871,7 +1871,7 @@ define([
                 })
                 .then(function(blob) {
                     if (!defined(blob)) {
-                        deferred.reject('Failed to fetch blob.');
+                        deferred.reject(new RuntimeError('Successfully retrieved ' + url + ' but it contained no content.'));
                         return;
                     }
 
@@ -1879,15 +1879,7 @@ define([
                         flipY: flipY,
                         premultiplyAlpha: false
                     });
-                })
-                .then(function(imageBitmap) {
-                    if (!defined(imageBitmap)) {
-                        deferred.reject('Failed to create imageBitmap from blob.');
-                        return;
-                    }
-
-                    deferred.resolve(imageBitmap);
-                });
+                }).then(deferred.resolve);
             })
             .otherwise(deferred.reject);
     };
