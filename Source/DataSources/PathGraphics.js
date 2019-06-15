@@ -23,30 +23,30 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the path.
      * @param {Property} [options.leadTime] A Property specifying the number of seconds behind the object to show.
      * @param {Property} [options.trailTime] A Property specifying the number of seconds in front of the object to show.
-     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the path.
      * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
-     * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the path.
      * @param {Property} [options.resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position.
+     * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the path.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this path will be displayed.
      */
     function PathGraphics(options) {
-        this._material = undefined;
-        this._materialSubscription = undefined;
+        this._definitionChanged = new Event();
         this._show = undefined;
         this._showSubscription = undefined;
-        this._width = undefined;
-        this._widthSubscription = undefined;
-        this._resolution = undefined;
-        this._resolutionSubscription = undefined;
         this._leadTime = undefined;
         this._leadTimeSubscription = undefined;
         this._trailTime = undefined;
         this._trailTimeSubscription = undefined;
+        this._width = undefined;
+        this._widthSubscription = undefined;
+        this._resolution = undefined;
+        this._resolutionSubscription = undefined;
+        this._material = undefined;
+        this._materialSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
-        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -73,12 +73,18 @@ define([
         show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the Property specifying the material used to draw the path.
+         * Gets or sets the Property specifying the number of seconds in front of the object to show.
          * @memberof PathGraphics.prototype
-         * @type {MaterialProperty}
-         * @default Color.WHITE
+         * @type {Property}
          */
-        material : createMaterialPropertyDescriptor('material'),
+        leadTime : createPropertyDescriptor('leadTime'),
+
+        /**
+         * Gets or sets the Property specifying the number of seconds behind the object to show.
+         * @memberof PathGraphics.prototype
+         * @type {Property}
+         */
+        trailTime : createPropertyDescriptor('trailTime'),
 
         /**
          * Gets or sets the numeric Property specifying the width in pixels.
@@ -97,18 +103,12 @@ define([
         resolution : createPropertyDescriptor('resolution'),
 
         /**
-         * Gets or sets the Property specifying the number of seconds in front of the object to show.
+         * Gets or sets the Property specifying the material used to draw the path.
          * @memberof PathGraphics.prototype
-         * @type {Property}
+         * @type {MaterialProperty}
+         * @default Color.WHITE
          */
-        leadTime : createPropertyDescriptor('leadTime'),
-
-        /**
-         * Gets or sets the Property specifying the number of seconds behind the object to show.
-         * @memberof PathGraphics.prototype
-         * @type {Property}
-         */
-        trailTime : createPropertyDescriptor('trailTime'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this path will be displayed.
@@ -128,12 +128,12 @@ define([
         if (!defined(result)) {
             return new PathGraphics(this);
         }
-        result.material = this.material;
-        result.width = this.width;
-        result.resolution = this.resolution;
         result.show = this.show;
         result.leadTime = this.leadTime;
         result.trailTime = this.trailTime;
+        result.width = this.width;
+        result.resolution = this.resolution;
+        result.material = this.material;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
     };
@@ -151,12 +151,12 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.material = defaultValue(this.material, source.material);
-        this.width = defaultValue(this.width, source.width);
-        this.resolution = defaultValue(this.resolution, source.resolution);
         this.show = defaultValue(this.show, source.show);
         this.leadTime = defaultValue(this.leadTime, source.leadTime);
         this.trailTime = defaultValue(this.trailTime, source.trailTime);
+        this.width = defaultValue(this.width, source.width);
+        this.resolution = defaultValue(this.resolution, source.resolution);
+        this.material = defaultValue(this.material, source.material);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };
 

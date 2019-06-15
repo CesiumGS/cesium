@@ -883,8 +883,8 @@ define([
                         this.tileText += '<br>SW corner: ' + newTile.rectangle.west + ', ' + newTile.rectangle.south;
                         this.tileText += '<br>NE corner: ' + newTile.rectangle.east + ', ' + newTile.rectangle.north;
                         var data = newTile.data;
-                        if (defined(data)) {
-                            this.tileText += '<br>Min: ' + data.minimumHeight + ' Max: ' + data.maximumHeight;
+                        if (defined(data) && defined(data.tileBoundingRegion)) {
+                            this.tileText += '<br>Min: ' + data.tileBoundingRegion.minimumHeight + ' Max: ' + data.tileBoundingRegion.maximumHeight;
                         } else {
                             this.tileText += '<br>(Tile is not loaded)';
                         }
