@@ -86,18 +86,21 @@ define([
          * @type {Property}
          */
         color : createPropertyDescriptor('color'),
+
         /**
          * Gets or sets the Property specifying the {@link Color} of the gaps in the line.
          * @memberof PolylineDashMaterialProperty.prototype
          * @type {Property}
          */
         gapColor : createPropertyDescriptor('gapColor'),
+
         /**
          * Gets or sets the numeric Property specifying the length of a dash cycle
          * @memberof PolylineDashMaterialProperty.prototype
          * @type {Property}
          */
         dashLength : createPropertyDescriptor('dashLength'),
+
         /**
          * Gets or sets the numeric Property specifying a dash pattern
          * @memberof PolylineDashMaterialProperty.prototype
@@ -147,8 +150,7 @@ define([
                 Property.equals(this._color, other._color) &&
                 Property.equals(this._gapColor, other._gapColor) &&
                 Property.equals(this._dashLength, other._dashLength) &&
-                Property.equals(this._dashPattern, other._dashPattern)
-                );
+                Property.equals(this._dashPattern, other._dashPattern));
     };
 
     return PolylineDashMaterialProperty;

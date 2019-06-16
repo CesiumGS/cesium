@@ -94,6 +94,7 @@
           57494,62432,42995
         ]
       },
+      "heightReference":"CLAMP_TO_GROUND",
       "fill":true,
       "material":{
         "solidColor":{
@@ -128,8 +129,8 @@
       },
       "width":20413,
       "height":8062,
-      "extrudedHeight":22846,
       "heightReference":"CLAMP_TO_GROUND",
+      "extrudedHeight":22846,
       "extrudedHeightReference":"CLAMP_TO_GROUND",
       "cornerType":"BEVELED",
       "granularity":44105,
@@ -156,6 +157,7 @@
           15797,46507
         ]
       },
+      "classificationType":"TERRAIN",
       "zIndex":59315
     },
     "cylinder":{
@@ -163,6 +165,7 @@
       "length":33298,
       "topRadius":16245,
       "bottomRadius":59378,
+      "heightReference":"CLAMP_TO_GROUND",
       "fill":true,
       "material":{
         "solidColor":{
@@ -194,8 +197,8 @@
       "semiMajorAxis":60072,
       "semiMinorAxis":38653,
       "height":15549,
-      "extrudedHeight":55640,
       "heightReference":"CLAMP_TO_GROUND",
+      "extrudedHeight":55640,
       "extrudedHeightReference":"CLAMP_TO_GROUND",
       "rotation":27722,
       "stRotation":4692,
@@ -224,6 +227,7 @@
           27813,30828
         ]
       },
+      "classificationType":"TERRAIN",
       "zIndex":3341
     },
     "ellipsoid":{
@@ -233,6 +237,7 @@
           15638,24381,37983
         ]
       },
+      "heightReference":"CLAMP_TO_GROUND",
       "fill":true,
       "material":{
         "solidColor":{
@@ -369,14 +374,17 @@
             ]
           }
         }
+      },
+      "articulations":{
+        "prop":25496
       }
     },
     "path":{
       "show":true,
-      "width":56040,
-      "resolution":31563,
       "leadTime":5997,
       "trailTime":52915,
+      "width":56040,
+      "resolution":31563,
       "material":{
         "solidColor":{
           "color":{
@@ -434,8 +442,8 @@
       },
       "arcType":"RHUMB",
       "height":26391,
-      "extrudedHeight":15922,
       "heightReference":"CLAMP_TO_GROUND",
+      "extrudedHeight":15922,
       "extrudedHeightReference":"CLAMP_TO_GROUND",
       "stRotation":2555,
       "granularity":17060,
@@ -465,6 +473,7 @@
           5989,26104
         ]
       },
+      "classificationType":"TERRAIN",
       "zIndex":31269
     },
     "polyline":{
@@ -503,6 +512,7 @@
         ]
       },
       "clampToGround":true,
+      "classificationType":"TERRAIN",
       "zIndex":17658
     },
     "rectangle":{
@@ -513,8 +523,8 @@
         ]
       },
       "height":20608,
-      "extrudedHeight":23002,
       "heightReference":"CLAMP_TO_GROUND",
+      "extrudedHeight":23002,
       "extrudedHeightReference":"CLAMP_TO_GROUND",
       "rotation":54979,
       "stRotation":8079,
@@ -542,6 +552,7 @@
           21388,23379
         ]
       },
+      "classificationType":"TERRAIN",
       "zIndex":445
     },
     "wall":{
@@ -7274,6 +7285,9 @@
       "dimensions":{
         "reference":"Constant#box.dimensions"
       },
+      "heightReference":{
+        "reference":"Constant#box.heightReference"
+      },
       "fill":{
         "reference":"Constant#box.fill"
       },
@@ -7316,11 +7330,11 @@
       "height":{
         "reference":"Constant#corridor.height"
       },
-      "extrudedHeight":{
-        "reference":"Constant#corridor.extrudedHeight"
-      },
       "heightReference":{
         "reference":"Constant#corridor.heightReference"
+      },
+      "extrudedHeight":{
+        "reference":"Constant#corridor.extrudedHeight"
       },
       "extrudedHeightReference":{
         "reference":"Constant#corridor.extrudedHeightReference"
@@ -7356,6 +7370,9 @@
       "distanceDisplayCondition":{
         "reference":"Constant#corridor.distanceDisplayCondition"
       },
+      "classificationType":{
+        "reference":"Constant#corridor.classificationType"
+      },
       "zIndex":{
         "reference":"Constant#corridor.zIndex"
       }
@@ -7372,6 +7389,9 @@
       },
       "bottomRadius":{
         "reference":"Constant#cylinder.bottomRadius"
+      },
+      "heightReference":{
+        "reference":"Constant#cylinder.heightReference"
       },
       "fill":{
         "reference":"Constant#cylinder.fill"
@@ -7418,11 +7438,11 @@
       "height":{
         "reference":"Constant#ellipse.height"
       },
-      "extrudedHeight":{
-        "reference":"Constant#ellipse.extrudedHeight"
-      },
       "heightReference":{
         "reference":"Constant#ellipse.heightReference"
+      },
+      "extrudedHeight":{
+        "reference":"Constant#ellipse.extrudedHeight"
       },
       "extrudedHeightReference":{
         "reference":"Constant#ellipse.extrudedHeightReference"
@@ -7464,6 +7484,9 @@
       "distanceDisplayCondition":{
         "reference":"Constant#ellipse.distanceDisplayCondition"
       },
+      "classificationType":{
+        "reference":"Constant#ellipse.classificationType"
+      },
       "zIndex":{
         "reference":"Constant#ellipse.zIndex"
       }
@@ -7474,6 +7497,9 @@
       },
       "radii":{
         "reference":"Constant#ellipsoid.radii"
+      },
+      "heightReference":{
+        "reference":"Constant#ellipsoid.heightReference"
       },
       "fill":{
         "reference":"Constant#ellipsoid.fill"
@@ -7633,23 +7659,28 @@
             "reference":"Constant#model.nodeTransformations.prop.scale"
           }
         }
+      },
+      "articulations":{
+        "referenceProp":{
+          "reference":"Constant#model.articulations.prop"
+        }
       }
     },
     "path":{
       "show":{
         "reference":"Constant#path.show"
       },
-      "width":{
-        "reference":"Constant#path.width"
-      },
-      "resolution":{
-        "reference":"Constant#path.resolution"
-      },
       "leadTime":{
         "reference":"Constant#path.leadTime"
       },
       "trailTime":{
         "reference":"Constant#path.trailTime"
+      },
+      "width":{
+        "reference":"Constant#path.width"
+      },
+      "resolution":{
+        "reference":"Constant#path.resolution"
       },
       "material":{
         "solidColor":{
@@ -7710,11 +7741,11 @@
       "height":{
         "reference":"Constant#polygon.height"
       },
-      "extrudedHeight":{
-        "reference":"Constant#polygon.extrudedHeight"
-      },
       "heightReference":{
         "reference":"Constant#polygon.heightReference"
+      },
+      "extrudedHeight":{
+        "reference":"Constant#polygon.extrudedHeight"
       },
       "extrudedHeightReference":{
         "reference":"Constant#polygon.extrudedHeightReference"
@@ -7758,6 +7789,9 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#polygon.distanceDisplayCondition"
+      },
+      "classificationType":{
+        "reference":"Constant#polygon.classificationType"
       },
       "zIndex":{
         "reference":"Constant#polygon.zIndex"
@@ -7805,6 +7839,9 @@
       "clampToGround":{
         "reference":"Constant#polyline.clampToGround"
       },
+      "classificationType":{
+        "reference":"Constant#polyline.classificationType"
+      },
       "zIndex":{
         "reference":"Constant#polyline.zIndex"
       }
@@ -7819,11 +7856,11 @@
       "height":{
         "reference":"Constant#rectangle.height"
       },
-      "extrudedHeight":{
-        "reference":"Constant#rectangle.extrudedHeight"
-      },
       "heightReference":{
         "reference":"Constant#rectangle.heightReference"
+      },
+      "extrudedHeight":{
+        "reference":"Constant#rectangle.extrudedHeight"
       },
       "extrudedHeightReference":{
         "reference":"Constant#rectangle.extrudedHeightReference"
@@ -7861,6 +7898,9 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#rectangle.distanceDisplayCondition"
+      },
+      "classificationType":{
+        "reference":"Constant#rectangle.classificationType"
       },
       "zIndex":{
         "reference":"Constant#rectangle.zIndex"
@@ -11419,20 +11459,6 @@
       }
     },
     "path":{
-      "width":{
-        "epoch":"2016-06-17T12:00:00Z",
-        "number":[
-          0,32449,
-          3600,33819
-        ]
-      },
-      "resolution":{
-        "epoch":"2016-06-17T12:00:00Z",
-        "number":[
-          0,8399,
-          3600,19400
-        ]
-      },
       "leadTime":{
         "epoch":"2016-06-17T12:00:00Z",
         "number":[
@@ -11445,6 +11471,20 @@
         "number":[
           0,34052,
           3600,57713
+        ]
+      },
+      "width":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,32449,
+          3600,33819
+        ]
+      },
+      "resolution":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,8399,
+          3600,19400
         ]
       },
       "material":{
