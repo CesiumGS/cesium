@@ -253,7 +253,7 @@ define([
 
     /**
      * The {@link VertexFormat} that all {@link PerInstanceColorAppearance} instances
-     * are compatible with when {@link PerInstanceColorAppearance#flat} is <code>false</code>.
+     * are compatible with when {@link PerInstanceColorAppearance#flat} is <code>true</code>.
      * This requires only a <code>position</code> attribute.
      *
      * @type VertexFormat
