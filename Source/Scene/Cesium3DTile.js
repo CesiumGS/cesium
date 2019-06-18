@@ -1184,6 +1184,9 @@ define([
     function createSphere(sphere, transform, result) {
         var center = Cartesian3.fromElements(sphere[0], sphere[1], sphere[2], scratchCenter);
         var radius = sphere[3];
+        if (radius === 0) {
+            radius = CesiumMath.EPSILON7;
+        }
 
         // Find the transformed center and radius
         center = Matrix4.multiplyByPoint(transform, center, center);
