@@ -13,17 +13,13 @@ define([
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
         '../Core/EllipsoidTangentPlane',
         '../Core/GeometryInstance',
-        '../Core/GeometryOffsetAttribute',
-        '../Core/isArray',
         '../Core/Iso8601',
-        '../Core/oneTimeWarning',
         '../Core/OffsetGeometryInstanceAttribute',
+        '../Core/oneTimeWarning',
         '../Core/PolygonGeometry',
-        '../Core/PolygonHierarchy',
         '../Core/PolygonOutlineGeometry',
         '../Core/Rectangle',
         '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/GroundPrimitive',
         '../Scene/HeightReference',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
@@ -47,17 +43,13 @@ define([
         DistanceDisplayConditionGeometryInstanceAttribute,
         EllipsoidTangentPlane,
         GeometryInstance,
-        GeometryOffsetAttribute,
-        isArray,
         Iso8601,
-        oneTimeWarning,
         OffsetGeometryInstanceAttribute,
+        oneTimeWarning,
         PolygonGeometry,
-        PolygonHierarchy,
         PolygonOutlineGeometry,
         Rectangle,
         ShowGeometryInstanceAttribute,
-        GroundPrimitive,
         HeightReference,
         MaterialAppearance,
         PerInstanceColorAppearance,
@@ -223,10 +215,11 @@ define([
     };
 
     PolygonGeometryUpdater.prototype._computeCenter = function(time, result) {
-        var positions = Property.getValueOrUndefined(this._entity.polygon.hierarchy, time);
-        if (defined(positions) && !isArray(positions)) {
-            positions = positions.positions;
+        var hierarchy = Property.getValueOrUndefined(this._entity.polygon.hierarchy, time);
+        if (!defined(hierarchy)) {
+            return;
         }
+        var positions = hierarchy.positions;
         if (positions.length === 0) {
             return;
         }
@@ -289,10 +282,6 @@ define([
         options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
 
         var hierarchyValue = polygon.hierarchy.getValue(Iso8601.MINIMUM_VALUE);
-        if (isArray(hierarchyValue)) {
-            hierarchyValue = new PolygonHierarchy(hierarchyValue);
-        }
-
         var heightValue = Property.getValueOrUndefined(polygon.height, Iso8601.MINIMUM_VALUE);
         var heightReferenceValue = Property.getValueOrDefault(polygon.heightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE);
         var extrudedHeightValue = Property.getValueOrUndefined(polygon.extrudedHeight, Iso8601.MINIMUM_VALUE);
@@ -364,12 +353,7 @@ define([
     DyanmicPolygonGeometryUpdater.prototype._setOptions = function(entity, polygon, time) {
         var options = this._options;
 
-        var hierarchy = Property.getValueOrUndefined(polygon.hierarchy, time);
-        if (isArray(hierarchy)) {
-            options.polygonHierarchy = new PolygonHierarchy(hierarchy);
-        } else {
-            options.polygonHierarchy = hierarchy;
-        }
+        options.polygonHierarchy = Property.getValueOrUndefined(polygon.hierarchy, time);
 
         var heightValue = Property.getValueOrUndefined(polygon.height, time);
         var heightReferenceValue = Property.getValueOrDefault(polygon.heightReference, time, HeightReference.NONE);
