@@ -1155,13 +1155,13 @@ define([
 
     function createRegion(region, transform, initialTransform, result) {
         if (region[2] <= region[0]) {
-            region[2] += CesiumMath.EPSILON7;
+            region[2] = region[0] + CesiumMath.EPSILON7;
         }
         if (region[3] <= region[1]) {
-            region[3] += CesiumMath.EPSILON7;
+            region[3] = region[1] + CesiumMath.EPSILON7;
         }
         if (region[5] <= region[4]) {
-            region[5] += CesiumMath.EPSILON7;
+            region[5] =  region[4] + CesiumMath.EPSILON7;
         }
 
         if (!Matrix4.equalsEpsilon(transform, initialTransform, CesiumMath.EPSILON8)) {
