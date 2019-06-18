@@ -125,7 +125,9 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Esri](https://www.esri.com)
    * [Tamrat Belayneh](https://github.com/Tamrat-B/)
    * [Chris Andrews](https://github.com/chri7928/)
-   
+* [Cesium GS, Inc.](https://cesium.com/)
+   *
+
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
