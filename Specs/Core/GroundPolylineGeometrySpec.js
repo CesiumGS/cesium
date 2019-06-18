@@ -287,7 +287,7 @@ defineSuite([
             positions : Cartesian3.fromDegreesArray([
                 0.01, 0.0,
                 0.02, 0.0,
-                0.01, 0.0
+                0.01, CesiumMath.EPSILON7
             ]),
             granularity : 0.0
         });
@@ -299,11 +299,10 @@ defineSuite([
 
         var miteredStartNormal = Cartesian3.unpack(startNormalAndForwardOffsetZvalues, 32);
         var miteredEndNormal = Cartesian3.unpack(endNormalAndTextureCoordinateNormalizationXvalues, 0);
-        var reverseMiteredEndNormal = Cartesian3.multiplyByScalar(miteredEndNormal, -1.0, new Cartesian3());
 
-        expect(Cartesian3.equalsEpsilon(miteredStartNormal, reverseMiteredEndNormal, CesiumMath.EPSILON7)).toBe(true);
+        expect(Cartesian3.equalsEpsilon(miteredStartNormal, miteredEndNormal, CesiumMath.EPSILON7)).toBe(true);
 
-        var approximateExpectedMiterNormal = new Cartesian3(0.0, 1.0, 0.0);
+        var approximateExpectedMiterNormal = new Cartesian3(0.0, -1.0, 0.0);
 
         Cartesian3.normalize(approximateExpectedMiterNormal, approximateExpectedMiterNormal);
         expect(Cartesian3.equalsEpsilon(approximateExpectedMiterNormal, miteredStartNormal, CesiumMath.EPSILON2)).toBe(true);

@@ -5,9 +5,10 @@ sudo: false
 addons:
   chrome: stable
   firefox: latest
+services:
+  - xvfb
 before_script:
   - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
 script:
   - npm --silent run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
