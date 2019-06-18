@@ -242,7 +242,7 @@ define([
 
     /**
      * The {@link VertexFormat} that all {@link PerInstanceColorAppearance} instances
-     * are compatible with.  This requires only <code>position</code> and <code>st</code>
+     * are compatible with.  This requires only <code>position</code> and <code>normal</code>
      * attributes.
      *
      * @type VertexFormat
