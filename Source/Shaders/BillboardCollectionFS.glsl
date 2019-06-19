@@ -93,7 +93,6 @@ void main()
     vec4 color = texture2D(u_atlas, v_textureCoordinates);
 
 #ifdef SDF
-
     float outlineWidth = v_outlineWidth;
     vec4 outlineColor = v_outlineColor;
 
