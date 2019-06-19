@@ -61,7 +61,7 @@ define([
      *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
      *   }),
      *   attributes : {
-     *     color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+     *     color : new Cesium.ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 0.5)
      *   }
      * });
      *
@@ -70,7 +70,7 @@ define([
      *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 40.0, 10.0, 50.0)
      *   }),
      *   attributes : {
-     *     color : new Cesium.Color(0.0, 0.0, 1.0, 0.5)
+     *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 0.0, 1.0, 0.5)
      *   }
      * });
      *
