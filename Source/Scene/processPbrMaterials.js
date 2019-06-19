@@ -740,9 +740,9 @@ define([
 
             fragmentShader += '    vec3 r = normalize(czm_inverseViewRotation * normalize(reflect(v, n)));\n';
             // Figure out if the reflection vector hits the ellipsoid
-            fragmentShader += '    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();\n';
+            fragmentShader += '    vec3 ellipsoid_radii = vec3(6378137.0, 6378137.0, 6356752.314245);\n';
             fragmentShader += '    float vertexRadius = length(positionWC);\n';
-            fragmentShader += '    float horizonDotNadir = 1.0 - min(1.0, ellipsoid.radii.x / vertexRadius);\n';
+            fragmentShader += '    float horizonDotNadir = 1.0 - min(1.0, ellipsoid_radii.x / vertexRadius);\n';
             fragmentShader += '    float reflectionDotNadir = dot(r, normalize(positionWC));\n';
             // Flipping the X vector is a cheap way to get the inverse of czm_temeToPseudoFixed, since that's a rotation about Z.
             fragmentShader += '    r.x = -r.x;\n';

@@ -211,3 +211,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Trubie Turner](https://github.com/flexei)
 * [Merijn Wijngaard](https://github.com/mwijngaard)
 * [Dennis Adams](https://github.com/dennisadams)
+* [Hai Zhou](https://github.com/verybigzhouhai)
