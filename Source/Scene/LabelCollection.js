@@ -263,15 +263,18 @@ define([
                     });
 
                     var ctx = canvas.getContext('2d');
-                    var imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    for (var i = 0; i < canvas.width; i++) {
-                        for (var j = 0; j < canvas.height; j++) {
-                            var baseIndex = (j * canvas.width + i);
+                    var canvasWidth = canvas.width;
+                    var canvasHeight = canvas.height;
+                    var imgData = ctx.getImageData(0, 0, canvasWidth, canvasHeight);
+                    for (var i = 0; i < canvasWidth; i++) {
+                        for (var j = 0; j < canvasHeight; j++) {
+                            var baseIndex = (j * canvasWidth + i);
                             var alpha = sdfValues[baseIndex] * 255;
-                            imgData.data[baseIndex * 4 + 0] = alpha;
-                            imgData.data[baseIndex * 4 + 1] = alpha;
-                            imgData.data[baseIndex * 4 + 2] = alpha;
-                            imgData.data[baseIndex * 4 + 3] = alpha;
+                            var imageIndex = baseIndex * 4;
+                            imgData.data[imageIndex + 0] = alpha;
+                            imgData.data[imageIndex + 1] = alpha;
+                            imgData.data[imageIndex + 2] = alpha;
+                            imgData.data[imageIndex + 3] = alpha;
                         }
                     }
                     ctx.putImageData(imgData, 0, 0);
