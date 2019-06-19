@@ -91,7 +91,7 @@ define([
     var DISTANCE_DISPLAY_CONDITION_INDEX = Billboard.DISTANCE_DISPLAY_CONDITION;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE;
     var TEXTURE_COORDINATE_BOUNDS = Billboard.TEXTURE_COORDINATE_BOUNDS;
-    var SDF = Billboard.SDF;
+    var SDF_INDEX = Billboard.SDF_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations;
@@ -793,7 +793,7 @@ define([
                 index : attributeLocations.sdf,
                 componentsPerAttribute : 2,
                 componentDatatype : ComponentDatatype.FLOAT,
-                usage : buffersUsage[SDF]
+                usage : buffersUsage[SDF_INDEX]
             });
         }
 
@@ -1628,7 +1628,7 @@ define([
                 writers.push(writeTextureCoordinateBoundsOrLabelTranslate);
             }
 
-            if (properties[SDF]) {
+            if (properties[SDF_INDEX]) {
                 writers.push(writeSDF);
             }
 

@@ -218,7 +218,7 @@ define([
     var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE = 15;
     Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
-    var SDF = Billboard.SDF = 17;
+    var SDF_INDEX = Billboard.SDF_INDEX = 17;
     Billboard.NUMBER_OF_PROPERTIES = 18;
 
     function makeDirty(billboard, propertyChanged) {
@@ -969,7 +969,7 @@ define([
                 var outlineColor = this._outlineColor;
                 if (!Color.equals(outlineColor, value)) {
                     Color.clone(value, outlineColor);
-                    makeDirty(this, SDF);
+                    makeDirty(this, SDF_INDEX);
                 }
             }
         },
@@ -987,7 +987,7 @@ define([
             set : function(value) {
                 if (this._outlineWidth !== value) {
                     this._outlineWidth = value;
-                    makeDirty(this, SDF);
+                    makeDirty(this, SDF_INDEX);
                 }
             }
         }
