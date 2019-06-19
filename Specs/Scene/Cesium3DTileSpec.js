@@ -249,7 +249,7 @@ defineSuite([
 
         it('can`t have an oriented bounding box with 0 volume', function() {
             var box = tileWithBoundingBox0Volume.boundingVolume.box;
-            var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox, undefined);
+            var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox0Volume, undefined);
             expect(tile.boundingVolume).toBeDefined();
             var center = new Cartesian3(box[0], box[1], box[2]);
             var halfAxes = Matrix3.fromArray(box, 3);
