@@ -46,7 +46,7 @@ define([
     var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
     /**
-     * An abstract class for updating geometry entites.
+     * An abstract class for updating geometry entities.
      * @alias GeometryUpdater
      * @constructor
      *
