@@ -129,7 +129,7 @@ define([
      *
      * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
      *   geometryInstances : instance,
-     *   appearance : Cesium.PolylineColorAppearance()
+     *   appearance : new Cesium.PolylineColorAppearance()
      * }));
      */
     function GroundPolylinePrimitive(options) {
