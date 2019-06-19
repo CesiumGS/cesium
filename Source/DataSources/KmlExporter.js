@@ -13,18 +13,22 @@ define([
     '../Core/createGuid',
     '../Core/defaultValue',
     '../Core/defined',
+    '../Core/defineProperties',
     '../Core/Ellipsoid',
     '../Core/isArray',
     '../Core/Iso8601',
     '../Core/JulianDate',
     '../Core/Math',
     '../Core/Rectangle',
+    '../Core/ReferenceFrame',
     '../Core/Resource',
+    '../Core/RuntimeError',
     '../Core/TimeInterval',
     '../Core/TimeIntervalCollection',
     '../Scene/HeightReference',
     '../Scene/HorizontalOrigin',
-    '../Scene/VerticalOrigin'
+    '../Scene/VerticalOrigin',
+    '../ThirdParty/when'
 ], function(
     BillboardGraphics,
     CompositePositionProperty,
@@ -40,18 +44,22 @@ define([
     createGuid,
     defaultValue,
     defined,
+    defineProperties,
     Ellipsoid,
     isArray,
     Iso8601,
     JulianDate,
     CesiumMath,
     Rectangle,
+    ReferenceFrame,
     Resource,
+    RuntimeError,
     TimeInterval,
     TimeIntervalCollection,
     HeightReference,
     HorizontalOrigin,
-    VerticalOrigin) {
+    VerticalOrigin,
+    when) {
         'use strict';
 
         var BILLBOARD_SIZE = 32;
@@ -59,7 +67,14 @@ define([
         var gxNamespace = 'http://www.google.com/kml/ext/2.2';
         var xmlnsNamespace = 'http://www.w3.org/2000/xmlns/';
 
-        function defaultTextureCallback(texture) {
+        function ExternalFileHandler(modelCallback) {
+            this._files = {};
+            this._promises = [];
+            this._count = 0;
+            this._modelCallback = modelCallback;
+        }
+
+        ExternalFileHandler.prototype.texture = function(texture) {
             if (typeof texture === 'string') {
                 return texture;
             }
@@ -69,25 +84,53 @@ define([
             }
 
             if (texture instanceof HTMLCanvasElement) {
-                return texture.toDataURL();
+                var deferred = when.defer();
+                this._promises.push(deferred.promise);
+
+                var filename = 'texture_' + (++this._count) + '.png';
+                var that = this;
+                texture.toBlob(function(blob) {
+                    that._files[filename] = blob;
+                    deferred.resolve();
+                });
+
+                return filename;
             }
 
             return '';
-        }
+        };
 
-        function defaultModelCallback(model, time) {
-            var uri = model.uri;
-            if (!defined(uri)) {
-                return '';
+        ExternalFileHandler.prototype.model = function(model, time) {
+            var modelCallback = this._modelCallback;
+            if (!defined(modelCallback)) {
+                throw new RuntimeError('Model callback must be specified if there are models in the entity collection');
             }
 
-            uri = uri.getValue(time);
-            if (typeof uri !== 'string') {
-                uri = uri.url;
-            }
+            return modelCallback(model, time);
+        };
 
-            return uri;
-        }
+        defineProperties(ExternalFileHandler.prototype, {
+            /**
+             * Resolves when all external files are ready
+             * @memberof GlExternalFileHandlerobe.prototype
+             * @type {Promise}
+             */
+            promise : {
+                get : function() {
+                    return when.all(this._promises);
+                }
+            },
+            /**
+             * An object with filename and blobs for external files
+             * @memberof ExternalFileHandler.prototype
+             * @type {ObjectId}
+             */
+            files : {
+                get : function() {
+                    return this._files;
+                }
+            }
+        });
 
         function ValueGetter(time) {
             this._time = time;
@@ -177,7 +220,6 @@ define([
          * @param {EntityCollection} entities The EntityCollection to export as KML
          * @param {Object} options An object with the following properties:
          * @param {Function} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file
-         * @param {Function} [options.textureCallback] A callback that will be called with an image, URI or Canvas and should return the URI to use in the KML. By default it will use the URI or a data URI of the image or canvas.
          * @param {Function} [options.modelCallback] A callback that will be called with a ModelGraphics instance and should return the URI to use in the KML. By default it will just return the model's uri property directly.
          * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
          * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
@@ -189,8 +231,7 @@ define([
             this._idManager = new IdManager();
 
             var styleCache = this._styleCache = new StyleCache();
-            this._textureCallback = defaultValue(options.textureCallback, defaultTextureCallback);
-            this._modelCallback = defaultValue(options.modelCallback, defaultModelCallback);
+            this._externalFileHandler = new ExternalFileHandler(options.modelCallback);
 
             // Use the start time as the default because just in case they define
             //  properties with an interval even if they don't change.
@@ -234,9 +275,17 @@ define([
             styleCache.save(kmlDocumentElement);
         }
 
-        KmlExporter.prototype.toString = function() {
-            var serializer = new XMLSerializer();
-            return serializer.serializeToString(this._kmlDoc);
+        KmlExporter.prototype.export = function() {
+            var externalFileHandler = this._externalFileHandler;
+            var that = this;
+            return externalFileHandler.promise
+                .then(function() {
+                    var serializer = new XMLSerializer();
+                    return {
+                        kml: serializer.serializeToString(that._kmlDoc),
+                        externalFiles: externalFileHandler.files
+                    };
+                });
         };
 
         function recurseEntities(that, parentNode, entities) {
@@ -424,7 +473,7 @@ define([
 
             var isModel = (pointGraphics instanceof ModelGraphics);
 
-            var i;
+            var i, j, times;
             var tracks = [];
             for (i = 0; i < intervals.length; ++i) {
                 var interval = intervals.get(i);
@@ -443,11 +492,6 @@ define([
                     trackAltitudeMode.appendChild(getAltitudeMode(that, HeightReference.NONE));
                 }
 
-                // We need the raw samples, so just use the internal SampledProperty
-                if (positionProperty instanceof SampledPositionProperty) {
-                    positionProperty = positionProperty._property;
-                }
-
                 var positionTimes = [];
                 var positionValues = [];
 
@@ -461,11 +505,19 @@ define([
                     positionValues.push(constCoordinates);
                     positionTimes.push(JulianDate.toIso8601(interval.stop));
                     positionValues.push(constCoordinates);
+                } else if (positionProperty instanceof SampledPositionProperty) {
+                    times = positionProperty._property._times;
+
+                    for (j = 0; j < times.length; ++j) {
+                        positionTimes.push(JulianDate.toIso8601(times[j]));
+                        positionProperty.getValueInReferenceFrame(times[j], ReferenceFrame.FIXED, scratchCartesian3);
+                        positionValues.push(getCoordinates(scratchCartesian3, ellipsoid));
+                    }
                 } else if (positionProperty instanceof SampledProperty) {
-                    var times = positionProperty._times;
+                    times = positionProperty._times;
                     var values = positionProperty._values;
 
-                    for (var j = 0; j < times.length; ++j) {
+                    for (j = 0; j < times.length; ++j) {
                         positionTimes.push(JulianDate.toIso8601(times[j]));
                         Cartesian3.fromArray(values, j * 3, scratchCartesian3);
                         positionValues.push(getCoordinates(scratchCartesian3, ellipsoid));
@@ -573,12 +625,13 @@ define([
         function createIconStyleFromBillboard(that, billboardGraphics) {
             var kmlDoc = that._kmlDoc;
             var valueGetter = that._valueGetter;
+            var externalFileHandler = that._externalFileHandler;
 
             var iconStyle = kmlDoc.createElement('IconStyle');
 
             var image = valueGetter.get(billboardGraphics.image);
             if (defined(image)) {
-                image = that._textureCallback(image);
+                image = externalFileHandler.texture(image);
 
                 var icon = kmlDoc.createElement('Icon');
                 icon.appendChild(createBasicElementWithText(kmlDoc, 'href', image));
@@ -876,6 +929,7 @@ define([
         function createGroundOverlay(that, rectangleGraphics, overlays) {
             var kmlDoc = that._kmlDoc;
             var valueGetter = that._valueGetter;
+            var externalFileHandler = that._externalFileHandler;
 
             var groundOverlay = kmlDoc.createElement('GroundOverlay');
 
@@ -899,7 +953,7 @@ define([
 
             // We should only end up here if we have an ImageMaterialProperty
             var material = valueGetter.get(rectangleGraphics.material);
-            var href = that._textureCallback(material.image);
+            var href = externalFileHandler.texture(material.image);
             var icon = kmlDoc.createElement('Icon');
             icon.appendChild(createBasicElementWithText(kmlDoc, 'href', href));
             groundOverlay.appendChild(icon);
@@ -915,6 +969,7 @@ define([
         function createModelGeometry(that, modelGraphics) {
             var kmlDoc = that._kmlDoc;
             var valueGetter = that._valueGetter;
+            var externalFileHandler = that._externalFileHandler;
 
             var modelGeometry = kmlDoc.createElement('Model');
 
@@ -928,7 +983,7 @@ define([
             }
 
             var link = kmlDoc.createElement('Link');
-            var uri = that._modelCallback(modelGraphics, that._time);
+            var uri = externalFileHandler.model(modelGraphics, that._time);
 
             link.appendChild(createBasicElementWithText(kmlDoc, 'href', uri));
             modelGeometry.appendChild(link);

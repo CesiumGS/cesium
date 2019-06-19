@@ -87,16 +87,6 @@ defineSuite([
             }
         };
 
-        xit('test', function() {
-            return KmlDataSource.load('../Apps/SampleData/kml/facilities/facilities.kml', options)
-                .then(function(datasource) {
-                    var exporter = new KmlExporter(datasource.entities);
-
-                    var kml = exporter.toString();
-                    download('test.kml', kml);
-                });
-        });
-
         function checkKmlDoc(kmlDoc, properties) {
             var kml = kmlDoc.documentElement;
             var kmlChildNodes = kml.childNodes;
@@ -299,6 +289,44 @@ defineSuite([
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
+            it('Point with label', function() {
+                var entity1 = createEntity({
+                    point: {
+                        color: Color.LINEN,
+                        pixelSize: 3,
+                        heightReference: HeightReference.CLAMP_TO_GROUND
+                    },
+                    label: {
+                        text: 'Im a label',
+                        color: Color.ORANGE,
+                        scale: 2
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {
+                    color: 'ffe6f0fa',
+                    colorMode: 'normal',
+                    scale: 3 / 32
+                };
+                expectedResult.Document.Style.LabelStyle = {
+                    color: 'ff00a5ff',
+                    colorMode: 'normal',
+                    scale: 2
+                };
+                expectedResult.Document.Placemark.name = 'Im a label';
+                expectedResult.Document.Placemark.Point = {
+                    altitudeMode: 'clampToGround',
+                    coordinates: checkPointCoord
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
             it('Billboard with constant position', function() {
                 var entity1 = createEntity({
                     billboard: {
@@ -478,7 +506,7 @@ defineSuite([
                 var expectedResult = createExpectResult(entity1);
                 expectedResult.Document.Style.IconStyle = {
                     Icon: {
-                        href: 'http://test.invalid/images/myTexture.jpg'
+                        href: 'texture_1.png'
                     }
                 };
                 expectedResult.Document.Placemark.Point = {
@@ -486,16 +514,15 @@ defineSuite([
                     coordinates: checkPointCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities, {
-                    textureCallback: function(texture) {
-                        if (texture instanceof HTMLCanvasElement) {
-                            return 'http://test.invalid/images/myTexture.jpg';
-                        }
-
-                        fail();
-                    }
-                });
+                var kmlExporter = new KmlExporter(entities);
                 checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+
+                return kmlExporter.export()
+                    .then(function(result) {
+                        expect(result.kml).toBeDefined();
+                        expect(Object.keys(result.externalFiles).length).toBe(1);
+                        expect(result.externalFiles['texture_1.png']).toBeDefined();
+                    });
             });
         });
 
@@ -625,6 +652,45 @@ defineSuite([
                             href: 'http://test.invalid/test'
                         }
                     }
+                };
+
+                var kmlExporter = new KmlExporter(entities, {
+                    modelCallback: function(model) {
+                        return model.uri;
+                    }
+                });
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+
+            it('With Path', function() {
+                var position = new SampledPositionProperty();
+                position.addSamples(times, positions);
+
+                var entity1 = createEntity({
+                    position: position,
+                    point: {
+                        heightReference: HeightReference.CLAMP_TO_GROUND
+                    },
+                    path: {
+                        width: 2,
+                        material: new ColorMaterialProperty(Color.GREEN)
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {};
+                expectedResult.Document.Style.LineStyle = {
+                    color: 'ff008000',
+                    colorMode: 'normal',
+                    width: 2
+                };
+                expectedResult.Document.Placemark.Track = {
+                    altitudeMode: 'clampToGround',
+                    when: checkWhen,
+                    coord: checkCoord
                 };
 
                 var kmlExporter = new KmlExporter(entities);
@@ -1085,6 +1151,75 @@ defineSuite([
                             },
                             color: 'ff008000'
                         }
+                    }
+                };
+
+                var kmlExporter = new KmlExporter(entities);
+                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+            });
+        });
+
+        describe('Multigeometry', function() {
+            var positions = [
+                Cartesian3.fromDegrees(-1, -1, 12),
+                Cartesian3.fromDegrees(1, -1, 12),
+                Cartesian3.fromDegrees(1, 1, 12),
+                Cartesian3.fromDegrees(-1, 1, 12)
+            ];
+
+            function getCheckCoords() {
+                return function(textContent) {
+                    var coordinates = textContent.split(' ');
+                    expect(coordinates.length).toBe(4);
+
+                    var cartographic1 = new Cartographic();
+                    var cartographic2 = new Cartographic();
+                    var count = positions.length;
+                    for (var i=0;i<count;++i) {
+                        Cartographic.fromCartesian(positions[i], undefined, cartographic1);
+                        cartographic1.height = 0;
+
+                        var values = coordinates[i].split(',');
+                        expect(values.length).toBe(3);
+                        Cartographic.fromDegrees(Number(values[0]), Number(values[1]), Number(values[2]), cartographic2);
+                        if (Cartographic.equalsEpsilon(cartographic1, cartographic2, CesiumMath.EPSILON7)) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                };
+            }
+
+            it('Polygon and Point', function(){
+                var entity1 = createEntity({
+                    polygon: {
+                        hierarchy: positions
+                    },
+                    point: {}
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                var expectedResult = createExpectResult(entity1);
+                expectedResult.Document.Style.IconStyle = {
+                };
+                expectedResult.Document.Style.PolyStyle = {
+                };
+                expectedResult.Document.Placemark.MultiGeometry = {
+                    Point: {
+                        altitudeMode: 'absolute',
+                        coordinates: checkPointCoord
+                    },
+                    Polygon: {
+                        altitudeMode: 'absolute',
+                        outerBoundaryIs: {
+                            LinearRing: {
+                                coordinates: getCheckCoords()
+                            }
+                        },
+                        extrude: true
                     }
                 };
 
