@@ -791,7 +791,7 @@ define([
         if (sdf) {
             attributes.push({
                 index : attributeLocations.sdf,
-                componentsPerAttribute : 4,
+                componentsPerAttribute : 2,
                 componentDatatype : ComponentDatatype.FLOAT,
                 usage : buffersUsage[SDF]
             });
@@ -1384,13 +1384,13 @@ define([
 
         if (billboardCollection._instanced) {
             i = billboard._index;
-            writer(i, compressed0, compressed1, 0, 0);
+            writer(i, compressed0, compressed1);
         } else {
             i = billboard._index * 4;
-            writer(i + 0, compressed0 + LOWER_LEFT, compressed1, 0, 0);
-            writer(i + 1, compressed0 + LOWER_RIGHT, compressed1, 0, 0);
-            writer(i + 2, compressed0 + UPPER_RIGHT, compressed1, 0, 0);
-            writer(i + 3, compressed0 + UPPER_LEFT, compressed1, 0, 0);
+            writer(i + 0, compressed0 + LOWER_LEFT, compressed1);
+            writer(i + 1, compressed0 + LOWER_RIGHT, compressed1);
+            writer(i + 2, compressed0 + UPPER_RIGHT, compressed1);
+            writer(i + 3, compressed0 + UPPER_LEFT, compressed1);
         }
     }
 
