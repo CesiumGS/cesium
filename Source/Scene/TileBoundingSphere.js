@@ -33,6 +33,9 @@ define([
      * @private
      */
     function TileBoundingSphere(center, radius) {
+        if (radius === 0) {
+            radius = CesiumMath.EPSILON7;
+        }
         this._boundingSphere = new BoundingSphere(center, radius);
     }
 

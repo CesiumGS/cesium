@@ -26,6 +26,23 @@ define([
         Primitive) {
     'use strict';
 
+    function checkHalfAxes(halfAxes) {
+        var u = Matrix3.getColumn(halfAxes, 0, new Cartesian3());
+        var v = Matrix3.getColumn(halfAxes, 1, new Cartesian3());
+        var w = Matrix3.getColumn(halfAxes, 2, new Cartesian3());
+
+        if (u.equals(Cartesian3.ZERO)) {
+            Matrix3.setColumn(halfAxes, 0, new Cartesian3(CesiumMath.EPSILON7, 0.0, 0.0), halfAxes);
+        }
+        if (v.equals(Cartesian3.ZERO))  {
+            Matrix3.setColumn(halfAxes, 1, new Cartesian3(0.0, CesiumMath.EPSILON7, 0.0), halfAxes);
+        }
+        if (w.equals(Cartesian3.ZERO))  {
+            Matrix3.setColumn(halfAxes, 2, new Cartesian3(0.0, 0.0, CesiumMath.EPSILON7), halfAxes);
+        }
+        return halfAxes;
+    }
+
     /**
      * A tile bounding volume specified as an oriented bounding box.
      * @alias TileOrientedBoundingBox
@@ -39,6 +56,7 @@ define([
      * @private
      */
     function TileOrientedBoundingBox(center, halfAxes) {
+        halfAxes = checkHalfAxes(halfAxes);
         this._orientedBoundingBox = new OrientedBoundingBox(center, halfAxes);
         this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
     }
@@ -111,6 +129,7 @@ define([
      */
     TileOrientedBoundingBox.prototype.update = function(center, halfAxes) {
         Cartesian3.clone(center, this._orientedBoundingBox.center);
+        halfAxes = checkHalfAxes(halfAxes);
         Matrix3.clone(halfAxes, this._orientedBoundingBox.halfAxes);
         BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox, this._boundingSphere);
     };

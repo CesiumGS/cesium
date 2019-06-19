@@ -1107,20 +1107,6 @@ define([
         var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
         halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
 
-        var u = Matrix3.getColumn(halfAxes, 0, new Cartesian3());
-        var v = Matrix3.getColumn(halfAxes, 1, new Cartesian3());
-        var w = Matrix3.getColumn(halfAxes, 2, new Cartesian3());
-
-        if (u.equals(Cartesian3.ZERO)) {
-            Matrix3.setColumn(halfAxes, 0, new Cartesian3(CesiumMath.EPSILON7, 0.0, 0.0), halfAxes);
-        }
-        if (v.equals(Cartesian3.ZERO))  {
-            Matrix3.setColumn(halfAxes, 1, new Cartesian3(0.0, CesiumMath.EPSILON7, 0.0), halfAxes);
-        }
-        if (w.equals(Cartesian3.ZERO))  {
-            Matrix3.setColumn(halfAxes, 2, new Cartesian3(0.0, 0.0, CesiumMath.EPSILON7), halfAxes);
-        }
-
         if (defined(result)) {
             result.update(center, halfAxes);
             return result;
@@ -1154,16 +1140,6 @@ define([
     }
 
     function createRegion(region, transform, initialTransform, result) {
-        if (region[2] <= region[0]) {
-            region[2] = region[0] + CesiumMath.EPSILON7;
-        }
-        if (region[3] <= region[1]) {
-            region[3] = region[1] + CesiumMath.EPSILON7;
-        }
-        if (region[5] <= region[4]) {
-            region[5] =  region[4] + CesiumMath.EPSILON7;
-        }
-
         if (!Matrix4.equalsEpsilon(transform, initialTransform, CesiumMath.EPSILON8)) {
             return createBoxFromTransformedRegion(region, transform, initialTransform, result);
         }
@@ -1184,9 +1160,6 @@ define([
     function createSphere(sphere, transform, result) {
         var center = Cartesian3.fromElements(sphere[0], sphere[1], sphere[2], scratchCenter);
         var radius = sphere[3];
-        if (radius === 0) {
-            radius = CesiumMath.EPSILON7;
-        }
 
         // Find the transformed center and radius
         center = Matrix4.multiplyByPoint(transform, center, center);
