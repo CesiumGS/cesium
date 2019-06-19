@@ -7,6 +7,7 @@ define([
         '../Core/GeometryInstance',
         '../Core/Matrix4',
         '../Core/SphereOutlineGeometry',
+        '../Core/Math',
         './PerInstanceColorAppearance',
         './Primitive'
     ], function(
@@ -18,6 +19,7 @@ define([
         GeometryInstance,
         Matrix4,
         SphereOutlineGeometry,
+        CesiumMath,
         PerInstanceColorAppearance,
         Primitive) {
     'use strict';

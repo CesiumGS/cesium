@@ -9,6 +9,7 @@ define([
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/OrientedBoundingBox',
+        '../Core/Math',
         './PerInstanceColorAppearance',
         './Primitive'
     ], function(
@@ -22,6 +23,7 @@ define([
         Matrix3,
         Matrix4,
         OrientedBoundingBox,
+        CesiumMath,
         PerInstanceColorAppearance,
         Primitive) {
     'use strict';

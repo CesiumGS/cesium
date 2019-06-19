@@ -87,6 +87,15 @@ defineSuite([
         }
     };
 
+    var tileWithBoundingBox0Volume = {
+        geometricError : 1,
+        refine : 'REPLACE',
+        children : [],
+        boundingVolume: {
+            box : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+        }
+    };
+
     var tileWithContentBoundingBox = {
         geometricError : 1,
         refine : 'REPLACE',
@@ -230,6 +239,16 @@ defineSuite([
 
         it('can have an oriented bounding box', function() {
             var box = tileWithBoundingBox.boundingVolume.box;
+            var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox, undefined);
+            expect(tile.boundingVolume).toBeDefined();
+            var center = new Cartesian3(box[0], box[1], box[2]);
+            var halfAxes = Matrix3.fromArray(box, 3);
+            var obb = new TileOrientedBoundingBox(center, halfAxes);
+            expect(tile.boundingVolume).toEqual(obb);
+        });
+
+        it('can`t have an oriented bounding box with 0 volume', function() {
+            var box = tileWithBoundingBox0Volume.boundingVolume.box;
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox, undefined);
             expect(tile.boundingVolume).toBeDefined();
             var center = new Cartesian3(box[0], box[1], box[2]);
