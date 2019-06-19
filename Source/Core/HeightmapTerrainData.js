@@ -7,6 +7,7 @@ define([
         './defineProperties',
         './DeveloperError',
         './GeographicProjection',
+        './HeightmapEncoding',
         './HeightmapTessellator',
         './OrientedBoundingBox',
         './Math',
@@ -24,6 +25,7 @@ define([
         defineProperties,
         DeveloperError,
         GeographicProjection,
+        HeightmapEncoding,
         HeightmapTessellator,
         OrientedBoundingBox,
         CesiumMath,
@@ -89,6 +91,7 @@ define([
      *                 than this value after encoding with the `heightScale` and `heightOffset` are clamped to this value.  For example, if the height
      *                 buffer is a `Uint16Array`, this value should be `256 * 256 - 1` or 65535 because a `Uint16Array` cannot store numbers larger
      *                 than 65535.  If this parameter is not specified, no maximum value is enforced.
+     * @param {HeightmapEncoding} [options.encoding=HeightmapEncoding.NONE] The encoding that is used on the buffer.
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
@@ -126,6 +129,7 @@ define([
         this._width = options.width;
         this._height = options.height;
         this._childTileMask = defaultValue(options.childTileMask, 15);
+        this._encoding = defaultValue(options.encoding, HeightmapEncoding.NONE);
 
         var defaultStructure = HeightmapTessellator.DEFAULT_STRUCTURE;
         var structure = options.structure;
@@ -145,7 +149,7 @@ define([
         this._waterMask = options.waterMask;
 
         this._skirtHeight = undefined;
-        this._bufferType = this._buffer.constructor;
+        this._bufferType = (this._encoding === HeightmapEncoding.LERC) ? Float32Array : this._buffer.constructor;
         this._mesh = undefined;
     }
 
@@ -238,7 +242,8 @@ define([
             ellipsoid : ellipsoid,
             skirtHeight : this._skirtHeight,
             isGeographic : tilingScheme.projection instanceof GeographicProjection,
-            exaggeration : exaggeration
+            exaggeration : exaggeration,
+            encoding : this._encoding
         });
 
         if (!defined(verticesPromise)) {

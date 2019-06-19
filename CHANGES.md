@@ -5,6 +5,19 @@ Change Log
 
 ##### Additions :tada:
 * Reworked label rendering to use signed distance fields for crisper text. [#7730](https://github.com/AnalyticalGraphicsInc/cesium/pull/7730)
+* Added support for the [AGI_articulations](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations) vendor extension of glTF 2.0 to the Entity API and CZML. [#7907](https://github.com/AnalyticalGraphicsInc/cesium/pull/7907)
+* Added CZML support for `heightReference` to `box`, `cylinder`, and `ellipsoid`, and added CZML support for `classificationType` to `corridor`, `ellipse`, `polygon`, `polyline`, and `rectangle`. [#7899](https://github.com/AnalyticalGraphicsInc/cesium/pull/7899)
+* Adds `ArcGISTiledElevationTerrainProvider` to support LERC encoded terrain from ArcGIS ImageServer.
+
+##### Fixes :wrench:
+* Fixed a bug that caused missing segments for ground polylines with coplanar points over large distances and problems with polylines containing duplicate points. [#7885](https://github.com/AnalyticalGraphicsInc/cesium//pull/7885)
+* Fixed a bug where billboards were not pickable when zoomed out completely in 2D View. [#7908](https://github.com/AnalyticalGraphicsInc/cesium/pull/7908)
+* Fixed a bug where image requests that returned HTTP code 204 would prevent any future request from succeeding on browsers that supported ImageBitmap. [#7914](https://github.com/AnalyticalGraphicsInc/cesium/pull/7914/)
+* Fixed polyline colors when `scene.highDynamicRange` is enabled. [#7924](https://github.com/AnalyticalGraphicsInc/cesium/pull/7924)
+* Fixed a bug in the inspector where the min/max height values of a picked tile were undefined. [#7904](https://github.com/AnalyticalGraphicsInc/cesium/pull/7904)
+
+### 1.58.1 - 2018-06-03
+_This is an npm-only release to fix a publishing issue_.
 
 ### 1.58 - 2019-06-03
 
@@ -13,6 +26,7 @@ Change Log
 * Added syntax to delete data from existing properties via CZML. [#7818](https://github.com/AnalyticalGraphicsInc/cesium/pull/7818)
 * Added `checkerboard` material to CZML. [#7845](https://github.com/AnalyticalGraphicsInc/cesium/pull/7845)
 * `BingMapsImageryProvider` now uses `DiscardEmptyTileImagePolicy` by default to detect missing tiles as zero-length responses instead of inspecting pixel values. [#7810](https://github.com/AnalyticalGraphicsInc/cesium/pull/7810)
+* Added support for the [AGI_articulations](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations) vendor extension of glTF 2.0 to the Model primitive graphics API. [#7835](https://github.com/AnalyticalGraphicsInc/cesium/pull/7835)
 * Reduce the number of Bing transactions and ion Bing sessions used when destroying and recreating the same imagery layer to 1. [#7848](https://github.com/AnalyticalGraphicsInc/cesium/pull/7848)
 
 ##### Fixes :wrench:
