@@ -63,7 +63,7 @@
     "karma-requirejs": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "^0.0.32",
-    "merge-stream": "^1.0.1",
+    "merge-stream": "^2.0.0",
     "mime": "^2.0.3",
     "mkdirp": "^0.5.1",
     "request": "^2.79.0",

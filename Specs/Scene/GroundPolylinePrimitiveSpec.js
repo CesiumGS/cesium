@@ -158,7 +158,7 @@ defineSuite([
     it('default constructs', function() {
         groundPolylinePrimitive = new GroundPolylinePrimitive();
         expect(groundPolylinePrimitive.geometryInstances).not.toBeDefined();
-        expect(groundPolylinePrimitive.appearance instanceof PolylineMaterialAppearance).toBe(true);
+        expect(groundPolylinePrimitive.appearance).toBeInstanceOf(PolylineMaterialAppearance);
         expect(groundPolylinePrimitive.show).toEqual(true);
         expect(groundPolylinePrimitive.interleave).toEqual(false);
         expect(groundPolylinePrimitive.releaseGeometryInstances).toEqual(true);
