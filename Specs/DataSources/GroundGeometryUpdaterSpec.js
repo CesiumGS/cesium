@@ -115,4 +115,35 @@ defineSuite([
         result = GroundGeometryUpdater.computeGeometryOffsetAttribute(undefined, heightReference, undefined, extrudedHeightReference);
         expect(result).toBeUndefined();
     });
+
+    it('Overridden version of destroy is called', function() {
+        var options = {
+            scene: {
+                frameState: {
+                    context: {
+                        depthTexture: true
+                    }
+                }
+            },
+            entity: {},
+            geometryOptions: {},
+            geometryPropertyName: '',
+            observedPropertyNames: []
+        };
+
+        var groundGeometryUpdater = new GroundGeometryUpdater(options);
+
+        // Just make the terrain propery a dummy object with a destroy method
+        var destroySpy = jasmine.createSpy('destroy');
+        groundGeometryUpdater._terrainOffsetProperty = {
+            destroy: destroySpy
+        };
+
+        groundGeometryUpdater.destroy();
+
+        // Make sure the terrain updater is destroyed and the parent class' destroy is called
+        expect(destroySpy).toHaveBeenCalled();
+        expect(groundGeometryUpdater._terrainOffsetProperty).toBeUndefined();
+        expect(groundGeometryUpdater.isDestroyed()).toBe(true);
+    });
 });

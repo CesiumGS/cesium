@@ -45,6 +45,7 @@ define([
         this._colorSubscription = undefined;
         this._transparent = undefined;
         this._transparentSubscription = undefined;
+
         this.image = options.image;
         this.repeat = options.repeat;
         this.color = options.color;
@@ -65,6 +66,7 @@ define([
                 return Property.isConstant(this._image) && Property.isConstant(this._repeat);
             }
         },
+
         /**
          * Gets the event that is raised whenever the definition of this property changes.
          * The definition is considered to have changed if a call to getValue would return
@@ -79,12 +81,14 @@ define([
                 return this._definitionChanged;
             }
         },
+
         /**
          * Gets or sets the Property specifying Image, URL, Canvas, or Video to use.
          * @memberof ImageMaterialProperty.prototype
          * @type {Property}
          */
         image : createPropertyDescriptor('image'),
+
         /**
          * Gets or sets the {@link Cartesian2} Property specifying the number of times the image repeats in each direction.
          * @memberof ImageMaterialProperty.prototype
@@ -92,6 +96,7 @@ define([
          * @default new Cartesian2(1, 1)
          */
         repeat : createPropertyDescriptor('repeat'),
+
         /**
          * Gets or sets the Color Property specifying the desired color applied to the image.
          * @memberof ImageMaterialProperty.prototype
@@ -99,6 +104,7 @@ define([
          * @default 1.0
          */
         color : createPropertyDescriptor('color'),
+
         /**
          * Gets or sets the Boolean Property specifying whether the image has transparency
          * @memberof ImageMaterialProperty.prototype
@@ -151,9 +157,9 @@ define([
         return this === other ||
                (other instanceof ImageMaterialProperty &&
                 Property.equals(this._image, other._image) &&
+                Property.equals(this._repeat, other._repeat) &&
                 Property.equals(this._color, other._color) &&
-                Property.equals(this._transparent, other._transparent) &&
-                Property.equals(this._repeat, other._repeat));
+                Property.equals(this._transparent, other._transparent));
     };
 
     return ImageMaterialProperty;

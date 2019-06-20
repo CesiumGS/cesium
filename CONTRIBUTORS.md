@@ -122,6 +122,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Daniel Cooper](https://github.com/moodragon46)
 * [GeoFS](https://www.geo-fs.com)
    * [Xavier Tassin](https://github.com/xtassin/)
+* [Esri](https://www.esri.com)
+   * [Tamrat Belayneh](https://github.com/Tamrat-B/)
+   * [Chris Andrews](https://github.com/chri7928/)
+* [Cesium GS, Inc.](https://cesium.com/)
+   *
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
@@ -209,3 +214,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Trubie Turner](https://github.com/flexei)
 * [Merijn Wijngaard](https://github.com/mwijngaard)
 * [Vladislav Kalashnikov](https://github.com/vla9isla8)
+* [Dennis Adams](https://github.com/dennisadams)
