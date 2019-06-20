@@ -214,16 +214,38 @@ define([
         };
 
         /**
+         * Exports an EntityCollection as a KML document. Only Point, Billboard, Model, Path, Polygon, Polyline geometries will be exported. If your
+         * document contains a Model, you must specify a modelCallback to handle the conversion as KML doesn't allow for glTF models. There is not
+         * a 1 to 1 mapping of Entity properties to KML Feature properties, so there are some caveats. Entity properties that are time dynamic but
+         * cannot be dynamic in KML are exported with their values at options.time or the beginning of the EntityCollection if not specified. For time-dynamic
+         * properties that are supported in KML, we use the samples if it is a SampledProperty otherwise we sample the value using the options.sampleDuration.
+         * Point, Billboard, Model and Path geometries with time-dynamic positions will be exported as gx:Track Features. Not all Materials are representable
+         * in KML, so for more advanced Materials just the primary color is used. Canvas objects are exported as png images.
+         *
          * @alias KmlExporter
          * @constructor
          *
          * @param {EntityCollection} entities The EntityCollection to export as KML
          * @param {Object} options An object with the following properties:
          * @param {Function} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file
-         * @param {Function} [options.modelCallback] A callback that will be called with a ModelGraphics instance and should return the URI to use in the KML. By default it will just return the model's uri property directly.
+         * @param {Function} [options.modelCallback] A callback that will be called with a ModelGraphics instance and should return the URI to use in the KML. This will throw a RuntimeError if there is a model and this is undefined.
          * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
          * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
          * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
+         *
+         * @example
+         * var exporter = new Cesium.KmlExporter(entityCollection);
+         * var kml = exporter.export()
+         *   .then(function(result) {
+         *     // The XML string is in result.kml
+         *
+         *     var externalFiles = result.externalFiles
+         *     for(var file in externalFiles) {
+         *       // file is the name of the file used in the KML document as the href
+         *       // externalFiles[file] is a blob with the contents of the file
+         *     }
+         *   });
+         *
          */
         function KmlExporter(entities, options) {
             options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -1041,6 +1063,11 @@ define([
             var color;
             var type = valueGetter.getMaterialType(materialProperty);
             switch (type) {
+                case 'Image':
+                    // Image materials are only able to be represented on rectangles, so if we make it
+                    //  here we can't texture a generic polygon or polyline in KML, so just use white.
+                    color = colorToString(Color.WHITE);
+                    break;
                 case 'Color':
                 case 'Grid':
                 case 'PolylineGlow':
