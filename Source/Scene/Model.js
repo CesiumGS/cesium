@@ -4775,7 +4775,7 @@ define([
         destroyIfNotCached(rendererResources, cachedRendererResources);
 
         var programId;
-        if (isClippingEnabled(model) || isColorShadingEnabled(model) || model._shouldRegenerateShaders) {
+        if (isClippingEnabled(model) || isColorShadingEnabled(model) || model._shouldRegenerateShaders || !cachedRendererResources.programs) {
             model._shouldRegenerateShaders = false;
 
             rendererResources.programs = {};
