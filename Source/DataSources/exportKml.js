@@ -239,7 +239,9 @@ define([
          * @returns {Promise<Object>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs.
          *
          * @example
-         * Cesium.exportKml(entityCollection)
+         * Cesium.exportKml({
+         *      entities: entityCollection
+         *  })
          *   .then(function(result) {
          *     // The XML string is in result.kml
          *
