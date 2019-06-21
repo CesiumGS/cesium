@@ -305,7 +305,7 @@ define([
             // Use the start time as the default because just in case they define
             //  properties with an interval even if they don't change.
             var entityAvailability = entities.computeAvailability();
-            var time = this._time = (defined(options.time) ? options.time : entityAvailability.start);
+            var time = (defined(options.time) ? options.time : entityAvailability.start);
 
             // Figure out how we will sample dynamic position properties
             var defaultAvailability = defaultValue(options.defaultAvailability, entityAvailability);
