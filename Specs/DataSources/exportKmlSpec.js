@@ -1,10 +1,11 @@
 defineSuite([
-    'DataSources/KmlExporter',
+    'DataSources/exportKml',
     'Core/BoundingRectangle',
     'Core/Cartesian2',
     'Core/Cartesian3',
     'Core/Cartographic',
     'Core/Color',
+    'Core/defaultValue',
     'Core/defined',
     'Core/Iso8601',
     'Core/JulianDate',
@@ -23,12 +24,13 @@ defineSuite([
     'Scene/HorizontalOrigin',
     'Scene/VerticalOrigin'
 ], function(
-    KmlExporter,
+    exportKml,
     BoundingRectangle,
     Cartesian2,
     Cartesian3,
     Cartographic,
     Color,
+    defaultValue,
     defined,
     Iso8601,
     JulianDate,
@@ -48,13 +50,19 @@ defineSuite([
     VerticalOrigin) {
         'use strict';
 
-        function checkKmlDoc(kmlDoc, properties) {
+        var kmlDoc;
+        function checkKmlDoc(entities, properties, options) {
+            options = defaultValue(options, {});
+            options.entities = entities;
+            var promise = exportKml(options);
             var kml = kmlDoc.documentElement;
             var kmlChildNodes = kml.childNodes;
             expect(kml.localName).toEqual('kml');
             expect(kmlChildNodes.length).toBe(1);
 
             checkTagWithProperties(kml, properties);
+
+            return promise;
         }
 
         function checkTagWithProperties(element, properties) {
@@ -153,6 +161,22 @@ defineSuite([
             };
         }
 
+        var oldCreateState;
+        beforeAll(function() {
+            oldCreateState = exportKml._createState;
+
+            // We need to capture the DOM object
+            exportKml._createState = function(options) {
+                var state = oldCreateState(options);
+                kmlDoc = state.kmlDoc;
+                return state;
+            };
+        });
+
+        afterAll(function() {
+            exportKml._createState = oldCreateState;
+        });
+
         beforeEach(function() {
             counter = 0;
         });
@@ -218,8 +242,7 @@ defineSuite([
                 }
             };
 
-            var kmlExporter = new KmlExporter(entities);
-            checkKmlDoc(kmlExporter._kmlDoc, hierarchy);
+            checkKmlDoc(entities, hierarchy);
         });
 
         describe('Point Geometry', function() {
@@ -246,8 +269,7 @@ defineSuite([
                     coordinates: checkPointCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Point with label', function() {
@@ -284,8 +306,7 @@ defineSuite([
                     coordinates: checkPointCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Billboard with constant position', function() {
@@ -336,8 +357,7 @@ defineSuite([
                     coordinates: checkPointCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Billboard with AlignedAxis not Z', function() {
@@ -358,8 +378,7 @@ defineSuite([
                     coordinates: checkPointCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Billboard with 0 degree heading should be 360', function() {
@@ -382,8 +401,7 @@ defineSuite([
                     coordinates: checkPointCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Billboard with HotSpot at the center', function() {
@@ -416,8 +434,7 @@ defineSuite([
                     coordinates: checkPointCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Billboard with HotSpot at the TopRight', function() {
@@ -450,8 +467,7 @@ defineSuite([
                     coordinates: checkPointCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Billboard with a Canvas image', function() {
@@ -475,10 +491,7 @@ defineSuite([
                     coordinates: checkPointCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
-
-                return kmlExporter.export()
+                return checkKmlDoc(entities, expectedResult)
                     .then(function(result) {
                         expect(result.kml).toBeDefined();
                         expect(Object.keys(result.externalFiles).length).toBe(1);
@@ -550,8 +563,7 @@ defineSuite([
                     coord: checkCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('CallbackProperty', function() {
@@ -579,14 +591,13 @@ defineSuite([
                     coord: checkCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities, {
+                checkKmlDoc(entities, expectedResult, {
                     defaultAvailability: new TimeInterval({
                         start: times[0],
                         stop: times[2]
                     }),
                     sampleDuration: JulianDate.secondsDifference(times[1], times[0])
                 });
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
             it('With Model', function() {
@@ -615,12 +626,11 @@ defineSuite([
                     }
                 };
 
-                var kmlExporter = new KmlExporter(entities, {
+                checkKmlDoc(entities, expectedResult, {
                     modelCallback: function(model) {
                         return model.uri;
                     }
                 });
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
 
             it('With Path', function() {
@@ -654,8 +664,7 @@ defineSuite([
                     coord: checkCoord
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
         });
 
@@ -714,8 +723,7 @@ defineSuite([
                     drawOrder: 2
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Not clamped to ground', function() {
@@ -744,8 +752,7 @@ defineSuite([
                     drawOrder: 2
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('With outline', function() {
@@ -778,8 +785,7 @@ defineSuite([
                     coordinates: checkCoords
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
         });
 
@@ -858,8 +864,7 @@ defineSuite([
                     }
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Polygon with extrusion', function(){
@@ -888,8 +893,7 @@ defineSuite([
                     extrude: true
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Polygon with extrusion and perPositionHeights', function(){
@@ -918,8 +922,7 @@ defineSuite([
                     extrude: true
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Polygon with holes', function() {
@@ -950,8 +953,7 @@ defineSuite([
                     }
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Rectangle extruded', function(){
@@ -996,8 +998,7 @@ defineSuite([
                     extrude: true
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
 
             it('Rectangle not extruded', function(){
@@ -1027,8 +1028,7 @@ defineSuite([
                     }
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
         });
 
@@ -1064,12 +1064,11 @@ defineSuite([
                     }
                 };
 
-                var kmlExporter = new KmlExporter(entities, {
+                checkKmlDoc(entities, expectedResult, {
                     modelCallback: function(model, time) {
                         return model.uri.getValue(time).replace('.glb', '.dae');
                     }
                 });
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
             });
         });
 
@@ -1115,8 +1114,7 @@ defineSuite([
                     }
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
         });
 
@@ -1184,8 +1182,7 @@ defineSuite([
                     }
                 };
 
-                var kmlExporter = new KmlExporter(entities);
-                checkKmlDoc(kmlExporter._kmlDoc, expectedResult);
+                checkKmlDoc(entities, expectedResult);
             });
         });
     });

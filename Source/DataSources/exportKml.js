@@ -14,6 +14,7 @@ define([
     '../Core/defaultValue',
     '../Core/defined',
     '../Core/defineProperties',
+    '../Core/DeveloperError',
     '../Core/Ellipsoid',
     '../Core/isArray',
     '../Core/Iso8601',
@@ -45,6 +46,7 @@ define([
     defaultValue,
     defined,
     defineProperties,
+    DeveloperError,
     Ellipsoid,
     isArray,
     Iso8601,
@@ -67,6 +69,9 @@ define([
         var gxNamespace = 'http://www.google.com/kml/ext/2.2';
         var xmlnsNamespace = 'http://www.w3.org/2000/xmlns/';
 
+        //
+        // Handles files external to the KML (eg. textures and models)
+        //
         function ExternalFileHandler(modelCallback) {
             this._files = {};
             this._promises = [];
@@ -110,21 +115,11 @@ define([
         };
 
         defineProperties(ExternalFileHandler.prototype, {
-            /**
-             * Resolves when all external files are ready
-             * @memberof GlExternalFileHandlerobe.prototype
-             * @type {Promise}
-             */
             promise : {
                 get : function() {
                     return when.all(this._promises);
                 }
             },
-            /**
-             * An object with filename and blobs for external files
-             * @memberof ExternalFileHandler.prototype
-             * @type {ObjectId}
-             */
             files : {
                 get : function() {
                     return this._files;
@@ -132,6 +127,9 @@ define([
             }
         });
 
+        //
+        // Handles getting values from properties taking the desired time and default values into account
+        //
         function ValueGetter(time) {
             this._time = time;
         }
@@ -160,6 +158,9 @@ define([
             return property.getType(this._time);
         };
 
+        //
+        // Caches styles so we don't generate a ton of duplicate styles
+        //
         function StyleCache() {
             this._ids = {};
             this._styles = {};
@@ -195,6 +196,9 @@ define([
             }
         };
 
+        //
+        // Manages the generation of IDs because an entity may have geometry and a Folder for children
+        //
         function IdManager() {
             this._ids = {};
         }
@@ -222,20 +226,20 @@ define([
          * Point, Billboard, Model and Path geometries with time-dynamic positions will be exported as gx:Track Features. Not all Materials are representable
          * in KML, so for more advanced Materials just the primary color is used. Canvas objects are exported as png images.
          *
-         * @alias KmlExporter
-         * @constructor
+         * @exports exportKml
          *
-         * @param {EntityCollection} entities The EntityCollection to export as KML
          * @param {Object} options An object with the following properties:
-         * @param {Function} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file
-         * @param {Function} [options.modelCallback] A callback that will be called with a ModelGraphics instance and should return the URI to use in the KML. This will throw a RuntimeError if there is a model and this is undefined.
+         * @param {EntityCollection} options.entities The EntityCollection to export as KML
+         * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid for the output file
+         * @param {exportKml~ModelCallback} [options.modelCallback] A callback that will be called with a ModelGraphics instance and should return the URI to use in the KML. This will throw a RuntimeError if there is a model and this is undefined.
          * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
          * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
          * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
          *
+         * @returns {Promise<Object>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs.
+         *
          * @example
-         * var exporter = new Cesium.KmlExporter(entityCollection);
-         * var kml = exporter.export()
+         * Cesium.exportKml(entityCollection)
          *   .then(function(result) {
          *     // The XML string is in result.kml
          *
@@ -247,23 +251,63 @@ define([
          *   });
          *
          */
-        function KmlExporter(entities, options) {
+        function exportKml(options) {
             options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-            this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-            this._idManager = new IdManager();
+            var entities = options.entities;
 
-            var styleCache = this._styleCache = new StyleCache();
-            this._externalFileHandler = new ExternalFileHandler(options.modelCallback);
+            //>>includeStart('debug', pragmas.debug);
+            if (!defined(entities)) {
+                throw new DeveloperError('entities is required.');
+            }
+            //>>includeEnd('debug');
+
+            // Get the state that is passed around during the recursion
+            // This is separated out for testing.
+            var state = exportKml._createState(options);
+
+            // Filter EntityCollection so we only have top level entities
+            var rootEntities = entities.values.filter(function(entity) {
+                return !defined(entity.parent);
+            });
+
+            // Add the <Document>
+            var kmlDoc = state.kmlDoc;
+            var kmlElement = kmlDoc.documentElement;
+            kmlElement.setAttributeNS(xmlnsNamespace, 'xmlns:gx', gxNamespace);
+            var kmlDocumentElement = kmlDoc.createElement('Document');
+            kmlElement.appendChild(kmlDocumentElement);
+
+            // Create the KML Hierarchy
+            recurseEntities(state, kmlDocumentElement, rootEntities);
+
+            // Write out the <Style> elements
+            state.styleCache.save(kmlDocumentElement);
+
+            // Once all the blobs have resolved return the KML string along with the blob collection
+            var externalFileHandler = state.externalFileHandler;
+            return externalFileHandler.promise
+                .then(function() {
+                    var serializer = new XMLSerializer();
+                    return {
+                        kml: serializer.serializeToString(state.kmlDoc),
+                        externalFiles: externalFileHandler.files
+                    };
+                });
+        }
+
+        exportKml._createState = function(options) {
+            var entities = options.entities;
+
+            var styleCache = new StyleCache();
 
             // Use the start time as the default because just in case they define
             //  properties with an interval even if they don't change.
             var entityAvailability = entities.computeAvailability();
             var time = this._time = (defined(options.time) ? options.time : entityAvailability.start);
-            this._valueGetter = new ValueGetter(time);
 
             // Figure out how we will sample dynamic position properties
             var defaultAvailability = defaultValue(options.defaultAvailability, entityAvailability);
-            var sampleDuration = this._sampleDuration = defaultValue(options.sampleDuration, 60);
+            var sampleDuration = defaultValue(options.sampleDuration, 60);
 
             // Make sure we don't have infinite availability if we need to sample
             if (defaultAvailability.start === Iso8601.MINIMUM_VALUE) {
@@ -279,42 +323,28 @@ define([
                 JulianDate.addSeconds(defaultAvailability.start, 10 * sampleDuration, defaultAvailability.stop);
             }
 
-            // Wrap it in a TimeIntervalCollection because that is what entity.availability is
-            this._defaultAvailability = new TimeIntervalCollection([defaultAvailability]);
+            var externalFileHandler = new ExternalFileHandler(options.modelCallback);
 
-            var kmlDoc = this._kmlDoc = document.implementation.createDocument(kmlNamespace, 'kml');
-            var kmlElement = kmlDoc.documentElement;
-            kmlElement.setAttributeNS(xmlnsNamespace, 'xmlns:gx', gxNamespace);
-
-            var kmlDocumentElement = kmlDoc.createElement('Document');
-            kmlElement.appendChild(kmlDocumentElement);
-
-            var rootEntities = entities.values.filter(function(entity) {
-                return !defined(entity.parent);
-            });
-            recurseEntities(this, kmlDocumentElement, rootEntities);
-
-            styleCache.save(kmlDocumentElement);
-        }
-
-        KmlExporter.prototype.export = function() {
-            var externalFileHandler = this._externalFileHandler;
-            var that = this;
-            return externalFileHandler.promise
-                .then(function() {
-                    var serializer = new XMLSerializer();
-                    return {
-                        kml: serializer.serializeToString(that._kmlDoc),
-                        externalFiles: externalFileHandler.files
-                    };
-                });
+            var kmlDoc = document.implementation.createDocument(kmlNamespace, 'kml');
+            return {
+                kmlDoc: kmlDoc,
+                ellipsoid: defaultValue(options.ellipsoid, Ellipsoid.WGS84),
+                idManager: new IdManager(),
+                styleCache: styleCache,
+                externalFileHandler: externalFileHandler,
+                time: time,
+                valueGetter: new ValueGetter(time),
+                sampleDuration: sampleDuration,
+                // Wrap it in a TimeIntervalCollection because that is what entity.availability is
+                defaultAvailability: new TimeIntervalCollection([defaultAvailability])
+            };
         };
 
-        function recurseEntities(that, parentNode, entities) {
-            var kmlDoc = that._kmlDoc;
-            var styleCache = that._styleCache;
-            var valueGetter = that._valueGetter;
-            var idManager = that._idManager;
+        function recurseEntities(state, parentNode, entities) {
+            var kmlDoc = state.kmlDoc;
+            var styleCache = state.styleCache;
+            var valueGetter = state.valueGetter;
+            var idManager = state.idManager;
 
             var count = entities.length;
             var overlays;
@@ -326,11 +356,11 @@ define([
                 geometries = [];
                 styles = [];
 
-                createPoint(that, entity, geometries, styles);
-                createLineString(that, entity.polyline, geometries, styles);
-                createPolygon(that, entity.rectangle, geometries, styles, overlays);
-                createPolygon(that, entity.polygon, geometries, styles, overlays);
-                createModel(that, entity, entity.model, geometries, styles);
+                createPoint(state, entity, geometries, styles);
+                createLineString(state, entity.polyline, geometries, styles);
+                createPolygon(state, entity.rectangle, geometries, styles, overlays);
+                createPolygon(state, entity.polygon, geometries, styles, overlays);
+                createModel(state, entity, entity.model, geometries, styles);
 
                 var timeSpan;
                 var availability = entity.availability;
@@ -432,7 +462,7 @@ define([
 
                     parentNode.appendChild(folderNode);
 
-                    recurseEntities(that, folderNode, children);
+                    recurseEntities(state, folderNode, children);
                 }
             }
         }
@@ -441,10 +471,10 @@ define([
         var scratchCartographic = new Cartographic();
         var scratchJulianDate = new JulianDate();
 
-        function createPoint(that, entity, geometries, styles) {
-            var kmlDoc = that._kmlDoc;
-            var ellipsoid = that._ellipsoid;
-            var valueGetter = that._valueGetter;
+        function createPoint(state, entity, geometries, styles) {
+            var kmlDoc = state.kmlDoc;
+            var ellipsoid = state.ellipsoid;
+            var valueGetter = state.valueGetter;
 
             var pointGraphics = defaultValue(entity.billboard, entity.point);
             if (!defined(pointGraphics) && !defined(entity.path)) {
@@ -454,7 +484,7 @@ define([
             // If the point isn't constant then create gx:Track or gx:MultiTrack
             var entityPositionProperty = entity.position;
             if (!entityPositionProperty.isConstant) {
-                createTracks(that, entity, pointGraphics, geometries, styles);
+                createTracks(state, entity, pointGraphics, geometries, styles);
                 return;
             }
 
@@ -466,7 +496,7 @@ define([
 
             // Set altitude mode
             var altitudeMode = kmlDoc.createElement('altitudeMode');
-            altitudeMode.appendChild(getAltitudeMode(that, pointGraphics.heightReference));
+            altitudeMode.appendChild(getAltitudeMode(state, pointGraphics.heightReference));
             pointGeometry.appendChild(altitudeMode);
 
             pointGeometry.appendChild(coordinates);
@@ -474,14 +504,14 @@ define([
 
             // Create style
             var iconStyle = (pointGraphics instanceof BillboardGraphics) ?
-                createIconStyleFromBillboard(that, pointGraphics) : createIconStyleFromPoint(that, pointGraphics);
+                createIconStyleFromBillboard(state, pointGraphics) : createIconStyleFromPoint(state, pointGraphics);
             styles.push(iconStyle);
         }
 
-        function createTracks(that, entity, pointGraphics, geometries, styles) {
-            var kmlDoc = that._kmlDoc;
-            var ellipsoid = that._ellipsoid;
-            var valueGetter = that._valueGetter;
+        function createTracks(state, entity, pointGraphics, geometries, styles) {
+            var kmlDoc = state.kmlDoc;
+            var ellipsoid = state.ellipsoid;
+            var valueGetter = state.valueGetter;
 
             var intervals;
             var entityPositionProperty = entity.position;
@@ -490,7 +520,7 @@ define([
                 intervals = entityPositionProperty.intervals;
                 useEntityPositionProperty = false;
             } else {
-                intervals = defaultValue(entity.availability, that._defaultAvailability);
+                intervals = defaultValue(entity.availability, state.defaultAvailability);
             }
 
             var isModel = (pointGraphics instanceof ModelGraphics);
@@ -506,12 +536,12 @@ define([
                 //  so just extract the internal property and set the altitudeMode.
                 if (positionProperty instanceof ScaledPositionProperty) {
                     positionProperty = positionProperty._value;
-                    trackAltitudeMode.appendChild(getAltitudeMode(that, HeightReference.CLAMP_TO_GROUND));
+                    trackAltitudeMode.appendChild(getAltitudeMode(state, HeightReference.CLAMP_TO_GROUND));
                 } else if (defined(pointGraphics)) {
-                    trackAltitudeMode.appendChild(getAltitudeMode(that, pointGraphics.heightReference));
+                    trackAltitudeMode.appendChild(getAltitudeMode(state, pointGraphics.heightReference));
                 } else {
                     // Path graphics only, which has no height reference
-                    trackAltitudeMode.appendChild(getAltitudeMode(that, HeightReference.NONE));
+                    trackAltitudeMode.appendChild(getAltitudeMode(state, HeightReference.NONE));
                 }
 
                 var positionTimes = [];
@@ -545,7 +575,7 @@ define([
                         positionValues.push(getCoordinates(scratchCartesian3, ellipsoid));
                     }
                 } else {
-                    var duration = that._sampleDuration;
+                    var duration = state.sampleDuration;
                     interval.start.clone(scratchJulianDate);
                     if (!interval.isStartIncluded) {
                         JulianDate.addSeconds(scratchJulianDate, duration, scratchJulianDate);
@@ -581,7 +611,7 @@ define([
                 }
 
                 if (isModel) {
-                    trackGeometry.appendChild(createModelGeometry(that, pointGraphics));
+                    trackGeometry.appendChild(createModelGeometry(state, pointGraphics));
                 }
 
                 tracks.push(trackGeometry);
@@ -603,7 +633,7 @@ define([
             // Create style
             if (defined(pointGraphics) && !isModel) {
                 var iconStyle = (pointGraphics instanceof BillboardGraphics) ?
-                    createIconStyleFromBillboard(that, pointGraphics) : createIconStyleFromPoint(that, pointGraphics);
+                    createIconStyleFromBillboard(state, pointGraphics) : createIconStyleFromPoint(state, pointGraphics);
                 styles.push(iconStyle);
             }
 
@@ -618,15 +648,15 @@ define([
                         lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'width', width));
                     }
 
-                    processMaterial(that, material, lineStyle);
+                    processMaterial(state, material, lineStyle);
                     styles.push(lineStyle);
                 }
             }
         }
 
-        function createIconStyleFromPoint(that, pointGraphics) {
-            var kmlDoc = that._kmlDoc;
-            var valueGetter = that._valueGetter;
+        function createIconStyleFromPoint(state, pointGraphics) {
+            var kmlDoc = state.kmlDoc;
+            var valueGetter = state.valueGetter;
 
             var iconStyle = kmlDoc.createElement('IconStyle');
 
@@ -644,10 +674,10 @@ define([
             return iconStyle;
         }
 
-        function createIconStyleFromBillboard(that, billboardGraphics) {
-            var kmlDoc = that._kmlDoc;
-            var valueGetter = that._valueGetter;
-            var externalFileHandler = that._externalFileHandler;
+        function createIconStyleFromBillboard(state, billboardGraphics) {
+            var kmlDoc = state.kmlDoc;
+            var valueGetter = state.valueGetter;
+            var externalFileHandler = state.externalFileHandler;
 
             var iconStyle = kmlDoc.createElement('IconStyle');
 
@@ -732,10 +762,10 @@ define([
             return iconStyle;
         }
 
-        function createLineString(that, polylineGraphics, geometries, styles) {
-            var kmlDoc = that._kmlDoc;
-            var ellipsoid = that._ellipsoid;
-            var valueGetter = that._valueGetter;
+        function createLineString(state, polylineGraphics, geometries, styles) {
+            var kmlDoc = state.kmlDoc;
+            var ellipsoid = state.ellipsoid;
+            var valueGetter = state.valueGetter;
 
             if (!defined(polylineGraphics)) {
                 return;
@@ -779,16 +809,14 @@ define([
                 lineStyle.appendChild(createBasicElementWithText(kmlDoc, 'width', width));
             }
 
-            processMaterial(that, polylineGraphics.material, lineStyle);
-
-            // TODO: <gx:physicalWidth>?
+            processMaterial(state, polylineGraphics.material, lineStyle);
 
             styles.push(lineStyle);
         }
 
-        function getRectangleBoundaries(that, rectangleGraphics, extrudedHeight) {
-            var kmlDoc = that._kmlDoc;
-            var valueGetter = that._valueGetter;
+        function getRectangleBoundaries(state, rectangleGraphics, extrudedHeight) {
+            var kmlDoc = state.kmlDoc;
+            var valueGetter = state.valueGetter;
 
             var coordinates;
             var height = valueGetter.get(rectangleGraphics.height, 0.0);
@@ -821,9 +849,9 @@ define([
             return [outerBoundaryIs];
         }
 
-        function getLinearRing(that, positions, height, perPositionHeight) {
-            var kmlDoc = that._kmlDoc;
-            var ellipsoid = that._ellipsoid;
+        function getLinearRing(state, positions, height, perPositionHeight) {
+            var kmlDoc = state.kmlDoc;
+            var ellipsoid = state.ellipsoid;
 
             var coordinateStrings = [];
             var positionCount = positions.length;
@@ -841,9 +869,9 @@ define([
             return linearRing;
         }
 
-        function getPolygonBoundaries(that, polygonGraphics, extrudedHeight) {
-            var kmlDoc = that._kmlDoc;
-            var valueGetter = that._valueGetter;
+        function getPolygonBoundaries(state, polygonGraphics, extrudedHeight) {
+            var kmlDoc = state.kmlDoc;
+            var valueGetter = state.valueGetter;
 
             var height = valueGetter.get(polygonGraphics.height, 0.0);
             var perPositionHeight = valueGetter.get(polygonGraphics.perPositionHeight, false);
@@ -863,7 +891,7 @@ define([
 
             // Polygon boundaries
             var outerBoundaryIs = kmlDoc.createElement('outerBoundaryIs');
-            outerBoundaryIs.appendChild(getLinearRing(that, positions, height, perPositionHeight));
+            outerBoundaryIs.appendChild(getLinearRing(state, positions, height, perPositionHeight));
             boundaries.push(outerBoundaryIs);
 
             // Hole boundaries
@@ -872,7 +900,7 @@ define([
                 var holeCount = holes.length;
                 for (var i = 0; i < holeCount; ++i) {
                     var innerBoundaryIs = kmlDoc.createElement('innerBoundaryIs');
-                    innerBoundaryIs.appendChild(getLinearRing(that, holes[i].positions, height, perPositionHeight));
+                    innerBoundaryIs.appendChild(getLinearRing(state, holes[i].positions, height, perPositionHeight));
                     boundaries.push(innerBoundaryIs);
                 }
             }
@@ -880,9 +908,9 @@ define([
             return boundaries;
         }
 
-        function createPolygon(that, geometry, geometries, styles, overlays) {
-            var kmlDoc = that._kmlDoc;
-            var valueGetter = that._valueGetter;
+        function createPolygon(state, geometry, geometries, styles, overlays) {
+            var kmlDoc = state.kmlDoc;
+            var valueGetter = state.valueGetter;
 
             if (!defined(geometry)) {
                 return;
@@ -891,7 +919,7 @@ define([
             // Detect textured quads and use ground overlays instead
             var isRectangle = (geometry instanceof RectangleGraphics);
             if (isRectangle && valueGetter.getMaterialType(geometry.material) === 'Image') {
-                createGroundOverlay(that, geometry, overlays);
+                createGroundOverlay(state, geometry, overlays);
                 return;
             }
 
@@ -903,8 +931,8 @@ define([
             }
 
             // Set boundaries
-            var boundaries = isRectangle ? getRectangleBoundaries(that, geometry, extrudedHeight) :
-                getPolygonBoundaries(that, geometry, extrudedHeight);
+            var boundaries = isRectangle ? getRectangleBoundaries(state, geometry, extrudedHeight) :
+                getPolygonBoundaries(state, geometry, extrudedHeight);
 
             var boundaryCount = boundaries.length;
             for (var i = 0; i < boundaryCount; ++i) {
@@ -913,7 +941,7 @@ define([
 
             // Set altitude mode
             var altitudeMode = kmlDoc.createElement('altitudeMode');
-            altitudeMode.appendChild(getAltitudeMode(that, geometry.heightReference));
+            altitudeMode.appendChild(getAltitudeMode(state, geometry.heightReference));
             polygonGeometry.appendChild(altitudeMode);
 
             geometries.push(polygonGeometry);
@@ -926,7 +954,7 @@ define([
                 polyStyle.appendChild(createBasicElementWithText(kmlDoc, 'fill', fill));
             }
 
-            processMaterial(that, geometry.material, polyStyle);
+            processMaterial(state, geometry.material, polyStyle);
 
             var outline = valueGetter.get(geometry.outline, false);
             if (outline) {
@@ -948,16 +976,16 @@ define([
             styles.push(polyStyle);
         }
 
-        function createGroundOverlay(that, rectangleGraphics, overlays) {
-            var kmlDoc = that._kmlDoc;
-            var valueGetter = that._valueGetter;
-            var externalFileHandler = that._externalFileHandler;
+        function createGroundOverlay(state, rectangleGraphics, overlays) {
+            var kmlDoc = state.kmlDoc;
+            var valueGetter = state.valueGetter;
+            var externalFileHandler = state.externalFileHandler;
 
             var groundOverlay = kmlDoc.createElement('GroundOverlay');
 
             // Set altitude mode
             var altitudeMode = kmlDoc.createElement('altitudeMode');
-            altitudeMode.appendChild(getAltitudeMode(that, rectangleGraphics.heightReference));
+            altitudeMode.appendChild(getAltitudeMode(state, rectangleGraphics.heightReference));
             groundOverlay.appendChild(altitudeMode);
 
             var height = valueGetter.get(rectangleGraphics.height);
@@ -988,10 +1016,10 @@ define([
             overlays.push(groundOverlay);
         }
 
-        function createModelGeometry(that, modelGraphics) {
-            var kmlDoc = that._kmlDoc;
-            var valueGetter = that._valueGetter;
-            var externalFileHandler = that._externalFileHandler;
+        function createModelGeometry(state, modelGraphics) {
+            var kmlDoc = state.kmlDoc;
+            var valueGetter = state.valueGetter;
+            var externalFileHandler = state.externalFileHandler;
 
             var modelGeometry = kmlDoc.createElement('Model');
 
@@ -1005,7 +1033,7 @@ define([
             }
 
             var link = kmlDoc.createElement('Link');
-            var uri = externalFileHandler.model(modelGraphics, that._time);
+            var uri = externalFileHandler.model(modelGraphics, state.time);
 
             link.appendChild(createBasicElementWithText(kmlDoc, 'href', uri));
             modelGeometry.appendChild(link);
@@ -1013,10 +1041,10 @@ define([
             return modelGeometry;
         }
 
-        function createModel(that, entity, modelGraphics, geometries, styles) {
-            var kmlDoc = that._kmlDoc;
-            var ellipsoid = that._ellipsoid;
-            var valueGetter = that._valueGetter;
+        function createModel(state, entity, modelGraphics, geometries, styles) {
+            var kmlDoc = state.kmlDoc;
+            var ellipsoid = state.ellipsoid;
+            var valueGetter = state.valueGetter;
 
             if (!defined(modelGraphics)) {
                 return;
@@ -1025,15 +1053,15 @@ define([
             // If the point isn't constant then create gx:Track or gx:MultiTrack
             var entityPositionProperty = entity.position;
             if (!entityPositionProperty.isConstant) {
-                createTracks(that, entity, modelGraphics, geometries, styles);
+                createTracks(state, entity, modelGraphics, geometries, styles);
                 return;
             }
 
-            var modelGeometry = createModelGeometry(that, modelGraphics);
+            var modelGeometry = createModelGeometry(state, modelGraphics);
 
             // Set altitude mode
             var altitudeMode = kmlDoc.createElement('altitudeMode');
-            altitudeMode.appendChild(getAltitudeMode(that, modelGraphics.heightReference));
+            altitudeMode.appendChild(getAltitudeMode(state, modelGraphics.heightReference));
             modelGeometry.appendChild(altitudeMode);
 
             valueGetter.get(entityPositionProperty, undefined, scratchCartesian3);
@@ -1047,9 +1075,9 @@ define([
             geometries.push(modelGeometry);
         }
 
-        function processMaterial(that, materialProperty, style) {
-            var kmlDoc = that._kmlDoc;
-            var valueGetter = that._valueGetter;
+        function processMaterial(state, materialProperty, style) {
+            var kmlDoc = state.kmlDoc;
+            var valueGetter = state.valueGetter;
 
             if (!defined(materialProperty)) {
                 return;
@@ -1094,9 +1122,9 @@ define([
             }
         }
 
-        function getAltitudeMode(that, heightReferenceProperty) {
-            var kmlDoc = that._kmlDoc;
-            var valueGetter = that._valueGetter;
+        function getAltitudeMode(state, heightReferenceProperty) {
+            var kmlDoc = state.kmlDoc;
+            var valueGetter = state.valueGetter;
 
             var heightReference = valueGetter.get(heightReferenceProperty, HeightReference.NONE);
             var altitudeModeText;
@@ -1161,5 +1189,14 @@ define([
             return result;
         }
 
-        return KmlExporter;
+        /**
+         * Function interface for merging interval data.
+         * @callback exportKml~ModelCallback
+         *
+         * @param {ModelGraphics} model The ModelGraphics instance for an Entity.
+         * @param {JulianDate} time The time that any properties should use to get the value.
+         * @returns {String} The URL to use for the href in the KML document.
+         */
+
+        return exportKml;
     });
