@@ -191,7 +191,8 @@ define([
         this._canvas = canvas;
 
         options = clone(options, true);
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        // options is being modified here hence why EMPTY_OBJECT is not being used here
+        options = defaultValue(options, {});
         options.allowTextureFilterAnisotropic = defaultValue(options.allowTextureFilterAnisotropic, true);
         var webglOptions = defaultValue(options.webgl, {});
 
