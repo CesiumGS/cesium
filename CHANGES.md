@@ -14,6 +14,7 @@ Change Log
 * Fixed a bug where image requests that returned HTTP code 204 would prevent any future request from succeeding on browsers that supported ImageBitmap. [#7914](https://github.com/AnalyticalGraphicsInc/cesium/pull/7914/)
 * Fixed polyline colors when `scene.highDynamicRange` is enabled. [#7924](https://github.com/AnalyticalGraphicsInc/cesium/pull/7924)
 * Fixed a bug in the inspector where the min/max height values of a picked tile were undefined. [#7904](https://github.com/AnalyticalGraphicsInc/cesium/pull/7904)
+* Reduces size of approximateTerrainHeights.json by rounding the numbers [#7959](https://github.com/AnalyticalGraphicsInc/cesium/pull/7959)
 
 ### 1.58.1 - 2018-06-03
 _This is an npm-only release to fix a publishing issue_.
