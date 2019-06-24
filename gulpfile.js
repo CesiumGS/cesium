@@ -22,6 +22,7 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
+var gulpJsonTransform = require('gulp-json-transform');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var Karma = require('karma');
@@ -130,6 +131,19 @@ gulp.task('requirejs', function(done) {
     requirejs.optimize(config, function() {
         done();
     }, done);
+});
+
+gulp.task('optimizeApproximateTerrainHeights', function() {
+    return gulp.src('Source/Assets/approximateTerrainHeightsPrecise.json')
+        .pipe(gulpJsonTransform(function(data, file) {
+            Object.entries(data).forEach(function(entry) {
+                var values = entry[1];
+                data[entry[0]] = [Math.floor(values[0]), Math.ceil(values[1]) ];
+            });
+            return data;
+        }))
+        .pipe(gulpRename('approximateTerrainHeights.json'))
+        .pipe(gulp.dest('Source/Assets/'));
 });
 
 function cloc() {

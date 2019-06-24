@@ -45,6 +45,7 @@
     "glsl-strip-comments": "^1.0.0",
     "gulp": "^4.0.0",
     "gulp-insert": "^0.5.0",
+    "gulp-json-transform": "^0.4.6",
     "gulp-rename": "^1.2.2",
     "gulp-replace": "^1.0.0",
     "gulp-tap": "^1.0.1",
