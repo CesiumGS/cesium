@@ -22,7 +22,8 @@ defineSuite([
     'DataSources/SampledPositionProperty',
     'Scene/HeightReference',
     'Scene/HorizontalOrigin',
-    'Scene/VerticalOrigin'
+    'Scene/VerticalOrigin',
+    'ThirdParty/when'
 ], function(
     exportKml,
     BoundingRectangle,
@@ -47,7 +48,8 @@ defineSuite([
     SampledPositionProperty,
     HeightReference,
     HorizontalOrigin,
-    VerticalOrigin) {
+    VerticalOrigin,
+    when) {
         'use strict';
 
         var kmlDoc;
@@ -496,6 +498,38 @@ defineSuite([
                         expect(result.kml).toBeDefined();
                         expect(Object.keys(result.externalFiles).length).toBe(1);
                         expect(result.externalFiles['texture_1.png']).toBeDefined();
+                    });
+            });
+
+            it('Billboard with a Canvas image as KMZ', function() {
+                var entity1 = createEntity({
+                    billboard: {
+                        image: document.createElement('canvas')
+                    }
+                });
+
+                var entities = new EntityCollection();
+                entities.add(entity1);
+
+                return exportKml({
+                        entities: entities,
+                        kmz: true
+                    })
+                    .then(function(result) {
+                        expect(result.kml).toBeUndefined();
+                        expect(result.externalFiles).toBeUndefined();
+                        expect(result.kmz).toBeDefined();
+
+                        var deferred = when.defer();
+                        var fileReader = new FileReader();
+                        fileReader.onload = function(event) {
+                            // Verify its a zip archive
+                            expect(new DataView(event.target.result).getUint32(0, false)).toBe(0x504b0304);
+                            deferred.resolve();
+                        };
+                        fileReader.readAsArrayBuffer(result.kmz);
+
+                        return deferred.promise;
                     });
             });
         });

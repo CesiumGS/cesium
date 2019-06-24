@@ -29,7 +29,8 @@ define([
     '../Scene/HeightReference',
     '../Scene/HorizontalOrigin',
     '../Scene/VerticalOrigin',
-    '../ThirdParty/when'
+    '../ThirdParty/when',
+    '../ThirdParty/zip'
 ], function(
     BillboardGraphics,
     CompositePositionProperty,
@@ -61,7 +62,8 @@ define([
     HeightReference,
     HorizontalOrigin,
     VerticalOrigin,
-    when) {
+    when,
+    zip) {
         'use strict';
 
         var BILLBOARD_SIZE = 32;
@@ -253,8 +255,9 @@ define([
          * @param {JulianDate} [options.time=entities.computeAvailability().start] The time value to use to get properties that are not time varying in KML.
          * @param {TimeInterval} [options.defaultAvailability=entities.computeAvailability()] The interval that will be sampled if an entity doesn't have an availability.
          * @param {Number} [options.sampleDuration=60] The number of seconds to sample properties that are varying in KML.
+         * @param {Boolean} [options.kmz] If true KML and external files will be compressed into a kmz file.
          *
-         * @returns {Promise<Object>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs.
+         * @returns {Promise<Object>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
          *
          * @example
          * Cesium.exportKml({
@@ -308,10 +311,63 @@ define([
             return externalFileHandler.promise
                 .then(function() {
                     var serializer = new XMLSerializer();
+                    var kmlString = serializer.serializeToString(state.kmlDoc);
+                    if (options.kmz) {
+                        return createKmz(kmlString, externalFileHandler.files);
+                    }
+
                     return {
-                        kml: serializer.serializeToString(state.kmlDoc),
+                        kml: kmlString,
                         externalFiles: externalFileHandler.files
                     };
+                });
+        }
+
+        function createKmz(kmlString, externalFiles) {
+            var deferred = when.defer();
+            zip.createWriter(new zip.BlobWriter(), function(writer) {
+                // We need to only write one file at a time so the zip doesn't get corrupted
+                addKmlToZip(writer, kmlString)
+                    .then(function() {
+                        var keys = Object.keys(externalFiles);
+                        return addExternalFilesToZip(writer, keys, externalFiles, 0);
+                    })
+                    .then(function() {
+                        writer.close(function(blob) {
+                            deferred.resolve({
+                                kmz: blob
+                            });
+                        });
+                    });
+            });
+
+            return deferred.promise;
+        }
+
+        function addKmlToZip(writer, kmlString) {
+            var deferred = when.defer();
+            writer.add('doc.kml', new zip.TextReader(kmlString), function() {
+                deferred.resolve();
+            });
+
+            return deferred.promise;
+        }
+
+        function addExternalFilesToZip(writer, keys, externalFiles, index) {
+            if (keys.length === index) {
+                return;
+            }
+
+            var filename = keys[index];
+
+            var deferred = when.defer();
+            writer.add(filename, new zip.BlobReader(externalFiles[filename]), function() {
+                deferred.resolve();
+            });
+
+            return deferred.promise
+                .then(function() {
+                    addExternalFilesToZip(writer, keys, externalFiles, index+1);
                 });
         }
 
