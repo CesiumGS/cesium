@@ -79,21 +79,39 @@ define([
             this._modelCallback = modelCallback;
         }
 
+        var imageTypeRegex = /^data:image\/([^,;]+)/;
         ExternalFileHandler.prototype.texture = function(texture) {
-            if (typeof texture === 'string') {
-                return texture;
-            }
+            var that = this;
+            var filename;
 
-            if (texture instanceof Resource) {
-                return texture.url;
+            if ((typeof texture === 'string') || (texture instanceof Resource)) {
+                texture = Resource.createIfNeeded(texture);
+                if (!texture.isDataUri) {
+                    return texture.url;
+                }
+
+                // If its a data URI try and get the correct extension and then fetch the blob
+                var regexResult = texture.url.match(imageTypeRegex);
+                filename = 'texture_' + (++this._count);
+                if (defined(regexResult)) {
+                    filename += '.' + regexResult[1];
+                }
+
+                var promise = texture.fetchBlob()
+                    .then(function(blob) {
+                        that._files[filename] = blob;
+                    });
+
+                this._promises.push(promise);
+
+                return filename;
             }
 
             if (texture instanceof HTMLCanvasElement) {
                 var deferred = when.defer();
                 this._promises.push(deferred.promise);
 
-                var filename = 'texture_' + (++this._count) + '.png';
-                var that = this;
+                filename = 'texture_' + (++this._count) + '.png';
                 texture.toBlob(function(blob) {
                     that._files[filename] = blob;
                     deferred.resolve();
