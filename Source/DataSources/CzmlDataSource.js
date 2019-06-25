@@ -1306,13 +1306,14 @@ define([
         }
     }
 
-    function processPositionsPacketData(object, propertyName, positionsData, entityCollection) {
-        if (defined(positionsData.references)) {
-            var properties = positionsData.references.map(function(reference) {
+    function processPositionsPacketData(object, propertyName, packetData, entityCollection) {
+        var references = packetData.references;
+        if (defined(references)) {
+            var properties = references.map(function(reference) {
                 return createReferenceProperty(entityCollection, reference);
             });
 
-            var iso8601Interval = positionsData.interval;
+            var iso8601Interval = packetData.interval;
             if (defined(iso8601Interval)) {
                 iso8601Interval = TimeInterval.fromIso8601(iso8601Interval);
                 if (!(object[propertyName] instanceof CompositePositionProperty)) {
@@ -1325,16 +1326,16 @@ define([
                 object[propertyName] = new PositionPropertyArray(properties);
             }
         } else {
-            if (defined(positionsData.cartesian)) {
-                positionsData.array = Cartesian3.unpackArray(positionsData.cartesian);
-            } else if (defined(positionsData.cartographicRadians)) {
-                positionsData.array = Cartesian3.fromRadiansArrayHeights(positionsData.cartographicRadians);
-            } else if (defined(positionsData.cartographicDegrees)) {
-                positionsData.array = Cartesian3.fromDegreesArrayHeights(positionsData.cartographicDegrees);
+            if (defined(packetData.cartesian)) {
+                packetData.array = Cartesian3.unpackArray(packetData.cartesian);
+            } else if (defined(packetData.cartographicRadians)) {
+                packetData.array = Cartesian3.fromRadiansArrayHeights(packetData.cartographicRadians);
+            } else if (defined(packetData.cartographicDegrees)) {
+                packetData.array = Cartesian3.fromDegreesArrayHeights(packetData.cartographicDegrees);
             }
 
-            if (defined(positionsData.array)) {
-                processPacketData(Array, object, propertyName, positionsData, undefined, undefined, entityCollection);
+            if (defined(packetData.array)) {
+                processPacketData(Array, object, propertyName, packetData, undefined, undefined, entityCollection);
             }
         }
     }
