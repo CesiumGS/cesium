@@ -4,19 +4,18 @@ defineSuite([
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Cartographic',
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/Color',
         'Core/CornerType',
         'Core/DistanceDisplayCondition',
-        'Core/Ellipsoid',
         'Core/Event',
         'Core/ExtrapolationType',
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/Math',
         'Core/NearFarScalar',
+        'Core/PolygonHierarchy',
         'Core/Quaternion',
         'Core/Rectangle',
         'Core/ReferenceFrame',
@@ -52,19 +51,18 @@ defineSuite([
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
-        Cartographic,
         ClockRange,
         ClockStep,
         Color,
         CornerType,
         DistanceDisplayCondition,
-        Ellipsoid,
         Event,
         ExtrapolationType,
         Iso8601,
         JulianDate,
         CesiumMath,
         NearFarScalar,
+        PolygonHierarchy,
         Quaternion,
         Rectangle,
         ReferenceFrame,
@@ -2231,25 +2229,25 @@ defineSuite([
 
         function expectPropertiesToBeDefined(dataSource) {
             var entity = dataSource.entities.getById('test-constant');
-            expect(entity.billboard.scale).toBeInstanceOf(ConstantProperty);
+            expect(entity.position).toBeInstanceOf(ConstantPositionProperty);
             entity = dataSource.entities.getById('test-interval');
-            expect(entity.billboard.scale).toBeInstanceOf(TimeIntervalCollectionProperty);
+            expect(entity.position).toBeInstanceOf(TimeIntervalCollectionPositionProperty);
             entity = dataSource.entities.getById('test-sampled');
-            expect(entity.billboard.scale).toBeInstanceOf(SampledProperty);
+            expect(entity.position).toBeInstanceOf(SampledPositionProperty);
             return dataSource;
         }
 
         function expectPropertiesToBeUndefined(dataSource) {
             var entity = dataSource.entities.getById('test-constant');
-            expect(entity.billboard.scale).toBeUndefined();
+            expect(entity.position).toBeUndefined();
             entity = dataSource.entities.getById('test-interval');
-            expect(entity.billboard.scale).toBeUndefined();
+            expect(entity.position).toBeUndefined();
             entity = dataSource.entities.getById('test-sampled');
-            expect(entity.billboard.scale).toBeUndefined();
+            expect(entity.position).toBeUndefined();
             return dataSource;
         }
 
-        createDataSource()
+        return createDataSource()
             .then(expectPropertiesToBeDefined)
             .then(function(dataSource) {
                 // delete with no interval specified should delete the properties entirely
@@ -3026,6 +3024,263 @@ defineSuite([
             expect(entity.polygon.material.getValue(invalidTime)).toBeUndefined();
             expect(entity.polygon.show.getValue(invalidTime)).toBeUndefined();
             expect(entity.polygon.shadows.getValue(invalidTime)).toBeUndefined();
+        });
+    });
+
+    it('can load constant polygon positions', function() {
+        var packet = {
+            polygon: {
+                positions: {
+                    cartographicDegrees : [
+                        -50, 20, 0,
+                        -50, 40, 0,
+                        -40, 40, 0,
+                        -40, 20, 0
+                    ]
+                }
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.polygon).toBeDefined();
+            expect(entity.polygon.hierarchy).toBeDefined();
+
+            var hierarchy = entity.polygon.hierarchy.getValue(Iso8601.MINIMUM_VALUE);
+            expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+            expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions.cartographicDegrees));
+        });
+    });
+
+    it('can load constant polygon positions with holes', function() {
+        var packet = {
+            polygon: {
+                positions: {
+                    cartographicDegrees : [
+                        -50, 20, 0,
+                        -50, 40, 0,
+                        -40, 40, 0,
+                        -40, 20, 0
+                    ]
+                },
+                holes: {
+                    cartographicDegrees : [
+                        [
+                            -48.2, 39, 0,
+                            -44.5, 37, 0,
+                            -48.9, 33.1, 0,
+                            -49, 36.6, 0
+                        ],
+                        [
+                            -45.2, 21, 0,
+                            -43.5, 27, 0,
+                            -41.6, 21.1, 0
+                        ]
+                    ]
+                }
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.polygon).toBeDefined();
+            expect(entity.polygon.hierarchy).toBeDefined();
+
+            var hierarchy = entity.polygon.hierarchy.getValue(Iso8601.MINIMUM_VALUE);
+            expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+            expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions.cartographicDegrees));
+            expect(hierarchy.holes).toEqual(packet.polygon.holes.cartographicDegrees.map(function(hole) {
+                return Cartesian3.fromDegreesArrayHeights(hole);
+            }));
+        });
+    });
+
+    it('can load interval polygon positions', function() {
+        var packet = {
+            polygon: {
+                positions: [{
+                    interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
+                    cartographicDegrees : [
+                        -50, 20, 0,
+                        -50, 40, 0,
+                        -40, 40, 0,
+                        -40, 20, 0
+                    ]
+                }, {
+                    interval : '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
+                    cartographicDegrees: [
+                        -35, 50, 0,
+                        -35, 10, 0,
+                        -45, 30, 0
+                    ]
+                }]
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.polygon).toBeDefined();
+            expect(entity.polygon.hierarchy).toBeDefined();
+
+            var hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:10:00Z'));
+            expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+            expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions[0].cartographicDegrees));
+
+            hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:20:00Z'));
+            expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+            expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions[1].cartographicDegrees));
+        });
+    });
+
+    it('can load interval polygon positions with holes', function() {
+        var packet = {
+            polygon: {
+                positions: [{
+                    interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
+                    cartographicDegrees : [
+                        -50, 20, 0,
+                        -50, 40, 0,
+                        -40, 40, 0,
+                        -40, 20, 0
+                    ]
+                }, {
+                    interval : '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
+                    cartographicDegrees: [
+                        -35, 50, 0,
+                        -35, 10, 0,
+                        -45, 30, 0
+                    ]
+                }],
+                holes: [{
+                    interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
+                    cartographicDegrees : [
+                        [
+                            -48.2, 39, 0,
+                            -44.5, 37, 0,
+                            -48.9, 33.1, 0,
+                            -49, 36.6, 0
+                        ],
+                        [
+                            -45.2, 21, 0,
+                            -43.5, 27, 0,
+                            -41.6, 21.1, 0
+                        ]
+                    ]
+                }, {
+                    interval : '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
+                    cartographicDegrees: [
+                        [
+                            -40, 34, 0,
+                            -37, 26, 0,
+                            -41.2, 31, 0
+                        ]
+                    ]
+                }]
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.polygon).toBeDefined();
+            expect(entity.polygon.hierarchy).toBeDefined();
+
+            var hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:10:00Z'));
+            expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+            expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions[0].cartographicDegrees));
+            expect(hierarchy.holes).toEqual(packet.polygon.holes[0].cartographicDegrees.map(function(hole) {
+                return Cartesian3.fromDegreesArrayHeights(hole);
+            }));
+
+            hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:20:00Z'));
+            expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+            expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions[1].cartographicDegrees));
+            expect(hierarchy.holes).toEqual(packet.polygon.holes[1].cartographicDegrees.map(function(hole) {
+                return Cartesian3.fromDegreesArrayHeights(hole);
+            }));
+        });
+    });
+
+    it('can load reference polygon positions with holes', function() {
+        var packets = [{
+            id : 'document',
+            version : '1.0'
+        }, {
+            id : 'target1',
+            position : {
+                cartesian : [1.0, 2.0, 3.0]
+            }
+        }, {
+            id : 'target2',
+            position : {
+                cartesian : [4.0, 5.0, 6.0]
+            }
+        }, {
+            id : 'target3',
+            position : {
+                cartesian : [7.0, 8.0, 9.0]
+            }
+        }, {
+            id : 'target4',
+            position : {
+                cartesian : [1.5, 2.5, 3.5]
+            }
+        }, {
+            id : 'target5',
+            position : {
+                cartesian : [1.5, 2.6, 3.5]
+            }
+        }, {
+            id : 'target6',
+            position : {
+                cartesian : [1.6, 2.5, 3.5]
+            }
+        }, {
+            id : 'polygon',
+            polygon : {
+                positions : {
+                    references : [
+                        'target1#position',
+                        'target2#position',
+                        'target3#position'
+                    ]
+                },
+                holes: {
+                    references : [
+                        [
+                            'target4#position',
+                            'target5#position',
+                            'target6#position'
+                        ]
+                    ]
+                }
+            }
+        }];
+
+        return CzmlDataSource.load(packets).then(function(dataSource) {
+            var entity = dataSource.entities.getById('polygon');
+
+            expect(entity.polygon).toBeDefined();
+            expect(entity.polygon.hierarchy).toBeDefined();
+
+            var time = JulianDate.fromIso8601('2012-08-04T16:10:00Z');
+            var hierarchy = entity.polygon.hierarchy.getValue(time);
+            expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+            expect(hierarchy.positions).toEqual([
+                dataSource.entities.getById('target1').position.getValue(time),
+                dataSource.entities.getById('target2').position.getValue(time),
+                dataSource.entities.getById('target3').position.getValue(time)
+            ]);
+            expect(hierarchy.holes).toEqual([
+                [
+                    dataSource.entities.getById('target4').position.getValue(time),
+                    dataSource.entities.getById('target5').position.getValue(time),
+                    dataSource.entities.getById('target6').position.getValue(time)
+                ]
+            ]);
         });
     });
 
@@ -4418,7 +4673,7 @@ defineSuite([
             expect(e.point.distanceDisplayCondition.getValue(date)).toEqual(new DistanceDisplayCondition(29646, 52915));
             expect(e.point.disableDepthTestDistance.getValue(date)).toEqual(9675.0);
             expect(e.polygon.show.getValue(date)).toEqual(true);
-            expect(e.polygon.hierarchy.getValue(date)).toEqual([ new Cartesian3(39143, 2200, 6408), new Cartesian3(27161, 33386, 62338) ]);
+            expect(e.polygon.hierarchy.getValue(date).positions).toEqual([ new Cartesian3(39143, 2200, 6408), new Cartesian3(27161, 33386, 62338) ]);
             expect(e.polygon.arcType.getValue(date)).toEqual(ArcType.RHUMB);
             expect(e.polygon.height.getValue(date)).toEqual(26391.0);
             expect(e.polygon.heightReference.getValue(date)).toEqual(HeightReference.CLAMP_TO_GROUND);
@@ -4756,9 +5011,9 @@ defineSuite([
             expect(e = dataSource.entities.getById('constant_point_outlineColor_rgbaf')).toBeDefined();
             expect(e.point.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.00392156862745098, 0.388235294117647, 0.101960784313725, 0.16078431372549), 1e-14);
             expect(e = dataSource.entities.getById('constant_polygon_hierarchy_cartographicRadians')).toBeDefined();
-            expect(e.polygon.hierarchy.getValue(date)).toEqual([ Cartesian3.fromRadians(0.612948853926511, 1.3346715688367, 54401), Cartesian3.fromRadians(1.1867596160592, 0.345663242797974, 35811) ]);
+            expect(e.polygon.hierarchy.getValue(date).positions).toEqual([ Cartesian3.fromRadians(0.612948853926511, 1.3346715688367, 54401), Cartesian3.fromRadians(1.1867596160592, 0.345663242797974, 35811) ]);
             expect(e = dataSource.entities.getById('constant_polygon_hierarchy_cartographicDegrees')).toBeDefined();
-            expect(e.polygon.hierarchy.getValue(date)).toEqual([ Cartesian3.fromDegrees(19, 41, 50907), Cartesian3.fromDegrees(28, 40, 24937) ]);
+            expect(e.polygon.hierarchy.getValue(date).positions).toEqual([ Cartesian3.fromDegrees(19, 41, 50907), Cartesian3.fromDegrees(28, 40, 24937) ]);
             expect(e = dataSource.entities.getById('constant_polygon_material_solidColor_color')).toBeDefined();
             expect(e.polygon.material.color.getValue(date)).toEqualEpsilon(new Color(0.980392156862745, 0.905882352941176, 0.274509803921569, 0.972549019607843), 1e-14);
             expect(e = dataSource.entities.getById('material_polygon_material_image')).toBeDefined();
@@ -5390,7 +5645,7 @@ defineSuite([
             expect(e.point.distanceDisplayCondition.getValue(date)).toEqual(constant.point.distanceDisplayCondition.getValue(date));
             expect(e.point.disableDepthTestDistance.getValue(date)).toEqual(constant.point.disableDepthTestDistance.getValue(date));
             expect(e.polygon.show.getValue(date)).toEqual(constant.polygon.show.getValue(date));
-            expect(e.polygon.hierarchy.getValue(date)).toEqual([dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date)]);
+            expect(e.polygon.hierarchy.getValue(date).positions).toEqual([dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date)]);
             expect(e.polygon.arcType.getValue(date)).toEqual(constant.polygon.arcType.getValue(date));
             expect(e.polygon.height.getValue(date)).toEqual(constant.polygon.height.getValue(date));
             expect(e.polygon.heightReference.getValue(date)).toEqual(constant.polygon.heightReference.getValue(date));
