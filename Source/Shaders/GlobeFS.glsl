@@ -278,7 +278,7 @@ void main()
     float fadeOutDist = u_lightingFadeDistance.x;
     float fadeInDist = u_lightingFadeDistance.y;
     if (czm_sceneMode != czm_sceneMode3D) {
-        vec3 radii = czm_ellipsoid_radii;
+        vec3 radii = czm_ellipsoidRadii;
         float maxRadii = max(radii.x, max(radii.y, radii.z));
         fadeOutDist -= maxRadii;
         fadeInDist -= maxRadii;
@@ -385,7 +385,7 @@ void main()
 
     vec3 ellipsoid_center = czm_view[3].xyz;
 
-    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid_center, czm_ellipsoid_inverseRadii);
+    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid_center, czm_ellipsoidInverseRadii);
 
     vec3 ellipsoidPosition = czm_pointAlongRay(ray, intersection.start);
     ellipsoidPosition = (czm_inverseView * vec4(ellipsoidPosition, 1.0)).xyz;
