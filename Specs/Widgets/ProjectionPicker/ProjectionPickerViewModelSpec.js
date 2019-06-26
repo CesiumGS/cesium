@@ -64,15 +64,15 @@ defineSuite([
 
         expect(scene.mode).toEqual(SceneMode.SCENE3D);
         expect(viewModel.isOrthographicProjection).toEqual(false);
-        expect(scene.camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+        expect(scene.camera.frustum).toBeInstanceOf(PerspectiveFrustum);
 
         viewModel.switchToOrthographic();
         expect(viewModel.isOrthographicProjection).toEqual(true);
-        expect(scene.camera.frustum instanceof OrthographicFrustum).toEqual(true);
+        expect(scene.camera.frustum).toBeInstanceOf(OrthographicFrustum);
 
         viewModel.switchToPerspective();
         expect(viewModel.isOrthographicProjection).toEqual(false);
-        expect(scene.camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+        expect(scene.camera.frustum).toBeInstanceOf(PerspectiveFrustum);
 
         viewModel.destroy();
     });
