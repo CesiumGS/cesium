@@ -126,7 +126,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Tamrat Belayneh](https://github.com/Tamrat-B/)
    * [Chris Andrews](https://github.com/chri7928/)
 * [Cesium GS, Inc.](https://cesium.com/)
-   *
+   * [Tom Fili](https://github.com/tfili)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
 * [Victor Berchet](https://github.com/vicb)
