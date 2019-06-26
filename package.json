@@ -39,7 +39,7 @@
     "cloc": "^2.3.3",
     "compression": "^1.6.2",
     "eslint": "^5.13.0",
-    "eslint-plugin-html": "^5.0.3",
+    "eslint-plugin-html": "^6.0.0",
     "express": "^4.15.0",
     "globby": "^9.0.0",
     "glsl-strip-comments": "^1.0.0",
