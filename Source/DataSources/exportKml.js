@@ -369,7 +369,7 @@ define([
 
             return deferred.promise
                 .then(function() {
-                    addExternalFilesToZip(writer, keys, externalFiles, index+1);
+                    return addExternalFilesToZip(writer, keys, externalFiles, index+1);
                 });
         }
 
