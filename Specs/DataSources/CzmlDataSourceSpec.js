@@ -187,6 +187,19 @@ defineSuite([
             }));
     });
 
+    function arraySubset(array, startIndex, count) {
+        startIndex = startIndex === undefined ? 0 : startIndex;
+        return array.slice(startIndex, startIndex + count);
+    }
+
+    function cartesianFromArrayDegrees(array, startIndex) {
+        return Cartesian3.fromDegrees.apply(null, arraySubset(array, startIndex, 3));
+    }
+
+    function cartesianFromArrayRadians(array, startIndex) {
+        return Cartesian3.fromRadians.apply(null, arraySubset(array, startIndex, 3));
+    }
+
     it('default constructor has expected values', function() {
         var dataSource = new CzmlDataSource();
         expect(dataSource.changedEvent).toBeInstanceOf(Event);
@@ -683,6 +696,186 @@ defineSuite([
         });
     });
 
+    it('can load interval data with further constrained intervals in subproperties', function() {
+        var packet = {
+            billboard : {
+                interval : '2010-01-01T00:00:00Z/2010-01-02T01:00:00Z',
+                scaleByDistance : [{
+                    interval : '2009-01-01T00:00:00Z/2010-01-01T00:30:00Z',
+                    nearFarScalar : [1.0, 2.0, 10000.0, 3.0]
+                }, {
+                    interval : '2010-01-01T00:30:00Z/2011-01-01T00:00:00Z',
+                    nearFarScalar : [2.0, 3.0, 20000.0, 4.0]
+                }]
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.billboard).toBeDefined();
+
+            // before billboard interval: not defined, even though the scaleByDistance includes the time in its intervals
+            var time = JulianDate.fromIso8601('2009-01-01T00:00:00Z');
+            expect(entity.billboard.scaleByDistance.getValue(time)).toBeUndefined();
+
+            // within both billboard and scaleByDistance intervals
+            time = JulianDate.fromIso8601('2010-01-01T00:05:00Z');
+            expect(entity.billboard.scaleByDistance.getValue(time)).toEqual(NearFarScalar.unpack(packet.billboard.scaleByDistance[0].nearFarScalar));
+            time = JulianDate.fromIso8601('2010-01-01T00:35:00Z');
+            expect(entity.billboard.scaleByDistance.getValue(time)).toEqual(NearFarScalar.unpack(packet.billboard.scaleByDistance[1].nearFarScalar));
+
+            // after billboard interval: not defined, even though the scaleByDistance includes the time in its intervals
+            time = JulianDate.fromIso8601('2010-01-03T00:00:00Z');
+            expect(entity.billboard.scaleByDistance.getValue(time)).toBeUndefined();
+        });
+    });
+
+    it('can constrain a constant property by sending an interval in a subsequent packet', function() {
+        var constantPacket = {
+            id: 'a',
+            billboard: {
+                scale: 1.0
+            }
+        };
+
+        // loading a value with an interval makes the previously constant property into a composite.
+        var intervalPacket = {
+            id: 'a',
+            billboard: {
+                scale: {
+                    interval: '2010-01-01T00:00:00Z/2010-01-02T01:00:00Z',
+                    number: 2.0
+                }
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(constantPacket)).then(function(dataSource) {
+            return dataSource.process(intervalPacket);
+        }).then(function(dataSource) {
+            var entity = dataSource.entities.getById('a');
+
+            expect(entity.billboard).toBeDefined();
+            expect(entity.billboard.scale).toBeInstanceOf(CompositeProperty);
+            expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2009-01-01T00:00:00Z'))).toEqual(constantPacket.billboard.scale);
+            expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2010-01-01T00:00:00Z'))).toEqual(intervalPacket.billboard.scale.number);
+            expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2011-01-01T00:00:00Z'))).toEqual(constantPacket.billboard.scale);
+        });
+    });
+
+    it('can constrain a constant position property by sending an interval in a subsequent packet', function() {
+        var constantPacket = {
+            id: 'a',
+            position: {
+                cartographicDegrees: [34, 117, 0]
+            }
+        };
+        // loading a value with an interval makes the previously constant property into a composite.
+        var intervalPacket = {
+            id: 'a',
+            position: {
+                interval: '2010-01-01T00:00:00Z/2010-01-02T01:00:00Z',
+                cartographicDegrees: [40, 100, 0]
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(constantPacket)).then(function(dataSource) {
+            return dataSource.process(intervalPacket);
+        }).then(function(dataSource) {
+            var entity = dataSource.entities.getById('a');
+
+            expect(entity.position).toBeDefined();
+            expect(entity.position).toBeInstanceOf(CompositePositionProperty);
+            expect(entity.position.getValue(JulianDate.fromIso8601('2009-01-01T00:00:00Z'))).toEqual(cartesianFromArrayDegrees(constantPacket.position.cartographicDegrees));
+            expect(entity.position.getValue(JulianDate.fromIso8601('2010-01-01T00:00:00Z'))).toEqual(cartesianFromArrayDegrees(intervalPacket.position.cartographicDegrees));
+            expect(entity.position.getValue(JulianDate.fromIso8601('2011-01-01T00:00:00Z'))).toEqual(cartesianFromArrayDegrees(constantPacket.position.cartographicDegrees));
+        });
+    });
+
+    it('can convert a sampled property to a composite by sending intervals in a subsequent packet', function() {
+        var sampledPacket = {
+            id: 'a',
+            billboard: {
+                scale: {
+                    number: [
+                        '2010-01-01T00:00:00Z', 1,
+                        '2010-01-01T01:00:00Z', 2,
+                        '2010-01-01T02:00:00Z', 3
+                    ]
+                }
+            }
+        };
+        // loading a value with an interval makes the property into a composite.
+        var intervalPacket = {
+            id: 'a',
+            billboard: {
+                scale: [{
+                    interval: '2010-01-01T00:20:00Z/2010-01-01T00:22:00Z',
+                    number: [
+                        '2010-01-01T00:20:00Z', 10,
+                        '2010-01-01T00:22:00Z', 20
+                    ]
+                }]
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(sampledPacket)).then(function(dataSource) {
+            return dataSource.process(intervalPacket);
+        }).then(function(dataSource) {
+            var entity = dataSource.entities.getById('a');
+
+            expect(entity.billboard).toBeDefined();
+            expect(entity.billboard.scale).toBeInstanceOf(CompositeProperty);
+            expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2010-01-01T00:00:00Z'))).toEqual(1.0);
+
+            expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2010-01-01T00:20:00Z'))).toEqual(10.0);
+            expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2010-01-01T00:21:00Z'))).toEqual(15.0);
+            expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2010-01-01T00:22:00Z'))).toEqual(20.0);
+
+            expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2010-01-01T01:00:00Z'))).toEqual(2.0);
+            expect(entity.billboard.scale.getValue(JulianDate.fromIso8601('2010-01-01T02:00:00Z'))).toEqual(3.0);
+        });
+    });
+
+    it('can convert a sampled position property to a composite by sending intervals in a subsequent packet', function() {
+        var sampledPacket = {
+            id: 'a',
+            position : {
+                cartographicDegrees : [
+                    '2010-01-01T00:00:00Z', 34, 117, 10000,
+                    '2010-01-01T01:00:00Z', 34, 117, 20000
+                ]
+            }
+        };
+        // loading a value with an interval makes the property into a composite.
+        var intervalPacket = {
+            id: 'a',
+            position: [{
+                interval: '2010-01-01T00:20:00Z/2010-01-01T00:22:00Z',
+                cartographicDegrees: [
+                    '2010-01-01T00:20:00Z', 40, 100, 10000,
+                    '2010-01-01T00:22:00Z', 40, 100, 20000
+                ]
+            }]
+        };
+
+        return CzmlDataSource.load(makeDocument(sampledPacket)).then(function(dataSource) {
+            return dataSource.process(intervalPacket);
+        }).then(function(dataSource) {
+            var entity = dataSource.entities.getById('a');
+
+            expect(entity.position).toBeDefined();
+            expect(entity.position).toBeInstanceOf(CompositePositionProperty);
+            expect(entity.position.getValue(JulianDate.fromIso8601('2010-01-01T00:00:00Z'))).toEqual(Cartesian3.fromDegrees(34, 117, 10000));
+
+            expect(entity.position.getValue(JulianDate.fromIso8601('2010-01-01T00:20:00Z'))).toEqual(Cartesian3.fromDegrees(40, 100, 10000));
+            expect(entity.position.getValue(JulianDate.fromIso8601('2010-01-01T00:21:00Z'))).toEqualEpsilon(Cartesian3.fromDegrees(40, 100, 15000), CesiumMath.EPSILON10);
+            expect(entity.position.getValue(JulianDate.fromIso8601('2010-01-01T00:22:00Z'))).toEqual(Cartesian3.fromDegrees(40, 100, 20000));
+
+            expect(entity.position.getValue(JulianDate.fromIso8601('2010-01-01T01:00:00Z'))).toEqual(Cartesian3.fromDegrees(34, 117, 20000));
+        });
+    });
+
     it('can handle sampled billboard pixelOffset.', function() {
         var epoch = JulianDate.now();
 
@@ -820,15 +1013,15 @@ defineSuite([
 
     it('can handle position specified as constant cartographicsDegrees', function() {
         var packet = {
-            position : {
-                cartographicDegrees : [34, 117, 10000]
+            position: {
+                cartographicDegrees: [34, 117, 10000]
             }
         };
 
         return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var resultCartesian = entity.position.getValue(JulianDate.now());
-            expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 10000));
+            expect(resultCartesian).toEqual(cartesianFromArrayDegrees(packet.position.cartographicDegrees));
         });
     });
 
@@ -848,10 +1041,10 @@ defineSuite([
         return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var resultCartesian = entity.position.getValue(epoch);
-            expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 10000));
+            expect(resultCartesian).toEqual(cartesianFromArrayDegrees(packet.position.cartographicDegrees, 1));
 
             resultCartesian = entity.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
-            expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 20000));
+            expect(resultCartesian).toEqual(cartesianFromArrayDegrees(packet.position.cartographicDegrees, 5));
         });
     });
 
@@ -871,10 +1064,10 @@ defineSuite([
         return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var resultCartesian = entity.position.getValue(firstDate);
-            expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 10000));
+            expect(resultCartesian).toEqual(cartesianFromArrayDegrees(packet.position.cartographicDegrees, 1));
 
             resultCartesian = entity.position.getValue(lastDate);
-            expect(resultCartesian).toEqual(Cartesian3.fromDegrees(34, 117, 20000));
+            expect(resultCartesian).toEqual(cartesianFromArrayDegrees(packet.position.cartographicDegrees, 5));
         });
     });
 
@@ -888,7 +1081,7 @@ defineSuite([
         return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var resultCartesian = entity.position.getValue(JulianDate.now());
-            expect(resultCartesian).toEqual(Cartesian3.fromRadians(1, 2, 10000));
+            expect(resultCartesian).toEqual(cartesianFromArrayRadians(packet.position.cartographicRadians));
         });
     });
 
@@ -908,10 +1101,10 @@ defineSuite([
         return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
             var entity = dataSource.entities.values[0];
             var resultCartesian = entity.position.getValue(epoch);
-            expect(resultCartesian).toEqual(Cartesian3.fromRadians(2, 0.3, 10000));
+            expect(resultCartesian).toEqual(cartesianFromArrayRadians(packet.position.cartographicRadians, 1));
 
             resultCartesian = entity.position.getValue(JulianDate.addSeconds(epoch, 1, new JulianDate()));
-            expect(resultCartesian).toEqual(Cartesian3.fromRadians(0.2, 0.5, 20000));
+            expect(resultCartesian).toEqual(cartesianFromArrayRadians(packet.position.cartographicRadians, 5));
         });
     });
 
@@ -4435,6 +4628,40 @@ defineSuite([
         }).otherwise(function(error) {
             expect(error).toBeInstanceOf(RuntimeError);
             expect(error.message).toContain('CZML version information invalid.  It is expected to be a property on the document object in the <Major>.<Minor> version format.');
+        });
+    });
+
+    it('ignores color values not expressed as a known type', function() {
+        var packet = {
+            billboard: {
+                color: {
+                    invalidType: 'someValue'
+                }
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.billboard).toBeDefined();
+            expect(entity.billboard.color).toBeUndefined();
+        });
+    });
+
+    it('ignores rectangle values not expressed as a known type', function() {
+        var packet = {
+            rectangle: {
+                coordinates: {
+                    invalidType: 'someValue'
+                }
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.rectangle).toBeDefined();
+            expect(entity.rectangle.coordinates).toBeUndefined();
         });
     });
 

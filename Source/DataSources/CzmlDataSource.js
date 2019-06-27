@@ -716,6 +716,10 @@ define([
 
         if (isValue) {
             unwrappedInterval = unwrapInterval(type, packetData, sourceUri);
+            if (!defined(unwrappedInterval)) {
+                // not a known value type, bail
+                return;
+            }
             packedLength = defaultValue(type.packedLength, 1);
             unwrappedIntervalLength = defaultValue(unwrappedInterval.length, 1);
             isSampled = !defined(packetData.array) && (typeof unwrappedInterval !== 'string') && (unwrappedIntervalLength > packedLength) && (type !== Object);
