@@ -125,13 +125,32 @@ define([
             return '';
         };
 
+        function getModelBlobHander(that, filename) {
+            return function (blob) {
+                that._files[filename] = blob;
+            };
+        }
+
         ExternalFileHandler.prototype.model = function(model, time) {
             var modelCallback = this._modelCallback;
             if (!defined(modelCallback)) {
                 throw new RuntimeError('Encountered a model entity while exporting to KML, but no model callback was supplied.');
             }
 
-            return modelCallback(model, time);
+            var externalFiles = {};
+            var url = modelCallback(model, time, externalFiles);
+
+            // Iterate through external files and add them to our list once the promise resolves
+            for (var filename in externalFiles) {
+                if(externalFiles.hasOwnProperty(filename)) {
+                    var promise = when(externalFiles[filename]);
+                    this._promises.push(promise);
+
+                    promise.then(getModelBlobHander(this, filename));
+                }
+            }
+
+            return url;
         };
 
         defineProperties(ExternalFileHandler.prototype, {
@@ -1269,10 +1288,13 @@ define([
 
         /**
          * Since KML does not support glTF models, this callback is required to specify what URL to use for the model in the KML document.
+         * It can also add additional files to the externalFiles object to be returned.
+         *
          * @callback exportKml~ModelCallback
          *
          * @param {ModelGraphics} model The ModelGraphics instance for an Entity.
          * @param {JulianDate} time The time that any properties should use to get the value.
+         * @param {Object} externalFiles An object that maps filename to a Blob or a Promise that resolves to a Blob.
          * @returns {String} The URL to use for the href in the KML document.
          */
 
