@@ -3265,8 +3265,13 @@ defineSuite([
 
             expect(entity.polygon).toBeDefined();
             expect(entity.polygon.hierarchy).toBeDefined();
+            expect(entity.polygon.hierarchy.isConstant).toEqual(true);
 
             var hierarchy = entity.polygon.hierarchy.getValue(Iso8601.MINIMUM_VALUE);
+            expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+            expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions.cartographicDegrees));
+
+            hierarchy = entity.polygon.hierarchy.getValue(Iso8601.MINIMUM_VALUE, new PolygonHierarchy());
             expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
             expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions.cartographicDegrees));
         });
@@ -3306,6 +3311,7 @@ defineSuite([
 
             expect(entity.polygon).toBeDefined();
             expect(entity.polygon.hierarchy).toBeDefined();
+            expect(entity.polygon.hierarchy.isConstant).toEqual(true);
 
             var hierarchy = entity.polygon.hierarchy.getValue(Iso8601.MINIMUM_VALUE);
             expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
@@ -3343,6 +3349,7 @@ defineSuite([
 
             expect(entity.polygon).toBeDefined();
             expect(entity.polygon.hierarchy).toBeDefined();
+            expect(entity.polygon.hierarchy.isConstant).toEqual(false);
 
             var hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:10:00Z'));
             expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
@@ -3406,6 +3413,7 @@ defineSuite([
 
             expect(entity.polygon).toBeDefined();
             expect(entity.polygon.hierarchy).toBeDefined();
+            expect(entity.polygon.hierarchy.isConstant).toEqual(false);
 
             var hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:10:00Z'));
             expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
@@ -3484,6 +3492,7 @@ defineSuite([
 
             expect(entity.polygon).toBeDefined();
             expect(entity.polygon.hierarchy).toBeDefined();
+            expect(entity.polygon.hierarchy.isConstant).toEqual(true);
 
             var time = JulianDate.fromIso8601('2012-08-04T16:10:00Z');
             var hierarchy = entity.polygon.hierarchy.getValue(time);
@@ -3500,6 +3509,87 @@ defineSuite([
                     dataSource.entities.getById('target6').position.getValue(time)
                 ]
             ]);
+        });
+    });
+
+    it('reports correct value of isConstant for polygon hierarchy', function() {
+        var document = [{
+            id: 'document',
+            version: '1.0'
+        }, {
+            id: 'constantPositionsTimeVaryingHoles',
+            polygon: {
+                positions: {
+                    cartographicDegrees: [
+                        -50, 20, 0,
+                        -50, 40, 0,
+                        -40, 40, 0,
+                        -40, 20, 0
+                    ]
+                },
+                holes: [{
+                    interval: '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
+                    cartographicDegrees: [
+                        [
+                            -45.2, 21, 0,
+                            -43.5, 27, 0,
+                            -41.6, 21.1, 0
+                        ]
+                    ]
+                }, {
+                    interval: '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
+                    cartographicDegrees: [
+                        [
+                            -40, 34, 0,
+                            -37, 26, 0,
+                            -41.2, 31, 0
+                        ]
+                    ]
+                }]
+            }
+        }, {
+            id: 'timeVaryingPositionsConstantHoles',
+            polygon: {
+                positions: [{
+                    interval: '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
+                    cartographicDegrees: [
+                        -50, 20, 0,
+                        -50, 40, 0,
+                        -40, 40, 0,
+                        -40, 20, 0
+                    ]
+                }, {
+                    interval: '2012-08-04T16:20:00Z/2012-08-04T16:40:00Z',
+                    cartographicDegrees: [
+                        -35, 50, 0,
+                        -35, 10, 0,
+                        -45, 30, 0
+                    ]
+                }],
+                holes: {
+                    cartographicDegrees: [
+                        [
+                            -45.2, 21, 0,
+                            -43.5, 27, 0,
+                            -41.6, 21.1, 0
+                        ]
+                    ]
+                }
+            }
+        }];
+
+        return CzmlDataSource.load(document).then(function(dataSource) {
+            var entity = dataSource.entities.getById('constantPositionsTimeVaryingHoles');
+
+            expect(entity.polygon).toBeDefined();
+            expect(entity.polygon.hierarchy).toBeDefined();
+            expect(entity.polygon.hierarchy.isConstant).toEqual(false);
+
+            entity = dataSource.entities.getById('timeVaryingPositionsConstantHoles');
+
+            expect(entity.polygon).toBeDefined();
+            expect(entity.polygon.hierarchy).toBeDefined();
+            expect(entity.polygon.hierarchy.isConstant).toEqual(false);
         });
     });
 
@@ -3802,6 +3892,106 @@ defineSuite([
             expect(invalidArticulations['SampleArticulation Yaw']).toBeUndefined();
             expect(invalidArticulations['SampleArticulation Pitch']).toBeUndefined();
             expect(invalidArticulations['SampleArticulation Roll']).toBeUndefined();
+        });
+    });
+
+    it('can load node transformations expressed as intervals', function() {
+        var packet = {
+            model : {
+                interval: '2012-04-02T12:00:00Z/2012-04-02T13:00:00Z',
+                nodeTransformations : [{
+                    interval: '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
+                    Mesh : {
+                        scale : {
+                            cartesian : [1.0, 2.0, 3.0]
+                        },
+                        translation : {
+                            cartesian : [4.0, 5.0, 6.0]
+                        },
+                        rotation : {
+                            unitQuaternion : [0.0, 0.7071, 0.0, 0.0]
+                        }
+                    }
+                }, {
+                    interval: '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
+                    Mesh : {
+                        scale : {
+                            cartesian : [10.0, 20.0, 30.0]
+                        },
+                        translation : {
+                            cartesian : [40.0, 50.0, 60.0]
+                        },
+                        rotation : {
+                            unitQuaternion : [0.0, 0.0, 0.0, 0.7071]
+                        }
+                    }
+                }]
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.model).toBeDefined();
+
+            var time = JulianDate.fromIso8601('2012-04-02T12:00:00Z');
+            var nodeTransform = entity.model.nodeTransformations.getValue(time).Mesh;
+            expect(nodeTransform).toBeDefined();
+            expect(nodeTransform.scale).toEqual(Cartesian3.unpack(packet.model.nodeTransformations[0].Mesh.scale.cartesian));
+            expect(nodeTransform.translation).toEqual(Cartesian3.unpack(packet.model.nodeTransformations[0].Mesh.translation.cartesian));
+
+            var expectedRotation = Quaternion.unpack(packet.model.nodeTransformations[0].Mesh.rotation.unitQuaternion);
+            Quaternion.normalize(expectedRotation, expectedRotation);
+            expect(nodeTransform.rotation).toEqual(expectedRotation);
+
+            time = JulianDate.fromIso8601('2012-04-02T12:00:01Z');
+            nodeTransform = entity.model.nodeTransformations.getValue(time).Mesh;
+            expect(nodeTransform).toBeDefined();
+            expect(nodeTransform.scale).toEqual(Cartesian3.unpack(packet.model.nodeTransformations[1].Mesh.scale.cartesian));
+            expect(nodeTransform.translation).toEqual(Cartesian3.unpack(packet.model.nodeTransformations[1].Mesh.translation.cartesian));
+
+            expectedRotation = Quaternion.unpack(packet.model.nodeTransformations[1].Mesh.rotation.unitQuaternion);
+            Quaternion.normalize(expectedRotation, expectedRotation);
+            expect(nodeTransform.rotation).toEqual(expectedRotation);
+        });
+    });
+
+    it('can load articulations expressed as intervals', function() {
+        var packet = {
+            model : {
+                interval: '2012-04-02T12:00:00Z/2012-04-02T13:00:00Z',
+                articulations : [{
+                    interval: '2012-04-02T12:00:00Z/2012-04-02T12:00:01Z',
+                    'SampleArticulation Yaw' : 30,
+                    'SampleArticulation Pitch' : 45,
+                    'SampleArticulation Roll' : 60
+                }, {
+                    interval: '2012-04-02T12:00:01Z/2012-04-02T12:00:02Z',
+                    'SampleArticulation Yaw' : 20,
+                    'SampleArticulation Pitch' : 25,
+                    'SampleArticulation Roll' : 30
+                }]
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.model).toBeDefined();
+
+            var time = JulianDate.fromIso8601('2012-04-02T12:00:00Z');
+            var articulations = entity.model.articulations.getValue(time);
+            expect(articulations).toBeDefined();
+            expect(articulations['SampleArticulation Yaw']).toEqual(packet.model.articulations[0]['SampleArticulation Yaw']);
+            expect(articulations['SampleArticulation Pitch']).toEqual(packet.model.articulations[0]['SampleArticulation Pitch']);
+            expect(articulations['SampleArticulation Roll']).toEqual(packet.model.articulations[0]['SampleArticulation Roll']);
+
+            time = JulianDate.fromIso8601('2012-04-02T12:00:01Z');
+            articulations = entity.model.articulations.getValue(time);
+            expect(articulations).toBeDefined();
+            expect(articulations['SampleArticulation Yaw']).toEqual(packet.model.articulations[1]['SampleArticulation Yaw']);
+            expect(articulations['SampleArticulation Pitch']).toEqual(packet.model.articulations[1]['SampleArticulation Pitch']);
+            expect(articulations['SampleArticulation Roll']).toEqual(packet.model.articulations[1]['SampleArticulation Roll']);
         });
     });
 

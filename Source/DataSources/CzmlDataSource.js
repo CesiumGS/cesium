@@ -1857,7 +1857,10 @@ define([
     defineProperties(PolygonHierarchyProperty.prototype, {
         isConstant : {
             get : function() {
-                return this.polygon._positions.isConstant;
+                var positions = this.polygon._positions;
+                var holes = this.polygon._holes;
+                return (!defined(positions) || positions.isConstant) &&
+                       (!defined(holes) || holes.isConstant);
             }
         },
         definitionChanged : {
