@@ -1891,6 +1891,37 @@ defineSuite([
                     expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
                 });
 
+                it('is an image with status code 204 with preferImageBitmap', function() {
+                    if (!supportsImageBitmapOptions) {
+                        return;
+                    }
+
+                    var promise = Resource.fetchImage({
+                        url: './Data/Images/Green.png',
+                        preferImageBitmap: true
+                    });
+
+                    expect(promise).toBeDefined();
+
+                    var resolved = false;
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolved = true;
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    fakeXHR.simulateHttpResponse(204);
+                    expect(resolved).toBe(false);
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeDefined();
+                });
+
                 it('resolves undefined for status code 204', function() {
                     var promise = loadWithXhr({
                         url : 'http://example.invalid'
