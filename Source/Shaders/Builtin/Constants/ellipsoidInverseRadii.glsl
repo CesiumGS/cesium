@@ -1,5 +1,5 @@
 /**
- * 0.1
+ * The reciprocal of the radius of the WGS84 ellipsoid.
  *
  * @name czm_ellipsoidInverseRadii
  * @glslConstant

@@ -1,5 +1,5 @@
 /**
- * 0.1
+ * The radius of the WGS84 ellipsoid.
  *
  * @name czm_ellipsoidRadii
  * @glslConstant
