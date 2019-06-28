@@ -26,6 +26,7 @@ defineSuite([
         'Core/Transforms',
         'Core/TranslationRotationScale',
         'DataSources/CompositeEntityCollection',
+        'DataSources/CompositeMaterialProperty',
         'DataSources/CompositePositionProperty',
         'DataSources/CompositeProperty',
         'DataSources/ConstantPositionProperty',
@@ -73,6 +74,7 @@ defineSuite([
         Transforms,
         TranslationRotationScale,
         CompositeEntityCollection,
+        CompositeMaterialProperty,
         CompositePositionProperty,
         CompositeProperty,
         ConstantPositionProperty,
@@ -707,6 +709,24 @@ defineSuite([
                     interval : '2010-01-01T00:30:00Z/2011-01-01T00:00:00Z',
                     nearFarScalar : [2.0, 3.0, 20000.0, 4.0]
                 }]
+            },
+            ellipsoid : {
+                interval : '2010-01-01T00:00:00Z/2010-01-02T01:00:00Z',
+                material : [{
+                    interval : '2009-01-01T00:00:00Z/2010-01-01T00:30:00Z',
+                    solidColor : {
+                        color : {
+                            rgbaf : [0.1, 0.2, 0.3, 0.4]
+                        }
+                    }
+                }, {
+                    interval : '2010-01-01T00:30:00Z/2011-01-01T00:00:00Z',
+                    solidColor : {
+                        color : {
+                            rgbaf : [0.5, 0.4, 0.3, 0.2]
+                        }
+                    }
+                }]
             }
         };
 
@@ -714,20 +734,26 @@ defineSuite([
             var entity = dataSource.entities.values[0];
 
             expect(entity.billboard).toBeDefined();
+            expect(entity.ellipsoid).toBeDefined();
 
             // before billboard interval: not defined, even though the scaleByDistance includes the time in its intervals
             var time = JulianDate.fromIso8601('2009-01-01T00:00:00Z');
             expect(entity.billboard.scaleByDistance.getValue(time)).toBeUndefined();
+            expect(entity.ellipsoid.material.getValue(time)).toBeUndefined();
 
             // within both billboard and scaleByDistance intervals
             time = JulianDate.fromIso8601('2010-01-01T00:05:00Z');
             expect(entity.billboard.scaleByDistance.getValue(time)).toEqual(NearFarScalar.unpack(packet.billboard.scaleByDistance[0].nearFarScalar));
+            expect(entity.ellipsoid.material.getValue(time).color).toEqual(Color.unpack(packet.ellipsoid.material[0].solidColor.color.rgbaf));
+
             time = JulianDate.fromIso8601('2010-01-01T00:35:00Z');
             expect(entity.billboard.scaleByDistance.getValue(time)).toEqual(NearFarScalar.unpack(packet.billboard.scaleByDistance[1].nearFarScalar));
+            expect(entity.ellipsoid.material.getValue(time).color).toEqual(Color.unpack(packet.ellipsoid.material[1].solidColor.color.rgbaf));
 
             // after billboard interval: not defined, even though the scaleByDistance includes the time in its intervals
             time = JulianDate.fromIso8601('2010-01-03T00:00:00Z');
             expect(entity.billboard.scaleByDistance.getValue(time)).toBeUndefined();
+            expect(entity.ellipsoid.material.getValue(time)).toBeUndefined();
         });
     });
 
@@ -3910,30 +3936,32 @@ defineSuite([
         });
     });
 
+    function printInterval(startTime, stopTime) {
+        return TimeInterval.toIso8601(new TimeInterval({
+            start: startTime,
+            stop: stopTime
+        }));
+    }
+
     it('can load materials specified with composite interval', function() {
-        var before = JulianDate.fromIso8601('2012-03-15T09:23:59Z');
-        var solid = JulianDate.fromIso8601('2012-03-15T10:00:00Z');
-        var grid1 = JulianDate.fromIso8601('2012-03-15T11:00:00Z');
-        var grid2 = JulianDate.fromIso8601('2012-03-15T12:00:00Z');
-        var after = JulianDate.fromIso8601('2012-03-15T12:00:01Z');
+        var beforeTime = JulianDate.fromIso8601('2012-03-15T09:23:59Z');
+        var solidTime = JulianDate.fromIso8601('2012-03-15T10:00:00Z');
+        var gridTime1 = JulianDate.fromIso8601('2012-03-15T11:00:00Z');
+        var gridTime2 = JulianDate.fromIso8601('2012-03-15T12:00:00Z');
+        var afterTime = JulianDate.fromIso8601('2012-03-15T12:00:01Z');
 
         var packet = {
+            id: 'obj',
             polygon : {
                 material : [{
-                    interval : '2012-03-15T10:00:00Z/2012-03-15T11:00:00Z',
-                    interpolationAlgorithm : 'LINEAR',
-                    interpolationDegree : 1,
-                    epoch : '2012-03-15T10:00:00Z',
+                    interval : printInterval(solidTime, gridTime1),
                     solidColor : {
                         color : {
                             rgba : [240, 0, 0, 0]
                         }
                     }
                 }, {
-                    interval : '2012-03-15T11:00:00Z/2012-03-15T12:00:00Z',
-                    interpolationAlgorithm : 'LINEAR',
-                    interpolationDegree : 1,
-                    epoch : '2012-03-15T11:00:00Z',
+                    interval : printInterval(gridTime1, gridTime2),
                     grid : {
                         color : {
                             rgba : [240, 255, 255, 255]
@@ -3952,14 +3980,55 @@ defineSuite([
                 }]
             }
         };
+        var secondPacket;
 
         return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
-            var entity = dataSource.entities.values[0];
-            expect(entity.polygon.material.getType(solid)).toEqual('Color');
-            expect(entity.polygon.material.getType(grid1)).toEqual('Grid');
-            expect(entity.polygon.material.getType(grid2)).toEqual('Grid');
-            expect(entity.polygon.material.getType(before)).toBeUndefined();
-            expect(entity.polygon.material.getType(after)).toBeUndefined();
+            var entity = dataSource.entities.getById('obj');
+
+            expect(entity.polygon.material).toBeInstanceOf(CompositeMaterialProperty);
+
+            expect(entity.polygon.material.getType(solidTime)).toEqual('Color');
+            expect(entity.polygon.material.getValue(solidTime).color).toEqual(Color.unpack(packet.polygon.material[0].solidColor.color.rgba.map(Color.byteToFloat)));
+
+            function assertValuesForGridMaterial(time) {
+                expect(entity.polygon.material.getValue(time).color).toEqual(Color.unpack(packet.polygon.material[1].grid.color.rgba.map(Color.byteToFloat)));
+                expect(entity.polygon.material.getValue(time).cellAlpha).toEqual(packet.polygon.material[1].grid.cellAlpha);
+                expect(entity.polygon.material.getValue(time).lineCount).toEqual(Cartesian2.unpack(packet.polygon.material[1].grid.lineCount.cartesian2));
+                expect(entity.polygon.material.getValue(time).lineThickness).toEqual(Cartesian2.unpack(packet.polygon.material[1].grid.lineThickness.cartesian2));
+                expect(entity.polygon.material.getValue(time).lineOffset).toEqual(Cartesian2.unpack(packet.polygon.material[1].grid.lineOffset.cartesian2));
+            }
+
+            expect(entity.polygon.material.getType(gridTime1)).toEqual('Grid');
+            assertValuesForGridMaterial(gridTime1);
+
+            expect(entity.polygon.material.getType(gridTime2)).toEqual('Grid');
+            assertValuesForGridMaterial(gridTime2);
+
+            expect(entity.polygon.material.getType(beforeTime)).toBeUndefined();
+            expect(entity.polygon.material.getType(afterTime)).toBeUndefined();
+            return dataSource;
+        }).then(function(dataSource) {
+            // processing new data into an existing interval updates the existing material property
+            secondPacket = {
+                id: 'obj',
+                polygon: {
+                    material: [{
+                        interval : printInterval(solidTime, gridTime1),
+                        solidColor: {
+                            color: {
+                                rgba: [200, 100, 50, 255]
+                            }
+                        }
+                    }]
+                }
+            };
+            return dataSource.process(secondPacket);
+        }).then(function(dataSource) {
+            var entity = dataSource.entities.getById('obj');
+
+            expect(entity.polygon.material).toBeInstanceOf(CompositeMaterialProperty);
+            expect(entity.polygon.material.getType(solidTime)).toEqual('Color');
+            expect(entity.polygon.material.getValue(solidTime).color).toEqual(Color.unpack(secondPacket.polygon.material[0].solidColor.color.rgba.map(Color.byteToFloat)));
         });
     });
 
@@ -4160,6 +4229,49 @@ defineSuite([
             expect(entity.wall).toBeDefined();
             expect(entity.wall.minimumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual([packets[1].billboard.scale, packets[2].billboard.scale]);
             expect(entity.wall.maximumHeights.getValue(Iso8601.MINIMUM_VALUE)).toEqual([packets[2].billboard.scale, packets[1].billboard.scale]);
+        });
+    });
+
+    it('can load array of references expressed using intervals', function() {
+        var packets = [{
+            id : 'document',
+            version : '1.0'
+        }, {
+            id : 'obj1',
+            billboard : {
+                scale : 1.0
+            }
+        }, {
+            id : 'obj2',
+            billboard : {
+                scale : 4.0
+            }
+        }, {
+            id : 'obj3',
+            billboard : {
+                scale : 6.0
+            }
+        }, {
+            id : 'wall',
+            wall : {
+                minimumHeights : [{
+                    interval : '2010-01-01T00:00:00Z/2010-01-01T01:00:00Z',
+                    references : ['obj1#billboard.scale', 'obj2#billboard.scale']
+                }, {
+                    interval : '2010-01-01T01:00:00Z/2010-01-01T02:00:00Z',
+                    references : ['obj2#billboard.scale', 'obj3#billboard.scale']
+                }]
+            }
+        }];
+
+        return CzmlDataSource.load(packets).then(function(dataSource) {
+            var entity = dataSource.entities.getById('wall');
+
+            expect(entity.wall).toBeDefined();
+            expect(entity.wall.minimumHeights).toBeInstanceOf(CompositeProperty);
+            expect(entity.wall.minimumHeights.getValue(JulianDate.fromIso8601('2009-01-01T00:00:00Z'))).toBeUndefined();
+            expect(entity.wall.minimumHeights.getValue(JulianDate.fromIso8601('2010-01-01T00:00:00Z'))).toEqual([packets[1].billboard.scale, packets[2].billboard.scale]);
+            expect(entity.wall.minimumHeights.getValue(JulianDate.fromIso8601('2010-01-01T01:00:00Z'))).toEqual([packets[2].billboard.scale, packets[3].billboard.scale]);
         });
     });
 
