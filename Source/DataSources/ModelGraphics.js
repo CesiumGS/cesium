@@ -103,6 +103,8 @@ define([
         this._lightColor = undefined;
         this._lightColorSubscription = undefined;
         this._definitionChanged = new Event();
+        this._upAxis = undefined;
+        this._forwardAxis = undefined;
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -283,7 +285,21 @@ define([
          * @memberOf ModelGraphics.prototype
          * @type {Property}
          */
-        lightColor : createPropertyDescriptor('lightColor')
+        lightColor : createPropertyDescriptor('lightColor'),
+
+        /**
+         * A property specifying the {@link Axis} up axis of the model.
+         * @memberOf ModelGraphics.prototype
+         * @type {Property}
+         */
+        upAxis : createPropertyDescriptor('upAxis'),
+
+        /**
+         * A property specifying the {@link Axis} forward axis of the model.
+         * @memberOf ModelGraphics.prototype
+         * @type {Property}
+         */
+        forwardAxis : createPropertyDescriptor('forwardAxis')
     });
 
     /**
@@ -352,6 +368,8 @@ define([
         this.clippingPlanes = defaultValue(this.clippingPlanes, source.clippingPlanes);
         this.imageBasedLightingFactor = defaultValue(this.imageBasedLightingFactor, source.imageBasedLightingFactor);
         this.lightColor = defaultValue(this.lightColor, source.lightColor);
+        this.upAxis = defaultValue(this.upAxis, source.upAxis);
+        this.forwardAxis = defaultValue(this.forwardAxis, source.forwardAxis);
 
         var sourceNodeTransformations = source.nodeTransformations;
         if (defined(sourceNodeTransformations)) {
