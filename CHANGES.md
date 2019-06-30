@@ -4,11 +4,11 @@ Change Log
 ### 1.59 - 2019-07-01
 
 ##### Additions :tada:
-* Added support for the [AGI_articulations](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations) vendor extension of glTF 2.0 to the Entity API and CZML. [#7907](https://github.com/AnalyticalGraphicsInc/cesium/pull/7907)
-* Added CZML support for `heightReference` to `box`, `cylinder`, and `ellipsoid`, and added CZML support for `classificationType` to `corridor`, `ellipse`, `polygon`, `polyline`, and `rectangle`. [#7899](https://github.com/AnalyticalGraphicsInc/cesium/pull/7899)
 * Adds `ArcGISTiledElevationTerrainProvider` to support LERC encoded terrain from ArcGIS ImageServer. [#7940](https://github.com/AnalyticalGraphicsInc/cesium/pull/7940)
+* Added CZML support for `heightReference` to `box`, `cylinder`, and `ellipsoid`, and added CZML support for `classificationType` to `corridor`, `ellipse`, `polygon`, `polyline`, and `rectangle`. [#7899](https://github.com/AnalyticalGraphicsInc/cesium/pull/7899)
 * Adds `exportKML` function to export `Entity` instances with Point, Billboard, Model, Label, Polyline and Polygon graphics. [#7921](https://github.com/AnalyticalGraphicsInc/cesium/pull/7921)
 * Added support for new Mapbox Style API. [#7698](https://github.com/AnalyticalGraphicsInc/cesium/pull/7698)
+* Added support for the [AGI_articulations](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations) vendor extension of glTF 2.0 to the Entity API and CZML. [#7907](https://github.com/AnalyticalGraphicsInc/cesium/pull/7907)
 
 ##### Fixes :wrench:
 * Fixed a bug that caused missing segments for ground polylines with coplanar points over large distances and problems with polylines containing duplicate points. [#7885](https://github.com/AnalyticalGraphicsInc/cesium//pull/7885)
