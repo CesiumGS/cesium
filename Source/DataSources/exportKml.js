@@ -278,7 +278,7 @@ define([
          * @param {Boolean} [options.kmz=false] If true KML and external files will be compressed into a kmz file.
          *
          * @returns {Promise<Object>} A promise that resolved to an object containing the KML string and a dictionary of external file blobs, or a kmz file as a blob if options.kmz is true.
-         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Export%20KML.html|Cesium Sandcastle KML Export Demo}
          * @example
          * Cesium.exportKml({
          *      entities: entityCollection
@@ -1288,13 +1288,14 @@ define([
 
         /**
          * Since KML does not support glTF models, this callback is required to specify what URL to use for the model in the KML document.
-         * It can also add additional files to the externalFiles object to be returned.
+         * It can also be used to add additional files to the <code>externalFiles</code> object, which is the list of files embedded in the exported KMZ,
+         * or otherwise returned with the KML string when exporting.
          *
          * @callback exportKml~ModelCallback
          *
          * @param {ModelGraphics} model The ModelGraphics instance for an Entity.
          * @param {JulianDate} time The time that any properties should use to get the value.
-         * @param {Object} externalFiles An object that maps filename to a Blob or a Promise that resolves to a Blob.
+         * @param {Object} externalFiles An object that maps a filename to a Blob or a Promise that resolves to a Blob.
          * @returns {String} The URL to use for the href in the KML document.
          */
 

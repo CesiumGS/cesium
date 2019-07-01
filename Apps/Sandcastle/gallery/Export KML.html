@@ -4,9 +4,9 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="A simple CZML example showing four satellites in orbit around the Earth, and some ground objects.">
+    <meta name="description" content="How to export a subset of a CesiumJS scene as a KML/KMZ file.">
     <meta name="cesium-sandcastle-labels" content="Showcases, DataSources">
-    <title>Cesium Demo</title>
+    <title>Export KML</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
@@ -67,6 +67,7 @@ function reset() {
     viewer.dataSources.removeAll();
 }
 
+// We fetch the resources that will be embedded in the KMZ file.
 var daeModelPromise = Cesium.Resource.fetchBlob({
     url: '../../../../Apps/SampleData/models/CesiumMilkTruck/CesiumMilkTruck.dae'
 });
@@ -75,6 +76,9 @@ var texturePromise = Cesium.Resource.fetchBlob({
     url: '../../../../Apps/SampleData/models/CesiumMilkTruck/CesiumMilkTruck.png'
 });
 
+// This callback allows us to set the URL of the model to use
+// a COLLADA version of the model instead of the glTF version.
+// It also lets us specify the files that will be embedded in the exported KMZ.
 function modelCallback(modelGraphics, time, externalFiles) {
     var resource = modelGraphics.uri.getValue(time);
 
@@ -91,7 +95,6 @@ function modelCallback(modelGraphics, time, externalFiles) {
 var filenameToSave = '';
 var dataSourcePromise;
 
-// Custom properties can be used as the value of graphical properties:
 Sandcastle.addToolbarMenu([{
     text: 'Satellites',
     onselect: function () {
