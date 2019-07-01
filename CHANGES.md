@@ -4,7 +4,9 @@ Change Log
 ### 1.60 - 2019-08-01
 
 ##### Additions :tada:
-* Reworked label rendering to use signed distance fields for crisper text. [#7730](https://github.com/AnalyticalGraphicsInc/cesium/pull/7730)
+* Reworked label rendering to use signed distance fields (SDF) for crisper text. [#7730](https://github.com/AnalyticalGraphicsInc/cesium/pull/7730)
+* Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Labels%20SDF.html) to showcase the new SDF labels.
+* Added `totalScale` property to `Label` which is the total scale of the label taking into account the label's scale and the relative size of the desired font compared to the generated glyph size.
 
 ### 1.59 - 2019-07-01
 
