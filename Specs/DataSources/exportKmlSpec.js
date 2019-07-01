@@ -660,11 +660,16 @@ defineSuite([
                     }
                 };
 
-                checkKmlDoc(entities, expectedResult, {
-                    modelCallback: function(model) {
+                var blob = new Blob([new Uint8Array([])], { type: 'model/vnd.collada+xml' });
+                return checkKmlDoc(entities, expectedResult, {
+                    modelCallback: function(model, time, externalFiles) {
+                        externalFiles['test.dae'] = blob;
                         return model.uri;
                     }
-                });
+                })
+                    .then(function(result) {
+                        expect(result.externalFiles['test.dae']).toBe(blob);
+                    });
             });
 
             it('With Path', function() {
