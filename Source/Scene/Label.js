@@ -59,6 +59,25 @@ define([
         label._repositionAllGlyphs = true;
     }
 
+    function getCSSValue(element, property) {
+        return document.defaultView.getComputedStyle(element, null).getPropertyValue(property);
+    }
+
+    function parseFont(label) {
+        var div = document.createElement('div');
+        div.style.position = 'absolute';
+        div.style.opacity = 0;
+        div.style.font = label._font;
+        document.body.appendChild(div);
+
+        label._fontFamily = getCSSValue(div,'font-family');
+        label._fontSize = getCSSValue(div,'font-size').replace('px', '');
+        label._fontStyle = getCSSValue(div,'font-style');
+        label._fontWeight = getCSSValue(div,'font-weight');
+
+        document.body.removeChild(div);
+    }
+
     /**
      * A Label draws viewport-aligned text positioned in the 3D scene.  This constructor
      * should not be used directly, instead create labels by calling {@link LabelCollection#add}.
@@ -164,6 +183,8 @@ define([
         this.text = defaultValue(options.text, '');
 
         this._relativeSize = 1.0;
+
+        parseFont(this);
 
         this._updateClamping();
     }
@@ -326,6 +347,7 @@ define([
                 if (this._font !== value) {
                     this._font = value;
                     rebindAllGlyphs(this);
+                    parseFont(this);
                 }
             }
         },

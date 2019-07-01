@@ -83,43 +83,6 @@ define([
         });
     }
 
-    function getCSSValue(element, property) {
-        return document.defaultView.getComputedStyle(element, null).getPropertyValue(property);
-    }
-
-    var fontInfoCache = {};
-    /**
-     * Given a CSS font string return an object containing the fontFamily, fontSize, fontStyle and fontWeight.
-     */
-    function getFontInfo(font) {
-        var fontInfo = fontInfoCache[font];
-        if (defined(fontInfo)) {
-            return fontInfo;
-        }
-
-        var div = document.createElement('div');
-        div.style.position = 'absolute';
-        div.style.opacity = 0;
-        div.style.font = font;
-        document.body.appendChild(div);
-
-        var fontFamily = getCSSValue(div,'font-family');
-        var fontSize = getCSSValue(div,'font-size').replace('px', '');
-        var fontStyle = getCSSValue(div,'font-style');
-        var fontWeight = getCSSValue(div,'font-weight');
-
-        document.body.removeChild(div);
-        fontInfo = {
-            fontFamily : fontFamily,
-            fontSize : fontSize,
-            fontStyle : fontStyle,
-            fontWeight : fontWeight
-        };
-        fontInfoCache[font] = fontInfo;
-
-        return fontInfo;
-    }
-
     // reusable object for calling writeTextToCanvas
     var writeTextToCanvasParameters = {};
     function createGlyphCanvas(character, font, fillColor, outlineColor, outlineWidth, style, verticalOrigin) {
@@ -179,10 +142,8 @@ define([
         var glyphIndex;
         var textIndex;
 
-        var font = label._font;
-        var fontInfo = getFontInfo(font);
         // Compute a font size scale relative to the sdf font generated size.
-        label._relativeSize = fontInfo.fontSize / SDFSettings.FONT_SIZE;
+        label._relativeSize = label._fontSize / SDFSettings.FONT_SIZE;
 
         // if we have more glyphs than needed, unbind the extras.
         if (textLength < glyphsLength) {
@@ -240,16 +201,16 @@ define([
 
             var id = JSON.stringify([
                                      character,
-                                     fontInfo.fontFamily,
-                                     fontInfo.fontStyle,
-                                     fontInfo.fontWeight,
+                                     label._fontFamily,
+                                     label._fontStyle,
+                                     label._fontWeight,
                                      +verticalOrigin
                                     ]);
 
             var glyphTextureInfo = glyphTextureCache[id];
             if (!defined(glyphTextureInfo)) {
 
-                var glyphFont = fontInfo.fontStyle + ' ' + fontInfo.fontWeight + ' ' + SDFSettings.FONT_SIZE + 'px ' + fontInfo.fontFamily;
+                var glyphFont = label._fontStyle + ' ' + label._fontWeight + ' ' + SDFSettings.FONT_SIZE + 'px ' + label._fontFamily;
 
                 var canvas = createGlyphCanvas(character, glyphFont, Color.WHITE, Color.WHITE, 0.0, LabelStyle.FILL, verticalOrigin);
 
