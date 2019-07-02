@@ -585,6 +585,7 @@ defineSuite([
         expect(scene).toRender([0, 0, 0, 255]);
 
         label.scale = 2.0;
+        scene.render();
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).toBeGreaterThan(10);
         });
@@ -853,35 +854,38 @@ defineSuite([
         scene.renderForSpecs();
         expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
 
+        // Changing the outline doesn't cause new glyphs to be generated.
         label.style = LabelStyle.OUTLINE;
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(9);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
 
+        // Changing fill color doesn't cause new glyphs to be generated.
         label.fillColor = new Color(1.0, 165.0 / 255.0, 0.0, 1.0);
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(11);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
 
+        // Changing outline color doesn't cause new glyphs to be generated.
         label.outlineColor = new Color(1.0, 1.0, 1.0, 1.0);
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(13);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
 
         // vertical origin only affects glyph positions, not glyphs themselves.
         label.verticalOrigin = VerticalOrigin.CENTER;
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(13);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
         label.verticalOrigin = VerticalOrigin.TOP;
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(13);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(7);
 
         //even though we're resetting to the original font, other properties used to create the id have changed
         label.font = originalFont;
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(15);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(9);
 
-        //Changing thickness requires new glyphs
+        //Changing thickness doesn't requires new glyphs
         label.outlineWidth = 3;
         scene.renderForSpecs();
-        expect(Object.keys(labels._glyphTextureCache).length).toEqual(17);
+        expect(Object.keys(labels._glyphTextureCache).length).toEqual(9);
     });
 
     it('should reuse billboards that are not needed any more', function() {
@@ -1164,9 +1168,11 @@ defineSuite([
             });
             scene.renderForSpecs();
 
+            var totalScale = label.scale * label._relativeSize;
+
             var backgroundBillboard = label._backgroundBillboard;
-            var width = backgroundBillboard.width * scale;
-            var height = backgroundBillboard.height * scale;
+            var width = backgroundBillboard.width * totalScale;
+            var height = backgroundBillboard.height * totalScale;
             var x = backgroundBillboard._translate.x;
             var y = -(backgroundBillboard._translate.y + height);
 
@@ -1319,7 +1325,7 @@ defineSuite([
                 expect(billboard.pixelOffset).toEqual(label.pixelOffset);
                 expect(billboard.verticalOrigin).toEqual(label.verticalOrigin);
                 // glyph horizontal origin is always LEFT
-                expect(billboard.scale).toEqual(label.scale);
+                expect(billboard.scale).toEqual(label.scale * label._relativeSize);
                 expect(billboard.id).toEqual(label.id);
                 expect(billboard.translucencyByDistance).toEqual(label.translucencyByDistance);
                 expect(billboard.pixelOffsetScaleByDistance).toEqual(label.pixelOffsetScaleByDistance);
@@ -1407,7 +1413,7 @@ defineSuite([
                 scene.renderForSpecs();
 
                 getGlyphBillboards().forEach(function(billboard) {
-                    expect(billboard.scale).toEqual(label.scale);
+                    expect(billboard.scale).toEqual(label.totalScale);
                 });
             });
 
@@ -1811,7 +1817,7 @@ defineSuite([
             expect(dimensions.descent).toEqual(originalDimensions.descent);
         });
 
-        it('should change label dimensions when font size changes', function() {
+        it('should not change label dimensions when font size changes', function() {
             var label = labels.add({
                 text : 'apl',
                 font : '90px "Open Sans"'
@@ -1824,9 +1830,9 @@ defineSuite([
             scene.renderForSpecs();
 
             var dimensions = label._glyphs[0].dimensions;
-            expect(dimensions.width).toBeLessThan(originalDimensions.width);
-            expect(dimensions.height).toBeLessThan(originalDimensions.height);
-            expect(dimensions.descent).toBeLessThanOrEqualTo(originalDimensions.descent);
+            expect(dimensions.width).toEqual(originalDimensions.width);
+            expect(dimensions.height).toEqual(originalDimensions.height);
+            expect(dimensions.descent).toEqual(originalDimensions.descent);
         });
 
         it('should increase label height and decrease width when adding newlines', function() {
