@@ -3277,6 +3277,10 @@ defineSuite([
         });
     });
 
+    function unpackPolygonHoleFromCartographicDegrees(holePositions) {
+        return new PolygonHierarchy(Cartesian3.fromDegreesArrayHeights(holePositions));
+    }
+
     it('can load constant polygon positions with holes', function() {
         var packet = {
             polygon: {
@@ -3316,9 +3320,7 @@ defineSuite([
             var hierarchy = entity.polygon.hierarchy.getValue(Iso8601.MINIMUM_VALUE);
             expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
             expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions.cartographicDegrees));
-            expect(hierarchy.holes).toEqual(packet.polygon.holes.cartographicDegrees.map(function(hole) {
-                return Cartesian3.fromDegreesArrayHeights(hole);
-            }));
+            expect(hierarchy.holes).toEqual(packet.polygon.holes.cartographicDegrees.map(unpackPolygonHoleFromCartographicDegrees));
         });
     });
 
@@ -3418,18 +3420,18 @@ defineSuite([
             var hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:10:00Z'));
             expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
             expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions[0].cartographicDegrees));
-            expect(hierarchy.holes).toEqual(packet.polygon.holes[0].cartographicDegrees.map(function(hole) {
-                return Cartesian3.fromDegreesArrayHeights(hole);
-            }));
+            expect(hierarchy.holes).toEqual(packet.polygon.holes[0].cartographicDegrees.map(unpackPolygonHoleFromCartographicDegrees));
 
             hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:20:00Z'));
             expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
             expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions[1].cartographicDegrees));
-            expect(hierarchy.holes).toEqual(packet.polygon.holes[1].cartographicDegrees.map(function(hole) {
-                return Cartesian3.fromDegreesArrayHeights(hole);
-            }));
+            expect(hierarchy.holes).toEqual(packet.polygon.holes[1].cartographicDegrees.map(unpackPolygonHoleFromCartographicDegrees));
         });
     });
+
+    function unpackPolygonHoleFromCartographicRadians(holePositions) {
+        return new PolygonHierarchy(Cartesian3.fromRadiansArrayHeights(holePositions));
+    }
 
     it('can load interval polygon positions with holes expressed as radians', function() {
         var packet = {
@@ -3467,11 +3469,13 @@ defineSuite([
             var hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:10:00Z'));
             expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
             expect(hierarchy.positions).toEqual(Cartesian3.fromRadiansArrayHeights(packet.polygon.positions[0].cartographicRadians));
-            expect(hierarchy.holes).toEqual(packet.polygon.holes[0].cartographicRadians.map(function(hole) {
-                return Cartesian3.fromRadiansArrayHeights(hole);
-            }));
+            expect(hierarchy.holes).toEqual(packet.polygon.holes[0].cartographicRadians.map(unpackPolygonHoleFromCartographicRadians));
         });
     });
+
+    function unpackPolygonHoleFromCartesian(holePositions) {
+        return new PolygonHierarchy(Cartesian3.unpackArray(holePositions));
+    }
 
     it('can load interval polygon positions with holes expressed as cartesian', function() {
         var packet = {
@@ -3507,9 +3511,7 @@ defineSuite([
             var hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:10:00Z'));
             expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
             expect(hierarchy.positions).toEqual(Cartesian3.unpackArray(packet.polygon.positions[0].cartesian));
-            expect(hierarchy.holes).toEqual(packet.polygon.holes[0].cartesian.map(function(hole) {
-                return Cartesian3.unpackArray(hole);
-            }));
+            expect(hierarchy.holes).toEqual(packet.polygon.holes[0].cartesian.map(unpackPolygonHoleFromCartesian));
         });
     });
 
@@ -3585,11 +3587,11 @@ defineSuite([
                 dataSource.entities.getById('target3').position.getValue(time)
             ]);
             expect(hierarchy.holes).toEqual([
-                [
+                new PolygonHierarchy([
                     dataSource.entities.getById('target4').position.getValue(time),
                     dataSource.entities.getById('target5').position.getValue(time),
                     dataSource.entities.getById('target6').position.getValue(time)
-                ]
+                ])
             ]);
         });
     });
@@ -5285,7 +5287,7 @@ defineSuite([
             expect(e.point.disableDepthTestDistance.getValue(date)).toEqual(9675.0);
             expect(e.polygon.show.getValue(date)).toEqual(true);
             expect(e.polygon.hierarchy.getValue(date).positions).toEqual([ new Cartesian3(39143, 2200, 6408), new Cartesian3(27161, 33386, 62338) ]);
-            expect(e.polygon.hierarchy.getValue(date).holes).toEqual([ [ new Cartesian3(47462, 20409, 3151), new Cartesian3(58636, 39653, 53914), new Cartesian3(31954, 4988, 47462) ], [ new Cartesian3(20409, 3151, 58636), new Cartesian3(39653, 53914, 31954), new Cartesian3(4988, 47462, 20409), new Cartesian3(3151, 58636, 39653) ] ]);
+            expect(e.polygon.hierarchy.getValue(date).holes).toEqual([ new PolygonHierarchy([ new Cartesian3(47462, 20409, 3151), new Cartesian3(58636, 39653, 53914), new Cartesian3(31954, 4988, 47462) ]), new PolygonHierarchy([ new Cartesian3(20409, 3151, 58636), new Cartesian3(39653, 53914, 31954), new Cartesian3(4988, 47462, 20409), new Cartesian3(3151, 58636, 39653) ]) ]);
             expect(e.polygon.arcType.getValue(date)).toEqual(ArcType.RHUMB);
             expect(e.polygon.height.getValue(date)).toEqual(26391.0);
             expect(e.polygon.heightReference.getValue(date)).toEqual(HeightReference.CLAMP_TO_GROUND);
@@ -5627,9 +5629,9 @@ defineSuite([
             expect(e = dataSource.entities.getById('constant_polygon_positions_cartographicDegrees')).toBeDefined();
             expect(e.polygon.hierarchy.getValue(date).positions).toEqual([ Cartesian3.fromDegrees(20, 42, 343), Cartesian3.fromDegrees(21, 14, 24042) ]);
             expect(e = dataSource.entities.getById('constant_polygon_holes_cartographicRadians')).toBeDefined();
-            expect(e.polygon.hierarchy.getValue(date).holes).toEqual([ [ Cartesian3.fromRadians(0.799220652820836, 1.50366253893541, 4776), Cartesian3.fromRadians(0.179862066646486, 1.42489853818289, 42245), Cartesian3.fromRadians(0.0636782022426772, 0.558333087028927, 32510) ], [ Cartesian3.fromRadians(1.50366253893541, 0.779166543514464, 33810), Cartesian3.fromRadians(1.42489853818289, 0.00358717805196918, 20389), Cartesian3.fromRadians(0.558333087028927, 0.799220652820836, 43134), Cartesian3.fromRadians(0.779166543514464, 0.179862066646486, 1412) ] ]);
+            expect(e.polygon.hierarchy.getValue(date).holes).toEqual([ new PolygonHierarchy([ Cartesian3.fromRadians(0.799220652820836, 1.50366253893541, 4776), Cartesian3.fromRadians(0.179862066646486, 1.42489853818289, 42245), Cartesian3.fromRadians(0.0636782022426772, 0.558333087028927, 32510) ]), new PolygonHierarchy([ Cartesian3.fromRadians(1.50366253893541, 0.779166543514464, 33810), Cartesian3.fromRadians(1.42489853818289, 0.00358717805196918, 20389), Cartesian3.fromRadians(0.558333087028927, 0.799220652820836, 43134), Cartesian3.fromRadians(0.779166543514464, 0.179862066646486, 1412) ]) ]);
             expect(e = dataSource.entities.getById('constant_polygon_holes_cartographicDegrees')).toBeDefined();
-            expect(e.polygon.hierarchy.getValue(date).holes).toEqual([ [ Cartesian3.fromDegrees(38, 39, 52122), Cartesian3.fromDegrees(30, 41, 40406), Cartesian3.fromDegrees(9, 42, 55073) ], [ Cartesian3.fromDegrees(39, 12, 5835), Cartesian3.fromDegrees(41, 41, 39069), Cartesian3.fromDegrees(42, 38, 39639), Cartesian3.fromDegrees(12, 30, 54806) ] ]);
+            expect(e.polygon.hierarchy.getValue(date).holes).toEqual([ new PolygonHierarchy([ Cartesian3.fromDegrees(38, 39, 52122), Cartesian3.fromDegrees(30, 41, 40406), Cartesian3.fromDegrees(9, 42, 55073) ]), new PolygonHierarchy([ Cartesian3.fromDegrees(39, 12, 5835), Cartesian3.fromDegrees(41, 41, 39069), Cartesian3.fromDegrees(42, 38, 39639), Cartesian3.fromDegrees(12, 30, 54806) ]) ]);
             expect(e = dataSource.entities.getById('constant_polygon_material_solidColor_color')).toBeDefined();
             expect(e.polygon.material.color.getValue(date)).toEqualEpsilon(new Color(0.980392156862745, 0.905882352941176, 0.274509803921569, 0.972549019607843), 1e-14);
             expect(e = dataSource.entities.getById('material_polygon_material_image')).toBeDefined();
@@ -6266,7 +6268,7 @@ defineSuite([
             expect(e.point.disableDepthTestDistance.getValue(date)).toEqual(constant.point.disableDepthTestDistance.getValue(date));
             expect(e.polygon.show.getValue(date)).toEqual(constant.polygon.show.getValue(date));
             expect(e.polygon.hierarchy.getValue(date).positions).toEqual([dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date)]);
-            expect(e.polygon.hierarchy.getValue(date).holes).toEqual([ [ dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date), dataSource.entities.getById('ConstantPosition3').position.getValue(date) ] ]);
+            expect(e.polygon.hierarchy.getValue(date).holes).toEqual([ new PolygonHierarchy([ dataSource.entities.getById('ConstantPosition1').position.getValue(date), dataSource.entities.getById('ConstantPosition2').position.getValue(date), dataSource.entities.getById('ConstantPosition3').position.getValue(date) ])]);
             expect(e.polygon.arcType.getValue(date)).toEqual(constant.polygon.arcType.getValue(date));
             expect(e.polygon.height.getValue(date)).toEqual(constant.polygon.height.getValue(date));
             expect(e.polygon.heightReference.getValue(date)).toEqual(constant.polygon.heightReference.getValue(date));

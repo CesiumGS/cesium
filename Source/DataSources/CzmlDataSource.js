@@ -1875,9 +1875,15 @@ define([
         if (defined(this.polygon._positions)) {
             positions = this.polygon._positions.getValue(time);
         }
+
         var holes;
         if (defined(this.polygon._holes)) {
             holes = this.polygon._holes.getValue(time);
+            if (defined(holes)) {
+                holes = holes.map(function(holePositions) {
+                    return new PolygonHierarchy(holePositions);
+                });
+            }
         }
 
         if (!defined(result)) {
