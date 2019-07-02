@@ -3361,7 +3361,7 @@ defineSuite([
         });
     });
 
-    it('can load interval polygon positions with holes', function() {
+    it('can load interval polygon positions with holes expressed as degrees', function() {
         var packet = {
             polygon: {
                 positions: [{
@@ -3427,6 +3427,88 @@ defineSuite([
             expect(hierarchy.positions).toEqual(Cartesian3.fromDegreesArrayHeights(packet.polygon.positions[1].cartographicDegrees));
             expect(hierarchy.holes).toEqual(packet.polygon.holes[1].cartographicDegrees.map(function(hole) {
                 return Cartesian3.fromDegreesArrayHeights(hole);
+            }));
+        });
+    });
+
+    it('can load interval polygon positions with holes expressed as radians', function() {
+        var packet = {
+            polygon: {
+                positions: [{
+                    interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
+                    cartographicRadians : [
+                        -0.8726646259971648, 0.3490658503988659, 0,
+                        -0.8726646259971648, 0.6981317007977318, 0,
+                        -0.6981317007977318, 0.6981317007977318, 0,
+                        -0.6981317007977318, 0.3490658503988659, 0
+                    ]
+                }],
+                holes: [{
+                    interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
+                    cartographicRadians : [
+                        [
+                            -0.8412486994612669, 0.6806784082777885, 0,
+                            -0.7766715171374766, 0.6457718232379019, 0,
+                            -0.8534660042252271, 0.5777039824101231, 0,
+                            -0.8552113334772214, 0.6387905062299246, 0
+                        ]
+                    ]
+                }]
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.polygon).toBeDefined();
+            expect(entity.polygon.hierarchy).toBeDefined();
+            expect(entity.polygon.hierarchy.isConstant).toEqual(false);
+
+            var hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:10:00Z'));
+            expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+            expect(hierarchy.positions).toEqual(Cartesian3.fromRadiansArrayHeights(packet.polygon.positions[0].cartographicRadians));
+            expect(hierarchy.holes).toEqual(packet.polygon.holes[0].cartographicRadians.map(function(hole) {
+                return Cartesian3.fromRadiansArrayHeights(hole);
+            }));
+        });
+    });
+
+    it('can load interval polygon positions with holes expressed as cartesian', function() {
+        var packet = {
+            polygon: {
+                positions: [{
+                    interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
+                    cartesian : [
+                        -35, 50, 0,
+                        -35, 10, 0,
+                        -45, 30, 0
+                    ]
+                }],
+                holes: [{
+                    interval : '2012-08-04T16:00:00Z/2012-08-04T16:20:00Z',
+                    cartesian : [
+                        [
+                            -40, 34, 0,
+                            -37, 26, 0,
+                            -41.2, 31, 0
+                        ]
+                    ]
+                }]
+            }
+        };
+
+        return CzmlDataSource.load(makeDocument(packet)).then(function(dataSource) {
+            var entity = dataSource.entities.values[0];
+
+            expect(entity.polygon).toBeDefined();
+            expect(entity.polygon.hierarchy).toBeDefined();
+            expect(entity.polygon.hierarchy.isConstant).toEqual(false);
+
+            var hierarchy = entity.polygon.hierarchy.getValue(JulianDate.fromIso8601('2012-08-04T16:10:00Z'));
+            expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+            expect(hierarchy.positions).toEqual(Cartesian3.unpackArray(packet.polygon.positions[0].cartesian));
+            expect(hierarchy.holes).toEqual(packet.polygon.holes[0].cartesian.map(function(hole) {
+                return Cartesian3.unpackArray(hole);
             }));
         });
     });
