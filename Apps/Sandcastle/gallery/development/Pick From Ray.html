@@ -85,7 +85,7 @@ var arrow = viewer.entities.add({
     polyline : {
         positions : arrowPositions,
         width : 10,
-        followSurface : false,
+        arcType : Cesium.ArcType.NONE,
         material : new Cesium.PolylineArrowMaterialProperty(Cesium.Color.YELLOW)
     }
 });

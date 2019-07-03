@@ -134,8 +134,8 @@ define([
         this._minimumMass = defaultValue(options.mass, defaultValue(options.minimumMass, 1.0));
         this._maximumMass = defaultValue(options.mass, defaultValue(options.maximumMass, 1.0));
 
-        this._minimumImageSize = defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize));
-        this._maximumImageSize = defaultValue(options.imageSize, defaultValue(options.maximumImageSize, defaultImageSize));
+        this._minimumImageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize)));
+        this._maximumImageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultValue(options.maximumImageSize, defaultImageSize)));
 
         this._lifetime = defaultValue(options.lifetime, Number.MAX_VALUE);
 

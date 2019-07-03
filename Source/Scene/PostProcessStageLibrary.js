@@ -7,6 +7,7 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
+        '../Shaders/PostProcessStages/AcesTonemapping',
         '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
         '../Shaders/PostProcessStages/AmbientOcclusionModulate',
         '../Shaders/PostProcessStages/BlackAndWhite',
@@ -16,12 +17,16 @@ define([
         '../Shaders/PostProcessStages/DepthOfField',
         '../Shaders/PostProcessStages/DepthView',
         '../Shaders/PostProcessStages/EdgeDetection',
+        '../Shaders/PostProcessStages/FilmicTonemapping',
         '../Shaders/PostProcessStages/FXAA',
         '../Shaders/PostProcessStages/GaussianBlur1D',
         '../Shaders/PostProcessStages/LensFlare',
+        '../Shaders/PostProcessStages/ModifiedReinhardTonemapping',
         '../Shaders/PostProcessStages/NightVision',
+        '../Shaders/PostProcessStages/ReinhardTonemapping',
         '../Shaders/PostProcessStages/Silhouette',
         '../ThirdParty/Shaders/FXAA3_11',
+        './AutoExposure',
         './PostProcessStage',
         './PostProcessStageComposite',
         './PostProcessStageSampleMode'
@@ -34,6 +39,7 @@ define([
         deprecationWarning,
         destroyObject,
         Ellipsoid,
+        AcesTonemapping,
         AmbientOcclusionGenerate,
         AmbientOcclusionModulate,
         BlackAndWhite,
@@ -43,12 +49,16 @@ define([
         DepthOfField,
         DepthView,
         EdgeDetection,
+        FilmicTonemapping,
         FXAA,
         GaussianBlur1D,
         LensFlare,
+        ModifiedReinhardTonemapping,
         NightVision,
+        ReinhardTonemapping,
         Silhouette,
         FXAA3_11,
+        AutoExposure,
         PostProcessStage,
         PostProcessStageComposite,
         PostProcessStageSampleMode) {
@@ -683,6 +693,88 @@ define([
             fragmentShader : fxaaFS,
             sampleMode : PostProcessStageSampleMode.LINEAR
         });
+    };
+
+    /**
+     * Creates a post-process stage that applies ACES tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies ACES tonemapping operator.
+     * @private
+     */
+    PostProcessStageLibrary.createAcesTonemappingStage = function(useAutoExposure) {
+        var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
+        fs += AcesTonemapping;
+        return new PostProcessStage({
+            name : 'czm_aces',
+            fragmentShader : fs,
+            uniforms : {
+                autoExposure : undefined
+            }
+        });
+    };
+
+    /**
+     * Creates a post-process stage that applies filmic tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies filmic tonemapping operator.
+     * @private
+     */
+    PostProcessStageLibrary.createFilmicTonemappingStage = function(useAutoExposure) {
+        var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
+        fs += FilmicTonemapping;
+        return new PostProcessStage({
+            name : 'czm_filmic',
+            fragmentShader : fs,
+            uniforms : {
+                autoExposure : undefined
+            }
+        });
+    };
+
+    /**
+     * Creates a post-process stage that applies Reinhard tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies Reinhard tonemapping operator.
+     * @private
+     */
+    PostProcessStageLibrary.createReinhardTonemappingStage = function(useAutoExposure) {
+        var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
+        fs += ReinhardTonemapping;
+        return new PostProcessStage({
+            name : 'czm_reinhard',
+            fragmentShader : fs,
+            uniforms : {
+                autoExposure : undefined
+            }
+        });
+    };
+
+    /**
+     * Creates a post-process stage that applies modified Reinhard tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies modified Reinhard tonemapping operator.
+     * @private
+     */
+    PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function(useAutoExposure) {
+        var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
+        fs += ModifiedReinhardTonemapping;
+        return new PostProcessStage({
+            name : 'czm_modified_reinhard',
+            fragmentShader : fs,
+            uniforms : {
+                white : Color.WHITE,
+                autoExposure : undefined
+            }
+        });
+    };
+
+    /**
+     * Creates a post-process stage that finds the average luminance of the input texture.
+     * @return {PostProcessStage} A post-process stage that finds the average luminance of the input texture.
+     * @private
+     */
+    PostProcessStageLibrary.createAutoExposureStage = function() {
+        return new AutoExposure();
     };
 
     /**

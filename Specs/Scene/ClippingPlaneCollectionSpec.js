@@ -232,6 +232,8 @@ defineSuite([
             expect(clippingPlanes.texture).toBeDefined();
             expect(isNaN(clippingPlanes.texture.width)).toBe(false);
             expect(isNaN(clippingPlanes.texture.height)).toBe(false);
+
+            scene.destroyForSpecs();
         });
 
         it('update fills the clipping plane texture with packed planes', function() {

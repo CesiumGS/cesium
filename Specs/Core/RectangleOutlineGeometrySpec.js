@@ -53,6 +53,28 @@ defineSuite([
         expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
     });
 
+    it('computes positions at north pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, 89.0, -179.0, 90.0);
+        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
+            rectangle : rectangle
+        }));
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(5 * 3);
+        expect(m.indices.length).toEqual(5 * 2);
+    });
+
+    it('computes positions at south pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, -179.0, -89.0);
+        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
+            rectangle : rectangle
+        }));
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(5 * 3);
+        expect(m.indices.length).toEqual(5 * 2);
+    });
+
     it('compute positions with rotation', function() {
         var rectangle = new Rectangle(-1, -1, 1, 1);
         var angle = CesiumMath.PI_OVER_TWO;
@@ -110,6 +132,30 @@ defineSuite([
 
         expect(positions.length).toEqual(16 * 3); // 8 top + 8 bottom
         expect(m.indices.length).toEqual(20 * 2); // 8 top + 8 bottom + 4 edges
+    });
+
+    it('computes positions extruded at north pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, 89.0, -179.0, 90.0);
+        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
+            rectangle : rectangle,
+            extrudedHeight : 2
+        }));
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(10 * 3); // 5 top + 5 bottom
+        expect(m.indices.length).toEqual(13 * 2); // 5 top + 5 bottom + 3 edges
+    });
+
+    it('computes positions extruded at south pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, -179.0, -89.0);
+        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
+            rectangle : rectangle,
+            extrudedHeight : 2
+        }));
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(10 * 3); // 5 top + 5 bottom
+        expect(m.indices.length).toEqual(13 * 2); // 5 top + 5 bottom + 3 edges
     });
 
     it('compute positions with rotation extruded', function() {

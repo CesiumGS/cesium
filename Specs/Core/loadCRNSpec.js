@@ -93,7 +93,7 @@ defineSuite([
 
         fakeXHR.simulateError();
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+        expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
         expect(rejectedError.statusCode).toBeUndefined();
         expect(rejectedError.response).toBeUndefined();
     });
@@ -118,7 +118,7 @@ defineSuite([
         var error = 'some error';
         fakeXHR.simulateHttpResponse(404, error);
         expect(resolvedValue).toBeUndefined();
-        expect(rejectedError instanceof RequestErrorEvent).toBe(true);
+        expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
         expect(rejectedError.statusCode).toEqual(404);
         expect(rejectedError.response).toEqual(error);
     });

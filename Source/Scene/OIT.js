@@ -89,6 +89,8 @@ define([
 
         this._useScissorTest = false;
         this._scissorRectangle = undefined;
+
+        this._useHDR = false;
     }
 
     function destroyTextures(oit) {
@@ -200,7 +202,7 @@ define([
         return supported;
     }
 
-    OIT.prototype.update = function(context, passState, framebuffer) {
+    OIT.prototype.update = function(context, passState, framebuffer, useHDR) {
         if (!this.isSupported()) {
             return;
         }
@@ -213,7 +215,7 @@ define([
         var height = this._opaqueTexture.height;
 
         var accumulationTexture = this._accumulationTexture;
-        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height;
+        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height || useHDR !== this._useHDR;
         if (textureChanged) {
             updateTextures(this, context, width, height);
         }
@@ -224,6 +226,8 @@ define([
                 return;
             }
         }
+
+        this._useHDR = useHDR;
 
         var that = this;
         var fs;
@@ -538,6 +542,7 @@ define([
 
         var context = scene.context;
         var useLogDepth = scene.frameState.useLogDepth;
+        var useHdr = scene._hdr;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
@@ -554,6 +559,7 @@ define([
         for (j = 0; j < length; ++j) {
             command = commands[j];
             command = useLogDepth ? command.derivedCommands.logDepth.command : command;
+            command = useHdr ? command.derivedCommands.hdr.command : command;
             derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
@@ -569,6 +575,7 @@ define([
         for (j = 0; j < length; ++j) {
             command = commands[j];
             command = useLogDepth ? command.derivedCommands.logDepth.command : command;
+            command = useHdr ? command.derivedCommands.hdr.command : command;
             derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
@@ -585,6 +592,7 @@ define([
     function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands, invertClassification) {
         var context = scene.context;
         var useLogDepth = scene.frameState.useLogDepth;
+        var useHdr = scene._hdr;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
@@ -602,6 +610,7 @@ define([
         for (var j = 0; j < length; ++j) {
             command = commands[j];
             command = useLogDepth ? command.derivedCommands.logDepth.command : command;
+            command = useHdr ? command.derivedCommands.hdr.command : command;
             derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }

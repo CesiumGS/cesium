@@ -136,10 +136,19 @@ define([
                 cluster._clusterDirty = true;
             }
 
+            var updateClamping = false;
+            var heightReference = Property.getValueOrDefault(labelGraphics._heightReference, time, defaultHeightReference);
+
             if (!defined(label)) {
                 label = cluster.getLabel(entity);
                 label.id = entity;
                 item.label = label;
+
+                // If this new label happens to have a position and height reference that match our new values,
+                // label._updateClamping will not be called automatically. That's a problem because the clamped
+                // height may be based on different terrain than is now loaded. So we'll manually call
+                // _updateClamping below.
+                updateClamping = Cartesian3.equals(label.position, position) && label.heightReference === heightReference;
             }
 
             label.show = true;
@@ -156,7 +165,7 @@ define([
             label.backgroundPadding = Property.getValueOrDefault(labelGraphics._backgroundPadding, time, defaultBackgroundPadding, backgroundPaddingScratch);
             label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, defaultPixelOffset, pixelOffsetScratch);
             label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, defaultEyeOffset, eyeOffsetScratch);
-            label.heightReference = Property.getValueOrDefault(labelGraphics._heightReference, time, defaultHeightReference);
+            label.heightReference = heightReference;
             label.horizontalOrigin = Property.getValueOrDefault(labelGraphics._horizontalOrigin, time, defaultHorizontalOrigin);
             label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
             label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistanceScratch);
@@ -164,6 +173,10 @@ define([
             label.scaleByDistance = Property.getValueOrUndefined(labelGraphics._scaleByDistance, time, scaleByDistanceScratch);
             label.distanceDisplayCondition = Property.getValueOrUndefined(labelGraphics._distanceDisplayCondition, time, distanceDisplayConditionScratch);
             label.disableDepthTestDistance = Property.getValueOrUndefined(labelGraphics._disableDepthTestDistance, time);
+
+            if (updateClamping) {
+                label._updateClamping();
+            }
         }
         return true;
     };

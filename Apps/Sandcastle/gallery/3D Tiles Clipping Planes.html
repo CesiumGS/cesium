@@ -52,7 +52,8 @@ function startup(Cesium) {
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
     infoBox: false,
-    selectionIndicator: false
+    selectionIndicator: false,
+    terrainProvider: Cesium.createWorldTerrain()
 });
 var scene = viewer.scene;
 
@@ -132,6 +133,14 @@ function loadTileset(url) {
 
         viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0));
 
+        if (!Cesium.Matrix4.equals(tileset.root.transform, Cesium.Matrix4.IDENTITY)) {
+            // The clipping plane is initially positioned at the tileset's root transform.
+            // Apply an additional matrix to center the clipping plane on the bounding sphere center.
+            var transformCenter = Cesium.Matrix4.getTranslation(tileset.root.transform, new Cesium.Cartesian3());
+            var height = Cesium.Cartesian3.distance(transformCenter, tileset.boundingSphere.center);
+            clippingPlanes.modelMatrix = Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(0.0, 0.0, height));
+        }
+
         for (var i = 0; i < clippingPlanes.length; ++i) {
             var plane = clippingPlanes.get(i);
             var planeEntity = viewer.entities.add({
@@ -161,7 +170,7 @@ function loadModel(url) {
         edgeWidth : viewModel.edgeStylingEnabled ? 1.0 : 0.0
     });
 
-    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 100.0);
+    var position = Cesium.Cartesian3.fromDegrees(-123.0744619, 44.0503706, 300.0);
     var heading = Cesium.Math.toRadians(135.0);
     var pitch = 0.0;
     var roll = 0.0;
@@ -200,7 +209,7 @@ function loadModel(url) {
 
 // Power Plant design model provided by Bentley Systems
 var bimUrl = Cesium.IonResource.fromAssetId(8564);
-var pointCloudUrl = Cesium.IonResource.fromAssetId(5714);
+var pointCloudUrl = Cesium.IonResource.fromAssetId(16421);
 var instancedUrl = '../../SampleData/Cesium3DTiles/Instanced/InstancedOrientation/tileset.json';
 var modelUrl = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 
@@ -220,6 +229,8 @@ Cesium.knockout.getObservable(viewModel, 'currentExampleType').subscribe(functio
         loadTileset(pointCloudUrl);
     } else if (newValue === clipObjects[2]) {
         loadTileset(instancedUrl);
+        // Position the instanced tileset above terrain
+        tileset.modelMatrix = new Cesium.Matrix4.fromTranslation(new Cesium.Cartesian3(15.0, -58.6, 50.825));
     } else {
         loadModel(modelUrl);
     }

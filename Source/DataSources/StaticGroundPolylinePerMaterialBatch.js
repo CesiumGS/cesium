@@ -1,4 +1,5 @@
 define([
+        '../Core/defaultValue',
         '../Core/AssociativeArray',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
@@ -14,6 +15,7 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
+        defaultValue,
         AssociativeArray,
         Color,
         ColorGeometryInstanceAttribute,
@@ -35,7 +37,7 @@ define([
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(orderedGroundPrimitives, materialProperty, zIndex) {
+    function Batch(orderedGroundPrimitives, classificationType, materialProperty, zIndex, asynchronous) {
         var appearanceType;
         if (materialProperty instanceof ColorMaterialProperty) {
             appearanceType = PolylineColorAppearance;
@@ -44,6 +46,7 @@ define([
         }
 
         this.orderedGroundPrimitives = orderedGroundPrimitives; // scene level primitive collection
+        this.classificationType = classificationType;
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
         this.updaters = new AssociativeArray();
@@ -59,6 +62,8 @@ define([
         this.subscriptions = new AssociativeArray();
         this.showsUpdated = new AssociativeArray();
         this.zIndex = zIndex;
+
+        this._asynchronous = asynchronous;
     }
 
     Batch.prototype.onMaterialChanged = function() {
@@ -133,9 +138,10 @@ define([
 
                 primitive = new GroundPolylinePrimitive({
                     show : false,
-                    asynchronous : true,
+                    asynchronous : this._asynchronous,
                     geometryInstances : geometries,
-                    appearance : new this.appearanceType()
+                    appearance : new this.appearanceType(),
+                    classificationType : this.classificationType
                 });
 
                 if (this.appearanceType === PolylineMaterialAppearance) {
@@ -274,9 +280,11 @@ define([
     /**
      * @private
      */
-    function StaticGroundPolylinePerMaterialBatch(orderedGroundPrimitives) {
+    function StaticGroundPolylinePerMaterialBatch(orderedGroundPrimitives, classificationType, asynchronous) {
         this._items = [];
         this._orderedGroundPrimitives = orderedGroundPrimitives;
+        this._classificationType = classificationType;
+        this._asynchronous = defaultValue(asynchronous, true);
     }
 
     StaticGroundPolylinePerMaterialBatch.prototype.add = function(time, updater) {
@@ -294,7 +302,7 @@ define([
             }
         }
         // If a compatible batch wasn't found, create a new batch.
-        var batch = new Batch(this._orderedGroundPrimitives, updater.fillMaterialProperty, zIndex);
+        var batch = new Batch(this._orderedGroundPrimitives, this._classificationType, updater.fillMaterialProperty, zIndex, this._asynchronous);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
     };

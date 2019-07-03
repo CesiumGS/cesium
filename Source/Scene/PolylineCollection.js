@@ -13,6 +13,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EncodedCartesian3',
+        '../Core/FeatureDetection',
         '../Core/IndexDatatype',
         '../Core/Intersect',
         '../Core/Math',
@@ -52,6 +53,7 @@ define([
         destroyObject,
         DeveloperError,
         EncodedCartesian3,
+        FeatureDetection,
         IndexDatatype,
         Intersect,
         CesiumMath,
@@ -1180,6 +1182,10 @@ define([
         // Check for use of v_polylineAngle in material shader
         if (this.material.shaderSource.search(/varying\s+float\s+v_polylineAngle;/g) !== -1) {
             defines.push('POLYLINE_DASH');
+        }
+
+        if (!FeatureDetection.isInternetExplorer()) {
+            defines.push('CLIP_POLYLINE');
         }
 
         var fs = new ShaderSource({

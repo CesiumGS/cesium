@@ -319,7 +319,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             var polyline = new Cesium.PolylineGraphics();
             polyline.material = new Cesium.ColorMaterialProperty(color);
             polyline.width = new Cesium.ConstantProperty(2);
-            polyline.followSurface = new Cesium.ConstantProperty(false);
+            polyline.arcType = new Cesium.ConstantProperty(Cesium.ArcType.NONE);
             polyline.positions = new Cesium.ConstantProperty([surfacePosition, heightPosition]);
 
             //The polyline instance itself needs to be on an entity.

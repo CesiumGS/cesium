@@ -1,4 +1,5 @@
 define([
+        '../Core/ArcType',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/createGuid',
@@ -27,6 +28,7 @@ define([
         './PolygonGraphics',
         './PolylineGraphics'
     ], function(
+        ArcType,
         Cartesian3,
         Color,
         createGuid,
@@ -365,6 +367,7 @@ define([
         polylineGraphics.material = material;
         polylineGraphics.width = widthProperty;
         polylineGraphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
+        polylineGraphics.arcType = ArcType.RHUMB;
     }
 
     function processLineString(dataSource, geoJson, geometry, crsFunction, options) {
@@ -434,6 +437,7 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
+        polygon.arcType = ArcType.RHUMB;
 
         var holes = [];
         for (var i = 1, len = coordinates.length; i < len; i++) {

@@ -37,6 +37,7 @@ define([
         }
 
         var scene = new Scene(options);
+        scene.highDynamicRange = false;
 
         if (!!window.webglValidation) {
             var context = scene.context;

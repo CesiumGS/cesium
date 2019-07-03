@@ -43,7 +43,7 @@ define([
     var defaultOutlineColor = new ConstantProperty(Color.BLACK);
     var defaultShadows = new ConstantProperty(ShadowMode.DISABLED);
     var defaultDistanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
-    var defaultClassificationType = new ConstantProperty(ClassificationType.TERRAIN);
+    var defaultClassificationType = new ConstantProperty(ClassificationType.BOTH);
 
     /**
      * An abstract class for updating geometry entites.
@@ -306,7 +306,8 @@ define([
      */
     GeometryUpdater.prototype.isOutlineVisible = function(time) {
         var entity = this._entity;
-        return this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+        var visible = this._outlineEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._showOutlineProperty.getValue(time);
+        return defaultValue(visible, false);
     };
 
     /**
@@ -317,7 +318,8 @@ define([
      */
     GeometryUpdater.prototype.isFilled = function(time) {
         var entity = this._entity;
-        return this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+        var visible = this._fillEnabled && entity.isAvailable(time) && this._showProperty.getValue(time) && this._fillProperty.getValue(time);
+        return defaultValue(visible, false);
     };
 
     /**

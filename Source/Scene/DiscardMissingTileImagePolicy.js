@@ -3,15 +3,13 @@ define([
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/getImagePixels',
-        '../Core/Resource',
-        '../ThirdParty/when'
+        '../Core/Resource'
     ], function(
         defaultValue,
         defined,
         DeveloperError,
         getImagePixels,
-        Resource,
-        when) {
+        Resource) {
     'use strict';
 
     /**
@@ -89,7 +87,11 @@ define([
             that._isReady = true;
         }
 
-        when(resource.fetchImage(true), success, failure);
+        resource.fetchImage({
+            preferBlob : true,
+            preferImageBitmap : true,
+            flipY : true
+        }).then(success).otherwise(failure);
     }
 
     /**

@@ -19,6 +19,7 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Scene/BlendingState',
+        '../Scene/StencilConstants',
         '../Shaders/PostProcessStages/PointCloudEyeDomeLighting'
     ], function(
         Cartesian3,
@@ -41,6 +42,7 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         BlendingState,
+        StencilConstants,
         PointCloudEyeDomeLightingShader) {
     'use strict';
 
@@ -160,7 +162,9 @@ define([
             depthMask : true,
             depthTest : {
                 enabled : true
-            }
+            },
+            stencilTest : StencilConstants.setCesium3DTileBit(),
+            stencilMask : StencilConstants.CESIUM_3D_TILE_MASK
         });
 
         processor._drawCommand = context.createViewportQuadCommand(blendFS, {

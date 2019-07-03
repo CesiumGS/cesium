@@ -3,6 +3,7 @@ define([
         'Core/Color',
         'Core/defaultValue',
         'Core/defined',
+        'Core/JulianDate',
         'Core/Resource',
         'Scene/Cesium3DTileContentFactory',
         'Scene/Cesium3DTileset',
@@ -13,6 +14,7 @@ define([
         Color,
         defaultValue,
         defined,
+        JulianDate,
         Resource,
         Cesium3DTileContentFactory,
         Cesium3DTileset,
@@ -46,11 +48,17 @@ define([
         return string + whitespace;
     }
 
+    var time = new JulianDate(2457522.0);
+
     Cesium3DTilesTester.expectRender = function(scene, tileset, callback) {
+        var renderOptions = {
+            scene : scene,
+            time : time
+        };
         tileset.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
+        expect(renderOptions).toRender([0, 0, 0, 255]);
         tileset.show = true;
-        expect(scene).toRenderAndCall(function(rgba) {
+        expect(renderOptions).toRenderAndCall(function(rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);
             if (defined(callback)) {
                 callback(rgba);
@@ -59,10 +67,14 @@ define([
     };
 
     Cesium3DTilesTester.expectRenderBlank = function(scene, tileset) {
+        var renderOptions = {
+            scene : scene,
+            time : time
+        };
         tileset.show = false;
-        expect(scene).toRender([0, 0, 0, 255]);
+        expect(renderOptions).toRender([0, 0, 0, 255]);
         tileset.show = true;
-        expect(scene).toRender([0, 0, 0, 255]);
+        expect(renderOptions).toRender([0, 0, 0, 255]);
     };
 
     Cesium3DTilesTester.expectRenderTileset = function(scene, tileset) {
@@ -114,6 +126,7 @@ define([
     Cesium3DTilesTester.loadTileset = function(scene, url, options) {
         options = defaultValue(options, {});
         options.url = url;
+        options.cullRequestsWhileMoving = defaultValue(options.cullRequestsWhileMoving, false);
         // Load all visible tiles
         var tileset = scene.primitives.add(new Cesium3DTileset(options));
 
@@ -162,8 +175,8 @@ define([
         });
     };
 
-    Cesium3DTilesTester.resolvesReadyPromise = function(scene, url) {
-        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+    Cesium3DTilesTester.resolvesReadyPromise = function(scene, url, options) {
+        return Cesium3DTilesTester.loadTileset(scene, url, options).then(function(tileset) {
             var content = tileset.root.content;
             return content.readyPromise.then(function(content) {
                 expect(content).toBeDefined();
@@ -171,8 +184,8 @@ define([
         });
     };
 
-    Cesium3DTilesTester.tileDestroys = function(scene, url) {
-        return Cesium3DTilesTester.loadTileset(scene, url).then(function(tileset) {
+    Cesium3DTilesTester.tileDestroys = function(scene, url, options) {
+        return Cesium3DTilesTester.loadTileset(scene, url, options).then(function(tileset) {
             var content = tileset.root.content;
             expect(content.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);
