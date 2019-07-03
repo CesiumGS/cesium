@@ -1,6 +1,6 @@
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to CesiumJS.  The following people have contributed to CesiumJS, under the following agreements:
 
-## [Corporate CLA](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt)
+## [Corporate CLA](Documentation/Contributors/CLAs/corporate-contributor-license-agreement-v1.0.pdf)
 
 * [Analytical Graphics, Inc.](http://www.agi.com/)
    * [Patrick Cozzi](https://github.com/pjcozzi)
@@ -128,7 +128,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Cesium GS, Inc.](https://cesium.com/)
    * [Tom Fili](https://github.com/tfili)
 
-## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
+## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
 * [Ravi Agrawal](https://github.com/macoda)
