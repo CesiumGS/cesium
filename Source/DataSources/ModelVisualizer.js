@@ -8,6 +8,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/Resource',
+        '../Scene/Axis',
         '../Scene/ColorBlendMode',
         '../Scene/HeightReference',
         '../Scene/Model',
@@ -25,6 +26,7 @@ define([
         DeveloperError,
         Matrix4,
         Resource,
+        Axis,
         ColorBlendMode,
         HeightReference,
         Model,
@@ -46,6 +48,7 @@ define([
     var defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
     var defaultColorBlendAmount = 0.5;
     var defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+    var defaultUpAxis = Axis.Y;
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -161,6 +164,8 @@ define([
             model.clampAnimations = Property.getValueOrDefault(modelGraphics._clampAnimations, time, defaultClampAnimations);
             model.imageBasedLightingFactor = Property.getValueOrDefault(modelGraphics._imageBasedLightingFactor, time, defaultImageBasedLightingFactor);
             model.lightColor = Property.getValueOrUndefined(modelGraphics._lightColor, time);
+            model._upAxis = Property.getValueOrDefault(modelGraphics._upAxis, time, defaultUpAxis);
+            model._forwardAxis = Property.getValueOrUndefined(modelGraphics._forwardAxis, time);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
