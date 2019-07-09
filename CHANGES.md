@@ -8,8 +8,10 @@ Change Log
 * Hacky fix/workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/7121.
 * Added support for using the imagery splitting system with the terrain and the atmosphere, too.
 * Added support for extruding `GeoJsonDataSource` polygons using the `heightReference`, `heightProperty`, and `extrudedHeightProperty` properties.
-* Added support for new "On Demand" Bing Maps styles.
-* Changed `BingMapsImageryProvider` to request `https` from Bing instead of requesting `http` and then rewriting the URL to use `https`.
+* Added several new Maki icons for use with GeoJSON.
+* Fixed a bug where Cesium would draw parent content whenever a child tile had no content.
+* Added the ability to enable/disable shadows on an Instanced 3D Model tileset.
+* Added support for the `TERRIA_solid_outlines` extension to glTF.
 
 ### 1.58.1 - 2018-06-03
 _This is an npm-only release to fix a publishing issue__
@@ -27,7 +29,7 @@ _This is an npm-only release to fix a publishing issue__
 ##### Fixes :wrench:
 * Fixed an edge case where Cesium would provide ion access token credentials to non-ion servers if the actual asset entrypoint was being hosted by ion. [#7839](https://github.com/AnalyticalGraphicsInc/cesium/pull/7839)
 * Fixed a bug that caused Cesium to request non-existent tiles for terrain tilesets lacking tile availability, i.e. a `layer.json` file.
-* Fixed memory leak when removing entities that had a `HeightReference` of `CLAMP_TO_GROUND` or `RELATIVE_TO_GROUND`. This includes when removing a `DataSource`. 
+* Fixed memory leak when removing entities that had a `HeightReference` of `CLAMP_TO_GROUND` or `RELATIVE_TO_GROUND`. This includes when removing a `DataSource`.
 * Fixed 3D Tiles credits not being shown in the data attribution box. [#7877](https://github.com/AnalyticalGraphicsInc/cesium/pull/7877)
 
 ### 1.57 - 2019-05-01
