@@ -1,4 +1,5 @@
 define([
+        '../ThirdParty/basis_transcoder',
         '../ThirdParty/when',
         './Check',
         './CompressedTextureBuffer',
@@ -8,6 +9,7 @@ define([
         './RuntimeError',
         './WebGLConstants'
     ], function(
+        basis_transcoder,
         when,
         Check,
         CompressedTextureBuffer,
@@ -98,6 +100,12 @@ define([
         // context._gl is prob the WebGLRenderContext
         // the original gltf for the basis agiHQ has a extensionsUsed and Required array, get rid of this for the time being save as BAK
         // Skinned character (cesium man) has a jpg texture and it was already a bitmap by the time it got here. Need to find where the conversion is happening.
+
+        // NOW: BasisFile
+        // see basis_universal/webgl/texture/index.html
+        // see basis_universal/webgl/gltf/BasisTextureLoader.js
+        // LATER:
+        // Both of the examples' index.html's have BASIS() and Module things that pull out BasisFile and initializeBasis
         var byteBuffer = new Uint8Array(data);
     }
 

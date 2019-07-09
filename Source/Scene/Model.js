@@ -55,7 +55,6 @@ define([
         '../ThirdParty/GltfPipeline/parseGlb',
         '../ThirdParty/GltfPipeline/removePipelineExtras',
         '../ThirdParty/GltfPipeline/updateVersion',
-        '../ThirdParty/basis_transcoder',
         '../ThirdParty/when',
         './Axis',
         './BlendingState',
@@ -135,7 +134,6 @@ define([
         parseGlb,
         removePipelineExtras,
         updateVersion,
-        basis_transcoder,
         when,
         Axis,
         BlendingState,
@@ -2516,10 +2514,6 @@ define([
     }
 
     function loadTexturesFromBufferViews(model) {
-        // TODO:
-        // context._gl is prob the WebGLRenderContext
-        // model.gltf has .textures so it should also have .images which has .mimeType "image/basis"
-        // the original gltf for the basis agiHQ has a extensionsUsed and Required array, get rid of this for the time being save as BAK
 
         var loadResources = model._loadResources;
 
@@ -2540,6 +2534,9 @@ define([
                 loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/basis') {
+                // TODO:
+                // context._gl is prob the WebGLRenderContext, needed for basis init
+                // the original gltf for the basis agiHQ has a extensionsUsed and Required array, get rid of this for the time being, save as BAK
                 loadKTX2(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/crn') {
