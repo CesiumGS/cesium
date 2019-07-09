@@ -292,7 +292,8 @@ define([
             lightColor : tileset.lightColor,
             luminanceAtZenith : tileset.luminanceAtZenith,
             sphericalHarmonicCoefficients : tileset.sphericalHarmonicCoefficients,
-            specularEnvironmentMaps : tileset.specularEnvironmentMaps
+            specularEnvironmentMaps : tileset.specularEnvironmentMaps,
+            shadows : tileset.shadows
         };
 
         if (gltfFormat === 0) {

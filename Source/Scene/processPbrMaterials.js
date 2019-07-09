@@ -895,6 +895,7 @@ define([
 
         // Add program
         var programId = addToArray(programs, {
+            isOutline : defined(material.extensions) ? defined(material.extensions.TERRIA_solid_outlines) : false,
             fragmentShader : fragmentShaderId,
             vertexShader : vertexShaderId
         });

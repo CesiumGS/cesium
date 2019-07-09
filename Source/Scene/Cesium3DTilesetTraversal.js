@@ -181,8 +181,9 @@ define([
         if (defined(loadedTile)) {
             // Tiles will actually be selected in traverseAndSelect
             loadedTile._shouldSelect = true;
-        } else {
-            // If no ancestors are ready traverse down and select tiles to minimize empty regions.
+        } else if (!tile.hasEmptyContent) {
+            // If this tile is supposed to have content, but this tile and its ancestors are not ready,
+            // traverse down and select tiles to minimize empty regions.
             // This happens often for immediatelyLoadDesiredLevelOfDetail where parent tiles are not necessarily loaded before zooming out.
             selectDescendants(tileset, tile, frameState);
         }

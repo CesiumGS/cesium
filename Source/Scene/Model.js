@@ -2290,6 +2290,7 @@ define([
 
         var vs = shaders[program.vertexShader];
         var fs = shaders[program.fragmentShader];
+        var isOutline = program.isOutline;
 
         var quantizedVertexShaders = model._quantizedVertexShaders;
         var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[programId];
@@ -2312,6 +2313,14 @@ define([
         if (!FeatureDetection.isInternetExplorer()) {
             drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
             drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+
+            if (isOutline) {
+                drawFS = drawFS.replace('czm_writeLogDepth();',
+                    '    czm_writeLogDepth();\n' +
+                    '#if defined(LOG_DEPTH) && !defined(DISABLE_LOG_DEPTH_FRAGMENT_WRITE)\n' +
+                    '    gl_FragDepthEXT -= 5e-5;\n' +
+                    '#endif');
+            }
         }
 
         if (!defined(model._uniformMapLoaded)) {
@@ -2399,6 +2408,15 @@ define([
         if (!FeatureDetection.isInternetExplorer()) {
             drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
             drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
+
+            var isOutline = program.isOutline;
+            if (isOutline) {
+                drawFS = drawFS.replace('czm_writeLogDepth();',
+                    '    czm_writeLogDepth();\n' +
+                    '#if defined(LOG_DEPTH) && !defined(DISABLE_LOG_DEPTH_FRAGMENT_WRITE)\n' +
+                    '    gl_FragDepthEXT -= 5e-5;\n' +
+                    '#endif');
+            }
         }
 
         if (!defined(model._uniformMapLoaded)) {
@@ -3061,6 +3079,23 @@ define([
             blendFuncSeparate = material.extensions.KHR_blend.blendFactors;
         }
 
+        // If we have outlines but this material is not one of them, set the
+        // polygonOffset render state to push this material back slightly in the
+        // depth buffer so that the outlines are clearly visible.
+        // Note that this render state will have no effect when we're using
+        // logarithmic depth; that is handled separately.
+        var hasOutlines = hasExtension(model.gltf, 'TERRIA_solid_outlines');
+        var isOutline = defined(material.extensions) && defined(material.extensions.TERRIA_solid_outlines);
+
+        var polygonOffset;
+        if (hasOutlines && !isOutline) {
+            polygonOffset = {
+                enabled : true,
+                factor : 0.75,
+                units : 1.0
+            };
+        }
+
         var enableCulling = !material.doubleSided;
         var blendingEnabled = (material.alphaMode === 'BLEND');
         rendererRenderStates[materialId] = RenderState.fromCache({
@@ -3079,7 +3114,8 @@ define([
                 functionDestinationRgb : blendFuncSeparate[1],
                 functionSourceAlpha : blendFuncSeparate[2],
                 functionDestinationAlpha : blendFuncSeparate[3]
-            }
+            },
+            polygonOffset : polygonOffset
         });
     }
 
