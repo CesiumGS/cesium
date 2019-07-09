@@ -24,6 +24,7 @@ define([
         '../Core/loadCRN',
         '../Core/loadImageFromTypedArray',
         '../Core/loadKTX',
+        '../Core/loadKTX2',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -103,6 +104,7 @@ define([
         loadCRN,
         loadImageFromTypedArray,
         loadKTX,
+        loadKTX2,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -2514,6 +2516,11 @@ define([
     }
 
     function loadTexturesFromBufferViews(model) {
+        // TODO:
+        // context._gl is prob the WebGLRenderContext
+        // model.gltf has .textures so it should also have .images which has .mimeType "image/basis"
+        // the original gltf for the basis agiHQ has a extensionsUsed and Required array, get rid of this for the time being save as BAK
+
         var loadResources = model._loadResources;
 
         if (loadResources.pendingBufferLoads !== 0) {
@@ -2531,6 +2538,9 @@ define([
 
             if (gltfTexture.mimeType === 'image/ktx') {
                 loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
+                ++model._loadResources.pendingTextureLoads;
+            } else if (gltfTexture.mimeType === 'image/basis') {
+                loadKTX2(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/crn') {
                 loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
@@ -2586,15 +2596,6 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function createTexture(gltfTexture, model, context) {
-        // TODO:
-        // See loadTexturesFromBufferViews for the place to insert a case to load basis
-        // Create a loadKTX2 in Core the same way it does loads for other things (ktx, crn typedarray), set needed paraemters before exiting func
-        // context._gl is prob the WebGLRenderContext
-        // internal/pixelFormat is enum for BC1-5, RGBA,etc. set internalFormat after transcode to suppported type
-        // model.gltf has .textures so it should also have .images which has .mimeType "image/basis"
-        // the original gltf for the basis agiHQ has a extensionsUsed and Required array, get rid of this for the time being save as BAK
-        // Skinned character (cesium man) has a jpg texture and it was already a bitmap by the time it got here. Need to find where the conversion is happening.
-
         var textures = model.gltf.textures;
         var texture = textures[gltfTexture.id];
 
