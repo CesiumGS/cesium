@@ -8,6 +8,7 @@ define([
         '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/Resource',
+        '../Scene/Axis',
         '../Scene/ColorBlendMode',
         '../Scene/HeightReference',
         '../Scene/Model',
@@ -25,6 +26,7 @@ define([
         DeveloperError,
         Matrix4,
         Resource,
+        Axis,
         ColorBlendMode,
         HeightReference,
         Model,
@@ -46,6 +48,7 @@ define([
     var defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
     var defaultColorBlendAmount = 0.5;
     var defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+    var defaultUpAxis = Axis.Y;
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -137,7 +140,6 @@ define([
                     url : resource.url,
                     animationsRunning : false,
                     nodeTransformationsScratch : {},
-                    originalNodeMatrixHash : {},
                     loadFail : false
                 };
                 modelHash[entity.id] = modelData;
@@ -162,6 +164,8 @@ define([
             model.clampAnimations = Property.getValueOrDefault(modelGraphics._clampAnimations, time, defaultClampAnimations);
             model.imageBasedLightingFactor = Property.getValueOrDefault(modelGraphics._imageBasedLightingFactor, time, defaultImageBasedLightingFactor);
             model.lightColor = Property.getValueOrUndefined(modelGraphics._lightColor, time);
+            model._upAxis = Property.getValueOrDefault(modelGraphics._upAxis, time, defaultUpAxis);
+            model._forwardAxis = Property.getValueOrUndefined(modelGraphics._forwardAxis, time);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
@@ -179,7 +183,6 @@ define([
                 // Apply node transformations
                 var nodeTransformations = Property.getValueOrUndefined(modelGraphics._nodeTransformations, time, modelData.nodeTransformationsScratch);
                 if (defined(nodeTransformations)) {
-                    var originalNodeMatrixHash = modelData.originalNodeMatrixHash;
                     var nodeNames = Object.keys(nodeTransformations);
                     for (var nodeIndex = 0, nodeLength = nodeNames.length; nodeIndex < nodeLength; ++nodeIndex) {
                         var nodeName = nodeNames[nodeIndex];
@@ -194,14 +197,8 @@ define([
                             continue;
                         }
 
-                        var originalNodeMatrix = originalNodeMatrixHash[nodeName];
-                        if (!defined(originalNodeMatrix)) {
-                            originalNodeMatrix = modelNode.matrix.clone();
-                            originalNodeMatrixHash[nodeName] = originalNodeMatrix;
-                        }
-
                         var transformationMatrix = Matrix4.fromTranslationRotationScale(nodeTransformation, nodeMatrixScratch);
-                        modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformationMatrix, transformationMatrix);
+                        modelNode.matrix = Matrix4.multiply(modelNode.originalMatrix, transformationMatrix, transformationMatrix);
                     }
                 }
             }

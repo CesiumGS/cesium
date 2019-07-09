@@ -3866,16 +3866,16 @@ defineSuite([
         });
     });
 
-	it('can load styles from a KML file with namespaces', function() {
-		return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
-			console.debug(dataSource.entities.values[2]);
-			var polyline = dataSource.entities.values[2].polyline;
-			var expectedColor = Color.fromBytes(0xff, 0x00, 0xff, 0x00);
-			var polylineColor = polyline.material.color.getValue();
-			expect(polylineColor).toEqual(expectedColor);
-			expect(polyline.width.getValue()).toEqual(10);
-		});
-	});
+    it('can load styles from a KML file with namespaces', function() {
+        return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
+            console.debug(dataSource.entities.values[2]);
+            var polyline = dataSource.entities.values[2].polyline;
+            var expectedColor = Color.fromBytes(0xff, 0x00, 0xff, 0x00);
+            var polylineColor = polyline.material.color.getValue();
+            expect(polylineColor).toEqual(expectedColor);
+            expect(polyline.width.getValue()).toEqual(10);
+        });
+    });
 
     it('Boolean values can use true string', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
@@ -3960,7 +3960,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
-			expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon refreshMode: onInterval');
+            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon refreshMode: onInterval');
         });
     });
 

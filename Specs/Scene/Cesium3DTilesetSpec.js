@@ -2748,7 +2748,7 @@ defineSuite([
 
             scene.renderForSpecs();
             var commandList = scene.frameState.commandList;
-            expect(commandList[0] instanceof ClearCommand).toBe(true);
+            expect(commandList[0]).toBeInstanceOf(ClearCommand);
             expect(commandList[0].stencil).toBe(0);
         });
     });
@@ -2824,7 +2824,7 @@ defineSuite([
             var length = commandList.length;
             for (var i = 0; i < length; ++i) {
                 var command = commandList[i];
-                expect(command instanceof ClearCommand).toBe(false);
+                expect(command).not.toBeInstanceOf(ClearCommand);
                 expect(command.renderState.cull.face).not.toBe(CullFace.FRONT);
             }
         });
@@ -3615,7 +3615,7 @@ defineSuite([
             }
 
             expect(allSorted).toBe(true);
-            expect(lastPriority !== requestedTilesInFlight[0]._priority).toBe(true); // Not all the same value
+            expect(lastPriority).not.toEqual(requestedTilesInFlight[0]._priority); // Not all the same value
         });
     });
 

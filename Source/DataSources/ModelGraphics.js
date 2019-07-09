@@ -46,7 +46,7 @@ define([
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
      * @param {Property} [options.clampAnimations=true] A boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
-     * @param {PropertyBag} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
+     * @param {PropertyBag} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
@@ -103,6 +103,8 @@ define([
         this._lightColor = undefined;
         this._lightColorSubscription = undefined;
         this._definitionChanged = new Event();
+        this._upAxis = undefined;
+        this._forwardAxis = undefined;
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -201,6 +203,7 @@ define([
         /**
          * Gets or sets the set of node transformations to apply to this model.  This is represented as an {@link PropertyBag}, where keys are
          * names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
+         * The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
          * @memberof ModelGraphics.prototype
          * @type {PropertyBag}
          */
@@ -282,7 +285,21 @@ define([
          * @memberOf ModelGraphics.prototype
          * @type {Property}
          */
-        lightColor : createPropertyDescriptor('lightColor')
+        lightColor : createPropertyDescriptor('lightColor'),
+
+        /**
+         * A property specifying the {@link Axis} up axis of the model.
+         * @memberOf ModelGraphics.prototype
+         * @type {Property}
+         */
+        upAxis : createPropertyDescriptor('upAxis'),
+
+        /**
+         * A property specifying the {@link Axis} forward axis of the model.
+         * @memberOf ModelGraphics.prototype
+         * @type {Property}
+         */
+        forwardAxis : createPropertyDescriptor('forwardAxis')
     });
 
     /**
@@ -351,6 +368,8 @@ define([
         this.clippingPlanes = defaultValue(this.clippingPlanes, source.clippingPlanes);
         this.imageBasedLightingFactor = defaultValue(this.imageBasedLightingFactor, source.imageBasedLightingFactor);
         this.lightColor = defaultValue(this.lightColor, source.lightColor);
+        this.upAxis = defaultValue(this.upAxis, source.upAxis);
+        this.forwardAxis = defaultValue(this.forwardAxis, source.forwardAxis);
 
         var sourceNodeTransformations = source.nodeTransformations;
         if (defined(sourceNodeTransformations)) {

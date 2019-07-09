@@ -737,10 +737,10 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider.rectangle.west >= -Math.PI).toBe(true);
-            expect(provider.rectangle.east <= Math.PI).toBe(true);
-            expect(provider.rectangle.south >= -WebMercatorProjection.MaximumLatitude).toBe(true);
-            expect(provider.rectangle.north <= WebMercatorProjection.MaximumLatitude).toBe(true);
+            expect(provider.rectangle.west).toBeGreaterThanOrEqualTo(-Math.PI);
+            expect(provider.rectangle.east).toBeLessThanOrEqualTo(Math.PI);
+            expect(provider.rectangle.south).toBeGreaterThanOrEqualTo(-WebMercatorProjection.MaximumLatitude);
+            expect(provider.rectangle.north).toBeLessThanOrEqualTo(WebMercatorProjection.MaximumLatitude);
         });
     });
 
