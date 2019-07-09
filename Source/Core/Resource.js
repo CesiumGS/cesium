@@ -1033,14 +1033,7 @@ define([
             }
 
             var deferred = when.defer();
-
-            Resource._Implementations.createImage(
-                url,
-                crossOrigin,
-                deferred,
-                flipY,
-                preferImageBitmap
-            );
+            Resource._Implementations.createImage(url, crossOrigin, deferred, flipY, preferImageBitmap);
 
             return deferred.promise;
         };
@@ -2003,24 +1996,18 @@ define([
 
                 return Resource.fetchBlob({
                     url: url
-                });
-            })
-            .then(function(blob) {
-                if (!defined(blob)) {
-                    return;
-                }
+                })
+                .then(function(blob) {
+                    if (!defined(blob)) {
+                        deferred.reject(new RuntimeError('Successfully retrieved ' + url + ' but it contained no content.'));
+                        return;
+                    }
 
-                return Resource.createImageBitmapFromBlob(blob, {
-                    flipY: flipY,
-                    premultiplyAlpha: false
-                });
-            })
-            .then(function(imageBitmap) {
-                if (!defined(imageBitmap)) {
-                    return;
-                }
-
-                deferred.resolve(imageBitmap);
+                    return Resource.createImageBitmapFromBlob(blob, {
+                        flipY: flipY,
+                        premultiplyAlpha: false
+                    });
+                }).then(deferred.resolve);
             })
             .otherwise(deferred.reject);
     };

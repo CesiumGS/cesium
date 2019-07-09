@@ -176,7 +176,7 @@ void main()
 #endif
 
 #ifdef APPLY_MATERIAL
-    float northPoleZ = czm_getWgs84EllipsoidEC().radii.z;
+    float northPoleZ = czm_ellipsoidRadii.z;
     vec3 northPolePositionMC = vec3(0.0, 0.0, northPoleZ);
     vec3 ellipsoidNormal = normalize(v_positionMC); // For a sphere this is correct, but not generally for an ellipsoid.
     vec3 vectorEastMC = normalize(cross(northPolePositionMC - v_positionMC, ellipsoidNormal));

@@ -140,6 +140,7 @@ define([
                     url : resource.url,
                     animationsRunning : false,
                     nodeTransformationsScratch : {},
+                    articulationsScratch : {},
                     loadFail : false
                 };
                 modelHash[entity.id] = modelData;
@@ -200,6 +201,28 @@ define([
                         var transformationMatrix = Matrix4.fromTranslationRotationScale(nodeTransformation, nodeMatrixScratch);
                         modelNode.matrix = Matrix4.multiply(modelNode.originalMatrix, transformationMatrix, transformationMatrix);
                     }
+                }
+
+                // Apply articulations
+                var anyArticulationUpdated = false;
+                var articulations = Property.getValueOrUndefined(modelGraphics._articulations, time, modelData.articulationsScratch);
+                if (defined(articulations)) {
+                    var articulationStageKeys = Object.keys(articulations);
+                    for (var s = 0, numKeys = articulationStageKeys.length; s < numKeys; ++s) {
+                        var key = articulationStageKeys[s];
+
+                        var articulationStageValue = articulations[key];
+                        if (!defined(articulationStageValue)) {
+                            continue;
+                        }
+
+                        anyArticulationUpdated = true;
+                        model.setArticulationStage(key, articulationStageValue);
+                    }
+                }
+
+                if (anyArticulationUpdated) {
+                    model.applyArticulations();
                 }
             }
         }
@@ -296,7 +319,7 @@ define([
         for (i = changed.length - 1; i > -1; i--) {
             entity = changed[i];
             if (defined(entity._model) && defined(entity._position)) {
-                clearNodeTransformationsScratch(entity, modelHash);
+                clearNodeTransformationsArticulationsScratch(entity, modelHash);
                 entities.set(entity.id, entity);
             } else {
                 removeModel(this, entity, modelHash, primitives);
@@ -319,10 +342,11 @@ define([
         }
     }
 
-    function clearNodeTransformationsScratch(entity, modelHash) {
+    function clearNodeTransformationsArticulationsScratch(entity, modelHash) {
         var modelData = modelHash[entity.id];
         if (defined(modelData)) {
             modelData.nodeTransformationsScratch = {};
+            modelData.articulationsScratch = {};
         }
     }
 
