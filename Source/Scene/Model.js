@@ -2656,11 +2656,12 @@ define([
         var tx;
         var source = gltfTexture.image;
 
-        // TODO: Might want to step through this and see what's what
-        // Access to file ext in here? If not, where? access to extension name?
-        // context is prob WebGLRenderContext
-        // internal/pixelFormat is enum for BC1-5 RGB RGBA ect
-        // I think ill need to set this after i transcode it to whatever the suppported/preferred type was
+        // TODO:
+        // context._gl is prob the WebGLRenderContext
+        // internal/pixelFormat is enum for BC1-5, RGBA,etc. set internalFormat after transcode to suppported type
+        // model.gltf has .textures so it would have .images which would have the .mimeType and .uri
+        // the original gltf for the basis agiHQ has a extensionsUsed and Required array, get rid of this for the time being save as BAK
+        // Skinned character (cesium man) has a jpg texture and it was already a bitmap by the time it got here. Need to find where the conversion is happening
 
         if (defined(internalFormat)) {
             tx = new Texture({
