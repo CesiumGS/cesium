@@ -1,12 +1,15 @@
 defineSuite([
         'DataSources/BoxGeometryUpdater',
         'Core/Cartesian3',
+        'Core/Color',
+        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
         'Core/TimeIntervalCollection',
         'DataSources/BoxGraphics',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
+        'Scene/HeightReference',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
         'Specs/createDynamicProperty',
@@ -15,12 +18,15 @@ defineSuite([
     ], function(
         BoxGeometryUpdater,
         Cartesian3,
+        Color,
+        GeometryOffsetAttribute,
         JulianDate,
         TimeIntervalCollection,
         BoxGraphics,
         ConstantPositionProperty,
         ConstantProperty,
         Entity,
+        HeightReference,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
@@ -79,10 +85,51 @@ defineSuite([
         instance = updater.createFillGeometryInstance(time);
         geometry = instance.geometry;
         expect(geometry._maximum).toEqual(Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3()));
+        expect(geometry._offsetAttribute).toBeUndefined();
 
         instance = updater.createOutlineGeometryInstance(time);
         geometry = instance.geometry;
         expect(geometry._max).toEqual(Cartesian3.multiplyByScalar(dimensions, 0.5, new Cartesian3()));
+        expect(geometry._offsetAttribute).toBeUndefined();
+    });
+
+    it('Creates geometry with expected offsetAttribute', function() {
+        var entity = createBasicBox();
+        var graphics = entity.box;
+        graphics.outline = true;
+        graphics.outlineColor = Color.BLACK;
+        graphics.height = new ConstantProperty(20.0);
+        graphics.extrudedHeight = new ConstantProperty(0.0);
+        var updater = new BoxGeometryUpdater(entity, getScene());
+
+        var instance;
+
+        updater._onEntityPropertyChanged(entity, 'box');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+
+        graphics.heightReference = new ConstantProperty(HeightReference.NONE);
+        updater._onEntityPropertyChanged(entity, 'box');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+
+        graphics.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
+        updater._onEntityPropertyChanged(entity, 'box');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+
+        graphics.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+        updater._onEntityPropertyChanged(entity, 'box');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
     });
 
     it('dynamic updater sets properties', function() {
@@ -93,6 +140,7 @@ defineSuite([
         dynamicUpdater.update(JulianDate.now());
 
         expect(dynamicUpdater._options.dimensions).toEqual(entity.box.dimensions.getValue());
+        expect(dynamicUpdater._options.offsetAttribute).toBeUndefined();
     });
 
     it('geometryChanged event is raised when expected', function() {
@@ -121,6 +169,13 @@ defineSuite([
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
         updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(3);
+    });
+
+    it('computes center', function() {
+        var entity = createBasicBox();
+        var updater = new BoxGeometryUpdater(entity, scene);
+
+        expect(updater._computeCenter(time)).toEqual(entity.position.getValue(time));
     });
 
     function getScene() {

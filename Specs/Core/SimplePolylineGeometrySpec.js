@@ -1,5 +1,6 @@
 defineSuite([
         'Core/SimplePolylineGeometry',
+        'Core/ArcType',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -9,6 +10,7 @@ defineSuite([
         'Specs/createPackableSpecs'
     ], function(
         SimplePolylineGeometry,
+        ArcType,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -55,6 +57,28 @@ defineSuite([
         expect(line.boundingSphere).toEqual(BoundingSphere.fromPoints(positions));
     });
 
+    it('constructor computes all vertex attributes for rhumb lines', function() {
+        var positions = Cartesian3.fromDegreesArray([
+            30, 30,
+            30, 60,
+            60, 60
+        ]);
+        var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
+            positions: positions,
+            granularity: Math.PI,
+            ellipsoid: Ellipsoid.UNIT_SPHERE,
+            arcType: ArcType.RHUMB
+        }));
+
+        var cartesian3Array = [];
+        Cartesian3.packArray(positions, cartesian3Array);
+
+        expect(line.attributes.position.values).toEqualEpsilon(cartesian3Array, CesiumMath.EPSILON8);
+        expect(line.indices).toEqual([0, 1, 1, 2]);
+        expect(line.primitiveType).toEqual(PrimitiveType.LINES);
+        expect(line.boundingSphere).toEqual(BoundingSphere.fromPoints(positions));
+    });
+
     it('constructor computes per segment colors', function() {
         var positions = [new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(0.0, 1.0, 0.0), new Cartesian3(0.0, 0.0, 1.0)];
         var colors = [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0), new Color(0.0, 0.0, 1.0, 1.0)];
@@ -92,7 +116,7 @@ defineSuite([
         var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
         var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
             positions : positions,
-            followSurface: false
+            arcType: ArcType.NONE
         }));
 
         expect(line.attributes.position.values).toEqual([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0]);
@@ -107,7 +131,7 @@ defineSuite([
         var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
             positions : positions,
             colors : colors,
-            followSurface: false
+            arcType : ArcType.NONE
         }));
 
         expect(line.attributes.color).toBeDefined();
@@ -123,7 +147,7 @@ defineSuite([
             positions : positions,
             colors : colors,
             colorsPerVertex : true,
-            followSurface: false
+            arcType : ArcType.NONE
         }));
 
         expect(line.attributes.color).toBeDefined();
@@ -137,20 +161,53 @@ defineSuite([
         positions : positions,
         colors : [Color.RED, Color.LIME, Color.BLUE],
         colorsPerVertex : true,
-        followSurface : false,
+        arcType : ArcType.NONE,
         granularity : 11,
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
     var packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 3, 1, 0, 0, 1, 0, 1, 0, 1, 0, 0, 1, 1, 12, 13, 14, 1, 0, 11];
-    createPackableSpecs(SimplePolylineGeometry, line, packedInstance, "per vertex colors");
+    createPackableSpecs(SimplePolylineGeometry, line, packedInstance, 'per vertex colors');
 
     line = new SimplePolylineGeometry({
         positions : positions,
         colorsPerVertex : false,
-        followSurface : false,
+        arcType : ArcType.NONE,
         granularity : 11,
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
     packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 0, 0, 11];
     createPackableSpecs(SimplePolylineGeometry, line, packedInstance);
+
+    line = new SimplePolylineGeometry({
+        positions : positions,
+        width : 10.0,
+        colorsPerVertex : false,
+        arcType : ArcType.GEODESIC,
+        granularity : 11,
+        ellipsoid : new Ellipsoid(12, 13, 14)
+    });
+    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 0, 1, 11];
+    createPackableSpecs(SimplePolylineGeometry, line, packedInstance, 'geodesic line');
+
+    line = new SimplePolylineGeometry({
+        positions : positions,
+        width : 10.0,
+        colorsPerVertex : false,
+        arcType : ArcType.RHUMB,
+        granularity : 11,
+        ellipsoid : new Ellipsoid(12, 13, 14)
+    });
+    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 0, 2, 11];
+    createPackableSpecs(SimplePolylineGeometry, line, packedInstance, 'rhumb line');
+
+    line = new SimplePolylineGeometry({
+        positions : positions,
+        width : 10.0,
+        colorsPerVertex : false,
+        arcType : ArcType.NONE,
+        granularity : 11,
+        ellipsoid : new Ellipsoid(12, 13, 14)
+    });
+    packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 0, 0, 11];
+    createPackableSpecs(SimplePolylineGeometry, line, packedInstance, 'straight line');
 });

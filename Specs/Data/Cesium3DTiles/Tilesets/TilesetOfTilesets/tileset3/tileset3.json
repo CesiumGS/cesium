@@ -2,7 +2,7 @@
   "asset": {
     "version": "1.0"
   },
-  "geometricError": 0,
+  "geometricError": 70,
   "root": {
     "boundingVolume": {
       "region": [
@@ -17,7 +17,7 @@
     "geometricError": 0,
     "refine": "ADD",
     "content": {
-      "url": "ll.b3dm"
+      "uri": "ll.b3dm"
     }
   }
 }

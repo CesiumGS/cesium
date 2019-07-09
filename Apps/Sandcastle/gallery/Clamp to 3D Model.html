@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Clamp a point and label to a model using the sampleHeight function.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    infoBox : false,
+    selectionIndicator : false,
+    shadows : true,
+    shouldAnimate : true
+});
+var scene = viewer.scene;
+scene.globe.depthTestAgainstTerrain = true;
+
+if (!scene.sampleHeightSupported) {
+    console.log('This browser does not support sampleHeight.');
+}
+
+var longitude = -2.1480545852753163;
+var latitude = 0.7688240036937101;
+var range = 0.000002;
+var duration = 4.0;
+
+var entity = viewer.entities.add({
+    position : Cesium.Cartesian3.fromRadians(longitude, latitude),
+    model : {
+        uri : '../../SampleData/models/GroundVehicle/GroundVehicle.glb'
+    }
+});
+
+var point = viewer.entities.add({
+    position : new Cesium.CallbackProperty(updatePosition, false),
+    point : {
+        pixelSize : 10,
+        color : Cesium.Color.YELLOW,
+        disableDepthTestDistance : Number.POSITIVE_INFINITY
+    },
+    label : {
+        show : false,
+        showBackground : true,
+        font : '14px monospace',
+        horizontalOrigin : Cesium.HorizontalOrigin.LEFT,
+        verticalOrigin : Cesium.VerticalOrigin.BOTTOM,
+        pixelOffset : new Cesium.Cartesian2(5, 5),
+        disableDepthTestDistance : Number.POSITIVE_INFINITY
+    }
+});
+
+var objectsToExclude = [point];
+var cartographic = new Cesium.Cartographic();
+
+function updatePosition(time, result) {
+    var offset = (time.secondsOfDay % duration) / duration;
+    cartographic.longitude = longitude - range + offset * range * 2.0;
+    cartographic.latitude = latitude;
+
+    var height;
+    if (scene.sampleHeightSupported) {
+        height = scene.sampleHeight(cartographic, objectsToExclude);
+    }
+
+    if (Cesium.defined(height)) {
+        cartographic.height = height;
+        point.label.text = Math.abs(height).toFixed(2).toString() + ' m';
+        point.label.show = true;
+    } else {
+        cartographic.height = 0.0;
+        point.label.show = false;
+    }
+
+    return Cesium.Cartographic.toCartesian(cartographic, Cesium.Ellipsoid.WGS84, result);
+}
+viewer.trackedEntity = entity;
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    startup(Cesium);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
+}
+</script>
+</body>
+</html>

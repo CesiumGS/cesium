@@ -221,15 +221,15 @@ define([
 
     SunPostProcess.prototype.update = function(passState) {
         var context = passState.context;
+        var viewport = passState.viewport;
 
         var sceneFramebuffer = this._sceneFramebuffer;
-        sceneFramebuffer.update(context);
+        sceneFramebuffer.update(context, viewport);
         var framebuffer = sceneFramebuffer.getFramebuffer();
 
         this._textureCache.update(context);
-        this._stages.update(context);
+        this._stages.update(context, false);
 
-        var viewport = passState.viewport;
         updateSunPosition(this, context, viewport);
 
         return framebuffer;

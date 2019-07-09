@@ -21,7 +21,7 @@ define([
      *
      * @example
      * // Make a billboard that is only visible when the distance to the camera is between 10 and 20 meters.
-     * billboard.distanceDisplayCondition = new DistanceDisplayCondition(10.0 20.0);
+     * billboard.distanceDisplayCondition = new Cesium.DistanceDisplayCondition(10.0, 20.0);
      */
     function DistanceDisplayCondition(near, far) {
         near = defaultValue(near, 0.0);

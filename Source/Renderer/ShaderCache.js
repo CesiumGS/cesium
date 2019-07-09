@@ -138,6 +138,21 @@ define([
         return cachedShader.shaderProgram;
     };
 
+    ShaderCache.prototype.replaceDerivedShaderProgram = function(shaderProgram, keyword, options) {
+        var cachedShader = shaderProgram._cachedShader;
+        var derivedKeyword = keyword + cachedShader.keyword;
+        var cachedDerivedShader = this._shaders[derivedKeyword];
+        if (defined(cachedDerivedShader)) {
+            destroyShader(this, cachedDerivedShader);
+            var index = cachedShader.derivedKeywords.indexOf(keyword);
+            if (index > -1) {
+                cachedShader.derivedKeywords.splice(index, 1);
+            }
+        }
+
+        return this.createDerivedShaderProgram(shaderProgram, keyword, options);
+    };
+
     ShaderCache.prototype.getDerivedShaderProgram = function(shaderProgram, keyword) {
         var cachedShader = shaderProgram._cachedShader;
         var derivedKeyword = keyword + cachedShader.keyword;

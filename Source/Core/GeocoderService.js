@@ -18,6 +18,7 @@ define([
      *
      * @see BingMapsGeocoderService
      * @see PeliasGeocoderService
+     * @see OpenCageGeocoderService
      */
     function GeocoderService() {
     }

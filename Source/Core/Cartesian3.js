@@ -779,6 +779,27 @@ define([
     };
 
     /**
+     * Computes the midpoint between the right and left Cartesian.
+     * @param {Cartesian3} left The first Cartesian.
+     * @param {Cartesian3} right The second Cartesian.
+     * @param {Cartesian3} result The object onto which to store the result.
+     * @returns {Cartesian3} The midpoint.
+     */
+    Cartesian3.midpoint = function(left, right, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('left', left);
+        Check.typeOf.object('right', right);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        result.x = (left.x + right.x) * 0.5;
+        result.y = (left.y + right.y) * 0.5;
+        result.z = (left.z + right.z) * 0.5;
+
+        return result;
+    };
+
+    /**
      * Returns a Cartesian3 position from longitude and latitude values given in degrees.
      *
      * @param {Number} longitude The longitude, in degrees

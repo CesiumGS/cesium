@@ -1,6 +1,7 @@
 define([
         '../Core/BoundingSphere',
         '../Core/ComponentDatatype',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DeveloperError',
         '../Core/Ellipsoid',
@@ -12,10 +13,12 @@ define([
         '../Core/GeometryPipeline',
         '../Core/IndexDatatype',
         '../Core/Matrix4',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/WebMercatorProjection'
     ], function(
         BoundingSphere,
         ComponentDatatype,
+        defaultValue,
         defined,
         DeveloperError,
         Ellipsoid,
@@ -27,6 +30,7 @@ define([
         GeometryPipeline,
         IndexDatatype,
         Matrix4,
+        OffsetGeometryInstanceAttribute,
         WebMercatorProjection) {
     'use strict';
 
@@ -109,7 +113,7 @@ define([
         var primitiveType;
         var length = instances.length;
 
-        for (i = 0 ; i < length; ++i) {
+        for (i = 0; i < length; ++i) {
             if (defined(instances[i].geometry)) {
                 primitiveType = instances[i].geometry.primitiveType;
                 break;
@@ -274,6 +278,8 @@ define([
         var length = instances.length;
         var pickOffsets;
 
+        var offsetInstanceExtend;
+        var hasOffset = false;
         if (length > 0) {
             geometries = geometryPipeline(parameters);
             if (geometries.length > 0) {
@@ -281,6 +287,10 @@ define([
                 if (parameters.createPickOffsets) {
                     pickOffsets = createInstancePickOffsets(instances, geometries);
                 }
+            }
+            if (defined(instances[0].attributes) && defined(instances[0].attributes.offset)) {
+                offsetInstanceExtend = new Array(length);
+                hasOffset = true;
             }
         }
 
@@ -292,6 +302,9 @@ define([
             if (defined(geometry)) {
                 boundingSpheres[i] = geometry.boundingSphere;
                 boundingSpheresCV[i] = geometry.boundingSphereCV;
+                if (hasOffset) {
+                    offsetInstanceExtend[i] = instance.geometry.offsetAttribute;
+                }
             }
 
             var eastHemisphereGeometry = instance.eastHemisphereGeometry;
@@ -311,6 +324,7 @@ define([
             modelMatrix : parameters.modelMatrix,
             attributeLocations : attributeLocations,
             pickOffsets : pickOffsets,
+            offsetInstanceExtend : offsetInstanceExtend,
             boundingSpheres : boundingSpheres,
             boundingSpheresCV : boundingSpheresCV
         };
@@ -318,7 +332,7 @@ define([
 
     function transferGeometry(geometry, transferableObjects) {
         var attributes = geometry.attributes;
-        for ( var name in attributes) {
+        for (var name in attributes) {
             if (attributes.hasOwnProperty(name)) {
                 var attribute = attributes[name];
 
@@ -354,9 +368,9 @@ define([
 
             var attributes = geometry.attributes;
 
-            count += 6 + 2 * BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
+            count += 7 + 2 * BoundingSphere.packedLength + (defined(geometry.indices) ? geometry.indices.length : 0);
 
-            for ( var property in attributes) {
+            for (var property in attributes) {
                 if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
                     var attribute = attributes[property];
                     count += 5 + attribute.values.length;
@@ -390,6 +404,7 @@ define([
 
             packedData[count++] = geometry.primitiveType;
             packedData[count++] = geometry.geometryType;
+            packedData[count++] = defaultValue(geometry.offsetAttribute, -1);
 
             var validBoundingSphere = defined(geometry.boundingSphere) ? 1.0 : 0.0;
             packedData[count++] = validBoundingSphere;
@@ -409,7 +424,7 @@ define([
 
             var attributes = geometry.attributes;
             var attributesToWrite = [];
-            for ( var property in attributes) {
+            for (var property in attributes) {
                 if (attributes.hasOwnProperty(property) && defined(attributes[property])) {
                     attributesToWrite.push(property);
                     if (!defined(stringHash[property])) {
@@ -470,6 +485,10 @@ define([
 
             var primitiveType = packedGeometry[packedGeometryIndex++];
             var geometryType = packedGeometry[packedGeometryIndex++];
+            var offsetAttribute = packedGeometry[packedGeometryIndex++];
+            if (offsetAttribute === -1) {
+                offsetAttribute = undefined;
+            }
 
             var boundingSphere;
             var boundingSphereCV;
@@ -530,7 +549,8 @@ define([
                 boundingSphere : boundingSphere,
                 boundingSphereCV : boundingSphereCV,
                 indices : indices,
-                attributes : attributes
+                attributes : attributes,
+                offsetAttribute: offsetAttribute
             });
         }
 
@@ -539,14 +559,20 @@ define([
 
     function packInstancesForCombine(instances, transferableObjects) {
         var length = instances.length;
-        var packedData = new Float64Array(1 + (length * 16));
+        var packedData = new Float64Array(1 + (length * 19));
         var count = 0;
         packedData[count++] = length;
         for (var i = 0; i < length; i++) {
             var instance = instances[i];
-
             Matrix4.pack(instance.modelMatrix, packedData, count);
             count += Matrix4.packedLength;
+            if (defined(instance.attributes) && defined(instance.attributes.offset)) {
+                var values = instance.attributes.offset.value;
+                packedData[count] = values[0];
+                packedData[count + 1] = values[1];
+                packedData[count + 2] = values[2];
+            }
+            count += 3;
         }
         transferableObjects.push(packedData.buffer);
 
@@ -561,10 +587,18 @@ define([
         var i = 1;
         while (i < packedInstances.length) {
             var modelMatrix = Matrix4.unpack(packedInstances, i);
+            var attributes;
             i += Matrix4.packedLength;
+            if (defined(packedInstances[i])) {
+                attributes = {
+                    offset : new OffsetGeometryInstanceAttribute(packedInstances[i], packedInstances[i + 1], packedInstances[i + 2])
+                };
+            }
+            i += 3;
 
             result[count++] = {
-                modelMatrix : modelMatrix
+                modelMatrix : modelMatrix,
+                attributes : attributes
             };
         }
 
@@ -687,6 +721,7 @@ define([
             attributeLocations : results.attributeLocations,
             modelMatrix : results.modelMatrix,
             pickOffsets : results.pickOffsets,
+            offsetInstanceExtend: results.offsetInstanceExtend,
             boundingSpheres : packedBoundingSpheres,
             boundingSpheresCV : packedBoundingSpheresCV
         };
@@ -701,6 +736,7 @@ define([
             attributeLocations : packedResult.attributeLocations,
             modelMatrix : packedResult.modelMatrix,
             pickOffsets : packedResult.pickOffsets,
+            offsetInstanceExtend: packedResult.offsetInstanceExtend,
             boundingSpheres : unpackBoundingSpheres(packedResult.boundingSpheres),
             boundingSpheresCV : unpackBoundingSpheres(packedResult.boundingSpheresCV)
         };

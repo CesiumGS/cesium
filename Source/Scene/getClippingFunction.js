@@ -1,43 +1,50 @@
 define([
+        '../Core/Cartesian2',
         '../Core/Check',
-        '../Renderer/PixelDatatype'
+        '../Renderer/PixelDatatype',
+        './ClippingPlaneCollection'
     ], function(
+        Cartesian2,
         Check,
-        PixelDatatype) {
+        PixelDatatype,
+        ClippingPlaneCollection) {
     'use strict';
 
+    var textureResolutionScratch = new Cartesian2();
     /**
      * Gets the GLSL functions needed to retrieve clipping planes from a ClippingPlaneCollection's texture.
      *
      * @param {ClippingPlaneCollection} clippingPlaneCollection ClippingPlaneCollection with a defined texture.
+     * @param {Context} context The current rendering context.
      * @returns {String} A string containing GLSL functions for retrieving clipping planes.
      * @private
      */
-    function getClippingFunction(clippingPlaneCollection) {
+    function getClippingFunction(clippingPlaneCollection, context) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('clippingPlaneCollection', clippingPlaneCollection);
+        Check.typeOf.object('context', context);
         //>>includeEnd('debug');
         var unionClippingRegions = clippingPlaneCollection.unionClippingRegions;
         var clippingPlanesLength = clippingPlaneCollection.length;
-        var texture = clippingPlaneCollection.texture;
-        var usingFloatTexture = texture.pixelDatatype === PixelDatatype.FLOAT;
-        var width = texture.width;
-        var height = texture.height;
+        var usingFloatTexture = ClippingPlaneCollection.useFloatTexture(context);
+        var textureResolution = ClippingPlaneCollection.getTextureResolution(clippingPlaneCollection, context, textureResolutionScratch);
+        var width = textureResolution.x;
+        var height = textureResolution.y;
 
         var functions = usingFloatTexture ? getClippingPlaneFloat(width, height) : getClippingPlaneUint8(width, height);
         functions += '\n';
-        functions += unionClippingRegions ? clippingFunctionUnion(usingFloatTexture, clippingPlanesLength) : clippingFunctionIntersect(usingFloatTexture, clippingPlanesLength);
+        functions += unionClippingRegions ? clippingFunctionUnion(clippingPlanesLength) : clippingFunctionIntersect(clippingPlanesLength);
         return functions;
     }
 
-    function clippingFunctionUnion(usingFloatTexture, clippingPlanesLength) {
+    function clippingFunctionUnion(clippingPlanesLength) {
         var functionString =
             'float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)\n' +
             '{\n' +
             '    vec4 position = czm_windowToEyeCoordinates(fragCoord);\n' +
             '    vec3 clipNormal = vec3(0.0);\n' +
             '    vec3 clipPosition = vec3(0.0);\n' +
-            '    float clipAmount = 0.0;\n' +
+            '    float clipAmount;\n' + // For union planes, we want to get the min distance. So we set the initial value to the first plane distance in the loop below.
             '    float pixelWidth = czm_metersPerPixel(position);\n' +
             '    bool breakAndDiscard = false;\n' +
 
@@ -49,7 +56,7 @@ define([
             '        clipPosition = -clippingPlane.w * clipNormal;\n' +
 
             '        float amount = dot(clipNormal, (position.xyz - clipPosition)) / pixelWidth;\n' +
-            '        clipAmount = max(amount, clipAmount);\n' +
+            '        clipAmount = czm_branchFreeTernary(i == 0, amount, min(amount, clipAmount));\n' +
 
             '        if (amount <= 0.0)\n' +
             '        {\n' +
@@ -66,7 +73,7 @@ define([
         return functionString;
     }
 
-    function clippingFunctionIntersect(usingFloatTexture, clippingPlanesLength) {
+    function clippingFunctionIntersect(clippingPlanesLength) {
         var functionString =
             'float clip(vec4 fragCoord, sampler2D clippingPlanes, mat4 clippingPlanesMatrix)\n' +
             '{\n' +

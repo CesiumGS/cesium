@@ -26,6 +26,16 @@ defineSuite([
         pollToPromise) {
     'use strict';
 
+    var supportsImageBitmapOptions;
+    beforeAll(function() {
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
+    });
+
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
@@ -172,9 +182,9 @@ defineSuite([
             expect(provider.credit).toBeInstanceOf(Object);
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url)) {
-                    // load blob url normally
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                if (/^blob:/.test(url) || supportsImageBitmapOptions) {
+                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
                 } else {
                     expect(url).toEqual('http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
 
@@ -191,7 +201,7 @@ defineSuite([
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -290,9 +300,9 @@ defineSuite([
         });
 
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url)) {
-                // load blob url normally
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+            if (/^blob:/.test(url) || supportsImageBitmapOptions) {
+                // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
             } else if (tries === 2) {
                 // Succeed after 2 tries
                 Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -327,7 +337,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
@@ -337,17 +347,17 @@ defineSuite([
     it('defaults to WebMercatorTilingScheme when no projection specified', function() {
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return deferred.resolve(JSON.stringify({
-                "isAuthenticated" : true,
-                "layers" : [{
-                    "icon" : "icons/773_l.png",
-                    "id" : 1234,
-                    "initialState" : true,
-                    "label" : "Imagery",
-                    "requestType" : "ImageryMaps",
-                    "version" : 1
+                'isAuthenticated' : true,
+                'layers' : [{
+                    'icon' : 'icons/773_l.png',
+                    'id' : 1234,
+                    'initialState' : true,
+                    'label' : 'Imagery',
+                    'requestType' : 'ImageryMaps',
+                    'version' : 1
                 }],
-                "serverUrl" : "https://example.invalid",
-                "useGoogleLayers" : false
+                'serverUrl' : 'https://example.invalid',
+                'useGoogleLayers' : false
             }));
         };
 
@@ -367,18 +377,18 @@ defineSuite([
     it('Projection is WebMercatorTilingScheme when server projection is mercator', function() {
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return deferred.resolve(JSON.stringify({
-                "isAuthenticated" : true,
-                "layers" : [{
-                    "icon" : "icons/773_l.png",
-                    "id" : 1234,
-                    "initialState" : true,
-                    "label" : "Imagery",
-                    "requestType" : "ImageryMaps",
-                    "version" : 1
+                'isAuthenticated' : true,
+                'layers' : [{
+                    'icon' : 'icons/773_l.png',
+                    'id' : 1234,
+                    'initialState' : true,
+                    'label' : 'Imagery',
+                    'requestType' : 'ImageryMaps',
+                    'version' : 1
                 }],
-                "projection" : "mercator",
-                "serverUrl" : "https://example.invalid",
-                "useGoogleLayers" : false
+                'projection' : 'mercator',
+                'serverUrl' : 'https://example.invalid',
+                'useGoogleLayers' : false
             }));
         };
 
@@ -398,18 +408,18 @@ defineSuite([
     it('Projection is GeographicTilingScheme when server projection is flat', function() {
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
             return deferred.resolve(JSON.stringify({
-                "isAuthenticated" : true,
-                "layers" : [{
-                    "icon" : "icons/773_l.png",
-                    "id" : 1234,
-                    "initialState" : true,
-                    "label" : "Imagery",
-                    "requestType" : "ImageryMaps",
-                    "version" : 1
+                'isAuthenticated' : true,
+                'layers' : [{
+                    'icon' : 'icons/773_l.png',
+                    'id' : 1234,
+                    'initialState' : true,
+                    'label' : 'Imagery',
+                    'requestType' : 'ImageryMaps',
+                    'version' : 1
                 }],
-                "projection" : "flat",
-                "serverUrl" : "https://example.invalid",
-                "useGoogleLayers" : false
+                'projection' : 'flat',
+                'serverUrl' : 'https://example.invalid',
+                'useGoogleLayers' : false
             }));
         };
 

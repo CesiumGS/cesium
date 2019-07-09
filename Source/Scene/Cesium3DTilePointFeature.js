@@ -69,6 +69,8 @@ define([
         this._pointOutlineWidth = undefined;
         this._heightOffset = undefined;
 
+        this._pickIds = new Array(3);
+
         setBillboardImage(this);
     }
 
@@ -461,7 +463,7 @@ define([
                 return this._polyline.material.uniforms.color;
             },
             set : function(value) {
-                this._polyline.material.uniforms.color = value;
+                this._polyline.material.uniforms.color = Color.clone(value, this._polyline.material.uniforms.color);
             }
         },
 
@@ -615,6 +617,19 @@ define([
             get : function() {
                 return this._content.tileset;
             }
+        },
+
+        /**
+         * @private
+         */
+        pickIds : {
+            get : function() {
+                var ids  = this._pickIds;
+                ids[0] = this._billboard.pickId;
+                ids[1] = this._label.pickId;
+                ids[2] = this._polyline.pickId;
+                return ids;
+            }
         }
     });
 
@@ -666,7 +681,7 @@ define([
      * Returns whether the feature contains this property. This includes properties from this feature's
      * class and inherited classes when using a batch table hierarchy.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable#batch-table-hierarchy}
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
      *
      * @param {String} name The case-sensitive name of the property.
      * @returns {Boolean} Whether the feature contains this property.
@@ -679,7 +694,7 @@ define([
      * Returns an array of property names for the feature. This includes properties from this feature's
      * class and inherited classes when using a batch table hierarchy.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable#batch-table-hierarchy}
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
      *
      * @param {String[]} results An array into which to store the results.
      * @returns {String[]} The names of the feature's properties.
@@ -692,7 +707,7 @@ define([
      * Returns a copy of the value of the feature's property with the given name. This includes properties from this feature's
      * class and inherited classes when using a batch table hierarchy.
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable#batch-table-hierarchy}
+     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/extensions/3DTILES_batch_table_hierarchy}
      *
      * @param {String} name The case-sensitive name of the property.
      * @returns {*} The value of the property or <code>undefined</code> if the property does not exist.

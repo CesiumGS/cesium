@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Draw lines and polygons on terrain with mouse clicks.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+    <table class="infoPanel">
+        <tbody>
+        <tr>
+            <td>Left click to add a vertex.</td>
+        </tr>
+         <tr>
+            <td>Right click to start new shape.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer',  {
+    selectionIndicator : false,
+    infoBox : false,
+    terrainProvider : Cesium.createWorldTerrain()
+});
+viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
+function createPoint(worldPosition) {
+    var point = viewer.entities.add({
+        position : worldPosition,
+        point : {
+            color : Cesium.Color.WHITE,
+            pixelSize : 5,
+            heightReference: Cesium.HeightReference.CLAMP_TO_GROUND
+        }
+    });
+    return point;
+}
+var drawingMode = 'line';
+function drawShape(positionData) {
+    var shape;
+    if (drawingMode === 'line') {
+        shape = viewer.entities.add({
+            polyline : {
+                positions : positionData,
+                clampToGround : true,
+                width : 3
+            }
+        });
+    }
+    else if (drawingMode === 'polygon') {
+        shape = viewer.entities.add({
+            polygon: {
+                hierarchy: positionData,
+                material: new Cesium.ColorMaterialProperty(Cesium.Color.WHITE.withAlpha(0.7))
+            }
+        });
+    }
+    return shape;
+}
+var activeShapePoints = [];
+var activeShape;
+var floatingPoint;
+var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
+handler.setInputAction(function(event) {
+    if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
+        console.log('This browser does not support polylines on terrain.');
+        return;
+    }
+    // We use `viewer.scene.pickPosition` here instead of `viewer.camera.pickEllipsoid` so that
+    // we get the correct point when mousing over terrain.
+    var earthPosition = viewer.scene.pickPosition(event.position);
+    // `earthPosition` will be undefined if our mouse is not over the globe.
+    if (Cesium.defined(earthPosition)) {
+        if (activeShapePoints.length === 0) {
+            floatingPoint = createPoint(earthPosition);
+            activeShapePoints.push(earthPosition);
+            var dynamicPositions = new Cesium.CallbackProperty(function () {
+                return activeShapePoints;
+            }, false);
+            activeShape = drawShape(dynamicPositions);
+        }
+        activeShapePoints.push(earthPosition);
+        createPoint(earthPosition);
+    }
+}, Cesium.ScreenSpaceEventType.LEFT_CLICK);
+
+handler.setInputAction(function(event) {
+    if (Cesium.defined(floatingPoint)) {
+        var newPosition = viewer.scene.pickPosition(event.endPosition);
+        if (Cesium.defined(newPosition)) {
+            floatingPoint.position.setValue(newPosition);
+            activeShapePoints.pop();
+            activeShapePoints.push(newPosition);
+        }
+    }
+}, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+// Redraw the shape so it's not dynamic and remove the dynamic shape.
+function terminateShape() {
+    activeShapePoints.pop();
+    drawShape(activeShapePoints);
+    viewer.entities.remove(floatingPoint);
+    viewer.entities.remove(activeShape);
+    floatingPoint = undefined;
+    activeShape = undefined;
+    activeShapePoints = [];
+}
+handler.setInputAction(function(event) {
+    terminateShape();
+}, Cesium.ScreenSpaceEventType.RIGHT_CLICK);
+
+var options = [{
+    text : 'Draw Lines',
+    onselect : function() {
+        terminateShape();
+        drawingMode = 'line';
+    }
+}, {
+    text : 'Draw Polygons',
+    onselect : function() {
+        terminateShape();
+        drawingMode = 'polygon';
+    }
+}];
+
+Sandcastle.addToolbarMenu(options);
+// Zoom in to an area with mountains
+viewer.camera.lookAt(Cesium.Cartesian3.fromDegrees(-122.2058, 46.1955, 1000.0), new Cesium.Cartesian3(5000.0, 5000.0, 5000.0));
+viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    startup(Cesium);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
+}
+</script>
+</body>
+</html>

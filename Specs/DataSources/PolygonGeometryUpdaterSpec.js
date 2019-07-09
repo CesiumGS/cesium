@@ -1,7 +1,17 @@
 defineSuite([
         'DataSources/PolygonGeometryUpdater',
+        'Core/ApproximateTerrainHeights',
+        'Core/ArcType',
         'Core/Cartesian3',
+        'Core/Color',
+        'Core/Ellipsoid',
+        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
+        'Core/Math',
+        'Core/CoplanarPolygonGeometry',
+        'Core/CoplanarPolygonOutlineGeometry',
+        'Core/PolygonGeometry',
+        'Core/PolygonOutlineGeometry',
         'Core/PolygonHierarchy',
         'Core/TimeIntervalCollection',
         'DataSources/ConstantProperty',
@@ -11,6 +21,7 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'Scene/GroundPrimitive',
+        'Scene/HeightReference',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
         'Specs/createDynamicProperty',
@@ -19,8 +30,18 @@ defineSuite([
         'Specs/createScene'
     ], function(
         PolygonGeometryUpdater,
+        ApproximateTerrainHeights,
+        ArcType,
         Cartesian3,
+        Color,
+        Ellipsoid,
+        GeometryOffsetAttribute,
         JulianDate,
+        CesiumMath,
+        CoplanarPolygonGeometry,
+        CoplanarPolygonOutlineGeometry,
+        PolygonGeometry,
+        PolygonOutlineGeometry,
         PolygonHierarchy,
         TimeIntervalCollection,
         ConstantProperty,
@@ -30,6 +51,7 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         GroundPrimitive,
+        HeightReference,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
@@ -46,21 +68,38 @@ defineSuite([
         scene = createScene();
         time = JulianDate.now();
         groundPrimitiveSupported = GroundPrimitive.isSupported(scene);
+        return ApproximateTerrainHeights.initialize();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     function createBasicPolygon() {
         var polygon = new PolygonGraphics();
         polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(Cartesian3.fromRadiansArray([
-            0, 0,
-            1, 0,
+            -1, -1,
+            1, -1,
             1, 1,
-            0, 1
+            -1, 1
         ])));
         polygon.height = new ConstantProperty(0);
+        var entity = new Entity();
+        entity.polygon = polygon;
+        return entity;
+    }
+
+    function createVerticalPolygon() {
+        var polygon = new PolygonGraphics();
+        polygon.hierarchy = new ConstantProperty(new PolygonHierarchy(Cartesian3.fromDegreesArrayHeights([
+            -1.0, 1.0, 0.0,
+            -2.0, 1.0, 0.0,
+            -2.0, 1.0, 0.0
+        ])));
+        polygon.perPositionHeight = true;
         var entity = new Entity();
         entity.polygon = polygon;
         return entity;
@@ -190,6 +229,16 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
+    it('A time-varying arcType causes geometry to be dynamic', function() {
+        var entity = createBasicPolygon();
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        entity.polygon.arcType = new SampledProperty(Number);
+        entity.polygon.arcType.addSample(time, 1);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+
+        expect(updater.isDynamic).toBe(true);
+    });
+
     it('Creates geometry with expected properties', function() {
         var options = {
             height : 431,
@@ -197,8 +246,9 @@ defineSuite([
             granularity : 0.97,
             stRotation : 12,
             perPositionHeight : false,
-            closeTop: true,
-            closeBottom: false
+            closeTop : true,
+            closeBottom : false,
+            arcType : ArcType.GEODESIC
         };
 
         var entity = createBasicPolygon();
@@ -212,6 +262,7 @@ defineSuite([
         polygon.height = new ConstantProperty(options.height);
         polygon.extrudedHeight = new ConstantProperty(options.extrudedHeight);
         polygon.granularity = new ConstantProperty(options.granularity);
+        polygon.arcType = new ConstantProperty(options.arcType);
 
         var updater = new PolygonGeometryUpdater(entity, scene);
 
@@ -219,19 +270,47 @@ defineSuite([
         var geometry;
         instance = updater.createFillGeometryInstance(time);
         geometry = instance.geometry;
+        expect(geometry).toBeInstanceOf(PolygonGeometry);
         expect(geometry._stRotation).toEqual(options.stRotation);
         expect(geometry._height).toEqual(options.height);
         expect(geometry._granularity).toEqual(options.granularity);
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
         expect(geometry._closeTop).toEqual(options.closeTop);
         expect(geometry._closeBottom).toEqual(options.closeBottom);
+        expect(geometry._arcType).toEqual(options.arcType);
+        expect(geometry._offsetAttribute).toBeUndefined();
 
         instance = updater.createOutlineGeometryInstance(time);
         geometry = instance.geometry;
+        expect(geometry).toBeInstanceOf(PolygonOutlineGeometry);
         expect(geometry._height).toEqual(options.height);
         expect(geometry._granularity).toEqual(options.granularity);
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
         expect(geometry._perPositionHeight).toEqual(options.perPositionHeight);
+        expect(geometry._offsetAttribute).toBeUndefined();
+    });
+
+    it('Creates coplanar polygon', function() {
+        var stRotation = 12;
+
+        var entity = createVerticalPolygon();
+
+        var polygon = entity.polygon;
+        polygon.outline = true;
+        polygon.stRotation = new ConstantProperty(stRotation);
+
+        var updater = new PolygonGeometryUpdater(entity, scene);
+
+        var instance;
+        var geometry;
+        instance = updater.createFillGeometryInstance(time);
+        geometry = instance.geometry;
+        expect(geometry).toBeInstanceOf(CoplanarPolygonGeometry);
+        expect(geometry._stRotation).toEqual(stRotation);
+
+        instance = updater.createOutlineGeometryInstance(time);
+        geometry = instance.geometry;
+        expect(geometry).toBeInstanceOf(CoplanarPolygonOutlineGeometry);
     });
 
     it('Checks that a polygon with per position heights isn\'t on terrain', function() {
@@ -258,6 +337,27 @@ defineSuite([
         }
     });
 
+    it('Checks that a polygon without per position heights does not use a height reference', function() {
+        var entity = createBasicPolygon();
+        var graphics = entity.polygon;
+        graphics.perPositionHeight = new ConstantProperty(true);
+        graphics.outline = true;
+        graphics.outlineColor = Color.BLACK;
+        graphics.height = undefined;
+        graphics.extrudedHeight = undefined;
+        var updater = new PolygonGeometryUpdater(entity, scene);
+
+        var instance;
+
+        graphics.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+        graphics.extrudedHeightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+        updater._onEntityPropertyChanged(entity, 'polygon');
+        instance = updater.createFillGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+        instance = updater.createOutlineGeometryInstance(time);
+        expect(instance.geometry._offsetAttribute).toBeUndefined();
+    });
+
     it('dynamic updater sets properties', function() {
         var polygon = new PolygonGraphics();
         polygon.hierarchy = createDynamicProperty(new PolygonHierarchy(Cartesian3.fromRadiansArray([
@@ -273,6 +373,7 @@ defineSuite([
         polygon.stRotation = createDynamicProperty(1);
         polygon.closeTop = createDynamicProperty(false);
         polygon.closeBottom = createDynamicProperty(false);
+        polygon.arcType = createDynamicProperty(ArcType.RHUMB);
 
         var entity = new Entity();
         entity.polygon = polygon;
@@ -291,6 +392,8 @@ defineSuite([
         expect(options.stRotation).toEqual(polygon.stRotation.getValue());
         expect(options.closeTop).toEqual(polygon.closeTop.getValue());
         expect(options.closeBottom).toEqual(polygon.closeBottom.getValue());
+        expect(options.arcType).toEqual(polygon.arcType.getValue());
+        expect(options.offsetAttribute).toBeUndefined();
     });
 
     it('geometryChanged event is raised when expected', function() {
@@ -331,6 +434,14 @@ defineSuite([
         entity.polygon.perPositionHeight = true;
         var updater = new PolygonGeometryUpdater(entity, scene);
         expect(updater.onTerrain).toBe(false);
+    });
+
+    it('computes center', function() {
+        var entity = createBasicPolygon();
+        var updater = new PolygonGeometryUpdater(entity, scene);
+        var result = updater._computeCenter(time);
+        result = Ellipsoid.WGS84.scaleToGeodeticSurface(result, result);
+        expect(result).toEqualEpsilon(Cartesian3.fromDegrees(0.0, 0.0), CesiumMath.EPSILON10);
     });
 
     function getScene() {

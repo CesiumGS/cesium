@@ -66,6 +66,7 @@ define([
          * and <code>w</code> components, respectively.
          *
          * @alias czm_viewport
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -99,6 +100,7 @@ define([
          * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
          *
          * @alias czm_viewportOrthographic
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -137,6 +139,7 @@ define([
          * from window coordinates to clip coordinates, and is often used to assign to <code>gl_Position</code>.
          *
          * @alias czm_viewportTransformation
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -164,12 +167,14 @@ define([
         }),
 
         /**
-         * An automatic GLSL uniform representing the depth after
-         * only the globe has been rendered and packed into an RGBA texture.
+         * An automatic GLSL uniform representing the depth of the scene
+         * after the globe pass and then updated after the 3D Tiles pass.
+         * The depth is packed into an RGBA texture.
          *
          * @private
          *
          * @alias czm_globeDepthTexture
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -193,6 +198,7 @@ define([
          * transforms model coordinates to world coordinates.
          *
          * @alias czm_model
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -220,6 +226,7 @@ define([
          * transforms world coordinates to model coordinates.
          *
          * @alias czm_inverseModel
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -246,6 +253,7 @@ define([
          * transforms world coordinates to eye coordinates.
          *
          * @alias czm_view
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -278,6 +286,7 @@ define([
          * 2D and Columbus View in the same way that 3D is lit.
          *
          * @alias czm_view3D
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -303,6 +312,7 @@ define([
          * transforms vectors in world coordinates to eye coordinates.
          *
          * @alias czm_viewRotation
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -333,6 +343,7 @@ define([
          * 2D and Columbus View in the same way that 3D is lit.
          *
          * @alias czm_viewRotation3D
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -358,6 +369,7 @@ define([
          * transforms from eye coordinates to world coordinates.
          *
          * @alias czm_inverseView
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -387,6 +399,7 @@ define([
          * 2D and Columbus View in the same way that 3D is lit.
          *
          * @alias czm_inverseView3D
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -412,6 +425,7 @@ define([
          * transforms vectors from eye coordinates to world coordinates.
          *
          * @alias czm_inverseViewRotation
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -442,6 +456,7 @@ define([
          * 2D and Columbus View in the same way that 3D is lit.
          *
          * @alias czm_inverseViewRotation3D
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -468,6 +483,7 @@ define([
          * coordinate system for a vertex shader's <code>gl_Position</code> output.
          *
          * @alias czm_projection
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -496,6 +512,7 @@ define([
          * coordinate system for a vertex shader's <code>gl_Position</code> output.
          *
          * @alias czm_inverseProjection
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -524,6 +541,7 @@ define([
          * are not clipped by the far plane.
          *
          * @alias czm_infiniteProjection
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -553,6 +571,7 @@ define([
          * normals should be transformed using {@link czm_normal}.
          *
          * @alias czm_modelView
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -590,6 +609,7 @@ define([
          * normals should be transformed using {@link czm_normal3D}.
          *
          * @alias czm_modelView3D
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -619,6 +639,7 @@ define([
          * in conjunction with {@link czm_translateRelativeToEye}.
          *
          * @alias czm_modelViewRelativeToEye
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -652,6 +673,7 @@ define([
          * transforms from eye coordinates to model coordinates.
          *
          * @alias czm_inverseModelView
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -680,6 +702,7 @@ define([
          * 2D and Columbus View in the same way that 3D is lit.
          *
          * @alias czm_inverseModelView3D
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -707,6 +730,7 @@ define([
          * coordinate system for a vertex shader's <code>gl_Position</code> output.
          *
          * @alias czm_viewProjection
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -739,6 +763,7 @@ define([
          * coordinate system for a vertex shader's <code>gl_Position</code> output.
          *
          * @alias czm_inverseViewProjection
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -765,6 +790,7 @@ define([
          * coordinate system for a vertex shader's <code>gl_Position</code> output.
          *
          * @alias czm_modelViewProjection
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -800,6 +826,7 @@ define([
          * coordinate system for a vertex shader's <code>gl_Position</code> output.
          *
          * @alias czm_inverseModelViewProjection
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -827,6 +854,7 @@ define([
          * conjunction with {@link czm_translateRelativeToEye}.
          *
          * @alias czm_modelViewProjectionRelativeToEye
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -863,6 +891,7 @@ define([
          * proxy geometry to ensure that triangles are not clipped by the far plane.
          *
          * @alias czm_modelViewInfiniteProjection
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -893,6 +922,7 @@ define([
          * An automatic GLSL uniform that indicates if the current camera is orthographic in 3D.
          *
          * @alias czm_orthographicIn3D
+         * @namespace
          * @glslUniform
          * @see UniformState#orthographicIn3D
          */
@@ -912,6 +942,7 @@ define([
          * normals should be transformed using <code>czm_normal</code>.
          *
          * @alias czm_normal
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -945,6 +976,7 @@ define([
          * normals should be transformed using <code>czm_normal3D</code>.
          *
          * @alias czm_normal3D
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -971,6 +1003,7 @@ define([
          * the opposite of the transform provided by {@link czm_normal}.
          *
          * @alias czm_inverseNormal
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1003,6 +1036,7 @@ define([
          * 2D and Columbus View in the same way that 3D is lit.
          *
          * @alias czm_inverseNormal3D
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1028,6 +1062,7 @@ define([
          *  of the eye (camera) in the 2D scene in meters.
          *
          * @alias czm_eyeHeight2D
+         * @namespace
          * @glslUniform
          *
          * @see UniformState#eyeHeight2D
@@ -1046,6 +1081,7 @@ define([
          * frustum used for multi-frustum rendering.
          *
          * @alias czm_entireFrustum
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1072,6 +1108,7 @@ define([
          * frustum used for multi-frustum rendering.
          *
          * @alias czm_currentFrustum
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1097,6 +1134,7 @@ define([
          * the x, y, z, and w components, respectively.
          *
          * @alias czm_frustumPlanes
+         * @namespace
          * @glslUniform
          */
         czm_frustumPlanes : new AutomaticUniform({
@@ -1111,6 +1149,7 @@ define([
          * The log2 of the current frustums far plane. Used for computing the log depth.
          *
          * @alias czm_log2FarDistance
+         * @namespace
          * @glslUniform
          *
          * @private
@@ -1128,6 +1167,7 @@ define([
          * This is used when reversing log depth computations.
          *
          * @alias czm_log2FarPlusOne
+         * @namespace
          * @glslUniform
          */
         czm_log2FarPlusOne : new AutomaticUniform({
@@ -1143,6 +1183,7 @@ define([
          * This is used when writing log depth in the fragment shader.
          *
          * @alias czm_log2NearDistance
+         * @namespace
          * @glslUniform
          */
         czm_log2NearDistance : new AutomaticUniform({
@@ -1157,6 +1198,7 @@ define([
          * An automatic GLSL uniform representing the sun position in world coordinates.
          *
          * @alias czm_sunPositionWC
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1179,6 +1221,7 @@ define([
          * An automatic GLSL uniform representing the sun position in Columbus view world coordinates.
          *
          * @alias czm_sunPositionColumbusView
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1201,6 +1244,7 @@ define([
          * This is commonly used for directional lighting computations.
          *
          * @alias czm_sunDirectionEC
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1227,6 +1271,7 @@ define([
          * This is commonly used for directional lighting computations.
          *
          * @alias czm_sunDirectionWC
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1250,6 +1295,7 @@ define([
          * This is commonly used for directional lighting computations.
          *
          * @alias czm_moonDirectionEC
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1276,6 +1322,7 @@ define([
          * as described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
          *
          * @alias czm_encodedCameraPositionMCHigh
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1300,6 +1347,7 @@ define([
          * as described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
          *
          * @alias czm_encodedCameraPositionMCLow
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1322,6 +1370,7 @@ define([
          * An automatic GLSL uniform representing the position of the viewer (camera) in world coordinates.
          *
          * @alias czm_viewerPositionWC
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1341,6 +1390,7 @@ define([
          * every frame.
          *
          * @alias czm_frameNumber
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1360,6 +1410,7 @@ define([
          * 2D/Columbus View and 3D, with 0.0 being 2D or Columbus View and 1.0 being 3D.
          *
          * @alias czm_morphTime
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1382,6 +1433,7 @@ define([
          * as a float.
          *
          * @alias czm_sceneMode
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1411,6 +1463,7 @@ define([
          * An automatic GLSL uniform representing the current rendering pass.
          *
          * @alias czm_pass
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1435,6 +1488,7 @@ define([
          * An automatic GLSL uniform representing the current scene background color.
          *
          * @alias czm_backgroundColor
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1464,6 +1518,7 @@ define([
          * An automatic GLSL uniform containing the BRDF look up texture used for image-based lighting computations.
          *
          * @alias czm_brdfLut
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1487,6 +1542,7 @@ define([
          * An automatic GLSL uniform containing the environment map used within the scene.
          *
          * @alias czm_environmentMap
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1506,10 +1562,87 @@ define([
         }),
 
         /**
+         * An automatic GLSL uniform containing the specular environment map atlas used within the scene.
+         *
+         * @alias czm_specularEnvironmentMaps
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform sampler2D czm_specularEnvironmentMaps;
+         */
+        czm_specularEnvironmentMaps : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.SAMPLER_2D,
+            getValue : function(uniformState) {
+                return uniformState.specularEnvironmentMaps;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform containing the size of the specular environment map atlas used within the scene.
+         *
+         * @alias czm_specularEnvironmentMapSize
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec2 czm_specularEnvironmentMapSize;
+         */
+        czm_specularEnvironmentMapSize : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT_VEC2,
+            getValue : function(uniformState) {
+                return uniformState.specularEnvironmentMapsDimensions;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform containing the maximum level-of-detail of the specular environment map atlas used within the scene.
+         *
+         * @alias czm_specularEnvironmentMapsMaximumLOD
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform float czm_specularEnvironmentMapsMaximumLOD;
+         */
+        czm_specularEnvironmentMapsMaximumLOD : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.specularEnvironmentMapsMaximumLOD;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform containing the spherical harmonic coefficients used within the scene.
+         *
+         * @alias czm_sphericalHarmonicCoefficients
+         * @namespace
+         * @glslUniform
+         *
+         * @example
+         * // GLSL declaration
+         * uniform vec3[9] czm_sphericalHarmonicCoefficients;
+         */
+        czm_sphericalHarmonicCoefficients : new AutomaticUniform({
+            size : 9,
+            datatype : WebGLConstants.FLOAT_VEC3,
+            getValue : function(uniformState) {
+                return uniformState.sphericalHarmonicCoefficients;
+            }
+        }),
+
+        /**
          * An automatic GLSL uniform representing a 3x3 rotation matrix that transforms
          * from True Equator Mean Equinox (TEME) axes to the pseudo-fixed axes at the current scene time.
          *
          * @alias czm_temeToPseudoFixed
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1534,6 +1667,7 @@ define([
          * An automatic GLSL uniform representing the ratio of canvas coordinate space to canvas pixel space.
          *
          * @alias czm_resolutionScale
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1551,6 +1685,7 @@ define([
          * An automatic GLSL uniform scalar used to mix a color with the fog color based on the distance to the camera.
          *
          * @alias czm_fogDensity
+         * @namespace
          * @glslUniform
          *
          * @see czm_fog
@@ -1568,6 +1703,7 @@ define([
          * This will be in pixel coordinates relative to the canvas.
          *
          * @alias czm_imagerySplitPosition
+         * @namespace
          * @glslUniform
          *
          * @example
@@ -1586,6 +1722,7 @@ define([
          * An automatic GLSL uniform scalar representing the geometric tolerance per meter
          *
          * @alias czm_geometricToleranceOverMeter
+         * @namespace
          * @glslUniform
          */
         czm_geometricToleranceOverMeter : new AutomaticUniform({
@@ -1602,6 +1739,7 @@ define([
          * the depth test should never be applied.
          *
          * @alias czm_minimumDisableDepthTestDistance
+         * @namespace
          * @glslUniform
          */
         czm_minimumDisableDepthTestDistance : new AutomaticUniform({
@@ -1616,6 +1754,7 @@ define([
          * An automatic GLSL uniform that will be the highlight color of unclassified 3D Tiles.
          *
          * @alias czm_invertClassificationColor
+         * @namespace
          * @glslUniform
          */
         czm_invertClassificationColor : new AutomaticUniform({
@@ -1623,6 +1762,34 @@ define([
             datatype : WebGLConstants.FLOAT_VEC4,
             getValue : function(uniformState) {
                 return uniformState.invertClassificationColor;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that is used for gamma correction.
+         *
+         * @alias czm_gamma
+         * @glslUniform
+         */
+        czm_gamma : new AutomaticUniform({
+            size : 1,
+            datatype : WebGLConstants.FLOAT,
+            getValue : function(uniformState) {
+                return uniformState.gamma;
+            }
+        }),
+
+        /**
+         * An automatic GLSL uniform that defines the color of light emitted by the sun.
+         *
+         * @alias czm_sunColor
+         * @glslUniform
+         */
+        czm_sunColor: new AutomaticUniform({
+            size: 1,
+            datatype: WebGLConstants.FLOAT_VEC3,
+            getValue: function(uniformState) {
+                return uniformState.sunColor;
             }
         })
     };

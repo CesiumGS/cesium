@@ -78,15 +78,15 @@ define([
         this._readyPromise = when.defer();
 
         this._terrainDataStructure = {
-                heightScale : 1.0 / 1000.0,
-                heightOffset : -1000.0,
-                elementsPerHeight : 3,
-                stride : 4,
-                elementMultiplier : 256.0,
-                isBigEndian : true,
-                lowestEncodedHeight : 0,
-                highestEncodedHeight : 256 * 256 * 256 - 1
-            };
+            heightScale : 1.0 / 1000.0,
+            heightOffset : -1000.0,
+            elementsPerHeight : 3,
+            stride : 4,
+            elementMultiplier : 256.0,
+            isBigEndian : true,
+            lowestEncodedHeight : 0,
+            highestEncodedHeight : 256 * 256 * 256 - 1
+        };
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -104,7 +104,7 @@ define([
         function metadataSuccess(xml) {
             var srs = xml.getElementsByTagName('SRS')[0].textContent;
             if (srs === 'EPSG:4326') {
-                that._tilingScheme = new GeographicTilingScheme({ ellipsoid : ellipsoid });
+                that._tilingScheme = new GeographicTilingScheme({ellipsoid : ellipsoid});
             } else {
                 metadataFailure('SRS ' + srs + ' is not supported.');
                 return;
@@ -261,27 +261,30 @@ define([
 
         var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
         var resource = this._resource.getDerivedResource({
-            url: level + '/' + x + '/' + (yTiles - y - 1) + '.tif',
-            queryParameters: {
-                cesium: true
+            url : level + '/' + x + '/' + (yTiles - y - 1) + '.tif',
+            queryParameters : {
+                cesium : true
             },
-            request: request
+            request : request
         });
-        var promise = resource.fetchImage();
+        var promise = resource.fetchImage({
+            preferImageBitmap: true
+        });
         if (!defined(promise)) {
             return undefined;
         }
 
         var that = this;
-        return when(promise, function(image) {
-            return new HeightmapTerrainData({
-                buffer : getImagePixels(image),
-                width : that._heightmapWidth,
-                height : that._heightmapHeight,
-                childTileMask : getChildMask(that, x, y, level),
-                structure : that._terrainDataStructure
+        return when(promise)
+            .then(function(image) {
+                return new HeightmapTerrainData({
+                    buffer : getImagePixels(image),
+                    width : that._heightmapWidth,
+                    height : that._heightmapHeight,
+                    childTileMask : getChildMask(that, x, y, level),
+                    structure : that._terrainDataStructure
+                });
             });
-        });
     };
 
     /**
@@ -351,6 +354,18 @@ define([
      * @returns {Boolean} Undefined if not supported, otherwise true or false.
      */
     VRTheWorldTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
+        return undefined;
+    };
+
+    /**
+     * Makes sure we load availability data for a tile
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+     */
+    VRTheWorldTerrainProvider.prototype.loadTileDataAvailability = function(x, y, level) {
         return undefined;
     };
 

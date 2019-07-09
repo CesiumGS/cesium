@@ -73,6 +73,14 @@ defineSuite([
         expect(credit1.id).toEqual(credit3.id);
     });
 
+    it('credit clone works', function() {
+        var credit1 = new Credit('<a href="http://cesiumjs.org/">credit1</a>');
+        var credit2 = Credit.clone(credit1);
+        expect(credit1).toEqual(credit2);
+        var credit3 = Credit.clone(undefined);
+        expect(credit3).toBeUndefined();
+    });
+
     it('credit display displays a credit', function() {
         creditDisplay = new CreditDisplay(container);
         var credit = new Credit('<a href="http://cesiumjs.org">CesiumJS.org</a>', true);
@@ -368,97 +376,11 @@ defineSuite([
         CreditDisplay.cesiumCredit = cesiumCredit;
     });
 
-    // Deprecated specs below, remove for Cesium 1.46
-    it('credit display displays text credit', function() {
+    it('each credit display has a unique cesium credit', function() {
         creditDisplay = new CreditDisplay(container);
-        var credit = new Credit({
-            text: 'credit1',
-            showOnScreen: true
-        });
-        beginFrame(creditDisplay);
-        creditDisplay.addCredit(credit);
-        creditDisplay.endFrame();
-        expect(container.childNodes.length).toEqual(3);
-        var creditContainer = container.childNodes[1];
-        expect(creditContainer.childNodes.length).toEqual(1);
-        expect(creditContainer.childNodes[0].innerHTML).toEqual('<span>credit1</span>');
-    });
-
-    it('credit display displays image credit', function() {
-        creditDisplay = new CreditDisplay(container);
-        var credit = new Credit({
-            imageUrl: imageUrl,
-            showOnScreen: true
-        });
-        beginFrame(creditDisplay);
-        creditDisplay.addCredit(credit);
-        creditDisplay.endFrame();
-
-        var creditContainer = container.childNodes[1];
-        expect(creditContainer.childNodes.length).toEqual(1);
-        var creditSpan = creditContainer.childNodes[0];
-        expect(creditSpan.childNodes.length).toEqual(1);
-        expect(creditSpan.childNodes[0].childNodes[0].src).toContain(imageUrl);
-    });
-
-    it('credit display displays hyperlink credit', function() {
-        creditDisplay = new CreditDisplay(container);
-        var link = 'http://cesiumjs.org/';
-        var credit = new Credit({
-            link: link,
-            showOnScreen: true
-        });
-        beginFrame(creditDisplay);
-        creditDisplay.addCredit(credit);
-        creditDisplay.endFrame();
-
-        var creditContainer = container.childNodes[1];
-        expect(creditContainer.childNodes.length).toEqual(1);
-        var creditSpan = creditContainer.childNodes[0];
-        expect(creditSpan.childNodes.length).toEqual(1);
-        expect(creditSpan.childNodes[0].childNodes[0].href).toEqual(link);
-        expect(creditSpan.childNodes[0].childNodes[0].innerHTML).toEqual(link);
-    });
-
-    it('credit display uses text as title for image credit', function() {
-        var credit1 = new Credit({
-            text: 'credit text',
-            imageUrl: imageUrl,
-            showOnScreen: true
-        });
-        creditDisplay = new CreditDisplay(container);
-        beginFrame(creditDisplay);
-        creditDisplay.addCredit(credit1);
-        creditDisplay.endFrame();
-
-        var creditContainer = container.childNodes[1];
-        expect(creditContainer.childNodes.length).toEqual(1);
-        var creditSpan = creditContainer.childNodes[0];
-        expect(creditSpan.childNodes.length).toEqual(1);
-        creditSpan = creditSpan.childNodes[0];
-        expect(creditSpan.childNodes[0].src).toContain(imageUrl);
-        expect(creditSpan.childNodes[0].alt).toEqual('credit text');
-        expect(creditSpan.childNodes[0].title).toEqual('credit text');
-    });
-
-    it('credit display creates image credit with hyperlink', function() {
-        var credit1 = new Credit({
-            imageUrl: imageUrl,
-            link: 'http://link.com',
-            showOnScreen: true
-        });
-        creditDisplay = new CreditDisplay(container);
-        beginFrame(creditDisplay);
-        creditDisplay.addCredit(credit1);
-        creditDisplay.endFrame();
-
-        var creditContainer = container.childNodes[1];
-        expect(creditContainer.childNodes.length).toEqual(1);
-        var creditSpan = creditContainer.childNodes[0];
-        expect(creditSpan.childNodes.length).toEqual(1);
-        var creditContent = creditSpan.childNodes[0].childNodes[0];
-        expect(creditContent.href).toContain('link.com');
-        expect(creditContent.childNodes.length).toEqual(1);
-        expect(creditContent.childNodes[0].src).toContain(imageUrl);
+        var container2 = document.createElement('div');
+        var creditDisplay2 = new CreditDisplay(container2);
+        expect(creditDisplay._currentCesiumCredit).toEqual(creditDisplay2._currentCesiumCredit);
+        expect(creditDisplay._currentCesiumCredit).not.toBe(creditDisplay2._currentCesiumCredit);
     });
 });

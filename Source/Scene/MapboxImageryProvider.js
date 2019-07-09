@@ -71,7 +71,8 @@ define([
         var accessToken = MapboxApi.getAccessToken(options.accessToken);
         this._mapId = mapId;
         this._accessToken = accessToken;
-        this._accessTokenErrorCredit = MapboxApi.getErrorCredit(options.accessToken);
+
+        this._accessTokenErrorCredit = Credit.clone(MapboxApi.getErrorCredit(options.accessToken));
         var format = defaultValue(options.format, 'png');
         if (!/\./.test(format)) {
             format = '.' + format;

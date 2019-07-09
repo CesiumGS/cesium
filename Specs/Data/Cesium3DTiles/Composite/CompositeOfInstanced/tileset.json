@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "properties": {
     "Height": {
@@ -23,7 +23,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "compositeOfInstanced.cmpt"
+      "uri": "compositeOfInstanced.cmpt"
     }
   }
 }

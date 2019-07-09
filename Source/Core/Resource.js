@@ -8,9 +8,7 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './deprecationWarning',
         './DeveloperError',
-        './FeatureDetection',
         './freezeObject',
         './getAbsoluteUri',
         './getBaseUri',
@@ -18,6 +16,7 @@ define([
         './isBlobUri',
         './isCrossOriginUrl',
         './isDataUri',
+        './loadAndExecuteScript',
         './objectToQuery',
         './queryToObject',
         './Request',
@@ -36,9 +35,7 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
-        FeatureDetection,
         freezeObject,
         getAbsoluteUri,
         getBaseUri,
@@ -46,6 +43,7 @@ define([
         isBlobUri,
         isCrossOriginUrl,
         isDataUri,
+        loadAndExecuteScript,
         objectToQuery,
         queryToObject,
         Request,
@@ -374,6 +372,48 @@ define([
         });
     };
 
+    var supportsImageBitmapOptionsPromise;
+    /**
+     * A helper function to check whether createImageBitmap supports passing ImageBitmapOptions.
+     *
+     * @returns {Promise<Boolean>} A promise that resolves to true if this browser supports creating an ImageBitmap with options.
+     *
+     * @private
+     */
+    Resource.supportsImageBitmapOptions = function() {
+        // Until the HTML folks figure out what to do about this, we need to actually try loading an image to
+        // know if this browser supports passing options to the createImageBitmap function.
+        // https://github.com/whatwg/html/pull/4248
+        if (defined(supportsImageBitmapOptionsPromise)) {
+            return supportsImageBitmapOptionsPromise;
+        }
+
+        if (typeof createImageBitmap !== 'function') {
+            supportsImageBitmapOptionsPromise = when.resolve(false);
+            return supportsImageBitmapOptionsPromise;
+        }
+
+        var imageDataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4////fwAJ+wP9CNHoHgAAAABJRU5ErkJggg==';
+
+        supportsImageBitmapOptionsPromise = Resource.fetchBlob({
+            url : imageDataUri
+        })
+            .then(function(blob) {
+                return createImageBitmap(blob, {
+                    imageOrientation: 'flipY',
+                    premultiplyAlpha: 'none'
+                });
+            })
+            .then(function(imageBitmap) {
+                return true;
+            })
+            .otherwise(function() {
+                return false;
+            });
+
+        return supportsImageBitmapOptionsPromise;
+    };
+
     defineProperties(Resource, {
         /**
          * Returns true if blobs are supported.
@@ -526,15 +566,17 @@ define([
         // objectToQuery escapes the placeholders.  Undo that.
         var url = uri.toString().replace(/%7B/g, '{').replace(/%7D/g, '}');
 
-        var template = this._templateValues;
-        var keys = Object.keys(template);
-        if (keys.length > 0) {
-            for (var i = 0; i < keys.length; i++) {
-                var key = keys[i];
-                var value = template[key];
-                url = url.replace(new RegExp('{' + key + '}', 'g'), encodeURIComponent(value));
+        var templateValues = this._templateValues;
+        url = url.replace(/{(.*?)}/g, function(match, key) {
+            var replacement = templateValues[key];
+            if (defined(replacement)) {
+                // use the replacement value from templateValues if there is one...
+                return encodeURIComponent(replacement);
             }
-        }
+            // otherwise leave it unchanged
+            return match;
+        });
+
         if (proxy && defined(this.proxy)) {
             url = this.proxy.getURL(url);
         }
@@ -554,21 +596,6 @@ define([
         } else {
             this._queryParameters = combineQueryParameters(params, this._queryParameters, false);
         }
-    };
-
-    /**
-     * Combines the specified object and the existing query parameters. This allows you to add many parameters at once,
-     *  as opposed to adding them one at a time to the queryParameters property. If a value is already set, it will be replaced with the new value.
-     *
-     * @param {Object} params The query parameters
-     * @param {Boolean} [useAsDefault=false] If true the params will be used as the default values, so they will only be set if they are undefined.
-     *
-     * @deprecated
-     */
-    Resource.prototype.addQueryParameters = function(params, useAsDefault) {
-        deprecationWarning('Resource.addQueryParameters', 'addQueryParameters has been deprecated and will be removed 1.45. Use setQueryParameters or appendQueryParameters instead.');
-
-        return this.setQueryParameters(params, useAsDefault);
     };
 
     /**
@@ -594,21 +621,6 @@ define([
         } else {
             this._templateValues = combine(template, this._templateValues);
         }
-    };
-
-    /**
-     * Combines the specified object and the existing template values. This allows you to add many values at once,
-     *  as opposed to adding them one at a time to the templateValues property. If a value is already set, it will become an array and the new value will be appended.
-     *
-     * @param {Object} template The template values
-     * @param {Boolean} [useAsDefault=false] If true the values will be used as the default values, so they will only be set if they are undefined.
-     *
-     * @deprecated
-     */
-    Resource.prototype.addTemplateValues = function(template, useAsDefault) {
-        deprecationWarning('Resource.addTemplateValues', 'addTemplateValues has been deprecated and will be removed 1.45. Use setTemplateValues.');
-
-        return this.setTemplateValues(template, useAsDefault);
     };
 
     /**
@@ -827,10 +839,14 @@ define([
 
     /**
      * Asynchronously loads the given image resource.  Returns a promise that will resolve to
-     * an {@link Image} once loaded, or reject if the image failed to load.
+     * an {@link https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap|ImageBitmap} if <code>preferImageBitmap</code> is true and the browser supports <code>createImageBitmap</code> or otherwise an
+     * {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement|Image} once loaded, or reject if the image failed to load.
      *
-     * @param {Boolean} [preferBlob = false]  If true, we will load the image via a blob.
-     * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     * @param {Object} [options] An object with the following properties.
+     * @param {Boolean} [options.preferBlob=false] If true, we will load the image via a blob.
+     * @param {Boolean} [options.preferImageBitmap=false] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
+     * @param {Boolean} [options.flipY=false] If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
+     * @returns {Promise.<ImageBitmap>|Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
      * @example
@@ -849,8 +865,11 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    Resource.prototype.fetchImage = function (preferBlob) {
-        preferBlob = defaultValue(preferBlob, false);
+    Resource.prototype.fetchImage = function (options) {
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        var preferImageBitmap = defaultValue(options.preferImageBitmap, false);
+        var preferBlob = defaultValue(options.preferBlob, false);
+        var flipY = defaultValue(options.flipY, false);
 
         checkAndResetRequest(this.request);
 
@@ -860,7 +879,11 @@ define([
         // 3. It's a blob URI
         // 4. It doesn't have request headers and we preferBlob is false
         if (!xhrBlobSupported || this.isDataUri || this.isBlobUri || (!this.hasHeaders && !preferBlob)) {
-            return fetchImage(this, true);
+            return fetchImage({
+                resource: this,
+                flipY: flipY,
+                preferImageBitmap: preferImageBitmap
+            });
         }
 
         var blobPromise = this.fetchBlob();
@@ -868,30 +891,52 @@ define([
             return;
         }
 
+        var supportsImageBitmap;
+        var useImageBitmap;
         var generatedBlobResource;
         var generatedBlob;
-        return blobPromise
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmap = result;
+                useImageBitmap = supportsImageBitmap && preferImageBitmap;
+                return blobPromise;
+            })
             .then(function(blob) {
                 if (!defined(blob)) {
                     return;
                 }
                 generatedBlob = blob;
+                if (useImageBitmap) {
+                    return Resource.createImageBitmapFromBlob(blob, {
+                        flipY: flipY,
+                        premultiplyAlpha: false
+                    });
+                }
                 var blobUrl = window.URL.createObjectURL(blob);
                 generatedBlobResource = new Resource({
                     url: blobUrl
                 });
 
-                return fetchImage(generatedBlobResource);
+                return fetchImage({
+                    resource: generatedBlobResource,
+                    flipY: flipY,
+                    preferImageBitmap: false
+                });
             })
             .then(function(image) {
                 if (!defined(image)) {
                     return;
                 }
-                window.URL.revokeObjectURL(generatedBlobResource.url);
 
-                // This is because the blob object is needed for DiscardMissingTileImagePolicy
-                // See https://github.com/AnalyticalGraphicsInc/cesium/issues/1353
+                // The blob object may be needed for use by a TileDiscardPolicy,
+                // so attach it to the image.
                 image.blob = generatedBlob;
+
+                if (useImageBitmap) {
+                    return image;
+                }
+
+                window.URL.revokeObjectURL(generatedBlobResource.url);
                 return image;
             })
             .otherwise(function(error) {
@@ -899,11 +944,31 @@ define([
                     window.URL.revokeObjectURL(generatedBlobResource.url);
                 }
 
+                // If the blob load succeeded but the image decode failed, attach the blob
+                // to the error object for use by a TileDiscardPolicy.
+                // In particular, BingMapsImageryProvider uses this to detect the
+                // zero-length response that is returned when a tile is not available.
+                error.blob = generatedBlob;
+
                 return when.reject(error);
             });
     };
 
-    function fetchImage(resource) {
+    /**
+     * Fetches an image and returns a promise to it.
+     *
+     * @param {Object} [options] An object with the following properties.
+     * @param {Resource} [options.resource] Resource object that points to an image to fetch.
+     * @param {Boolean} [options.preferImageBitmap] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
+     * @param {Boolean} [options.flipY] If true, image will be vertically flipped during decode. Only applies if the browser supports <code>createImageBitmap</code>.
+     *
+     * @private
+     */
+    function fetchImage(options) {
+        var resource = options.resource;
+        var flipY = options.flipY;
+        var preferImageBitmap = options.preferImageBitmap;
+
         var request = resource.request;
         request.url = resource.url;
         request.requestFunction = function() {
@@ -916,8 +981,7 @@ define([
             }
 
             var deferred = when.defer();
-
-            Resource._Implementations.createImage(url, crossOrigin, deferred);
+            Resource._Implementations.createImage(url, crossOrigin, deferred, flipY, preferImageBitmap);
 
             return deferred.promise;
         };
@@ -941,7 +1005,11 @@ define([
                             request.state = RequestState.UNISSUED;
                             request.deferred = undefined;
 
-                            return fetchImage(resource);
+                            return fetchImage({
+                                resource: resource,
+                                flipY: flipY,
+                                preferImageBitmap: preferImageBitmap
+                            });
                         }
 
                         return when.reject(e);
@@ -958,15 +1026,21 @@ define([
      * @param {Object} [options.templateValues] Key/Value pairs that are used to replace template values (eg. {x}).
      * @param {Object} [options.headers={}] Additional HTTP headers that will be sent.
      * @param {DefaultProxy} [options.proxy] A proxy to be used when loading the resource.
+     * @param {Boolean} [options.flipY=false] Whether to vertically flip the image during fetch and decode. Only applies when requesting an image and the browser supports <code>createImageBitmap</code>.
      * @param {Resource~RetryCallback} [options.retryCallback] The Function to call when a request for this resource fails. If it returns true, the request will be retried.
      * @param {Number} [options.retryAttempts=0] The number of times the retryCallback should be called before giving up.
      * @param {Request} [options.request] A Request object that will be used. Intended for internal use only.
-     * @param {Boolean} [options.preferBlob = false]  If true, we will load the image via a blob.
-     * @returns {Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
+     * @param {Boolean} [options.preferBlob=false]  If true, we will load the image via a blob.
+     * @param {Boolean} [options.preferImageBitmap=false] If true, image will be decoded during fetch and an <code>ImageBitmap</code> is returned.
+     * @returns {Promise.<ImageBitmap>|Promise.<Image>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     Resource.fetchImage = function (options) {
         var resource = new Resource(options);
-        return resource.fetchImage(options.preferBlob);
+        return resource.fetchImage({
+            flipY: options.flipY,
+            preferBlob: options.preferBlob,
+            preferImageBitmap: options.preferImageBitmap
+        });
     };
 
     /**
@@ -1755,7 +1829,7 @@ define([
      */
     Resource._Implementations = {};
 
-    Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+    function loadImageElement(url, crossOrigin, deferred) {
         var image = new Image();
 
         image.onload = function() {
@@ -1775,6 +1849,55 @@ define([
         }
 
         image.src = url;
+    }
+
+    Resource._Implementations.createImage = function(url, crossOrigin, deferred, flipY, preferImageBitmap) {
+        // Passing an Image to createImageBitmap will force it to run on the main thread
+        // since DOM elements don't exist on workers. We convert it to a blob so it's non-blocking.
+        // See:
+        //    https://bugzilla.mozilla.org/show_bug.cgi?id=1044102#c38
+        //    https://bugs.chromium.org/p/chromium/issues/detail?id=580202#c10
+        Resource.supportsImageBitmapOptions()
+            .then(function(supportsImageBitmap) {
+                // We can only use ImageBitmap if we can flip on decode.
+                // See: https://github.com/AnalyticalGraphicsInc/cesium/pull/7579#issuecomment-466146898
+                if (!(supportsImageBitmap && preferImageBitmap)) {
+                    loadImageElement(url, crossOrigin, deferred);
+                    return;
+                }
+
+                return Resource.fetchBlob({
+                    url: url
+                })
+                .then(function(blob) {
+                    if (!defined(blob)) {
+                        deferred.reject(new RuntimeError('Successfully retrieved ' + url + ' but it contained no content.'));
+                        return;
+                    }
+
+                    return Resource.createImageBitmapFromBlob(blob, {
+                        flipY: flipY,
+                        premultiplyAlpha: false
+                    });
+                }).then(deferred.resolve);
+            })
+            .otherwise(deferred.reject);
+    };
+
+    /**
+     * Wrapper for createImageBitmap
+     *
+     * @private
+     */
+    Resource.createImageBitmapFromBlob = function(blob, options) {
+        Check.defined('options', options);
+        Check.typeOf.bool('options.flipY', options.flipY);
+        Check.typeOf.bool('options.premultiplyAlpha', options.premultiplyAlpha);
+
+        return createImageBitmap(blob, {
+            imageOrientation: options.flipY ? 'flipY' : 'none',
+            premultiplyAlpha: options.premultiplyAlpha ? 'premultiply' : 'none'
+        });
     };
 
     function decodeResponse(loadWithHttpResponse, responseType) {
@@ -1789,10 +1912,15 @@ define([
     }
 
     function loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType) {
+
+        // Specifically use the Node version of require to avoid conflicts with the global
+        // require defined in the built version of Cesium.
+        var nodeRequire = global.require; // eslint-disable-line
+
         // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
-        var URL = require('url').parse(url);
-        var http = URL.protocol === 'https:' ? require('https') : require('http');
-        var zlib = require('zlib');
+        var URL = nodeRequire('url').parse(url);
+        var http = URL.protocol === 'https:' ? nodeRequire('https') : nodeRequire('http');
+        var zlib = nodeRequire('zlib');
         var options = {
             protocol : URL.protocol,
             hostname : URL.hostname,
@@ -1834,6 +1962,7 @@ define([
             }).end();
     }
 
+    var noXMLHttpRequest = typeof XMLHttpRequest === 'undefined';
     Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
         var dataUriRegexResult = dataUriRegex.exec(url);
         if (dataUriRegexResult !== null) {
@@ -1841,7 +1970,7 @@ define([
             return;
         }
 
-        if (FeatureDetection.isNodeJs()) {
+        if (noXMLHttpRequest) {
             loadWithHttpRequest(url, responseType, method, data, headers, deferred, overrideMimeType);
             return;
         }
@@ -1852,11 +1981,11 @@ define([
             xhr.withCredentials = true;
         }
 
+        xhr.open(method, url, true);
+
         if (defined(overrideMimeType) && defined(xhr.overrideMimeType)) {
             xhr.overrideMimeType(overrideMimeType);
         }
-
-        xhr.open(method, url, true);
 
         if (defined(headers)) {
             for (var key in headers) {
@@ -1933,20 +2062,7 @@ define([
     };
 
     Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
-        var script = document.createElement('script');
-        script.async = true;
-        script.src = url;
-
-        var head = document.getElementsByTagName('head')[0];
-        script.onload = function() {
-            script.onload = undefined;
-            head.removeChild(script);
-        };
-        script.onerror = function(e) {
-            deferred.reject(e);
-        };
-
-        head.appendChild(script);
+        return loadAndExecuteScript(url, functionName).otherwise(deferred.reject);
     };
 
     /**

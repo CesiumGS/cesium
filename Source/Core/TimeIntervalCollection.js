@@ -462,7 +462,7 @@ define([
      * The data property of the input interval is ignored.
      *
      * @param {TimeInterval} interval The interval to remove.
-     * @returns <code>true</code> if the interval was removed, <code>false</code> if no part of the interval was in the collection.
+     * @returns {Boolean} <code>true</code> if the interval was removed, <code>false</code> if no part of the interval was in the collection.
      */
     TimeIntervalCollection.prototype.removeInterval = function(interval) {
         //>>includeStart('debug', pragmas.debug);

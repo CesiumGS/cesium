@@ -309,11 +309,10 @@ define([
     /**
      * Apply a style to the content.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      * @param {Cesium3DTileFeature[]} features The array of features.
      */
-    Vector3DTilePoints.prototype.applyStyle = function(frameState, style, features) {
+    Vector3DTilePoints.prototype.applyStyle = function(style, features) {
         if (!defined(style)) {
             clearStyle(this, features);
             return;
@@ -326,65 +325,65 @@ define([
             var feature = features[batchId];
 
             if (defined(style.show)) {
-                feature.show = style.show.evaluate(frameState, feature);
+                feature.show = style.show.evaluate(feature);
             }
 
             if (defined(style.pointSize)) {
-                feature.pointSize = style.pointSize.evaluate(frameState, feature);
+                feature.pointSize = style.pointSize.evaluate(feature);
             }
 
             if (defined(style.color)) {
-                feature.color = style.color.evaluateColor(frameState, feature, scratchColor);
+                feature.color = style.color.evaluateColor(feature, scratchColor);
             }
 
             if (defined(style.pointOutlineColor)) {
-                feature.pointOutlineColor = style.pointOutlineColor.evaluateColor(frameState, feature, scratchColor2);
+                feature.pointOutlineColor = style.pointOutlineColor.evaluateColor(feature, scratchColor2);
             }
 
             if (defined(style.pointOutlineWidth)) {
-                feature.pointOutlineWidth = style.pointOutlineWidth.evaluate(frameState, feature);
+                feature.pointOutlineWidth = style.pointOutlineWidth.evaluate(feature);
             }
 
             if (defined(style.labelColor)) {
-                feature.labelColor = style.labelColor.evaluateColor(frameState, feature, scratchColor3);
+                feature.labelColor = style.labelColor.evaluateColor(feature, scratchColor3);
             }
 
             if (defined(style.labelOutlineColor)) {
-                feature.labelOutlineColor = style.labelOutlineColor.evaluateColor(frameState, feature, scratchColor4);
+                feature.labelOutlineColor = style.labelOutlineColor.evaluateColor(feature, scratchColor4);
             }
 
             if (defined(style.labelOutlineWidth)) {
-                feature.labelOutlineWidth = style.labelOutlineWidth.evaluate(frameState, feature);
+                feature.labelOutlineWidth = style.labelOutlineWidth.evaluate(feature);
             }
 
             if (defined(style.font)) {
-                feature.font = style.font.evaluate(frameState, feature);
+                feature.font = style.font.evaluate(feature);
             }
 
             if (defined(style.labelStyle)) {
-                feature.labelStyle = style.labelStyle.evaluate(frameState, feature);
+                feature.labelStyle = style.labelStyle.evaluate(feature);
             }
 
             if (defined(style.labelText)) {
-                feature.labelText = style.labelText.evaluate(frameState, feature);
+                feature.labelText = style.labelText.evaluate(feature);
             } else {
                 feature.labelText = undefined;
             }
 
             if (defined(style.backgroundColor)) {
-                feature.backgroundColor = style.backgroundColor.evaluateColor(frameState, feature, scratchColor5);
+                feature.backgroundColor = style.backgroundColor.evaluateColor(feature, scratchColor5);
             }
 
             if (defined(style.backgroundPadding)) {
-                feature.backgroundPadding = style.backgroundPadding.evaluate(frameState, feature);
+                feature.backgroundPadding = style.backgroundPadding.evaluate(feature);
             }
 
             if (defined(style.backgroundEnabled)) {
-                feature.backgroundEnabled = style.backgroundEnabled.evaluate(frameState, feature);
+                feature.backgroundEnabled = style.backgroundEnabled.evaluate(feature);
             }
 
             if (defined(style.scaleByDistance)) {
-                var scaleByDistanceCart4 = style.scaleByDistance.evaluate(frameState, feature);
+                var scaleByDistanceCart4 = style.scaleByDistance.evaluate(feature);
                 scratchScaleByDistance.near = scaleByDistanceCart4.x;
                 scratchScaleByDistance.nearValue = scaleByDistanceCart4.y;
                 scratchScaleByDistance.far = scaleByDistanceCart4.z;
@@ -395,7 +394,7 @@ define([
             }
 
             if (defined(style.translucencyByDistance)) {
-                var translucencyByDistanceCart4 = style.translucencyByDistance.evaluate(frameState, feature);
+                var translucencyByDistanceCart4 = style.translucencyByDistance.evaluate(feature);
                 scratchTranslucencyByDistance.near = translucencyByDistanceCart4.x;
                 scratchTranslucencyByDistance.nearValue = translucencyByDistanceCart4.y;
                 scratchTranslucencyByDistance.far = translucencyByDistanceCart4.z;
@@ -406,7 +405,7 @@ define([
             }
 
             if (defined(style.distanceDisplayCondition)) {
-                var distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(frameState, feature);
+                var distanceDisplayConditionCart2 = style.distanceDisplayCondition.evaluate(feature);
                 scratchDistanceDisplayCondition.near = distanceDisplayConditionCart2.x;
                 scratchDistanceDisplayCondition.far = distanceDisplayConditionCart2.y;
                 feature.distanceDisplayCondition = scratchDistanceDisplayCondition;
@@ -415,41 +414,41 @@ define([
             }
 
             if (defined(style.heightOffset)) {
-                feature.heightOffset = style.heightOffset.evaluate(frameState, feature);
+                feature.heightOffset = style.heightOffset.evaluate(feature);
             }
 
             if (defined(style.anchorLineEnabled)) {
-                feature.anchorLineEnabled = style.anchorLineEnabled.evaluate(frameState, feature);
+                feature.anchorLineEnabled = style.anchorLineEnabled.evaluate(feature);
             }
 
             if (defined(style.anchorLineColor)) {
-                feature.anchorLineColor = style.anchorLineColor.evaluateColor(frameState, feature, scratchColor6);
+                feature.anchorLineColor = style.anchorLineColor.evaluateColor(feature, scratchColor6);
             }
 
             if (defined(style.image)) {
-                feature.image = style.image.evaluate(frameState, feature);
+                feature.image = style.image.evaluate(feature);
             } else {
                 feature.image = undefined;
             }
 
             if (defined(style.disableDepthTestDistance)) {
-                feature.disableDepthTestDistance = style.disableDepthTestDistance.evaluate(frameState, feature);
+                feature.disableDepthTestDistance = style.disableDepthTestDistance.evaluate(feature);
             }
 
             if (defined(style.horizontalOrigin)) {
-                feature.horizontalOrigin = style.horizontalOrigin.evaluate(frameState, feature);
+                feature.horizontalOrigin = style.horizontalOrigin.evaluate(feature);
             }
 
             if (defined(style.verticalOrigin)) {
-                feature.verticalOrigin = style.verticalOrigin.evaluate(frameState, feature);
+                feature.verticalOrigin = style.verticalOrigin.evaluate(feature);
             }
 
             if (defined(style.labelHorizontalOrigin)) {
-                feature.labelHorizontalOrigin = style.labelHorizontalOrigin.evaluate(frameState, feature);
+                feature.labelHorizontalOrigin = style.labelHorizontalOrigin.evaluate(feature);
             }
 
             if (defined(style.labelVerticalOrigin)) {
-                feature.labelVerticalOrigin = style.labelVerticalOrigin.evaluate(frameState, feature);
+                feature.labelVerticalOrigin = style.labelVerticalOrigin.evaluate(feature);
             }
         }
     };

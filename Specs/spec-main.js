@@ -235,7 +235,7 @@
         }
 
         var catchingExceptions = queryString['catch'];
-        env.catchExceptions(typeof catchingExceptions === "undefined" ? true : catchingExceptions);
+        env.catchExceptions(typeof catchingExceptions === 'undefined' ? true : catchingExceptions);
 
         /**
          * ## Reporters

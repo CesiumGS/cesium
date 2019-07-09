@@ -319,7 +319,7 @@ WebGLGlobeDataSource.prototype.load = function(data) {
             var polyline = new Cesium.PolylineGraphics();
             polyline.material = new Cesium.ColorMaterialProperty(color);
             polyline.width = new Cesium.ConstantProperty(2);
-            polyline.followSurface = new Cesium.ConstantProperty(false);
+            polyline.arcType = new Cesium.ConstantProperty(Cesium.ArcType.NONE);
             polyline.positions = new Cesium.ConstantProperty([surfacePosition, heightPosition]);
 
             //The polyline instance itself needs to be on an entity.
@@ -377,10 +377,10 @@ viewer.dataSources.add(dataSource);
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

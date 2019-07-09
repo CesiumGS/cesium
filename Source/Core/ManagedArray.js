@@ -74,9 +74,9 @@ define([
      * Sets the element at an index. Resizes the array if index is greater than the length of the array.
      *
      * @param {Number} index The index to set.
-     * @param {*} value The value to set at index.
+     * @param {*} element The element to set at index.
      */
-    ManagedArray.prototype.set = function(index, value) {
+    ManagedArray.prototype.set = function(index, element) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.number('index', index);
         //>>includeEnd('debug');
@@ -84,11 +84,22 @@ define([
         if (index >= this.length) {
             this.length = index + 1;
         }
-        this._array[index] = value;
+        this._array[index] = element;
+    };
+
+    /**
+     * Returns the last element in the array without modifying the array.
+     *
+     * @returns {*} The last element in the array.
+     */
+    ManagedArray.prototype.peek = function() {
+        return this._array[this._length - 1];
     };
 
     /**
      * Push an element into the array.
+     *
+     * @param {*} element The element to push.
      */
     ManagedArray.prototype.push = function(element) {
         var index = this.length++;

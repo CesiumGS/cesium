@@ -202,7 +202,9 @@ Copyright 2011-2018 CesiumJS Contributors
    See the License for the specific language governing permissions and
    limitations under the License.
 
-Patents 9153063 and 9865085
+Patents 9153063 9865085
+
+Patents pending 15/829,786 62/701,099 62/837,358 62/837,381
 
 Third-Party Code
 ================
@@ -746,33 +748,53 @@ https://github.com/google/draco
 >License for the specific language governing permissions and limitations under
 >the License.
 
-### JSXSS
+### DOMPUrify
 
-https://github.com/leizongmin/js-xss
+https://github.com/cure53/DOMPurify
 
-> Copyright (c) 2012-2017 Zongmin Lei(雷宗民) <leizongmin@gmail.com>
-> http://ucdok.com
+>DOMPurify
+>Copyright 2015 Mario Heiderich
 >
-> The MIT License
+>DOMPurify is free software; you can redistribute it and/or modify it under the
+>terms of either:
 >
-> Permission is hereby granted, free of charge, to any person obtaining
-> a copy of this software and associated documentation files (the
-> "Software"), to deal in the Software without restriction, including
-> without limitation the rights to use, copy, modify, merge, publish,
-> distribute, sublicense, and/or sell copies of the Software, and to
-> permit persons to whom the Software is furnished to do so, subject to
-> the following conditions:
+>a) the Apache License Version 2.0, or
+>b) the Mozilla Public License Version 2.0
 >
-> The above copyright notice and this permission notice shall be
-> included in all copies or substantial portions of the Software.
+>Licensed under the Apache License, Version 2.0 (the "License");
+>you may not use this file except in compliance with the License.
+>You may obtain a copy of the License at
 >
-> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
-> EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
-> MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
-> NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
-> LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
-> OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
-> WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+>    http://www.apache.org/licenses/LICENSE-2.0
+>
+>    Unless required by applicable law or agreed to in writing, software
+>    distributed under the License is distributed on an "AS IS" BASIS,
+>    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+>    See the License for the specific language governing permissions and
+>    limitations under the License.
+
+### LERC
+
+http://github.com/Esri/lerc/
+
+>Copyright 2015 Esri
+>
+>Licensed under the Apache License, Version 2.0 (the "License");
+>you may not use this file except in compliance with the License.
+>You may obtain a copy of the License at
+>
+>    http://www.apache.org/licenses/LICENSE-2.0
+>
+>    Unless required by applicable law or agreed to in writing, software
+>    distributed under the License is distributed on an "AS IS" BASIS,
+>    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+>    See the License for the specific language governing permissions and
+>    limitations under the License.
+>
+>A copy of the license and additional notices are located with the
+>source distribution at:
+>
+>http://github.com/Esri/lerc/
 
 Tests
 =====
@@ -871,6 +893,14 @@ http://www.jshint.com/
 > The Software shall be used for Good, not Evil.
 >
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE. JSHint was forked from the 2010-12-16 edition of JSLint.
+
+### bitmap-sdf
+
+https://github.com/dy/bitmap-sdf
+
+> (c) 2017 Dima Yv. MIT License
+>
+> Development supported by plot.ly.
 
 ### Public domain data from Natural Earth
 

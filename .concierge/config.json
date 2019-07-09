@@ -1,0 +1,5 @@
+{
+    "contributorsPath": "CONTRIBUTORS.md",
+    "unitTestPath" : "Specs/",
+    "maxDaysSinceUpdate": 30
+}

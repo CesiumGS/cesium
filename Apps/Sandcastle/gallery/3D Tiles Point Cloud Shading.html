@@ -10,7 +10,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        if(typeof require === "function") {
+        if(typeof require === 'function') {
             require.config({
                 baseUrl : '../../../Source',
                 waitSeconds : 120
@@ -90,10 +90,16 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
+});
 
 var scene = viewer.scene;
 var viewModelTileset;
+
+if (!Cesium.PointCloudShading.isSupported(scene)) {
+    console.log('This browser does not support point cloud shading');
+}
 
 function reset() {
     viewer.scene.primitives.remove(viewModelTileset);
@@ -105,7 +111,7 @@ var pointClouds = ['St. Helens', 'Church'];
 var viewModel = {
     exampleTypes : pointClouds,
     currentExampleType : pointClouds[0],
-    maximumScreenSpaceError : 8.0,
+    maximumScreenSpaceError : 16.0,
     geometricErrorScale : 1.0,
     maximumAttenuation : 0, // Equivalent to undefined
     baseResolution : 0, // Equivalent to undefined
@@ -138,10 +144,10 @@ function loadStHelens() {
     // Mt. St. Helens 3D Tileset generated from LAS provided by https://www.liblas.org/samples/
     // This tileset uses replacement refinement and has geometric error approximately equal to
     // the average interpoint distance in each tile.
-    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3844) });
+    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5713) });
     viewer.scene.primitives.add(tileset);
 
-    tileset.maximumScreenSpaceError = 8.0;
+    tileset.maximumScreenSpaceError = 16.0;
     tileset.pointCloudShading.maximumAttenuation = undefined; // Will be based on maximumScreenSpaceError instead
     tileset.pointCloudShading.baseResolution = undefined;
     tileset.pointCloudShading.geometricErrorScale = 1.0;
@@ -154,18 +160,22 @@ function loadStHelens() {
 function loadChurch() {
     // Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
     // This tileset uses additive refinement and has geometric error based on the bounding box size for each tile.
-    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(3838) });
+    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(16421) });
     viewer.scene.primitives.add(tileset);
 
-    tileset.maximumScreenSpaceError = 1024.0; // For better performance, due to how this tileset treats geometric error.
-    tileset.pointCloudShading.maximumAttenuation = 8.0; // Don't allow points larger than 8 pixels.
+    tileset.maximumScreenSpaceError = 16.0;
+    tileset.pointCloudShading.maximumAttenuation = 4.0; // Don't allow points larger than 4 pixels.
     tileset.pointCloudShading.baseResolution = 0.05; // Assume an original capture resolution of 5 centimeters between neighboring points.
-    tileset.pointCloudShading.geometricErrorScale = 1.0; // Applies to both geometric error and the base resolution.
+    tileset.pointCloudShading.geometricErrorScale = 0.5; // Applies to both geometric error and the base resolution.
     tileset.pointCloudShading.attenuation = true;
     tileset.pointCloudShading.eyeDomeLighting = true;
 
+    viewer.scene.camera.setView({
+        destination: new Cesium.Cartesian3(4401744.644145314, 225051.41078911052, 4595420.374784433),
+        orientation: new Cesium.HeadingPitchRoll(5.646733805039757, -0.276607153839886, 6.281110875400085)
+    });
+
     tilesetToViewModel(tileset);
-    viewer.zoomTo(tileset);
 }
 
 function checkZero(newValue) {
@@ -254,10 +264,10 @@ Sandcastle.addToggleButton('Enable Eye Dome Lighting', true, function(checked) {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

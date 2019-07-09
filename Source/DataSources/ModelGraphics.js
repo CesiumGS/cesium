@@ -26,6 +26,10 @@ define([
         return new PropertyBag(value, createNodeTransformationProperty);
     }
 
+    function createArticulationStagePropertyBag(value) {
+        return new PropertyBag(value);
+    }
+
     /**
      * A 3D model based on {@link https://github.com/KhronosGroup/glTF|glTF}, the runtime asset format for WebGL, OpenGL ES, and OpenGL.
      * The position and orientation of the model is determined by the containing {@link Entity}.
@@ -38,31 +42,37 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.uri] A string or Resource Property specifying the URI of the glTF asset.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the model.
+     * @param {Property} [options.uri] A string or Resource Property specifying the URI of the glTF asset.
      * @param {Property} [options.scale=1.0] A numeric Property specifying a uniform linear scale.
      * @param {Property} [options.minimumPixelSize=0.0] A numeric Property specifying the approximate minimum pixel size of the model regardless of zoom.
      * @param {Property} [options.maximumScale] The maximum scale size of a model. An upper limit for minimumPixelSize.
      * @param {Property} [options.incrementallyLoadTextures=true] Determine if textures may continue to stream in after the model is loaded.
      * @param {Property} [options.runAnimations=true] A boolean Property specifying if glTF animations specified in the model should be started.
      * @param {Property} [options.clampAnimations=true] A boolean Property specifying if glTF animations should hold the last pose for time durations with no keyframes.
-     * @param {Property} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
      * @param {Property} [options.shadows=ShadowMode.ENABLED] An enum Property specifying whether the model casts or receives shadows from each light source.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
-     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
      * @param {Property} [options.silhouetteColor=Color.RED] A Property specifying the {@link Color} of the silhouette.
      * @param {Property} [options.silhouetteSize=0.0] A numeric Property specifying the size of the silhouette in pixels.
      * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} that blends with the model's rendered color.
      * @param {Property} [options.colorBlendMode=ColorBlendMode.HIGHLIGHT] An enum Property specifying how the color blends with the model.
      * @param {Property} [options.colorBlendAmount=0.5] A numeric Property specifying the color strength when the <code>colorBlendMode</code> is <code>MIX</code>. A value of 0.0 results in the model's rendered color while a value of 1.0 results in a solid color, with any value in-between resulting in a mix of the two.
+     * @param {Property} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] A property specifying the contribution from diffuse and specular image-based lighting.
+     * @param {Property} [options.lightColor] A property specifying the light color to use when shading the model. The default sun light color will be used when <code>undefined</code>.
+     * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this model will be displayed.
+     * @param {PropertyBag} [options.nodeTransformations] An object, where keys are names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node. The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
+     * @param {PropertyBag} [options.articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
      * @param {Property} [options.clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      *
      * @see {@link https://cesiumjs.org/tutorials/3D-Models-Tutorial/|3D Models Tutorial}
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
      */
     function ModelGraphics(options) {
+        this._definitionChanged = new Event();
         this._show = undefined;
         this._showSubscription = undefined;
+        this._uri = undefined;
+        this._uriSubscription = undefined;
         this._scale = undefined;
         this._scaleSubscription = undefined;
         this._minimumPixelSize = undefined;
@@ -71,19 +81,14 @@ define([
         this._maximumScaleSubscription = undefined;
         this._incrementallyLoadTextures = undefined;
         this._incrementallyLoadTexturesSubscription = undefined;
+        this._runAnimations = undefined;
+        this._runAnimationsSubscription = undefined;
+        this._clampAnimations = undefined;
+        this._clampAnimationsSubscription = undefined;
         this._shadows = undefined;
         this._shadowsSubscription = undefined;
-        this._uri = undefined;
-        this._uriSubscription = undefined;
-        this._runAnimations = undefined;
-        this._clampAnimations = undefined;
-        this._runAnimationsSubscription = undefined;
-        this._nodeTransformations = undefined;
-        this._nodeTransformationsSubscription = undefined;
         this._heightReference = undefined;
         this._heightReferenceSubscription = undefined;
-        this._distanceDisplayCondition = undefined;
-        this._distanceDisplayConditionSubscription = undefined;
         this._silhouetteColor = undefined;
         this._silhouetteColorSubscription = undefined;
         this._silhouetteSize = undefined;
@@ -94,9 +99,18 @@ define([
         this._colorBlendModeSubscription = undefined;
         this._colorBlendAmount = undefined;
         this._colorBlendAmountSubscription = undefined;
+        this._imageBasedLightingFactor = undefined;
+        this._imageBasedLightingFactorSubscription = undefined;
+        this._lightColor = undefined;
+        this._lightColorSubscription = undefined;
+        this._distanceDisplayCondition = undefined;
+        this._distanceDisplayConditionSubscription = undefined;
+        this._nodeTransformations = undefined;
+        this._nodeTransformationsSubscription = undefined;
+        this._articulations = undefined;
+        this._articulationsSubscription = undefined;
         this._clippingPlanes = undefined;
         this._clippingPlanesSubscription = undefined;
-        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -121,6 +135,13 @@ define([
          * @default true
          */
         show : createPropertyDescriptor('show'),
+
+        /**
+         * Gets or sets the string Property specifying the URI of the glTF asset.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        uri : createPropertyDescriptor('uri'),
 
         /**
          * Gets or sets the numeric Property specifying a uniform linear scale
@@ -161,22 +182,6 @@ define([
         incrementallyLoadTextures : createPropertyDescriptor('incrementallyLoadTextures'),
 
         /**
-         * Get or sets the enum Property specifying whether the model
-         * casts or receives shadows from each light source.
-         * @memberof ModelGraphics.prototype
-         * @type {Property}
-         * @default ShadowMode.ENABLED
-         */
-        shadows : createPropertyDescriptor('shadows'),
-
-        /**
-         * Gets or sets the string Property specifying the URI of the glTF asset.
-         * @memberof ModelGraphics.prototype
-         * @type {Property}
-         */
-        uri : createPropertyDescriptor('uri'),
-
-        /**
          * Gets or sets the boolean Property specifying if glTF animations should be run.
          * @memberof ModelGraphics.prototype
          * @type {Property}
@@ -193,12 +198,13 @@ define([
         clampAnimations : createPropertyDescriptor('clampAnimations'),
 
         /**
-         * Gets or sets the set of node transformations to apply to this model.  This is represented as an {@link PropertyBag}, where keys are
-         * names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
+         * Get or sets the enum Property specifying whether the model
+         * casts or receives shadows from each light source.
          * @memberof ModelGraphics.prototype
-         * @type {PropertyBag}
+         * @type {Property}
+         * @default ShadowMode.ENABLED
          */
-        nodeTransformations : createPropertyDescriptor('nodeTransformations', undefined, createNodeTransformationPropertyBag),
+        shadows : createPropertyDescriptor('shadows'),
 
         /**
          * Gets or sets the Property specifying the {@link HeightReference}.
@@ -207,13 +213,6 @@ define([
          * @default HeightReference.NONE
          */
         heightReference : createPropertyDescriptor('heightReference'),
-
-        /**
-         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this model will be displayed.
-         * @memberof ModelGraphics.prototype
-         * @type {Property}
-         */
-        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
 
         /**
          * Gets or sets the Property specifying the {@link Color} of the silhouette.
@@ -258,6 +257,44 @@ define([
         colorBlendAmount : createPropertyDescriptor('colorBlendAmount'),
 
         /**
+         * A property specifying the {@link Cartesian2} used to scale the diffuse and specular image-based lighting contribution to the final color.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        imageBasedLightingFactor : createPropertyDescriptor('imageBasedLightingFactor'),
+
+        /**
+         * A property specifying the {@link Cartesian3} color of the light source when shading the model.
+         * @memberOf ModelGraphics.prototype
+         * @type {Property}
+         */
+        lightColor : createPropertyDescriptor('lightColor'),
+
+        /**
+         * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this model will be displayed.
+         * @memberof ModelGraphics.prototype
+         * @type {Property}
+         */
+        distanceDisplayCondition : createPropertyDescriptor('distanceDisplayCondition'),
+
+        /**
+         * Gets or sets the set of node transformations to apply to this model.  This is represented as an {@link PropertyBag}, where keys are
+         * names of nodes, and values are {@link TranslationRotationScale} Properties describing the transformation to apply to that node.
+         * The transformation is applied after the node's existing transformation as specified in the glTF, and does not replace the node's existing transformation.
+         * @memberof ModelGraphics.prototype
+         * @type {PropertyBag}
+         */
+        nodeTransformations : createPropertyDescriptor('nodeTransformations', undefined, createNodeTransformationPropertyBag),
+
+        /**
+         * Gets or sets the set of articulation values to apply to this model.  This is represented as an {@link PropertyBag}, where keys are
+         * composed as the name of the articulation, a single space, and the name of the stage.
+         * @memberof ModelGraphics.prototype
+         * @type {PropertyBag}
+         */
+        articulations : createPropertyDescriptor('articulations', undefined, createArticulationStagePropertyBag),
+
+        /**
          * A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
          * @memberof ModelGraphics.prototype
          * @type {Property}
@@ -276,24 +313,25 @@ define([
             return new ModelGraphics(this);
         }
         result.show = this.show;
+        result.uri = this.uri;
         result.scale = this.scale;
         result.minimumPixelSize = this.minimumPixelSize;
         result.maximumScale = this.maximumScale;
         result.incrementallyLoadTextures = this.incrementallyLoadTextures;
-        result.shadows = this.shadows;
-        result.uri = this.uri;
         result.runAnimations = this.runAnimations;
         result.clampAnimations = this.clampAnimations;
-        result.nodeTransformations = this.nodeTransformations;
         result.heightReference = this._heightReference;
-        result.distanceDisplayCondition = this.distanceDisplayCondition;
         result.silhouetteColor = this.silhouetteColor;
         result.silhouetteSize = this.silhouetteSize;
         result.color = this.color;
         result.colorBlendMode = this.colorBlendMode;
         result.colorBlendAmount = this.colorBlendAmount;
+        result.imageBasedLightingFactor = this.imageBasedLightingFactor;
+        result.lightColor = this.lightColor;
+        result.distanceDisplayCondition = this.distanceDisplayCondition;
+        result.nodeTransformations = this.nodeTransformations;
+        result.articulations = this.articulations;
         result.clippingPlanes = this.clippingPlanes;
-
         return result;
     };
 
@@ -311,21 +349,23 @@ define([
         //>>includeEnd('debug');
 
         this.show = defaultValue(this.show, source.show);
+        this.uri = defaultValue(this.uri, source.uri);
         this.scale = defaultValue(this.scale, source.scale);
         this.minimumPixelSize = defaultValue(this.minimumPixelSize, source.minimumPixelSize);
         this.maximumScale = defaultValue(this.maximumScale, source.maximumScale);
         this.incrementallyLoadTextures = defaultValue(this.incrementallyLoadTextures, source.incrementallyLoadTextures);
-        this.shadows = defaultValue(this.shadows, source.shadows);
-        this.uri = defaultValue(this.uri, source.uri);
         this.runAnimations = defaultValue(this.runAnimations, source.runAnimations);
         this.clampAnimations = defaultValue(this.clampAnimations, source.clampAnimations);
+        this.shadows = defaultValue(this.shadows, source.shadows);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
-        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.silhouetteColor = defaultValue(this.silhouetteColor, source.silhouetteColor);
         this.silhouetteSize = defaultValue(this.silhouetteSize, source.silhouetteSize);
         this.color = defaultValue(this.color, source.color);
         this.colorBlendMode = defaultValue(this.colorBlendMode, source.colorBlendMode);
         this.colorBlendAmount = defaultValue(this.colorBlendAmount, source.colorBlendAmount);
+        this.imageBasedLightingFactor = defaultValue(this.imageBasedLightingFactor, source.imageBasedLightingFactor);
+        this.lightColor = defaultValue(this.lightColor, source.lightColor);
+        this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.clippingPlanes = defaultValue(this.clippingPlanes, source.clippingPlanes);
 
         var sourceNodeTransformations = source.nodeTransformations;
@@ -335,6 +375,16 @@ define([
                 targetNodeTransformations.merge(sourceNodeTransformations);
             } else {
                 this.nodeTransformations = new PropertyBag(sourceNodeTransformations, createNodeTransformationProperty);
+            }
+        }
+
+        var sourceArticulations = source.articulations;
+        if (defined(sourceArticulations)) {
+            var targetArticulations = this.articulations;
+            if (defined(targetArticulations)) {
+                targetArticulations.merge(sourceArticulations);
+            } else {
+                this.articulations = new PropertyBag(sourceArticulations);
             }
         }
     };

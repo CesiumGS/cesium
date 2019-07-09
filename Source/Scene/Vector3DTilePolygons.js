@@ -120,9 +120,9 @@ define([
         /**
          * What this tile will classify.
          * @type {ClassificationType}
-         * @default ClassificationType.CESIUM_3D_TILE
+         * @default ClassificationType.BOTH
          */
-        this.classificationType = ClassificationType.CESIUM_3D_TILE;
+        this.classificationType = ClassificationType.BOTH;
     }
 
     defineProperties(Vector3DTilePolygons.prototype, {
@@ -285,6 +285,9 @@ define([
             var minimumHeights = polygons._polygonMinimumHeights;
             var maximumHeights = polygons._polygonMaximumHeights;
             if (defined(minimumHeights) && defined(maximumHeights)) {
+                minimumHeights = arraySlice(minimumHeights);
+                maximumHeights = arraySlice(maximumHeights);
+
                 transferrableObjects.push(minimumHeights.buffer, maximumHeights.buffer);
                 parameters.minimumHeights = minimumHeights;
                 parameters.maximumHeights = maximumHeights;
@@ -384,12 +387,11 @@ define([
     /**
      * Apply a style to the content.
      *
-     * @param {FrameState} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      * @param {Cesium3DTileFeature[]} features The array of features.
      */
-    Vector3DTilePolygons.prototype.applyStyle = function(frameState, style, features) {
-        this._primitive.applyStyle(frameState, style, features);
+    Vector3DTilePolygons.prototype.applyStyle = function(style, features) {
+        this._primitive.applyStyle(style, features);
     };
 
     /**

@@ -315,6 +315,7 @@ define([
         container.appendChild(expandLink);
 
         appendCss();
+        var cesiumCredit = Credit.clone(CreditDisplay.cesiumCredit);
 
         this._delimiter = defaultValue(delimiter, ' • ');
         this._screenContainer = screenContainer;
@@ -328,12 +329,14 @@ define([
         this._expandLink = expandLink;
         this._expanded = false;
         this._defaultCredits = [];
+        this._cesiumCredit = cesiumCredit;
         this._previousCesiumCredit = undefined;
-        this._currentCesiumCredit = CreditDisplay.cesiumCredit;
+        this._currentCesiumCredit = cesiumCredit;
         this._currentFrameCredits = {
             screenCredits : new AssociativeArray(),
             lightboxCredits : new AssociativeArray()
         };
+        this._defaultCredit = undefined;
 
         this.viewport = viewport;
 
@@ -357,7 +360,10 @@ define([
         if (credit._isIon) {
             // If this is the an ion logo credit from the ion server
             // Juse use the default credit (which is identical) to avoid blinking
-            this._currentCesiumCredit = getDefaultCredit();
+            if (!defined(this._defaultCredit)) {
+                this._defaultCredit = Credit.clone(getDefaultCredit());
+            }
+            this._currentCesiumCredit = this._defaultCredit;
             return;
         }
 
@@ -436,7 +442,10 @@ define([
 
         currentFrameCredits.lightboxCredits.removeAll();
 
-        this._currentCesiumCredit = CreditDisplay.cesiumCredit;
+        if (!Credit.equals(CreditDisplay.cesiumCredit, this._cesiumCredit)) {
+            this._cesiumCredit = Credit.clone(CreditDisplay.cesiumCredit);
+        }
+        this._currentCesiumCredit = this._cesiumCredit;
     };
 
     /**

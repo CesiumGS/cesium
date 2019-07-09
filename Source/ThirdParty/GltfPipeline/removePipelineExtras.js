@@ -1,34 +1,51 @@
 define([
+        './ForEach',
         '../../Core/defined'
     ], function(
+        ForEach,
         defined) {
     'use strict';
 
     /**
-     * Iterate through the objects within each glTF object and delete their pipeline extras object.
+     * Iterate through the objects within the glTF and delete their pipeline extras object.
      *
-     * @param {Object} object Root object to remove pipeline extras.
+     * @param {Object} gltf A javascript object containing a glTF asset.
      * @returns {Object} glTF with no pipeline extras.
+     *
+     * @private
      */
-    function removePipelineExtras(object) {
-        if (defined(object) && typeof object === 'object') {
-            if (defined(object.extras) && defined(object.extras._pipeline)) {
-                delete object.extras._pipeline;
-                // Also delete extras if extras._pipeline is the only extras object
-                if (Object.keys(object.extras).length === 0) {
-                    delete object.extras;
-                }
-            }
+    function removePipelineExtras(gltf) {
+        ForEach.shader(gltf, function(shader) {
+            removeExtras(shader);
+        });
+        ForEach.buffer(gltf, function(buffer) {
+            removeExtras(buffer);
+        });
+        ForEach.image(gltf, function (image) {
+            removeExtras(image);
+            ForEach.compressedImage(image, function(compressedImage) {
+                removeExtras(compressedImage);
+            });
+        });
 
-            //Recursively check subproperties for extras
-            for (var propertyId in object) {
-                if (object.hasOwnProperty(propertyId)) {
-                    removePipelineExtras(object[propertyId]);
-                }
-            }
+        removeExtras(gltf);
+
+        return gltf;
+    }
+
+    function removeExtras(object) {
+        if (!defined(object.extras)) {
+            return;
         }
 
-        return object;
+        if (defined(object.extras._pipeline)) {
+            delete object.extras._pipeline;
+        }
+
+        if (Object.keys(object.extras).length === 0) {
+            delete object.extras;
+        }
     }
+
     return removePipelineExtras;
 });

@@ -200,7 +200,7 @@ defineSuite([
                 buffer = Buffer.createIndexBuffer({
                     context : context,
                     sizeInBytes : 16,
-                    usage : "invalid",
+                    usage : 'invalid',
                     indexDatatype : IndexDatatype.UNSIGNED_SHORT
                 });
             }).toThrowDeveloperError();

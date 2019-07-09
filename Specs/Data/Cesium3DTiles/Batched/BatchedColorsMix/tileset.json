@@ -8,16 +8,16 @@
       "maximum": 9
     },
     "Longitude": {
-      "minimum": -1.3196972173766555,
-      "maximum": -1.3196683129064435
+      "minimum": -1.3196959060375169,
+      "maximum": -1.3196607462778132
     },
     "Latitude": {
-      "minimum": 0.698861998722264,
-      "maximum": 0.6988888301460953
+      "minimum": 0.6988590050687061,
+      "maximum": 0.6988864387845588
     },
     "Height": {
-      "minimum": 6.929546581581235,
-      "maximum": 13.581844886764884
+      "minimum": 6.1022464875131845,
+      "maximum": 13.410263679921627
     }
   },
   "geometricError": 70,
@@ -35,7 +35,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "batchedColorsMix.b3dm"
+      "uri": "batchedColorsMix.b3dm"
     }
   }
 }

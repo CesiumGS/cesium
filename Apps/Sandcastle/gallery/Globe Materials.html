@@ -10,7 +10,7 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        if(typeof require === "function") {
+        if(typeof require === 'function') {
             require.config({
                 baseUrl : '../../../Source',
                 waitSeconds : 120
@@ -40,6 +40,7 @@
         <label><input type="radio" name="shadingMaterials" value="none" data-bind="checked: selectedShading"> No shading</label>
         <label><input type="radio" name="shadingMaterials" value="elevation" data-bind="checked: selectedShading"> Elevation</label>
         <label><input type="radio" name="shadingMaterials" value="slope" data-bind="checked: selectedShading"> Slope</label>
+        <label><input type="radio" name="shadingMaterials" value="aspect" data-bind="checked: selectedShading"> Aspect</label>
     </div>
     <div class="demo-container">
         <div>
@@ -111,15 +112,45 @@ function getSlopeContourMaterial() {
     });
 }
 
+function getAspectContourMaterial() {
+    // Creates a composite material with both aspect shading and contour lines
+    return new Cesium.Material({
+        fabric: {
+            type: 'AspectColorContour',
+            materials: {
+                contourMaterial: {
+                    type: 'ElevationContour'
+                },
+                aspectRampMaterial: {
+                    type: 'AspectRamp'
+                }
+            },
+            components: {
+                diffuse: 'contourMaterial.alpha == 0.0 ? aspectRampMaterial.diffuse : contourMaterial.diffuse',
+                alpha: 'max(contourMaterial.alpha, aspectRampMaterial.alpha)'
+            }
+        },
+        translucent: false
+    });
+}
+
 var elevationRamp = [0.0, 0.045, 0.1, 0.15, 0.37, 0.54, 1.0];
 var slopeRamp = [0.0, 0.29, 0.5, Math.sqrt(2)/2, 0.87, 0.91, 1.0];
+var aspectRamp = [0.0, 0.2, 0.4, 0.6, 0.8, 0.9, 1.0];
 function getColorRamp(selectedShading) {
     var ramp = document.createElement('canvas');
     ramp.width = 100;
     ramp.height = 1;
     var ctx = ramp.getContext('2d');
 
-    var values = selectedShading === 'elevation' ? elevationRamp : slopeRamp;
+    var values;
+    if (selectedShading === 'elevation') {
+        values = elevationRamp;
+    } else if (selectedShading === 'slope') {
+        values = slopeRamp;
+    } else if (selectedShading === 'aspect') {
+        values = aspectRamp;
+    }
 
     var grd = ctx.createLinearGradient(0, 0, 100, 0);
     grd.addColorStop(values[0], '#000000'); //black
@@ -169,12 +200,16 @@ function updateMaterial() {
         if (selectedShading === 'elevation') {
             material = getElevationContourMaterial();
             shadingUniforms = material.materials.elevationRampMaterial.uniforms;
-            shadingUniforms.minHeight = minHeight;
-            shadingUniforms.maxHeight = maxHeight;
+            shadingUniforms.minimumHeight = minHeight;
+            shadingUniforms.maximumHeight = maxHeight;
             contourUniforms = material.materials.contourMaterial.uniforms;
         } else if (selectedShading === 'slope') {
             material = getSlopeContourMaterial();
             shadingUniforms = material.materials.slopeRampMaterial.uniforms;
+            contourUniforms = material.materials.contourMaterial.uniforms;
+        } else if (selectedShading === 'aspect') {
+            material = getAspectContourMaterial();
+            shadingUniforms = material.materials.aspectRampMaterial.uniforms;
             contourUniforms = material.materials.contourMaterial.uniforms;
         } else {
             material = Cesium.Material.fromType('ElevationContour');
@@ -186,10 +221,13 @@ function updateMaterial() {
     } else if (selectedShading === 'elevation') {
         material = Cesium.Material.fromType('ElevationRamp');
         shadingUniforms = material.uniforms;
-        shadingUniforms.minHeight = minHeight;
-        shadingUniforms.maxHeight = maxHeight;
+        shadingUniforms.minimumHeight = minHeight;
+        shadingUniforms.maximumHeight = maxHeight;
     } else if (selectedShading === 'slope') {
         material = Cesium.Material.fromType('SlopeRamp');
+        shadingUniforms = material.uniforms;
+    } else if (selectedShading === 'aspect') {
+        material = Cesium.Material.fromType('AspectRamp');
         shadingUniforms = material.uniforms;
     }
     if (selectedShading !== 'none') {
@@ -274,10 +312,10 @@ Sandcastle.addToolbarMenu([{
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

@@ -58,6 +58,6 @@ defineSuite([
         slicePartitions: 3,
         subdivisions: 2
     });
-    var packedInstance = [1.0, 1.0, 1.0, 3.0, 3.0, 2.0];
+    var packedInstance = [1.0, 1.0, 1.0, 3.0, 3.0, 2.0, -1.0];
     createPackableSpecs(SphereOutlineGeometry, sphere, packedInstance);
 });

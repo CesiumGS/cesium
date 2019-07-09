@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "geometricError": 17.32,
   "root": {
@@ -41,7 +41,7 @@
     "geometricError": 8.66,
     "refine": "ADD",
     "content": {
-      "url": "parent.pnts"
+      "uri": "parent.pnts"
     },
     "children": [
       {
@@ -63,7 +63,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "0.pnts"
+          "uri": "0.pnts"
         }
       },
       {
@@ -85,7 +85,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "1.pnts"
+          "uri": "1.pnts"
         }
       },
       {
@@ -107,7 +107,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "2.pnts"
+          "uri": "2.pnts"
         }
       },
       {
@@ -129,7 +129,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "3.pnts"
+          "uri": "3.pnts"
         }
       },
       {
@@ -151,7 +151,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "4.pnts"
+          "uri": "4.pnts"
         }
       },
       {
@@ -173,7 +173,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "5.pnts"
+          "uri": "5.pnts"
         }
       },
       {
@@ -195,7 +195,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "6.pnts"
+          "uri": "6.pnts"
         }
       },
       {
@@ -217,7 +217,7 @@
         },
         "geometricError": 0,
         "content": {
-          "url": "7.pnts"
+          "uri": "7.pnts"
         }
       }
     ]

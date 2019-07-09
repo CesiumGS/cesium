@@ -1,13 +1,13 @@
 defineSuite([
         'Core/PeliasGeocoderService',
         'Core/GeocodeType',
-        'Core/Rectangle',
+        'Core/Cartesian3',
         'Core/Resource',
         'ThirdParty/when'
     ], function(
         PeliasGeocoderService,
         GeocodeType,
-        Rectangle,
+        Cartesian3,
         Resource,
         when) {
     'use strict';
@@ -24,13 +24,13 @@ defineSuite([
         var query = 'some query';
         var data = {
             features: [{
-                type: "Feature",
+                type: 'Feature',
                 geometry: {
-                    type: "Point",
+                    type: 'Point',
                     coordinates: [-75.172489, 39.927828]
                 },
                 properties: {
-                    label: "1826 S 16th St, Philadelphia, PA, USA"
+                    label: '1826 S 16th St, Philadelphia, PA, USA'
                 }
             }]
         };
@@ -40,7 +40,7 @@ defineSuite([
             .then(function(results) {
                 expect(results.length).toEqual(1);
                 expect(results[0].displayName).toEqual(data.features[0].properties.label);
-                expect(results[0].destination).toBeInstanceOf(Rectangle);
+                expect(results[0].destination).toBeInstanceOf(Cartesian3);
             });
     });
 

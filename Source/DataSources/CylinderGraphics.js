@@ -24,10 +24,11 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the cylinder.
      * @param {Property} [options.length] A numeric Property specifying the length of the cylinder.
      * @param {Property} [options.topRadius] A numeric Property specifying the radius of the top of the cylinder.
      * @param {Property} [options.bottomRadius] A numeric Property specifying the radius of the bottom of the cylinder.
-     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the cylinder.
+     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the cylinder is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the cylinder.
      * @param {Property} [options.outline=false] A boolean Property specifying whether the cylinder is outlined.
@@ -39,33 +40,35 @@ define([
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this cylinder will be displayed.
      */
     function CylinderGraphics(options) {
+        this._definitionChanged = new Event();
+        this._show = undefined;
+        this._showSubscription = undefined;
         this._length = undefined;
         this._lengthSubscription = undefined;
         this._topRadius = undefined;
         this._topRadiusSubscription = undefined;
         this._bottomRadius = undefined;
         this._bottomRadiusSubscription = undefined;
-        this._numberOfVerticalLines = undefined;
-        this._numberOfVerticalLinesSubscription = undefined;
-        this._slices = undefined;
-        this._slicesSubscription = undefined;
-        this._show = undefined;
-        this._showSubscription = undefined;
-        this._material = undefined;
-        this._materialSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
         this._fill = undefined;
         this._fillSubscription = undefined;
+        this._material = undefined;
+        this._materialSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
+        this._numberOfVerticalLines = undefined;
+        this._numberOfVerticalLinesSubscription = undefined;
+        this._slices = undefined;
+        this._slicesSubscription = undefined;
         this._shadows = undefined;
         this._shadowsSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
-        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -83,6 +86,14 @@ define([
                 return this._definitionChanged;
             }
         },
+
+        /**
+         * Gets or sets the boolean Property specifying the visibility of the cylinder.
+         * @memberof CylinderGraphics.prototype
+         * @type {Property}
+         * @default true
+         */
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the numeric Property specifying the length of the cylinder.
@@ -106,36 +117,12 @@ define([
         bottomRadius : createPropertyDescriptor('bottomRadius'),
 
         /**
-         * Gets or sets the Property specifying the number of vertical lines to draw along the perimeter for the outline.
+         * Gets or sets the Property specifying the {@link HeightReference}.
          * @memberof CylinderGraphics.prototype
          * @type {Property}
-         * @default 16
+         * @default HeightReference.NONE
          */
-        numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines'),
-
-        /**
-         * Gets or sets the Property specifying the number of edges around the perimeter of the cylinder.
-         * @memberof CylinderGraphics.prototype
-         * @type {Property}
-         * @default 128
-         */
-        slices : createPropertyDescriptor('slices'),
-
-        /**
-         * Gets or sets the boolean Property specifying the visibility of the cylinder.
-         * @memberof CylinderGraphics.prototype
-         * @type {Property}
-         * @default true
-         */
-        show : createPropertyDescriptor('show'),
-
-        /**
-         * Gets or sets the Property specifying the material used to fill the cylinder.
-         * @memberof CylinderGraphics.prototype
-         * @type {MaterialProperty}
-         * @default Color.WHITE
-         */
-        material : createMaterialPropertyDescriptor('material'),
+        heightReference : createPropertyDescriptor('heightReference'),
 
         /**
          * Gets or sets the boolean Property specifying whether the cylinder is filled with the provided material.
@@ -144,6 +131,14 @@ define([
          * @default true
          */
         fill : createPropertyDescriptor('fill'),
+
+        /**
+         * Gets or sets the Property specifying the material used to fill the cylinder.
+         * @memberof CylinderGraphics.prototype
+         * @type {MaterialProperty}
+         * @default Color.WHITE
+         */
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the boolean Property specifying whether the cylinder is outlined.
@@ -168,6 +163,22 @@ define([
          * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth'),
+
+        /**
+         * Gets or sets the Property specifying the number of vertical lines to draw along the perimeter for the outline.
+         * @memberof CylinderGraphics.prototype
+         * @type {Property}
+         * @default 16
+         */
+        numberOfVerticalLines : createPropertyDescriptor('numberOfVerticalLines'),
+
+        /**
+         * Gets or sets the Property specifying the number of edges around the perimeter of the cylinder.
+         * @memberof CylinderGraphics.prototype
+         * @type {Property}
+         * @default 128
+         */
+        slices : createPropertyDescriptor('slices'),
 
         /**
          * Get or sets the enum Property specifying whether the cylinder
@@ -196,17 +207,18 @@ define([
         if (!defined(result)) {
             return new CylinderGraphics(this);
         }
-        result.bottomRadius = this.bottomRadius;
+        result.show = this.show;
         result.length = this.length;
         result.topRadius = this.topRadius;
-        result.show = this.show;
-        result.material = this.material;
-        result.numberOfVerticalLines = this.numberOfVerticalLines;
-        result.slices = this.slices;
+        result.bottomRadius = this.bottomRadius;
+        result.heightReference = this.heightReference;
         result.fill = this.fill;
+        result.material = this.material;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
+        result.numberOfVerticalLines = this.numberOfVerticalLines;
+        result.slices = this.slices;
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
@@ -225,17 +237,18 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.bottomRadius = defaultValue(this.bottomRadius, source.bottomRadius);
+        this.show = defaultValue(this.show, source.show);
         this.length = defaultValue(this.length, source.length);
         this.topRadius = defaultValue(this.topRadius, source.topRadius);
-        this.show = defaultValue(this.show, source.show);
-        this.material = defaultValue(this.material, source.material);
-        this.numberOfVerticalLines = defaultValue(this.numberOfVerticalLines, source.numberOfVerticalLines);
-        this.slices = defaultValue(this.slices, source.slices);
+        this.bottomRadius = defaultValue(this.bottomRadius, source.bottomRadius);
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.fill = defaultValue(this.fill, source.fill);
+        this.material = defaultValue(this.material, source.material);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.numberOfVerticalLines = defaultValue(this.numberOfVerticalLines, source.numberOfVerticalLines);
+        this.slices = defaultValue(this.slices, source.slices);
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };

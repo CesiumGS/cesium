@@ -337,6 +337,13 @@ defineSuite([
     function renderDepthAttachment(framebuffer, texture) {
         ClearCommand.ALL.execute(context);
 
+        var framebufferClear = new ClearCommand({
+            depth : 1.0,
+            framebuffer : framebuffer
+        });
+
+        framebufferClear.execute(context);
+
         // 1 of 3.  Render green point into color attachment.
         var vs = 'attribute vec4 position; void main() { gl_PointSize = 1.0; gl_Position = position; }';
         var fs = 'void main() { gl_FragColor = vec4(0.0, 1.0, 0.0, 1.0); }';

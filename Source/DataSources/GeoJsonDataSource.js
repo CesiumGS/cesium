@@ -1,4 +1,5 @@
 define([
+        '../Core/ArcType',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/createGuid',
@@ -21,13 +22,13 @@ define([
         './ColorMaterialProperty',
         './ConstantPositionProperty',
         './ConstantProperty',
-        './CorridorGraphics',
         './DataSource',
         './EntityCluster',
         './EntityCollection',
         './PolygonGraphics',
         './PolylineGraphics'
     ], function(
+        ArcType,
         Cartesian3,
         Color,
         createGuid,
@@ -50,7 +51,6 @@ define([
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
-        CorridorGraphics,
         DataSource,
         EntityCluster,
         EntityCollection,
@@ -360,18 +360,14 @@ define([
         }
 
         var entity = createObject(geoJson, dataSource._entityCollection, options.describe);
-        var graphics;
-        if (options.clampToGround) {
-            graphics = new CorridorGraphics();
-            entity.corridor = graphics;
-        } else {
-            graphics = new PolylineGraphics();
-            entity.polyline = graphics;
-        }
+        var polylineGraphics = new PolylineGraphics();
+        entity.polyline = polylineGraphics;
 
-        graphics.material = material;
-        graphics.width = widthProperty;
-        graphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
+        polylineGraphics.clampToGround = options.clampToGround;
+        polylineGraphics.material = material;
+        polylineGraphics.width = widthProperty;
+        polylineGraphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
+        polylineGraphics.arcType = ArcType.RHUMB;
     }
 
     function processLineString(dataSource, geoJson, geometry, crsFunction, options) {
@@ -441,6 +437,7 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
+        polygon.arcType = ArcType.RHUMB;
 
         var holes = [];
         for (var i = 1, len = coordinates.length; i < len; i++) {
@@ -528,7 +525,7 @@ define([
      * @param {Color} [options.stroke=GeoJsonDataSource.stroke] The default color of polylines and polygon outlines.
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
-     * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground. If true, lines will use corridors so use Entity.corridor instead of Entity.polyline.
+     * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
      *
      * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */

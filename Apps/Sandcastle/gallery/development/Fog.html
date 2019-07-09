@@ -84,7 +84,7 @@ viewModel.enabled = viewer.scene.fog.enabled;
 viewModel.density = viewer.scene.fog.density;
 viewModel.sse = viewer.scene.fog.screenSpaceErrorFactor;
 
-Sandcastle.addToolbarButton("Horizon high altitude", function() {
+Sandcastle.addToolbarButton('Horizon high altitude', function() {
     viewer.camera.setView({
         destination: new Cesium.Cartesian3(-2467730.5740817646, -4390507.315824514, 3906155.113316938),
         orientation: {
@@ -94,7 +94,7 @@ Sandcastle.addToolbarButton("Horizon high altitude", function() {
     });
 });
 
-Sandcastle.addToolbarButton("Horizon low altitude", function() {
+Sandcastle.addToolbarButton('Horizon low altitude', function() {
     viewer.camera.setView({
         destination : new Cesium.Cartesian3(-734001.9511656855, -4214090.596769834, 4715898.125886317),
         orientation : {
@@ -106,17 +106,17 @@ Sandcastle.addToolbarButton("Horizon low altitude", function() {
 
 viewer.scene.globe._surface._debug.enableDebugOutput = true;
 
-Sandcastle.addToolbarButton("Snap", function() {
-    var container = document.getElementById("cesiumContainer");
+Sandcastle.addToolbarButton('Snap', function() {
+    var container = document.getElementById('cesiumContainer');
     var tmpH = container.style.height;
     var tmpW = container.style.width;
 
-    container.style.height = "600px";
-    container.style.width = "800px";
+    container.style.height = '600px';
+    container.style.width = '800px';
 
     viewer.resize();
     viewer.render();
-    window.open(viewer.canvas.toDataURL("image/png"));
+    window.open(viewer.canvas.toDataURL('image/png'));
     container.style.height = tmpH;
     container.style.width = tmpW;
     viewer.resize();
@@ -126,10 +126,10 @@ Sandcastle.addToolbarButton("Snap", function() {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

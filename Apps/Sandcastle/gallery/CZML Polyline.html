@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -34,7 +36,7 @@ var czml = [{
     "version" : "1.0"
 }, {
     "id" : "redLine",
-    "name" : "Red line on the surface",
+    "name" : "Red line clamped to terain",
     "polyline" : {
         "positions" : {
             "cartographicDegrees" : [
@@ -49,7 +51,8 @@ var czml = [{
                 }
             }
         },
-        "width" : 5
+        "width" : 5,
+        "clampToGround" : true
     }
 }, {
     "id" : "blueLine",
@@ -64,9 +67,10 @@ var czml = [{
         "material" : {
             "polylineGlow" : {
                 "color" : {
-                    "rgba" : [0, 0, 255, 255]
+                    "rgba" : [100, 149, 237, 255]
                 },
-                "glowPower" : 0.2
+                "glowPower" : 0.2,
+                "taperPower" : 0.5
             }
         },
         "width" : 10
@@ -111,7 +115,7 @@ var czml = [{
                 }
             }
         },
-        "followSurface" : false,
+        "arcType" : "NONE",
         "width" : 10
     }
 }, {
@@ -143,10 +147,10 @@ viewer.zoomTo(dataSourcePromise);
   //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

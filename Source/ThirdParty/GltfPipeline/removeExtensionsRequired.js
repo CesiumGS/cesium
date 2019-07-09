@@ -9,6 +9,8 @@ define([
      *
      * @param {Object} gltf A javascript object containing a glTF asset.
      * @param {String} extension The extension to remove.
+     *
+     * @private
      */
     function removeExtensionsRequired(gltf, extension) {
         var extensionsRequired = gltf.extensionsRequired;

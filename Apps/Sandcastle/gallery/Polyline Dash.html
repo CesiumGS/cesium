@@ -75,7 +75,7 @@ var cyanLine = viewer.entities.add({
         width : 10,
         material : new Cesium.PolylineDashMaterialProperty({
             color : Cesium.Color.CYAN,
-            dashPattern: parseInt("110000001111", 2)
+            dashPattern: parseInt('110000001111', 2)
         })
     }
 });
@@ -88,7 +88,7 @@ var yellowLine = viewer.entities.add({
         width : 10,
         material : new Cesium.PolylineDashMaterialProperty({
             color : Cesium.Color.YELLOW,
-            dashPattern: parseInt("1010101010101010", 2)
+            dashPattern: parseInt('1010101010101010', 2)
         })
     }
 });
@@ -97,10 +97,10 @@ viewer.zoomTo(viewer.entities);
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

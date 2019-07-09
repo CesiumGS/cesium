@@ -158,10 +158,10 @@ defineSuite([
         });
 
         var r = ellipse.rectangle;
-        expect(r.north).toEqual(0.698966597893341);
-        expect(r.south).toEqual(0.698652226072367);
-        expect(r.east).toEqual(-1.3192254919753026);
-        expect(r.west).toEqual(-1.3196344953554853);
+        expect(r.north).toEqualEpsilon(0.698966597893341, CesiumMath.EPSILON15);
+        expect(r.south).toEqualEpsilon(0.698652226072367, CesiumMath.EPSILON15);
+        expect(r.east).toEqualEpsilon(-1.3192254919753026, CesiumMath.EPSILON15);
+        expect(r.west).toEqualEpsilon(-1.3196344953554853, CesiumMath.EPSILON15);
     });
 
     it('computing textureCoordinateRotationPoints property', function() {
@@ -193,6 +193,6 @@ defineSuite([
         radius : 1.0,
         stRotation : CesiumMath.PI_OVER_TWO
     });
-    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0];
+    var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0, -1];
     createPackableSpecs(CircleGeometry, packableInstance, packedInstance);
 });

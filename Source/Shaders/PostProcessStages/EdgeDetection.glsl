@@ -19,10 +19,32 @@ void main(void)
     float padx = 1.0 / czm_viewport.z;
     float pady = 1.0 / czm_viewport.w;
 
+#ifdef CZM_SELECTED_FEATURE
+    bool selected = false;
+    for (int i = 0; i < 3; ++i)
+    {
+        float dir = directions[i];
+        selected = selected || czm_selected(vec2(-padx, dir * pady));
+        selected = selected || czm_selected(vec2(padx, dir * pady));
+        selected = selected || czm_selected(vec2(dir * padx, -pady));
+        selected = selected || czm_selected(vec2(dir * padx, pady));
+        if (selected)
+        {
+            break;
+        }
+    }
+    if (!selected)
+    {
+        gl_FragColor = vec4(color.rgb, 0.0);
+        return;
+    }
+#endif
+
     float horizEdge = 0.0;
     float vertEdge = 0.0;
 
-    for (int i = 0; i < 3; ++i) {
+    for (int i = 0; i < 3; ++i)
+    {
         float dir = directions[i];
         float scale = scalars[i];
 
@@ -34,6 +56,5 @@ void main(void)
     }
 
     float len = sqrt(horizEdge * horizEdge + vertEdge * vertEdge);
-    float alpha = len > length ? 1.0 : 0.0;
-    gl_FragColor = vec4(color.rgb, alpha);
+    gl_FragColor = vec4(color.rgb, len > length ? color.a : 0.0);
 }

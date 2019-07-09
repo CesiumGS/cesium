@@ -323,6 +323,11 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('clones default image size', function() {
+        var p = new ParticleSystem();
+        expect(p.maximumImageSize).not.toBe(p.minimumImageSize);
+    });
+
     it('renders', function() {
         scene.primitives.add(new ParticleSystem({
             image : greenImage,

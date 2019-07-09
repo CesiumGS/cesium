@@ -33,7 +33,6 @@ define([
         this.baseFragmentShaderSource = undefined;
 
         this._shadersByTexturesFlags = [];
-        this._pickShaderPrograms = [];
 
         this.material = undefined;
     }
@@ -67,15 +66,63 @@ define([
         return useWebMercatorProjection ? get2DYPositionFractionMercatorProjection : get2DYPositionFractionGeographicProjection;
     }
 
-    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(frameState, surfaceTile, numberOfDayTextures, applyBrightness, applyContrast, applyHue, applySaturation, applyGamma, applyAlpha, applySplit, showReflectiveOcean, showOceanWaves, enableLighting, hasVertexNormals, useWebMercatorProjection, enableFog, enableClippingPlanes, clippingPlanes) {
+    GlobeSurfaceShaderSet.prototype.getShaderProgram = function(options) {
+        var frameState = options.frameState;
+        var surfaceTile = options.surfaceTile;
+        var numberOfDayTextures = options.numberOfDayTextures;
+        var applyBrightness = options.applyBrightness;
+        var applyContrast = options.applyContrast;
+        var applyHue = options.applyHue;
+        var applySaturation = options.applySaturation;
+        var applyGamma = options.applyGamma;
+        var applyAlpha = options.applyAlpha;
+        var applySplit = options.applySplit;
+        var showReflectiveOcean = options.showReflectiveOcean;
+        var showOceanWaves = options.showOceanWaves;
+        var enableLighting = options.enableLighting;
+        var showGroundAtmosphere = options.showGroundAtmosphere;
+        var perFragmentGroundAtmosphere = options.perFragmentGroundAtmosphere;
+        var hasVertexNormals = options.hasVertexNormals;
+        var useWebMercatorProjection = options.useWebMercatorProjection;
+        var enableFog = options.enableFog;
+        var enableClippingPlanes = options.enableClippingPlanes;
+        var clippingPlanes = options.clippingPlanes;
+        var clippedByBoundaries = options.clippedByBoundaries;
+        var hasImageryLayerCutout = options.hasImageryLayerCutout;
+        var colorCorrect = options.colorCorrect;
+        var highlightFillTile = options.highlightFillTile;
+        var colorToAlpha = options.colorToAlpha;
+
         var quantization = 0;
         var quantizationDefine = '';
 
-        var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
+        var mesh = surfaceTile.renderedMesh;
+        var terrainEncoding = mesh.encoding;
         var quantizationMode = terrainEncoding.quantization;
         if (quantizationMode === TerrainQuantization.BITS12) {
             quantization = 1;
             quantizationDefine = 'QUANTIZATION_BITS12';
+        }
+
+        var vertexLogDepth = 0;
+        var vertexLogDepthDefine = '';
+        if (!defined(surfaceTile.vertexArray) || !defined(surfaceTile.terrainData) || surfaceTile.terrainData._createdByUpsampling) {
+            vertexLogDepth = 1;
+            vertexLogDepthDefine = 'DISABLE_GL_POSITION_LOG_DEPTH';
+        }
+
+        var cartographicLimitRectangleFlag = 0;
+        var cartographicLimitRectangleDefine = '';
+        if (clippedByBoundaries) {
+            cartographicLimitRectangleFlag = 1;
+            cartographicLimitRectangleDefine = 'TILE_LIMIT_RECTANGLE';
+        }
+
+        var imageryCutoutFlag = 0;
+        var imageryCutoutDefine = '';
+        if (hasImageryLayerCutout) {
+            imageryCutoutFlag = 1;
+            imageryCutoutDefine = 'APPLY_IMAGERY_CUTOUT';
         }
 
         var sceneMode = frameState.mode;
@@ -89,15 +136,23 @@ define([
                     (showReflectiveOcean << 8) |
                     (showOceanWaves << 9) |
                     (enableLighting << 10) |
-                    (hasVertexNormals << 11) |
-                    (useWebMercatorProjection << 12) |
-                    (enableFog << 13) |
-                    (quantization << 14) |
-                    (applySplit << 15) |
-                    (enableClippingPlanes << 16);
+                    (showGroundAtmosphere << 11) |
+                    (perFragmentGroundAtmosphere << 12) |
+                    (hasVertexNormals << 13) |
+                    (useWebMercatorProjection << 14) |
+                    (enableFog << 15) |
+                    (quantization << 16) |
+                    (applySplit << 17) |
+                    (enableClippingPlanes << 18) |
+                    (vertexLogDepth << 19) |
+                    (cartographicLimitRectangleFlag << 20) |
+                    (imageryCutoutFlag << 21) |
+                    (colorCorrect << 22) |
+                    (highlightFillTile << 23) |
+                    (colorToAlpha << 24);
 
         var currentClippingShaderState = 0;
-        if (defined(clippingPlanes)) {
+        if (defined(clippingPlanes) && clippingPlanes.length > 0) {
             currentClippingShaderState = enableClippingPlanes ? clippingPlanes.clippingPlanesState : 0;
         }
         var surfaceShader = surfaceTile.surfaceShader;
@@ -123,11 +178,11 @@ define([
             var fs = this.baseFragmentShaderSource.clone();
 
             if (currentClippingShaderState !== 0) {
-                fs.sources.unshift(getClippingFunction(clippingPlanes)); // Need to go before GlobeFS
+                fs.sources.unshift(getClippingFunction(clippingPlanes, frameState.context)); // Need to go before GlobeFS
             }
 
-            vs.defines.push(quantizationDefine);
-            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures);
+            vs.defines.push(quantizationDefine, vertexLogDepthDefine);
+            fs.defines.push('TEXTURE_UNITS ' + numberOfDayTextures, cartographicLimitRectangleDefine, imageryCutoutDefine);
 
             if (applyBrightness) {
                 fs.defines.push('APPLY_BRIGHTNESS');
@@ -154,6 +209,9 @@ define([
             if (showOceanWaves) {
                 fs.defines.push('SHOW_OCEAN_WAVES');
             }
+            if (colorToAlpha) {
+                fs.defines.push('APPLY_COLOR_TO_ALPHA');
+            }
 
             if (enableLighting) {
                 if (hasVertexNormals) {
@@ -162,6 +220,14 @@ define([
                 } else {
                     vs.defines.push('ENABLE_DAYNIGHT_SHADING');
                     fs.defines.push('ENABLE_DAYNIGHT_SHADING');
+                }
+            }
+
+            if (showGroundAtmosphere) {
+                vs.defines.push('GROUND_ATMOSPHERE');
+                fs.defines.push('GROUND_ATMOSPHERE');
+                if (perFragmentGroundAtmosphere) {
+                    fs.defines.push('PER_FRAGMENT_GROUND_ATMOSPHERE');
                 }
             }
 
@@ -181,27 +247,54 @@ define([
                 fs.defines.push('ENABLE_CLIPPING_PLANES');
             }
 
+            if (colorCorrect) {
+                fs.defines.push('COLOR_CORRECT');
+            }
+
+            if (highlightFillTile) {
+                fs.defines.push('HIGHLIGHT_FILL_TILE');
+            }
+
             var computeDayColor = '\
     vec4 computeDayColor(vec4 initialColor, vec3 textureCoordinates)\n\
     {\n\
         vec4 color = initialColor;\n';
 
+        if (hasImageryLayerCutout) {
+            computeDayColor += '\
+        vec4 cutoutAndColorResult;\n\
+        bool texelUnclipped;\n';
+        }
+
             for (var i = 0; i < numberOfDayTextures; ++i) {
-                computeDayColor += '\
-    color = sampleAndBlend(\n\
-        color,\n\
-        u_dayTextures[' + i + '],\n\
-        u_dayTextureUseWebMercatorT[' + i + '] ? textureCoordinates.xz : textureCoordinates.xy,\n\
-        u_dayTextureTexCoordsRectangle[' + i + '],\n\
-        u_dayTextureTranslationAndScale[' + i + '],\n\
-        ' + (applyAlpha ? 'u_dayTextureAlpha[' + i + ']' : '1.0') + ',\n\
-        ' + (applyBrightness ? 'u_dayTextureBrightness[' + i + ']' : '0.0') + ',\n\
-        ' + (applyContrast ? 'u_dayTextureContrast[' + i + ']' : '0.0') + ',\n\
-        ' + (applyHue ? 'u_dayTextureHue[' + i + ']' : '0.0') + ',\n\
-        ' + (applySaturation ? 'u_dayTextureSaturation[' + i + ']' : '0.0') + ',\n\
-        ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + ',\n\
-        ' + (applySplit ? 'u_dayTextureSplit[' + i + ']' : '0.0') + '\n\
-    );\n';
+                if (hasImageryLayerCutout) {
+                    computeDayColor += '\
+        cutoutAndColorResult = u_dayTextureCutoutRectangles[' + i + '];\n\
+        texelUnclipped = v_textureCoordinates.x < cutoutAndColorResult.x || cutoutAndColorResult.z < v_textureCoordinates.x || v_textureCoordinates.y < cutoutAndColorResult.y || cutoutAndColorResult.w < v_textureCoordinates.y;\n\
+        cutoutAndColorResult = sampleAndBlend(\n';
+                } else {
+                    computeDayColor += '\
+        color = sampleAndBlend(\n';
+                }
+        computeDayColor += '\
+            color,\n\
+            u_dayTextures[' + i + '],\n\
+            u_dayTextureUseWebMercatorT[' + i + '] ? textureCoordinates.xz : textureCoordinates.xy,\n\
+            u_dayTextureTexCoordsRectangle[' + i + '],\n\
+            u_dayTextureTranslationAndScale[' + i + '],\n\
+            ' + (applyAlpha ? 'u_dayTextureAlpha[' + i + ']' : '1.0') + ',\n\
+            ' + (applyBrightness ? 'u_dayTextureBrightness[' + i + ']' : '0.0') + ',\n\
+            ' + (applyContrast ? 'u_dayTextureContrast[' + i + ']' : '0.0') + ',\n\
+            ' + (applyHue ? 'u_dayTextureHue[' + i + ']' : '0.0') + ',\n\
+            ' + (applySaturation ? 'u_dayTextureSaturation[' + i + ']' : '0.0') + ',\n\
+            ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + ',\n\
+            ' + (applySplit ? 'u_dayTextureSplit[' + i + ']' : '0.0') + ',\n\
+            ' + (colorToAlpha ? 'u_colorsToAlpha[' + i + ']' : 'vec4(0.0)') + '\n\
+        );\n';
+                if (hasImageryLayerCutout) {
+                    computeDayColor += '\
+        color = czm_branchFreeTernary(texelUnclipped, cutoutAndColorResult, color);\n';
+                }
             }
 
             computeDayColor += '\
@@ -227,45 +320,6 @@ define([
         return surfaceShader.shaderProgram;
     };
 
-    GlobeSurfaceShaderSet.prototype.getPickShaderProgram = function(frameState, surfaceTile, useWebMercatorProjection) {
-        var quantization = 0;
-        var quantizationDefine = '';
-
-        var terrainEncoding = surfaceTile.pickTerrain.mesh.encoding;
-        var quantizationMode = terrainEncoding.quantization;
-        if (quantizationMode === TerrainQuantization.BITS12) {
-            quantization = 1;
-            quantizationDefine = 'QUANTIZATION_BITS12';
-        }
-
-        var sceneMode = frameState.mode;
-        var flags = sceneMode | (useWebMercatorProjection << 2) | (quantization << 3);
-        var pickShader = this._pickShaderPrograms[flags];
-
-        if (!defined(pickShader)) {
-            var vs = this.baseVertexShaderSource.clone();
-            vs.defines.push(quantizationDefine);
-            vs.sources.push(getPositionMode(sceneMode));
-            vs.sources.push(get2DYPositionFraction(useWebMercatorProjection));
-
-            // pass through fragment shader. only depth is rendered for the globe on a pick pass
-            var fs =
-                'void main()\n' +
-                '{\n' +
-                '    gl_FragColor = vec4(1.0, 1.0, 0.0, 1.0);\n' +
-                '}\n';
-
-            pickShader = this._pickShaderPrograms[flags] = ShaderProgram.fromCache({
-                context : frameState.context,
-                vertexShaderSource : vs,
-                fragmentShaderSource : fs,
-                attributeLocations : terrainEncoding.getAttributeLocations()
-            });
-        }
-
-        return pickShader;
-    };
-
     GlobeSurfaceShaderSet.prototype.destroy = function() {
         var flags;
         var shader;
@@ -286,14 +340,6 @@ define([
                         }
                     }
                 }
-            }
-        }
-
-        var pickShaderPrograms = this._pickShaderPrograms;
-        for (flags in pickShaderPrograms) {
-            if (pickShaderPrograms.hasOwnProperty(flags)) {
-                shader = pickShaderPrograms[flags];
-                shader.destroy();
             }
         }
 

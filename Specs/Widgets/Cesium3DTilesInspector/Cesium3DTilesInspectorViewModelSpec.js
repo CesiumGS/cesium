@@ -15,7 +15,7 @@ defineSuite([
     'use strict';
 
     // Parent tile with content and four child tiles with content
-    var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/';
+    var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/tileset.json';
 
     var scene;
     var viewModel;
@@ -256,13 +256,13 @@ defineSuite([
             style = new Cesium3DTileStyle({
                 color : {
                     conditions : [
-                        ["${Height} >= 83", "color('purple', 0.5)"],
-                        ["${Height} >= 80", "color('red')"],
-                        ["${Height} >= 70", "color('orange')"],
-                        ["${Height} >= 12", "color('yellow')"],
-                        ["${Height} >= 7", "color('lime')"],
-                        ["${Height} >= 1", "color('cyan')"],
-                        ["true", "color('blue')"]
+                        ['${Height} >= 83', "color('purple', 0.5)"],
+                        ['${Height} >= 80', "color('red')"],
+                        ['${Height} >= 70', "color('orange')"],
+                        ['${Height} >= 12', "color('yellow')"],
+                        ['${Height} >= 7', "color('lime')"],
+                        ['${Height} >= 1', "color('cyan')"],
+                        ['true', "color('blue')"]
                     ]
                 },
                 meta : {
