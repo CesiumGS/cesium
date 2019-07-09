@@ -54,6 +54,7 @@ define([
         '../ThirdParty/GltfPipeline/parseGlb',
         '../ThirdParty/GltfPipeline/removePipelineExtras',
         '../ThirdParty/GltfPipeline/updateVersion',
+        '../ThirdParty/basis_transcoder',
         '../ThirdParty/when',
         './Axis',
         './BlendingState',
@@ -132,6 +133,7 @@ define([
         parseGlb,
         removePipelineExtras,
         updateVersion,
+        basis_transcoder,
         when,
         Axis,
         BlendingState,
@@ -2653,6 +2655,12 @@ define([
 
         var tx;
         var source = gltfTexture.image;
+
+        // TODO: Might want to step through this and see what's what
+        // Access to file ext in here? If not, where? access to extension name?
+        // context is prob WebGLRenderContext
+        // internal/pixelFormat is enum for BC1-5 RGB RGBA ect
+        // I think ill need to set this after i transcode it to whatever the suppported/preferred type was
 
         if (defined(internalFormat)) {
             tx = new Texture({
