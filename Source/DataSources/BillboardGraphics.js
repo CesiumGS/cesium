@@ -27,71 +27,71 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.image] A Property specifying the Image, URI, or Canvas to use for the billboard.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the billboard.
+     * @param {Property} [options.image] A Property specifying the Image, URI, or Canvas to use for the billboard.
      * @param {Property} [options.scale=1.0] A numeric Property specifying the scale to apply to the image size.
+     * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
+     * @param {Property} [options.eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
      * @param {Property} [options.horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
      * @param {Property} [options.verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
-     * @param {Property} [options.eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
-     * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.color=Color.WHITE] A Property specifying the tint {@link Color} of the image.
      * @param {Property} [options.rotation=0] A numeric Property specifying the rotation about the alignedAxis.
      * @param {Property} [options.alignedAxis=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the unit vector axis of rotation.
+     * @param {Property} [options.sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
      * @param {Property} [options.width] A numeric Property specifying the width of the billboard in pixels, overriding the native size.
      * @param {Property} [options.height] A numeric Property specifying the height of the billboard in pixels, overriding the native size.
-     * @param {Property} [options.color=Color.WHITE] A Property specifying the tint {@link Color} of the image.
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance from the camera.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
      * @param {Property} [options.imageSubRegion] A Property specifying a {@link BoundingRectangle} that defines a sub-region of the image to use for the billboard, rather than the entire image, measured in pixels from the bottom-left.
-     * @param {Property} [options.sizeInMeters] A boolean Property specifying whether this billboard's size should be measured in meters.
-     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this billboard will be displayed.
      * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     function BillboardGraphics(options) {
+        this._definitionChanged = new Event();
+        this._show = undefined;
+        this._showSubscription = undefined;
         this._image = undefined;
         this._imageSubscription = undefined;
-        this._imageSubRegion = undefined;
-        this._imageSubRegionSubscription = undefined;
-        this._width = undefined;
-        this._widthSubscription = undefined;
-        this._height = undefined;
-        this._heightSubscription = undefined;
         this._scale = undefined;
         this._scaleSubscription = undefined;
-        this._rotation = undefined;
-        this._rotationSubscription = undefined;
-        this._alignedAxis = undefined;
-        this._alignedAxisSubscription = undefined;
+        this._pixelOffset = undefined;
+        this._pixelOffsetSubscription = undefined;
+        this._eyeOffset = undefined;
+        this._eyeOffsetSubscription = undefined;
         this._horizontalOrigin = undefined;
         this._horizontalOriginSubscription = undefined;
         this._verticalOrigin = undefined;
         this._verticalOriginSubscription = undefined;
-        this._color = undefined;
-        this._colorSubscription = undefined;
-        this._eyeOffset = undefined;
-        this._eyeOffsetSubscription = undefined;
         this._heightReference = undefined;
         this._heightReferenceSubscription = undefined;
-        this._pixelOffset = undefined;
-        this._pixelOffsetSubscription = undefined;
-        this._show = undefined;
-        this._showSubscription = undefined;
+        this._color = undefined;
+        this._colorSubscription = undefined;
+        this._rotation = undefined;
+        this._rotationSubscription = undefined;
+        this._alignedAxis = undefined;
+        this._alignedAxisSubscription = undefined;
+        this._sizeInMeters = undefined;
+        this._sizeInMetersSubscription = undefined;
+        this._width = undefined;
+        this._widthSubscription = undefined;
+        this._height = undefined;
+        this._heightSubscription = undefined;
         this._scaleByDistance = undefined;
         this._scaleByDistanceSubscription = undefined;
         this._translucencyByDistance = undefined;
         this._translucencyByDistanceSubscription = undefined;
         this._pixelOffsetScaleByDistance = undefined;
         this._pixelOffsetScaleByDistanceSubscription = undefined;
-        this._sizeInMeters = undefined;
-        this._sizeInMetersSubscription = undefined;
+        this._imageSubRegion = undefined;
+        this._imageSubRegionSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
         this._disableDepthTestDistance = undefined;
         this._disableDepthTestDistanceSubscription = undefined;
-        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -111,20 +111,19 @@ define([
         },
 
         /**
+         * Gets or sets the boolean Property specifying the visibility of the billboard.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         * @default true
+         */
+        show : createPropertyDescriptor('show'),
+
+        /**
          * Gets or sets the Property specifying the Image, URI, or Canvas to use for the billboard.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
          */
         image : createPropertyDescriptor('image'),
-
-        /**
-         * Gets or sets the Property specifying a {@link BoundingRectangle} that defines a
-         * sub-region of the <code>image</code> to use for the billboard, rather than the entire image,
-         * measured in pixels from the bottom-left.
-         * @memberof BillboardGraphics.prototype
-         * @type {Property}
-         */
-        imageSubRegion : createPropertyDescriptor('imageSubRegion'),
 
         /**
          * Gets or sets the numeric Property specifying the uniform scale to apply to the image.
@@ -142,58 +141,24 @@ define([
         scale : createPropertyDescriptor('scale'),
 
         /**
-         * Gets or sets the numeric Property specifying the rotation of the image
-         * counter clockwise from the <code>alignedAxis</code>.
-         * @memberof BillboardGraphics.prototype
-         * @type {Property}
-         * @default 0
-         */
-        rotation : createPropertyDescriptor('rotation'),
-
-        /**
-         * Gets or sets the {@link Cartesian3} Property specifying the unit vector axis of rotation
-         * in the fixed frame. When set to Cartesian3.ZERO the rotation is from the top of the screen.
-         * @memberof BillboardGraphics.prototype
-         * @type {Property}
-         * @default Cartesian3.ZERO
-         */
-        alignedAxis : createPropertyDescriptor('alignedAxis'),
-
-        /**
-         * Gets or sets the Property specifying the {@link HorizontalOrigin}.
-         * @memberof BillboardGraphics.prototype
-         * @type {Property}
-         * @default HorizontalOrigin.CENTER
-         */
-        horizontalOrigin : createPropertyDescriptor('horizontalOrigin'),
-
-        /**
-         * Gets or sets the Property specifying the {@link VerticalOrigin}.
-         * @memberof BillboardGraphics.prototype
-         * @type {Property}
-         * @default VerticalOrigin.CENTER
-         */
-        verticalOrigin : createPropertyDescriptor('verticalOrigin'),
-
-        /**
-         * Gets or sets the Property specifying the {@link Color} that is multiplied with the <code>image</code>.
-         * This has two common use cases.  First, the same white texture may be used by many different billboards,
-         * each with a different color, to create colored billboards. Second, the color's alpha component can be
-         * used to make the billboard translucent as shown below. An alpha of <code>0.0</code> makes the billboard
-         * transparent, and <code>1.0</code> makes the billboard opaque.
+         * Gets or sets the {@link Cartesian2} Property specifying the billboard's pixel offset in screen space
+         * from the origin of this billboard.  This is commonly used to align multiple billboards and labels at
+         * the same position, e.g., an image and text.  The screen space origin is the top, left corner of the
+         * canvas; <code>x</code> increases from left to right, and <code>y</code> increases from top to bottom.
          * <p>
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setColor.Alpha255.png' width='250' height='188' /></td>
-         * <td align='center'><code>alpha : 0.5</code><br/><img src='Images/Billboard.setColor.Alpha127.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
+         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, 25);</code><br/><img src='Images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
          * </tr></table>
+         * The billboard's origin is indicated by the yellow point.
          * </div>
          * </p>
          * @memberof BillboardGraphics.prototype
          * @type {Property}
-         * @default Color.WHITE
+         * @default Cartesian2.ZERO
          */
-        color : createPropertyDescriptor('color'),
+        pixelOffset : createPropertyDescriptor('pixelOffset'),
 
         /**
          * Gets or sets the {@link Cartesian3} Property specifying the billboard's offset in eye coordinates.
@@ -221,6 +186,22 @@ define([
         eyeOffset : createPropertyDescriptor('eyeOffset'),
 
         /**
+         * Gets or sets the Property specifying the {@link HorizontalOrigin}.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         * @default HorizontalOrigin.CENTER
+         */
+        horizontalOrigin : createPropertyDescriptor('horizontalOrigin'),
+
+        /**
+         * Gets or sets the Property specifying the {@link VerticalOrigin}.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         * @default VerticalOrigin.CENTER
+         */
+        verticalOrigin : createPropertyDescriptor('verticalOrigin'),
+
+        /**
          * Gets or sets the Property specifying the {@link HeightReference}.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
@@ -229,35 +210,53 @@ define([
         heightReference : createPropertyDescriptor('heightReference'),
 
         /**
-         * Gets or sets the {@link Cartesian2} Property specifying the billboard's pixel offset in screen space
-         * from the origin of this billboard.  This is commonly used to align multiple billboards and labels at
-         * the same position, e.g., an image and text.  The screen space origin is the top, left corner of the
-         * canvas; <code>x</code> increases from left to right, and <code>y</code> increases from top to bottom.
+         * Gets or sets the Property specifying the {@link Color} that is multiplied with the <code>image</code>.
+         * This has two common use cases.  First, the same white texture may be used by many different billboards,
+         * each with a different color, to create colored billboards. Second, the color's alpha component can be
+         * used to make the billboard translucent as shown below. An alpha of <code>0.0</code> makes the billboard
+         * transparent, and <code>1.0</code> makes the billboard opaque.
          * <p>
          * <div align='center'>
          * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>b.pixeloffset = new Cartesian2(50, 25);</code><br/><img src='Images/Billboard.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * <td align='center'><code>default</code><br/><img src='Images/Billboard.setColor.Alpha255.png' width='250' height='188' /></td>
+         * <td align='center'><code>alpha : 0.5</code><br/><img src='Images/Billboard.setColor.Alpha127.png' width='250' height='188' /></td>
          * </tr></table>
-         * The billboard's origin is indicated by the yellow point.
          * </div>
          * </p>
          * @memberof BillboardGraphics.prototype
          * @type {Property}
-         * @default Cartesian2.ZERO
+         * @default Color.WHITE
          */
-        pixelOffset : createPropertyDescriptor('pixelOffset'),
+        color : createPropertyDescriptor('color'),
 
         /**
-         * Gets or sets the boolean Property specifying the visibility of the billboard.
+         * Gets or sets the numeric Property specifying the rotation of the image
+         * counter clockwise from the <code>alignedAxis</code>.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
-         * @default true
+         * @default 0
          */
-        show : createPropertyDescriptor('show'),
+        rotation : createPropertyDescriptor('rotation'),
 
         /**
-         * Gets or sets the numeric Property specifying the billboard's width in pixels.
+         * Gets or sets the {@link Cartesian3} Property specifying the unit vector axis of rotation
+         * in the fixed frame. When set to Cartesian3.ZERO the rotation is from the top of the screen.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         * @default Cartesian3.ZERO
+         */
+        alignedAxis : createPropertyDescriptor('alignedAxis'),
+
+        /**
+         * Gets or sets the boolean Property specifying if this billboard's size will be measured in meters.
+         * @memberof BillboardGraphics.prototype
+         * @type {Property}
+         * @default false
+         */
+        sizeInMeters : createPropertyDescriptor('sizeInMeters'),
+
+        /**
+         * Gets or sets the numeric Property specifying the width of the billboard in pixels.
          * When undefined, the native width is used.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
@@ -306,12 +305,13 @@ define([
         pixelOffsetScaleByDistance : createPropertyDescriptor('pixelOffsetScaleByDistance'),
 
         /**
-         * Gets or sets the boolean Property specifying if this billboard's size will be measured in meters.
+         * Gets or sets the Property specifying a {@link BoundingRectangle} that defines a
+         * sub-region of the <code>image</code> to use for the billboard, rather than the entire image,
+         * measured in pixels from the bottom-left.
          * @memberof BillboardGraphics.prototype
          * @type {Property}
-         * @default false
          */
-        sizeInMeters : createPropertyDescriptor('sizeInMeters'),
+        imageSubRegion : createPropertyDescriptor('imageSubRegion'),
 
         /**
          * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this billboard will be displayed.
@@ -339,24 +339,24 @@ define([
         if (!defined(result)) {
             return new BillboardGraphics(this);
         }
-        result.color = this._color;
-        result.eyeOffset = this._eyeOffset;
-        result.heightReference = this._heightReference;
-        result.horizontalOrigin = this._horizontalOrigin;
+        result.show = this._show;
         result.image = this._image;
-        result.imageSubRegion = this._imageSubRegion;
-        result.pixelOffset = this._pixelOffset;
         result.scale = this._scale;
+        result.pixelOffset = this._pixelOffset;
+        result.eyeOffset = this._eyeOffset;
+        result.horizontalOrigin = this._horizontalOrigin;
+        result.verticalOrigin = this._verticalOrigin;
+        result.heightReference = this._heightReference;
+        result.color = this._color;
         result.rotation = this._rotation;
         result.alignedAxis = this._alignedAxis;
-        result.show = this._show;
-        result.verticalOrigin = this._verticalOrigin;
+        result.sizeInMeters = this._sizeInMeters;
         result.width = this._width;
         result.height = this._height;
         result.scaleByDistance = this._scaleByDistance;
         result.translucencyByDistance = this._translucencyByDistance;
         result.pixelOffsetScaleByDistance = this._pixelOffsetScaleByDistance;
-        result.sizeInMeters = this._sizeInMeters;
+        result.imageSubRegion = this._imageSubRegion;
         result.distanceDisplayCondition = this._distanceDisplayCondition;
         result.disableDepthTestDistance = this._disableDepthTestDistance;
         return result;
@@ -375,24 +375,24 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.color = defaultValue(this._color, source.color);
-        this.eyeOffset = defaultValue(this._eyeOffset, source.eyeOffset);
-        this.heightReference = defaultValue(this._heightReference, source.heightReference);
-        this.horizontalOrigin = defaultValue(this._horizontalOrigin, source.horizontalOrigin);
+        this.show = defaultValue(this._show, source.show);
         this.image = defaultValue(this._image, source.image);
-        this.imageSubRegion = defaultValue(this._imageSubRegion, source.imageSubRegion);
-        this.pixelOffset = defaultValue(this._pixelOffset, source.pixelOffset);
         this.scale = defaultValue(this._scale, source.scale);
+        this.pixelOffset = defaultValue(this._pixelOffset, source.pixelOffset);
+        this.eyeOffset = defaultValue(this._eyeOffset, source.eyeOffset);
+        this.horizontalOrigin = defaultValue(this._horizontalOrigin, source.horizontalOrigin);
+        this.verticalOrigin = defaultValue(this._verticalOrigin, source.verticalOrigin);
+        this.heightReference = defaultValue(this._heightReference, source.heightReference);
+        this.color = defaultValue(this._color, source.color);
         this.rotation = defaultValue(this._rotation, source.rotation);
         this.alignedAxis = defaultValue(this._alignedAxis, source.alignedAxis);
-        this.show = defaultValue(this._show, source.show);
-        this.verticalOrigin = defaultValue(this._verticalOrigin, source.verticalOrigin);
+        this.sizeInMeters = defaultValue(this._sizeInMeters, source.sizeInMeters);
         this.width = defaultValue(this._width, source.width);
         this.height = defaultValue(this._height, source.height);
         this.scaleByDistance = defaultValue(this._scaleByDistance, source.scaleByDistance);
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
         this.pixelOffsetScaleByDistance = defaultValue(this._pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
-        this.sizeInMeters = defaultValue(this._sizeInMeters, source.sizeInMeters);
+        this.imageSubRegion = defaultValue(this._imageSubRegion, source.imageSubRegion);
         this.distanceDisplayCondition = defaultValue(this._distanceDisplayCondition, source.distanceDisplayCondition);
         this.disableDepthTestDistance = defaultValue(this._disableDepthTestDistance, source.disableDepthTestDistance);
     };

@@ -78,12 +78,14 @@ define([
          * @type {Property}
          */
         color : createPropertyDescriptor('color'),
+
         /**
          * Gets or sets the numeric Property specifying the strength of the glow, as a percentage of the total line width (less than 1.0).
          * @memberof PolylineGlowMaterialProperty.prototype
          * @type {Property}
          */
         glowPower : createPropertyDescriptor('glowPower'),
+
         /**
          * Gets or sets the numeric Property specifying the strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.
          * @memberof PolylineGlowMaterialProperty.prototype

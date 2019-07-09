@@ -34,6 +34,7 @@ define([
         '../Core/Spherical',
         '../Core/TimeInterval',
         '../Core/TimeIntervalCollection',
+        '../Scene/ClassificationType',
         '../Scene/ColorBlendMode',
         '../Scene/HeightReference',
         '../Scene/HorizontalOrigin',
@@ -124,6 +125,7 @@ define([
         Spherical,
         TimeInterval,
         TimeIntervalCollection,
+        ClassificationType,
         ColorBlendMode,
         HeightReference,
         HorizontalOrigin,
@@ -515,6 +517,8 @@ define([
             return Color;
         } else if (czmlInterval.hasOwnProperty('arcType')) {
             return ArcType;
+        } else if (czmlInterval.hasOwnProperty('classificationType')) {
+            return ClassificationType;
         } else if (czmlInterval.hasOwnProperty('colorBlendMode')) {
             return ColorBlendMode;
         } else if (czmlInterval.hasOwnProperty('cornerType')) {
@@ -576,6 +580,8 @@ define([
                 return unwrapUnitCartesianInterval(czmlInterval);
             case Color:
                 return unwrapColorInterval(czmlInterval);
+            case ClassificationType:
+                return ClassificationType[defaultValue(czmlInterval.classificationType, czmlInterval)];
             case ColorBlendMode:
                 return ColorBlendMode[defaultValue(czmlInterval.colorBlendMode, czmlInterval)];
             case CornerType:
@@ -1442,6 +1448,7 @@ define([
 
         processPacketData(Boolean, box, 'show', boxData.show, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, box, 'dimensions', boxData.dimensions, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, box, 'heightReference', boxData.heightReference, interval, sourceUri, entityCollection);
         processPacketData(Boolean, box, 'fill', boxData.fill, interval, sourceUri, entityCollection);
         processMaterialPacketData(box, 'material', boxData.material, interval, sourceUri, entityCollection);
         processPacketData(Boolean, box, 'outline', boxData.outline, interval, sourceUri, entityCollection);
@@ -1473,8 +1480,8 @@ define([
         processPositions(corridor, 'positions', corridorData.positions, entityCollection);
         processPacketData(Number, corridor, 'width', corridorData.width, interval, sourceUri, entityCollection);
         processPacketData(Number, corridor, 'height', corridorData.height, interval, sourceUri, entityCollection);
-        processPacketData(Number, corridor, 'extrudedHeight', corridorData.extrudedHeight, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, corridor, 'heightReference', corridorData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(Number, corridor, 'extrudedHeight', corridorData.extrudedHeight, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, corridor, 'extrudedHeightReference', corridorData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(CornerType, corridor, 'cornerType', corridorData.cornerType, interval, sourceUri, entityCollection);
         processPacketData(Number, corridor, 'granularity', corridorData.granularity, interval, sourceUri, entityCollection);
@@ -1485,6 +1492,7 @@ define([
         processPacketData(Number, corridor, 'outlineWidth', corridorData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, corridor, 'shadows', corridorData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, corridor, 'distanceDisplayCondition', corridorData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(ClassificationType, corridor, 'classificationType', corridorData.classificationType, interval, sourceUri, entityCollection);
         processPacketData(Number, corridor, 'zIndex', corridorData.zIndex, interval, sourceUri, entityCollection);
     }
 
@@ -1510,6 +1518,7 @@ define([
         processPacketData(Number, cylinder, 'length', cylinderData.length, interval, sourceUri, entityCollection);
         processPacketData(Number, cylinder, 'topRadius', cylinderData.topRadius, interval, sourceUri, entityCollection);
         processPacketData(Number, cylinder, 'bottomRadius', cylinderData.bottomRadius, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, cylinder, 'heightReference', cylinderData.heightReference, interval, sourceUri, entityCollection);
         processPacketData(Boolean, cylinder, 'fill', cylinderData.fill, interval, sourceUri, entityCollection);
         processMaterialPacketData(cylinder, 'material', cylinderData.material, interval, sourceUri, entityCollection);
         processPacketData(Boolean, cylinder, 'outline', cylinderData.outline, interval, sourceUri, entityCollection);
@@ -1588,8 +1597,8 @@ define([
         processPacketData(Number, ellipse, 'semiMajorAxis', ellipseData.semiMajorAxis, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'semiMinorAxis', ellipseData.semiMinorAxis, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'height', ellipseData.height, interval, sourceUri, entityCollection);
-        processPacketData(Number, ellipse, 'extrudedHeight', ellipseData.extrudedHeight, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, ellipse, 'heightReference', ellipseData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipse, 'extrudedHeight', ellipseData.extrudedHeight, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, ellipse, 'extrudedHeightReference', ellipseData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(Rotation, ellipse, 'rotation', ellipseData.rotation, interval, sourceUri, entityCollection);
         processPacketData(Rotation, ellipse, 'stRotation', ellipseData.stRotation, interval, sourceUri, entityCollection);
@@ -1602,6 +1611,7 @@ define([
         processPacketData(Number, ellipse, 'numberOfVerticalLines', ellipseData.numberOfVerticalLines, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, ellipse, 'shadows', ellipseData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, ellipse, 'distanceDisplayCondition', ellipseData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(ClassificationType, ellipse, 'classificationType', ellipseData.classificationType, interval, sourceUri, entityCollection);
         processPacketData(Number, ellipse, 'zIndex', ellipseData.zIndex, interval, sourceUri, entityCollection);
     }
 
@@ -1625,6 +1635,7 @@ define([
 
         processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri, entityCollection);
+        processPacketData(HeightReference, ellipsoid, 'heightReference', ellipsoidData.heightReference, interval, sourceUri, entityCollection);
         processPacketData(Boolean, ellipsoid, 'fill', ellipsoidData.fill, interval, sourceUri, entityCollection);
         processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri, entityCollection);
         processPacketData(Boolean, ellipsoid, 'outline', ellipsoidData.outline, interval, sourceUri, entityCollection);
@@ -1713,14 +1724,26 @@ define([
         processPacketData(Number, model, 'colorBlendAmount', modelData.colorBlendAmount, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, model, 'distanceDisplayCondition', modelData.distanceDisplayCondition, interval, sourceUri, entityCollection);
 
+        var i, len;
         var nodeTransformationsData = modelData.nodeTransformations;
         if (defined(nodeTransformationsData)) {
             if (isArray(nodeTransformationsData)) {
-                for (var i = 0, len = nodeTransformationsData.length; i < len; i++) {
+                for (i = 0, len = nodeTransformationsData.length; i < len; i++) {
                     processNodeTransformations(model, nodeTransformationsData[i], interval, sourceUri, entityCollection);
                 }
             } else {
                 processNodeTransformations(model, nodeTransformationsData, interval, sourceUri, entityCollection);
+            }
+        }
+
+        var articulationsData = modelData.articulations;
+        if (defined(articulationsData)) {
+            if (isArray(articulationsData)) {
+                for (i = 0, len = articulationsData.length; i < len; i++) {
+                    processArticulations(model, articulationsData[i], interval, sourceUri, entityCollection);
+                }
+            } else {
+                processArticulations(model, articulationsData, interval, sourceUri, entityCollection);
             }
         }
     }
@@ -1772,6 +1795,46 @@ define([
         }
     }
 
+    function processArticulations(model, articulationsData, constrainedInterval, sourceUri, entityCollection) {
+        var combinedInterval;
+        var packetInterval = articulationsData.interval;
+        if (defined(packetInterval)) {
+            iso8601Scratch.iso8601 = packetInterval;
+            combinedInterval = TimeInterval.fromIso8601(iso8601Scratch);
+            if (defined(constrainedInterval)) {
+                combinedInterval = TimeInterval.intersect(combinedInterval, constrainedInterval, scratchTimeInterval);
+            }
+        } else if (defined(constrainedInterval)) {
+            combinedInterval = constrainedInterval;
+        }
+
+        var articulations = model.articulations;
+        var keys = Object.keys(articulationsData);
+        for (var i = 0, len = keys.length; i < len; ++i) {
+            var key = keys[i];
+
+            if (key === 'interval') {
+                continue;
+            }
+
+            var articulationStageData = articulationsData[key];
+
+            if (!defined(articulationStageData)) {
+                continue;
+            }
+
+            if (!defined(articulations)) {
+                model.articulations = articulations = new PropertyBag();
+            }
+
+            if (!articulations.hasProperty(key)) {
+                articulations.addProperty(key);
+            }
+
+            processPacketData(Number, articulations, key, articulationStageData, combinedInterval, sourceUri, entityCollection);
+        }
+    }
+
     function processPath(entity, packet, entityCollection, sourceUri) {
         var pathData = packet.path;
         if (!defined(pathData)) {
@@ -1791,10 +1854,10 @@ define([
         }
 
         processPacketData(Boolean, path, 'show', pathData.show, interval, sourceUri, entityCollection);
-        processPacketData(Number, path, 'width', pathData.width, interval, sourceUri, entityCollection);
-        processPacketData(Number, path, 'resolution', pathData.resolution, interval, sourceUri, entityCollection);
         processPacketData(Number, path, 'leadTime', pathData.leadTime, interval, sourceUri, entityCollection);
         processPacketData(Number, path, 'trailTime', pathData.trailTime, interval, sourceUri, entityCollection);
+        processPacketData(Number, path, 'width', pathData.width, interval, sourceUri, entityCollection);
+        processPacketData(Number, path, 'resolution', pathData.resolution, interval, sourceUri, entityCollection);
         processMaterialPacketData(path, 'material', pathData.material, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, path, 'distanceDisplayCondition', pathData.distanceDisplayCondition, interval, sourceUri, entityCollection);
     }
@@ -1850,8 +1913,8 @@ define([
         processPacketData(Boolean, polygon, 'show', polygonData.show, interval, sourceUri, entityCollection);
         processPositions(polygon, 'hierarchy', polygonData.positions, entityCollection);
         processPacketData(Number, polygon, 'height', polygonData.height, interval, sourceUri, entityCollection);
-        processPacketData(Number, polygon, 'extrudedHeight', polygonData.extrudedHeight, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, polygon, 'heightReference', polygonData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(Number, polygon, 'extrudedHeight', polygonData.extrudedHeight, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, polygon, 'extrudedHeightReference', polygonData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(Rotation, polygon, 'stRotation', polygonData.stRotation, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'granularity', polygonData.granularity, interval, sourceUri, entityCollection);
@@ -1866,6 +1929,7 @@ define([
         processPacketData(ArcType, polygon, 'arcType', polygonData.arcType, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polygon, 'shadows', polygonData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polygon, 'distanceDisplayCondition', polygonData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(ClassificationType, polygon, 'classificationType', polygonData.classificationType, interval, sourceUri, entityCollection);
         processPacketData(Number, polygon, 'zIndex', polygonData.zIndex, interval, sourceUri, entityCollection);
     }
 
@@ -1901,6 +1965,7 @@ define([
         processPacketData(Boolean, polyline, 'clampToGround', polylineData.clampToGround, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, polyline, 'shadows', polylineData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, polyline, 'distanceDisplayCondition', polylineData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(ClassificationType, polyline, 'classificationType', polylineData.classificationType, interval, sourceUri, entityCollection);
         processPacketData(Number, polyline, 'zIndex', polylineData.zIndex, interval, sourceUri, entityCollection);
 
         // for backwards compatibility, adapt CZML followSurface to arcType.
@@ -1932,8 +1997,8 @@ define([
         processPacketData(Boolean, rectangle, 'show', rectangleData.show, interval, sourceUri, entityCollection);
         processPacketData(Rectangle, rectangle, 'coordinates', rectangleData.coordinates, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'height', rectangleData.height, interval, sourceUri, entityCollection);
-        processPacketData(Number, rectangle, 'extrudedHeight', rectangleData.extrudedHeight, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, rectangle, 'heightReference', rectangleData.heightReference, interval, sourceUri, entityCollection);
+        processPacketData(Number, rectangle, 'extrudedHeight', rectangleData.extrudedHeight, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, rectangle, 'extrudedHeightReference', rectangleData.extrudedHeightReference, interval, sourceUri, entityCollection);
         processPacketData(Rotation, rectangle, 'rotation', rectangleData.rotation, interval, sourceUri, entityCollection);
         processPacketData(Rotation, rectangle, 'stRotation', rectangleData.stRotation, interval, sourceUri, entityCollection);
@@ -1945,6 +2010,7 @@ define([
         processPacketData(Number, rectangle, 'outlineWidth', rectangleData.outlineWidth, interval, sourceUri, entityCollection);
         processPacketData(ShadowMode, rectangle, 'shadows', rectangleData.shadows, interval, sourceUri, entityCollection);
         processPacketData(DistanceDisplayCondition, rectangle, 'distanceDisplayCondition', rectangleData.distanceDisplayCondition, interval, sourceUri, entityCollection);
+        processPacketData(ClassificationType, rectangle, 'classificationType', rectangleData.classificationType, interval, sourceUri, entityCollection);
         processPacketData(Number, rectangle, 'zIndex', rectangleData.zIndex, interval, sourceUri, entityCollection);
     }
 
