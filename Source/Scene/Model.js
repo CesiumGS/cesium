@@ -2586,6 +2586,15 @@ define([
     ///////////////////////////////////////////////////////////////////////////
 
     function createTexture(gltfTexture, model, context) {
+        // TODO:
+        // See loadTexturesFromBufferViews for the place to insert a case to load basis
+        // Create a loadKTX2 in Core the same way it does loads for other things (ktx, crn typedarray), set needed paraemters before exiting func
+        // context._gl is prob the WebGLRenderContext
+        // internal/pixelFormat is enum for BC1-5, RGBA,etc. set internalFormat after transcode to suppported type
+        // model.gltf has .textures so it should also have .images which has .mimeType "image/basis"
+        // the original gltf for the basis agiHQ has a extensionsUsed and Required array, get rid of this for the time being save as BAK
+        // Skinned character (cesium man) has a jpg texture and it was already a bitmap by the time it got here. Need to find where the conversion is happening.
+
         var textures = model.gltf.textures;
         var texture = textures[gltfTexture.id];
 
@@ -2655,13 +2664,6 @@ define([
 
         var tx;
         var source = gltfTexture.image;
-
-        // TODO:
-        // context._gl is prob the WebGLRenderContext
-        // internal/pixelFormat is enum for BC1-5, RGBA,etc. set internalFormat after transcode to suppported type
-        // model.gltf has .textures so it would have .images which would have the .mimeType and .uri
-        // the original gltf for the basis agiHQ has a extensionsUsed and Required array, get rid of this for the time being save as BAK
-        // Skinned character (cesium man) has a jpg texture and it was already a bitmap by the time it got here. Need to find where the conversion is happening
 
         if (defined(internalFormat)) {
             tx = new Texture({
