@@ -106,7 +106,9 @@ define([
         // see basis_universal/webgl/gltf/BasisTextureLoader.js
         // LATER:
         // Both of the examples' index.html's have BASIS() and Module things that pull out BasisFile and initializeBasis
-        var byteBuffer = new Uint8Array(data);
+        // var byteBuffer = new Uint8Array(data);
+        // initializeBasis();
+        // var basisFile = new BasisFile(new Uint8Array(data));
     }
 
     // var fileIdentifier = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
