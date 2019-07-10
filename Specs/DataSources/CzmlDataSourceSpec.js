@@ -5428,7 +5428,7 @@ defineSuite([
             expect(e = dataSource.entities.getById('constant_corridor_material_grid_color')).toBeDefined();
             expect(e.corridor.material.color.getValue(date)).toEqualEpsilon(new Color(0.576470588235294, 0.76078431372549, 0.152941176470588, 0.00392156862745098), 1e-14);
             expect(e = dataSource.entities.getById('constant_corridor_material_stripe_evenColor')).toBeDefined();
-            expect(e.corridor.material.evenColor.getValue(date)).toEqualEpsilon(new Color(0.913725490196078, 0.63921568627451, 0.631372549019608, 0.890196078431373), 1e-14);
+            expect(e.corridor.material.evenColor.getValue(date)).toEqualEpsilon(new Color(0.913725490196078, 0.63921568627451, 0.631372549019608, 0.890196078431372), 1e-14);
             expect(e = dataSource.entities.getById('constant_corridor_material_stripe_oddColor')).toBeDefined();
             expect(e.corridor.material.oddColor.getValue(date)).toEqualEpsilon(new Color(0.2, 0.137254901960784, 0.792156862745098, 0.301960784313725), 1e-14);
             expect(e = dataSource.entities.getById('constant_corridor_material_checkerboard_evenColor')).toBeDefined();
@@ -5712,7 +5712,7 @@ defineSuite([
             expect(e.polyline.material.oddColor.getValue(date)).toEqual(Color.fromBytes(189, 110, 12, 32));
             expect(e.polyline.material.repeat.getValue(date)).toEqual(new Cartesian2(22832, 11097));
             expect(e = dataSource.entities.getById('constant_polyline_material_polylineOutline_color')).toBeDefined();
-            expect(e.polyline.material.color.getValue(date)).toEqualEpsilon(new Color(0.450980392156863, 0.890196078431373, 0.403921568627451, 0.16078431372549), 1e-14);
+            expect(e.polyline.material.color.getValue(date)).toEqualEpsilon(new Color(0.450980392156863, 0.890196078431372, 0.403921568627451, 0.16078431372549), 1e-14);
             expect(e = dataSource.entities.getById('constant_polyline_material_polylineOutline_outlineColor')).toBeDefined();
             expect(e.polyline.material.outlineColor.getValue(date)).toEqualEpsilon(new Color(0.815686274509804, 0.545098039215686, 0.529411764705882, 0.317647058823529), 1e-14);
             expect(e = dataSource.entities.getById('constant_polyline_material_polylineArrow_color')).toBeDefined();
@@ -6982,10 +6982,10 @@ defineSuite([
             expect(e.box.material.repeat.getValue(documentStopDate)).toEqual(new Cartesian2(34685, 17543));
             expect(e = dataSource.entities.getById('sampled_box_material_image_color')).toBeDefined();
             expect(e.box.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.149019607843137, 0.929411764705882, 0.462745098039216, 0.764705882352941), 1e-14);
-            expect(e.box.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.890196078431373, 0.262745098039216, 0.866666666666667, 0.792156862745098), 1e-14);
+            expect(e.box.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.890196078431372, 0.262745098039216, 0.866666666666667, 0.792156862745098), 1e-14);
             expect(e = dataSource.entities.getById('sampled_box_material_grid_color')).toBeDefined();
             expect(e.box.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.501960784313725, 0.447058823529412, 0.72156862745098, 0.392156862745098), 1e-14);
-            expect(e.box.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.890196078431373, 0.505882352941176, 0.56078431372549, 0.674509803921569), 1e-14);
+            expect(e.box.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.890196078431372, 0.505882352941176, 0.56078431372549, 0.674509803921569), 1e-14);
             expect(e = dataSource.entities.getById('sampled_box_material_stripe_evenColor')).toBeDefined();
             expect(e.box.material.evenColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.980392156862745, 0.345098039215686, 0.929411764705882, 0.533333333333333), 1e-14);
             expect(e.box.material.evenColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.988235294117647, 0.372549019607843, 0.713725490196078, 0.466666666666667), 1e-14);
@@ -7164,7 +7164,7 @@ defineSuite([
             expect(e.ellipse.material.evenColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.207843137254902, 0.156862745098039, 0.952941176470588, 0.717647058823529), 1e-14);
             expect(e.ellipse.material.evenColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.635294117647059, 0.835294117647059, 0.76078431372549, 0.235294117647059), 1e-14);
             expect(e = dataSource.entities.getById('sampled_ellipse_material_checkerboard_oddColor')).toBeDefined();
-            expect(e.ellipse.material.oddColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.890196078431373, 0.141176470588235, 0.231372549019608, 0.623529411764706), 1e-14);
+            expect(e.ellipse.material.oddColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.890196078431372, 0.141176470588235, 0.231372549019608, 0.623529411764706), 1e-14);
             expect(e.ellipse.material.oddColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.192156862745098, 0.294117647058824, 0.741176470588235, 0.0274509803921569), 1e-14);
             expect(e = dataSource.entities.getById('sampled_ellipse_outlineColor_rgbaf')).toBeDefined();
             expect(e.ellipse.outlineColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.76078431372549, 0.36078431372549, 0.223529411764706, 0.611764705882353), 1e-14);
@@ -7220,7 +7220,7 @@ defineSuite([
             expect(e.ellipsoid.material.evenColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.819607843137255, 0.282352941176471, 0.929411764705882, 0.501960784313725), 1e-14);
             expect(e.ellipsoid.material.evenColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.850980392156863, 0.294117647058824, 0.498039215686275, 0.956862745098039), 1e-14);
             expect(e = dataSource.entities.getById('sampled_ellipsoid_material_checkerboard_oddColor')).toBeDefined();
-            expect(e.ellipsoid.material.oddColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.227450980392157, 0.862745098039216, 0.890196078431373, 0.207843137254902), 1e-14);
+            expect(e.ellipsoid.material.oddColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.227450980392157, 0.862745098039216, 0.890196078431372, 0.207843137254902), 1e-14);
             expect(e.ellipsoid.material.oddColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.796078431372549, 0.0470588235294118, 0.843137254901961, 0.388235294117647), 1e-14);
             expect(e = dataSource.entities.getById('sampled_ellipsoid_outlineColor_rgbaf')).toBeDefined();
             expect(e.ellipsoid.outlineColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.552941176470588, 0.549019607843137, 0.431372549019608, 0.568627450980392), 1e-14);
@@ -7242,7 +7242,7 @@ defineSuite([
             expect(e.model.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.435294117647059, 0.945098039215686, 0.431372549019608, 0.619607843137255), 1e-14);
             expect(e = dataSource.entities.getById('sampled_path_material_solidColor_color')).toBeDefined();
             expect(e.path.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.517647058823529, 0.56078431372549, 0.254901960784314, 0.494117647058824), 1e-14);
-            expect(e.path.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.905882352941176, 0.152941176470588, 0.854901960784314, 0.890196078431373), 1e-14);
+            expect(e.path.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.905882352941176, 0.152941176470588, 0.854901960784314, 0.890196078431372), 1e-14);
             expect(e = dataSource.entities.getById('sampled_path_material_polylineOutline')).toBeDefined();
             expect(e.path.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(209, 154, 35, 76));
             expect(e.path.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(186, 25, 242, 140));
@@ -7323,7 +7323,7 @@ defineSuite([
             expect(e.path.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.898039215686275, 0.772549019607843, 0.294117647058824, 0.0431372549019608), 1e-14);
             expect(e.path.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.815686274509804, 0.0901960784313725, 0.898039215686275, 0.309803921568627), 1e-14);
             expect(e = dataSource.entities.getById('sampled_path_material_grid_color')).toBeDefined();
-            expect(e.path.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.890196078431373, 0, 0.717647058823529, 0.329411764705882), 1e-14);
+            expect(e.path.material.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.890196078431372, 0, 0.717647058823529, 0.329411764705882), 1e-14);
             expect(e.path.material.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.474509803921569, 0.690196078431373, 0.0431372549019608, 0.258823529411765), 1e-14);
             expect(e = dataSource.entities.getById('sampled_path_material_stripe_evenColor')).toBeDefined();
             expect(e.path.material.evenColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.368627450980392, 0.584313725490196, 0.831372549019608, 0.541176470588235), 1e-14);
@@ -7568,7 +7568,7 @@ defineSuite([
             expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.729411764705882, 0.533333333333333, 0.411764705882353, 0.454901960784314), 1e-14);
             expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineDash_color')).toBeDefined();
             expect(e.polyline.depthFailMaterial.color.getValue(documentStartDate)).toEqualEpsilon(new Color(0.776470588235294, 0.0823529411764706, 0.96078431372549, 0.776470588235294), 1e-14);
-            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.0941176470588235, 0.643137254901961, 0.717647058823529, 0.890196078431373), 1e-14);
+            expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.0941176470588235, 0.643137254901961, 0.717647058823529, 0.890196078431372), 1e-14);
             expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_polylineDash_gapColor')).toBeDefined();
             expect(e.polyline.depthFailMaterial.gapColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.219607843137255, 0.403921568627451, 0.815686274509804, 0.803921568627451), 1e-14);
             expect(e.polyline.depthFailMaterial.gapColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.294117647058824, 0.615686274509804, 0.172549019607843, 0.0235294117647059), 1e-14);
@@ -7583,7 +7583,7 @@ defineSuite([
             expect(e.polyline.depthFailMaterial.color.getValue(documentStopDate)).toEqualEpsilon(new Color(0.423529411764706, 0.968627450980392, 0.815686274509804, 0.968627450980392), 1e-14);
             expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_stripe_evenColor')).toBeDefined();
             expect(e.polyline.depthFailMaterial.evenColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.854901960784314, 0.843137254901961, 0.701960784313725, 0.113725490196078), 1e-14);
-            expect(e.polyline.depthFailMaterial.evenColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.941176470588235, 0.890196078431373, 0.933333333333333, 0.588235294117647), 1e-14);
+            expect(e.polyline.depthFailMaterial.evenColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.941176470588235, 0.890196078431372, 0.933333333333333, 0.588235294117647), 1e-14);
             expect(e = dataSource.entities.getById('sampled_polyline_depthFailMaterial_stripe_oddColor')).toBeDefined();
             expect(e.polyline.depthFailMaterial.oddColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.427450980392157, 0.870588235294118, 0.96078431372549, 0.219607843137255), 1e-14);
             expect(e.polyline.depthFailMaterial.oddColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.219607843137255, 0.847058823529412, 0.752941176470588, 0.172549019607843), 1e-14);
@@ -7698,7 +7698,7 @@ defineSuite([
             expect(e.wall.material.evenColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.388235294117647, 0.847058823529412, 0.258823529411765, 0.113725490196078), 1e-14);
             expect(e = dataSource.entities.getById('sampled_wall_material_stripe_oddColor')).toBeDefined();
             expect(e.wall.material.oddColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.345098039215686, 0.0196078431372549, 0.0549019607843137, 0.662745098039216), 1e-14);
-            expect(e.wall.material.oddColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.694117647058824, 0.890196078431373, 0.380392156862745, 0.317647058823529), 1e-14);
+            expect(e.wall.material.oddColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.694117647058824, 0.890196078431372, 0.380392156862745, 0.317647058823529), 1e-14);
             expect(e = dataSource.entities.getById('sampled_wall_material_checkerboard_evenColor')).toBeDefined();
             expect(e.wall.material.evenColor.getValue(documentStartDate)).toEqualEpsilon(new Color(0.670588235294118, 0.462745098039216, 0.443137254901961, 0.23921568627451), 1e-14);
             expect(e.wall.material.evenColor.getValue(documentStopDate)).toEqualEpsilon(new Color(0.313725490196078, 0.0901960784313725, 0.623529411764706, 0.933333333333333), 1e-14);
@@ -7914,7 +7914,7 @@ defineSuite([
             expect(e.properties.custom_unitSpherical.getValue(documentStopDate)).toEqualEpsilon(Cartesian3.fromSpherical(new Spherical(44800, 8111)), 1e-14);
             expect(e.properties.custom_rgba.getValue(documentStartDate)).toEqual(Color.fromBytes(179, 175, 115, 46));
             expect(e.properties.custom_rgba.getValue(documentStopDate)).toEqual(Color.fromBytes(136, 187, 237, 156));
-            expect(e.properties.custom_rgbaf.getValue(documentStartDate)).toEqualEpsilon(new Color(0.890196078431373, 0.450980392156863, 0.588235294117647, 0.72156862745098), 1e-14);
+            expect(e.properties.custom_rgbaf.getValue(documentStartDate)).toEqualEpsilon(new Color(0.890196078431372, 0.450980392156863, 0.588235294117647, 0.72156862745098), 1e-14);
             expect(e.properties.custom_rgbaf.getValue(documentStopDate)).toEqualEpsilon(new Color(0.419607843137255, 0.843137254901961, 0.36078431372549, 0.423529411764706), 1e-14);
             expect(e.properties.custom_number.getValue(documentStartDate)).toEqual(24561.0);
             expect(e.properties.custom_number.getValue(documentStopDate)).toEqual(45446.0);
