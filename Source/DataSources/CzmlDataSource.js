@@ -1917,7 +1917,7 @@ define([
         processPacketData(Boolean, polygon, 'show', polygonData.show, interval, sourceUri, entityCollection);
 
         // adapt 'position' property producing Cartesian[]
-        // and 'holes' property producting Cartesian[][]
+        // and 'holes' property producing Cartesian[][]
         // to a single property producing PolygonHierarchy
         processPositionArray(polygon, '_positions', polygonData.positions, entityCollection);
         processPositionArrayOfArrays(polygon, '_holes', polygonData.holes, entityCollection);
