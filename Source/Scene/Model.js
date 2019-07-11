@@ -24,7 +24,7 @@ define([
         '../Core/loadCRN',
         '../Core/loadImageFromTypedArray',
         '../Core/loadKTX',
-        '../Core/loadKTX2',
+        '../Core/KTX2',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -103,7 +103,7 @@ define([
         loadCRN,
         loadImageFromTypedArray,
         loadKTX,
-        loadKTX2,
+        KTX2,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -163,6 +163,7 @@ define([
     if (!FeatureDetection.supportsTypedArrays()) {
         return {};
     }
+    var ktx2 = new KTX2();
 
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
@@ -1915,7 +1916,7 @@ define([
                 if (ktxRegex.test(uri)) {
                     promise = loadKTX(imageResource);
                 } else if (ktx2Regex.test(uri)) {
-                    promise = loadKTX2(imageResource, context);
+                    promise = ktx2.loadKTX2(imageResource, context);
                 } else if (crnRegex.test(uri)) {
                     promise = loadCRN(imageResource);
                 } else {
@@ -2537,7 +2538,7 @@ define([
                 loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/basis') {
-                loadKTX2(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
+                ktx2.loadKTX2(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/crn') {
                 loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
@@ -4574,6 +4575,10 @@ define([
             return;
         }
         var supportsWebP = FeatureDetection.supportsWebP();
+
+        if (!ktx2.basisReady()) {
+            return;
+        }
 
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;

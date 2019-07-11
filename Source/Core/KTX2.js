@@ -22,6 +22,32 @@ define([
         WebGLConstants) {
     'use strict';
 
+    var initialized = false;
+    var basisLoader = new BasisLoader();
+    var basis = basisLoader.BASIS();
+    /**
+     * Describes a compressed texture and contains a compressed texture buffer.
+     * @alias KTX2
+     * @constructor
+     */
+    function KTX2() {
+    }
+
+    /**
+     * Is the transcoder wasm compiled yet.
+     *
+     * @return bool
+     */
+    KTX2.prototype.basisReady = function() {
+        if (!defined(basis.initializeBasis)) {
+            return false;
+        } else if (!initialized) {
+            basis.initializeBasis();
+            initialized = true;
+        }
+        return true;
+    };
+
     /**
      * Asynchronously loads and parses the given URL to a KTX2 file or parses the raw binary data of a KTX2 file.
      * Returns a promise that will resolve to an object containing the image buffer, width, height and format once loaded,
@@ -40,9 +66,8 @@ define([
      * </ul>
      * </p>
      *
-     * @exports loadKTX
-     *
      * @param {Resource|String|ArrayBuffer} resourceOrUrlOrBuffer The URL of the binary data or an ArrayBuffer.
+     * @param {Object} context The render context
      * @returns {Promise.<CompressedTextureBuffer>|undefined} A promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      * @exception {RuntimeError} Invalid KTX2 file.
@@ -74,7 +99,7 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadKTX2(resourceOrUrlOrBuffer, context) {
+    KTX2.prototype.loadKTX2 = function(resourceOrUrlOrBuffer, context) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('resourceOrUrlOrBuffer', resourceOrUrlOrBuffer);
         //>>includeEnd('debug');
@@ -126,98 +151,153 @@ define([
     DXT_FORMAT_MAP[BASIS_FORMAT.cTFBC1] = COMPRESSED_RGB_S3TC_DXT1_EXT;
     DXT_FORMAT_MAP[BASIS_FORMAT.cTFBC3] = COMPRESSED_RGBA_S3TC_DXT5_EXT;
 
-    function parseKTX2(data, context) {
-        // context._gl is prob the WebGLRenderContext
-        // the original gltf for the basis agiHQ has a extensionsUsed and Required array, get rid of this for the time being save as BAK
-        // Skinned character (cesium man) has a jpg texture and it was already a bitmap by the time it got here. Need to find where the conversion is happening.
-
-        // NOW: BasisFile
-        // see basis_universal/webgl/texture/index.html
-        // see basis_universal/webgl/gltf/BasisTextureLoader.js
-        // LATER:
-        // Both of the examples' index.html's have BASIS() and Module things that pull out BasisFile and initializeBasis
-        // var basisLoader = new BasisLoader();
-        // var basis = basisLoader.BASIS();
-        // basis.initializeBasis();
-        // var BasisFile = basis.BasisFile;
-        // var basisFile = new BasisFile(new Uint8Array(data));
-        var basisLoader = new BasisLoader();
-        var basis = basisLoader.BASIS();
-        var deferred = when.defer();
-        setTimeout(function() {
-            var result;
-            basis.initializeBasis();
-            var BasisFile = basis.BasisFile;
-            var basisFile = new BasisFile(new Uint8Array(data));
-            var width = basisFile.getImageWidth(0, 0);
-            var height = basisFile.getImageHeight(0, 0);
-            var images = basisFile.getNumImages();
-            var levels = basisFile.getNumLevels(0);
-            var has_alpha = basisFile.getHasAlpha();
-            if (!width || !height || !images || !levels) {
-              console.warn('Invalid .basis file');
-              basisFile.close();
-              basisFile.delete();
-              deferred.resolve(result);
-              return;
-            }
-
-            var format = BASIS_FORMAT.cTFBC1;
-            if (has_alpha)
-            {
-                format = BASIS_FORMAT.cTFBC3;
-                console.log('Decoding .basis data to BC3');
-            }
-            else
-            {
-                console.log('Decoding .basis data to BC1');
-            }
-            if (!basisFile.startTranscoding()) {
-                console.warn('startTranscoding failed');
-                basisFile.close();
-                basisFile.delete();
-                deferred.resolve(result);
-                return;
-            }
-            var dstSize = basisFile.getImageTranscodedSizeInBytes(0, 0, format);
-            var dst = new Uint8Array(dstSize);
-            if (!basisFile.transcodeImage(dst, 0, 0, format, 1, 0)) {
-                console.warn('transcodeImage failed');
-                basisFile.close();
-                basisFile.delete();
-                deferred.resolve(result);
-                return;
-            }
-            var alignedWidth = (width + 3) & ~3;
-            var alignedHeight = (height + 3) & ~3;
-
+     function parseKTX2(data, context) {
+        var result;
+        var BasisFile = basis.BasisFile;
+        var basisFile = new BasisFile(new Uint8Array(data));
+        var width = basisFile.getImageWidth(0, 0);
+        var height = basisFile.getImageHeight(0, 0);
+        var images = basisFile.getNumImages();
+        var levels = basisFile.getNumLevels(0);
+        var has_alpha = basisFile.getHasAlpha();
+        if (!width || !height || !images || !levels) {
+            console.warn('Invalid .basis file');
             basisFile.close();
             basisFile.delete();
-            console.log('width: ' + width);
-            console.log('height: ' + height);
-            console.log('images: ' + images);
-            console.log('first image mipmap levels: ' + levels);
-            console.log('has_alpha: ' + has_alpha);
+            return result;
+        }
 
-            // TODO: context._gl is prob the WebGLRenderContext, needed for basis init
-            if (context._gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc') || context._gl.getExtension('WEBGL_compressed_texture_s3tc')) {
-                // result = createDxtTexture(context, dst, alignedWidth, alignedHeight, DXT_FORMAT_MAP[format]);
-                result = new CompressedTextureBuffer(DXT_FORMAT_MAP[format], alignedWidth, alignedHeight, dst);
-            } else {
-                // var rgb565Data = dxtToRgb565(new Uint16Array(dst.buffer), 0, alignedWidth, alignedHeight);
-                // result = createRgb565Texture(context, rgb565Data, alignedWidth, alignedHeight);
-            }
-            // result should be 'image' i.e. a CompressedTextureBuffer:
-            // image : image,
-            // bufferView : image.bufferView,
-            // width : image.width,
-            // height : image.height,
-            // internalFormat : image.internalFormat
+        var format = BASIS_FORMAT.cTFBC1;
+        if (has_alpha)
+        {
+            format = BASIS_FORMAT.cTFBC3;
+            console.log('Decoding .basis data to BC3');
+        }
+        else
+        {
+            console.log('Decoding .basis data to BC1');
+        }
+        if (!basisFile.startTranscoding()) {
+            console.warn('startTranscoding failed');
+            basisFile.close();
+            basisFile.delete();
+            return result;
+        }
+        var dstSize = basisFile.getImageTranscodedSizeInBytes(0, 0, format);
+        var dst = new Uint8Array(dstSize);
+        if (!basisFile.transcodeImage(dst, 0, 0, format, 1, 0)) {
+            console.warn('transcodeImage failed');
+            basisFile.close();
+            basisFile.delete();
+            return result;
+        }
+        var alignedWidth = (width + 3) & ~3;
+        var alignedHeight = (height + 3) & ~3;
 
-            deferred.resolve(result);
-        }, 2000);
-        return deferred;
+        basisFile.close();
+        basisFile.delete();
+        console.log('width: ' + width);
+        console.log('height: ' + height);
+        console.log('images: ' + images);
+        console.log('first image mipmap levels: ' + levels);
+        console.log('has_alpha: ' + has_alpha);
+
+        // TODO: context._gl is prob the WebGLRenderContext, needed for basis init
+        if (context._gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc') || context._gl.getExtension('WEBGL_compressed_texture_s3tc')) {
+            // result = createDxtTexture(context, dst, alignedWidth, alignedHeight, DXT_FORMAT_MAP[format]);
+            result = new CompressedTextureBuffer(DXT_FORMAT_MAP[format], alignedWidth, alignedHeight, dst);
+        } else {
+            // var rgb565Data = dxtToRgb565(new Uint16Array(dst.buffer), 0, alignedWidth, alignedHeight);
+            // result = createRgb565Texture(context, rgb565Data, alignedWidth, alignedHeight);
+        }
+        // result should be 'image' i.e. a CompressedTextureBuffer:
+        // image : image,
+        // bufferView : image.bufferView,
+        // width : image.width,
+        // height : image.height,
+        // internalFormat : image.internalFormat
+
+        return result;
     }
+
+    // function parseKTX2(data, context) {
+    //     var basisLoader = new BasisLoader();
+    //     var basis = basisLoader.BASIS();
+    //     var deferred = when.defer();
+    //     setTimeout(function() {
+    //         var result;
+    //         basis.initializeBasis();
+    //         var BasisFile = basis.BasisFile;
+    //         var basisFile = new BasisFile(new Uint8Array(data));
+    //         var width = basisFile.getImageWidth(0, 0);
+    //         var height = basisFile.getImageHeight(0, 0);
+    //         var images = basisFile.getNumImages();
+    //         var levels = basisFile.getNumLevels(0);
+    //         var has_alpha = basisFile.getHasAlpha();
+    //         if (!width || !height || !images || !levels) {
+    //           console.warn('Invalid .basis file');
+    //           basisFile.close();
+    //           basisFile.delete();
+    //           deferred.resolve(result);
+    //           return;
+    //         }
+    //
+    //         var format = BASIS_FORMAT.cTFBC1;
+    //         if (has_alpha)
+    //         {
+    //             format = BASIS_FORMAT.cTFBC3;
+    //             console.log('Decoding .basis data to BC3');
+    //         }
+    //         else
+    //         {
+    //             console.log('Decoding .basis data to BC1');
+    //         }
+    //         if (!basisFile.startTranscoding()) {
+    //             console.warn('startTranscoding failed');
+    //             basisFile.close();
+    //             basisFile.delete();
+    //             deferred.resolve(result);
+    //             return;
+    //         }
+    //         var dstSize = basisFile.getImageTranscodedSizeInBytes(0, 0, format);
+    //         var dst = new Uint8Array(dstSize);
+    //         if (!basisFile.transcodeImage(dst, 0, 0, format, 1, 0)) {
+    //             console.warn('transcodeImage failed');
+    //             basisFile.close();
+    //             basisFile.delete();
+    //             deferred.resolve(result);
+    //             return;
+    //         }
+    //         var alignedWidth = (width + 3) & ~3;
+    //         var alignedHeight = (height + 3) & ~3;
+    //
+    //         basisFile.close();
+    //         basisFile.delete();
+    //         console.log('width: ' + width);
+    //         console.log('height: ' + height);
+    //         console.log('images: ' + images);
+    //         console.log('first image mipmap levels: ' + levels);
+    //         console.log('has_alpha: ' + has_alpha);
+    //
+    //         // TODO: context._gl is prob the WebGLRenderContext, needed for basis init
+    //         if (context._gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc') || context._gl.getExtension('WEBGL_compressed_texture_s3tc')) {
+    //             // result = createDxtTexture(context, dst, alignedWidth, alignedHeight, DXT_FORMAT_MAP[format]);
+    //             result = new CompressedTextureBuffer(DXT_FORMAT_MAP[format], alignedWidth, alignedHeight, dst);
+    //         } else {
+    //             // var rgb565Data = dxtToRgb565(new Uint16Array(dst.buffer), 0, alignedWidth, alignedHeight);
+    //             // result = createRgb565Texture(context, rgb565Data, alignedWidth, alignedHeight);
+    //         }
+    //         // result should be 'image' i.e. a CompressedTextureBuffer:
+    //         // image : image,
+    //         // bufferView : image.bufferView,
+    //         // width : image.width,
+    //         // height : image.height,
+    //         // internalFormat : image.internalFormat
+    //
+    //         deferred.resolve(result);
+    //     }, 2000);
+    //     return deferred;
+    // }
 
     function createDxtTexture(context, dxtData, width, height, format) {
         var gl = context._gl;
@@ -349,5 +429,5 @@ define([
         return dst;
     }
 
-    return loadKTX2;
+    return KTX2;
 });
