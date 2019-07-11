@@ -1,6 +1,7 @@
 define([
         '../ThirdParty/basis_transcoder',
         '../ThirdParty/when',
+        '../Scene/BasisLoader',
         './Check',
         './CompressedTextureBuffer',
         './defined',
@@ -11,6 +12,7 @@ define([
     ], function(
         basis_transcoder,
         when,
+        BasisLoader,
         Check,
         CompressedTextureBuffer,
         defined,
@@ -72,7 +74,7 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
-    function loadKTX2(resourceOrUrlOrBuffer) {
+    function loadKTX2(resourceOrUrlOrBuffer, context) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('resourceOrUrlOrBuffer', resourceOrUrlOrBuffer);
         //>>includeEnd('debug');
@@ -91,12 +93,40 @@ define([
 
         return loadPromise.then(function(data) {
             if (defined(data)) {
-                return parseKTX2(data);
+                return parseKTX2(data, context);
             }
         });
     }
 
-    function parseKTX2(data) {
+    // TODO: Just use PixelFormat
+    // DXT formats, from:
+    // // http://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc/
+    var COMPRESSED_RGB_S3TC_DXT1_EXT  = 0x83F0;
+    var COMPRESSED_RGBA_S3TC_DXT1_EXT = 0x83F1;
+    var COMPRESSED_RGBA_S3TC_DXT3_EXT = 0x83F2;
+    var COMPRESSED_RGBA_S3TC_DXT5_EXT = 0x83F3;
+
+    var BASIS_FORMAT = {
+        cTFETC1: 0,
+        cTFBC1: 1,
+        cTFBC4: 2,
+        cTFPVRTC1_4_OPAQUE_ONLY: 3,
+        cTFBC7_M6_OPAQUE_ONLY: 4,
+        cTFETC2: 5,
+        cTFBC3: 6,
+        cTFBC5: 7,
+    };
+
+    var BASIS_FORMAT_NAMES = {};
+    for (var name in BASIS_FORMAT) {
+          BASIS_FORMAT_NAMES[BASIS_FORMAT[name]] = name;
+    }
+
+    var DXT_FORMAT_MAP = {};
+    DXT_FORMAT_MAP[BASIS_FORMAT.cTFBC1] = COMPRESSED_RGB_S3TC_DXT1_EXT;
+    DXT_FORMAT_MAP[BASIS_FORMAT.cTFBC3] = COMPRESSED_RGBA_S3TC_DXT5_EXT;
+
+    function parseKTX2(data, context) {
         // context._gl is prob the WebGLRenderContext
         // the original gltf for the basis agiHQ has a extensionsUsed and Required array, get rid of this for the time being save as BAK
         // Skinned character (cesium man) has a jpg texture and it was already a bitmap by the time it got here. Need to find where the conversion is happening.
@@ -106,155 +136,218 @@ define([
         // see basis_universal/webgl/gltf/BasisTextureLoader.js
         // LATER:
         // Both of the examples' index.html's have BASIS() and Module things that pull out BasisFile and initializeBasis
-        // var byteBuffer = new Uint8Array(data);
-        // initializeBasis();
+        // var basisLoader = new BasisLoader();
+        // var basis = basisLoader.BASIS();
+        // basis.initializeBasis();
+        // var BasisFile = basis.BasisFile;
         // var basisFile = new BasisFile(new Uint8Array(data));
+        var basisLoader = new BasisLoader();
+        var basis = basisLoader.BASIS();
+        var deferred = when.defer();
+        setTimeout(function() {
+            var result;
+            basis.initializeBasis();
+            var BasisFile = basis.BasisFile;
+            var basisFile = new BasisFile(new Uint8Array(data));
+            var width = basisFile.getImageWidth(0, 0);
+            var height = basisFile.getImageHeight(0, 0);
+            var images = basisFile.getNumImages();
+            var levels = basisFile.getNumLevels(0);
+            var has_alpha = basisFile.getHasAlpha();
+            if (!width || !height || !images || !levels) {
+              console.warn('Invalid .basis file');
+              basisFile.close();
+              basisFile.delete();
+              deferred.resolve(result);
+              return;
+            }
+
+            var format = BASIS_FORMAT.cTFBC1;
+            if (has_alpha)
+            {
+                format = BASIS_FORMAT.cTFBC3;
+                console.log('Decoding .basis data to BC3');
+            }
+            else
+            {
+                console.log('Decoding .basis data to BC1');
+            }
+            if (!basisFile.startTranscoding()) {
+                console.warn('startTranscoding failed');
+                basisFile.close();
+                basisFile.delete();
+                deferred.resolve(result);
+                return;
+            }
+            var dstSize = basisFile.getImageTranscodedSizeInBytes(0, 0, format);
+            var dst = new Uint8Array(dstSize);
+            if (!basisFile.transcodeImage(dst, 0, 0, format, 1, 0)) {
+                console.warn('transcodeImage failed');
+                basisFile.close();
+                basisFile.delete();
+                deferred.resolve(result);
+                return;
+            }
+            var alignedWidth = (width + 3) & ~3;
+            var alignedHeight = (height + 3) & ~3;
+
+            basisFile.close();
+            basisFile.delete();
+            console.log('width: ' + width);
+            console.log('height: ' + height);
+            console.log('images: ' + images);
+            console.log('first image mipmap levels: ' + levels);
+            console.log('has_alpha: ' + has_alpha);
+
+            // TODO: context._gl is prob the WebGLRenderContext, needed for basis init
+            if (context._gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc') || context._gl.getExtension('WEBGL_compressed_texture_s3tc')) {
+                // result = createDxtTexture(context, dst, alignedWidth, alignedHeight, DXT_FORMAT_MAP[format]);
+                result = new CompressedTextureBuffer(DXT_FORMAT_MAP[format], alignedWidth, alignedHeight, dst);
+            } else {
+                // var rgb565Data = dxtToRgb565(new Uint16Array(dst.buffer), 0, alignedWidth, alignedHeight);
+                // result = createRgb565Texture(context, rgb565Data, alignedWidth, alignedHeight);
+            }
+            // result should be 'image' i.e. a CompressedTextureBuffer:
+            // image : image,
+            // bufferView : image.bufferView,
+            // width : image.width,
+            // height : image.height,
+            // internalFormat : image.internalFormat
+
+            deferred.resolve(result);
+        }, 2000);
+        return deferred;
     }
 
-    // var fileIdentifier = [0xAB, 0x4B, 0x54, 0x58, 0x20, 0x31, 0x31, 0xBB, 0x0D, 0x0A, 0x1A, 0x0A];
-    // var endiannessTest = 0x04030201;
-    // var faceOrder = ['positiveX', 'negativeX', 'positiveY', 'negativeY', 'positiveZ', 'negativeZ'];
+    function createDxtTexture(context, dxtData, width, height, format) {
+        var gl = context._gl;
+        var tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.compressedTexImage2D(
+            gl.TEXTURE_2D,
+            0,
+            format,
+            width,
+            height,
+            0,
+            dxtData);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        //gl.generateMipmap(gl.TEXTURE_2D)
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return tex;
+    };
 
-    // var sizeOfUint32 = 4;
-    //
-    // function parseKTX(data) {
-    //     var byteBuffer = new Uint8Array(data);
-    //
-    //     var isKTX = true;
-    //     var i;
-    //     for (i = 0; i < fileIdentifier.length; ++i) {
-    //         if (fileIdentifier[i] !== byteBuffer[i]) {
-    //             isKTX = false;
-    //             break;
-    //         }
-    //     }
-    //
-    //     if (!isKTX) {
-    //         throw new RuntimeError('Invalid KTX file.');
-    //     }
-    //
-    //     var view;
-    //     var byteOffset;
-    //
-    //     if (defined(data.buffer)) {
-    //         view = new DataView(data.buffer);
-    //         byteOffset = data.byteOffset;
-    //     } else {
-    //         view = new DataView(data);
-    //         byteOffset = 0;
-    //     }
-    //
-    //     byteOffset += 12; // skip identifier
-    //
-    //     var endianness = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     if (endianness !== endiannessTest) {
-    //         throw new RuntimeError('File is the wrong endianness.');
-    //     }
-    //
-    //     var glType = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     var glTypeSize = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     var glFormat = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     var glInternalFormat = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     var glBaseInternalFormat = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     var pixelWidth = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     var pixelHeight = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     var pixelDepth = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     var numberOfArrayElements = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     var numberOfFaces = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     var numberOfMipmapLevels = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //     var bytesOfKeyValueByteSize = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //
-    //     // skip metadata
-    //     byteOffset += bytesOfKeyValueByteSize;
-    //
-    //     var imageSize = view.getUint32(byteOffset, true);
-    //     byteOffset += sizeOfUint32;
-    //
-    //     var texture;
-    //     if (defined(data.buffer)) {
-    //         texture = new Uint8Array(data.buffer, byteOffset, imageSize);
-    //     } else {
-    //         texture = new Uint8Array(data, byteOffset, imageSize);
-    //     }
-    //
-    //     // Some tools use a sized internal format.
-    //     // See table 2: https://www.opengl.org/sdk/docs/man/html/glTexImage2D.xhtml
-    //     if (glInternalFormat === WebGLConstants.RGB8) {
-    //         glInternalFormat = PixelFormat.RGB;
-    //     } else if (glInternalFormat === WebGLConstants.RGBA8) {
-    //         glInternalFormat = PixelFormat.RGBA;
-    //     }
-    //
-    //     if (!PixelFormat.validate(glInternalFormat)) {
-    //         throw new RuntimeError('glInternalFormat is not a valid format.');
-    //     }
-    //
-    //     if (PixelFormat.isCompressedFormat(glInternalFormat)) {
-    //         if (glType !== 0) {
-    //             throw new RuntimeError('glType must be zero when the texture is compressed.');
-    //         }
-    //         if (glTypeSize !== 1) {
-    //             throw new RuntimeError('The type size for compressed textures must be 1.');
-    //         }
-    //         if (glFormat !== 0) {
-    //             throw new RuntimeError('glFormat must be zero when the texture is compressed.');
-    //         }
-    //     } else if (glType !== WebGLConstants.UNSIGNED_BYTE) {
-    //         throw new RuntimeError('Only unsigned byte buffers are supported.');
-    //     } else if (glBaseInternalFormat !== glFormat) {
-    //         throw new RuntimeError('The base internal format must be the same as the format for uncompressed textures.');
-    //     }
-    //
-    //     if (pixelDepth !== 0) {
-    //         throw new RuntimeError('3D textures are unsupported.');
-    //     }
-    //
-    //     if (numberOfArrayElements !== 0) {
-    //         throw new RuntimeError('Texture arrays are unsupported.');
-    //     }
-    //
-    //     var offset = texture.byteOffset;
-    //     var mipmaps = new Array(numberOfMipmapLevels);
-    //     for (i = 0; i < numberOfMipmapLevels; ++i) {
-    //         var level = mipmaps[i] = {};
-    //         for (var j = 0; j < numberOfFaces; ++j) {
-    //             var width = pixelWidth >> i;
-    //             var height = pixelHeight >> i;
-    //             var levelSize = PixelFormat.isCompressedFormat(glInternalFormat) ?
-    //                             PixelFormat.compressedTextureSizeInBytes(glInternalFormat, width, height) :
-    //                             PixelFormat.textureSizeInBytes(glInternalFormat, glType, width, height);
-    //             var levelBuffer = new Uint8Array(texture.buffer, offset, levelSize);
-    //             level[faceOrder[j]] = new CompressedTextureBuffer(glInternalFormat, width, height, levelBuffer);
-    //             offset += levelSize;
-    //         }
-    //         offset += 3 - ((offset + 3) % 4) + 4;
-    //     }
-    //
-    //     var result = mipmaps;
-    //     if (numberOfFaces === 1) {
-    //         for (i = 0; i < numberOfMipmapLevels; ++i) {
-    //             result[i] = result[i][faceOrder[0]];
-    //         }
-    //     }
-    //     if (numberOfMipmapLevels === 1) {
-    //         result = result[0];
-    //     }
-    //
-    //     return result;
-    // }
+    function createRgb565Texture(context, rgb565Data, width, height) {
+        var gl = context._gl;
+        var tex = gl.createTexture();
+        gl.bindTexture(gl.TEXTURE_2D, tex);
+        gl.texImage2D(
+            gl.TEXTURE_2D,
+            0,
+            gl.RGB,
+            width,
+            height,
+            0,
+            gl.RGB,
+            gl.UNSIGNED_SHORT_5_6_5,
+            rgb565Data);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        //gl.generateMipmap(gl.TEXTURE_2D)
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        return tex;
+    };
+
+    /**
+     * Transcodes DXT into RGB565.
+     * This is an optimized version of dxtToRgb565Unoptimized() below.
+     * Optimizations:
+     * 1. Use integer math to compute c2 and c3 instead of floating point
+     *    math.  Specifically:
+     *      c2 = 5/8 * c0 + 3/8 * c1
+     *      c3 = 3/8 * c0 + 5/8 * c1
+     *    This is about a 40% performance improvement.  It also appears to
+     *    match what hardware DXT decoders do, as the colors produced
+     *    by this integer math match what hardware produces, while the
+     *    floating point in dxtToRgb565Unoptimized() produce slightly
+     *    different colors (for one GPU this was tested on).
+     * 2. Unroll the inner loop.  Another ~10% improvement.
+     * 3. Compute r0, g0, b0, r1, g1, b1 only once instead of twice.
+     *    Another 10% improvement.
+     * 4. Use a Uint16Array instead of a Uint8Array.  Another 10% improvement.
+     * @param {Uint16Array} src The src DXT bits as a Uint16Array.
+     * @param {number} srcByteOffset
+     * @param {number} width
+     * @param {number} height
+     * @return {Uint16Array} dst
+     */
+    function dxtToRgb565(src, src16Offset, width, height) {
+        var c = new Uint16Array(4);
+        var dst = new Uint16Array(width * height);
+        var nWords = (width * height) / 4;
+        var m = 0;
+        var dstI = 0;
+        var i = 0;
+        var r0 = 0, g0 = 0, b0 = 0, r1 = 0, g1 = 0, b1 = 0;
+
+        var blockWidth = width / 4;
+        var blockHeight = height / 4;
+        for (var blockY = 0; blockY < blockHeight; blockY++) {
+            for (var blockX = 0; blockX < blockWidth; blockX++) {
+                i = src16Offset + 4 * (blockY * blockWidth + blockX);
+                c[0] = src[i];
+                c[1] = src[i + 1];
+
+                r0 = c[0] & 0x1f;
+                g0 = c[0] & 0x7e0;
+                b0 = c[0] & 0xf800;
+                r1 = c[1] & 0x1f;
+                g1 = c[1] & 0x7e0;
+                b1 = c[1] & 0xf800;
+                // Interpolate between c0 and c1 to get c2 and c3.
+                // Note that we approximate 1/3 as 3/8 and 2/3 as 5/8 for
+                // speed.  This also appears to be what the hardware DXT
+                // decoder in many GPUs does :)
+
+                // rg FIXME: This is most likely leading to wrong results vs. a GPU
+
+                c[2] = ((5 * r0 + 3 * r1) >> 3)
+                    | (((5 * g0 + 3 * g1) >> 3) & 0x7e0)
+                    | (((5 * b0 + 3 * b1) >> 3) & 0xf800);
+                c[3] = ((5 * r1 + 3 * r0) >> 3)
+                    | (((5 * g1 + 3 * g0) >> 3) & 0x7e0)
+                    | (((5 * b1 + 3 * b0) >> 3) & 0xf800);
+                m = src[i + 2];
+                dstI = (blockY * 4) * width + blockX * 4;
+                dst[dstI] = c[m & 0x3];
+                dst[dstI + 1] = c[(m >> 2) & 0x3];
+                dst[dstI + 2] = c[(m >> 4) & 0x3];
+                dst[dstI + 3] = c[(m >> 6) & 0x3];
+                dstI += width;
+                dst[dstI] = c[(m >> 8) & 0x3];
+                dst[dstI + 1] = c[(m >> 10) & 0x3];
+                dst[dstI + 2] = c[(m >> 12) & 0x3];
+                dst[dstI + 3] = c[(m >> 14)];
+                m = src[i + 3];
+                dstI += width;
+                dst[dstI] = c[m & 0x3];
+                dst[dstI + 1] = c[(m >> 2) & 0x3];
+                dst[dstI + 2] = c[(m >> 4) & 0x3];
+                dst[dstI + 3] = c[(m >> 6) & 0x3];
+                dstI += width;
+                dst[dstI] = c[(m >> 8) & 0x3];
+                dst[dstI + 1] = c[(m >> 10) & 0x3];
+                dst[dstI + 2] = c[(m >> 12) & 0x3];
+                dst[dstI + 3] = c[(m >> 14)];
+            }
+        }
+        return dst;
+    }
 
     return loadKTX2;
 });

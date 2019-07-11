@@ -1837,6 +1837,7 @@ define([
     }
 
     var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
+    var ktx2Regex = /(^data:image\/basis)|(\.basis$)/i;
     var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
 
     function parseTextures(model, context, supportsWebP) {
@@ -1913,6 +1914,8 @@ define([
                 var promise;
                 if (ktxRegex.test(uri)) {
                     promise = loadKTX(imageResource);
+                } else if (ktx2Regex.test(uri)) {
+                    promise = loadKTX2(imageResource, context);
                 } else if (crnRegex.test(uri)) {
                     promise = loadCRN(imageResource);
                 } else {
@@ -2534,9 +2537,6 @@ define([
                 loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/basis') {
-                // TODO:
-                // context._gl is prob the WebGLRenderContext, needed for basis init
-                // the original gltf for the basis agiHQ has a extensionsUsed and Required array, get rid of this for the time being, save as BAK
                 loadKTX2(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/crn') {
