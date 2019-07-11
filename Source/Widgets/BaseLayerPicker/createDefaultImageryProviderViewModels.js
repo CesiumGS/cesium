@@ -221,7 +221,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         }));
 
         providerViewModels.push(new ProviderViewModel({
-            name : 'Natural Earth\u00a0II',
+            name : 'Natural Earth II',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
             tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
             category : 'Cesium ion',

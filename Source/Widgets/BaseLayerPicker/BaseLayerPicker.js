@@ -76,7 +76,7 @@ define([
      *  }));
      *
      *  imageryViewModels.push(new Cesium.ProviderViewModel({
-     *      name : 'Natural Earth\u00a0II',
+     *      name : 'Natural Earth II',
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
      *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
      *      creationFunction : function() {
