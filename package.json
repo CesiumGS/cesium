@@ -53,7 +53,7 @@
     "jasmine-core": "^3.3.0",
     "jsdoc": "^3.4.3",
     "karma": "^4.0.0",
-    "karma-chrome-launcher": "^2.0.0",
+    "karma-chrome-launcher": "^3.0.0",
     "karma-detect-browsers": "^2.2.3",
     "karma-edge-launcher": "^0.4.2",
     "karma-firefox-launcher": "^1.0.0",
