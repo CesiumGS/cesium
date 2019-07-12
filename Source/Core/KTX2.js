@@ -121,14 +121,14 @@ define([
                 return parseKTX2(data, context);
             }
         });
-    }
+    };
 
     // TODO: Just use PixelFormat
     // DXT formats, from:
     // // http://www.khronos.org/registry/webgl/extensions/WEBGL_compressed_texture_s3tc/
     var COMPRESSED_RGB_S3TC_DXT1_EXT  = 0x83F0;
-    var COMPRESSED_RGBA_S3TC_DXT1_EXT = 0x83F1;
-    var COMPRESSED_RGBA_S3TC_DXT3_EXT = 0x83F2;
+    // var COMPRESSED_RGBA_S3TC_DXT1_EXT = 0x83F1;
+    // var COMPRESSED_RGBA_S3TC_DXT3_EXT = 0x83F2;
     var COMPRESSED_RGBA_S3TC_DXT5_EXT = 0x83F3;
 
     var BASIS_FORMAT = {
@@ -139,12 +139,14 @@ define([
         cTFBC7_M6_OPAQUE_ONLY: 4,
         cTFETC2: 5,
         cTFBC3: 6,
-        cTFBC5: 7,
+        cTFBC5: 7
     };
 
     var BASIS_FORMAT_NAMES = {};
     for (var name in BASIS_FORMAT) {
+        if (defined(name)) {
           BASIS_FORMAT_NAMES[BASIS_FORMAT[name]] = name;
+        }
     }
 
     var DXT_FORMAT_MAP = {};
@@ -299,49 +301,49 @@ define([
     //     return deferred;
     // }
 
-    function createDxtTexture(context, dxtData, width, height, format) {
-        var gl = context._gl;
-        var tex = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.compressedTexImage2D(
-            gl.TEXTURE_2D,
-            0,
-            format,
-            width,
-            height,
-            0,
-            dxtData);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        //gl.generateMipmap(gl.TEXTURE_2D)
-        gl.bindTexture(gl.TEXTURE_2D, null);
-        return tex;
-    };
+    // function createDxtTexture(context, dxtData, width, height, format) {
+    //     var gl = context._gl;
+    //     var tex = gl.createTexture();
+    //     gl.bindTexture(gl.TEXTURE_2D, tex);
+    //     gl.compressedTexImage2D(
+    //         gl.TEXTURE_2D,
+    //         0,
+    //         format,
+    //         width,
+    //         height,
+    //         0,
+    //         dxtData);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    //     //gl.generateMipmap(gl.TEXTURE_2D)
+    //     gl.bindTexture(gl.TEXTURE_2D, null);
+    //     return tex;
+    // }
 
-    function createRgb565Texture(context, rgb565Data, width, height) {
-        var gl = context._gl;
-        var tex = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, tex);
-        gl.texImage2D(
-            gl.TEXTURE_2D,
-            0,
-            gl.RGB,
-            width,
-            height,
-            0,
-            gl.RGB,
-            gl.UNSIGNED_SHORT_5_6_5,
-            rgb565Data);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        //gl.generateMipmap(gl.TEXTURE_2D)
-        gl.bindTexture(gl.TEXTURE_2D, null);
-        return tex;
-    };
+    // function createRgb565Texture(context, rgb565Data, width, height) {
+    //     var gl = context._gl;
+    //     var tex = gl.createTexture();
+    //     gl.bindTexture(gl.TEXTURE_2D, tex);
+    //     gl.texImage2D(
+    //         gl.TEXTURE_2D,
+    //         0,
+    //         gl.RGB,
+    //         width,
+    //         height,
+    //         0,
+    //         gl.RGB,
+    //         gl.UNSIGNED_SHORT_5_6_5,
+    //         rgb565Data);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    //     //gl.generateMipmap(gl.TEXTURE_2D)
+    //     gl.bindTexture(gl.TEXTURE_2D, null);
+    //     return tex;
+    // }
 
     /**
      * Transcodes DXT into RGB565.
@@ -366,68 +368,68 @@ define([
      * @param {number} height
      * @return {Uint16Array} dst
      */
-    function dxtToRgb565(src, src16Offset, width, height) {
-        var c = new Uint16Array(4);
-        var dst = new Uint16Array(width * height);
-        var nWords = (width * height) / 4;
-        var m = 0;
-        var dstI = 0;
-        var i = 0;
-        var r0 = 0, g0 = 0, b0 = 0, r1 = 0, g1 = 0, b1 = 0;
-
-        var blockWidth = width / 4;
-        var blockHeight = height / 4;
-        for (var blockY = 0; blockY < blockHeight; blockY++) {
-            for (var blockX = 0; blockX < blockWidth; blockX++) {
-                i = src16Offset + 4 * (blockY * blockWidth + blockX);
-                c[0] = src[i];
-                c[1] = src[i + 1];
-
-                r0 = c[0] & 0x1f;
-                g0 = c[0] & 0x7e0;
-                b0 = c[0] & 0xf800;
-                r1 = c[1] & 0x1f;
-                g1 = c[1] & 0x7e0;
-                b1 = c[1] & 0xf800;
-                // Interpolate between c0 and c1 to get c2 and c3.
-                // Note that we approximate 1/3 as 3/8 and 2/3 as 5/8 for
-                // speed.  This also appears to be what the hardware DXT
-                // decoder in many GPUs does :)
-
-                // rg FIXME: This is most likely leading to wrong results vs. a GPU
-
-                c[2] = ((5 * r0 + 3 * r1) >> 3)
-                    | (((5 * g0 + 3 * g1) >> 3) & 0x7e0)
-                    | (((5 * b0 + 3 * b1) >> 3) & 0xf800);
-                c[3] = ((5 * r1 + 3 * r0) >> 3)
-                    | (((5 * g1 + 3 * g0) >> 3) & 0x7e0)
-                    | (((5 * b1 + 3 * b0) >> 3) & 0xf800);
-                m = src[i + 2];
-                dstI = (blockY * 4) * width + blockX * 4;
-                dst[dstI] = c[m & 0x3];
-                dst[dstI + 1] = c[(m >> 2) & 0x3];
-                dst[dstI + 2] = c[(m >> 4) & 0x3];
-                dst[dstI + 3] = c[(m >> 6) & 0x3];
-                dstI += width;
-                dst[dstI] = c[(m >> 8) & 0x3];
-                dst[dstI + 1] = c[(m >> 10) & 0x3];
-                dst[dstI + 2] = c[(m >> 12) & 0x3];
-                dst[dstI + 3] = c[(m >> 14)];
-                m = src[i + 3];
-                dstI += width;
-                dst[dstI] = c[m & 0x3];
-                dst[dstI + 1] = c[(m >> 2) & 0x3];
-                dst[dstI + 2] = c[(m >> 4) & 0x3];
-                dst[dstI + 3] = c[(m >> 6) & 0x3];
-                dstI += width;
-                dst[dstI] = c[(m >> 8) & 0x3];
-                dst[dstI + 1] = c[(m >> 10) & 0x3];
-                dst[dstI + 2] = c[(m >> 12) & 0x3];
-                dst[dstI + 3] = c[(m >> 14)];
-            }
-        }
-        return dst;
-    }
+    // function dxtToRgb565(src, src16Offset, width, height) {
+    //     var c = new Uint16Array(4);
+    //     var dst = new Uint16Array(width * height);
+    //     // var nWords = (width * height) / 4;
+    //     var m = 0;
+    //     var dstI = 0;
+    //     var i = 0;
+    //     var r0 = 0, g0 = 0, b0 = 0, r1 = 0, g1 = 0, b1 = 0;
+    //
+    //     var blockWidth = width / 4;
+    //     var blockHeight = height / 4;
+    //     for (var blockY = 0; blockY < blockHeight; blockY++) {
+    //         for (var blockX = 0; blockX < blockWidth; blockX++) {
+    //             i = src16Offset + 4 * (blockY * blockWidth + blockX);
+    //             c[0] = src[i];
+    //             c[1] = src[i + 1];
+    //
+    //             r0 = c[0] & 0x1f;
+    //             g0 = c[0] & 0x7e0;
+    //             b0 = c[0] & 0xf800;
+    //             r1 = c[1] & 0x1f;
+    //             g1 = c[1] & 0x7e0;
+    //             b1 = c[1] & 0xf800;
+    //             // Interpolate between c0 and c1 to get c2 and c3.
+    //             // Note that we approximate 1/3 as 3/8 and 2/3 as 5/8 for
+    //             // speed.  This also appears to be what the hardware DXT
+    //             // decoder in many GPUs does :)
+    //
+    //             // rg FIXME: This is most likely leading to wrong results vs. a GPU
+    //
+    //             c[2] = ((5 * r0 + 3 * r1) >> 3)
+    //                 | (((5 * g0 + 3 * g1) >> 3) & 0x7e0)
+    //                 | (((5 * b0 + 3 * b1) >> 3) & 0xf800);
+    //             c[3] = ((5 * r1 + 3 * r0) >> 3)
+    //                 | (((5 * g1 + 3 * g0) >> 3) & 0x7e0)
+    //                 | (((5 * b1 + 3 * b0) >> 3) & 0xf800);
+    //             m = src[i + 2];
+    //             dstI = (blockY * 4) * width + blockX * 4;
+    //             dst[dstI] = c[m & 0x3];
+    //             dst[dstI + 1] = c[(m >> 2) & 0x3];
+    //             dst[dstI + 2] = c[(m >> 4) & 0x3];
+    //             dst[dstI + 3] = c[(m >> 6) & 0x3];
+    //             dstI += width;
+    //             dst[dstI] = c[(m >> 8) & 0x3];
+    //             dst[dstI + 1] = c[(m >> 10) & 0x3];
+    //             dst[dstI + 2] = c[(m >> 12) & 0x3];
+    //             dst[dstI + 3] = c[(m >> 14)];
+    //             m = src[i + 3];
+    //             dstI += width;
+    //             dst[dstI] = c[m & 0x3];
+    //             dst[dstI + 1] = c[(m >> 2) & 0x3];
+    //             dst[dstI + 2] = c[(m >> 4) & 0x3];
+    //             dst[dstI + 3] = c[(m >> 6) & 0x3];
+    //             dstI += width;
+    //             dst[dstI] = c[(m >> 8) & 0x3];
+    //             dst[dstI + 1] = c[(m >> 10) & 0x3];
+    //             dst[dstI + 2] = c[(m >> 12) & 0x3];
+    //             dst[dstI + 3] = c[(m >> 14)];
+    //         }
+    //     }
+    //     return dst;
+    // }
 
     return KTX2;
 });
