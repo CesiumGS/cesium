@@ -4,6 +4,9 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/isArray',
+        '../Core/PolygonHierarchy',
+        './ConstantProperty',
         './createMaterialPropertyDescriptor',
         './createPropertyDescriptor'
     ], function(
@@ -12,9 +15,20 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        isArray,
+        PolygonHierarchy,
+        ConstantProperty,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
     'use strict';
+
+    function createPolygonHierarchyProperty(value) {
+        if (isArray(value)) {
+            // convert array of positions to PolygonHierarchy object
+            value = new PolygonHierarchy(value);
+        }
+        return new ConstantProperty(value);
+    }
 
     /**
      * Describes a polygon defined by an hierarchy of linear rings which make up the outer shape and any nested holes.
@@ -125,7 +139,7 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        hierarchy : createPropertyDescriptor('hierarchy'),
+        hierarchy : createPropertyDescriptor('hierarchy', undefined, createPolygonHierarchyProperty),
 
         /**
          * Gets or sets the numeric Property specifying the constant altitude of the polygon.
