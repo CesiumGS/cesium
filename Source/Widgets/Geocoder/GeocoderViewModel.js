@@ -1,30 +1,43 @@
 define([
-        '../../Core/BingMapsGeocoderService',
+        '../../Core/IonGeocoderService',
         '../../Core/CartographicGeocoderService',
         '../../Core/defaultValue',
         '../../Core/defined',
         '../../Core/defineProperties',
         '../../Core/DeveloperError',
         '../../Core/Event',
+        '../../Core/GeocodeType',
+        '../../Core/Math',
         '../../Core/Matrix4',
+        '../../Core/Rectangle',
+        '../../Core/sampleTerrainMostDetailed',
+        '../../Scene/computeFlyToLocationForRectangle',
         '../../ThirdParty/knockout',
         '../../ThirdParty/when',
         '../createCommand',
         '../getElement'
     ], function(
-        BingMapsGeocoderService,
+        IonGeocoderService,
         CartographicGeocoderService,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
+        GeocodeType,
+        CesiumMath,
         Matrix4,
+        Rectangle,
+        sampleTerrainMostDetailed,
+        computeFlyToLocationForRectangle,
         knockout,
         when,
         createCommand,
         getElement) {
     'use strict';
+
+    // The height we use if geocoding to a specific point instead of an rectangle.
+    var DEFAULT_HEIGHT = 1000;
 
     /**
      * The view model for the {@link Geocoder} widget.
@@ -37,6 +50,7 @@ define([
      *        If more than one are supplied, suggestions will be gathered for the geocoders that support it,
      *        and if no suggestion is selected the result from the first geocoder service wil be used.
      * @param {Number} [options.flightDuration] The duration of the camera flight to an entered location, in seconds.
+     * @param {Geocoder~DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
      */
     function GeocoderViewModel(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -50,7 +64,7 @@ define([
         } else {
             this._geocoderServices = [
                 new CartographicGeocoderService(),
-                new BingMapsGeocoderService({scene: options.scene})
+                new IonGeocoderService({ scene: options.scene })
             ];
         }
 
@@ -64,9 +78,7 @@ define([
         this._suggestions = [];
         this._selectedSuggestion = undefined;
         this._showSuggestions = true;
-        this._updateCamera = updateCamera;
-        this._adjustSuggestionsScroll = adjustSuggestionsScroll;
-        this._updateSearchSuggestions = updateSearchSuggestions;
+
         this._handleArrowDown = handleArrowDown;
         this._handleArrowUp = handleArrowUp;
 
@@ -79,7 +91,8 @@ define([
             return suggestionsNotEmpty && showSuggestions;
         });
 
-        this._searchCommand = createCommand(function() {
+        this._searchCommand = createCommand(function(geocodeType) {
+            geocodeType = defaultValue(geocodeType, GeocodeType.SEARCH);
             that._focusTextbox = false;
             if (defined(that._selectedSuggestion)) {
                 that.activateSuggestion(that._selectedSuggestion);
@@ -89,7 +102,7 @@ define([
             if (that.isSearchInProgress) {
                 cancelGeocode(that);
             } else {
-                geocode(that, that._geocoderServices);
+                geocode(that, that._geocoderServices, geocodeType);
             }
         });
 
@@ -126,7 +139,7 @@ define([
             that._searchText = data.displayName;
             var destination = data.destination;
             clearSuggestions(that);
-            updateCamera(that, destination);
+            that.destinationFound(that, destination);
         };
 
         this.hideSuggestions = function () {
@@ -159,6 +172,12 @@ define([
          */
         this.autoComplete = defaultValue(options.autocomplete, true);
 
+        /**
+         * Gets and sets the command called when a geocode destination is found
+         * @type {Geocoder~DestinationFoundFunction}
+         */
+        this.destinationFound = defaultValue(options.destinationFound, GeocoderViewModel.flyToDestination);
+
         this._focusTextbox = false;
 
         knockout.track(this, ['_searchText', '_isSearchInProgress', 'keepExpanded', '_suggestions', '_selectedSuggestion', '_showSuggestions', '_focusTextbox']);
@@ -166,7 +185,7 @@ define([
         var searchTextObservable = knockout.getObservable(this, '_searchText');
         searchTextObservable.extend({ rateLimit: { timeout: 500 } });
         this._suggestionSubscription = searchTextObservable.subscribe(function() {
-            updateSearchSuggestions(that);
+            GeocoderViewModel._updateSearchSuggestions(that);
         });
         /**
          * Gets a value indicating whether a search is currently in progress.  This property is observable.
@@ -312,7 +331,7 @@ define([
         }
         next = currentIndex - 1;
         viewModel._selectedSuggestion = viewModel._suggestions[next];
-        adjustSuggestionsScroll(viewModel, next);
+        GeocoderViewModel._adjustSuggestionsScroll(viewModel, next);
     }
 
     function handleArrowDown(viewModel) {
@@ -324,27 +343,76 @@ define([
         var next = (currentIndex + 1) % numberOfSuggestions;
         viewModel._selectedSuggestion = viewModel._suggestions[next];
 
-        adjustSuggestionsScroll(viewModel, next);
+        GeocoderViewModel._adjustSuggestionsScroll(viewModel, next);
     }
 
-    function updateCamera(viewModel, destination) {
-        viewModel._scene.camera.flyTo({
-            destination : destination,
-            complete: function() {
-                viewModel._complete.raiseEvent();
-            },
-            duration : viewModel._flightDuration,
-            endTransform : Matrix4.IDENTITY
-        });
+    function computeFlyToLocationForCartographic(cartographic, terrainProvider) {
+        var availability = defined(terrainProvider) ? terrainProvider.availability : undefined;
+
+        if (!defined(availability)) {
+            cartographic.height += DEFAULT_HEIGHT;
+            return when.resolve(cartographic);
+        }
+
+        return sampleTerrainMostDetailed(terrainProvider, [cartographic])
+            .then(function(positionOnTerrain) {
+                cartographic = positionOnTerrain[0];
+                cartographic.height += DEFAULT_HEIGHT;
+                return cartographic;
+            });
     }
 
-    function chainPromise(promise, geocoderService, query) {
+    function flyToDestination(viewModel, destination) {
+        var scene = viewModel._scene;
+        var mapProjection = scene.mapProjection;
+        var ellipsoid = mapProjection.ellipsoid;
+
+        var camera = scene.camera;
+        var terrainProvider = scene.terrainProvider;
+        var finalDestination = destination;
+
+        var promise;
+        if (destination instanceof Rectangle) {
+            // Some geocoders return a Rectangle of zero width/height, treat it like a point instead.
+            if (CesiumMath.equalsEpsilon(destination.south, destination.north, CesiumMath.EPSILON7) &&
+                CesiumMath.equalsEpsilon(destination.east, destination.west, CesiumMath.EPSILON7)) {
+                // destination is now a Cartographic
+                destination = Rectangle.center(destination);
+            } else {
+                promise = computeFlyToLocationForRectangle(destination, scene);
+            }
+        } else { // destination is a Cartesian3
+            destination = ellipsoid.cartesianToCartographic(destination);
+        }
+
+        if (!defined(promise)) {
+            promise = computeFlyToLocationForCartographic(destination, terrainProvider);
+        }
+
+        promise
+            .then(function(result) {
+                finalDestination = ellipsoid.cartographicToCartesian(result);
+            })
+            .always(function() {
+                // Whether terrain querying succeeded or not, fly to the destination.
+                camera.flyTo({
+                    destination: finalDestination,
+                    complete: function() {
+                        viewModel._complete.raiseEvent();
+                    },
+                    duration: viewModel._flightDuration,
+                    endTransform: Matrix4.IDENTITY
+                });
+            });
+    }
+
+    function chainPromise(promise, geocoderService, query, geocodeType) {
         return promise
             .then(function(result) {
                 if (defined(result) && result.state === 'fulfilled' && result.value.length > 0){
                     return result;
                 }
-                var nextPromise = geocoderService.geocode(query)
+                var nextPromise = geocoderService.geocode(query, geocodeType)
                     .then(function (result) {
                         return {state: 'fulfilled', value: result};
                     })
@@ -356,7 +424,7 @@ define([
             });
     }
 
-    function geocode(viewModel, geocoderServices) {
+    function geocode(viewModel, geocoderServices, geocodeType) {
         var query = viewModel._searchText;
 
         if (hasOnlyWhitespace(query)) {
@@ -368,7 +436,7 @@ define([
 
         var promise = when.resolve();
         for (var i = 0; i < geocoderServices.length; i++) {
-            promise = chainPromise(promise, geocoderServices[i], query);
+            promise = chainPromise(promise, geocoderServices[i], query, geocodeType);
         }
 
         viewModel._geocodePromise = promise;
@@ -382,7 +450,7 @@ define([
                 var geocoderResults = result.value;
                 if (result.state === 'fulfilled' && defined(geocoderResults) && geocoderResults.length > 0) {
                     viewModel._searchText = geocoderResults[0].displayName;
-                    updateCamera(viewModel, geocoderResults[0].destination);
+                    viewModel.destinationFound(viewModel, geocoderResults[0].destination);
                     return;
                 }
                 viewModel._searchText = query + ' (not found)';
@@ -442,7 +510,7 @@ define([
                 if (results.length >= 5) {
                     return results;
                 }
-                return service.geocode(query)
+                return service.geocode(query, GeocodeType.AUTOCOMPLETE)
                     .then(function(newResults) {
                         results = results.concat(newResults);
                         return results;
@@ -457,6 +525,16 @@ define([
                 }
             });
     }
+
+    /**
+     * A function to fly to the destination found by a successful geocode.
+     * @type {Geocoder~DestinationFoundFunction}
+     */
+    GeocoderViewModel.flyToDestination = flyToDestination;
+
+    //exposed for testing
+    GeocoderViewModel._updateSearchSuggestions = updateSearchSuggestions;
+    GeocoderViewModel._adjustSuggestionsScroll = adjustSuggestionsScroll;
 
     return GeocoderViewModel;
 });

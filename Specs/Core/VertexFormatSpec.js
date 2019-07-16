@@ -12,7 +12,7 @@ defineSuite([
             normal : true
         });
         var cloned = VertexFormat.clone(vertexFormat);
-        expect(cloned instanceof VertexFormat).toBe(true);
+        expect(cloned).toBeInstanceOf(VertexFormat);
         expect(cloned).toEqual(vertexFormat);
     });
 

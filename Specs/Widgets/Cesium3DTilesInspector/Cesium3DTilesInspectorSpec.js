@@ -13,7 +13,7 @@ defineSuite([
     'use strict';
 
     // Parent tile with content and four child tiles with content
-    var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/';
+    var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/tileset.json';
 
     var scene;
     beforeAll(function() {
@@ -79,16 +79,6 @@ defineSuite([
         afterAll(function() {
             widget.destroy();
             document.body.removeChild(container);
-        });
-
-        it('shows performance', function() {
-            var viewModel = widget.viewModel;
-            viewModel.performance = true;
-            expect(viewModel._performanceDisplay._container.className.indexOf('cesium-cesiumInspector-show') !== -1).toBe(true);
-            expect(viewModel._performanceDisplay._container.className.indexOf('cesium-cesiumInspector-hide') === -1).toBe(true);
-            viewModel.performance = false;
-            expect(viewModel._performanceDisplay._container.className.indexOf('cesium-cesiumInspector-show') === -1).toBe(true);
-            expect(viewModel._performanceDisplay._container.className.indexOf('cesium-cesiumInspector-hide') !== -1).toBe(true);
         });
     });
 }, 'WebGL');

@@ -21,7 +21,8 @@ defineSuite([
     'use strict';
 
     var clock = new Clock({
-        clockStep : ClockStep.TICK_DEPENDENT
+        clockStep : ClockStep.TICK_DEPENDENT,
+        shouldAnimate : true
     });
 
     var times = TimeIntervalCollection.fromIso8601({

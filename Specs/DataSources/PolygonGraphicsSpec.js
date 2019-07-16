@@ -1,20 +1,26 @@
 defineSuite([
         'DataSources/PolygonGraphics',
+        'Core/ArcType',
+        'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/PolygonHierarchy',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
         PolygonGraphics,
+        ArcType,
+        Cartesian3,
         Color,
         DistanceDisplayCondition,
         PolygonHierarchy,
         ColorMaterialProperty,
         ConstantProperty,
+        ClassificationType,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
@@ -37,7 +43,10 @@ defineSuite([
             closeTop : true,
             closeBottom : true,
             shadows : ShadowMode.DISABLED,
-            distanceDisplayCondition : new DistanceDisplayCondition()
+            distanceDisplayCondition : new DistanceDisplayCondition(),
+            classificationType : ClassificationType.TERRAIN,
+            arcType: ArcType.GEODESIC,
+            zIndex: 22
         };
 
         var polygon = new PolygonGraphics(options);
@@ -57,6 +66,9 @@ defineSuite([
         expect(polygon.closeBottom).toBeInstanceOf(ConstantProperty);
         expect(polygon.shadows).toBeInstanceOf(ConstantProperty);
         expect(polygon.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
+        expect(polygon.classificationType).toBeInstanceOf(ConstantProperty);
+        expect(polygon.arcType).toBeInstanceOf(ConstantProperty);
+        expect(polygon.zIndex).toBeInstanceOf(ConstantProperty);
 
         expect(polygon.material.color.getValue()).toEqual(options.material);
         expect(polygon.show.getValue()).toEqual(options.show);
@@ -74,6 +86,9 @@ defineSuite([
         expect(polygon.closeBottom.getValue()).toEqual(options.closeBottom);
         expect(polygon.shadows.getValue()).toEqual(options.shadows);
         expect(polygon.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
+        expect(polygon.classificationType.getValue()).toEqual(options.classificationType);
+        expect(polygon.arcType.getValue()).toEqual(options.arcType);
+        expect(polygon.zIndex.getValue()).toEqual(22);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -94,6 +109,9 @@ defineSuite([
         source.closeBottom = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition());
+        source.classificationType = new ConstantProperty(ClassificationType.TERRAIN);
+        source.arcType = new ConstantProperty(ArcType.RHUMB);
+        source.zIndex = new ConstantProperty(30);
 
         var target = new PolygonGraphics();
         target.merge(source);
@@ -114,6 +132,9 @@ defineSuite([
         expect(target.closeBottom).toBe(source.closeBottom);
         expect(target.shadows).toBe(source.shadows);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(target.classificationType).toBe(source.classificationType);
+        expect(target.arcType).toBe(source.arcType);
+        expect(target.zIndex).toBe(source.zIndex);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -135,6 +156,9 @@ defineSuite([
         var closeBottom = new ConstantProperty();
         var shadows = new ConstantProperty();
         var distanceDisplayCondition = new ConstantProperty();
+        var classificationType = new ConstantProperty();
+        var arcType = new ConstantProperty();
+        var zIndex = new ConstantProperty();
 
         var target = new PolygonGraphics();
         target.material = material;
@@ -153,6 +177,9 @@ defineSuite([
         target.closeBottom = closeBottom;
         target.shadows = shadows;
         target.distanceDisplayCondition = distanceDisplayCondition;
+        target.classificationType = classificationType;
+        target.arcType = arcType;
+        target.zIndex = zIndex;
 
         target.merge(source);
 
@@ -172,6 +199,9 @@ defineSuite([
         expect(target.closeBottom).toBe(closeBottom);
         expect(target.shadows).toBe(shadows);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
+        expect(target.classificationType).toBe(classificationType);
+        expect(target.arcType).toBe(arcType);
+        expect(target.zIndex).toBe(zIndex);
     });
 
     it('clone works', function() {
@@ -192,6 +222,9 @@ defineSuite([
         source.closeBottom = new ConstantProperty();
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
+        source.classificationType = new ConstantProperty();
+        source.arcType = new ConstantProperty();
+        source.zIndex = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -210,6 +243,9 @@ defineSuite([
         expect(result.closeBottom).toBe(source.closeBottom);
         expect(result.shadows).toBe(source.shadows);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+        expect(result.classificationType).toBe(source.classificationType);
+        expect(result.arcType).toBe(source.arcType);
+        expect(result.zIndex).toBe(source.zIndex);
     });
 
     it('merge throws if source undefined', function() {
@@ -237,5 +273,33 @@ defineSuite([
         testDefinitionChanged(property, 'closeBottom', true, false);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
+        testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
+        testDefinitionChanged(property, 'arcType', ArcType.GEODESIC, ArcType.RHUMB);
+        testDefinitionChanged(property, 'zIndex', 54, 3);
+    });
+
+    it('converts an array of positions to a PolygonHierarchy', function() {
+        var positions = [
+            new Cartesian3(1, 2, 3),
+            new Cartesian3(4, 5, 6),
+            new Cartesian3(7, 8, 9)
+        ];
+
+        var graphics = new PolygonGraphics({
+            hierarchy: positions
+        });
+
+        expect(graphics.hierarchy).toBeInstanceOf(ConstantProperty);
+        var hierarchy = graphics.hierarchy.getValue();
+        expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+        expect(hierarchy.positions).toEqual(positions);
+
+        graphics = new PolygonGraphics();
+        graphics.hierarchy = positions;
+
+        expect(graphics.hierarchy).toBeInstanceOf(ConstantProperty);
+        hierarchy = graphics.hierarchy.getValue();
+        expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+        expect(hierarchy.positions).toEqual(positions);
     });
 });

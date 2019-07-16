@@ -1,5 +1,4 @@
 define([
-        './Sampler',
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
@@ -16,9 +15,9 @@ define([
         '../Core/OrthographicFrustum',
         '../Core/Simon1994PlanetaryPositions',
         '../Core/Transforms',
-        '../Scene/SceneMode'
+        '../Scene/SceneMode',
+        './Sampler'
     ], function(
-        Sampler,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -35,7 +34,8 @@ define([
         OrthographicFrustum,
         Simon1994PlanetaryPositions,
         Transforms,
-        SceneMode) {
+        SceneMode,
+        Sampler) {
     'use strict';
 
     /**
@@ -46,6 +46,10 @@ define([
          * @type {Texture}
          */
         this.globeDepthTexture = undefined;
+        /**
+         * @type {Number}
+         */
+        this.gamma = undefined;
 
         this._viewport = new BoundingRectangle();
         this._viewportCartesian4 = new Cartesian4();
@@ -61,6 +65,9 @@ define([
         this._entireFrustum = new Cartesian2();
         this._currentFrustum = new Cartesian2();
         this._frustumPlanes = new Cartesian4();
+        this._log2FarDistance = undefined;
+        this._log2FarPlusOne = undefined;
+        this._log2NearDistance = undefined;
 
         this._frameState = undefined;
         this._temeToPseudoFixed = Matrix3.clone(Matrix4.IDENTITY);
@@ -140,6 +147,7 @@ define([
         this._sunPositionColumbusView = new Cartesian3();
         this._sunDirectionWC = new Cartesian3();
         this._sunDirectionEC = new Cartesian3();
+        this._sunColor = new Cartesian3();
         this._moonDirectionEC = new Cartesian3();
 
         this._pass = undefined;
@@ -154,8 +162,13 @@ define([
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
 
-        this._brdfLut = new Sampler();
-        this._environmentMap = new Sampler();
+        this._brdfLut = undefined;
+        this._environmentMap = undefined;
+
+        this._sphericalHarmonicCoefficients = undefined;
+        this._specularEnvironmentMaps = undefined;
+        this._specularEnvironmentMapsDimensions = new Cartesian2();
+        this._specularEnvironmentMapsMaximumLOD = undefined;
 
         this._fogDensity = undefined;
 
@@ -642,6 +655,39 @@ define([
         },
 
         /**
+         * The log2 of the current frustum's far distance. Used to compute the log depth.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        log2FarDistance : {
+            get : function() {
+                return this._log2FarDistance;
+            }
+        },
+
+        /**
+         * The log2 of 1 + the current frustum's far distance. Used to reverse log depth.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        log2FarPlusOne : {
+            get : function() {
+                return this._log2FarPlusOne;
+            }
+        },
+
+        /**
+         * The log2 current frustum's near distance. Used when writing log depth in the fragment shader.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        log2NearDistance : {
+            get : function() {
+                return this._log2NearDistance;
+            }
+        },
+
+        /**
          * The the height (<code>x</code>) and the height squared (<code>y</code>)
          * in meters of the camera above the 2D world plane. This uniform is only valid
          * when the {@link SceneMode} equal to <code>SCENE2D</code>.
@@ -698,6 +744,17 @@ define([
         sunDirectionEC : {
             get : function() {
                 return this._sunDirectionEC;
+            }
+        },
+
+        /**
+         * The color of the light emitted by the sun.
+         * @memberof UniformState.prototype
+         * @type {Color}
+         */
+        sunColor: {
+            get: function() {
+                return this._sunColor;
             }
         },
 
@@ -808,7 +865,7 @@ define([
         /**
          * The look up texture used to find the BRDF for a material
          * @memberof UniformState.prototype
-         * @type {Sampler}
+         * @type {Texture}
          */
         brdfLut : {
             get : function() {
@@ -819,11 +876,55 @@ define([
         /**
          * The environment map of the scene
          * @memberof UniformState.prototype
-         * @type {Sampler}
+         * @type {CubeMap}
          */
         environmentMap : {
             get : function() {
                 return this._environmentMap;
+            }
+        },
+
+        /**
+         * The spherical harmonic coefficients of the scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian3[]}
+         */
+        sphericalHarmonicCoefficients : {
+            get : function() {
+                return this._sphericalHarmonicCoefficients;
+            }
+        },
+
+        /**
+         * The specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Texture}
+         */
+        specularEnvironmentMaps : {
+            get : function() {
+                return this._specularEnvironmentMaps;
+            }
+        },
+
+        /**
+         * The dimensions of the specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Cartesian2}
+         */
+        specularEnvironmentMapsDimensions : {
+            get : function() {
+                return this._specularEnvironmentMapsDimensions;
+            }
+        },
+
+        /**
+         * The maximum level-of-detail of the specular environment map atlas of the scene.
+         * @memberof UniformState.prototype
+         * @type {Number}
+         */
+        specularEnvironmentMapsMaximumLOD : {
+            get : function() {
+                return this._specularEnvironmentMapsMaximumLOD;
             }
         },
 
@@ -860,6 +961,18 @@ define([
         invertClassificationColor : {
             get : function() {
                 return this._invertClassificationColor;
+            }
+        },
+
+        /**
+         * Whether or not the current projection is orthographic in 3D.
+         *
+         * @memberOf UniformState.prototype
+         * @type {Boolean}
+         */
+        orthographicIn3D : {
+            get : function() {
+                return this._orthographicIn3D;
             }
         }
     });
@@ -975,6 +1088,10 @@ define([
         this._currentFrustum.x = frustum.near;
         this._currentFrustum.y = frustum.far;
 
+        this._log2FarDistance = 2.0 / CesiumMath.log2(frustum.far + 1.0);
+        this._log2FarPlusOne = CesiumMath.log2(frustum.far + 1.0);
+        this._log2NearDistance = CesiumMath.log2(frustum.near);
+
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
         }
@@ -988,6 +1105,8 @@ define([
     UniformState.prototype.updatePass = function(pass) {
         this._pass = pass;
     };
+
+    var EMPTY_ARRAY = [];
 
     /**
      * Synchronizes frame state with the uniform state.  This is called
@@ -1017,12 +1136,23 @@ define([
         }
 
         setSunAndMoonDirections(this, frameState);
+        this._sunColor = Cartesian3.clone(frameState.sunColor, this._sunColor);
 
         var brdfLutGenerator = frameState.brdfLutGenerator;
         var brdfLut = defined(brdfLutGenerator) ? brdfLutGenerator.colorTexture : undefined;
         this._brdfLut = brdfLut;
 
         this._environmentMap = defaultValue(frameState.environmentMap, frameState.context.defaultCubeMap);
+
+        // IE 11 doesn't optimize out uniforms that are #ifdef'd out. So undefined values for the spherical harmonic
+        // coefficients and specular environment map atlas dimensions cause a crash.
+        this._sphericalHarmonicCoefficients = defaultValue(frameState.sphericalHarmonicCoefficients, EMPTY_ARRAY);
+        this._specularEnvironmentMaps = frameState.specularEnvironmentMaps;
+        this._specularEnvironmentMapsMaximumLOD = frameState.specularEnvironmentMapsMaximumLOD;
+
+        if (defined(this._specularEnvironmentMaps)) {
+            Cartesian2.clone(this._specularEnvironmentMaps.dimensions, this._specularEnvironmentMapsDimensions);
+        }
 
         this._fogDensity = frameState.fog.density;
 

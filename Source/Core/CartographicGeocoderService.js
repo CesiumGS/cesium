@@ -22,7 +22,7 @@ define([
      * @function
      *
      * @param {String} query The query to be sent to the geocoder service
-     * @returns {Promise<GeocoderResult[]>}
+     * @returns {Promise<GeocoderService~Result[]>}
      */
     CartographicGeocoderService.prototype.geocode = function(query) {
         //>>includeStart('debug', pragmas.debug);

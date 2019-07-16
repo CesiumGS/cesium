@@ -34,7 +34,7 @@ define([
      * @param {ClockStep} [options.clockStep=ClockStep.SYSTEM_CLOCK_MULTIPLIER] Determines if calls to {@link Clock#tick} are frame dependent or system clock dependent.
      * @param {ClockRange} [options.clockRange=ClockRange.UNBOUNDED] Determines how the clock should behave when {@link Clock#startTime} or {@link Clock#stopTime} is reached.
      * @param {Boolean} [options.canAnimate=true] Indicates whether {@link Clock#tick} can advance time.  This could be false if data is being buffered, for example.  The clock will only tick when both {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
-     * @param {Boolean} [options.shouldAnimate=true] Indicates whether {@link Clock#tick} should attempt to advance time.  The clock will only tick when both {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
+     * @param {Boolean} [options.shouldAnimate=false] Indicates whether {@link Clock#tick} should attempt to advance time.  The clock will only tick when both {@link Clock#canAnimate} and {@link Clock#shouldAnimate} are true.
      *
      * @exception {DeveloperError} startTime must come before stopTime.
      *
@@ -132,6 +132,11 @@ define([
          * @type {Event}
          */
         this.onTick = new Event();
+        /**
+         * An {@link Event} that is fired whenever {@link Clock#stopTime} is reached.
+         * @type {Event}
+         */
+        this.onStop = new Event();
 
         this._currentTime = undefined;
         this._multiplier = undefined;
@@ -144,8 +149,8 @@ define([
 
         this.currentTime = currentTime;
         this.multiplier = defaultValue(options.multiplier, 1.0);
+        this.shouldAnimate = defaultValue(options.shouldAnimate, false);
         this.clockStep = defaultValue(options.clockStep, ClockStep.SYSTEM_CLOCK_MULTIPLIER);
-        this.shouldAnimate = defaultValue(options.shouldAnimate, true);
     }
 
     defineProperties(Clock.prototype, {
@@ -227,7 +232,6 @@ define([
             }
         },
 
-
         /**
          * Indicates whether {@link Clock#tick} should attempt to advance time.
          * The clock will only advance time when both
@@ -237,7 +241,7 @@ define([
          * {@link ClockStep.SYSTEM_CLOCK_MULTIPLIER}.
          * @memberof Clock.prototype
          * @type {Boolean}
-         * @default true
+         * @default false
          */
         shouldAnimate : {
             get : function() {
@@ -291,6 +295,7 @@ define([
                         currentTime = JulianDate.clone(startTime, currentTime);
                     } else if (JulianDate.greaterThan(currentTime, stopTime)) {
                         currentTime = JulianDate.clone(stopTime, currentTime);
+                        this.onStop.raiseEvent(this);
                     }
                 } else if (clockRange === ClockRange.LOOP_STOP) {
                     if (JulianDate.lessThan(currentTime, startTime)) {
@@ -298,6 +303,7 @@ define([
                     }
                     while (JulianDate.greaterThan(currentTime, stopTime)) {
                         currentTime = JulianDate.addSeconds(startTime, JulianDate.secondsDifference(currentTime, stopTime), currentTime);
+                        this.onStop.raiseEvent(this);
                     }
                 }
             }

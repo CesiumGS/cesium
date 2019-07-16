@@ -3,25 +3,9 @@ define([
     ], function(
         FeatureDetection) {
     'use strict';
-    /*global CanvasPixelArray*/
-
-    var typedArrayTypes = [];
-
-    // Earlier versions of IE do not support typed arrays
-    if (FeatureDetection.supportsTypedArrays()) {
-        typedArrayTypes.push(Int8Array, Uint8Array, Int16Array, Uint16Array, Int32Array, Uint32Array, Float32Array, Float64Array);
-
-        if (typeof Uint8ClampedArray !== 'undefined') {
-            typedArrayTypes.push(Uint8ClampedArray);
-        }
-
-        if (typeof CanvasPixelArray !== 'undefined') {
-            typedArrayTypes.push(CanvasPixelArray);
-        }
-    }
 
     function isTypedArray(o) {
-        return typedArrayTypes.some(function(type) {
+        return FeatureDetection.typedArrayTypes.some(function(type) {
             return o instanceof type;
         });
     }

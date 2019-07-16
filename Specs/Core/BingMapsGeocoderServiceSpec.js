@@ -1,34 +1,15 @@
 defineSuite([
         'Core/BingMapsGeocoderService',
-        'Core/loadJsonp',
         'Core/Rectangle',
-        'Specs/createScene'
+        'Core/Resource'
     ], function(
         BingMapsGeocoderService,
-        loadJsonp,
         Rectangle,
-        createScene) {
+        Resource) {
     'use strict';
 
-    var service;
-    var scene;
-    beforeEach(function() {
-        scene = createScene();
-        service = new BingMapsGeocoderService({scene: scene});
-    });
-
-    afterEach(function() {
-        scene.destroyForSpecs();
-    });
-
     afterAll(function() {
-        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
-    });
-
-    it('constructor throws without scene', function() {
-        expect(function() {
-            return new BingMapsGeocoderService();
-        }).toThrowDeveloperError();
+        Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
     });
 
     it('returns geocoder results', function (done) {
@@ -41,9 +22,10 @@ defineSuite([
                 }]
             }]
         };
-        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+        Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
             deferred.resolve(data);
         };
+        var service = new BingMapsGeocoderService();
         service.geocode(query).then(function(results) {
             expect(results.length).toEqual(1);
             expect(results[0].displayName).toEqual('a');
@@ -57,9 +39,10 @@ defineSuite([
         var data = {
             resourceSets: []
         };
-        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+        Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
             deferred.resolve(data);
         };
+        var service = new BingMapsGeocoderService();
         service.geocode(query).then(function(results) {
             expect(results.length).toEqual(0);
             done();
@@ -73,9 +56,10 @@ defineSuite([
                 resources: []
             }]
         };
-        loadJsonp.loadAndExecuteScript = function(url, functionName, deferred) {
+        Resource._Implementations.loadAndExecuteScript = function(url, functionName, deferred) {
             deferred.resolve(data);
         };
+        var service = new BingMapsGeocoderService();
         service.geocode(query).then(function(results) {
             expect(results.length).toEqual(0);
             done();

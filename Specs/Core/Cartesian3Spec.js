@@ -690,6 +690,34 @@ defineSuite([
         expect(left).toEqual(expectedResult);
     });
 
+    it('midpoint works with a result parameter', function() {
+        var left = new Cartesian3(0.0, 0.0, 6.0);
+        var right = new Cartesian3(0.0, 0.0, -6.0);
+        var result = new Cartesian3();
+        var expectedResult = new Cartesian3(0.0, 0.0, 0.0);
+        var returnedResult = Cartesian3.midpoint(left, right, result);
+        expect(returnedResult).toBe(result);
+        expect(result).toEqual(expectedResult);
+    });
+
+    it('midpoint throws with no left', function() {
+        expect(function() {
+            return Cartesian3.midpoint(undefined, new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('midpoint throws with no right', function() {
+        expect(function() {
+            return Cartesian3.midpoint(new Cartesian3(), undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('midpoint throws with no result', function() {
+        expect(function() {
+            return Cartesian3.midpoint(new Cartesian3(), new Cartesian3(), undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('fromSpherical throws with no spherical parameter', function() {
         expect(function() {
             Cartesian3.fromSpherical(undefined);
@@ -1238,6 +1266,30 @@ defineSuite([
     it('mostOrthogonalAxis throws with no result', function() {
         expect(function() {
             Cartesian3.mostOrthogonalAxis(new Cartesian3());
+        }).toThrowDeveloperError();
+    });
+
+    it('projects vector a onto vector b', function() {
+        var a = new Cartesian3(0.0, 1.0, 0.0);
+        var b = new Cartesian3(1.0, 0.0, 0.0);
+        var result = Cartesian3.projectVector(a, b, new Cartesian3());
+        expect(result).toEqual(new Cartesian3(0.0, 0.0, 0.0));
+
+        a = new Cartesian3(1.0, 1.0, 0.0);
+        b = new Cartesian3(1.0, 0.0, 0.0);
+        result = Cartesian3.projectVector(a, b, new Cartesian3());
+        expect(result).toEqual(new Cartesian3(1.0, 0.0, 0.0));
+    });
+
+    it('projectVector throws when missing parameters', function() {
+        expect(function() {
+            return Cartesian3.projectVector(undefined, new Cartesian3(), new Cartesian3());
+        }).toThrowDeveloperError();
+        expect(function() {
+            return Cartesian3.projectVector(new Cartesian3(), undefined, new Cartesian3());
+        }).toThrowDeveloperError();
+        expect(function() {
+            return Cartesian3.projectVector(new Cartesian3(), new Cartesian3(), undefined);
         }).toThrowDeveloperError();
     });
 

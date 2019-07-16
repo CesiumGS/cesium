@@ -75,6 +75,7 @@ defineSuite([
             maximumZoomDistance: 5906376272000.0  // distance from the Sun to Pluto in meters.
         };
         this.camera = undefined;
+        this.preloadFlightCamera = undefined;
         this.context = {
             drawingBufferWidth : 1024,
             drawingBufferHeight : 768
@@ -99,6 +100,8 @@ defineSuite([
         camera.minimumZoomDistance = 0.0;
 
         scene.camera = camera;
+        scene.preloadFlightCamera = Camera.clone(camera);
+        camera._scene = scene;
         scene.mapMode2D = MapMode2D.INFINITE_2D;
     });
 
@@ -993,6 +996,53 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
+    it('moves forward in 2D mode zooms in camera instead of moving it', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.moveForward(moveAmount);
+
+        // want to be at prev location bc moveBackward in 2D uses zoom2D which only adjusts frustum
+        expect(camera.position).toEqual(oldCamera.position, CesiumMath.EPSILON10);
+        expect(camera.frustum).not.toEqual(oldCamera.frustum);
+
+        expect(camera.up).toEqual(up);
+        expect(camera.direction).toEqual(dir);
+        expect(camera.right).toEqual(right);
+    });
+
+    it('moves backward in 2D mode zooms out camera instead of moving it', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.moveBackward(moveAmount);
+
+        // want to be at prev location bc moveBackward in 2D uses zoom2D which only adjusts frustum
+        expect(camera.position).toEqual(oldCamera.position, CesiumMath.EPSILON10);
+        expect(camera.frustum).not.toEqual(oldCamera.frustum);
+        expect(camera.up).toEqual(up);
+        expect(camera.direction).toEqual(dir);
+        expect(camera.right).toEqual(right);
+    });
+
     it('move clamps position in 2D', function() {
         var frustum = new OrthographicOffCenterFrustum();
         frustum.near = 1.0;
@@ -1065,6 +1115,94 @@ defineSuite([
         expect(camera.right).toEqualEpsilon(right, CesiumMath.EPSILON15);
         expect(camera.direction).toEqualEpsilon(Cartesian3.negate(up, new Cartesian3()), CesiumMath.EPSILON15);
         expect(camera.up).toEqualEpsilon(dir, CesiumMath.EPSILON15);
+    });
+
+    it('looks left in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookLeft(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks right in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookRight(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks up in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookUp(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
+    });
+
+    it('looks down in 2D mode does not modify the camera at all', function() {
+        var frustum = new OrthographicOffCenterFrustum();
+        frustum.near = 1.0;
+        frustum.far = 2.0;
+        frustum.left = -2.0;
+        frustum.right = 2.0;
+        frustum.top = 1.0;
+        frustum.bottom = -1.0;
+        camera.frustum = frustum;
+
+        camera.update(SceneMode.SCENE2D);
+        var oldCamera = Camera.clone(camera);
+
+        camera.lookDown(turnAmount);
+
+        // dont want camera look vector to rotate at all in 2D
+        expect(camera.position).toEqual(oldCamera.position);
+        expect(camera.up).toEqualEpsilon(oldCamera.up, CesiumMath.EPSILON15);
+        expect(camera.direction).toEqualEpsilon(oldCamera.direction, CesiumMath.EPSILON15);
+        expect(camera.right).toEqualEpsilon(oldCamera.right, CesiumMath.EPSILON15);
     });
 
     it('twists left', function() {
@@ -1906,7 +2044,6 @@ defineSuite([
         expect(camera.right).toEqual(right);
     });
 
-
     it('get rectangle coordinate returns camera position if scene mode is morphing', function() {
         var rectangle = new Rectangle(
             -CesiumMath.PI_OVER_TWO,
@@ -2127,7 +2264,7 @@ defineSuite([
         var ray = camera.getPickRay(windowCoord);
 
         var cameraPosition = camera.position;
-        var expectedPosition = new Cartesian3(cameraPosition.x + 2.0, cameraPosition.y + 2, cameraPosition.z);
+        var expectedPosition = new Cartesian3(cameraPosition.z, cameraPosition.x + 2.0, cameraPosition.y + 2.0);
         expect(ray.origin).toEqualEpsilon(expectedPosition, CesiumMath.EPSILON14);
         expect(ray.direction).toEqual(camera.directionWC);
     });
@@ -2708,7 +2845,7 @@ defineSuite([
         var correctResult = new Rectangle(-0.05789100547374969, -0.04365869998457809, 0.05789100547374969, 0.04365869998457809);
 
         var rect = camera.computeViewRectangle();
-        expect(rect).toEqual(correctResult);
+        expect(rect).toEqualEpsilon(correctResult, CesiumMath.EPSILON10);
     });
 
     it('computeViewRectangle when zoomed in to pole', function() {
@@ -2740,7 +2877,7 @@ defineSuite([
         var correctResult = new Rectangle(3.0837016481160435, -0.04365869998457809, -3.0837016481160435, 0.04365869998457809);
 
         var rect = camera.computeViewRectangle();
-        expect(rect).toEqual(correctResult);
+        expect(rect).toEqualEpsilon(correctResult, CesiumMath.EPSILON10);
     });
 
     it('computeViewRectangle when zoomed out', function() {
@@ -2887,11 +3024,11 @@ defineSuite([
     });
 
     it('switches projections', function() {
-        expect(camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(PerspectiveFrustum);
         camera.switchToOrthographicFrustum();
-        expect(camera.frustum instanceof OrthographicFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicFrustum);
         camera.switchToPerspectiveFrustum();
-        expect(camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(PerspectiveFrustum);
     });
 
     it('does not switch projection in 2D', function() {
@@ -2911,11 +3048,11 @@ defineSuite([
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
 
-        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicOffCenterFrustum);
         camera.switchToOrthographicFrustum();
-        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicOffCenterFrustum);
         camera.switchToPerspectiveFrustum();
-        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicOffCenterFrustum);
     });
 
     it('normalizes WC members', function() {
@@ -2924,5 +3061,21 @@ defineSuite([
         expect(Cartesian3.magnitude(camera.directionWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
         expect(Cartesian3.magnitude(camera.rightWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
         expect(Cartesian3.magnitude(camera.upWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
+    });
+
+    it('get camera deltas', function() {
+        camera._updateCameraChanged();
+        expect(camera.positionWCDeltaMagnitude).toEqual(0);
+        expect(camera.positionWCDeltaMagnitudeLastFrame).toEqual(0);
+
+        camera.moveUp(moveAmount);
+
+        camera._updateCameraChanged();
+        expect(camera.positionWCDeltaMagnitude).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
+        expect(camera.positionWCDeltaMagnitudeLastFrame).toEqual(0);
+
+        camera._updateCameraChanged();
+        expect(camera.positionWCDeltaMagnitude).toEqual(0);
+        expect(camera.positionWCDeltaMagnitudeLastFrame).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
     });
 });

@@ -16,6 +16,14 @@ defineSuite([
         expect(CesiumMath.sign(0)).toEqual(0);
     });
 
+    it('sign of -0', function() {
+        expect(CesiumMath.sign(-0)).toEqual(-0);
+    });
+
+    it('sign of NaN', function() {
+        expect(CesiumMath.sign(NaN)).toBeNaN();
+    });
+
     it('signNotZero of -2', function() {
         expect(CesiumMath.signNotZero(-2)).toEqual(-1);
     });
@@ -67,6 +75,27 @@ defineSuite([
 
     it('fromSNorm 128', function() {
         expect(CesiumMath.fromSNorm(255.0 / 2)).toEqual(0.0);
+    });
+
+    //////////////////////////////////////////////////////////////////////
+    it('normalize 0 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(0, -10, 10)).toEqual(0.5);
+    });
+
+    it('normalize 10 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(10, -10, 10)).toEqual(1.0);
+    });
+
+    it('normalize -10 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(-10, -10, 10)).toEqual(0.0);
+    });
+
+    it('normalize -10.0001 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(-10.0001, -10, 10)).toEqual(0.0);
+    });
+
+    it('normalize 10.00001 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(10.00001, -10, 10)).toEqual(1.0);
     });
 
     //////////////////////////////////////////////////////////////////////
@@ -246,12 +275,134 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('lessThan works', function() {
+        expect(CesiumMath.lessThan(1.0, 2.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThan(2.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.0, 1.2, 0.2)).toBe(false);
+        expect(CesiumMath.lessThan(1.2, 1.0, 0.2)).toBe(false);
+    });
+
+    it('lessThan throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.lessThan(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThan throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.lessThan(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThan throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.lessThan(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThanOrEquals works', function() {
+        expect(CesiumMath.lessThanOrEquals(1.0, 2.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(2.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.lessThanOrEquals(1.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(1.0, 1.2, 0.2)).toBe(true);
+        expect(CesiumMath.lessThanOrEquals(1.2, 1.0, 0.2)).toBe(true);
+    });
+
+    it('lessThanOrEquals throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.lessThanOrEquals(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThanOrEquals throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.lessThanOrEquals(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('lessThanOrEquals throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.lessThanOrEquals(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThan works', function() {
+        expect(CesiumMath.greaterThan(1.0, 2.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(2.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThan(1.0, 1.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(1.0, 1.2, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThan(1.2, 1.0, 0.2)).toBe(false);
+    });
+
+    it('greaterThan throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.greaterThan(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThan throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.greaterThan(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThan throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.greaterThan(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThanOrEquals works', function() {
+        expect(CesiumMath.greaterThanOrEquals(1.0, 2.0, 0.2)).toBe(false);
+        expect(CesiumMath.greaterThanOrEquals(2.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.0, 1.0, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.0, 1.2, 0.2)).toBe(true);
+        expect(CesiumMath.greaterThanOrEquals(1.2, 1.0, 0.2)).toBe(true);
+    });
+
+    it('greaterThanOrEquals throws for undefined left', function() {
+        expect(function() {
+            CesiumMath.greaterThanOrEquals(undefined, 5.0, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThanOrEquals throws for undefined right', function() {
+        expect(function() {
+            CesiumMath.greaterThanOrEquals(1.0, undefined, CesiumMath.EPSILON16);
+        }).toThrowDeveloperError();
+    });
+
+    it('greaterThanOrEquals throws for undefined absoluteEpsilon', function() {
+        expect(function() {
+            CesiumMath.greaterThanOrEquals(1.0, 5.0, undefined);
+        }).toThrowDeveloperError();
+    });
+
     it('factorial produces the correct results', function() {
         var factorials = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600, 6227020800, 87178291200, 1307674368000, 20922789888000, 355687428096000, 6402373705728000,
                           121645100408832000, 2432902008176640000, 51090942171709440000, 1124000727777607680000, 25852016738884976640000, 620448401733239439360000];
 
-        for ( var i = 0; i < factorials.length; i++) {
-            expect(CesiumMath.factorial(i)).toEqual(factorials[i]);
+        var length = factorials.length;
+        var i;
+        var indices = [];
+
+        // Populate indices array
+        for (i = 0; i < length; i++) {
+            indices.push(i);
+        }
+
+        // Randomize the indices array
+        for (i = 0; i < length; i++) {
+            var tmp = indices[i];
+            var randomIndex = Math.floor(Math.random() * length);
+            indices[i] = indices[randomIndex];
+            indices[randomIndex] = tmp;
+        }
+
+        for (i = 0; i < length; i++) {
+            var index = indices[i];
+            expect(CesiumMath.factorial(index)).toEqual(factorials[index]);
         }
     });
 
@@ -432,6 +583,32 @@ defineSuite([
     it('logBase throws without base', function() {
         expect(function() {
             CesiumMath.logBase(64, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('cbrt', function() {
+        expect(CesiumMath.cbrt(27.0)).toEqual(3.0);
+        expect(CesiumMath.cbrt(-27.0)).toEqual(-3.0);
+        expect(CesiumMath.cbrt(0.0)).toEqual(0.0);
+        expect(CesiumMath.cbrt(1.0)).toEqual(1.0);
+        expect(CesiumMath.cbrt()).toEqual(NaN);
+    });
+
+    it('fastApproximateAtan', function() {
+        expect(CesiumMath.fastApproximateAtan(0.0)).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+        expect(CesiumMath.fastApproximateAtan(1.0)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON3);
+        expect(CesiumMath.fastApproximateAtan(-1.0)).toEqualEpsilon(-CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON3);
+    });
+
+    it('fastApproximateAtan2', function() {
+        expect(CesiumMath.fastApproximateAtan2(1.0, 0.0)).toEqualEpsilon(0.0, CesiumMath.EPSILON3);
+        expect(CesiumMath.fastApproximateAtan2(1.0, 1.0)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR, CesiumMath.EPSILON3);
+        expect(CesiumMath.fastApproximateAtan2(-1.0, 1.0)).toEqualEpsilon(CesiumMath.PI_OVER_FOUR + CesiumMath.PI_OVER_TWO, CesiumMath.EPSILON3);
+    });
+
+    it('fastApproximateAtan2 throws if both arguments are zero', function() {
+        expect(function() {
+            CesiumMath.fastApproximateAtan2(0, 0);
         }).toThrowDeveloperError();
     });
 });

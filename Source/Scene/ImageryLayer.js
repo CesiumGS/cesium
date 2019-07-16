@@ -7,6 +7,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
+        '../Core/GeographicProjection',
         '../Core/GeographicTilingScheme',
         '../Core/IndexDatatype',
         '../Core/Math',
@@ -48,6 +49,7 @@ define([
         destroyObject,
         DeveloperError,
         FeatureDetection,
+        GeographicProjection,
         GeographicTilingScheme,
         IndexDatatype,
         CesiumMath,
@@ -155,6 +157,9 @@ define([
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
+     * @param {Rectangle} [options.cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
+     * @param {Color} [options.colorToAlpha] Color to be used as alpha.
+     * @param {Number} [options.colorToAlphaThreshold=0.004] Threshold for color-to-alpha.
      */
     function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
@@ -277,6 +282,27 @@ define([
         this._requestImageError = undefined;
 
         this._reprojectComputeCommands = [];
+
+        /**
+         * Rectangle cutout in this layer of imagery.
+         *
+         * @type {Rectangle}
+         */
+        this.cutoutRectangle = options.cutoutRectangle;
+
+        /**
+         * Color value that should be set to transparent.
+         *
+         * @type {Color}
+         */
+        this.colorToAlpha = options.colorToAlpha;
+
+        /**
+         * Normalized (0-1) threshold for color-to-alpha.
+         *
+         * @type {Number}
+         */
+        this.colorToAlphaThreshold = defaultValue(options.colorToAlphaThreshold, ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD);
     }
 
     defineProperties(ImageryLayer.prototype, {
@@ -306,7 +332,6 @@ define([
             }
         }
     });
-
 
     /**
      * This value is used as the default brightness for the imagery layer if one is not provided during construction
@@ -369,6 +394,14 @@ define([
     ImageryLayer.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
 
     /**
+     * This value is used as the default threshold for color-to-alpha if one is not provided
+     * during construction or by the imagery provider.
+     * @type {Number}
+     * @default 0.004
+     */
+    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
+
+    /**
      * Gets a value indicating whether this layer is the base layer in the
      * {@link ImageryLayerCollection}.  The base layer is the one that underlies all
      * others.  It is special in that it is treated as if it has global rectangle, even if
@@ -402,8 +435,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -483,7 +514,7 @@ define([
         // Use Web Mercator for our texture coordinate computations if this imagery layer uses
         // that projection and the terrain tile falls entirely inside the valid bounds of the
         // projection.
-        var useWebMercatorT = imageryProvider.tilingScheme instanceof WebMercatorTilingScheme &&
+        var useWebMercatorT = imageryProvider.tilingScheme.projection instanceof WebMercatorProjection &&
                               tile.rectangle.north < WebMercatorProjection.MaximumLatitude &&
                               tile.rectangle.south > -WebMercatorProjection.MaximumLatitude;
 
@@ -713,9 +744,8 @@ define([
      * @private
      *
      * @param {Imagery} imagery The imagery to request.
-     * @param {Function} [priorityFunction] The priority function used for sorting the imagery request.
      */
-    ImageryLayer.prototype._requestImagery = function(imagery, priorityFunction) {
+    ImageryLayer.prototype._requestImagery = function(imagery) {
         var imageryProvider = this._imageryProvider;
 
         var that = this;
@@ -758,10 +788,9 @@ define([
 
         function doRequest() {
             var request = new Request({
-                throttle : true,
+                throttle : false,
                 throttleByServer : true,
-                type : RequestType.IMAGERY,
-                priorityFunction : priorityFunction
+                type : RequestType.IMAGERY
             });
             imagery.request = request;
             imagery.state = ImageryState.TRANSITIONING;
@@ -782,6 +811,34 @@ define([
         }
 
         doRequest();
+    };
+
+    ImageryLayer.prototype._createTextureWebGL = function(context, imagery) {
+        var sampler = new Sampler({
+            minificationFilter : this.minificationFilter,
+            magnificationFilter : this.magnificationFilter
+        });
+
+        var image = imagery.image;
+
+        if (defined(image.internalFormat)) {
+            return new Texture({
+                context : context,
+                pixelFormat : image.internalFormat,
+                width : image.width,
+                height : image.height,
+                source : {
+                    arrayBufferView : image.bufferView
+                },
+                sampler : sampler
+            });
+        }
+        return new Texture({
+            context : context,
+            source : image,
+            pixelFormat : this._imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB,
+            sampler : sampler
+        });
     };
 
     /**
@@ -823,34 +880,10 @@ define([
         }
         //>>includeEnd('debug');
 
-        var sampler = new Sampler({
-            minificationFilter : this.minificationFilter,
-            magnificationFilter : this.magnificationFilter
-        });
-
         // Imagery does not need to be discarded, so upload it to WebGL.
-        var texture;
-        if (defined(image.internalFormat)) {
-            texture = new Texture({
-                context : context,
-                pixelFormat : image.internalFormat,
-                width : image.width,
-                height : image.height,
-                source : {
-                    arrayBufferView : image.bufferView
-                },
-                sampler : sampler
-            });
-        } else {
-            texture = new Texture({
-                context : context,
-                source : image,
-                pixelFormat : imageryProvider.hasAlphaChannel ? PixelFormat.RGBA : PixelFormat.RGB,
-                sampler : sampler
-            });
-        }
+        var texture = this._createTextureWebGL(context, imagery);
 
-        if (imageryProvider.tilingScheme instanceof WebMercatorTilingScheme) {
+        if (imageryProvider.tilingScheme.projection instanceof WebMercatorProjection) {
             imagery.textureWebMercator = texture;
         } else {
             imagery.texture = texture;
@@ -863,16 +896,16 @@ define([
         return minificationFilter + ':' + magnificationFilter + ':' + maximumAnisotropy;
     }
 
-    function finalizeReprojectTexture(imageryLayer, context, imagery, texture) {
-        var minificationFilter = imageryLayer.minificationFilter;
-        var magnificationFilter = imageryLayer.magnificationFilter;
+    ImageryLayer.prototype._finalizeReprojectTexture = function(context, texture) {
+        var minificationFilter = this.minificationFilter;
+        var magnificationFilter = this.magnificationFilter;
         var usesLinearTextureFilter = minificationFilter === TextureMinificationFilter.LINEAR && magnificationFilter === TextureMagnificationFilter.LINEAR;
         // Use mipmaps if this texture has power-of-two dimensions.
         // In addition, mipmaps are only generated if the texture filters are both LINEAR.
         if (usesLinearTextureFilter && !PixelFormat.isCompressedFormat(texture.pixelFormat) && CesiumMath.isPowerOfTwo(texture.width) && CesiumMath.isPowerOfTwo(texture.height)) {
             minificationFilter = TextureMinificationFilter.LINEAR_MIPMAP_LINEAR;
             var maximumSupportedAnisotropy = ContextLimits.maximumTextureFilterAnisotropy;
-            var maximumAnisotropy = Math.min(maximumSupportedAnisotropy, defaultValue(imageryLayer._maximumAnisotropy, maximumSupportedAnisotropy));
+            var maximumAnisotropy = Math.min(maximumSupportedAnisotropy, defaultValue(this._maximumAnisotropy, maximumSupportedAnisotropy));
             var mipmapSamplerKey = getSamplerKey(minificationFilter, magnificationFilter, maximumAnisotropy);
             var mipmapSamplers = context.cache.imageryLayerMipmapSamplers;
             if (!defined(mipmapSamplers)) {
@@ -909,9 +942,7 @@ define([
             }
             texture.sampler = nonMipmapSampler;
         }
-
-        imagery.state = ImageryState.READY;
-    }
+    };
 
     /**
      * Enqueues a command re-projecting a texture to a {@link GeographicProjection} on the next update, if necessary, and generate
@@ -935,7 +966,7 @@ define([
         // avoids precision problems in the reprojection transformation while making
         // no noticeable difference in the georeferencing of the image.
         if (needGeographicProjection &&
-            !(this._imageryProvider.tilingScheme instanceof GeographicTilingScheme) &&
+            !(this._imageryProvider.tilingScheme.projection instanceof GeographicProjection) &&
             rectangle.width / texture.width > 1e-5) {
                 var that = this;
                 imagery.addReference();
@@ -949,7 +980,8 @@ define([
                     },
                     postExecute : function(outputTexture) {
                         imagery.texture = outputTexture;
-                        finalizeReprojectTexture(that, context, imagery, outputTexture);
+                        that._finalizeReprojectTexture(context, outputTexture);
+                        imagery.state = ImageryState.READY;
                         imagery.releaseReference();
                     }
                 });
@@ -958,7 +990,8 @@ define([
             if (needGeographicProjection) {
                 imagery.texture = texture;
             }
-            finalizeReprojectTexture(this, context, imagery, texture);
+            this._finalizeReprojectTexture(context, texture);
+            imagery.state = ImageryState.READY;
         }
     };
 
@@ -1213,7 +1246,7 @@ define([
         var imageryProvider = layer._imageryProvider;
         var tilingScheme = imageryProvider.tilingScheme;
         var ellipsoid = tilingScheme.ellipsoid;
-        var latitudeFactor = !(layer._imageryProvider.tilingScheme instanceof GeographicTilingScheme) ? Math.cos(latitudeClosestToEquator) : 1.0;
+        var latitudeFactor = !(layer._imageryProvider.tilingScheme.projection instanceof GeographicProjection) ? Math.cos(latitudeClosestToEquator) : 1.0;
         var tilingSchemeRectangle = tilingScheme.rectangle;
         var levelZeroMaximumTexelSpacing = ellipsoid.maximumRadius * tilingSchemeRectangle.width * latitudeFactor / (imageryProvider.tileWidth * tilingScheme.getNumberOfXTilesAtLevel(0));
 

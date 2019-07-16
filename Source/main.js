@@ -6,8 +6,14 @@ require([
     ], function(
         Cesium) {
     'use strict';
-    /*global self*/
-    var scope = typeof window !== 'undefined' ? window : typeof self !== 'undefined' ? self : {};
-
-    scope.Cesium = Cesium;
+    /*global self,module*/
+    if (typeof window !== 'undefined') {
+        window.Cesium = Cesium;
+    } else if (typeof self !== 'undefined') {
+        self.Cesium = Cesium;
+    } else if(typeof module !== 'undefined') {
+        module.exports = Cesium;
+    } else {
+        console.log('Unable to load Cesium.');
+    }
 }, undefined, true);

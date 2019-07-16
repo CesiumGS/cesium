@@ -5,7 +5,7 @@ define([
         './defineProperties',
         './DeveloperError',
         './Spline'
-], function(
+    ], function(
         Check,
         defaultValue,
         defined,

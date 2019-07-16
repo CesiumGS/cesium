@@ -1,0 +1,20 @@
+image: Visual Studio 2017
+
+version: '{build}'
+
+environment:
+  matrix:
+    - nodejs_version: "8"
+
+install:
+  # Get the latest stable version of Node.js
+  - ps: Install-Product node $env:nodejs_version
+  # install modules
+  - npm install
+
+test_script:
+  - npm --silent run build
+  - npm --silent run test -- --browsers IE --webgl-stub --suppressPassed
+
+# Don't actually build.
+build: off

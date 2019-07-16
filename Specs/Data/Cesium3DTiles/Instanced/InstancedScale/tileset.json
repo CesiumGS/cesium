@@ -23,7 +23,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "instancedScale.i3dm"
+      "uri": "instancedScale.i3dm"
     }
   }
 }

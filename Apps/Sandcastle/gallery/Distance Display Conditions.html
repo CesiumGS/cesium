@@ -66,7 +66,7 @@ function addPointAndModel() {
             distanceDisplayCondition : new Cesium.DistanceDisplayCondition(250.5)
         },
         model : {
-            uri : '../../SampleData/models/CesiumGround/Cesium_Ground.glb',
+            uri : '../../SampleData/models/GroundVehicle/GroundVehicle.glb',
             distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0.0, 250.5)
         }
     });
@@ -94,10 +94,10 @@ Sandcastle.reset = function () {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

@@ -1,15 +1,19 @@
 define([
         './Batched3DModel3DTileContent',
         './Composite3DTileContent',
+        './Geometry3DTileContent',
         './Instanced3DModel3DTileContent',
         './PointCloud3DTileContent',
-        './Tileset3DTileContent'
+        './Tileset3DTileContent',
+        './Vector3DTileContent'
     ], function(
         Batched3DModel3DTileContent,
         Composite3DTileContent,
+        Geometry3DTileContent,
         Instanced3DModel3DTileContent,
         PointCloud3DTileContent,
-        Tileset3DTileContent) {
+        Tileset3DTileContent,
+        Vector3DTileContent) {
     'use strict';
 
     /**
@@ -18,21 +22,27 @@ define([
      * @private
      */
     var Cesium3DTileContentFactory = {
-        b3dm : function(tileset, tile, url, arrayBuffer, byteOffset) {
-            return new Batched3DModel3DTileContent(tileset, tile, url, arrayBuffer, byteOffset);
+        b3dm : function(tileset, tile, resource, arrayBuffer, byteOffset) {
+            return new Batched3DModel3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset);
         },
-        pnts : function(tileset, tile, url, arrayBuffer, byteOffset) {
-            return new PointCloud3DTileContent(tileset, tile, url, arrayBuffer, byteOffset);
+        pnts : function(tileset, tile, resource, arrayBuffer, byteOffset) {
+            return new PointCloud3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset);
         },
-        i3dm : function(tileset, tile, url, arrayBuffer, byteOffset) {
-            return new Instanced3DModel3DTileContent(tileset, tile, url, arrayBuffer, byteOffset);
+        i3dm : function(tileset, tile, resource, arrayBuffer, byteOffset) {
+            return new Instanced3DModel3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset);
         },
-        cmpt : function(tileset, tile, url, arrayBuffer, byteOffset) {
+        cmpt : function(tileset, tile, resource, arrayBuffer, byteOffset) {
             // Send in the factory in order to avoid a cyclical dependency
-            return new Composite3DTileContent(tileset, tile, url, arrayBuffer, byteOffset, Cesium3DTileContentFactory);
+            return new Composite3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset, Cesium3DTileContentFactory);
         },
-        json : function(tileset, tile, url, arrayBuffer, byteOffset) {
-            return new Tileset3DTileContent(tileset, tile, url, arrayBuffer, byteOffset);
+        json : function(tileset, tile, resource, arrayBuffer, byteOffset) {
+            return new Tileset3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset);
+        },
+        geom : function(tileset, tile, resource, arrayBuffer, byteOffset) {
+            return new Geometry3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset);
+        },
+        vctr : function(tileset, tile, resource, arrayBuffer, byteOffset) {
+            return new Vector3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset);
         }
     };
 

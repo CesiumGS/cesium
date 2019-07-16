@@ -7,8 +7,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/loadImage',
         '../Core/PixelFormat',
+        '../Core/Resource',
         '../Core/RuntimeError',
         '../Renderer/Framebuffer',
         '../Renderer/Texture',
@@ -22,8 +22,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        loadImage,
         PixelFormat,
+        Resource,
         RuntimeError,
         Framebuffer,
         Texture,
@@ -327,7 +327,7 @@ define([
      * the existing index is used.
      *
      * @param {String} id An identifier to detect whether the image already exists in the atlas.
-     * @param {Image|Canvas|String|Promise|TextureAtlas~CreateImageCallback} image An image or canvas to add to the texture atlas,
+     * @param {Image|Canvas|String|Resource|Promise|TextureAtlas~CreateImageCallback} image An image or canvas to add to the texture atlas,
      *        or a URL to an Image, or a Promise for an image, or a function that creates an image.
      * @returns {Promise.<Number>} A Promise for the image index.
      */
@@ -357,9 +357,10 @@ define([
                 throw new DeveloperError('image is required.');
             }
             //>>includeEnd('debug');
-        } else if (typeof image === 'string') {
-            // if image is a string, load it as an image
-            image = loadImage(image);
+        } else if ((typeof image === 'string') || (image instanceof Resource)) {
+            // Get a resource
+            var resource = Resource.createIfNeeded(image);
+            image = resource.fetchImage();
         }
 
         var that = this;
@@ -448,8 +449,6 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
-     *
-     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

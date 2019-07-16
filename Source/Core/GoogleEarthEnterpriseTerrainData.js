@@ -193,18 +193,24 @@ define([
         var that = this;
         return verticesPromise
             .then(function(result) {
+                // Clone complex result objects because the transfer from the web worker
+                // has stripped them down to JSON-style objects.
                 that._mesh = new TerrainMesh(
                     center,
                     new Float32Array(result.vertices),
                     new Uint16Array(result.indices),
                     result.minimumHeight,
                     result.maximumHeight,
-                    result.boundingSphere3D,
-                    result.occludeePointInScaledSpace,
+                    BoundingSphere.clone(result.boundingSphere3D),
+                    Cartesian3.clone(result.occludeePointInScaledSpace),
                     result.numberOfAttributes,
-                    result.orientedBoundingBox,
+                    OrientedBoundingBox.clone(result.orientedBoundingBox),
                     TerrainEncoding.clone(result.encoding),
-                    exaggeration);
+                    exaggeration,
+                    result.westIndicesSouthToNorth,
+                    result.southIndicesEastToWest,
+                    result.eastIndicesNorthToSouth,
+                    result.northIndicesWestToEast);
 
                 that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
                 that._skirtIndex = result.skirtIndex;
