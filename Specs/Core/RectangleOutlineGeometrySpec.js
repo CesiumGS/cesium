@@ -1,10 +1,8 @@
 defineSuite([
         'Core/RectangleOutlineGeometry',
-        'Core/arrayFill',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
         'Core/GeographicProjection',
         'Core/Math',
         'Core/Matrix2',
@@ -12,11 +10,9 @@ defineSuite([
         'Specs/createPackableSpecs'
     ], function(
         RectangleOutlineGeometry,
-        arrayFill,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
-        GeometryOffsetAttribute,
         GeographicProjection,
         CesiumMath,
         Matrix2,
@@ -51,28 +47,6 @@ defineSuite([
 
         var expectedNWCorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.northwest(rectangle));
         expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON9);
-    });
-
-    it('computes positions at north pole', function() {
-        var rectangle = Rectangle.fromDegrees(-180.0, 89.0, -179.0, 90.0);
-        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
-            rectangle : rectangle
-        }));
-        var positions = m.attributes.position.values;
-
-        expect(positions.length).toEqual(5 * 3);
-        expect(m.indices.length).toEqual(5 * 2);
-    });
-
-    it('computes positions at south pole', function() {
-        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, -179.0, -89.0);
-        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
-            rectangle : rectangle
-        }));
-        var positions = m.attributes.position.values;
-
-        expect(positions.length).toEqual(5 * 3);
-        expect(m.indices.length).toEqual(5 * 2);
     });
 
     it('compute positions with rotation', function() {
@@ -134,30 +108,6 @@ defineSuite([
         expect(m.indices.length).toEqual(20 * 2); // 8 top + 8 bottom + 4 edges
     });
 
-    it('computes positions extruded at north pole', function() {
-        var rectangle = Rectangle.fromDegrees(-180.0, 89.0, -179.0, 90.0);
-        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
-            rectangle : rectangle,
-            extrudedHeight : 2
-        }));
-        var positions = m.attributes.position.values;
-
-        expect(positions.length).toEqual(10 * 3); // 5 top + 5 bottom
-        expect(m.indices.length).toEqual(13 * 2); // 5 top + 5 bottom + 3 edges
-    });
-
-    it('computes positions extruded at south pole', function() {
-        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, -179.0, -89.0);
-        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
-            rectangle : rectangle,
-            extrudedHeight : 2
-        }));
-        var positions = m.attributes.position.values;
-
-        expect(positions.length).toEqual(10 * 3); // 5 top + 5 bottom
-        expect(m.indices.length).toEqual(13 * 2); // 5 top + 5 bottom + 3 edges
-    });
-
     it('compute positions with rotation extruded', function() {
         var rectangle = new Rectangle(-1, -1, 1, 1);
         var angle = CesiumMath.PI_OVER_TWO;
@@ -182,6 +132,7 @@ defineSuite([
         var actual = new Cartesian3(positions[0], positions[1], positions[2]);
         expect(actual).toEqualEpsilon(rotatedNWCorner, CesiumMath.EPSILON6);
     });
+
 
     it('computes non-extruded rectangle if height is small', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
@@ -216,66 +167,6 @@ defineSuite([
         expect(geometry2).toBeUndefined();
     });
 
-    it('computes offset attribute', function() {
-        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
-        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
-            rectangle : rectangle,
-            granularity : 1.0,
-            offsetAttribute : GeometryOffsetAttribute.TOP
-        }));
-        var positions = m.attributes.position.values;
-
-        var numVertices = 8;
-        expect(positions.length).toEqual(numVertices * 3);
-
-        var offset = m.attributes.applyOffset.values;
-        expect(offset.length).toEqual(numVertices);
-        var expected = new Array(offset.length);
-        expected = arrayFill(expected, 1);
-        expect(offset).toEqual(expected);
-    });
-
-    it('computes offset attribute extruded for top vertices', function() {
-        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
-        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
-            rectangle : rectangle,
-            granularity : 1.0,
-            extrudedHeight : 2,
-            offsetAttribute : GeometryOffsetAttribute.TOP
-        }));
-        var positions = m.attributes.position.values;
-
-        var numVertices = 16;
-        expect(positions.length).toEqual(numVertices * 3);
-
-        var offset = m.attributes.applyOffset.values;
-        expect(offset.length).toEqual(numVertices);
-        var expected = new Array(offset.length);
-        expected = arrayFill(expected, 0);
-        expected = arrayFill(expected, 1, 0, 8);
-        expect(offset).toEqual(expected);
-    });
-
-    it('computes offset attribute extruded for all vertices', function() {
-        var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
-        var m = RectangleOutlineGeometry.createGeometry(new RectangleOutlineGeometry({
-            rectangle : rectangle,
-            granularity : 1.0,
-            extrudedHeight : 2,
-            offsetAttribute : GeometryOffsetAttribute.ALL
-        }));
-        var positions = m.attributes.position.values;
-
-        var numVertices = 16;
-        expect(positions.length).toEqual(numVertices * 3);
-
-        var offset = m.attributes.applyOffset.values;
-        expect(offset.length).toEqual(numVertices);
-        var expected = new Array(offset.length);
-        expected = arrayFill(expected, 1);
-        expect(offset).toEqual(expected);
-    });
-
     var rectangle = new RectangleOutlineGeometry({
         rectangle : new Rectangle(0.1, 0.2, 0.3, 0.4),
         ellipsoid : new Ellipsoid(5, 6, 7),
@@ -284,7 +175,7 @@ defineSuite([
         rotation : 10,
         extrudedHeight : 11
     });
-    var packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 11, 10, 9, -1];
+    var packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 1, 11];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'extruded');
 
     rectangle = new RectangleOutlineGeometry({
@@ -294,7 +185,7 @@ defineSuite([
         height : 9,
         rotation : 10
     });
-    packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 9, -1];
+    packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 0, 0];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'at height');
 
 });

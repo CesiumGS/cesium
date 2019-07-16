@@ -4,7 +4,6 @@ define([
         './defined',
         './defineProperties',
         './DeveloperError',
-        './Math',
         './OrthographicOffCenterFrustum'
     ], function(
         Check,
@@ -12,7 +11,6 @@ define([
         defined,
         defineProperties,
         DeveloperError,
-        CesiumMath,
         OrthographicOffCenterFrustum) {
     'use strict';
 
@@ -261,7 +259,7 @@ define([
      * @returns {Boolean} <code>true</code> if they are equal, <code>false</code> otherwise.
      */
     OrthographicFrustum.prototype.equals = function(other) {
-        if (!defined(other) || !(other instanceof OrthographicFrustum)) {
+        if (!defined(other)) {
             return false;
         }
 
@@ -270,30 +268,9 @@ define([
 
         return (this.width === other.width &&
                 this.aspectRatio === other.aspectRatio &&
+                this.near === other.near &&
+                this.far === other.far &&
                 this._offCenterFrustum.equals(other._offCenterFrustum));
-    };
-
-    /**
-     * Compares the provided OrthographicFrustum componentwise and returns
-     * <code>true</code> if they pass an absolute or relative tolerance test,
-     * <code>false</code> otherwise.
-     *
-     * @param {OrthographicFrustum} other The right hand side OrthographicFrustum.
-     * @param {Number} relativeEpsilon The relative epsilon tolerance to use for equality testing.
-     * @param {Number} [absoluteEpsilon=relativeEpsilon] The absolute epsilon tolerance to use for equality testing.
-     * @returns {Boolean} <code>true</code> if this and other are within the provided epsilon, <code>false</code> otherwise.
-     */
-    OrthographicFrustum.prototype.equalsEpsilon = function(other, relativeEpsilon, absoluteEpsilon) {
-        if (!defined(other) || !(other instanceof OrthographicFrustum)) {
-            return false;
-        }
-
-        update(this);
-        update(other);
-
-        return (CesiumMath.equalsEpsilon(this.width, other.width, relativeEpsilon, absoluteEpsilon) &&
-                CesiumMath.equalsEpsilon(this.aspectRatio, other.aspectRatio, relativeEpsilon, absoluteEpsilon) &&
-                this._offCenterFrustum.equalsEpsilon(other._offCenterFrustum, relativeEpsilon, absoluteEpsilon));
     };
 
     return OrthographicFrustum;

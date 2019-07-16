@@ -41,7 +41,8 @@ define([
 
         //If center was not defined, compute it.
         if (!defined(center)) {
-            center = Cartesian3.midpoint(this.minimum, this.maximum, new Cartesian3());
+            center = Cartesian3.add(this.minimum, this.maximum, new Cartesian3());
+            Cartesian3.multiplyByScalar(center, 0.5, center);
         } else {
             center = Cartesian3.clone(center);
         }
@@ -110,7 +111,8 @@ define([
         maximum.y = maximumY;
         maximum.z = maximumZ;
 
-        result.center = Cartesian3.midpoint(minimum, maximum, result.center);
+        var center = Cartesian3.add(minimum, maximum, result.center);
+        Cartesian3.multiplyByScalar(center, 0.5, center);
 
         return result;
     };
@@ -128,7 +130,7 @@ define([
         }
 
         if (!defined(result)) {
-            return new AxisAlignedBoundingBox(box.minimum, box.maximum, box.center);
+            return new AxisAlignedBoundingBox(box.minimum, box.maximum);
         }
 
         result.minimum = Cartesian3.clone(box.minimum, result.minimum);

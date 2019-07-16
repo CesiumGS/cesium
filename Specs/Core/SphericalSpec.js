@@ -50,23 +50,22 @@ defineSuite([
 
     it('Cloning with no result parameter returns a new instance.', function() {
         var v = new Spherical(1, 2, 3);
-        var clone = v.clone();
-        expect(clone).not.toBe(v);
-        expect(clone).toBeInstanceOf(Spherical);
-        expect(clone).toEqual(v);
+        var w = v.clone();
+        expect(v === w).toEqual(false);
+        expect(v).toEqual(w);
     });
 
     it('Cloning with result modifies existing instance and returns it.', function() {
         var v = new Spherical(1, 2, 3);
         var w = new NotSpherical();
         expect(NotSpherical.areEqual(v, w)).toEqual(false);
-        var clone = v.clone(w);
-        expect(clone).not.toBe(v);
-        expect(clone).toBe(w);
+        var q = v.clone(w);
+        expect(v === w).toEqual(false);
+        expect(q === w).toEqual(true);
         expect(NotSpherical.areEqual(v, w)).toEqual(true);
     });
 
-    it('Normalizing with no result parameter creates new instance and sets magnitude to 1.0', function() {
+    it('Normalizing with no result parameter creates new instance and sets magntitude to 1.0', function() {
         var v = new Spherical(0, 2, 3);
         var w = Spherical.normalize(v);
         expect(w).not.toEqual(v);
@@ -75,24 +74,24 @@ defineSuite([
         expect(w.magnitude).toEqual(1);
     });
 
-    it('Normalizing with result parameter modifies instance and sets magnitude to 1.0', function() {
+    it('Normalizing with result parameter modifies instance and sets magntitude to 1.0', function() {
         var v = new Spherical(0, 2, 3);
         var w = new NotSpherical();
         var q = Spherical.normalize(v, w);
-        expect(q).not.toEqual(v);
-        expect(q).toBe(w);
-        expect(q.clock).toEqual(0);
-        expect(q.cone).toEqual(2);
-        expect(q.magnitude).toEqual(1);
+        expect(w).not.toEqual(v);
+        expect(w === q).toEqual(true);
+        expect(w.clock).toEqual(0);
+        expect(w.cone).toEqual(2);
+        expect(w.magnitude).toEqual(1);
     });
 
-    it('Normalizing with this as result parameter modifies instance and sets magnitude to 1.0', function() {
+    it('Normalizing with this as result parameter modifies instance and sets magntitude to 1.0', function() {
         var v = new Spherical(0, 2, 3);
         var q = Spherical.normalize(v, v);
-        expect(q).toBe(v);
-        expect(q.clock).toEqual(0);
-        expect(q.cone).toEqual(2);
-        expect(q.magnitude).toEqual(1);
+        expect(v === q).toEqual(true);
+        expect(v.clock).toEqual(0);
+        expect(v.cone).toEqual(2);
+        expect(v.magnitude).toEqual(1);
     });
 
     it('equalsEpsilon returns true for expected values.', function() {

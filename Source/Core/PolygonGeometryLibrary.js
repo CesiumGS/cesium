@@ -1,49 +1,35 @@
 define([
-        './ArcType',
         './arrayRemoveDuplicates',
-        './Cartesian2',
         './Cartesian3',
-        './Cartographic',
         './ComponentDatatype',
         './defaultValue',
         './defined',
-        './DeveloperError',
         './Ellipsoid',
-        './EllipsoidRhumbLine',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
-        './Matrix3',
         './PolygonPipeline',
         './PrimitiveType',
-        './Quaternion',
         './Queue',
         './WindingOrder'
     ], function(
-        ArcType,
         arrayRemoveDuplicates,
-        Cartesian2,
         Cartesian3,
-        Cartographic,
         ComponentDatatype,
         defaultValue,
         defined,
-        DeveloperError,
         Ellipsoid,
-        EllipsoidRhumbLine,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
-        Matrix3,
         PolygonPipeline,
         PrimitiveType,
-        Quaternion,
         Queue,
         WindingOrder) {
     'use strict';
@@ -149,20 +135,7 @@ define([
     PolygonGeometryLibrary.subdivideLineCount = function(p0, p1, minDistance) {
         var distance = Cartesian3.distance(p0, p1);
         var n = distance / minDistance;
-        var countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
-        return Math.pow(2, countDivide);
-    };
-
-    var scratchCartographic0 = new Cartographic();
-    var scratchCartographic1 = new Cartographic();
-    var scratchCartographic2 = new Cartographic();
-    var scratchCartesian0 = new Cartesian3();
-    PolygonGeometryLibrary.subdivideRhumbLineCount = function(ellipsoid, p0, p1, minDistance) {
-        var c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
-        var c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
-        var rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
-        var n = rhumb.surfaceDistance / minDistance;
-        var countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
+        var countDivide = Math.max(0, Math.ceil(Math.log(n) / Math.log(2)));
         return Math.pow(2, countDivide);
     };
 
@@ -184,35 +157,6 @@ define([
             positions[index++] = p[0];
             positions[index++] = p[1];
             positions[index++] = p[2];
-        }
-
-        return positions;
-    };
-
-    PolygonGeometryLibrary.subdivideRhumbLine = function(ellipsoid, p0, p1, minDistance, result) {
-        var c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
-        var c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
-        var rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
-
-        var n = rhumb.surfaceDistance / minDistance;
-        var countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
-        var numVertices = Math.pow(2, countDivide);
-        var distanceBetweenVertices = rhumb.surfaceDistance / numVertices;
-
-        if (!defined(result)) {
-            result = [];
-        }
-
-        var positions = result;
-        positions.length = numVertices * 3;
-
-        var index = 0;
-        for ( var i = 0; i < numVertices; i++) {
-            var c = rhumb.interpolateUsingSurfaceDistance(i * distanceBetweenVertices, scratchCartographic2);
-            var p = ellipsoid.cartographicToCartesian(c, scratchCartesian0);
-            positions[index++] = p.x;
-            positions[index++] = p.y;
-            positions[index++] = p.z;
         }
 
         return positions;
@@ -259,63 +203,7 @@ define([
         return geometry;
     };
 
-    PolygonGeometryLibrary.polygonOutlinesFromHierarchy = function(polygonHierarchy, scaleToEllipsoidSurface, ellipsoid) {
-        // create from a polygon hierarchy
-        // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
-        var polygons = [];
-        var queue = new Queue();
-        queue.enqueue(polygonHierarchy);
-        var i;
-        var j;
-        var length;
-        while (queue.length !== 0) {
-            var outerNode = queue.dequeue();
-            var outerRing = outerNode.positions;
-            if (scaleToEllipsoidSurface) {
-                length = outerRing.length;
-                for (i = 0; i < length; i++) {
-                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
-                }
-            }
-            outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
-            if (outerRing.length < 3) {
-                continue;
-            }
-
-            var numChildren = outerNode.holes ? outerNode.holes.length : 0;
-            // The outer polygon contains inner polygons
-            for (i = 0; i < numChildren; i++) {
-                var hole = outerNode.holes[i];
-                var holePositions = hole.positions;
-                if (scaleToEllipsoidSurface) {
-                    length = holePositions.length;
-                    for (j = 0; j < length; ++j) {
-                        ellipsoid.scaleToGeodeticSurface(holePositions[j], holePositions[j]);
-                    }
-                }
-                holePositions = arrayRemoveDuplicates(holePositions, Cartesian3.equalsEpsilon, true);
-                if (holePositions.length < 3) {
-                    continue;
-                }
-                polygons.push(holePositions);
-
-                var numGrandchildren = 0;
-                if (defined(hole.holes)) {
-                    numGrandchildren = hole.holes.length;
-                }
-
-                for (j = 0; j < numGrandchildren; j++) {
-                    queue.enqueue(hole.holes[j]);
-                }
-            }
-
-            polygons.push(outerRing);
-        }
-
-        return polygons;
-    };
-
-    PolygonGeometryLibrary.polygonsFromHierarchy = function(polygonHierarchy, projectPointsTo2D, scaleToEllipsoidSurface, ellipsoid) {
+    PolygonGeometryLibrary.polygonsFromHierarchy = function(polygonHierarchy, perPositionHeight, tangentPlane, ellipsoid) {
         // create from a polygon hierarchy
         // Algorithm adapted from http://www.geometrictools.com/Documentation/TriangulationByEarClipping.pdf
         var hierarchy = [];
@@ -329,24 +217,12 @@ define([
             var outerRing = outerNode.positions;
             var holes = outerNode.holes;
 
-            var i;
-            var length;
-            if (scaleToEllipsoidSurface) {
-                length = outerRing.length;
-                for (i = 0; i < length; i++) {
-                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
-                }
-            }
-
             outerRing = arrayRemoveDuplicates(outerRing, Cartesian3.equalsEpsilon, true);
             if (outerRing.length < 3) {
                 continue;
             }
 
-            var positions2D = projectPointsTo2D(outerRing);
-            if (!defined(positions2D)) {
-                continue;
-            }
+            var positions2D = tangentPlane.projectPointsOntoPlane(outerRing);
             var holeIndices = [];
 
             var originalWindingOrder = PolygonPipeline.computeWindingOrder2D(positions2D);
@@ -358,27 +234,17 @@ define([
             var positions = outerRing.slice();
             var numChildren = defined(holes) ? holes.length : 0;
             var polygonHoles = [];
+            var i;
             var j;
 
             for (i = 0; i < numChildren; i++) {
                 var hole = holes[i];
-                var holePositions = hole.positions;
-                if (scaleToEllipsoidSurface) {
-                    length = holePositions.length;
-                    for (j = 0; j < length; ++j) {
-                        ellipsoid.scaleToGeodeticSurface(holePositions[j], holePositions[j]);
-                    }
-                }
-
-                holePositions = arrayRemoveDuplicates(holePositions, Cartesian3.equalsEpsilon, true);
+                var holePositions = arrayRemoveDuplicates(hole.positions, Cartesian3.equalsEpsilon, true);
                 if (holePositions.length < 3) {
                     continue;
                 }
 
-                var holePositions2D = projectPointsTo2D(holePositions);
-                if (!defined(holePositions2D)) {
-                    continue;
-                }
+                var holePositions2D = tangentPlane.projectPointsOntoPlane(holePositions);
 
                 originalWindingOrder = PolygonPipeline.computeWindingOrder2D(holePositions2D);
                 if (originalWindingOrder === WindingOrder.CLOCKWISE) {
@@ -401,6 +267,18 @@ define([
                 }
             }
 
+            if (!perPositionHeight) {
+                for (i = 0; i < outerRing.length; i++) {
+                    ellipsoid.scaleToGeodeticSurface(outerRing[i], outerRing[i]);
+                }
+                for (i = 0; i < polygonHoles.length; i++) {
+                    var polygonHole = polygonHoles[i];
+                    for (j = 0; j < polygonHole.length; ++j) {
+                        ellipsoid.scaleToGeodeticSurface(polygonHole[j], polygonHole[j]);
+                    }
+                }
+            }
+
             hierarchy.push({
                 outerRing : outerRing,
                 holes : polygonHoles
@@ -418,42 +296,7 @@ define([
         };
     };
 
-    var computeBoundingRectangleCartesian2 = new Cartesian2();
-    var computeBoundingRectangleCartesian3 = new Cartesian3();
-    var computeBoundingRectangleQuaternion = new Quaternion();
-    var computeBoundingRectangleMatrix3 = new Matrix3();
-    PolygonGeometryLibrary.computeBoundingRectangle = function (planeNormal, projectPointTo2D, positions, angle, result) {
-        var rotation = Quaternion.fromAxisAngle(planeNormal, angle, computeBoundingRectangleQuaternion);
-        var textureMatrix = Matrix3.fromQuaternion(rotation, computeBoundingRectangleMatrix3);
-
-        var minX = Number.POSITIVE_INFINITY;
-        var maxX = Number.NEGATIVE_INFINITY;
-        var minY = Number.POSITIVE_INFINITY;
-        var maxY = Number.NEGATIVE_INFINITY;
-
-        var length = positions.length;
-        for ( var i = 0; i < length; ++i) {
-            var p = Cartesian3.clone(positions[i], computeBoundingRectangleCartesian3);
-            Matrix3.multiplyByVector(textureMatrix, p, p);
-            var st = projectPointTo2D(p, computeBoundingRectangleCartesian2);
-
-            if (defined(st)) {
-                minX = Math.min(minX, st.x);
-                maxX = Math.max(maxX, st.x);
-
-                minY = Math.min(minY, st.y);
-                maxY = Math.max(maxY, st.y);
-            }
-        }
-
-        result.x = minX;
-        result.y = minY;
-        result.width = maxX - minX;
-        result.height = maxY - minY;
-        return result;
-    };
-
-    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat, arcType) {
+    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat) {
         var indices = PolygonPipeline.triangulate(polygon.positions2D, polygon.holes);
 
         /* If polygon is completely unrenderable, just use the first three vertices */
@@ -492,18 +335,14 @@ define([
             return geometry;
         }
 
-        if (arcType === ArcType.GEODESIC) {
-            return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
-        } else if (arcType === ArcType.RHUMB) {
-            return PolygonPipeline.computeRhumbLineSubdivision(ellipsoid, positions, indices, granularity);
-        }
+        return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
     };
 
     var computeWallIndicesSubdivided = [];
     var p1Scratch = new Cartesian3();
     var p2Scratch = new Cartesian3();
 
-    PolygonGeometryLibrary.computeWallGeometry = function(positions, ellipsoid, granularity, perPositionHeight, arcType) {
+    PolygonGeometryLibrary.computeWallGeometry = function(positions, ellipsoid, granularity, perPositionHeight) {
         var edgePositions;
         var topEdgeLength;
         var i;
@@ -517,14 +356,8 @@ define([
             var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
             var numVertices = 0;
-            if (arcType === ArcType.GEODESIC) {
-                for (i = 0; i < length; i++) {
-                    numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
-                }
-            } else if (arcType === ArcType.RHUMB) {
-                for (i = 0; i < length; i++) {
-                    numVertices += PolygonGeometryLibrary.subdivideRhumbLineCount(ellipsoid, positions[i], positions[(i + 1) % length], minDistance);
-                }
+            for (i = 0; i < length; i++) {
+                numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
             }
 
             topEdgeLength = (numVertices + length) * 3;
@@ -533,12 +366,7 @@ define([
                 p1 = positions[i];
                 p2 = positions[(i + 1) % length];
 
-                var tempPositions;
-                if (arcType === ArcType.GEODESIC) {
-                    tempPositions = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance, computeWallIndicesSubdivided);
-                } else if (arcType === ArcType.RHUMB) {
-                    tempPositions = PolygonGeometryLibrary.subdivideRhumbLine(ellipsoid, p1, p2, minDistance, computeWallIndicesSubdivided);
-                }
+                var tempPositions = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance, computeWallIndicesSubdivided);
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j, ++index) {
                     edgePositions[index] = tempPositions[j];
@@ -591,7 +419,7 @@ define([
 
             p1 = Cartesian3.fromArray(edgePositions, UL * 3, p1Scratch);
             p2 = Cartesian3.fromArray(edgePositions, UR * 3, p2Scratch);
-            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON14, CesiumMath.EPSILON6)) {
+            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON14)) {
                 continue;
             }
 

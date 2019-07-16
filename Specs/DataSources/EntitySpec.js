@@ -19,7 +19,6 @@ defineSuite([
         'DataSources/LabelGraphics',
         'DataSources/ModelGraphics',
         'DataSources/PathGraphics',
-        'DataSources/PlaneGraphics',
         'DataSources/PointGraphics',
         'DataSources/PolygonGraphics',
         'DataSources/PolylineGraphics',
@@ -47,7 +46,6 @@ defineSuite([
         LabelGraphics,
         ModelGraphics,
         PathGraphics,
-        PlaneGraphics,
         PointGraphics,
         PolygonGraphics,
         PolylineGraphics,
@@ -71,7 +69,6 @@ defineSuite([
         expect(entity.model).toBeUndefined();
         expect(entity.orientation).toBeUndefined();
         expect(entity.path).toBeUndefined();
-        expect(entity.plane).toBeUndefined();
         expect(entity.point).toBeUndefined();
         expect(entity.polygon).toBeUndefined();
         expect(entity.polyline).toBeUndefined();
@@ -100,7 +97,6 @@ defineSuite([
             model : {},
             orientation : new Quaternion(1, 2, 3, 4),
             path : {},
-            plane : {},
             point : {},
             polygon : {},
             polyline : {},
@@ -130,7 +126,6 @@ defineSuite([
         expect(entity.model).toBeInstanceOf(ModelGraphics);
         expect(entity.orientation).toBeInstanceOf(ConstantProperty);
         expect(entity.path).toBeInstanceOf(PathGraphics);
-        expect(entity.plane).toBeInstanceOf(PlaneGraphics);
         expect(entity.point).toBeInstanceOf(PointGraphics);
         expect(entity.polygon).toBeInstanceOf(PolygonGraphics);
         expect(entity.polyline).toBeInstanceOf(PolylineGraphics);
@@ -200,7 +195,7 @@ defineSuite([
         }
     });
 
-    it('merge does not overwrite availability', function() {
+    it('merge always overwrites availability', function() {
         var entity = new Entity();
         var interval = TimeInterval.fromIso8601({
             iso8601 : '2000-01-01/2001-01-01'
@@ -214,7 +209,7 @@ defineSuite([
         entity2.availability = interval2;
 
         entity.merge(entity2);
-        expect(entity.availability).toBe(interval);
+        expect(entity.availability).toBe(interval2);
     });
 
     it('merge works with custom properties.', function() {

@@ -1,7 +1,0 @@
-{
-    "recommendations": [
-        "dbaeumer.vscode-eslint",
-        "slevesque.shader",
-        "cesium.gltf-vscode"
-    ]
-}

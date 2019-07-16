@@ -151,7 +151,6 @@ define([
         var modelMatrix = Matrix4.fromTranslation(this.center, new Matrix4.clone(Matrix4.IDENTITY));
         var instance = new GeometryInstance({
             geometry : geometry,
-            id : 'outline',
             modelMatrix : modelMatrix,
             attributes : {
                 color : ColorGeometryInstanceAttribute.fromColor(color)

@@ -17,7 +17,7 @@
     },
     "Height": {
       "minimum": 6.161747192963958,
-      "maximum": 85.41026367992163
+      "maximum": 84.83180232718587
     }
   },
   "geometricError": 240,
@@ -35,7 +35,7 @@
     "geometricError": 70,
     "refine": "ADD",
     "content": {
-      "uri": "parent.b3dm",
+      "url": "parent.b3dm",
       "boundingVolume": {
         "region": [
           -1.3197004795898053,
@@ -62,7 +62,7 @@
         "geometricError": 70,
         "refine": "REPLACE",
         "content": {
-          "uri": "parent.b3dm"
+          "url": "parent.b3dm"
         },
         "children": [
           {
@@ -79,7 +79,7 @@
             "geometricError": 0,
             "refine": "ADD",
             "content": {
-              "uri": "ll.b3dm"
+              "url": "ll.b3dm"
             }
           },
           {
@@ -96,7 +96,7 @@
             "geometricError": 0,
             "refine": "REPLACE",
             "content": {
-              "uri": "ur.b3dm"
+              "url": "ur.b3dm"
             }
           }
         ]
@@ -115,7 +115,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "uri": "parent.b3dm"
+          "url": "parent.b3dm"
         },
         "children": [
           {
@@ -132,7 +132,7 @@
             "geometricError": 0,
             "refine": "ADD",
             "content": {
-              "uri": "ul.b3dm"
+              "url": "ul.b3dm"
             }
           },
           {
@@ -149,7 +149,7 @@
             "geometricError": 0,
             "refine": "REPLACE",
             "content": {
-              "uri": "lr.b3dm"
+              "url": "lr.b3dm"
             }
           }
         ]

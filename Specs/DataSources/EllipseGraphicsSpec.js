@@ -4,7 +4,6 @@ defineSuite([
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
-        'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
@@ -14,7 +13,6 @@ defineSuite([
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
-        ClassificationType,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
@@ -37,9 +35,7 @@ defineSuite([
             outlineColor : Color.RED,
             outlineWidth : 9,
             shadows : ShadowMode.DISABLED,
-            distanceDisplayCondition : new DistanceDisplayCondition(),
-            classificationType : ClassificationType.TERRAIN,
-            zIndex: 3
+            distanceDisplayCondition : new DistanceDisplayCondition()
         };
 
         var ellipse = new EllipseGraphics(options);
@@ -59,8 +55,6 @@ defineSuite([
         expect(ellipse.outlineWidth).toBeInstanceOf(ConstantProperty);
         expect(ellipse.shadows).toBeInstanceOf(ConstantProperty);
         expect(ellipse.distanceDisplayCondition).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.classificationType).toBeInstanceOf(ConstantProperty);
-        expect(ellipse.zIndex).toBeInstanceOf(ConstantProperty);
 
         expect(ellipse.material.color.getValue()).toEqual(options.material);
         expect(ellipse.show.getValue()).toEqual(options.show);
@@ -78,8 +72,6 @@ defineSuite([
         expect(ellipse.outlineWidth.getValue()).toEqual(options.outlineWidth);
         expect(ellipse.shadows.getValue()).toEqual(options.shadows);
         expect(ellipse.distanceDisplayCondition.getValue()).toEqual(options.distanceDisplayCondition);
-        expect(ellipse.classificationType.getValue()).toEqual(options.classificationType);
-        expect(ellipse.zIndex.getValue()).toEqual(options.zIndex);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -100,8 +92,6 @@ defineSuite([
         source.numberOfVerticalLines = new ConstantProperty();
         source.shadows = new ConstantProperty(ShadowMode.ENABLED);
         source.distanceDisplayCondition = new ConstantProperty(new DistanceDisplayCondition(10.0, 100.0));
-        source.classificationType = new ConstantProperty(ClassificationType.TERRAIN);
-        source.zIndex = new ConstantProperty(3);
 
         var target = new EllipseGraphics();
         target.merge(source);
@@ -122,8 +112,6 @@ defineSuite([
         expect(target.numberOfVerticalLines).toBe(source.numberOfVerticalLines);
         expect(target.shadows).toBe(source.shadows);
         expect(target.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
-        expect(target.classificationType).toBe(source.classificationType);
-        expect(target.zIndex).toBe(source.zIndex);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -145,8 +133,6 @@ defineSuite([
         var numberOfVerticalLines = new ConstantProperty();
         var shadows = new ConstantProperty();
         var distanceDisplayCondition = new ConstantProperty();
-        var classificationType = new ConstantProperty();
-        var zIndex = new ConstantProperty();
 
         var target = new EllipseGraphics();
         target.material = material;
@@ -165,8 +151,6 @@ defineSuite([
         target.numberOfVerticalLines = numberOfVerticalLines;
         target.shadows = shadows;
         target.distanceDisplayCondition = distanceDisplayCondition;
-        target.classificationType = classificationType;
-        target.zIndex = zIndex;
 
         target.merge(source);
 
@@ -186,8 +170,6 @@ defineSuite([
         expect(target.numberOfVerticalLines).toBe(numberOfVerticalLines);
         expect(target.shadows).toBe(shadows);
         expect(target.distanceDisplayCondition).toBe(distanceDisplayCondition);
-        expect(target.classificationType).toBe(classificationType);
-        expect(target.zIndex).toBe(zIndex);
     });
 
     it('clone works', function() {
@@ -208,8 +190,6 @@ defineSuite([
         source.numberOfVerticalLines = new ConstantProperty();
         source.shadows = new ConstantProperty();
         source.distanceDisplayCondition = new ConstantProperty();
-        source.classificationType = new ConstantProperty();
-        source.zIndex = new ConstantProperty();
 
         var result = source.clone();
         expect(result.material).toBe(source.material);
@@ -228,8 +208,6 @@ defineSuite([
         expect(result.numberOfVerticalLines).toBe(source.numberOfVerticalLines);
         expect(result.shadows).toBe(source.shadows);
         expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
-        expect(result.classificationType).toBe(source.classificationType);
-        expect(result.zIndex).toBe(source.zIndex);
     });
 
     it('merge throws if source undefined', function() {
@@ -257,7 +235,5 @@ defineSuite([
         testDefinitionChanged(property, 'numberOfVerticalLines', 16, 32);
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
-        testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
-        testDefinitionChanged(property, 'zIndex', 4, 0);
     });
 });

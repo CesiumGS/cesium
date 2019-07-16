@@ -4,24 +4,12 @@
     /* sort subparams under their parent params (like opts.classname) */
     var parentParam = null;
     params.forEach(function(param, i) {
-        var paramRegExp;
-
-        if (!param) {
-            return;
-        }
-
-        if (parentParam && parentParam.name && param.name) {
-            paramRegExp = new RegExp('^(?:' + parentParam.name + '(?:\\[\\])*)\\.(.+)$');
-
-            if ( paramRegExp.test(param.name) ) {
-                param.name = RegExp.$1;
-                parentParam.subparams = parentParam.subparams || [];
-                parentParam.subparams.push(param);
-                params[i] = null;
-            }
-            else {
-                parentParam = param;
-            }
+        if (!param) { return; }
+        if ( parentParam && param.name && param.name.indexOf(parentParam.name + '.') === 0 ) {
+            param.name = param.name.substr(parentParam.name.length+1);
+            parentParam.subparams = parentParam.subparams || [];
+            parentParam.subparams.push(param);
+            params[i] = null;
         }
         else {
             parentParam = param;

@@ -3,9 +3,6 @@
     "version": "1.0",
     "tilesetVersion": "1.2.3"
   },
-  "extras": {
-    "name": "Sample Tileset"
-  },
   "properties": {
     "id": {
       "minimum": 0,
@@ -21,7 +18,7 @@
     },
     "Height": {
       "minimum": 6.161747192963958,
-      "maximum": 85.41026367992163
+      "maximum": 84.83180232718587
     }
   },
   "geometricError": 240,
@@ -39,7 +36,7 @@
     "geometricError": 70,
     "refine": "ADD",
     "content": {
-      "uri": "parent.b3dm",
+      "url": "parent.b3dm",
       "boundingVolume": {
         "region": [
           -1.3197004795898053,
@@ -65,7 +62,7 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ll.b3dm"
+          "url": "ll.b3dm"
         }
       },
       {
@@ -81,10 +78,7 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "lr.b3dm"
-        },
-        "extras": {
-          "id": "Special Tile"
+          "url": "lr.b3dm"
         }
       },
       {
@@ -100,7 +94,7 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ur.b3dm"
+          "url": "ur.b3dm"
         }
       },
       {
@@ -116,7 +110,7 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ul.b3dm"
+          "url": "ul.b3dm"
         }
       }
     ]

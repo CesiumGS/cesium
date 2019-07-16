@@ -1,11 +1,11 @@
 defineSuite([
         'Scene/SkyBox',
-        'Core/Resource',
+        'Core/loadImage',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
         SkyBox,
-        Resource,
+        loadImage,
         SceneMode,
         createScene) {
     'use strict';
@@ -17,7 +17,7 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
 
-        return Resource.fetchImage('./Data/Images/Blue.png').then(function(image) {
+        return loadImage('./Data/Images/Blue.png').then(function(image) {
             loadedImage = image;
         });
     });

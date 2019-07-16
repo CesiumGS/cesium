@@ -25,8 +25,7 @@ define([
         var protocol = a.protocol;
 
         a.href = url;
-        // IE only absolutizes href on get, not set
-        a.href = a.href; // eslint-disable-line no-self-assign
+        a.href = a.href; // IE only absolutizes href on get, not set
 
         return protocol !== a.protocol || host !== a.host;
     }

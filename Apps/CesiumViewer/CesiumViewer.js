@@ -1,6 +1,5 @@
 define([
         'Cesium/Core/Cartesian3',
-        'Cesium/Core/createWorldTerrain',
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
         'Cesium/Core/Math',
@@ -16,7 +15,6 @@ define([
         'domReady!'
     ], function(
         Cartesian3,
-        createWorldTerrain,
         defined,
         formatError,
         CesiumMath,
@@ -32,28 +30,20 @@ define([
     'use strict';
 
     /*
-     Options parsed from query string:
-       source=url          The URL of a CZML/GeoJSON/KML data source to load at startup.
-                           Automatic data type detection uses file extension.
-       sourceType=czml/geojson/kml
-                           Override data type detection for source.
-       flyTo=false         Don't automatically fly to the loaded source.
-       tmsImageryUrl=url   Automatically use a TMS imagery provider.
-       lookAt=id           The ID of the entity to track at startup.
-       stats=true          Enable the FPS performance display.
-       inspector=true      Enable the inspector widget.
-       debug=true          Full WebGL error reporting at substantial performance cost.
-       theme=lighter       Use the dark-text-on-light-background theme.
-       scene3DOnly=true    Enable 3D only mode.
-       view=longitude,latitude,[height,heading,pitch,roll]
-                           Automatically set a camera view. Values in degrees and meters.
-                           [height,heading,pitch,roll] default is looking straight down, [300,0,-90,0]
-       saveCamera=false    Don't automatically update the camera view in the URL when it changes.
+     * 'debug'  : true/false,   // Full WebGL error reporting at substantial performance cost.
+     * 'lookAt' : CZML id,      // The CZML ID of the object to track at startup.
+     * 'source' : 'file.czml',  // The relative URL of the CZML file to load at startup.
+     * 'stats'  : true,         // Enable the FPS performance display.
+     * 'theme'  : 'lighter',    // Use the dark-text-on-light-background theme.
+     * 'scene3DOnly' : false    // Enable 3D only mode
+     * 'view' : longitude,latitude,[height,heading,pitch,roll]
+     *    // Using degrees and meters
+     *    // [height,heading,pitch,roll] default is looking straight down, [300,0,-90,0]
      */
     var endUserOptions = queryToObject(window.location.search.substring(1));
 
     var imageryProvider;
-    if (defined(endUserOptions.tmsImageryUrl)) {
+    if (endUserOptions.tmsImageryUrl) {
         imageryProvider = createTileMapServiceImageryProvider({
             url : endUserOptions.tmsImageryUrl
         });
@@ -62,23 +52,11 @@ define([
     var loadingIndicator = document.getElementById('loadingIndicator');
     var viewer;
     try {
-        var hasBaseLayerPicker = !defined(imageryProvider);
         viewer = new Viewer('cesiumContainer', {
             imageryProvider : imageryProvider,
-            baseLayerPicker : hasBaseLayerPicker,
-            scene3DOnly : endUserOptions.scene3DOnly,
-            requestRenderMode : true
+            baseLayerPicker : !defined(imageryProvider),
+            scene3DOnly : endUserOptions.scene3DOnly
         });
-
-        if (hasBaseLayerPicker) {
-            var viewModel = viewer.baseLayerPicker.viewModel;
-            viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
-        } else {
-            viewer.terrainProvider = createWorldTerrain({
-                requestWaterMask: true,
-                requestVertexNormals: true
-            });
-        }
     } catch (exception) {
         loadingIndicator.style.display = 'none';
         var message = formatError(exception);
@@ -116,24 +94,13 @@ define([
     var view = endUserOptions.view;
     var source = endUserOptions.source;
     if (defined(source)) {
-        var sourceType = endUserOptions.sourceType;
-        if (!defined(sourceType)) {
-            // autodetect using file extension if not specified
-            if (/\.czml$/i.test(source)) {
-                sourceType = 'czml';
-            } else if (/\.geojson$/i.test(source) || /\.json$/i.test(source) || /\.topojson$/i.test(source)) {
-                sourceType = 'geojson';
-            } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
-                sourceType = 'kml';
-            }
-        }
-
         var loadPromise;
-        if (sourceType === 'czml') {
+
+        if (/\.czml$/i.test(source)) {
             loadPromise = CzmlDataSource.load(source);
-        } else if (sourceType === 'geojson') {
+        } else if (/\.geojson$/i.test(source) || /\.json$/i.test(source) || /\.topojson$/i.test(source)) {
             loadPromise = GeoJsonDataSource.load(source);
-        } else if (sourceType === 'kml') {
+        } else if (/\.kml$/i.test(source) || /\.kmz$/i.test(source)) {
             loadPromise = KmlDataSource.load(source, {
                 camera: scene.camera,
                 canvas: scene.canvas
@@ -153,7 +120,7 @@ define([
                         var error = 'No entity with id "' + lookAt + '" exists in the provided data source.';
                         showLoadError(source, error);
                     }
-                } else if (!defined(view) && endUserOptions.flyTo !== 'false') {
+                } else if (!defined(view)) {
                     viewer.flyTo(dataSource);
                 }
             }).otherwise(function(error) {

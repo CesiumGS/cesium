@@ -1,10 +1,8 @@
 define([
-        './arrayFill',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
-        './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
@@ -17,22 +15,21 @@ define([
         './GeometryAttribute',
         './GeometryAttributes',
         './GeometryInstance',
-        './GeometryOffsetAttribute',
         './GeometryPipeline',
         './IndexDatatype',
         './Math',
         './Matrix3',
+        './Matrix4',
         './PrimitiveType',
         './Quaternion',
         './Rectangle',
+        './Transforms',
         './VertexFormat'
     ], function(
-        arrayFill,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
         Cartographic,
-        Check,
         ComponentDatatype,
         defaultValue,
         defined,
@@ -45,14 +42,15 @@ define([
         GeometryAttribute,
         GeometryAttributes,
         GeometryInstance,
-        GeometryOffsetAttribute,
         GeometryPipeline,
         IndexDatatype,
         CesiumMath,
         Matrix3,
+        Matrix4,
         PrimitiveType,
         Quaternion,
         Rectangle,
+        Transforms,
         VertexFormat) {
     'use strict';
 
@@ -62,7 +60,6 @@ define([
     var scratchCartesian4 = new Cartesian3();
     var texCoordScratch = new Cartesian2();
     var textureMatrixScratch = new Matrix3();
-    var tangentMatrixScratch = new Matrix3();
     var quaternionScratch = new Quaternion();
 
     var scratchNormal = new Cartesian3();
@@ -105,19 +102,8 @@ define([
 
         var geodeticNormal = ellipsoid.scaleToGeodeticSurface(center, scratchCartesian1);
         ellipsoid.geodeticSurfaceNormal(geodeticNormal, geodeticNormal);
-
-        var textureMatrix = textureMatrixScratch;
-        var tangentMatrix = tangentMatrixScratch;
-        if (stRotation !== 0) {
-            var rotation = Quaternion.fromAxisAngle(geodeticNormal, stRotation, quaternionScratch);
-            textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrix);
-
-            rotation = Quaternion.fromAxisAngle(geodeticNormal, -stRotation, quaternionScratch);
-            tangentMatrix = Matrix3.fromQuaternion(rotation, tangentMatrix);
-        } else {
-            textureMatrix = Matrix3.clone(Matrix3.IDENTITY, textureMatrix);
-            tangentMatrix = Matrix3.clone(Matrix3.IDENTITY, tangentMatrix);
-        }
+        var rotation = Quaternion.fromAxisAngle(geodeticNormal, stRotation, quaternionScratch);
+        var textureMatrix = Matrix3.fromQuaternion(rotation, textureMatrixScratch);
 
         var minTexCoord = Cartesian2.fromElements(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, scratchMinTexCoord);
         var maxTexCoord = Cartesian2.fromElements(Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY, scratchMaxTexCoord);
@@ -164,7 +150,7 @@ define([
                 if (vertexFormat.normal || vertexFormat.tangent || vertexFormat.bitangent) {
                     if (vertexFormat.tangent || vertexFormat.bitangent) {
                         tangent = Cartesian3.normalize(Cartesian3.cross(Cartesian3.UNIT_Z, normal, tangent), tangent);
-                        Matrix3.multiplyByVector(tangentMatrix, tangent, tangent);
+                        Matrix3.multiplyByVector(textureMatrix, tangent, tangent);
                     }
                     if (vertexFormat.normal) {
                         normals[i] = normal.x;
@@ -259,22 +245,6 @@ define([
                 componentDatatype : ComponentDatatype.FLOAT,
                 componentsPerAttribute : 3,
                 values : extrudeNormals
-            });
-        }
-
-        if (extrude && defined(options.offsetAttribute)) {
-            var offsetAttribute = new Uint8Array(size);
-            if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
-                offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
-            } else {
-                var offsetValue = options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                offsetAttribute = arrayFill(offsetAttribute, offsetValue);
-            }
-
-            attributes.applyOffset = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 1,
-                values : offsetAttribute
             });
         }
 
@@ -595,21 +565,6 @@ define([
             });
         }
 
-        if (defined(options.offsetAttribute)) {
-            var offsetAttribute = new Uint8Array(size);
-            if (options.offsetAttribute === GeometryOffsetAttribute.TOP) {
-                offsetAttribute = arrayFill(offsetAttribute, 1, 0, size / 2);
-            } else {
-                var offsetValue = options.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                offsetAttribute = arrayFill(offsetAttribute, offsetValue);
-            }
-            attributes.applyOffset = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 1,
-                values : offsetAttribute
-            });
-        }
-
         return attributes;
     }
 
@@ -698,30 +653,37 @@ define([
         };
     }
 
-    function computeRectangle(center, semiMajorAxis, semiMinorAxis, rotation, granularity, ellipsoid, result) {
-        var cep = EllipseGeometryLibrary.computeEllipsePositions({
-            center : center,
-            semiMajorAxis : semiMajorAxis,
-            semiMinorAxis : semiMinorAxis,
-            rotation : rotation,
-            granularity : granularity
-        }, false, true);
-        var positionsFlat = cep.outerPositions;
-        var positionsCount = positionsFlat.length / 3;
-        var positions = new Array(positionsCount);
-        for (var i = 0; i < positionsCount; ++i) {
-            positions[i] = Cartesian3.fromArray(positionsFlat, i * 3);
+    var scratchEnuToFixedMatrix = new Matrix4();
+    var scratchFixedToEnuMatrix = new Matrix4();
+    var scratchRotationMatrix = new Matrix3();
+    var scratchRectanglePoints = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
+    var scratchCartographicPoints = [new Cartographic(), new Cartographic(), new Cartographic(), new Cartographic()];
+
+    function computeRectangle(center, ellipsoid, semiMajorAxis, semiMinorAxis, rotation) {
+        Transforms.eastNorthUpToFixedFrame(center, ellipsoid, scratchEnuToFixedMatrix);
+        Matrix4.inverseTransformation(scratchEnuToFixedMatrix, scratchFixedToEnuMatrix);
+
+        // Find the 4 extreme points of the ellipse in ENU
+        var i;
+        for (i = 0; i < 4; ++i) {
+            Cartesian3.clone(Cartesian3.ZERO, scratchRectanglePoints[i]);
         }
-        var rectangle = Rectangle.fromCartesianArray(positions, ellipsoid, result);
-        // Rectangle width goes beyond 180 degrees when the ellipse crosses a pole.
-        // When this happens, make the rectangle into a "circle" around the pole
-        if (rectangle.width > CesiumMath.PI) {
-            rectangle.north = rectangle.north > 0.0 ? CesiumMath.PI_OVER_TWO - CesiumMath.EPSILON7 : rectangle.north;
-            rectangle.south = rectangle.south < 0.0 ? CesiumMath.EPSILON7 - CesiumMath.PI_OVER_TWO : rectangle.south;
-            rectangle.east = CesiumMath.PI;
-            rectangle.west = -CesiumMath.PI;
+        scratchRectanglePoints[0].x += semiMajorAxis;
+        scratchRectanglePoints[1].x -= semiMajorAxis;
+        scratchRectanglePoints[2].y += semiMinorAxis;
+        scratchRectanglePoints[3].y -= semiMinorAxis;
+
+        Matrix3.fromRotationZ(rotation, scratchRotationMatrix);
+        for (i = 0; i < 4; ++i) {
+            // Apply the rotation
+            Matrix3.multiplyByVector(scratchRotationMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
+
+            // Convert back to fixed and then to cartographic
+            Matrix4.multiplyByPoint(scratchEnuToFixedMatrix, scratchRectanglePoints[i], scratchRectanglePoints[i]);
+            ellipsoid.cartesianToCartographic(scratchRectanglePoints[i], scratchCartographicPoints[i]);
         }
-        return rectangle;
+
+        return Rectangle.fromCartographicArray(scratchCartographicPoints);
     }
 
     /**
@@ -767,12 +729,21 @@ define([
         var semiMajorAxis = options.semiMajorAxis;
         var semiMinorAxis = options.semiMinorAxis;
         var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
+        var height = defaultValue(options.height, 0.0);
+        var extrudedHeight = options.extrudedHeight;
+        var extrude = (defined(extrudedHeight) && Math.abs(height - extrudedHeight) > 1.0);
         var vertexFormat = defaultValue(options.vertexFormat, VertexFormat.DEFAULT);
 
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.center', center);
-        Check.typeOf.number('options.semiMajorAxis', semiMajorAxis);
-        Check.typeOf.number('options.semiMinorAxis', semiMinorAxis);
+        if (!defined(center)) {
+            throw new DeveloperError('center is required.');
+        }
+        if (!defined(semiMajorAxis)) {
+            throw new DeveloperError('semiMajorAxis is required.');
+        }
+        if (!defined(semiMinorAxis)) {
+            throw new DeveloperError('semiMinorAxis is required.');
+        }
         if (semiMajorAxis < semiMinorAxis) {
             throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
         }
@@ -781,32 +752,28 @@ define([
         }
         //>>includeEnd('debug');
 
-        var height = defaultValue(options.height, 0.0);
-        var extrudedHeight = defaultValue(options.extrudedHeight, height);
-
         this._center = Cartesian3.clone(center);
         this._semiMajorAxis = semiMajorAxis;
         this._semiMinorAxis = semiMinorAxis;
         this._ellipsoid = Ellipsoid.clone(ellipsoid);
         this._rotation = defaultValue(options.rotation, 0.0);
         this._stRotation = defaultValue(options.stRotation, 0.0);
-        this._height = Math.max(extrudedHeight, height);
+        this._height = height;
         this._granularity = granularity;
         this._vertexFormat = VertexFormat.clone(vertexFormat);
-        this._extrudedHeight = Math.min(extrudedHeight, height);
+        this._extrudedHeight = defaultValue(extrudedHeight, height);
+        this._extrude = extrude;
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createEllipseGeometry';
-        this._offsetAttribute = options.offsetAttribute;
 
-        this._rectangle = undefined;
-        this._textureCoordinateRotationPoints = undefined;
+        this._rectangle = computeRectangle(this._center, this._ellipsoid, semiMajorAxis, semiMinorAxis, this._rotation);
     }
 
     /**
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 9;
+    EllipseGeometry.packedLength = Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 9;
 
     /**
      * Stores the provided instance into the provided array.
@@ -819,8 +786,12 @@ define([
      */
     EllipseGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('value', value);
-        Check.defined('array', array);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -834,6 +805,9 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
+        Rectangle.pack(value._rectangle, array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
         array[startingIndex++] = value._semiMajorAxis;
         array[startingIndex++] = value._semiMinorAxis;
         array[startingIndex++] = value._rotation;
@@ -841,8 +815,8 @@ define([
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._granularity;
         array[startingIndex++] = value._extrudedHeight;
-        array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+        array[startingIndex++] = value._extrude ? 1.0 : 0.0;
+        array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
 
         return array;
     };
@@ -850,6 +824,7 @@ define([
     var scratchCenter = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
     var scratchVertexFormat = new VertexFormat();
+    var scratchRectangle = new Rectangle();
     var scratchOptions = {
         center : scratchCenter,
         ellipsoid : scratchEllipsoid,
@@ -861,8 +836,7 @@ define([
         height : undefined,
         granularity : undefined,
         extrudedHeight : undefined,
-        shadowVolume: undefined,
-        offsetAttribute: undefined
+        shadowVolume: undefined
     };
 
     /**
@@ -875,7 +849,9 @@ define([
      */
     EllipseGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('array', array);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -889,6 +865,9 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
+        startingIndex += Rectangle.packedLength;
+
         var semiMajorAxis = array[startingIndex++];
         var semiMinorAxis = array[startingIndex++];
         var rotation = array[startingIndex++];
@@ -896,8 +875,8 @@ define([
         var height = array[startingIndex++];
         var granularity = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
-        var shadowVolume = array[startingIndex++] === 1.0;
-        var offsetAttribute = array[startingIndex];
+        var extrude = array[startingIndex++] === 1.0;
+        var shadowVolume = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
             scratchOptions.height = height;
@@ -908,8 +887,6 @@ define([
             scratchOptions.semiMajorAxis = semiMajorAxis;
             scratchOptions.semiMinorAxis = semiMinorAxis;
             scratchOptions.shadowVolume = shadowVolume;
-            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
-
             return new EllipseGeometry(scratchOptions);
         }
 
@@ -923,49 +900,11 @@ define([
         result._height = height;
         result._granularity = granularity;
         result._extrudedHeight = extrudedHeight;
+        result._extrude = extrude;
         result._shadowVolume = shadowVolume;
-        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
+        result._rectangle = Rectangle.clone(rectangle);
 
         return result;
-    };
-
-    /**
-     * Computes the bounding rectangle based on the provided options
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Cartesian3} options.center The ellipse's center point in the fixed frame.
-     * @param {Number} options.semiMajorAxis The length of the ellipse's semi-major axis in meters.
-     * @param {Number} options.semiMinorAxis The length of the ellipse's semi-minor axis in meters.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid the ellipse will be on.
-     * @param {Number} [options.rotation=0.0] The angle of rotation counter-clockwise from north.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The angular distance between points on the ellipse in radians.
-     * @param {Rectangle} [result] An object in which to store the result
-     *
-     * @returns {Rectangle} The result rectangle
-     */
-    EllipseGeometry.computeRectangle = function(options, result) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-
-        var center = options.center;
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var semiMajorAxis = options.semiMajorAxis;
-        var semiMinorAxis = options.semiMinorAxis;
-        var granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
-        var rotation = defaultValue(options.rotation, 0.0);
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.center', center);
-        Check.typeOf.number('options.semiMajorAxis', semiMajorAxis);
-        Check.typeOf.number('options.semiMinorAxis', semiMinorAxis);
-        if (semiMajorAxis < semiMinorAxis) {
-            throw new DeveloperError('semiMajorAxis must be greater than or equal to the semiMinorAxis.');
-        }
-        if (granularity <= 0.0) {
-            throw new DeveloperError('granularity must be greater than zero.');
-        }
-        //>>includeEnd('debug');
-
-        return computeRectangle(center, semiMajorAxis, semiMinorAxis, rotation, granularity, ellipsoid, result);
     };
 
     /**
@@ -979,10 +918,6 @@ define([
             return;
         }
 
-        var height = ellipseGeometry._height;
-        var extrudedHeight = ellipseGeometry._extrudedHeight;
-        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
-
         ellipseGeometry._center = ellipseGeometry._ellipsoid.scaleToGeodeticSurface(ellipseGeometry._center, ellipseGeometry._center);
         var options = {
             center : ellipseGeometry._center,
@@ -990,39 +925,27 @@ define([
             semiMinorAxis : ellipseGeometry._semiMinorAxis,
             ellipsoid : ellipseGeometry._ellipsoid,
             rotation : ellipseGeometry._rotation,
-            height : height,
+            height : ellipseGeometry._height,
+            extrudedHeight : ellipseGeometry._extrudedHeight,
             granularity : ellipseGeometry._granularity,
             vertexFormat : ellipseGeometry._vertexFormat,
             stRotation : ellipseGeometry._stRotation
         };
         var geometry;
-        if (extrude) {
-            options.extrudedHeight = extrudedHeight;
+        if (ellipseGeometry._extrude) {
+            options.extrudedHeight = Math.min(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
+            options.height = Math.max(ellipseGeometry._extrudedHeight, ellipseGeometry._height);
             options.shadowVolume = ellipseGeometry._shadowVolume;
-            options.offsetAttribute = ellipseGeometry._offsetAttribute;
             geometry = computeExtrudedEllipse(options);
         } else {
             geometry = computeEllipse(options);
-
-            if (defined(ellipseGeometry._offsetAttribute)) {
-                var length = geometry.attributes.position.values.length;
-                var applyOffset = new Uint8Array(length / 3);
-                var offsetValue = ellipseGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                arrayFill(applyOffset, offsetValue);
-                geometry.attributes.applyOffset = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                    componentsPerAttribute : 1,
-                    values: applyOffset
-                });
-            }
         }
 
         return new Geometry({
             attributes : geometry.attributes,
             indices : geometry.indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : geometry.boundingSphere,
-            offsetAttribute : ellipseGeometry._offsetAttribute
+            boundingSphere : geometry.boundingSphere
         });
     };
 
@@ -1051,53 +974,13 @@ define([
         });
     };
 
-    function textureCoordinateRotationPoints(ellipseGeometry) {
-        var stRotation = -ellipseGeometry._stRotation;
-        if (stRotation === 0.0) {
-            return [0, 0, 0, 1, 1, 0];
-        }
-
-        var cep = EllipseGeometryLibrary.computeEllipsePositions({
-            center : ellipseGeometry._center,
-            semiMajorAxis : ellipseGeometry._semiMajorAxis,
-            semiMinorAxis : ellipseGeometry._semiMinorAxis,
-            rotation : ellipseGeometry._rotation,
-            granularity : ellipseGeometry._granularity
-        }, false, true);
-        var positionsFlat = cep.outerPositions;
-        var positionsCount = positionsFlat.length / 3;
-        var positions = new Array(positionsCount);
-        for (var i = 0; i < positionsCount; ++i) {
-            positions[i] = Cartesian3.fromArray(positionsFlat, i * 3);
-        }
-
-        var ellipsoid = ellipseGeometry._ellipsoid;
-        var boundingRectangle = ellipseGeometry.rectangle;
-        return Geometry._textureCoordinateRotationPoints(positions, stRotation, ellipsoid, boundingRectangle);
-    }
-
     defineProperties(EllipseGeometry.prototype, {
         /**
          * @private
          */
         rectangle : {
             get : function() {
-                if (!defined(this._rectangle)) {
-                    this._rectangle = computeRectangle(this._center, this._semiMajorAxis, this._semiMinorAxis, this._rotation, this._granularity, this._ellipsoid);
-                }
                 return this._rectangle;
-            }
-        },
-        /**
-         * For remapping texture coordinates when rendering EllipseGeometries as GroundPrimitives.
-         * @private
-         */
-        textureCoordinateRotationPoints : {
-            get : function() {
-                if (!defined(this._textureCoordinateRotationPoints)) {
-                    this._textureCoordinateRotationPoints = textureCoordinateRotationPoints(this);
-                }
-                return this._textureCoordinateRotationPoints;
             }
         }
     });

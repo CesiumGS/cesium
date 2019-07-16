@@ -44,7 +44,7 @@ defineSuite([
         DomEventSimulator) {
     'use strict';
 
-    var usePointerEvents;
+    var usePointerEvents = FeatureDetection.supportsPointerEvents();
     var scene;
     var canvas;
     var camera;
@@ -64,7 +64,7 @@ defineSuite([
         this.getHeight = function(cartographic) {
             return 0.0;
         };
-        this.pickWorldCoordinates = function() {
+        this.pick = function() {
             return new Cartesian3(0.0, 0.0, 1.0);
         };
         this._surface = {
@@ -80,7 +80,6 @@ defineSuite([
         };
     }
     beforeAll(function() {
-        usePointerEvents = FeatureDetection.supportsPointerEvents();
         canvas = createCanvas(1024, 768);
     });
 

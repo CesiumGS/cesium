@@ -1,6 +1,5 @@
 defineSuite([
         'Scene/PolylineColorAppearance',
-        'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
@@ -11,7 +10,6 @@ defineSuite([
         'Specs/createScene'
     ], function(
         PolylineColorAppearance,
-        ArcType,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
@@ -61,7 +59,7 @@ defineSuite([
                     ],
                     width : 10.0,
                     vertexFormat : PolylineColorAppearance.VERTEX_FORMAT,
-                    arcType : ArcType.NONE
+                    followSurface: false
                 }),
                 attributes : {
                     color : ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0))

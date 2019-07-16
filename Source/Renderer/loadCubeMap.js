@@ -2,14 +2,14 @@ define([
         '../Core/Check',
         '../Core/defined',
         '../Core/DeveloperError',
-        '../Core/Resource',
+        '../Core/loadImage',
         '../ThirdParty/when',
         './CubeMap'
     ], function(
         Check,
         defined,
         DeveloperError,
-        Resource,
+        loadImage,
         when,
         CubeMap) {
     'use strict';
@@ -22,6 +22,9 @@ define([
      *
      * @param {Context} context The context to use to create the cube map.
      * @param {Object} urls The source URL of each image.  See the example below.
+     * @param {Boolean} [allowCrossOrigin=true] Whether to request the image using Cross-Origin
+     *        Resource Sharing (CORS).  CORS is only actually used if the image URL is actually cross-origin.
+     *        Data URIs are never requested using CORS.
      * @returns {Promise.<CubeMap>} a promise that will resolve to the requested {@link CubeMap} when loaded.
      *
      * @exception {DeveloperError} context is required.
@@ -47,7 +50,7 @@ define([
      *
      * @private
      */
-    function loadCubeMap(context, urls) {
+    function loadCubeMap(context, urls, allowCrossOrigin) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('context', context);
         if ((!defined(urls)) ||
@@ -66,18 +69,14 @@ define([
         //
         // Also, it is perhaps acceptable to use the context here in the callbacks, but
         // ideally, we would do it in the primitive's update function.
-        var flipOptions = {
-            flipY : true,
-            preferImageBitmap: true
-        };
 
         var facePromises = [
-            Resource.createIfNeeded(urls.positiveX).fetchImage(flipOptions),
-            Resource.createIfNeeded(urls.negativeX).fetchImage(flipOptions),
-            Resource.createIfNeeded(urls.positiveY).fetchImage(flipOptions),
-            Resource.createIfNeeded(urls.negativeY).fetchImage(flipOptions),
-            Resource.createIfNeeded(urls.positiveZ).fetchImage(flipOptions),
-            Resource.createIfNeeded(urls.negativeZ).fetchImage(flipOptions)
+            loadImage(urls.positiveX, allowCrossOrigin),
+            loadImage(urls.negativeX, allowCrossOrigin),
+            loadImage(urls.positiveY, allowCrossOrigin),
+            loadImage(urls.negativeY, allowCrossOrigin),
+            loadImage(urls.positiveZ, allowCrossOrigin),
+            loadImage(urls.negativeZ, allowCrossOrigin)
         ];
 
         return when.all(facePromises, function(images) {

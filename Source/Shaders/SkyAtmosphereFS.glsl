@@ -54,12 +54,12 @@ void main (void)
     float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
     float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
 
-    vec3 rgb = rayleighPhase * v_rayleighColor + miePhase * v_mieColor;
+    const float exposure = 2.0;
 
-#ifndef HDR
-    const float exposure = 1.1;
+    vec3 rgb = rayleighPhase * v_rayleighColor + miePhase * v_mieColor;
     rgb = vec3(1.0) - exp(-exposure * rgb);
-#endif
+    // Compute luminance before color correction to avoid strangely gray night skies
+    float l = czm_luminance(rgb);
 
 #ifdef COLOR_CORRECT
     // Convert rgb color to hsb
@@ -70,6 +70,9 @@ void main (void)
     hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
     // Convert shifted hsb back to rgb
     rgb = czm_HSBToRGB(hsb);
+
+    // Check if correction decreased the luminance to 0
+    l = min(l, czm_luminance(rgb));
 #endif
 
     // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)

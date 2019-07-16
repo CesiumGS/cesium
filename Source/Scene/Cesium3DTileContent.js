@@ -57,7 +57,7 @@ define([
          * equals the number of groups of points as distinguished by the <code>BATCH_ID</code> feature table semantic.
          * </p>
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/PointCloud#batched-points}
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/PointCloud/README.md#batched-points}
          *
          * @memberof Cesium3DTileContent.prototype
          *
@@ -130,7 +130,7 @@ define([
          * Gets the array of {@link Cesium3DTileContent} objects that represent the
          * content a composite's inner tiles, which can also be composites.
          *
-         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Composite}
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Composite/README.md}
          *
          * @memberof Cesium3DTileContent.prototype
          *
@@ -160,8 +160,6 @@ define([
         /**
          * Gets the tileset for this tile.
          *
-         * @memberof Cesium3DTileContent.prototype
-         *
          * @type {Cesium3DTileset}
          * @readonly
          */
@@ -173,8 +171,6 @@ define([
 
         /**
          * Gets the tile containing this content.
-         *
-         * @memberof Cesium3DTileContent.prototype
          *
          * @type {Cesium3DTile}
          * @readonly
@@ -237,7 +233,7 @@ define([
      * Features in a tile are ordered by <code>batchId</code>, an index used to retrieve their metadata from the batch table.
      * </p>
      *
-     * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/BatchTable}.
+     * @see {@link  https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/TileFormats/BatchTable}.
      *
      * @param {Number} batchId The batchId for the feature.
      * @returns {Cesium3DTileFeature} The corresponding {@link Cesium3DTileFeature} object.
@@ -271,11 +267,12 @@ define([
      * not part of the public Cesium API.
      * </p>
      *
+     * @param {FrameSate} frameState The frame state.
      * @param {Cesium3DTileStyle} style The style.
      *
      * @private
      */
-    Cesium3DTileContent.prototype.applyStyle = function(style) {
+    Cesium3DTileContent.prototype.applyStyle = function(frameState, style) {
         DeveloperError.throwInstantiationError();
     };
 
@@ -328,6 +325,8 @@ define([
      * This is used to implement the <code>Cesium3DTileContent</code> interface, but is
      * not part of the public Cesium API.
      * </p>
+     *
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

@@ -1,19 +1,19 @@
 define([
-        '../Core/Check',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/loadCRN',
-        '../Core/loadKTX',
-        '../Core/Resource'
+        '../Core/loadImage',
+        '../Core/loadImageViaBlob',
+        '../Core/loadKTX'
     ], function(
-        Check,
         defined,
         defineProperties,
         DeveloperError,
         loadCRN,
-        loadKTX,
-        Resource) {
+        loadImage,
+        loadImageViaBlob,
+        loadKTX) {
     'use strict';
 
     /**
@@ -31,15 +31,14 @@ define([
      * @see GoogleEarthEnterpriseMapsProvider
      * @see GridImageryProvider
      * @see MapboxImageryProvider
-     * @see MapboxStyleImageryProvider
      * @see SingleTileImageryProvider
      * @see TileCoordinatesImageryProvider
      * @see UrlTemplateImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     function ImageryProvider() {
         /**
@@ -327,35 +326,23 @@ define([
      * that the request should be retried later.
      *
      * @param {ImageryProvider} imageryProvider The imagery provider for the URL.
-     * @param {Resource|String} url The URL of the image.
+     * @param {String} url The URL of the image.
+     * @param {Request} [request] The request object. Intended for internal use only.
      * @returns {Promise.<Image|Canvas>|undefined} A promise for the image that will resolve when the image is available, or
      *          undefined if there are too many active requests to the server, and the request
      *          should be retried later.  The resolved image may be either an
      *          Image or a Canvas DOM object.
      */
-    ImageryProvider.loadImage = function(imageryProvider, url) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('url', url);
-        //>>includeEnd('debug');
-
-        var resource = Resource.createIfNeeded(url);
-
-        if (ktxRegex.test(resource)) {
-            return loadKTX(resource);
-        } else if (crnRegex.test(resource)) {
-            return loadCRN(resource);
+    ImageryProvider.loadImage = function(imageryProvider, url, request) {
+        if (ktxRegex.test(url)) {
+            return loadKTX(url, undefined, request);
+        } else if (crnRegex.test(url)) {
+            return loadCRN(url, undefined, request);
         } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return resource.fetchImage({
-                preferBlob : true,
-                preferImageBitmap : true,
-                flipY : true
-            });
+            return loadImageViaBlob(url, request);
         }
 
-        return resource.fetchImage({
-            preferImageBitmap : true,
-            flipY : true
-        });
+        return loadImage(url, undefined, request);
     };
 
     return ImageryProvider;

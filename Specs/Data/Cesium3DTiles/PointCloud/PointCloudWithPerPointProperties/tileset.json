@@ -33,7 +33,7 @@
     },
     "geometricError": 0,
     "content": {
-      "uri": "pointCloudWithPerPointProperties.pnts"
+      "url": "pointCloudWithPerPointProperties.pnts"
     }
   }
 }

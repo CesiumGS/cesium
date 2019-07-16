@@ -30,24 +30,29 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.orientation=StripeOrientation.HORIZONTAL] A Property specifying the {@link StripeOrientation}.
      * @param {Property} [options.evenColor=Color.WHITE] A Property specifying the first {@link Color}.
      * @param {Property} [options.oddColor=Color.BLACK] A Property specifying the second {@link Color}.
-     * @param {Property} [options.offset=0] A numeric Property specifying how far into the pattern to start the material.
      * @param {Property} [options.repeat=1] A numeric Property specifying how many times the stripes repeat.
+     * @param {Property} [options.offset=0] A numeric Property specifying how far into the pattern to start the material.
+     * @param {Property} [options.orientation=StripeOrientation.HORIZONTAL] A Property specifying the {@link StripeOrientation}.
      */
     function StripeMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._definitionChanged = new Event();
+
         this._orientation = undefined;
         this._orientationSubscription = undefined;
+
         this._evenColor = undefined;
         this._evenColorSubscription = undefined;
+
         this._oddColor = undefined;
         this._oddColorSubscription = undefined;
+
         this._offset = undefined;
         this._offsetSubscription = undefined;
+
         this._repeat = undefined;
         this._repeatSubscription = undefined;
 
@@ -90,7 +95,6 @@ define([
                 return this._definitionChanged;
             }
         },
-
         /**
          * Gets or sets the Property specifying the {@link StripeOrientation}/
          * @memberof StripeMaterialProperty.prototype
@@ -98,7 +102,6 @@ define([
          * @default StripeOrientation.HORIZONTAL
          */
         orientation : createPropertyDescriptor('orientation'),
-
         /**
          * Gets or sets the Property specifying the first {@link Color}.
          * @memberof StripeMaterialProperty.prototype
@@ -106,7 +109,6 @@ define([
          * @default Color.WHITE
          */
         evenColor : createPropertyDescriptor('evenColor'),
-
         /**
          * Gets or sets the Property specifying the second {@link Color}.
          * @memberof StripeMaterialProperty.prototype
@@ -114,7 +116,6 @@ define([
          * @default Color.BLACK
          */
         oddColor : createPropertyDescriptor('oddColor'),
-
         /**
          * Gets or sets the numeric Property specifying the point into the pattern
          * to begin drawing; with 0.0 being the beginning of the even color, 1.0 the beginning
@@ -125,7 +126,6 @@ define([
          * @default 0.0
          */
         offset : createPropertyDescriptor('offset'),
-
         /**
          * Gets or sets the numeric Property specifying how many times the stripes repeat.
          * @memberof StripeMaterialProperty.prototype

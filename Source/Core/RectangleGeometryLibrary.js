@@ -30,17 +30,17 @@ define([
     /**
      * @private
      */
-    RectangleGeometryLibrary.computePosition = function(computedOptions, ellipsoid, computeST, row, col, position, st) {
-        var radiiSquared = ellipsoid.radiiSquared;
-        var nwCorner = computedOptions.nwCorner;
-        var rectangle = computedOptions.boundingRectangle;
+    RectangleGeometryLibrary.computePosition = function(options, row, col, position, st) {
+        var radiiSquared = options.ellipsoid.radiiSquared;
+        var nwCorner = options.nwCorner;
+        var rectangle = options.rectangle;
 
-        var stLatitude = nwCorner.latitude - computedOptions.granYCos * row + col * computedOptions.granXSin;
+        var stLatitude = nwCorner.latitude - options.granYCos * row + col * options.granXSin;
         var cosLatitude = cos(stLatitude);
         var nZ = sin(stLatitude);
         var kZ = radiiSquared.z * nZ;
 
-        var stLongitude = nwCorner.longitude + row * computedOptions.granYSin + col * computedOptions.granXCos;
+        var stLongitude = nwCorner.longitude + row * options.granYSin + col * options.granXCos;
         var nX = cosLatitude * cos(stLongitude);
         var nY = cosLatitude * sin(stLongitude);
 
@@ -53,17 +53,17 @@ define([
         position.y = kY / gamma;
         position.z = kZ / gamma;
 
-        if (computeST) {
-            var stNwCorner = computedOptions.stNwCorner;
+        if (defined(options.vertexFormat) && options.vertexFormat.st) {
+            var stNwCorner = options.stNwCorner;
             if (defined(stNwCorner)) {
-                stLatitude = stNwCorner.latitude - computedOptions.stGranYCos * row + col * computedOptions.stGranXSin;
-                stLongitude = stNwCorner.longitude + row * computedOptions.stGranYSin + col * computedOptions.stGranXCos;
+                stLatitude = stNwCorner.latitude - options.stGranYCos * row + col * options.stGranXSin;
+                stLongitude = stNwCorner.longitude + row * options.stGranYSin + col * options.stGranXCos;
 
-                st.x = (stLongitude - computedOptions.stWest) * computedOptions.lonScalar;
-                st.y = (stLatitude - computedOptions.stSouth) * computedOptions.latScalar;
+                st.x = (stLongitude - options.stWest) * options.lonScalar;
+                st.y = (stLatitude - options.stSouth) * options.latScalar;
             } else {
-                st.x = (stLongitude - rectangle.west) * computedOptions.lonScalar;
-                st.y = (stLatitude - rectangle.south) * computedOptions.latScalar;
+                st.x = (stLongitude - rectangle.west) * options.lonScalar;
+                st.y = (stLatitude - rectangle.south) * options.latScalar;
             }
         }
     };
@@ -126,21 +126,17 @@ define([
     /**
      * @private
      */
-    RectangleGeometryLibrary.computeOptions = function(rectangle, granularity, rotation, stRotation, boundingRectangleScratch, nwCornerResult, stNwCornerResult) {
+    RectangleGeometryLibrary.computeOptions = function(geometry, rectangle, nwCorner, stNwCorner) {
+        var granularity = geometry._granularity;
+        var ellipsoid = geometry._ellipsoid;
+        var surfaceHeight = geometry._surfaceHeight;
+        var rotation = geometry._rotation;
+        var stRotation = geometry._stRotation;
+        var extrudedHeight = geometry._extrudedHeight;
         var east = rectangle.east;
         var west = rectangle.west;
         var north = rectangle.north;
         var south = rectangle.south;
-
-        var northCap = false;
-        var southCap = false;
-
-        if (north === CesiumMath.PI_OVER_TWO) {
-            northCap = true;
-        }
-        if (south === -CesiumMath.PI_OVER_TWO) {
-            southCap = true;
-        }
 
         var width;
         var height;
@@ -150,16 +146,19 @@ define([
         var dy = north - south;
         if (west > east) {
             dx = (CesiumMath.TWO_PI - west + east);
+            width = Math.ceil(dx / granularity) + 1;
+            height = Math.ceil(dy / granularity) + 1;
+            granularityX = dx / (width - 1);
+            granularityY = dy / (height - 1);
         } else {
             dx = east - west;
+            width = Math.ceil(dx / granularity) + 1;
+            height = Math.ceil(dy / granularity) + 1;
+            granularityX = dx / (width - 1);
+            granularityY = dy / (height - 1);
         }
 
-        width = Math.ceil(dx / granularity) + 1;
-        height = Math.ceil(dy / granularity) + 1;
-        granularityX = dx / (width - 1);
-        granularityY = dy / (height - 1);
-
-        var nwCorner = Rectangle.northwest(rectangle, nwCornerResult);
+        nwCorner = Rectangle.northwest(rectangle, nwCorner);
         var center = Rectangle.center(rectangle, centerScratch);
         if (rotation !== 0 || stRotation !== 0) {
             if (center.longitude < nwCorner.longitude) {
@@ -173,19 +172,18 @@ define([
         var granYSin = 0.0;
         var granXSin = 0.0;
 
-        var boundingRectangle = Rectangle.clone(rectangle, boundingRectangleScratch);
-
-        var computedOptions = {
+        var options = {
             granYCos : granYCos,
             granYSin : granYSin,
             granXCos : granXCos,
             granXSin : granXSin,
+            ellipsoid : ellipsoid,
+            surfaceHeight : surfaceHeight,
+            extrudedHeight : extrudedHeight,
             nwCorner : nwCorner,
-            boundingRectangle : boundingRectangle,
+            rectangle : rectangle,
             width: width,
-            height: height,
-            northCap: northCap,
-            southCap: southCap
+            height: height
         };
 
         if (rotation !== 0) {
@@ -202,33 +200,33 @@ define([
             }
             //>>includeEnd('debug')
 
-            computedOptions.granYCos = rotationOptions.granYCos;
-            computedOptions.granYSin = rotationOptions.granYSin;
-            computedOptions.granXCos = rotationOptions.granXCos;
-            computedOptions.granXSin = rotationOptions.granXSin;
+            options.granYCos = rotationOptions.granYCos;
+            options.granYSin = rotationOptions.granYSin;
+            options.granXCos = rotationOptions.granXCos;
+            options.granXSin = rotationOptions.granXSin;
 
-            boundingRectangle.north = north;
-            boundingRectangle.south = south;
-            boundingRectangle.east = east;
-            boundingRectangle.west = west;
+            rectangle.north = north;
+            rectangle.south = south;
+            rectangle.east = east;
+            rectangle.west = west;
         }
 
         if (stRotation !== 0) {
             rotation = rotation - stRotation;
-            var stNwCorner = Rectangle.northwest(boundingRectangle, stNwCornerResult);
+            stNwCorner = Rectangle.northwest(rectangle, stNwCorner);
 
             var stRotationOptions = getRotationOptions(stNwCorner, rotation, granularityX, granularityY, center, width, height);
 
-            computedOptions.stGranYCos =  stRotationOptions.granYCos;
-            computedOptions.stGranXCos = stRotationOptions.granXCos;
-            computedOptions.stGranYSin = stRotationOptions.granYSin;
-            computedOptions.stGranXSin = stRotationOptions.granXSin;
-            computedOptions.stNwCorner = stNwCorner;
-            computedOptions.stWest = stRotationOptions.west;
-            computedOptions.stSouth = stRotationOptions.south;
+            options.stGranYCos =  stRotationOptions.granYCos;
+            options.stGranXCos = stRotationOptions.granXCos;
+            options.stGranYSin = stRotationOptions.granYSin;
+            options.stGranXSin = stRotationOptions.granXSin;
+            options.stNwCorner = stNwCorner;
+            options.stWest = stRotationOptions.west;
+            options.stSouth = stRotationOptions.south;
         }
 
-        return computedOptions;
+        return options;
     };
 
     return RectangleGeometryLibrary;

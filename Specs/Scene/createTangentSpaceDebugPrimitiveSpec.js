@@ -14,6 +14,7 @@ defineSuite([
         VertexFormat) {
     'use strict';
 
+
     it('computes all attributes', function() {
         var geometry = new EllipsoidGeometry({
             vertexFormat : VertexFormat.ALL,

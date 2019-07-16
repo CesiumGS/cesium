@@ -2,7 +2,10 @@ varying vec4 v_color;
 varying vec4 v_outlineColor;
 varying float v_innerPercent;
 varying float v_pixelDistance;
+
+#ifdef RENDER_FOR_PICK
 varying vec4 v_pickColor;
+#endif
 
 void main()
 {
@@ -17,7 +20,7 @@ void main()
     color.a *= wholeAlpha;
 
 // Fully transparent parts of the billboard are not pickable.
-#if !defined(OPAQUE) && !defined(TRANSLUCENT)
+#if defined(RENDER_FOR_PICK) || (!defined(OPAQUE) && !defined(TRANSLUCENT))
     if (color.a < 0.005)   // matches 0/255 and 1/255
     {
         discard;
@@ -38,6 +41,9 @@ void main()
 #endif
 #endif
 
-    gl_FragColor = czm_gammaCorrect(color);
-    czm_writeLogDepth();
+#ifdef RENDER_FOR_PICK
+    gl_FragColor = v_pickColor;
+#else
+    gl_FragColor = color;
+#endif
 }

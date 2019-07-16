@@ -516,9 +516,7 @@ define([
             } else {
                 item = items.get(entity.id);
                 if (defined(item)) {
-                    if (defined(item.updater)) {
-                        item.updater.removeObject(item);
-                    }
+                    item.updater.removeObject(item);
                     items.remove(entity.id);
                 }
             }

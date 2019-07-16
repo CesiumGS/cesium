@@ -7,7 +7,7 @@ define([
     /**
      * Whether a classification affects terrain, 3D Tiles or both.
      *
-     * @exports ClassificationType
+     * @exports ClassificationOption
      */
     var ClassificationType = {
         /**
@@ -30,11 +30,7 @@ define([
          * @type {Number}
          * @constant
          */
-        BOTH : 2,
-        /**
-         * @private
-         */
-        NUMBER_OF_CLASSIFICATION_TYPES : 3
+        BOTH : 2
     };
 
     return freezeObject(ClassificationType);

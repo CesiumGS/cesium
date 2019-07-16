@@ -1,21 +1,22 @@
 defineSuite([
         'DataSources/KmlTourFlyTo',
+        'DataSources/KmlCamera',
+        'DataSources/KmlLookAt',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
-        'DataSources/KmlCamera',
-        'DataSources/KmlLookAt',
         'Specs/pollToPromise'
     ], function(
         KmlTourFlyTo,
+        KmlCamera,
+        KmlLookAt,
         Cartesian3,
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
-        KmlCamera,
-        KmlLookAt,
-        pollToPromise) {
+        pollToPromise
+        ) {
     'use strict';
 
     it('generates camera options for KmlLookAt', function() {

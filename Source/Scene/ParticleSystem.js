@@ -32,8 +32,6 @@ define([
         Particle) {
     'use strict';
 
-    var defaultImageSize = new Cartesian2(1.0, 1.0);
-
     /**
      * A ParticleSystem manages the updating and display of a collection of particles.
      *
@@ -42,36 +40,36 @@ define([
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.show=true] Whether to display the particle system.
-     * @param {ParticleSystem~updateCallback} [options.updateCallback] The callback function to be called each frame to update a particle.
+     * @param {ParticleSystem~applyForce[]} [options.forces] An array of force callbacks.
      * @param {ParticleEmitter} [options.emitter=new CircleEmitter(0.5)] The particle emitter for this system.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system from model to world coordinates.
      * @param {Matrix4} [options.emitterModelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the particle system emitter within the particle systems local coordinate system.
-     * @param {Number} [options.emissionRate=5] The number of particles to emit per second.
+     * @param {Color} [options.startColor=Color.WHITE] The color of a particle when it is born.
+     * @param {Color} [options.endColor=Color.WHITE] The color of a particle when it dies.
+     * @param {Number} [options.startScale=1.0] The scale of the particle when it is born.
+     * @param {Number} [options.endScale=1.0] The scale of the particle when it dies.
+     * @param {Number} [options.rate=5] The number of particles to emit per second.
      * @param {ParticleBurst[]} [options.bursts] An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
-     * @param {Boolean} [options.loop=true] Whether the particle system should loop its bursts when it is complete.
-     * @param {Number} [options.scale=1.0] Sets the scale to apply to the image of the particle for the duration of its particleLife.
-     * @param {Number} [options.startScale] The initial scale to apply to the image of the particle at the beginning of its life.
-     * @param {Number} [options.endScale] The final scale to apply to the image of the particle at the end of its life.
-     * @param {Color} [options.color=Color.WHITE] Sets the color of a particle for the duration of its particleLife.
-     * @param {Color} [options.startColor] The color of the particle at the beginning of its life.
-     * @param {Color} [options.endColor] The color of the particle at the end of its life.
+     * @param {Boolean} [options.loop=true] Whether the particle system should loop it's bursts when it is complete.
+     * @param {Number} [options.speed] Sets the minimum and maximum speed in meters per second
+     * @param {Number} [options.minimumSpeed=1.0] Sets the minimum speed in meters per second.
+     * @param {Number} [options.maximumSpeed=1.0] Sets the maximum speed in meters per second.
+     * @param {Number} [options.life] Sets the minimum and maximum life of particles in seconds.
+     * @param {Number} [options.minimumLife=5.0] Sets the minimum life of particles in seconds.
+     * @param {Number} [options.maximumLife=5.0] Sets the maximum life of particles in seconds.
+     * @param {Number} [options.mass] Sets the minimum and maximum mass of particles in kilograms.
+     * @param {Number} [options.minimumMass=1.0] Sets the minimum mass of particles in kilograms.
+     * @param {Number} [options.maximumMass=1.0] Sets the maximum mass of particles in kilograms.
      * @param {Object} [options.image] The URI, HTMLImageElement, or HTMLCanvasElement to use for the billboard.
-     * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] If set, overrides the minimumImageSize and maximumImageSize inputs that scale the particle image's dimensions in pixels.
-     * @param {Cartesian2} [options.minimumImageSize] Sets the minimum bound, width by height, above which to randomly scale the particle image's dimensions in pixels.
-     * @param {Cartesian2} [options.maximumImageSize] Sets the maximum bound, width by height, below which to randomly scale the particle image's dimensions in pixels.
-     * @param {Number} [options.speed=1.0] If set, overrides the minimumSpeed and maximumSpeed inputs with this value.
-     * @param {Number} [options.minimumSpeed] Sets the minimum bound in meters per second above which a particle's actual speed will be randomly chosen.
-     * @param {Number} [options.maximumSpeed] Sets the maximum bound in meters per second below which a particle's actual speed will be randomly chosen.
-     * @param {Number} [options.lifetime=Number.MAX_VALUE] How long the particle system will emit particles, in seconds.
-     * @param {Number} [options.particleLife=5.0] If set, overrides the minimumParticleLife and maximumParticleLife inputs with this value.
-     * @param {Number} [options.minimumParticleLife] Sets the minimum bound in seconds for the possible duration of a particle's life above which a particle's actual life will be randomly chosen.
-     * @param {Number} [options.maximumParticleLife] Sets the maximum bound in seconds for the possible duration of a particle's life below which a particle's actual life will be randomly chosen.
-     * @param {Number} [options.mass=1.0] Sets the minimum and maximum mass of particles in kilograms.
-     * @param {Number} [options.minimumMass] Sets the minimum bound for the mass of a particle in kilograms. A particle's actual mass will be chosen as a random amount above this value.
-     * @param {Number} [options.maximumMass] Sets the maximum mass of particles in kilograms. A particle's actual mass will be chosen as a random amount below this value.
-     * @tutorial {@link https://cesiumjs.org/tutorials/Particle-Systems-Tutorial/|Particle Systems Tutorial}
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Particle%20System.html&label=Showcases|Particle Systems Tutorial Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
+     * @param {Number} [options.width] Sets the minimum and maximum width of particles in pixels.
+     * @param {Number} [options.minimumWidth=1.0] Sets the minimum width of particles in pixels.
+     * @param {Number} [options.maximumWidth=1.0] Sets the maximum width of particles in pixels.
+     * @param {Number} [options.height] Sets the minimum and maximum height of particles in pixels.
+     * @param {Number} [options.minimumHeight=1.0] Sets the minimum height of particles in pixels.
+     * @param {Number} [options.maximumHeight=1.0] Sets the maximum height of particles in pixels.
+     * @param {Number} [options.lifeTime=Number.MAX_VALUE] How long the particle system will emit particles, in seconds.
+     *
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=ParticleSystem.html|Particle Systems Demo}
      */
     function ParticleSystem(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -85,10 +83,10 @@ define([
 
         /**
          * An array of force callbacks. The callback is passed a {@link Particle} and the difference from the last time
-         * @type {ParticleSystem~updateCallback}
+         * @type {ParticleSystem~applyForce[]}
          * @default undefined
          */
-        this.updateCallback = options.updateCallback;
+        this.forces = options.forces;
 
         /**
          * Whether the particle system should loop it's bursts when it is complete.
@@ -117,27 +115,30 @@ define([
         this._matrixDirty = true;
         this._combinedMatrix = new Matrix4();
 
-        this._startColor = Color.clone(defaultValue(options.color, defaultValue(options.startColor, Color.WHITE)));
-        this._endColor = Color.clone(defaultValue(options.color, defaultValue(options.endColor, Color.WHITE)));
+        this._startColor = Color.clone(defaultValue(options.startColor, Color.WHITE));
+        this._endColor = Color.clone(defaultValue(options.endColor, Color.WHITE));
 
-        this._startScale = defaultValue(options.scale, defaultValue(options.startScale, 1.0));
-        this._endScale = defaultValue(options.scale, defaultValue(options.endScale, 1.0));
+        this._startScale = defaultValue(options.startScale, 1.0);
+        this._endScale = defaultValue(options.endScale, 1.0);
 
-        this._emissionRate = defaultValue(options.emissionRate, 5.0);
+        this._rate = defaultValue(options.rate, 5);
 
         this._minimumSpeed = defaultValue(options.speed, defaultValue(options.minimumSpeed, 1.0));
         this._maximumSpeed = defaultValue(options.speed, defaultValue(options.maximumSpeed, 1.0));
 
-        this._minimumParticleLife = defaultValue(options.particleLife, defaultValue(options.minimumParticleLife, 5.0));
-        this._maximumParticleLife = defaultValue(options.particleLife, defaultValue(options.maximumParticleLife, 5.0));
+        this._minimumLife = defaultValue(options.life, defaultValue(options.minimumLife, 5.0));
+        this._maximumLife = defaultValue(options.life, defaultValue(options.maximumLife, 5.0));
 
         this._minimumMass = defaultValue(options.mass, defaultValue(options.minimumMass, 1.0));
         this._maximumMass = defaultValue(options.mass, defaultValue(options.maximumMass, 1.0));
 
-        this._minimumImageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize)));
-        this._maximumImageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultValue(options.maximumImageSize, defaultImageSize)));
+        this._minimumWidth = defaultValue(options.width, defaultValue(options.minimumWidth, 1.0));
+        this._maximumWidth = defaultValue(options.width, defaultValue(options.maximumWidth, 1.0));
 
-        this._lifetime = defaultValue(options.lifetime, Number.MAX_VALUE);
+        this._minimumHeight = defaultValue(options.height, defaultValue(options.minimumHeight, 1.0));
+        this._maximumHeight = defaultValue(options.height, defaultValue(options.maximumHeight, 1.0));
+
+        this._lifeTime = defaultValue(options.lifeTime, Number.MAX_VALUE);
 
         this._billboardCollection = undefined;
         this._particles = [];
@@ -161,7 +162,7 @@ define([
          * The particle emitter for this
          * @memberof ParticleSystem.prototype
          * @type {ParticleEmitter}
-         * @default CircleEmitter
+         * @default CricleEmitter
          */
         emitter : {
             get : function() {
@@ -176,7 +177,6 @@ define([
         },
         /**
          * An array of {@link ParticleBurst}, emitting bursts of particles at periodic times.
-         * @memberof ParticleSystem.prototype
          * @type {ParticleBurst[]}
          * @default undefined
          */
@@ -226,7 +226,7 @@ define([
             }
         },
         /**
-         * The color of the particle at the beginning of its life.
+         * The color of a particle when it is born.
          * @memberof ParticleSystem.prototype
          * @type {Color}
          * @default Color.WHITE
@@ -243,7 +243,7 @@ define([
             }
         },
         /**
-         * The color of the particle at the end of its life.
+         * The color of a particle when it dies.
          * @memberof ParticleSystem.prototype
          * @type {Color}
          * @default Color.WHITE
@@ -260,7 +260,7 @@ define([
             }
         },
         /**
-         * The initial scale to apply to the image of the particle at the beginning of its life.
+         * The scale of the particle when it is born.
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 1.0
@@ -277,7 +277,7 @@ define([
             }
         },
         /**
-         * The final scale to apply to the image of the particle at the end of its life.
+         * The scale of the particle when it dies.
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 1.0
@@ -299,20 +299,20 @@ define([
          * @type {Number}
          * @default 5
          */
-        emissionRate : {
+        rate : {
             get : function() {
-                return this._emissionRate;
+                return this._rate;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._emissionRate = value;
+                this._rate = value;
                 this._updateParticlePool = true;
             }
         },
         /**
-         * Sets the minimum bound in meters per second above which a particle's actual speed will be randomly chosen.
+         * Sets the minimum speed in meters per second.
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 1.0
@@ -329,7 +329,7 @@ define([
             }
         },
         /**
-         * Sets the maximum bound in meters per second below which a particle's actual speed will be randomly chosen.
+         * Sets the maximum speed in meters per second.
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 1.0
@@ -346,37 +346,37 @@ define([
             }
         },
         /**
-         * Sets the minimum bound in seconds for the possible duration of a particle's life above which a particle's actual life will be randomly chosen.
+         * Sets the minimum life of particles in seconds.
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 5.0
          */
-        minimumParticleLife : {
+        minimumLife : {
             get : function() {
-                return this._minimumParticleLife;
+                return this._minimumLife;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._minimumParticleLife = value;
+                this._minimumLife = value;
             }
         },
         /**
-         * Sets the maximum bound in seconds for the possible duration of a particle's life below which a particle's actual life will be randomly chosen.
+         * Sets the maximum life of particles in seconds.
          * @memberof ParticleSystem.prototype
          * @type {Number}
          * @default 5.0
          */
-        maximumParticleLife : {
+        maximumLife : {
             get : function() {
-                return this._maximumParticleLife;
+                return this._maximumLife;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._maximumParticleLife = value;
+                this._maximumLife = value;
                 this._updateParticlePool = true;
             }
         },
@@ -415,41 +415,71 @@ define([
             }
         },
         /**
-         * Sets the minimum bound, width by height, above which to randomly scale the particle image's dimensions in pixels.
+         * Sets the minimum width of particles in pixels.
          * @memberof ParticleSystem.prototype
-         * @type {Cartesian2}
-         * @default new Cartesian2(1.0, 1.0)
+         * @type {Number}
+         * @default 1.0
          */
-        minimumImageSize : {
+        minimumWidth : {
             get : function() {
-                return this._minimumImageSize;
+                return this._minimumWidth;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                Check.typeOf.object('value', value);
-                Check.typeOf.number.greaterThanOrEquals('value.x', value.x, 0.0);
-                Check.typeOf.number.greaterThanOrEquals('value.y', value.y, 0.0);
+                Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._minimumImageSize = value;
+                this._minimumWidth = value;
             }
         },
         /**
-         * Sets the maximum bound, width by height, below which to randomly scale the particle image's dimensions in pixels.
+         * Sets the maximum width of particles in pixels.
          * @memberof ParticleSystem.prototype
-         * @type {Cartesian2}
-         * @default new Cartesian2(1.0, 1.0)
+         * @type {Number}
+         * @default 1.0
          */
-        maximumImageSize : {
+        maximumWidth : {
             get : function() {
-                return this._maximumImageSize;
+                return this._maximumWidth;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
-                Check.typeOf.object('value', value);
-                Check.typeOf.number.greaterThanOrEquals('value.x', value.x, 0.0);
-                Check.typeOf.number.greaterThanOrEquals('value.y', value.y, 0.0);
+                Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._maximumImageSize = value;
+                this._maximumWidth = value;
+            }
+        },
+        /**
+         * Sets the minimum height of particles in pixels.
+         * @memberof ParticleSystem.prototype
+         * @type {Number}
+         * @default 1.0
+         */
+        minimumHeight : {
+            get : function() {
+                return this._minimumHeight;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
+                //>>includeEnd('debug');
+                this._minimumHeight = value;
+            }
+        },
+        /**
+         * Sets the maximum height of particles in pixels.
+         * @memberof ParticleSystem.prototype
+         * @type {Number}
+         * @default 1.0
+         */
+        maximumHeight : {
+            get : function() {
+                return this._maximumHeight;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
+                //>>includeEnd('debug');
+                this._maximumHeight = value;
             }
         },
         /**
@@ -458,15 +488,15 @@ define([
          * @type {Number}
          * @default Number.MAX_VALUE
          */
-        lifetime : {
+        lifeTime : {
             get : function() {
-                return this._lifetime;
+                return this._lifeTime;
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
                 Check.typeOf.number.greaterThanOrEquals('value', value, 0.0);
                 //>>includeEnd('debug');
-                this._lifetime = value;
+                this._lifeTime = value;
             }
         },
         /**
@@ -492,8 +522,8 @@ define([
     });
 
     function updateParticlePool(system) {
-        var emissionRate = system._emissionRate;
-        var life = system._maximumParticleLife;
+        var rate = system._rate;
+        var life = system._maximumLife;
 
         var burstAmount = 0;
         var bursts = system._bursts;
@@ -507,7 +537,7 @@ define([
         var billboardCollection = system._billboardCollection;
         var image = system.image;
 
-        var particleEstimate = Math.ceil(emissionRate * life + burstAmount);
+        var particleEstimate = Math.ceil(rate * life + burstAmount);
         var particles = system._particles;
         var particlePool = system._particlePool;
         var numToAdd = Math.max(particleEstimate - particles.length - particlePool.length, 0);
@@ -567,8 +597,8 @@ define([
                 image : particle.image
             });
         }
-        billboard.width = particle.imageSize.x;
-        billboard.height = particle.imageSize.y;
+        billboard.width = particle.size.x;
+        billboard.height = particle.size.y;
         billboard.position = particle.position;
         billboard.show = true;
 
@@ -580,7 +610,8 @@ define([
         billboard.color = new Color(r,g,b,a);
 
         // Update the scale
-        billboard.scale = CesiumMath.lerp(particle.startScale, particle.endScale, particle.normalizedAge);
+        var scale = CesiumMath.lerp(particle.startScale, particle.endScale, particle.normalizedAge);
+        billboard.scale = scale;
     }
 
     function addParticle(system, particle) {
@@ -589,10 +620,12 @@ define([
         particle.startScale = system._startScale;
         particle.endScale = system._endScale;
         particle.image = system.image;
-        particle.life = CesiumMath.randomBetween(system._minimumParticleLife, system._maximumParticleLife);
+        particle.life = CesiumMath.randomBetween(system._minimumLife, system._maximumLife);
         particle.mass = CesiumMath.randomBetween(system._minimumMass, system._maximumMass);
-        particle.imageSize.x = CesiumMath.randomBetween(system._minimumImageSize.x, system._maximumImageSize.x);
-        particle.imageSize.y = CesiumMath.randomBetween(system._minimumImageSize.y, system._maximumImageSize.y);
+
+        var width = CesiumMath.randomBetween(system._minimumWidth, system._maximumWidth);
+        var height = CesiumMath.randomBetween(system._minimumHeight, system._maximumHeight);
+        particle.size = Cartesian2.fromElements(width, height, particle.size);
 
         // Reset the normalizedAge and age in case the particle was reused.
         particle._normalizedAge = 0.0;
@@ -610,10 +643,10 @@ define([
             return 0;
         }
 
-        dt = CesiumMath.mod(dt, system._lifetime);
+        dt = CesiumMath.mod(dt, system._lifeTime);
 
-        // Compute the number of particles to emit based on the emissionRate.
-        var v = dt * system._emissionRate;
+        // Compute the number of particles to emit based on the rate.
+        var v = dt * system._rate;
         var numToEmit = Math.floor(v);
         system._carryOver += (v - numToEmit);
         if (system._carryOver > 1.0)
@@ -669,7 +702,7 @@ define([
 
         var particles = this._particles;
         var emitter = this._emitter;
-        var updateCallback = this.updateCallback;
+        var forces = this.forces;
 
         var i;
         var particle;
@@ -678,7 +711,7 @@ define([
         var length = particles.length;
         for (i = 0; i < length; ++i) {
             particle = particles[i];
-            if (!particle.update(dt, updateCallback)) {
+            if (!particle.update(dt, forces)) {
                 removeBillboard(particle);
                 // Add the particle back to the pool so it can be reused.
                 addParticleToPool(this, particle);
@@ -730,9 +763,9 @@ define([
         this._previousTime = JulianDate.clone(frameState.time, this._previousTime);
         this._currentTime += dt;
 
-        if (this._lifetime !== Number.MAX_VALUE && this._currentTime > this._lifetime) {
+        if (this._lifeTime !== Number.MAX_VALUE && this._currentTime > this._lifeTime) {
             if (this.loop) {
-                this._currentTime = CesiumMath.mod(this._currentTime, this._lifetime);
+                this._currentTime = CesiumMath.mod(this._currentTime, this._lifeTime);
                 if (this.bursts) {
                     var burstLength = this.bursts.length;
                     // Reset any bursts
@@ -774,6 +807,8 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
+     * @returns {undefined}
+     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      * @see ParticleSystem#isDestroyed
@@ -784,15 +819,11 @@ define([
     };
 
     /**
-     * A function used to modify attributes of the particle at each time step. This can include force modifications,
-     * color, sizing, etc.
+     * A function used to apply a force to the particle on each time step.
+     * @callback ParticleSystem~applyForce
      *
-     * @see {@link https://cesiumjs.org/tutorials/Particle-Systems-Tutorial/|Particle Systems Tutorial}
-     *
-     * @callback ParticleSystem~updateCallback
-     *
-     * @param {Particle} particle The particle being updated.
-     * @param {Number} dt The time in seconds since the last update.
+     * @param {Particle} particle The particle to apply the force to.
+     * @param {Number} dt The time since the last update.
      *
      * @example
      * function applyGravity(particle, dt) {

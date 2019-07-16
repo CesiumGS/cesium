@@ -1,22 +1,20 @@
 define([
         '../../Core/buildModuleUrl',
         '../../Scene/ArcGisMapServerImageryProvider',
-        '../../Scene/IonWorldImageryStyle',
+        '../../Scene/BingMapsImageryProvider',
+        '../../Scene/BingMapsStyle',
         '../../Scene/createOpenStreetMapImageryProvider',
         '../../Scene/createTileMapServiceImageryProvider',
-        '../../Scene/createWorldImagery',
-        '../../Scene/IonImageryProvider',
-        '../../Scene/MapboxStyleImageryProvider',
+        '../../Scene/MapboxImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,
         ArcGisMapServerImageryProvider,
-        IonWorldImageryStyle,
+        BingMapsImageryProvider,
+        BingMapsStyle,
         createOpenStreetMapImageryProvider,
         createTileMapServiceImageryProvider,
-        createWorldImagery,
-        IonImageryProvider,
-        MapboxStyleImageryProvider,
+        MapboxImageryProvider,
         ProviderViewModel) {
     'use strict';
 
@@ -28,11 +26,11 @@ define([
         providerViewModels.push(new ProviderViewModel({
             name : 'Bing Maps Aerial',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingAerial.png'),
-            tooltip : 'Bing Maps aerial imagery, provided by Cesium ion',
-            category: 'Cesium ion',
+            tooltip : 'Bing Maps aerial imagery \nhttp://www.bing.com/maps',
             creationFunction : function() {
-                return createWorldImagery({
-                    style : IonWorldImageryStyle.AERIAL
+                return new BingMapsImageryProvider({
+                    url : 'https://dev.virtualearth.net',
+                    mapStyle : BingMapsStyle.AERIAL
                 });
             }
         }));
@@ -40,11 +38,11 @@ define([
         providerViewModels.push(new ProviderViewModel({
             name : 'Bing Maps Aerial with Labels',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingAerialLabels.png'),
-            tooltip : 'Bing Maps aerial imagery with labels, provided by Cesium ion',
-            category : 'Cesium ion',
+            tooltip : 'Bing Maps aerial imagery with label overlays \nhttp://www.bing.com/maps',
             creationFunction : function() {
-                return createWorldImagery({
-                    style : IonWorldImageryStyle.AERIAL_WITH_LABELS
+                return new BingMapsImageryProvider({
+                    url : 'https://dev.virtualearth.net',
+                    mapStyle : BingMapsStyle.AERIAL_WITH_LABELS
                 });
             }
         }));
@@ -52,11 +50,11 @@ define([
         providerViewModels.push(new ProviderViewModel({
             name : 'Bing Maps Roads',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/bingRoads.png'),
-            tooltip : 'Bing Maps standard road maps, provided by Cesium ion',
-            category : 'Cesium ion',
+            tooltip : 'Bing Maps standard road maps\nhttp://www.bing.com/maps',
             creationFunction : function() {
-                return createWorldImagery({
-                    style : IonWorldImageryStyle.ROAD
+                return new BingMapsImageryProvider({
+                    url : 'https://dev.virtualearth.net',
+                    mapStyle : BingMapsStyle.ROAD
                 });
             }
         }));
@@ -65,10 +63,9 @@ define([
             name: 'Mapbox Satellite',
             tooltip: 'Mapbox satellite imagery https://www.mapbox.com/maps/',
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxSatellite.png'),
-            category : 'Other',
             creationFunction: function() {
-                return new MapboxStyleImageryProvider({
-                    styleId: 'satellite-v9'
+                return new MapboxImageryProvider({
+                    mapId: 'mapbox.satellite'
                 });
             }
         }));
@@ -77,10 +74,9 @@ define([
             name: 'Mapbox Streets',
             tooltip: 'Mapbox streets imagery https://www.mapbox.com/maps/',
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxTerrain.png'),
-            category : 'Other',
             creationFunction: function() {
-                return new MapboxStyleImageryProvider({
-                    styleId: 'satellite-streets-v11'
+                return new MapboxImageryProvider({
+                    mapId: 'mapbox.streets'
                 });
             }
         }));
@@ -89,10 +85,9 @@ define([
             name: 'Mapbox Streets Classic',
             tooltip: 'Mapbox streets basic imagery https://www.mapbox.com/maps/',
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxStreets.png'),
-            category : 'Other',
             creationFunction: function() {
-                return new MapboxStyleImageryProvider({
-                    styleId: 'streets-v11'
+                return new MapboxImageryProvider({
+                    mapId: 'mapbox.streets-basic'
                 });
             }
         }));
@@ -108,7 +103,6 @@ imagery for Antarctica. The map features 0.3m resolution imagery in the continen
 parts of Western Europe from DigitalGlobe. In other parts of the world, 1 meter resolution imagery is available from GeoEye IKONOS, \
 i-cubed Nationwide Prime, Getmapping, AeroGRID, IGN Spain, and IGP Portugal.  Additionally, imagery at different resolutions has been \
 contributed by the GIS User Community.\nhttp://www.esri.com',
-            category : 'Other',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
                     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
@@ -125,7 +119,6 @@ This worldwide street map presents highway-level data for the world. Street-leve
 Canada; Japan; most countries in Europe; Australia and New Zealand; India; parts of South America including Argentina, Brazil, \
 Chile, Colombia, and Venezuela; Ghana; and parts of southern Africa including Botswana, Lesotho, Namibia, South Africa, and Swaziland.\n\
 http://www.esri.com',
-            category : 'Other',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
                     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer',
@@ -141,7 +134,6 @@ http://www.esri.com',
 This web map contains the National Geographic World Map service. This map service is designed to be used as a general reference map \
 for informational and educational purposes as well as a basemap by GIS professionals and other users for creating web maps and web \
 mapping applications.\nhttp://www.esri.com',
-            category : 'Other',
             creationFunction : function() {
                 return new ArcGisMapServerImageryProvider({
                     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/NatGeo_World_Map/MapServer/',
@@ -155,7 +147,6 @@ mapping applications.\nhttp://www.esri.com',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/openStreetMap.png'),
             tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable map \
 of the world.\nhttp://www.openstreetmap.org',
-            category : 'Other',
             creationFunction : function() {
                 return createOpenStreetMapImageryProvider({
                     url : 'https://a.tile.openstreetmap.org/'
@@ -168,7 +159,6 @@ of the world.\nhttp://www.openstreetmap.org',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/stamenWatercolor.png'),
             tooltip : 'Reminiscent of hand drawn maps, Stamen watercolor maps apply raster effect \
 area washes and organic edges over a paper texture to add warm pop to any map.\nhttp://maps.stamen.com',
-            category : 'Other',
             creationFunction : function() {
                 return createOpenStreetMapImageryProvider({
                     url : 'https://stamen-tiles.a.ssl.fastly.net/watercolor/',
@@ -181,7 +171,6 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             name : 'Stamen Toner',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/stamenToner.png'),
             tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
-            category : 'Other',
             creationFunction : function() {
                 return createOpenStreetMapImageryProvider({
                     url : 'https://stamen-tiles.a.ssl.fastly.net/toner/',
@@ -191,32 +180,16 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
         }));
 
         providerViewModels.push(new ProviderViewModel({
-            name : 'Sentinel-2',
-            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/sentinel-2.png'),
-            tooltip : 'Sentinel-2 cloudless by EOX IT Services GmbH (Contains modified Copernicus Sentinel data 2016 and 2017).',
-            category : 'Cesium ion',
+            name : 'The Black Marble',
+            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/blackMarble.png'),
+            tooltip : 'The lights of cities and villages trace the outlines of civilization in this global view of the \
+Earth at night as seen by NASA/NOAA\'s Suomi NPP satellite.',
             creationFunction : function() {
-                return new IonImageryProvider({ assetId: 3954 });
-            }
-        }));
-
-        providerViewModels.push(new ProviderViewModel({
-            name : 'Blue Marble',
-            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/blueMarble.png'),
-            tooltip : 'Blue Marble Next Generation July, 2004 imagery from NASA.',
-            category : 'Cesium ion',
-            creationFunction : function() {
-                return new IonImageryProvider({ assetId: 3845 });
-            }
-        }));
-
-        providerViewModels.push(new ProviderViewModel({
-            name : 'Earth at night',
-            iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/earthAtNight.png'),
-            tooltip : 'The Earth at night, also known as The Black Marble, is a 500 meter resolution global composite imagery layer released by NASA.',
-            category : 'Cesium ion',
-            creationFunction : function() {
-                return new IonImageryProvider({ assetId: 3812 });
+                return createTileMapServiceImageryProvider({
+                    url : 'https://cesiumjs.org/blackmarble',
+                    flipXY : true,
+                    credit : 'Black Marble imagery courtesy NASA Earth Observatory'
+                });
             }
         }));
 
@@ -224,7 +197,6 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             name : 'Natural Earth\u00a0II',
             iconUrl : buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
             tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
-            category : 'Cesium ion',
             creationFunction : function() {
                 return createTileMapServiceImageryProvider({
                     url : buildModuleUrl('Assets/Textures/NaturalEarthII')

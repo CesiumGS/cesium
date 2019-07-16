@@ -41,7 +41,7 @@
     "geometricError": 70,
     "refine": "ADD",
     "content": {
-      "uri": "buildings.b3dm"
+      "url": "buildings.b3dm"
     },
     "children": [
       {
@@ -81,7 +81,7 @@
         ],
         "geometricError": 0,
         "content": {
-          "uri": "instances.i3dm"
+          "url": "instances.i3dm"
         }
       }
     ]

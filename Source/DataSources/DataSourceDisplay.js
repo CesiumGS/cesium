@@ -1,47 +1,59 @@
 define([
-        '../Core/ApproximateTerrainHeights',
         '../Core/BoundingSphere',
         '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/destroyObject',
+        '../Core/DeveloperError',
         '../Core/EventHelper',
-        '../Scene/GroundPolylinePrimitive',
         '../Scene/GroundPrimitive',
-        '../Scene/OrderedGroundPrimitiveCollection',
-        '../Scene/PrimitiveCollection',
         './BillboardVisualizer',
         './BoundingSphereState',
+        './BoxGeometryUpdater',
+        './CorridorGeometryUpdater',
         './CustomDataSource',
+        './CylinderGeometryUpdater',
+        './EllipseGeometryUpdater',
+        './EllipsoidGeometryUpdater',
         './GeometryVisualizer',
         './LabelVisualizer',
         './ModelVisualizer',
         './PathVisualizer',
         './PointVisualizer',
-        './PolylineVisualizer'
+        './PolygonGeometryUpdater',
+        './PolylineGeometryUpdater',
+        './PolylineVolumeGeometryUpdater',
+        './RectangleGeometryUpdater',
+        './WallGeometryUpdater'
     ], function(
-        ApproximateTerrainHeights,
         BoundingSphere,
         Check,
         defaultValue,
         defined,
         defineProperties,
         destroyObject,
+        DeveloperError,
         EventHelper,
-        GroundPolylinePrimitive,
         GroundPrimitive,
-        OrderedGroundPrimitiveCollection,
-        PrimitiveCollection,
         BillboardVisualizer,
         BoundingSphereState,
+        BoxGeometryUpdater,
+        CorridorGeometryUpdater,
         CustomDataSource,
+        CylinderGeometryUpdater,
+        EllipseGeometryUpdater,
+        EllipsoidGeometryUpdater,
         GeometryVisualizer,
         LabelVisualizer,
         ModelVisualizer,
         PathVisualizer,
         PointVisualizer,
-        PolylineVisualizer) {
+        PolygonGeometryUpdater,
+        PolylineGeometryUpdater,
+        PolylineVolumeGeometryUpdater,
+        RectangleGeometryUpdater,
+        WallGeometryUpdater) {
     'use strict';
 
     /**
@@ -64,7 +76,6 @@ define([
         //>>includeEnd('debug');
 
         GroundPrimitive.initializeTerrainHeights();
-        GroundPolylinePrimitive.initializeTerrainHeights();
 
         var scene = options.scene;
         var dataSourceCollection = options.dataSourceCollection;
@@ -72,24 +83,10 @@ define([
         this._eventHelper = new EventHelper();
         this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
         this._eventHelper.add(dataSourceCollection.dataSourceRemoved, this._onDataSourceRemoved, this);
-        this._eventHelper.add(dataSourceCollection.dataSourceMoved, this._onDataSourceMoved, this);
 
         this._dataSourceCollection = dataSourceCollection;
         this._scene = scene;
         this._visualizersCallback = defaultValue(options.visualizersCallback, DataSourceDisplay.defaultVisualizersCallback);
-
-        var primitivesAdded = false;
-        var primitives = new PrimitiveCollection();
-        var groundPrimitives = new PrimitiveCollection();
-
-        if (dataSourceCollection.length > 0) {
-            scene.primitives.add(primitives);
-            scene.groundPrimitives.add(groundPrimitives);
-            primitivesAdded = true;
-        }
-
-        this._primitives = primitives;
-        this._groundPrimitives = groundPrimitives;
 
         for (var i = 0, len = dataSourceCollection.length; i < len; i++) {
             this._onDataSourceAdded(dataSourceCollection, dataSourceCollection.get(i));
@@ -99,25 +96,6 @@ define([
         this._onDataSourceAdded(undefined, defaultDataSource);
         this._defaultDataSource = defaultDataSource;
 
-        var removeDefaultDataSoureListener;
-        var removeDataSourceCollectionListener;
-        if (!primitivesAdded) {
-            var that = this;
-            var addPrimitives = function() {
-                scene.primitives.add(primitives);
-                scene.groundPrimitives.add(groundPrimitives);
-                removeDefaultDataSoureListener();
-                removeDataSourceCollectionListener();
-                that._removeDefaultDataSoureListener = undefined;
-                that._removeDataSourceCollectionListener = undefined;
-            };
-            removeDefaultDataSoureListener = defaultDataSource.entities.collectionChanged.addEventListener(addPrimitives);
-            removeDataSourceCollectionListener = dataSourceCollection.dataSourceAdded.addEventListener(addPrimitives);
-        }
-
-        this._removeDefaultDataSoureListener = removeDefaultDataSoureListener;
-        this._removeDataSourceCollectionListener = removeDataSourceCollectionListener;
-
         this._ready = false;
     }
 
@@ -125,17 +103,26 @@ define([
      * Gets or sets the default function which creates an array of visualizers used for visualization.
      * By default, this function uses all standard visualizers.
      *
+     * @member
      * @type {DataSourceDisplay~VisualizersCallback}
      */
     DataSourceDisplay.defaultVisualizersCallback = function(scene, entityCluster, dataSource) {
         var entities = dataSource.entities;
         return [new BillboardVisualizer(entityCluster, entities),
-                new GeometryVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives),
+                new GeometryVisualizer(BoxGeometryUpdater, scene, entities),
+                new GeometryVisualizer(CylinderGeometryUpdater, scene, entities),
+                new GeometryVisualizer(CorridorGeometryUpdater, scene, entities),
+                new GeometryVisualizer(EllipseGeometryUpdater, scene, entities),
+                new GeometryVisualizer(EllipsoidGeometryUpdater, scene, entities),
+                new GeometryVisualizer(PolygonGeometryUpdater, scene, entities),
+                new GeometryVisualizer(PolylineGeometryUpdater, scene, entities),
+                new GeometryVisualizer(PolylineVolumeGeometryUpdater, scene, entities),
+                new GeometryVisualizer(RectangleGeometryUpdater, scene, entities),
+                new GeometryVisualizer(WallGeometryUpdater, scene, entities),
                 new LabelVisualizer(entityCluster, entities),
                 new ModelVisualizer(scene, entities),
                 new PointVisualizer(entityCluster, entities),
-                new PathVisualizer(scene, entities),
-                new PolylineVisualizer(scene, entities, dataSource._primitives, dataSource._groundPrimitives)];
+                new PathVisualizer(scene, entities)];
     };
 
     defineProperties(DataSourceDisplay.prototype, {
@@ -208,6 +195,8 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
+     * @returns {undefined}
+     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -225,14 +214,6 @@ define([
         }
         this._onDataSourceRemoved(undefined, this._defaultDataSource);
 
-        if (defined(this._removeDefaultDataSoureListener)) {
-            this._removeDefaultDataSoureListener();
-            this._removeDataSourceCollectionListener();
-        } else {
-            this._scene.primitives.remove(this._primitives);
-            this._scene.groundPrimitives.remove(this._groundPrimitives);
-        }
-
         return destroyObject(this);
     };
 
@@ -244,10 +225,12 @@ define([
      */
     DataSourceDisplay.prototype.update = function(time) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('time', time);
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
         //>>includeEnd('debug');
 
-        if (!ApproximateTerrainHeights.initialized) {
+        if (!GroundPrimitive._initialized) {
             this._ready = false;
             return false;
         }
@@ -302,9 +285,15 @@ define([
      */
     DataSourceDisplay.prototype.getBoundingSphere = function(entity, allowPartial, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('entity', entity);
-        Check.typeOf.bool('allowPartial', allowPartial);
-        Check.defined('result', result);
+        if (!defined(entity)) {
+            throw new DeveloperError('entity is required.');
+        }
+        if (!defined(allowPartial)) {
+            throw new DeveloperError('allowPartial is required.');
+        }
+        if (!defined(result)) {
+            throw new DeveloperError('result is required.');
+        }
         //>>includeEnd('debug');
 
         if (!this._ready) {
@@ -365,32 +354,18 @@ define([
     DataSourceDisplay.prototype._onDataSourceAdded = function(dataSourceCollection, dataSource) {
         var scene = this._scene;
 
-        var displayPrimitives = this._primitives;
-        var displayGroundPrimitives = this._groundPrimitives;
-
-        var primitives = displayPrimitives.add(new PrimitiveCollection());
-        var groundPrimitives = displayGroundPrimitives.add(new OrderedGroundPrimitiveCollection());
-
-        dataSource._primitives = primitives;
-        dataSource._groundPrimitives = groundPrimitives;
-
         var entityCluster = dataSource.clustering;
         entityCluster._initialize(scene);
 
-        primitives.add(entityCluster);
+        scene.primitives.add(entityCluster);
 
         dataSource._visualizers = this._visualizersCallback(scene, entityCluster, dataSource);
     };
 
     DataSourceDisplay.prototype._onDataSourceRemoved = function(dataSourceCollection, dataSource) {
-        var displayPrimitives = this._primitives;
-        var displayGroundPrimitives = this._groundPrimitives;
-
-        var primitives = dataSource._primitives;
-        var groundPrimitives = dataSource._groundPrimitives;
-
+        var scene = this._scene;
         var entityCluster = dataSource.clustering;
-        primitives.remove(entityCluster);
+        scene.primitives.remove(entityCluster);
 
         var visualizers = dataSource._visualizers;
         var length = visualizers.length;
@@ -398,34 +373,7 @@ define([
             visualizers[i].destroy();
         }
 
-        displayPrimitives.remove(primitives);
-        displayGroundPrimitives.remove(groundPrimitives);
-
         dataSource._visualizers = undefined;
-    };
-
-    DataSourceDisplay.prototype._onDataSourceMoved = function(dataSource, newIndex, oldIndex) {
-        var displayPrimitives = this._primitives;
-        var displayGroundPrimitives = this._groundPrimitives;
-
-        var primitives = dataSource._primitives;
-        var groundPrimitives = dataSource._groundPrimitives;
-
-        if (newIndex === oldIndex + 1) {
-            displayPrimitives.raise(primitives);
-            displayGroundPrimitives.raise(groundPrimitives);
-        } else if (newIndex === oldIndex - 1) {
-            displayPrimitives.lower(primitives);
-            displayGroundPrimitives.lower(groundPrimitives);
-        } else if (newIndex === 0) {
-            displayPrimitives.lowerToBottom(primitives);
-            displayGroundPrimitives.lowerToBottom(groundPrimitives);
-            displayPrimitives.raise(primitives); // keep defaultDataSource primitives at index 0 since it's not in the collection
-            displayGroundPrimitives.raise(groundPrimitives);
-        } else {
-            displayPrimitives.raiseToTop(primitives);
-            displayGroundPrimitives.raiseToTop(groundPrimitives);
-        }
     };
 
     /**

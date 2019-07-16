@@ -1,7 +1,6 @@
 {
   "asset": {
-    "version": "1.0",
-    "tilesetVersion": "1.2.3"
+    "version": "1.0"
   },
   "geometricError": 70,
   "root": {
@@ -32,7 +31,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "uri": "external.b3dm"
+          "url": "external.b3dm"
         },
         "transform": [
           0.9686356343768792,
@@ -67,7 +66,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "uri": "external.i3dm"
+          "url": "external.i3dm"
         },
         "transform": [
           0.9686366521446808,
@@ -102,7 +101,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "uri": "embed.i3dm"
+          "url": "embed.i3dm"
         },
         "transform": [
           0.9686376698962317,

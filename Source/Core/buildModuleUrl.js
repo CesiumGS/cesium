@@ -1,14 +1,16 @@
 define([
+        '../ThirdParty/Uri',
         './defined',
         './DeveloperError',
         './getAbsoluteUri',
-        './Resource',
+        './joinUrls',
         'require'
     ], function(
+        Uri,
         defined,
         DeveloperError,
         getAbsoluteUri,
-        Resource,
+        joinUrls,
         require) {
     'use strict';
     /*global CESIUM_BASE_URL*/
@@ -26,34 +28,15 @@ define([
         return undefined;
     }
 
-    var a;
-    function tryMakeAbsolute(url) {
-        if (typeof document === 'undefined') {
-            //Node.js and Web Workers. In both cases, the URL will already be absolute.
-            return url;
-        }
-
-        if (!defined(a)) {
-            a = document.createElement('a');
-        }
-        a.href = url;
-
-        // IE only absolutizes href on get, not set
-        a.href = a.href; // eslint-disable-line no-self-assign
-        return a.href;
-    }
-
-    var baseResource;
+    var baseUrl;
     function getCesiumBaseUrl() {
-        if (defined(baseResource)) {
-            return baseResource;
+        if (defined(baseUrl)) {
+            return baseUrl;
         }
 
         var baseUrlString;
         if (typeof CESIUM_BASE_URL !== 'undefined') {
             baseUrlString = CESIUM_BASE_URL;
-        } else if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
-            baseUrlString = getAbsoluteUri('..', buildModuleUrl('Core/buildModuleUrl.js'));
         } else {
             baseUrlString = getBaseUrlFromCesiumScript();
         }
@@ -64,27 +47,22 @@ define([
         }
         //>>includeEnd('debug');
 
-        baseResource = new Resource({
-            url: tryMakeAbsolute(baseUrlString)
-        });
-        baseResource.appendForwardSlash();
+        baseUrl = new Uri(getAbsoluteUri(baseUrlString));
 
-        return baseResource;
+        return baseUrl;
     }
 
     function buildModuleUrlFromRequireToUrl(moduleID) {
         //moduleID will be non-relative, so require it relative to this module, in Core.
-        return tryMakeAbsolute(require.toUrl('../' + moduleID));
+        return require.toUrl('../' + moduleID);
     }
 
     function buildModuleUrlFromBaseUrl(moduleID) {
-        var resource = getCesiumBaseUrl().getDerivedResource({
-            url: moduleID
-        });
-        return resource.url;
+        return joinUrls(getCesiumBaseUrl(), moduleID);
     }
 
     var implementation;
+    var a;
 
     /**
      * Given a non-relative moduleID, returns an absolute URL to the file represented by that module ID,
@@ -103,31 +81,28 @@ define([
             }
         }
 
+        if (!defined(a)) {
+            a = document.createElement('a');
+        }
+
         var url = implementation(moduleID);
-        return url;
+
+        a.href = url;
+        a.href = a.href; // IE only absolutizes href on get, not set
+
+        return a.href;
     }
 
     // exposed for testing
     buildModuleUrl._cesiumScriptRegex = cesiumScriptRegex;
-    buildModuleUrl._buildModuleUrlFromBaseUrl = buildModuleUrlFromBaseUrl;
-    buildModuleUrl._clearBaseResource = function() {
-        baseResource = undefined;
-    };
 
     /**
      * Sets the base URL for resolving modules.
      * @param {String} value The new base URL.
      */
     buildModuleUrl.setBaseUrl = function(value) {
-        baseResource = Resource.DEFAULT.getDerivedResource({
-            url: value
-        });
+        baseUrl = new Uri(value).resolve(new Uri(document.location.href));
     };
-
-    /**
-     * Gets the base URL for resolving modules.
-     */
-    buildModuleUrl.getCesiumBaseUrl = getCesiumBaseUrl;
 
     return buildModuleUrl;
 });

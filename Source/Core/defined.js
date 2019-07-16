@@ -4,7 +4,7 @@ define(function() {
     /**
      * @exports defined
      *
-     * @param {*} value The object.
+     * @param {Object} value The object.
      * @returns {Boolean} Returns true if the object is defined, returns false otherwise.
      *
      * @example

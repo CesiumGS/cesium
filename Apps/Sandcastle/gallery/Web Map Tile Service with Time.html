@@ -10,12 +10,10 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -29,9 +27,7 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    shouldAnimate : true
-});
+var viewer = new Cesium.Viewer('cesiumContainer');
 
 function dataCallback(interval, index) {
     var time;
@@ -64,20 +60,20 @@ var provider = new Cesium.WebMapTileServiceImageryProvider({
     format : 'image/png',
     clock: viewer.clock,
     times: times,
-    credit : 'NASA Global Imagery Browse Services for EOSDIS'
+    credit : new Cesium.Credit('NASA Global Imagery Browse Services for EOSDIS')
 });
 var imageryLayers = viewer.imageryLayers;
 imageryLayers.addImageryProvider(provider);
 provider.readyPromise
     .then(function() {
         var start = Cesium.JulianDate.fromIso8601('2015-07-30');
-        var stop = Cesium.JulianDate.fromIso8601('2017-06-17');
+        var end = Cesium.JulianDate.fromIso8601('2017-06-17');
 
-        viewer.timeline.zoomTo(start, stop);
+        viewer.timeline.zoomTo(start, end);
 
         var clock = viewer.clock;
         clock.startTime = start;
-        clock.stopTime = stop;
+        clock.endTime = end;
         clock.currentTime = start;
         clock.clockRange = Cesium.ClockRange.LOOP_STOP;
         clock.multiplier = 86400;
@@ -85,10 +81,10 @@ provider.readyPromise
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== 'undefined') {
+if (typeof Cesium !== "undefined") {
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
 }
 </script>
 </body>

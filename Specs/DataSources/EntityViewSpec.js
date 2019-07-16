@@ -33,18 +33,11 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
-    it('throws when constructed without required values', function() {
-        var entity = new Entity();
-        var view;
-        expect(function() {
-            view = new EntityView(undefined, scene);
-        }).toThrowDeveloperError();
-        expect(function() {
-            view = new EntityView(entity, undefined);
-        }).toThrowDeveloperError();
-
-        view = new EntityView(entity, scene);
+    it('default constructor sets expected values', function() {
+        var view = new EntityView();
         expect(view.ellipsoid).toBe(Ellipsoid.WGS84);
+        expect(view.entity).toBeUndefined();
+        expect(view.scene).toBeUndefined();
     });
 
     it('constructor sets expected values', function() {
@@ -105,9 +98,38 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('update returns without entity.position property.', function() {
+    it('update throws without entity property', function() {
+        var view = new EntityView(undefined, scene);
+        expect(function() {
+            view.update(JulianDate.now());
+        }).toThrowDeveloperError();
+
+    });
+
+    it('update throws without scene property', function() {
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
+        var view = new EntityView(entity, undefined);
+        expect(function() {
+            view.update(JulianDate.now());
+        }).toThrowDeveloperError();
+    });
+
+    it('update throws without ellipsoid property', function() {
+        var entity = new Entity();
+        entity.position = new ConstantPositionProperty(Cartesian3.ZERO);
+        var view = new EntityView(entity, scene);
+        view.ellipsoid = undefined;
+        expect(function() {
+            view.update(JulianDate.now());
+        }).toThrowDeveloperError();
+    });
+
+    it('update throws without entity.position property.', function() {
         var entity = new Entity();
         var view = new EntityView(entity, scene);
-        view.update(JulianDate.now());
+        expect(function() {
+            view.update(JulianDate.now());
+        }).toThrowDeveloperError();
     });
 }, 'WebGL');

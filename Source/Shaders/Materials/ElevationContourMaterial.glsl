@@ -16,14 +16,12 @@ czm_material czm_getMaterial(czm_materialInput materialInput)
     float dxc = abs(dFdx(materialInput.height));
     float dyc = abs(dFdy(materialInput.height));
     float dF = max(dxc, dyc) * width;
-    float alpha = (distanceToContour < dF) ? 1.0 : 0.0;
+    material.alpha = (distanceToContour < dF) ? 1.0 : 0.0;
 #else
-    float alpha = (distanceToContour < (czm_resolutionScale * width)) ? 1.0 : 0.0;
+    material.alpha = (distanceToContour < (czm_resolutionScale * width)) ? 1.0 : 0.0;
 #endif
 
-    vec4 outColor = czm_gammaCorrect(vec4(color.rgb, alpha));
-    material.diffuse = outColor.rgb;
-    material.alpha = outColor.a;
+    material.diffuse = color.rgb;
 
     return material;
 }

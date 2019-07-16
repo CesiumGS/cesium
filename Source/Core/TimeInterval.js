@@ -3,7 +3,6 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './DeveloperError',
         './freezeObject',
         './JulianDate'
     ], function(
@@ -11,7 +10,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         freezeObject,
         JulianDate) {
     'use strict';
@@ -85,7 +83,7 @@ define([
 
         /**
          * Gets or sets the data associated with this interval.
-         * @type {*}
+         * @type {Object}
          */
         this.data = options.data;
 
@@ -128,9 +126,7 @@ define([
     };
 
     /**
-     * Creates a new instance from a {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} interval.
-     *
-     * @throws DeveloperError if options.iso8601 does not match proper formatting.
+     * Creates a new instance from an {@link http://en.wikipedia.org/wiki/ISO_8601|ISO 8601} interval.
      *
      * @param {Object} options Object with the following properties:
      * @param {String} options.iso8601 An ISO 8601 interval.
@@ -147,9 +143,6 @@ define([
         //>>includeEnd('debug');
 
         var dates = options.iso8601.split('/');
-        if (dates.length !== 2) {
-            throw new DeveloperError('options.iso8601 is an invalid ISO 8601 interval.');
-        }
         var start = JulianDate.fromIso8601(dates[0]);
         var stop = JulianDate.fromIso8601(dates[1]);
         var isStartIncluded = defaultValue(options.isStartIncluded, true);
@@ -394,16 +387,16 @@ define([
      * Function interface for merging interval data.
      * @callback TimeInterval~MergeCallback
      *
-     * @param {*} leftData The first data instance.
-     * @param {*} rightData The second data instance.
-     * @returns {*} The result of merging the two data instances.
+     * @param {Object} leftData The first data instance.
+     * @param {Object} rightData The second data instance.
+     * @returns {Object} The result of merging the two data instances.
      */
 
     /**
      * Function interface for comparing interval data.
      * @callback TimeInterval~DataComparer
-     * @param {*} leftData The first data instance.
-     * @param {*} rightData The second data instance.
+     * @param {Object} leftData The first data instance.
+     * @param {Object} rightData The second data instance.
      * @returns {Boolean} <code>true</code> if the provided instances are equal, <code>false</code> otherwise.
      */
 

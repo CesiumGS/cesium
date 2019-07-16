@@ -5,7 +5,7 @@ define([
         './defined',
         './Iau2006XysSample',
         './JulianDate',
-        './Resource',
+        './loadJson',
         './TimeStandard'
     ], function(
         when,
@@ -14,7 +14,7 @@ define([
         defined,
         Iau2006XysSample,
         JulianDate,
-        Resource,
+        loadJson,
         TimeStandard) {
     'use strict';
 
@@ -26,7 +26,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Resource|String} [options.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
+     * @param {String} [options.xysFileUrlTemplate='Assets/IAU2006_XYS/IAU2006_XYS_{0}.json'] A template URL for obtaining the XYS data.  In the template,
      *                 `{0}` will be replaced with the file index.
      * @param {Number} [options.interpolationOrder=9] The order of interpolation to perform on the XYS data.
      * @param {Number} [options.sampleZeroJulianEphemerisDate=2442396.5] The Julian ephemeris date (JED) of the
@@ -40,7 +40,7 @@ define([
     function Iau2006XysData(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        this._xysFileUrlTemplate = Resource.createIfNeeded(options.xysFileUrlTemplate);
+        this._xysFileUrlTemplate = options.xysFileUrlTemplate;
         this._interpolationOrder = defaultValue(options.interpolationOrder, 9);
         this._sampleZeroJulianEphemerisDate = defaultValue(options.sampleZeroJulianEphemerisDate, 2442396.5);
         this._sampleZeroDateTT = new JulianDate(this._sampleZeroJulianEphemerisDate, 0.0, TimeStandard.TAI);
@@ -96,7 +96,7 @@ define([
      *                 the Terrestrial Time (TT) time standard.
      * @param {Number} stopSecondTT The seconds past noon of the end of the interval to preload, expressed in
      *                 the Terrestrial Time (TT) time standard.
-     * @returns {Promise} A promise that, when resolved, indicates that the requested interval has been
+     * @returns {Promise.<undefined>} A promise that, when resolved, indicates that the requested interval has been
      *                    preloaded.
      */
     Iau2006XysData.prototype.preload = function(startDayTT, startSecondTT, stopDayTT, stopSecondTT) {
@@ -238,18 +238,12 @@ define([
         var chunkUrl;
         var xysFileUrlTemplate = xysData._xysFileUrlTemplate;
         if (defined(xysFileUrlTemplate)) {
-            chunkUrl = xysFileUrlTemplate.getDerivedResource({
-                templateValues: {
-                    '0': chunkIndex
-                }
-            });
+            chunkUrl = xysFileUrlTemplate.replace('{0}', chunkIndex);
         } else {
-            chunkUrl = new Resource({
-                url : buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_' + chunkIndex + '.json')
-            });
+            chunkUrl = buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_' + chunkIndex + '.json');
         }
 
-        when(chunkUrl.fetchJson(), function(chunk) {
+        when(loadJson(chunkUrl), function(chunk) {
             xysData._chunkDownloadsInProgress[chunkIndex] = false;
 
             var samples = xysData._samples;

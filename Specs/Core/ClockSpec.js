@@ -20,7 +20,7 @@ defineSuite([
         expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
         expect(clock.clockRange).toEqual(ClockRange.UNBOUNDED);
         expect(clock.canAnimate).toEqual(true);
-        expect(clock.shouldAnimate).toEqual(false);
+        expect(clock.shouldAnimate).toEqual(true);
     });
 
     it('sets provided constructor parameters correctly', function() {
@@ -49,7 +49,7 @@ defineSuite([
         expect(clock.clockRange).toEqual(range);
         expect(clock.multiplier).toEqual(multiplier);
         expect(clock.canAnimate).toEqual(true);
-        expect(clock.shouldAnimate).toEqual(false);
+        expect(clock.shouldAnimate).toEqual(true);
 
         clock = new Clock({
             canAnimate : false
@@ -57,9 +57,9 @@ defineSuite([
         expect(clock.canAnimate).toEqual(false);
 
         clock = new Clock({
-            shouldAnimate : true
+            shouldAnimate : false
         });
-        expect(clock.shouldAnimate).toEqual(true);
+        expect(clock.shouldAnimate).toEqual(false);
     });
 
     it('works when constructed with no currentTime parameter', function() {
@@ -82,7 +82,7 @@ defineSuite([
         expect(clock.clockRange).toEqual(range);
         expect(clock.multiplier).toEqual(multiplier);
         expect(clock.canAnimate).toEqual(true);
-        expect(clock.shouldAnimate).toEqual(false);
+        expect(clock.shouldAnimate).toEqual(true);
     });
 
     it('works when constructed with no startTime parameter', function() {
@@ -105,7 +105,7 @@ defineSuite([
         expect(clock.clockRange).toEqual(range);
         expect(clock.multiplier).toEqual(multiplier);
         expect(clock.canAnimate).toEqual(true);
-        expect(clock.shouldAnimate).toEqual(false);
+        expect(clock.shouldAnimate).toEqual(true);
     });
 
     it('works when constructed with no startTime or stopTime', function() {
@@ -127,7 +127,7 @@ defineSuite([
         expect(clock.clockRange).toEqual(range);
         expect(clock.multiplier).toEqual(multiplier);
         expect(clock.canAnimate).toEqual(true);
-        expect(clock.shouldAnimate).toEqual(false);
+        expect(clock.shouldAnimate).toEqual(true);
     });
 
     it('works when constructed with no startTime or currentTime', function() {
@@ -149,7 +149,7 @@ defineSuite([
         expect(clock.clockRange).toEqual(range);
         expect(clock.multiplier).toEqual(multiplier);
         expect(clock.canAnimate).toEqual(true);
-        expect(clock.shouldAnimate).toEqual(false);
+        expect(clock.shouldAnimate).toEqual(true);
     });
 
     it('works when constructed with no currentTime or stopTime', function() {
@@ -171,7 +171,7 @@ defineSuite([
         expect(clock.clockRange).toEqual(range);
         expect(clock.multiplier).toEqual(multiplier);
         expect(clock.canAnimate).toEqual(true);
-        expect(clock.shouldAnimate).toEqual(false);
+        expect(clock.shouldAnimate).toEqual(true);
     });
 
     it('works when constructed with no stopTime parameter', function() {
@@ -195,7 +195,7 @@ defineSuite([
         expect(clock.clockRange).toEqual(range);
         expect(clock.multiplier).toEqual(multiplier);
         expect(clock.canAnimate).toEqual(true);
-        expect(clock.shouldAnimate).toEqual(false);
+        expect(clock.shouldAnimate).toEqual(true);
     });
 
     it('throws when constructed if start time is after stop time', function() {
@@ -220,8 +220,7 @@ defineSuite([
             currentTime : currentTime,
             clockStep : ClockStep.TICK_DEPENDENT,
             multiplier : multiplier,
-            clockRange : ClockRange.LOOP_STOP,
-            shouldAnimate : true
+            clockRange : ClockRange.LOOP_STOP
         });
         expect(clock.currentTime).toEqual(currentTime);
 
@@ -245,8 +244,7 @@ defineSuite([
             currentTime : currentTime,
             clockStep : ClockStep.TICK_DEPENDENT,
             multiplier : multiplier,
-            clockRange : ClockRange.LOOP_STOP,
-            shouldAnimate : true
+            clockRange : ClockRange.LOOP_STOP
         });
         expect(clock.currentTime).toEqual(currentTime);
 
@@ -270,8 +268,7 @@ defineSuite([
             currentTime : currentTime,
             clockStep : ClockStep.TICK_DEPENDENT,
             multiplier : multiplier,
-            clockRange : ClockRange.UNBOUNDED,
-            shouldAnimate : true
+            clockRange : ClockRange.UNBOUNDED
         });
         expect(clock.currentTime).toEqual(currentTime);
 
@@ -295,8 +292,7 @@ defineSuite([
             currentTime : currentTime,
             clockStep : ClockStep.TICK_DEPENDENT,
             multiplier : multiplier,
-            clockRange : ClockRange.UNBOUNDED,
-            shouldAnimate : true
+            clockRange : ClockRange.UNBOUNDED
         });
         expect(clock.currentTime).toEqual(currentTime);
 
@@ -320,8 +316,7 @@ defineSuite([
             currentTime : currentTime,
             clockStep : ClockStep.TICK_DEPENDENT,
             multiplier : multiplier,
-            clockRange : ClockRange.LOOP_STOP,
-            shouldAnimate : true
+            clockRange : ClockRange.LOOP_STOP
         });
         expect(clock.currentTime).toEqual(currentTime);
 
@@ -345,8 +340,7 @@ defineSuite([
             currentTime : currentTime,
             clockStep : ClockStep.TICK_DEPENDENT,
             multiplier : multiplier,
-            clockRange : ClockRange.LOOP_STOP,
-            shouldAnimate : true
+            clockRange : ClockRange.LOOP_STOP
         });
 
         expect(clock.currentTime).toEqual(currentTime);
@@ -365,8 +359,7 @@ defineSuite([
             currentTime : currentTime,
             clockStep : ClockStep.TICK_DEPENDENT,
             multiplier : multiplier,
-            clockRange : ClockRange.CLAMPED,
-            shouldAnimate : true
+            clockRange : ClockRange.CLAMPED
         });
 
         expect(clock.currentTime).toEqual(currentTime);
@@ -385,53 +378,12 @@ defineSuite([
             currentTime : currentTime,
             clockStep : ClockStep.TICK_DEPENDENT,
             multiplier : multiplier,
-            clockRange : ClockRange.CLAMPED,
-            shouldAnimate : true
+            clockRange : ClockRange.CLAMPED
         });
 
         expect(clock.currentTime).toEqual(currentTime);
         expect(start).toEqual(clock.tick());
         expect(start).toEqual(clock.currentTime);
-    });
-
-    it('fires onEnd event when endTime is reached and clock range is CLAMPED', function() {
-        var start = new JulianDate(0);
-        var stop = new JulianDate(1);
-        var currentTime = stop;
-        var multiplier = 100.0;
-        var clock = new Clock({
-            startTime : start,
-            stopTime : stop,
-            currentTime : currentTime,
-            clockStep : ClockStep.TICK_DEPENDENT,
-            multiplier : multiplier,
-            clockRange : ClockRange.CLAMPED,
-            shouldAnimate : true
-        });
-        var onStopSpy = jasmine.createSpy('event');
-        clock.onStop.addEventListener(onStopSpy);
-        clock.tick();
-        expect(onStopSpy).toHaveBeenCalled();
-    });
-
-    it('fires onEnd event when endTime is reached and clock range is LOOP_STOP', function() {
-        var start = new JulianDate(0);
-        var stop = new JulianDate(1);
-        var currentTime = stop;
-        var multiplier = 100.0;
-        var clock = new Clock({
-            startTime : start,
-            stopTime : stop,
-            currentTime : currentTime,
-            clockStep : ClockStep.TICK_DEPENDENT,
-            multiplier : multiplier,
-            clockRange : ClockRange.LOOP_STOP,
-            shouldAnimate : true
-        });
-        var onStopSpy = jasmine.createSpy('event');
-        clock.onStop.addEventListener(onStopSpy);
-        clock.tick();
-        expect(onStopSpy).toHaveBeenCalled();
     });
 
     describe('SYSTEM_CLOCK modes', function() {
@@ -513,7 +465,8 @@ defineSuite([
             var clock = new Clock({
                 currentTime : new JulianDate(1),
                 clockStep : ClockStep.SYSTEM_CLOCK_MULTIPLIER,
-                multiplier : 1.5
+                multiplier : 1.5,
+                shouldAnimate : false
             });
 
             clock.clockStep = ClockStep.SYSTEM_CLOCK;
@@ -544,8 +497,7 @@ defineSuite([
         it('uses multiplier in SYSTEM_CLOCK_MULTIPLIER mode', function() {
             var clock = new Clock({
                 clockStep : ClockStep.SYSTEM_CLOCK_MULTIPLIER,
-                multiplier : 2.0,
-                shouldAnimate : true
+                multiplier : 2.0
             });
 
             var time1 = clock.tick();

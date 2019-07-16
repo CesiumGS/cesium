@@ -10,12 +10,10 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
+    require.config({
+        baseUrl : '../../../Source',
+        waitSeconds : 60
+    });
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -33,17 +31,17 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var worldTerrain = Cesium.createWorldTerrain({
-    requestWaterMask: true,
-    requestVertexNormals: true
-});
-
-var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: worldTerrain
-});
+var viewer = new Cesium.Viewer('cesiumContainer');
 
 // set lighting to true
 viewer.scene.globe.enableLighting = true;
+
+var cesiumTerrainProviderMeshes = new Cesium.CesiumTerrainProvider({
+    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
+    requestWaterMask : true,
+    requestVertexNormals : true
+});
+viewer.terrainProvider = cesiumTerrainProviderMeshes;
 
 // setup alternative terrain providers
 var ellipsoidProvider = new Cesium.EllipsoidTerrainProvider();
@@ -54,28 +52,32 @@ var vrTheWorldProvider = new Cesium.VRTheWorldTerrainProvider({
 });
 
 Sandcastle.addToolbarMenu([{
-    text : 'CesiumTerrainProvider - Cesium World Terrain',
+    text : 'CesiumTerrainProvider - STK World Terrain',
     onselect : function() {
-        viewer.terrainProvider = worldTerrain;
+        viewer.terrainProvider = cesiumTerrainProviderMeshes;
         viewer.scene.globe.enableLighting = true;
     }
 }, {
-    text : 'CesiumTerrainProvider - Cesium World Terrain - no effects',
+    text : 'CesiumTerrainProvider - STK World Terrain - no effects',
     onselect : function() {
-        viewer.terrainProvider = Cesium.createWorldTerrain();
+        viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles'
+        });
     }
 }, {
-    text : 'CesiumTerrainProvider - Cesium World Terrain w/ Lighting',
+    text : 'CesiumTerrainProvider - STK World Terrain w/ Lighting',
     onselect : function() {
-        viewer.terrainProvider = Cesium.createWorldTerrain({
+        viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
             requestVertexNormals : true
         });
         viewer.scene.globe.enableLighting = true;
     }
 }, {
-    text : 'CesiumTerrainProvider - Cesium World Terrain w/ Water',
+    text : 'CesiumTerrainProvider - STK World Terrain w/ Water',
     onselect : function() {
-        viewer.terrainProvider = Cesium.createWorldTerrain({
+        viewer.terrainProvider = new Cesium.CesiumTerrainProvider({
+            url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
             requestWaterMask : true
         });
     }
@@ -193,10 +195,6 @@ Sandcastle.addToolbarButton('Sample Everest Terrain at Level 9', function() {
 }, 'sampleButtons');
 
 Sandcastle.addToolbarButton('Sample Most Detailed Everest Terrain', function() {
-    if (!Cesium.defined(viewer.terrainProvider.availability)) {
-        console.log('sampleTerrainMostDetailed is not supported for the selected terrain provider');
-        return;
-    }
     var terrainSamplePositions = createGrid(0.0005);
     Cesium.when(Cesium.sampleTerrainMostDetailed(viewer.terrainProvider, terrainSamplePositions), sampleTerrainSuccess);
     lookAtMtEverest();
@@ -205,10 +203,10 @@ Sandcastle.addToolbarButton('Sample Most Detailed Everest Terrain', function() {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== 'undefined') {
+if (typeof Cesium !== "undefined") {
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
 }
 </script>
 </body>

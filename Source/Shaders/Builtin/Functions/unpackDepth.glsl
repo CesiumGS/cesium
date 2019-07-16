@@ -1,12 +1,12 @@
 /**
- * Unpacks a vec4 depth value to a float in [0, 1) range.
+ * Unpacks a vec3 depth depth value to a float.
  *
  * @name czm_unpackDepth
  * @glslFunction
  *
- * @param {vec4} packedDepth The packed depth.
+ * @param {vec3} packedDepth The packed depth.
  *
- * @returns {float} The floating-point depth in [0, 1) range.
+ * @returns {float} The floating-point depth.
  */
  float czm_unpackDepth(vec4 packedDepth)
  {

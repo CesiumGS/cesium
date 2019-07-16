@@ -7,10 +7,10 @@ defineSuite([
         'Core/GoogleEarthEnterpriseMetadata',
         'Core/GoogleEarthEnterpriseTerrainData',
         'Core/GoogleEarthEnterpriseTileInformation',
+        'Core/loadWithXhr',
         'Core/Math',
         'Core/Request',
         'Core/RequestScheduler',
-        'Core/Resource',
         'Core/TerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
@@ -23,10 +23,10 @@ defineSuite([
         GoogleEarthEnterpriseMetadata,
         GoogleEarthEnterpriseTerrainData,
         GoogleEarthEnterpriseTileInformation,
+        loadWithXhr,
         CesiumMath,
         Request,
         RequestScheduler,
-        Resource,
         TerrainProvider,
         pollToPromise,
         when) {
@@ -84,7 +84,7 @@ defineSuite([
     });
 
     afterEach(function() {
-        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     it('conforms to TerrainProvider interface', function() {
@@ -114,23 +114,6 @@ defineSuite([
         });
     });
 
-    it('resolves readyPromise with Resource', function() {
-        var resource = new Resource({
-            url : 'made/up/url'
-        });
-
-        installMockGetQuadTreePacket();
-
-        terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
-            url : resource
-        });
-
-        return terrainProvider.readyPromise.then(function(result) {
-            expect(result).toBe(true);
-            expect(terrainProvider.ready).toBe(true);
-        });
-    });
-
     it('uses geographic tiling scheme by default', function() {
         installMockGetQuadTreePacket();
 
@@ -141,7 +124,8 @@ defineSuite([
         return pollToPromise(function() {
             return terrainProvider.ready;
         }).then(function() {
-            expect(terrainProvider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            var tilingScheme = terrainProvider.tilingScheme;
+            expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
         });
     });
 
@@ -259,10 +243,32 @@ defineSuite([
     });
 
     describe('requestTileGeometry', function() {
+        it('uses the proxy if one is supplied', function() {
+            installMockGetQuadTreePacket();
+            var baseUrl = 'made/up/url';
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url.indexOf('/proxy/?')).toBe(0);
+
+                loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.terrain', responseType, method, data, headers, deferred);
+            };
+
+            terrainProvider = new GoogleEarthEnterpriseTerrainProvider({
+                url : baseUrl,
+                proxy : new DefaultProxy('/proxy/')
+            });
+
+            return pollToPromise(function() {
+                return terrainProvider.ready;
+            }).then(function() {
+                return terrainProvider.requestTileGeometry(0, 0, 0);
+            });
+        });
+
         it('provides GoogleEarthEnterpriseTerrainData', function() {
             installMockGetQuadTreePacket();
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                Resource._DefaultImplementations.loadWithXhr('Data/GoogleEarthEnterprise/gee.terrain', responseType, method, data, headers, deferred);
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.terrain', responseType, method, data, headers, deferred);
             };
 
             return waitForTile(0, 0, 0, function(loadedData) {
@@ -276,14 +282,14 @@ defineSuite([
 
             var deferreds = [];
             var loadRealTile = true;
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 if (url.indexOf('dbRoot.v5') !== -1) {
                     return deferred.reject(); // Just reject dbRoot file and use defaults.
                 }
 
                 if (loadRealTile) {
                     loadRealTile = false;
-                    return Resource._DefaultImplementations.loadWithXhr('Data/GoogleEarthEnterprise/gee.terrain', responseType, method, data, headers, deferred);
+                    return loadWithXhr.defaultLoad('Data/GoogleEarthEnterprise/gee.terrain', responseType, method, data, headers, deferred);
                 }
                 // Do nothing, so requests never complete
                 deferreds.push(deferred);
@@ -339,8 +345,8 @@ defineSuite([
             installMockGetQuadTreePacket();
             var baseUrl = 'made/up/url';
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                Resource._DefaultImplementations.loadWithXhr('Data/CesiumTerrainTileJson/tile.terrain', responseType, method, data, headers, deferred);
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                loadWithXhr.defaultLoad('Data/CesiumTerrainTileJson/tile.terrain', responseType, method, data, headers, deferred);
             };
 
             terrainProvider = new GoogleEarthEnterpriseTerrainProvider({

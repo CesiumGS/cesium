@@ -135,6 +135,7 @@ defineSuite([
             maximumHeight : 10.0
         });
 
+
         camera.position = ellipsoid.cartographicToCartesian(cameraPositionCartographic, new Cartesian3());
         expect(tile.distanceToCamera(frameState)).toBeLessThan(CesiumMath.EPSILON8 * ellipsoid.maximumRadius);
     });
@@ -154,6 +155,7 @@ defineSuite([
             minimumHeight : 0.0,
             maximumHeight : 10.0
         });
+
 
         camera.position = ellipsoid.cartographicToCartesian(cameraPositionCartographic, new Cartesian3());
         expect(tile.distanceToCamera(frameState)).toBeLessThan(CesiumMath.EPSILON8 * ellipsoid.maximumRadius);

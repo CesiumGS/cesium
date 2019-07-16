@@ -8,11 +8,11 @@ define([
         '../Core/Event',
         '../Core/GeographicTilingScheme',
         '../Core/GoogleEarthEnterpriseMetadata',
+        '../Core/loadArrayBuffer',
         '../Core/loadImageFromTypedArray',
         '../Core/Math',
         '../Core/Rectangle',
         '../Core/Request',
-        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../ThirdParty/protobuf-minimal',
@@ -27,11 +27,11 @@ define([
         Event,
         GeographicTilingScheme,
         GoogleEarthEnterpriseMetadata,
+        loadArrayBuffer,
         loadImageFromTypedArray,
         CesiumMath,
         Rectangle,
         Request,
-        Resource,
         RuntimeError,
         TileProviderError,
         protobuf,
@@ -70,8 +70,10 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Resource|String} options.url The url of the Google Earth Enterprise server hosting the imagery.
+     * @param {String} options.url The url of the Google Earth Enterprise server hosting the imagery.
      * @param {GoogleEarthEnterpriseMetadata} options.metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseTerrainProvider.
+     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
+     *        expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
      *        is invalid and should be discarded. If this value is not specified, a default
@@ -108,13 +110,15 @@ define([
 
         var metadata;
         if (defined(options.metadata)) {
-            metadata = options.metadata;
+            metadata = this._metadata = options.metadata;
         } else {
-            var resource = Resource.createIfNeeded(options.url);
-            metadata = new GoogleEarthEnterpriseMetadata(resource);
+            metadata = this._metadata = new GoogleEarthEnterpriseMetadata({
+                url : options.url,
+                proxy : options.proxy
+            });
         }
-        this._metadata = metadata;
         this._tileDiscardPolicy = options.tileDiscardPolicy;
+        this._proxy = defaultValue(options.proxy, this._metadata.proxy);
 
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
@@ -182,7 +186,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._metadata.proxy;
+                return this._proxy;
             }
         },
 
@@ -462,7 +466,9 @@ define([
             // Already have info and there isn't any imagery here
             return invalidImage;
         }
-        var promise = buildImageResource(this, info, x, y, level, request).fetchArrayBuffer();
+        // Load the
+        var url = buildImageUrl(this, info, x, y, level);
+        var promise = loadArrayBuffer(url, undefined, request);
         if (!defined(promise)) {
             return undefined; // Throttled
         }
@@ -488,11 +494,7 @@ define([
                     return invalidImage;
                 }
 
-                return loadImageFromTypedArray({
-                    uint8Array: a,
-                    format: type,
-                    flipY: true
-                });
+                return loadImageFromTypedArray(a, type);
             });
     };
 
@@ -517,15 +519,18 @@ define([
     //
     // Functions to handle imagery packets
     //
-    function buildImageResource(imageryProvider, info, x, y, level, request) {
+    function buildImageUrl(imageryProvider, info, x, y, level) {
         var quadKey = GoogleEarthEnterpriseMetadata.tileXYToQuadKey(x, y, level);
         var version = info.imageryVersion;
         version = (defined(version) && version > 0) ? version : 1;
+        var imageUrl = imageryProvider.url + 'flatfile?f1-0' + quadKey + '-i.' + version.toString();
 
-        return imageryProvider._metadata.resource.getDerivedResource({
-            url: 'flatfile?f1-0' + quadKey + '-i.' + version.toString(),
-            request: request
-        });
+        var proxy = imageryProvider._proxy;
+        if (defined(proxy)) {
+            imageUrl = proxy.getURL(imageUrl);
+        }
+
+        return imageUrl;
     }
 
     // Detects if a Uint8Array is a JPEG or PNG

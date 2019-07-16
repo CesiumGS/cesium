@@ -1,5 +1,4 @@
 define([
-        '../Core/ArcType',
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/defaultValue',
@@ -11,7 +10,6 @@ define([
         './PolylineColorAppearance',
         './Primitive'
     ], function(
-        ArcType,
         Cartesian3,
         Color,
         defaultValue,
@@ -91,9 +89,9 @@ define([
         this._modelMatrix = new Matrix4();
 
         /**
-         * User-defined value returned when the primitive is picked.
+         * User-defined object returned when the primitive is picked.
          *
-         * @type {*}
+         * @type {Object}
          * @default undefined
          *
          * @see Scene#pick
@@ -144,7 +142,7 @@ define([
                         Color.RED,
                         Color.RED
                     ],
-                    arcType: ArcType.NONE
+                    followSurface: false
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,
@@ -162,7 +160,7 @@ define([
                         Color.GREEN,
                         Color.GREEN
                     ],
-                    arcType: ArcType.NONE
+                    followSurface: false
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,
@@ -180,7 +178,7 @@ define([
                         Color.BLUE,
                         Color.BLUE
                     ],
-                    arcType: ArcType.NONE
+                    followSurface: false
                 }),
                 modelMatrix : Matrix4.multiplyByUniformScale(this.modelMatrix, this.length, new Matrix4()),
                 id : this.id,
@@ -220,6 +218,8 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
+     *
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

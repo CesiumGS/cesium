@@ -63,7 +63,6 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    shouldAnimate : true,
     shadows : true
 });
 
@@ -145,7 +144,7 @@ function createModel(url, height, heading, pitch, roll) {
         model.colorBlendAmount = viewModel.colorBlendAmount;
         // Play and loop all animations at half-speed
         model.activeAnimations.addAll({
-            multiplier : 0.5,
+            speedup : 0.5,
             loop : Cesium.ModelAnimationLoop.REPEAT
         });
 
@@ -186,17 +185,17 @@ var options = [{
         createModel('../../SampleData/models/CesiumAir/Cesium_Air.glb', height, heading, pitch, roll);
     }
 }, {
-    text : 'Ground Vehicle',
+    text : 'Ground vehicle',
     onselect : function() {
-        createModel('../../SampleData/models/GroundVehicle/GroundVehicle.glb');
+        createModel('../../SampleData/models/CesiumGround/Cesium_Ground.glb');
     }
 }, {
-    text : 'Milk Truck',
+    text : 'Milk truck',
     onselect : function() {
         createModel('../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb');
     }
 }, {
-    text : 'Skinned Character',
+    text : 'Skinned character',
     onselect : function() {
         createModel('../../SampleData/models/CesiumMan/Cesium_Man.glb');
     }
@@ -211,10 +210,10 @@ Sandcastle.addToggleButton('Shadows', viewer.shadows, function(checked) {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== 'undefined') {
+if (typeof Cesium !== "undefined") {
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
 }
 </script>
 </body>

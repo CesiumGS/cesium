@@ -184,15 +184,6 @@ define([
             get : function() {
                 return this._ellipseGeometry.rectangle;
             }
-        },
-        /**
-         * For remapping texture coordinates when rendering CircleGeometries as GroundPrimitives.
-         * @private
-         */
-        textureCoordinateRotationPoints : {
-            get : function() {
-                return this._ellipseGeometry.textureCoordinateRotationPoints;
-            }
         }
     });
 

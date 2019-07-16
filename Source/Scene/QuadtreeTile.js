@@ -3,15 +3,13 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Rectangle',
-        './QuadtreeTileLoadState',
-        './TileSelectionResult'
+        './QuadtreeTileLoadState'
     ], function(
         defined,
         defineProperties,
         DeveloperError,
         Rectangle,
-        QuadtreeTileLoadState,
-        TileSelectionResult) {
+        QuadtreeTileLoadState) {
     'use strict';
 
     /**
@@ -59,22 +57,21 @@ define([
         this._northwestChild = undefined;
         this._northeastChild = undefined;
 
-        // TileReplacementQueue gets/sets these private properties.
-        this.replacementPrevious = undefined;
-        this.replacementNext = undefined;
+        // QuadtreeTileReplacementQueue gets/sets these private properties.
+        this._replacementPrevious = undefined;
+        this._replacementNext = undefined;
 
         // The distance from the camera to this tile, updated when the tile is selected
         // for rendering.  We can get rid of this if we have a better way to sort by
         // distance - for example, by using the natural ordering of a quadtree.
         // QuadtreePrimitive gets/sets this private property.
         this._distance = 0.0;
-        this._loadPriority = 0.0;
+        this._priorityFunction = undefined;
 
         this._customData = [];
         this._frameUpdated = undefined;
-        this._lastSelectionResult = TileSelectionResult.NONE;
-        this._lastSelectionResultFrame = undefined;
-        this._loadedCallbacks = {};
+        this._frameRendered = undefined;
+        this._loadedCallbacks = [];
 
         /**
          * Gets or sets the current state of the tile in the tile load pipeline.
@@ -91,7 +88,7 @@ define([
         this.renderable = false;
 
         /**
-         * Gets or set a value indicating whether or not the tile was entirely upsampled from its
+         * Gets or set a value indicating whether or not the tile was entire upsampled from its
          * parent tile.  If all four children of a parent tile were upsampled from the parent,
          * we will render the parent instead of the children even if the LOD indicates that
          * the children would be preferable.
@@ -396,107 +393,6 @@ define([
             }
         }
     });
-
-    QuadtreeTile.prototype.findLevelZeroTile = function(levelZeroTiles, x, y) {
-        var xTiles = this.tilingScheme.getNumberOfXTilesAtLevel(0);
-        if (x < 0) {
-            x += xTiles;
-        } else if (x >= xTiles) {
-            x -= xTiles;
-        }
-
-        if (y < 0 || y >= this.tilingScheme.getNumberOfYTilesAtLevel(0)) {
-            return undefined;
-        }
-
-        return levelZeroTiles.filter(function(tile) {
-            return tile.x === x && tile.y === y;
-        })[0];
-    };
-
-    QuadtreeTile.prototype.findTileToWest = function(levelZeroTiles) {
-        var parent = this.parent;
-        if (parent === undefined) {
-            return this.findLevelZeroTile(levelZeroTiles, this.x - 1, this.y);
-        }
-
-        if (parent.southeastChild === this) {
-            return parent.southwestChild;
-        } else if (parent.northeastChild === this) {
-            return parent.northwestChild;
-        }
-
-        var westOfParent = parent.findTileToWest(levelZeroTiles);
-        if (westOfParent === undefined) {
-            return undefined;
-        } else if (parent.southwestChild === this) {
-            return westOfParent.southeastChild;
-        }
-        return westOfParent.northeastChild;
-    };
-
-    QuadtreeTile.prototype.findTileToEast = function(levelZeroTiles) {
-        var parent = this.parent;
-        if (parent === undefined) {
-            return this.findLevelZeroTile(levelZeroTiles, this.x + 1, this.y);
-        }
-
-        if (parent.southwestChild === this) {
-            return parent.southeastChild;
-        } else if (parent.northwestChild === this) {
-            return parent.northeastChild;
-        }
-
-        var eastOfParent = parent.findTileToEast(levelZeroTiles);
-        if (eastOfParent === undefined) {
-            return undefined;
-        } else if (parent.southeastChild === this) {
-            return eastOfParent.southwestChild;
-        }
-        return eastOfParent.northwestChild;
-    };
-
-    QuadtreeTile.prototype.findTileToSouth = function(levelZeroTiles) {
-        var parent = this.parent;
-        if (parent === undefined) {
-            return this.findLevelZeroTile(levelZeroTiles, this.x, this.y + 1);
-        }
-
-        if (parent.northwestChild === this) {
-            return parent.southwestChild;
-        } else if (parent.northeastChild === this) {
-            return parent.southeastChild;
-        }
-
-        var southOfParent = parent.findTileToSouth(levelZeroTiles);
-        if (southOfParent === undefined) {
-            return undefined;
-        } else if (parent.southwestChild === this) {
-            return southOfParent.northwestChild;
-        }
-        return southOfParent.northeastChild;
-    };
-
-    QuadtreeTile.prototype.findTileToNorth = function(levelZeroTiles) {
-        var parent = this.parent;
-        if (parent === undefined) {
-            return this.findLevelZeroTile(levelZeroTiles, this.x, this.y - 1);
-        }
-
-        if (parent.southwestChild === this) {
-            return parent.northwestChild;
-        } else if (parent.southeastChild === this) {
-            return parent.northeastChild;
-        }
-
-        var northOfParent = parent.findTileToNorth(levelZeroTiles);
-        if (northOfParent === undefined) {
-            return undefined;
-        } else if (parent.northwestChild === this) {
-            return northOfParent.southwestChild;
-        }
-        return northOfParent.southeastChild;
-    };
 
     /**
      * Frees the resources associated with this tile and returns it to the <code>START</code>

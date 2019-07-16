@@ -26,8 +26,8 @@ define([
 
     /**
      * Represents the contents of a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/TileFormats/Composite|Composite}
-     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset.
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/TileFormats/Composite/README.md|Composite}
+     * tile in a {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
      * </p>
@@ -37,10 +37,10 @@ define([
      *
      * @private
      */
-    function Composite3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset, factory) {
+    function Composite3DTileContent(tileset, tile, url, arrayBuffer, byteOffset, factory) {
         this._tileset = tileset;
         this._tile = tile;
-        this._resource = resource;
+        this._url = url;
         this._contents = [];
         this._readyPromise = when.defer();
 
@@ -48,6 +48,9 @@ define([
     }
 
     defineProperties(Composite3DTileContent.prototype, {
+        /**
+         * @inheritdoc Cesium3DTileContent#featurePropertiesDirty
+         */
         featurePropertiesDirty : {
             get : function() {
                 var contents = this._contents;
@@ -72,7 +75,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
          * always returns <code>0</code>.  Instead call <code>featuresLength</code> for a tile in the composite.
-         * @memberof Composite3DTileContent.prototype
          */
         featuresLength : {
             get : function() {
@@ -83,7 +85,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
          * always returns <code>0</code>.  Instead call <code>pointsLength</code> for a tile in the composite.
-         * @memberof Composite3DTileContent.prototype
          */
         pointsLength : {
             get : function() {
@@ -94,7 +95,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
          * always returns <code>0</code>.  Instead call <code>trianglesLength</code> for a tile in the composite.
-         * @memberof Composite3DTileContent.prototype
          */
         trianglesLength : {
             get : function() {
@@ -105,7 +105,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
          * always returns <code>0</code>.  Instead call <code>geometryByteLength</code> for a tile in the composite.
-         * @memberof Composite3DTileContent.prototype
          */
         geometryByteLength : {
             get : function() {
@@ -116,7 +115,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.   <code>Composite3DTileContent</code>
          * always returns <code>0</code>.  Instead call <code>texturesByteLength</code> for a tile in the composite.
-         * @memberof Composite3DTileContent.prototype
          */
         texturesByteLength : {
             get : function() {
@@ -127,7 +125,6 @@ define([
         /**
          * Part of the {@link Cesium3DTileContent} interface.  <code>Composite3DTileContent</code>
          * always returns <code>0</code>.  Instead call <code>batchTableByteLength</code> for a tile in the composite.
-         * @memberof Composite3DTileContent.prototype
          */
         batchTableByteLength : {
             get : function() {
@@ -135,40 +132,54 @@ define([
             }
         },
 
+        /**
+         * @inheritdoc Cesium3DTileContent#innerContents
+         */
         innerContents : {
             get : function() {
                 return this._contents;
             }
         },
 
+        /**
+         * @inheritdoc Cesium3DTileContent#readyPromise
+         */
         readyPromise : {
             get : function() {
                 return this._readyPromise.promise;
             }
         },
 
+        /**
+         * @inheritdoc Cesium3DTileContent#tileset
+         */
         tileset : {
             get : function() {
                 return this._tileset;
             }
         },
 
+        /**
+         * @inheritdoc Cesium3DTileContent#tile
+         */
         tile : {
             get : function() {
                 return this._tile;
             }
         },
 
+        /**
+         * @inheritdoc Cesium3DTileContent#url
+         */
         url : {
             get : function() {
-                return this._resource.getUrlComponent(true);
+                return this._url;
             }
         },
 
         /**
          * Part of the {@link Cesium3DTileContent} interface. <code>Composite3DTileContent</code>
          * always returns <code>undefined</code>.  Instead call <code>batchTable</code> for a tile in the composite.
-         * @memberof Composite3DTileContent.prototype
          */
         batchTable : {
             get : function() {
@@ -209,7 +220,7 @@ define([
             var contentFactory = factory[tileType];
 
             if (defined(contentFactory)) {
-                var innerContent = contentFactory(content._tileset, content._tile, content._resource, arrayBuffer, byteOffset);
+                var innerContent = contentFactory(content._tileset, content._tile, content._url, arrayBuffer, byteOffset);
                 content._contents.push(innerContent);
                 contentPromises.push(innerContent.readyPromise);
             } else {
@@ -242,6 +253,9 @@ define([
         return undefined;
     };
 
+    /**
+     * @inheritdoc Cesium3DTileContent#applyDebugSettings
+     */
     Composite3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
         var contents = this._contents;
         var length = contents.length;
@@ -250,14 +264,20 @@ define([
         }
     };
 
-    Composite3DTileContent.prototype.applyStyle = function(style) {
+    /**
+     * @inheritdoc Cesium3DTileContent#applyStyle
+     */
+    Composite3DTileContent.prototype.applyStyle = function(frameState, style) {
         var contents = this._contents;
         var length = contents.length;
         for (var i = 0; i < length; ++i) {
-            contents[i].applyStyle(style);
+            contents[i].applyStyle(frameState, style);
         }
     };
 
+    /**
+     * @inheritdoc Cesium3DTileContent#update
+     */
     Composite3DTileContent.prototype.update = function(tileset, frameState) {
         var contents = this._contents;
         var length = contents.length;
@@ -266,10 +286,16 @@ define([
         }
     };
 
+    /**
+     * @inheritdoc Cesium3DTileContent#isDestroyed
+     */
     Composite3DTileContent.prototype.isDestroyed = function() {
         return false;
     };
 
+    /**
+     * @inheritdoc Cesium3DTileContent#destroy
+     */
     Composite3DTileContent.prototype.destroy = function() {
         var contents = this._contents;
         var length = contents.length;

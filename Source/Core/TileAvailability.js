@@ -28,21 +28,14 @@ define([
         this._maximumLevel = maximumLevel;
 
         this._rootNodes = [];
+        for (var y = 0; y < tilingScheme.getNumberOfYTilesAtLevel(); ++y) {
+            for (var x = 0; x < tilingScheme.getNumberOfXTilesAtLevel(); ++x) {
+                this._rootNodes.push(new QuadtreeNode(tilingScheme, undefined, 0, x, y));
+            }
+        }
     }
 
     var rectangleScratch = new Rectangle();
-
-    function findNode(level, x, y, nodes) {
-        var count = nodes.length;
-        for (var i = 0; i < count; ++i) {
-            var node = nodes[i];
-            if (node.x === x && node.y === y && node.level === level) {
-                return true;
-            }
-        }
-
-        return false;
-    }
 
     /**
      * Marks a rectangular range of tiles in a particular level as being available.  For best performance,
@@ -57,17 +50,6 @@ define([
     TileAvailability.prototype.addAvailableTileRange = function(level, startX, startY, endX, endY) {
         var tilingScheme = this._tilingScheme;
 
-        var rootNodes = this._rootNodes;
-        if (level === 0) {
-            for (var y = startY; y <= endY; ++y) {
-                for (var x = startX; x <= endX; ++x) {
-                    if (!findNode(level, x, y, rootNodes)) {
-                        rootNodes.push(new QuadtreeNode(tilingScheme, undefined, 0, x, y));
-                    }
-                }
-            }
-        }
-
         tilingScheme.tileXYToRectangle(startX, startY, level, rectangleScratch);
         var west = rectangleScratch.west;
         var north = rectangleScratch.north;
@@ -78,8 +60,8 @@ define([
 
         var rectangleWithLevel = new RectangleWithLevel(level, west, south, east, north);
 
-        for (var i = 0; i < rootNodes.length; ++i) {
-            var rootNode = rootNodes[i];
+        for (var i = 0; i < this._rootNodes.length; ++i) {
+            var rootNode = this._rootNodes[i];
             if (rectanglesOverlap(rootNode.extent, rectangleWithLevel)) {
                 putRectangleInQuadtree(this._maximumLevel, rootNode, rectangleWithLevel);
             }
@@ -106,9 +88,11 @@ define([
             }
         }
 
+        //>>includeStart('debug', pragmas.debug);
         if (!defined(node)) {
-            return -1;
+            throw new DeveloperError('The specified position does not exist in any root node of the tiling scheme.');
         }
+        //>>includeEnd('debug');
 
         return findMaxLevelFromNode(undefined, node, position);
     };

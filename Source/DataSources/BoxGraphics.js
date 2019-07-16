@@ -23,9 +23,8 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the box.
      * @param {Property} [options.dimensions] A {@link Cartesian3} Property specifying the length, width, and height of the box.
-     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the box.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the box is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the box.
      * @param {Property} [options.outline=false] A boolean Property specifying whether the box is outlined.
@@ -34,16 +33,13 @@ define([
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the box casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this box will be displayed.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
      */
     function BoxGraphics(options) {
-        this._definitionChanged = new Event();
-        this._show = undefined;
-        this._showSubscription = undefined;
         this._dimensions = undefined;
         this._dimensionsSubscription = undefined;
-        this._heightReference = undefined;
-        this._heightReferenceSubscription = undefined;
+        this._show = undefined;
+        this._showSubscription = undefined;
         this._fill = undefined;
         this._fillSubscription = undefined;
         this._material = undefined;
@@ -58,6 +54,7 @@ define([
         this._shadowsSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
+        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -91,12 +88,12 @@ define([
         dimensions : createPropertyDescriptor('dimensions'),
 
         /**
-         * Gets or sets the Property specifying the {@link HeightReference}.
+         * Gets or sets the material used to fill the box.
          * @memberof BoxGraphics.prototype
-         * @type {Property}
-         * @default HeightReference.NONE
+         * @type {MaterialProperty}
+         * @default Color.WHITE
          */
-        heightReference : createPropertyDescriptor('heightReference'),
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the boolean Property specifying whether the box is filled with the provided material.
@@ -105,14 +102,6 @@ define([
          * @default true
          */
         fill : createPropertyDescriptor('fill'),
-
-        /**
-         * Gets or sets the material used to fill the box.
-         * @memberof BoxGraphics.prototype
-         * @type {MaterialProperty}
-         * @default Color.WHITE
-         */
-        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Property specifying whether the box is outlined.
@@ -165,11 +154,10 @@ define([
         if (!defined(result)) {
             return new BoxGraphics(this);
         }
-        result.show = this.show;
         result.dimensions = this.dimensions;
-        result.heightReference = this.heightReference;
-        result.fill = this.fill;
+        result.show = this.show;
         result.material = this.material;
+        result.fill = this.fill;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
@@ -191,11 +179,10 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.show = defaultValue(this.show, source.show);
         this.dimensions = defaultValue(this.dimensions, source.dimensions);
-        this.heightReference = defaultValue(this.heightReference, source.heightReference);
-        this.fill = defaultValue(this.fill, source.fill);
+        this.show = defaultValue(this.show, source.show);
         this.material = defaultValue(this.material, source.material);
+        this.fill = defaultValue(this.fill, source.fill);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);

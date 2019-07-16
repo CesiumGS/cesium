@@ -1,19 +1,17 @@
 defineSuite([
-        'Renderer/DrawCommand',
         'Core/PrimitiveType',
+        'Renderer/DrawCommand',
         'Renderer/Pass'
     ], function(
-        DrawCommand,
         PrimitiveType,
+        DrawCommand,
         Pass) {
     'use strict';
 
     it('constructs', function() {
         var c = new DrawCommand();
         expect(c.boundingVolume).toBeUndefined();
-        expect(c.orientedBoundingBox).toBeUndefined();
         expect(c.cull).toEqual(true);
-        expect(c.occlude).toEqual(true);
         expect(c.modelMatrix).toBeUndefined();
         expect(c.primitiveType).toEqual(PrimitiveType.TRIANGLES);
         expect(c.vertexArray).toBeUndefined();
@@ -28,16 +26,10 @@ defineSuite([
         expect(c.executeInClosestFrustum).toEqual(false);
         expect(c.owner).toBeUndefined();
         expect(c.debugShowBoundingVolume).toEqual(false);
-        expect(c.debugOverlappingFrustums).toEqual(0);
-        expect(c.castShadows).toEqual(false);
-        expect(c.receiveShadows).toEqual(false);
-        expect(c.pickId).toBeUndefined();
-        expect(c.pickOnly).toBe(false);
     });
 
     it('constructs with options', function() {
         var boundingVolume = {};
-        var orientedBoundingBox = {};
         var modelMatrix = {};
         var primitiveType = PrimitiveType.TRIANGLE_FAN;
         var vertexArray = {};
@@ -47,13 +39,10 @@ defineSuite([
         var framebuffer = {};
         var pass = Pass.TRANSLUCENT;
         var owner = {};
-        var pickId = {};
 
         var c = new DrawCommand({
             boundingVolume : boundingVolume,
-            orientedBoundingBox : orientedBoundingBox,
             cull : false,
-            occlude : false,
             modelMatrix :  modelMatrix,
             primitiveType : primitiveType,
             vertexArray : vertexArray,
@@ -67,17 +56,11 @@ defineSuite([
             pass : pass,
             executeInClosestFrustum : true,
             owner : owner,
-            debugShowBoundingVolume : true,
-            castShadows : true,
-            receiveShadows : true,
-            pickId : pickId,
-            pickOnly : true
+            debugShowBoundingVolume : true
         });
 
         expect(c.boundingVolume).toBe(boundingVolume);
-        expect(c.orientedBoundingBox).toBe(orientedBoundingBox);
         expect(c.cull).toEqual(false);
-        expect(c.occlude).toEqual(false);
         expect(c.modelMatrix).toBe(modelMatrix);
         expect(c.primitiveType).toEqual(primitiveType);
         expect(c.vertexArray).toBe(vertexArray);
@@ -92,19 +75,12 @@ defineSuite([
         expect(c.executeInClosestFrustum).toEqual(true);
         expect(c.owner).toBe(owner);
         expect(c.debugShowBoundingVolume).toEqual(true);
-        expect(c.debugOverlappingFrustums).toEqual(0);
-        expect(c.castShadows).toEqual(true);
-        expect(c.receiveShadows).toEqual(true);
-        expect(c.pickId).toBe(pickId);
-        expect(c.pickOnly).toEqual(true);
     });
 
     it('shallow clones', function() {
         var c = new DrawCommand({
             boundingVolume : {},
-            orientedBoundingBox : {},
             cull : false,
-            occlude : false,
             modelMatrix :  {},
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             vertexArray : {},
@@ -118,19 +94,13 @@ defineSuite([
             pass : Pass.TRANSLUCENT,
             executeInClosestFrustum : true,
             owner : {},
-            debugShowBoundingVolume : true,
-            castShadows : true,
-            receiveShadows : true,
-            pickId : {},
-            pickOnly : true
+            debugShowBoundingVolume : true
         });
 
         var clone = DrawCommand.shallowClone(c);
 
         expect(clone.boundingVolume).toBe(c.boundingVolume);
-        expect(clone.orientedBoundingBox).toBe(c.orientedBoundingBox);
         expect(clone.cull).toEqual(c.cull);
-        expect(clone.occlude).toEqual(c.occlude);
         expect(clone.modelMatrix).toBe(c.modelMatrix);
         expect(clone.primitiveType).toEqual(c.primitiveType);
         expect(clone.vertexArray).toBe(c.vertexArray);
@@ -145,19 +115,12 @@ defineSuite([
         expect(clone.executeInClosestFrustum).toEqual(c.executeInClosestFrustum);
         expect(clone.owner).toBe(c.owner);
         expect(clone.debugShowBoundingVolume).toEqual(c.debugShowBoundingVolume);
-        expect(clone.debugOverlappingFrustums).toEqual(c.debugOverlappingFrustums);
-        expect(clone.castShadows).toEqual(c.castShadows);
-        expect(clone.receiveShadows).toEqual(c.receiveShadows);
-        expect(clone.pickId).toBe(c.pickId);
-        expect(clone.pickOnly).toBe(c.pickOnly);
     });
 
     it('shallow clones with result', function() {
         var c = new DrawCommand({
             boundingVolume : {},
-            orientedBoundingBox : {},
             cull : false,
-            occlude : false,
             modelMatrix :  {},
             primitiveType : PrimitiveType.TRIANGLE_FAN,
             vertexArray : {},
@@ -171,11 +134,7 @@ defineSuite([
             pass : Pass.TRANSLUCENT,
             executeInClosestFrustum : true,
             owner : {},
-            debugShowBoundingVolume : true,
-            castShadows : true,
-            receiveShadows : true,
-            pickId : {},
-            pickOnly : true
+            debugShowBoundingVolume : true
         });
 
         var result = new DrawCommand();
@@ -183,9 +142,7 @@ defineSuite([
 
         expect(result).toBe(clone);
         expect(clone.boundingVolume).toBe(c.boundingVolume);
-        expect(clone.orientedBoundingBox).toBe(c.orientedBoundingBox);
         expect(clone.cull).toEqual(c.cull);
-        expect(clone.occlude).toEqual(c.occlude);
         expect(clone.modelMatrix).toBe(c.modelMatrix);
         expect(clone.primitiveType).toEqual(c.primitiveType);
         expect(clone.vertexArray).toBe(c.vertexArray);
@@ -200,11 +157,6 @@ defineSuite([
         expect(clone.executeInClosestFrustum).toEqual(c.executeInClosestFrustum);
         expect(clone.owner).toBe(c.owner);
         expect(clone.debugShowBoundingVolume).toEqual(c.debugShowBoundingVolume);
-        expect(clone.debugOverlappingFrustums).toEqual(c.debugOverlappingFrustums);
-        expect(clone.castShadows).toEqual(c.castShadows);
-        expect(clone.receiveShadows).toEqual(c.receiveShadows);
-        expect(clone.pickId).toBe(c.pickId);
-        expect(clone.pickOnly).toBe(c.pickOnly);
     });
 
     it('shallow clone returns undefined', function() {

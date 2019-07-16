@@ -1,6 +1,5 @@
 define([
         '../Core/Cartesian3',
-        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -12,7 +11,6 @@ define([
         './SampledProperty'
     ], function(
         Cartesian3,
-        Check,
         defaultValue,
         defined,
         defineProperties,
@@ -212,8 +210,12 @@ define([
      */
     SampledPositionProperty.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('time', time);
-        Check.defined('referenceFrame', referenceFrame);
+        if (!defined(time)) {
+            throw new DeveloperError('time is required.');
+        }
+        if (!defined(referenceFrame)) {
+            throw new DeveloperError('referenceFrame is required.');
+        }
         //>>includeEnd('debug');
 
         result = this._property.getValue(time, result);
@@ -273,25 +275,6 @@ define([
      */
     SampledPositionProperty.prototype.addSamplesPackedArray = function(packedSamples, epoch) {
         this._property.addSamplesPackedArray(packedSamples, epoch);
-    };
-
-    /**
-     * Removes a sample at the given time, if present.
-     *
-     * @param {JulianDate} time The sample time.
-     * @returns {Boolean} <code>true</code> if a sample at time was removed, <code>false</code> otherwise.
-     */
-    SampledPositionProperty.prototype.removeSample = function(time) {
-        this._property.removeSample(time);
-    };
-
-    /**
-     * Removes all samples for the given time interval.
-     *
-     * @param {TimeInterval} time The time interval for which to remove all samples.
-     */
-    SampledPositionProperty.prototype.removeSamples = function(timeInterval) {
-        this._property.removeSamples(timeInterval);
     };
 
     /**

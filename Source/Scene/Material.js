@@ -11,14 +11,13 @@ define([
         '../Core/DeveloperError',
         '../Core/isArray',
         '../Core/loadCRN',
+        '../Core/loadImage',
         '../Core/loadKTX',
         '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
-        '../Core/Resource',
         '../Renderer/CubeMap',
         '../Renderer/Texture',
-        '../Shaders/Materials/AspectRampMaterial',
         '../Shaders/Materials/BumpMapMaterial',
         '../Shaders/Materials/CheckerboardMaterial',
         '../Shaders/Materials/DotMaterial',
@@ -49,14 +48,13 @@ define([
         DeveloperError,
         isArray,
         loadCRN,
+        loadImage,
         loadKTX,
         Matrix2,
         Matrix3,
         Matrix4,
-        Resource,
         CubeMap,
         Texture,
-        AspectRampMaterial,
         BumpMapMaterial,
         CheckerboardMaterial,
         DotMaterial,
@@ -227,7 +225,6 @@ define([
      *  <ul>
      *      <li><code>color</code>: color and maximum alpha for the glow on the line.</li>
      *      <li><code>glowPower</code>: strength of the glow, as a percentage of the total line width (less than 1.0).</li>
-     *      <li><code>taperPower</code>: strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.</li>
      *  </ul>
      *  <li>PolylineOutline</li>
      *  <ul>
@@ -249,11 +246,7 @@ define([
      *  </ul>
      *  <li>SlopeRamp</li>
      *  <ul>
-     *      <li><code>image</code>: color ramp image to use for coloring the terrain by slope.</li>
-     *  </ul>
-     *  <li>AspectRamp</li>
-     *  <ul>
-     *      <li><code>image</code>: color ramp image to use for color the terrain by aspect.</li>
+     *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
      *  </ul>
      * </ul>
      * </ul>
@@ -280,7 +273,7 @@ define([
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      *
      * @example
      * // Create a color material with fromType:
@@ -411,7 +404,7 @@ define([
 
     /**
      * Gets whether or not this material is translucent.
-     * @returns {Boolean} <code>true</code> if this material is translucent, <code>false</code> otherwise.
+     * @returns <code>true</code> if this material is translucent, <code>false</code> otherwise.
      */
     Material.prototype.isTranslucent = function() {
         if (defined(this.translucent)) {
@@ -545,6 +538,8 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
@@ -702,13 +697,7 @@ define([
             if (defined(components)) {
                 for ( var component in components) {
                     if (components.hasOwnProperty(component)) {
-                        if (component === 'diffuse' || component === 'emission') {
-                            material.shaderSource += 'material.' + component + ' = czm_gammaCorrect(' + components[component] + '); \n';
-                        } else if (component === 'alpha') {
-                            material.shaderSource += 'material.alpha = czm_gammaCorrect(vec4(vec3(0.0), ' + components.alpha + ')).a; \n';
-                        } else {
-                            material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
-                        }
+                        material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
                     }
                 }
             }
@@ -801,35 +790,26 @@ define([
                 return;
             }
 
-            // When using the entity layer, the Resource objects get recreated on getValue because
-            //  they are clonable. That's why we check the url property for Resources
-            //  because the instances aren't the same and we keep trying to load the same
-            //  image if it fails to load.
-            var isResource = (uniformValue instanceof Resource);
-            if (!defined(material._texturePaths[uniformId]) ||
-                (isResource && uniformValue.url !== material._texturePaths[uniformId].url) ||
-                (!isResource && uniformValue !== material._texturePaths[uniformId])) {
-                if (typeof uniformValue === 'string' || isResource) {
-                    var resource = isResource ? uniformValue : Resource.createIfNeeded(uniformValue);
-
+            if (uniformValue !== material._texturePaths[uniformId]) {
+                if (typeof uniformValue === 'string') {
                     var promise;
                     if (ktxRegex.test(uniformValue)) {
-                        promise = loadKTX(resource);
+                        promise = loadKTX(uniformValue);
                     } else if (crnRegex.test(uniformValue)) {
-                        promise = loadCRN(resource);
+                        promise = loadCRN(uniformValue);
                     } else {
-                        promise = resource.fetchImage();
+                        promise = loadImage(uniformValue);
                     }
                     when(promise, function(image) {
                         material._loadedImages.push({
-                            id: uniformId,
-                            image: image
+                            id : uniformId,
+                            image : image
                         });
                     });
-                } else if (uniformValue instanceof HTMLCanvasElement || uniformValue instanceof HTMLImageElement) {
+                } else if (uniformValue instanceof HTMLCanvasElement) {
                     material._loadedImages.push({
-                        id: uniformId,
-                        image: uniformValue
+                        id : uniformId,
+                        image : uniformValue
                     });
                 }
 
@@ -868,12 +848,12 @@ define([
 
             if (path !== material._texturePaths[uniformId]) {
                 var promises = [
-                    Resource.createIfNeeded(uniformValue.positiveX).fetchImage(),
-                    Resource.createIfNeeded(uniformValue.negativeX).fetchImage(),
-                    Resource.createIfNeeded(uniformValue.positiveY).fetchImage(),
-                    Resource.createIfNeeded(uniformValue.negativeY).fetchImage(),
-                    Resource.createIfNeeded(uniformValue.positiveZ).fetchImage(),
-                    Resource.createIfNeeded(uniformValue.negativeZ).fetchImage()
+                    loadImage(uniformValue.positiveX),
+                    loadImage(uniformValue.negativeX),
+                    loadImage(uniformValue.positiveY),
+                    loadImage(uniformValue.negativeY),
+                    loadImage(uniformValue.positiveZ),
+                    loadImage(uniformValue.negativeZ)
                 ];
 
                 when.all(promises).then(function(images) {
@@ -984,7 +964,7 @@ define([
                 uniformType = 'float';
             } else if (type === 'boolean') {
                 uniformType = 'bool';
-            } else if (type === 'string' || uniformValue instanceof Resource ||uniformValue instanceof HTMLCanvasElement || uniformValue instanceof HTMLImageElement) {
+            } else if (type === 'string' || uniformValue instanceof HTMLCanvasElement) {
                 if (/^([rgba]){1,4}$/i.test(uniformValue)) {
                     uniformType = 'channels';
                 } else if (uniformValue === Material.DefaultCubeMapId) {
@@ -1484,8 +1464,7 @@ define([
             type : Material.PolylineGlowType,
             uniforms : {
                 color : new Color(0.0, 0.5, 1.0, 1.0),
-                glowPower : 0.25,
-                taperPower : 1.0
+                glowPower : 0.25
             },
             source : PolylineGlowMaterial
         },
@@ -1562,26 +1541,9 @@ define([
         fabric : {
             type : Material.SlopeRampMaterialType,
             uniforms : {
-                image : Material.DefaultImageId
+                image: Material.DefaultImageId
             },
             source : SlopeRampMaterial
-        },
-        translucent : false
-    });
-
-    /**
-     * Gets the name of the aspect ramp material.
-     * @type {String}
-     * @readonly
-     */
-    Material.AspectRampMaterialType = 'AspectRamp';
-    Material._materialCache.addMaterial(Material.AspectRampMaterialType, {
-        fabric: {
-            type : Material.AspectRampMaterialType,
-            uniforms : {
-                image : Material.DefaultImageId
-            },
-            source : AspectRampMaterial
         },
         translucent : false
     });

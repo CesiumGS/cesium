@@ -1,6 +1,6 @@
 define([
-        './defined',
-        './defineProperties'
+        '../Core/defined',
+        '../Core/defineProperties'
     ], function(
         defined,
         defineProperties) {
@@ -23,20 +23,12 @@ define([
         }
     });
 
-    /**
-     * @private
-     */
     function DoublyLinkedListNode(item, previous, next) {
         this.item = item;
         this.previous  = previous;
         this.next = next;
     }
 
-    /**
-     * Adds the item to the end of the list
-     * @param {*} [item]
-     * @return {DoublyLinkedListNode}
-     */
     DoublyLinkedList.prototype.add = function(item) {
         var node = new DoublyLinkedListNode(item, this.tail, undefined);
 
@@ -44,6 +36,7 @@ define([
             this.tail.next = node;
             this.tail = node;
         } else {
+            // Insert into empty linked list
             this.head = node;
             this.tail = node;
         }
@@ -75,10 +68,6 @@ define([
         node.previous = undefined;
     }
 
-    /**
-     * Removes the given node from the list
-     * @param {DoublyLinkedListNode} node
-     */
     DoublyLinkedList.prototype.remove = function(node) {
         if (!defined(node)) {
             return;
@@ -89,11 +78,6 @@ define([
         --this._length;
     };
 
-    /**
-     * Moves nextNode after node
-     * @param {DoublyLinkedListNode} node
-     * @param {DoublyLinkedListNode} nextNode
-     */
     DoublyLinkedList.prototype.splice = function(node, nextNode) {
         if (node === nextNode) {
             return;

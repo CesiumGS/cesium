@@ -71,62 +71,6 @@ define([
 
         knockout.track(this, ['imageryProviderViewModels', 'terrainProviderViewModels', 'dropDownVisible']);
 
-        var imageryObservable = knockout.getObservable(this, 'imageryProviderViewModels');
-        var imageryProviders = knockout.pureComputed(function() {
-            var providers = imageryObservable();
-            var categories = {};
-            var i;
-            for (i = 0; i < providers.length; i++) {
-                var provider = providers[i];
-                var category = provider.category;
-                if (defined(categories[category])) {
-                    categories[category].push(provider);
-                } else {
-                    categories[category] = [provider];
-                }
-            }
-            var allCategoryNames = Object.keys(categories);
-
-            var result = [];
-            for (i = 0; i < allCategoryNames.length; i++) {
-                var name = allCategoryNames[i];
-                result.push({
-                    name: name,
-                    providers: categories[name]
-                });
-            }
-            return result;
-        });
-        this._imageryProviders = imageryProviders;
-
-        var terrainObservable = knockout.getObservable(this, 'terrainProviderViewModels');
-        var terrainProviders = knockout.pureComputed(function() {
-            var providers = terrainObservable();
-            var categories = {};
-            var i;
-            for (i = 0; i < providers.length; i++) {
-                var provider = providers[i];
-                var category = provider.category;
-                if (defined(categories[category])) {
-                    categories[category].push(provider);
-                } else {
-                    categories[category] = [provider];
-                }
-            }
-            var allCategoryNames = Object.keys(categories);
-
-            var result = [];
-            for (i = 0; i < allCategoryNames.length; i++) {
-                var name = allCategoryNames[i];
-                result.push({
-                    name: name,
-                    providers: categories[name]
-                });
-            }
-            return result;
-        });
-        this._terrainProviders = terrainProviders;
-
         /**
          * Gets the button tooltip.  This property is observable.
          * @type {String}
@@ -153,10 +97,8 @@ define([
          */
         this.buttonImageUrl = undefined;
         knockout.defineProperty(this, 'buttonImageUrl', function() {
-            var selectedImagery = this.selectedImagery;
-            if (defined(selectedImagery)) {
-                return selectedImagery.iconUrl;
-            }
+            var viewModel = this.selectedImagery;
+            return defined(viewModel) ? viewModel.iconUrl : undefined;
         });
 
         /**
@@ -182,14 +124,12 @@ define([
                 var currentImageryProviders = this._currentImageryProviders;
                 var currentImageryProvidersLength = currentImageryProviders.length;
                 var imageryLayers = this._globe.imageryLayers;
-                var hadExistingBaseLayer = false;
                 for (i = 0; i < currentImageryProvidersLength; i++) {
                     var layersLength = imageryLayers.length;
                     for ( var x = 0; x < layersLength; x++) {
                         var layer = imageryLayers.get(x);
                         if (layer.imageryProvider === currentImageryProviders[i]) {
                             imageryLayers.remove(layer);
-                            hadExistingBaseLayer = true;
                             break;
                         }
                     }
@@ -205,15 +145,7 @@ define([
                         this._currentImageryProviders = newProviders.slice(0);
                     } else {
                         this._currentImageryProviders = [newProviders];
-                        if (hadExistingBaseLayer) {
-                            imageryLayers.addImageryProvider(newProviders, 0);
-                        } else {
-                            var baseLayer = imageryLayers.get(0);
-                            if (defined(baseLayer)) {
-                                imageryLayers.remove(baseLayer);
-                            }
-                            imageryLayers.addImageryProvider(newProviders, 0);
-                        }
+                        imageryLayers.addImageryProvider(newProviders, 0);
                     }
                 }
                 selectedImageryViewModel(value);

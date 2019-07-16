@@ -50,9 +50,7 @@ defineSuite([
         scene = createScene();
         scene.globe = {
             ellipsoid : Ellipsoid.WGS84,
-            _surface : {},
-            imageryLayersUpdatedEvent : new Event(),
-            terrainProviderChanged : new Event()
+            _surface : {}
         };
 
         scene.globe.getHeight = function() {
@@ -65,6 +63,7 @@ defineSuite([
         scene.globe._surface.updateHeight = function() {
         };
 
+        scene.globe.terrainProviderChanged = new Event();
         defineProperties(scene.globe, {
             terrainProvider : {
                 set : function(value) {
@@ -175,7 +174,7 @@ defineSuite([
         visualizer.update(time);
 
         var pointPrimitiveCollection = entityCluster._pointCollection;
-        expect(pointPrimitiveCollection).toBeInstanceOf(PointPrimitiveCollection);
+        expect(pointPrimitiveCollection instanceof PointPrimitiveCollection).toBe(true);
         expect(pointPrimitiveCollection.length).toEqual(1);
         var pointPrimitive = pointPrimitiveCollection.get(0);
 
@@ -237,7 +236,7 @@ defineSuite([
         visualizer.update(time);
 
         var billboardCollection = entityCluster._billboardCollection;
-        expect(billboardCollection).toBeInstanceOf(BillboardCollection);
+        expect(billboardCollection instanceof BillboardCollection).toBe(true);
         expect(billboardCollection.length).toEqual(1);
         var billboard = billboardCollection.get(0);
 

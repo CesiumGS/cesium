@@ -1,12 +1,11 @@
 define([
-        '../Core/ApproximateTerrainHeights',
         '../Core/BoundingRectangle',
         '../Core/BoundingSphere',
         '../Core/BoxGeometry',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
-        '../Core/Check',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/createGuid',
@@ -21,7 +20,9 @@ define([
         '../Core/GeographicProjection',
         '../Core/GeometryInstance',
         '../Core/GeometryPipeline',
+        '../Core/getTimestamp',
         '../Core/Intersect',
+        '../Core/Interval',
         '../Core/JulianDate',
         '../Core/Math',
         '../Core/Matrix4',
@@ -32,10 +33,8 @@ define([
         '../Core/PerspectiveFrustum',
         '../Core/PerspectiveOffCenterFrustum',
         '../Core/PixelFormat',
-        '../Core/Ray',
         '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
-        '../Core/TaskProcessor',
         '../Core/Transforms',
         '../Renderer/ClearCommand',
         '../Renderer/ComputeEngine',
@@ -44,34 +43,30 @@ define([
         '../Renderer/DrawCommand',
         '../Renderer/Framebuffer',
         '../Renderer/Pass',
+        '../Renderer/PassState',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
         '../Renderer/Texture',
-        '../ThirdParty/when',
         './BrdfLutGenerator',
         './Camera',
-        './Cesium3DTileFeature',
-        './Cesium3DTilePass',
-        './Cesium3DTilePassState',
-        './Cesium3DTileset',
         './CreditDisplay',
         './DebugCameraPrimitive',
         './DepthPlane',
-        './DerivedCommand',
         './DeviceOrientationCameraController',
         './Fog',
         './FrameState',
+        './FrustumCommands',
+        './FXAA',
         './GlobeDepth',
         './InvertClassification',
         './JobScheduler',
         './MapMode2D',
-        './OctahedralProjectedCubeMap',
+        './OIT',
         './PerformanceDisplay',
         './PerInstanceColorAppearance',
         './PickDepth',
-        './PostProcessStageCollection',
         './Primitive',
         './PrimitiveCollection',
         './SceneMode',
@@ -79,19 +74,16 @@ define([
         './SceneTransitioner',
         './ScreenSpaceCameraController',
         './ShadowMap',
-        './StencilConstants',
         './SunPostProcess',
-        './TweenCollection',
-        './View'
+        './TweenCollection'
     ], function(
-        ApproximateTerrainHeights,
         BoundingRectangle,
         BoundingSphere,
         BoxGeometry,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         Cartographic,
-        Check,
         Color,
         ColorGeometryInstanceAttribute,
         createGuid,
@@ -106,7 +98,9 @@ define([
         GeographicProjection,
         GeometryInstance,
         GeometryPipeline,
+        getTimestamp,
         Intersect,
+        Interval,
         JulianDate,
         CesiumMath,
         Matrix4,
@@ -117,10 +111,8 @@ define([
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
         PixelFormat,
-        Ray,
         RequestScheduler,
         ShowGeometryInstanceAttribute,
-        TaskProcessor,
         Transforms,
         ClearCommand,
         ComputeEngine,
@@ -129,34 +121,30 @@ define([
         DrawCommand,
         Framebuffer,
         Pass,
+        PassState,
         PixelDatatype,
         RenderState,
         ShaderProgram,
         ShaderSource,
         Texture,
-        when,
         BrdfLutGenerator,
         Camera,
-        Cesium3DTileFeature,
-        Cesium3DTilePass,
-        Cesium3DTilePassState,
-        Cesium3DTileset,
         CreditDisplay,
         DebugCameraPrimitive,
         DepthPlane,
-        DerivedCommand,
         DeviceOrientationCameraController,
         Fog,
         FrameState,
+        FrustumCommands,
+        FXAA,
         GlobeDepth,
         InvertClassification,
         JobScheduler,
         MapMode2D,
-        OctahedralProjectedCubeMap,
+        OIT,
         PerformanceDisplay,
         PerInstanceColorAppearance,
         PickDepth,
-        PostProcessStageCollection,
         Primitive,
         PrimitiveCollection,
         SceneMode,
@@ -164,28 +152,9 @@ define([
         SceneTransitioner,
         ScreenSpaceCameraController,
         ShadowMap,
-        StencilConstants,
         SunPostProcess,
-        TweenCollection,
-        View) {
+        TweenCollection) {
     'use strict';
-
-    var requestRenderAfterFrame = function (scene) {
-        return function () {
-            scene.frameState.afterRender.push(function() {
-                scene.requestRender();
-            });
-        };
-    };
-
-    function MostDetailedRayPick(ray, width, tilesets) {
-        this.ray = ray;
-        this.width = width;
-        this.tilesets = tilesets;
-        this.ready = false;
-        this.deferred = when.defer();
-        this.promise = this.deferred.promise;
-    }
 
     /**
      * The container for all 3D graphical objects and state in a Cesium virtual scene.  Generally,
@@ -234,15 +203,12 @@ define([
      * @param {Canvas} options.canvas The HTML canvas element to create the scene for.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties.  See details above.
      * @param {Element} [options.creditContainer] The HTML element in which the credits will be displayed.
-     * @param {Element} [options.creditViewport] The HTML element in which to display the credit popup.  If not specified, the viewport will be a added as a sibling of the canvas.
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Boolean} [options.orderIndependentTranslucency=true] If true and the configuration supports it, use order independent translucency.
      * @param {Boolean} [options.scene3DOnly=false] If true, optimizes memory use and performance for 3D mode but disables the ability to use 2D or Columbus View.
      * @param {Number} [options.terrainExaggeration=1.0] A scalar used to exaggerate the terrain. Note that terrain exaggeration will not modify any other primitive as they are positioned relative to the ellipsoid.
      * @param {Boolean} [options.shadows=false] Determines if shadows are cast by the sun.
      * @param {MapMode2D} [options.mapMode2D=MapMode2D.INFINITE_SCROLL] Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
-     * @param {Boolean} [options.requestRenderMode=false] If true, rendering a frame will only occur when needed as determined by changes within the scene. Enabling improves performance of the application, but requires using {@link Scene#requestRender} to render a new frame explicitly in this mode. This will be necessary in many cases after making changes to the scene in other parts of the API. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
-     * @param {Number} [options.maximumRenderTimeChange=0.0] If requestRenderMode is true, this value defines the maximum change in simulation time allowed before a render is requested. See {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}.
      *
      * @see CesiumWidget
      * @see {@link http://www.khronos.org/registry/webgl/specs/latest/#5.2|WebGLContextAttributes}
@@ -263,16 +229,15 @@ define([
         var canvas = options.canvas;
         var contextOptions = options.contextOptions;
         var creditContainer = options.creditContainer;
-        var creditViewport = options.creditViewport;
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(canvas)) {
             throw new DeveloperError('options and options.canvas are required.');
         }
         //>>includeEnd('debug');
-        var hasCreditContainer = defined(creditContainer);
+
         var context = new Context(canvas, contextOptions);
-        if (!hasCreditContainer) {
+        if (!defined(creditContainer)) {
             creditContainer = document.createElement('div');
             creditContainer.style.position = 'absolute';
             creditContainer.style.bottom = '0';
@@ -282,16 +247,19 @@ define([
             creditContainer.style['padding-right'] = '5px';
             canvas.parentNode.appendChild(creditContainer);
         }
-        if (!defined(creditViewport)) {
-            creditViewport = canvas.parentNode;
-        }
 
         this._id = createGuid();
         this._jobScheduler = new JobScheduler();
-        this._frameState = new FrameState(context, new CreditDisplay(creditContainer, ' • ', creditViewport), this._jobScheduler);
+        this._frameState = new FrameState(context, new CreditDisplay(creditContainer), this._jobScheduler);
         this._frameState.scene3DOnly = defaultValue(options.scene3DOnly, false);
-        this._removeCreditContainer = !hasCreditContainer;
-        this._creditContainer = creditContainer;
+
+        var ps = new PassState(context);
+        ps.viewport = new BoundingRectangle();
+        ps.viewport.x = 0;
+        ps.viewport.y = 0;
+        ps.viewport.width = context.drawingBufferWidth;
+        ps.viewport.height = context.drawingBufferHeight;
+        this._passState = ps;
 
         this._canvas = canvas;
         this._context = context;
@@ -300,11 +268,6 @@ define([
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
 
-        this._mostDetailedRayPicks = [];
-
-        this._logDepthBuffer = context.fragmentDepth;
-        this._logDepthBufferDirty = true;
-
         this._tweens = new TweenCollection();
 
         this._shaderFrameCount = 0;
@@ -312,12 +275,28 @@ define([
         this._sunPostProcess = undefined;
 
         this._computeCommandList = [];
+        this._frustumCommandsList = [];
         this._overlayCommandList = [];
+
+        this._pickFramebuffer = undefined;
 
         this._useOIT = defaultValue(options.orderIndependentTranslucency, true);
         this._executeOITFunction = undefined;
 
+        var globeDepth;
+        if (context.depthTexture) {
+            globeDepth = new GlobeDepth();
+        }
+
+        var oit;
+        if (this._useOIT && defined(globeDepth)) {
+            oit = new OIT(context);
+        }
+
+        this._globeDepth = globeDepth;
         this._depthPlane = new DepthPlane();
+        this._oit = oit;
+        this._fxaa = new FXAA();
 
         this._clearColorCommand = new ClearCommand({
             color : new Color(),
@@ -331,24 +310,24 @@ define([
         this._stencilClearCommand = new ClearCommand({
             stencil : 0
         });
-        this._classificationStencilClearCommand = new ClearCommand({
-            stencil : 0,
-            renderState : RenderState.fromCache({
-                stencilMask : StencilConstants.CLASSIFICATION_MASK
-            })
-        });
 
+        this._pickDepths = [];
+        this._debugGlobeDepths = [];
+
+        this._pickDepthPassState = undefined;
+        this._pickDepthFramebuffer = undefined;
+        this._pickDepthFramebufferWidth = undefined;
+        this._pickDepthFramebufferHeight = undefined;
         this._depthOnlyRenderStateCache = {};
-        this._pickRenderStateCache = {};
 
         this._transitioner = new SceneTransitioner(this);
-
-        this._preUpdate = new Event();
-        this._postUpdate = new Event();
 
         this._renderError = new Event();
         this._preRender = new Event();
         this._postRender = new Event();
+
+        this._cameraStartFired = false;
+        this._cameraMovedTime = undefined;
 
         this._pickPositionCache = {};
         this._pickPositionCacheDirty = false;
@@ -454,14 +433,8 @@ define([
          * @default 1.0
          */
         this.morphTime = 1.0;
-
         /**
-         * The far-to-near ratio of the multi-frustum when using a normal depth buffer.
-         * <p>
-         * This value is used to create the near and far values for each frustum of the multi-frustum. It is only used
-         * when {@link Scene#logarithmicDepthBuffer} is <code>false</code>. When <code>logarithmicDepthBuffer</code> is
-         * <code>true</code>, use {@link Scene#logarithmicDepthFarToNearRatio}.
-         * </p>
+         * The far-to-near ratio of the multi-frustum. The default is 1,000.0.
          *
          * @type {Number}
          * @default 1000.0
@@ -469,23 +442,9 @@ define([
         this.farToNearRatio = 1000.0;
 
         /**
-         * The far-to-near ratio of the multi-frustum when using a logarithmic depth buffer.
-         * <p>
-         * This value is used to create the near and far values for each frustum of the multi-frustum. It is only used
-         * when {@link Scene#logarithmicDepthBuffer} is <code>true</code>. When <code>logarithmicDepthBuffer</code> is
-         * <code>false</code>, use {@link Scene#farToNearRatio}.
-         * </p>
-         *
-         * @type {Number}
-         * @default 1e9
-         */
-        this.logarithmicDepthFarToNearRatio = 1e9;
-
-        /**
          * Determines the uniform depth size in meters of each frustum of the multifrustum in 2D. If a primitive or model close
          * to the surface shows z-fighting, decreasing this will eliminate the artifact, but decrease performance. On the
-         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to the surface.
-         *
+         * other hand, increasing this will increase performance but may cause z-fighting among primitives close to thesurface.
          * @type {Number}
          * @default 1.75e6
          */
@@ -551,6 +510,8 @@ define([
          */
         this.debugShowFrustums = false;
 
+        this._debugFrustumStatistics = undefined;
+
         /**
          * This property is for debugging only; it is not for production use.
          * <p>
@@ -602,6 +563,15 @@ define([
         this._debugFrustumPlanes = undefined;
 
         /**
+         * When <code>true</code>, enables Fast Approximate Anti-aliasing even when order independent translucency
+         * is unsupported.
+         *
+         * @type Boolean
+         * @default true
+         */
+        this.fxaa = true;
+
+        /**
          * When <code>true</code>, enables picking using the depth buffer.
          *
          * @type Boolean
@@ -610,26 +580,12 @@ define([
         this.useDepthPicking = true;
 
         /**
-         * When <code>true</code>, enables picking translucent geometry using the depth buffer. Note that {@link Scene#useDepthPicking} must also be true for enabling this to work.
-         *
+         * When <code>true</code>, enables picking translucent geometry using the depth buffer.
+         * {@link Scene#useDepthPicking} must also be true to enable picking the depth buffer.
          * <p>
-         * Render must be called between picks.
-         * <br>There is a decrease in performance when enabled. There are extra draw calls to write depth for
+         * There is a decrease in performance when enabled. There are extra draw calls to write depth for
          * translucent geometry.
          * </p>
-         *
-         * @example
-         * // picking the position of a translucent primitive
-         * viewer.screenSpaceEventHandler.setInputAction(function onLeftClick(movement) {
-         *      var pickedFeature = viewer.scene.pick(movement.position);
-         *      if (!Cesium.defined(pickedFeature)) {
-         *          // nothing picked
-         *          return;
-         *      }
-         *      viewer.scene.render();
-         *      var worldPosition = viewer.scene.pickPosition(movement.position);
-         * }, Cesium.ScreenSpaceEventType.LEFT_CLICK);
-         *
          * @type {Boolean}
          * @default false
          */
@@ -642,6 +598,14 @@ define([
          * @private
          */
         this.cameraEventWaitTime = 500.0;
+
+        /**
+         * Set to true to copy the depth texture after rendering the globe. Makes czm_globeDepthTexture valid.
+         * @type {Boolean}
+         * @default false
+         * @private
+         */
+        this.copyGlobeDepth = false;
 
         /**
          * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
@@ -695,12 +659,6 @@ define([
          */
         this.eyeSeparation = undefined;
 
-        /**
-         * Post processing effects applied to the final render.
-         * @type {PostProcessStageCollection}
-         */
-        this.postProcessStages = new PostProcessStageCollection();
-
         this._brdfLutGenerator = new BrdfLutGenerator();
 
         this._terrainExaggeration = defaultValue(options.terrainExaggeration, 1.0);
@@ -708,6 +666,9 @@ define([
         this._performanceDisplay = undefined;
         this._debugVolume = undefined;
 
+        var camera = new Camera(this);
+        this._camera = camera;
+        this._cameraClone = Camera.clone(camera);
         this._screenSpaceCameraController = new ScreenSpaceCameraController(this);
         this._mapMode2D = defaultValue(options.mapMode2D, MapMode2D.INFINITE_SCROLL);
 
@@ -729,138 +690,30 @@ define([
 
             clearGlobeDepth : false,
             useDepthPlane : false,
-            renderTranslucentDepthForPick : false,
 
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
             useOIT : false,
-            useInvertClassification : false,
-            usePostProcess : false,
-            usePostProcessSelected : false,
-            useWebVR : false
+            useFXAA : false,
+            useInvertClassification : false
         };
 
         this._useWebVR = false;
         this._cameraVR = undefined;
         this._aspectRatioVR = undefined;
 
-        /**
-         * When <code>true</code>, rendering a frame will only occur when needed as determined by changes within the scene.
-         * Enabling improves performance of the application, but requires using {@link Scene#requestRender}
-         * to render a new frame explicitly in this mode. This will be necessary in many cases after making changes
-         * to the scene in other parts of the API.
-         *
-         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
-         * @see Scene#maximumRenderTimeChange
-         * @see Scene#requestRender
-         *
-         * @type {Boolean}
-         * @default false
-         */
-        this.requestRenderMode = defaultValue(options.requestRenderMode, false);
-        this._renderRequested = true;
+        // initial guess at frustums.
+        var near = camera.frustum.near;
+        var far = camera.frustum.far;
+        var numFrustums = Math.ceil(Math.log(far / near) / Math.log(this.farToNearRatio));
+        updateFrustums(near, far, this.farToNearRatio, numFrustums, this._frustumCommandsList, false, undefined);
 
-        /**
-         * If {@link Scene#requestRenderMode} is <code>true</code>, this value defines the maximum change in
-         * simulation time allowed before a render is requested. Lower values increase the number of frames rendered
-         * and higher values decrease the number of frames rendered. If <code>undefined</code>, changes to
-         * the simulation time will never request a render.
-         * This value impacts the rate of rendering for changes in the scene like lighting, entity property updates,
-         * and animations.
-         *
-         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
-         * @see Scene#requestRenderMode
-         *
-         * @type {Number}
-         * @default 0.5
-         */
-        this.maximumRenderTimeChange = defaultValue(options.maximumRenderTimeChange, 0.0);
-        this._lastRenderTime = undefined;
-        this._frameRateMonitor = undefined;
-
-        this._removeRequestListenerCallback = RequestScheduler.requestCompletedEvent.addEventListener(requestRenderAfterFrame(this));
-        this._removeTaskProcessorListenerCallback = TaskProcessor.taskCompletedEvent.addEventListener(requestRenderAfterFrame(this));
-        this._removeGlobeCallbacks = [];
-
-        var viewport = new BoundingRectangle(0, 0, context.drawingBufferWidth, context.drawingBufferHeight);
-        var camera = new Camera(this);
-
-        if (this._logDepthBuffer) {
-            camera.frustum.near = 0.1;
-            camera.frustum.far = 10000000000.0;
-        }
-
-        var pickOffscreenDefaultWidth = 0.1;
-        var pickOffscreenViewport = new BoundingRectangle(0, 0, 1, 1);
-        var pickOffscreenCamera = new Camera(this);
-        pickOffscreenCamera.frustum = new OrthographicFrustum({
-            width: pickOffscreenDefaultWidth,
-            aspectRatio: 1.0,
-            near: 0.1
-        });
-
-        this._pickOffscreenView = new View(this, pickOffscreenCamera, pickOffscreenViewport);
-
-        /**
-         * The camera view for the scene camera flight destination. Used for preloading flight destination tiles.
-         * @type {Camera}
-         * @private
-         */
-        this.preloadFlightCamera = new Camera(this);
-
-        /**
-         * The culling volume for the scene camera flight destination. Used for preloading flight destination tiles.
-         * @type {CullingVolume}
-         * @private
-         */
-        this.preloadFlightCullingVolume = undefined;
-
-        /**
-         * @private
-         */
-        this.pickOffscreenDefaultWidth = pickOffscreenDefaultWidth;
-
-        this._defaultView = new View(this, camera, viewport);
-        this._view = this._defaultView;
-
-        this._hdr = undefined;
-        this._hdrDirty = undefined;
-        this.highDynamicRange = true;
-        this.gamma = 2.2;
-        this._sunColor = new Cartesian3(1.8, 1.85, 2.0);
-
-        /**
-         * The spherical harmonic coefficients for image-based lighting of PBR models.
-         * @type {Cartesian3[]}
-         */
-        this.sphericalHarmonicCoefficients = undefined;
-
-        /**
-         * The url to the KTX file containing the specular environment map and convoluted mipmaps for image-based lighting of PBR models.
-         * @type {String}
-         */
-        this.specularEnvironmentMaps = undefined;
-        this._specularEnvironmentMapAtlas = undefined;
-
-        // Give frameState, camera, and screen space camera controller initial state before rendering
-        updateFrameNumber(this, 0.0, JulianDate.now());
-        updateFrameState(this);
+        // give frameState, camera, and screen space camera controller initial state before rendering
+        updateFrameState(this, 0.0, JulianDate.now());
         this.initializeFrame();
     }
 
-    function updateGlobeListeners(scene, globe) {
-        for (var i = 0; i < scene._removeGlobeCallbacks.length; ++i) {
-            scene._removeGlobeCallbacks[i]();
-        }
-        scene._removeGlobeCallbacks.length = 0;
-
-        var removeGlobeCallbacks = [];
-        if (defined(globe)) {
-            removeGlobeCallbacks.push(globe.imageryLayersUpdatedEvent.addEventListener(requestRenderAfterFrame(scene)));
-            removeGlobeCallbacks.push(globe.terrainProviderChanged.addEventListener(requestRenderAfterFrame(scene)));
-        }
-        scene._removeGlobeCallbacks = removeGlobeCallbacks;
-    }
+    var OPAQUE_FRUSTUM_NEAR_OFFSET = 0.9999;
 
     defineProperties(Scene.prototype, {
         /**
@@ -877,13 +730,13 @@ define([
         },
 
         /**
-         * The drawingBufferHeight of the underlying GL context.
+         * The drawingBufferWidth of the underlying GL context.
          * @memberof Scene.prototype
          *
          * @type {Number}
          * @readonly
          *
-         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferHeight|drawingBufferHeight}
+         * @see {@link https://www.khronos.org/registry/webgl/specs/1.0/#DOM-WebGLRenderingContext-drawingBufferWidth|drawingBufferWidth}
          */
         drawingBufferHeight : {
             get : function() {
@@ -937,62 +790,13 @@ define([
         },
 
         /**
-         * Returns <code>true</code> if the {@link Scene#pickPosition} function is supported.
+         * Returns true if the pickPosition function is supported.
          * @memberof Scene.prototype
          *
          * @type {Boolean}
          * @readonly
-         *
-         * @see Scene#pickPosition
          */
         pickPositionSupported : {
-            get : function() {
-                return this._context.depthTexture;
-            }
-        },
-
-        /**
-         * Returns <code>true</code> if the {@link Scene#sampleHeight} and {@link Scene#sampleHeightMostDetailed} functions are supported.
-         * @memberof Scene.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @see Scene#sampleHeight
-         * @see Scene#sampleHeightMostDetailed
-         */
-        sampleHeightSupported : {
-            get : function() {
-                return this._context.depthTexture;
-            }
-        },
-
-        /**
-         * Returns <code>true</code> if the {@link Scene#clampToHeight} and {@link Scene#clampToHeightMostDetailed} functions are supported.
-         * @memberof Scene.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @see Scene#clampToHeight
-         * @see Scene#clampToHeightMostDetailed
-         */
-        clampToHeightSupported : {
-            get : function() {
-                return this._context.depthTexture;
-            }
-        },
-
-        /**
-         * Returns <code>true</code> if the {@link Scene#invertClassification} is supported.
-         * @memberof Scene.prototype
-         *
-         * @type {Boolean}
-         * @readonly
-         *
-         * @see Scene#invertClassification
-         */
-        invertClassificationSupported : {
             get : function() {
                 return this._context.depthTexture;
             }
@@ -1012,8 +816,6 @@ define([
             set: function(globe) {
                 this._globe = this._globe && this._globe.destroy();
                 this._globe = globe;
-
-                updateGlobeListeners(this, globe);
             }
         },
 
@@ -1052,13 +854,10 @@ define([
          */
         camera : {
             get : function() {
-                return this._view.camera;
-            },
-            set : function(camera) {
-                // For internal use only. Documentation is still @readonly.
-                this._view.camera = camera;
+                return this._camera;
             }
         },
+        // TODO: setCamera
 
         /**
          * Gets the controller for camera input handling.
@@ -1175,45 +974,6 @@ define([
         },
 
         /**
-         * Gets the event that will be raised before the scene is updated or rendered.  Subscribers to the event
-         * receive the Scene instance as the first parameter and the current time as the second parameter.
-         * @memberof Scene.prototype
-         *
-         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
-         * @see Scene#postUpdate
-         * @see Scene#preRender
-         * @see Scene#postRender
-         *
-         * @type {Event}
-         * @readonly
-         */
-        preUpdate : {
-            get : function() {
-                return this._preUpdate;
-            }
-        },
-
-        /**
-         * Gets the event that will be raised immediately after the scene is updated and before the scene is rendered.
-         * Subscribers to the event receive the Scene instance as the first parameter and the current time as the second
-         * parameter.
-         * @memberof Scene.prototype
-         *
-         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
-         * @see Scene#preUpdate
-         * @see Scene#preRender
-         * @see Scene#postRender
-         *
-         * @type {Event}
-         * @readonly
-         */
-        postUpdate : {
-            get : function() {
-                return this._postUpdate;
-            }
-        },
-
-        /**
          * Gets the event that will be raised when an error is thrown inside the <code>render</code> function.
          * The Scene instance and the thrown error are the only two parameters passed to the event handler.
          * By default, errors are not rethrown after this event is raised, but that can be changed by setting
@@ -1230,15 +990,9 @@ define([
         },
 
         /**
-         * Gets the event that will be raised after the scene is updated and immediately before the scene is rendered.
-         * Subscribers to the event receive the Scene instance as the first parameter and the current time as the second
-         * parameter.
+         * Gets the event that will be raised at the start of each call to <code>render</code>.  Subscribers to the event
+         * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
-         *
-         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
-         * @see Scene#preUpdate
-         * @see Scene#postUpdate
-         * @see Scene#postRender
          *
          * @type {Event}
          * @readonly
@@ -1250,14 +1004,9 @@ define([
         },
 
         /**
-         * Gets the event that will be raised immediately after the scene is rendered.  Subscribers to the event
+         * Gets the event that will be raised at the end of each call to <code>render</code>.  Subscribers to the event
          * receive the Scene instance as the first parameter and the current time as the second parameter.
          * @memberof Scene.prototype
-         *
-         * @see {@link https://cesium.com/blog/2018/01/24/cesium-scene-rendering-performance/|Improving Performance with Explicit Rendering}
-         * @see Scene#preUpdate
-         * @see Scene#postUpdate
-         * @see Scene#postRender
          *
          * @type {Event}
          * @readonly
@@ -1265,20 +1014,6 @@ define([
         postRender : {
             get : function() {
                 return this._postRender;
-            }
-        },
-
-        /**
-         * Gets the simulation time when the scene was last rendered. Returns undefined if the scene has not yet been
-         * rendered.
-         * @memberof Scene.prototype
-         *
-         * @type {JulianDate}
-         * @readonly
-         */
-        lastRenderTime : {
-            get : function() {
-                return this._lastRenderTime;
             }
         },
 
@@ -1313,7 +1048,7 @@ define([
          */
         debugFrustumStatistics : {
             get : function() {
-                return this._view.debugFrustumStatistics;
+                return this._debugFrustumStatistics;
             }
         },
 
@@ -1339,7 +1074,7 @@ define([
          */
         orderIndependentTranslucency : {
             get : function() {
-                return this._useOIT;
+                return defined(this._oit);
             }
         },
 
@@ -1389,26 +1124,13 @@ define([
         /**
          * Gets the number of frustums used in the last frame.
          * @memberof Scene.prototype
-         * @type {FrustumCommands[]}
-         *
-         * @private
-         */
-        frustumCommandsList : {
-            get : function() {
-                return this._view.frustumCommandsList;
-            }
-        },
-
-        /**
-         * Gets the number of frustums used in the last frame.
-         * @memberof Scene.prototype
          * @type {Number}
          *
          * @private
          */
         numberOfFrustums : {
             get : function() {
-                return this._view.frustumCommandsList.length;
+                return this._frustumCommandsList.length;
             }
         },
 
@@ -1448,14 +1170,14 @@ define([
                         this._deviceOrientationCameraController = new DeviceOrientationCameraController(this);
                     }
 
-                    this._aspectRatioVR = this.camera.frustum.aspectRatio;
+                    this._aspectRatioVR = this._camera.frustum.aspectRatio;
                 } else {
                     this._frameState.creditDisplay.container.style.visibility = 'visible';
                     this._cameraVR = undefined;
                     this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
 
-                    this.camera.frustum.aspectRatio = this._aspectRatioVR;
-                    this.camera.frustum.xOffset = 0.0;
+                    this._camera.frustum.aspectRatio = this._aspectRatioVR;
+                    this._camera.frustum.xOffset = 0.0;
                 }
             }
         },
@@ -1463,7 +1185,7 @@ define([
         /**
          * Determines if the 2D map is rotatable or can be scrolled infinitely in the horizontal direction.
          * @memberof Scene.prototype
-         * @type {MapMode2D}
+         * @type {Boolean}
          */
         mapMode2D : {
             get : function() {
@@ -1507,97 +1229,6 @@ define([
                 //>>includeEnd('debug');
                 this._minimumDisableDepthTestDistance = value;
             }
-        },
-
-        /**
-         * Whether or not to use a logarithmic depth buffer. Enabling this option will allow for less frustums in the multi-frustum,
-         * increasing performance. This property relies on {@link Context#fragmentDepth} being supported.
-         * @memberof Scene.prototype
-         * @type {Boolean}
-         */
-        logarithmicDepthBuffer : {
-            get : function() {
-                return this._logDepthBuffer;
-            },
-            set : function(value) {
-                value = this._context.fragmentDepth && value;
-                if (this._logDepthBuffer !== value) {
-                    this._logDepthBuffer = value;
-                    this._logDepthBufferDirty = true;
-                    this._defaultView.updateFrustums = true;
-                }
-            }
-        },
-
-        /**
-         * The value used for gamma correction. This is only used when rendering with high dynamic range.
-         * @memberof Scene.prototype
-         * @type {Number}
-         * @default 2.2
-         */
-        gamma : {
-            get : function() {
-                return this._context.uniformState.gamma;
-            },
-            set : function(value) {
-                this._context.uniformState.gamma = value;
-            }
-        },
-
-        /**
-         * Whether or not to use high dynamic range rendering.
-         * @memberof Scene.prototype
-         * @type {Boolean}
-         * @default true
-         */
-        highDynamicRange : {
-            get : function() {
-                return this._hdr;
-            },
-            set : function(value) {
-                var context = this._context;
-                var hdr = value && context.depthTexture && (context.colorBufferFloat || context.colorBufferHalfFloat);
-                this._hdrDirty = hdr !== this._hdr;
-                this._hdr = hdr;
-            }
-        },
-
-        /**
-         * Whether or not high dynamic range rendering is supported.
-         * @memberof Scene.prototype
-         * @type {Boolean}
-         * @default true
-         */
-        highDynamicRangeSupported : {
-            get : function() {
-                var context = this._context;
-                return context.depthTexture && (context.colorBufferFloat || context.colorBufferHalfFloat);
-            }
-        },
-
-        /**
-         * Gets or sets the color of the light emitted by the sun.
-         *
-         * @memberof Scene.prototype
-         * @type {Cartesian3}
-         * @default Cartesian3(1.8, 1.85, 2.0)
-         */
-        sunColor: {
-            get: function() {
-                return this._sunColor;
-            },
-            set: function(value) {
-                this._sunColor = value;
-            }
-        },
-
-        /**
-         * @private
-         */
-        opaqueFrustumNearOffset : {
-            get : function() {
-                return this._frameState.useLogDepth ? 0.9 : 0.9999;
-            }
         }
     });
 
@@ -1613,123 +1244,64 @@ define([
                ((format === 'WEBGL_compressed_texture_etc1' || format === 'etc1') && context.etc1);
     };
 
-    function updateDerivedCommands(scene, command, shadowsDirty) {
-        var frameState = scene._frameState;
-        var context = scene._context;
-        var oit = scene._view.oit;
-        var lightShadowMaps = frameState.shadowState.lightShadowMaps;
-        var lightShadowsEnabled = frameState.shadowState.lightShadowsEnabled;
-
-        var derivedCommands = command.derivedCommands;
-
-        if (defined(command.pickId)) {
-            derivedCommands.picking = DerivedCommand.createPickDerivedCommand(scene, command, context, derivedCommands.picking);
-        }
-
-        if (!command.pickOnly) {
-            derivedCommands.depth = DerivedCommand.createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
-        }
-
-        derivedCommands.originalCommand = command;
-
-        if (scene._hdr) {
-            derivedCommands.hdr = DerivedCommand.createHdrCommand(command, context, derivedCommands.hdr);
-            command = derivedCommands.hdr.command;
-            derivedCommands = command.derivedCommands;
-        }
-
-        if (lightShadowsEnabled && command.receiveShadows) {
-            derivedCommands.shadows = ShadowMap.createReceiveDerivedCommand(lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
-        }
-
-        if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
-            if (lightShadowsEnabled && command.receiveShadows) {
-                derivedCommands.oit = defined(derivedCommands.oit) ? derivedCommands.oit : {};
-                derivedCommands.oit.shadows = oit.createDerivedCommands(derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
-            } else {
-                derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
-            }
-        }
+    var scratchPosition0 = new Cartesian3();
+    var scratchPosition1 = new Cartesian3();
+    function maxComponent(a, b) {
+        var x = Math.max(Math.abs(a.x), Math.abs(b.x));
+        var y = Math.max(Math.abs(a.y), Math.abs(b.y));
+        var z = Math.max(Math.abs(a.z), Math.abs(b.z));
+        return Math.max(Math.max(x, y), z);
     }
 
-    /**
-     * @private
-     */
-    Scene.prototype.updateDerivedCommands = function(command) {
-        if (!defined(command.derivedCommands)) {
-            // Is not a DrawCommand
-            return;
-        }
+    function cameraEqual(camera0, camera1, epsilon) {
+        var scalar = 1 / Math.max(1, maxComponent(camera0.position, camera1.position));
+        Cartesian3.multiplyByScalar(camera0.position, scalar, scratchPosition0);
+        Cartesian3.multiplyByScalar(camera1.position, scalar, scratchPosition1);
+        return Cartesian3.equalsEpsilon(scratchPosition0, scratchPosition1, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.direction, camera1.direction, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.up, camera1.up, epsilon) &&
+               Cartesian3.equalsEpsilon(camera0.right, camera1.right, epsilon) &&
+               Matrix4.equalsEpsilon(camera0.transform, camera1.transform, epsilon);
+    }
 
-        var frameState = this._frameState;
-        var context = this._context;
+    function updateDerivedCommands(scene, command) {
+        var frameState = scene.frameState;
+        var context = scene._context;
+        var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
+        var shadowMaps = frameState.shadowHints.shadowMaps;
+        var lightShadowMaps = frameState.shadowHints.lightShadowMaps;
+        var lightShadowsEnabled = shadowsEnabled && (lightShadowMaps.length > 0);
 
         // Update derived commands when any shadow maps become dirty
         var shadowsDirty = false;
-        var lastDirtyTime = frameState.shadowState.lastDirtyTime;
+        var lastDirtyTime = frameState.shadowHints.lastDirtyTime;
         if (command.lastDirtyTime !== lastDirtyTime) {
             command.lastDirtyTime = lastDirtyTime;
             command.dirty = true;
             shadowsDirty = true;
         }
 
-        var useLogDepth = frameState.useLogDepth;
-        var useHdr = this._hdr;
         var derivedCommands = command.derivedCommands;
-        var hasLogDepthDerivedCommands = defined(derivedCommands.logDepth);
-        var hasHdrCommands = defined(derivedCommands.hdr);
-        var hasDerivedCommands = defined(derivedCommands.originalCommand);
-        var needsLogDepthDerivedCommands = useLogDepth && !hasLogDepthDerivedCommands;
-        var needsHdrCommands = useHdr && !hasHdrCommands;
-        var needsDerivedCommands = (!useLogDepth || !useHdr) && !hasDerivedCommands;
-        command.dirty = command.dirty || needsLogDepthDerivedCommands || needsHdrCommands || needsDerivedCommands;
-
-        if (command.dirty) {
+        if (command.dirty && defined(derivedCommands)) {
             command.dirty = false;
 
-            var shadowMaps = frameState.shadowState.shadowMaps;
-            var shadowsEnabled = frameState.shadowState.shadowsEnabled;
-            if (shadowsEnabled && command.castShadows) {
-                derivedCommands.shadows = ShadowMap.createCastDerivedCommand(shadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
+            if (shadowsEnabled && (command.receiveShadows || command.castShadows)) {
+                derivedCommands.shadows = ShadowMap.createDerivedCommands(shadowMaps, lightShadowMaps, command, shadowsDirty, context, derivedCommands.shadows);
             }
 
-            if (hasLogDepthDerivedCommands || needsLogDepthDerivedCommands) {
-                derivedCommands.logDepth = DerivedCommand.createLogDepthCommand(command, context, derivedCommands.logDepth);
-                updateDerivedCommands(this, derivedCommands.logDepth.command, shadowsDirty);
+            var oit = scene._oit;
+            if (command.pass === Pass.TRANSLUCENT && defined(oit) && oit.isSupported()) {
+                if (lightShadowsEnabled && command.receiveShadows) {
+                    derivedCommands.oit = defined(derivedCommands.oit) ? derivedCommands.oit : {};
+                    derivedCommands.oit.shadows = oit.createDerivedCommands(command.derivedCommands.shadows.receiveCommand, context, derivedCommands.oit.shadows);
+                } else {
+                    derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
+                }
             }
-            if (hasDerivedCommands || needsDerivedCommands) {
-                updateDerivedCommands(this, command, shadowsDirty);
-            }
+
+            derivedCommands.depth = createDepthOnlyDerivedCommand(scene, command, context, derivedCommands.depth);
         }
-    };
-
-    var mostDetailedPreloadTilesetPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.MOST_DETAILED_PRELOAD
-    });
-
-    var mostDetailedPickTilesetPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.MOST_DETAILED_PICK
-    });
-
-    var renderTilesetPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.RENDER
-    });
-
-    var pickTilesetPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.PICK
-    });
-
-    var preloadTilesetPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.PRELOAD
-    });
-
-    var preloadFlightTilesetPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.PRELOAD_FLIGHT
-    });
-
-    var requestRenderModeDeferCheckPassState = new Cesium3DTilePassState({
-        pass : Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK
-    });
+    }
 
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
@@ -1738,10 +1310,10 @@ define([
         // TODO: The occluder is the top-level globe. When we add
         //       support for multiple central bodies, this should be the closest one.
         var globe = scene.globe;
-        if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show) {
+        if (scene._mode === SceneMode.SCENE3D && defined(globe)) {
             var ellipsoid = globe.ellipsoid;
             scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
-            scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene.camera.positionWC, scratchOccluder);
+            scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene._camera.positionWC, scratchOccluder);
             return scratchOccluder;
         }
 
@@ -1752,18 +1324,10 @@ define([
         passes.render = false;
         passes.pick = false;
         passes.depth = false;
-        passes.postProcess = false;
-        passes.offscreen = false;
     }
 
-    function updateFrameNumber(scene, frameNumber, time) {
-        var frameState = scene._frameState;
-        frameState.frameNumber = frameNumber;
-        frameState.time = JulianDate.clone(time, frameState.time);
-    }
-
-    function updateFrameState(scene) {
-        var camera = scene.camera;
+    function updateFrameState(scene, frameNumber, time) {
+        var camera = scene._camera;
 
         var frameState = scene._frameState;
         frameState.commandList.length = 0;
@@ -1773,24 +1337,14 @@ define([
         frameState.mode = scene._mode;
         frameState.morphTime = scene.morphTime;
         frameState.mapProjection = scene.mapProjection;
+        frameState.frameNumber = frameNumber;
+        frameState.time = JulianDate.clone(time, frameState.time);
         frameState.camera = camera;
         frameState.cullingVolume = camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
         frameState.occluder = getOccluder(scene);
         frameState.terrainExaggeration = scene._terrainExaggeration;
         frameState.minimumDisableDepthTestDistance = scene._minimumDisableDepthTestDistance;
         frameState.invertClassification = scene.invertClassification;
-        frameState.useLogDepth = scene._logDepthBuffer && !(scene.camera.frustum instanceof OrthographicFrustum || scene.camera.frustum instanceof OrthographicOffCenterFrustum);
-        frameState.sunColor = scene._sunColor;
-
-        if (defined(scene._specularEnvironmentMapAtlas) && scene._specularEnvironmentMapAtlas.ready) {
-            frameState.specularEnvironmentMaps = scene._specularEnvironmentMapAtlas.texture;
-            frameState.specularEnvironmentMapsMaximumLOD = scene._specularEnvironmentMapAtlas.maximumMipmapLevel;
-        } else {
-            frameState.specularEnvironmentMaps = undefined;
-            frameState.specularEnvironmentMapsMaximumLOD = undefined;
-        }
-
-        frameState.sphericalHarmonicCoefficients = scene.sphericalHarmonicCoefficients;
 
         scene._actualInvertClassificationColor = Color.clone(scene.invertClassificationColor, scene._actualInvertClassificationColor);
         if (!InvertClassification.isTranslucencySupported(scene._context)) {
@@ -1806,22 +1360,241 @@ define([
         }
 
         clearPasses(frameState.passes);
+    }
 
-        frameState.tilesetPassState = undefined;
+    function updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, nearToFarDistance2D) {
+        frustumCommandsList.length = numFrustums;
+        for (var m = 0; m < numFrustums; ++m) {
+            var curNear;
+            var curFar;
+
+            if (!is2D) {
+                curNear = Math.max(near, Math.pow(farToNearRatio, m) * near);
+                curFar = Math.min(far, farToNearRatio * curNear);
+            } else {
+                curNear = Math.min(far - nearToFarDistance2D, near + m * nearToFarDistance2D);
+                curFar = Math.min(far, curNear + nearToFarDistance2D);
+            }
+
+            var frustumCommands = frustumCommandsList[m];
+            if (!defined(frustumCommands)) {
+                frustumCommands = frustumCommandsList[m] = new FrustumCommands(curNear, curFar);
+            } else {
+                frustumCommands.near = curNear;
+                frustumCommands.far = curFar;
+            }
+        }
+    }
+
+    function insertIntoBin(scene, command, distance) {
+        if (scene.debugShowFrustums) {
+            command.debugOverlappingFrustums = 0;
+        }
+
+        if (!scene.frameState.passes.pick) {
+            updateDerivedCommands(scene, command);
+        }
+
+        var frustumCommandsList = scene._frustumCommandsList;
+        var length = frustumCommandsList.length;
+
+        for (var i = 0; i < length; ++i) {
+            var frustumCommands = frustumCommandsList[i];
+            var curNear = frustumCommands.near;
+            var curFar = frustumCommands.far;
+
+            if (distance.start > curFar) {
+                continue;
+            }
+
+            if (distance.stop < curNear) {
+                break;
+            }
+
+            var pass = command.pass;
+            var index = frustumCommands.indices[pass]++;
+            frustumCommands.commands[pass][index] = command;
+
+            if (scene.debugShowFrustums) {
+                command.debugOverlappingFrustums |= (1 << i);
+            }
+
+            if (command.executeInClosestFrustum) {
+                break;
+            }
+        }
+
+        if (scene.debugShowFrustums) {
+            var cf = scene._debugFrustumStatistics.commandsInFrustums;
+            cf[command.debugOverlappingFrustums] = defined(cf[command.debugOverlappingFrustums]) ? cf[command.debugOverlappingFrustums] + 1 : 1;
+            ++scene._debugFrustumStatistics.totalCommands;
+        }
     }
 
     var scratchCullingVolume = new CullingVolume();
+    var distances = new Interval();
 
-    /**
-     * @private
-     */
-    Scene.prototype.isVisible = function(command, cullingVolume, occluder) {
+    function isVisible(command, cullingVolume, occluder) {
         return ((defined(command)) &&
                 ((!defined(command.boundingVolume)) ||
                  !command.cull ||
                  ((cullingVolume.computeVisibility(command.boundingVolume) !== Intersect.OUTSIDE) &&
-                  (!defined(occluder) || !command.occlude || !command.boundingVolume.isOccluded(occluder)))));
-    };
+                  (!defined(occluder) || !command.boundingVolume.isOccluded(occluder)))));
+    }
+
+    function createPotentiallyVisibleSet(scene) {
+        var frameState = scene._frameState;
+        var camera = frameState.camera;
+        var direction = camera.directionWC;
+        var position = camera.positionWC;
+
+        var computeList = scene._computeCommandList;
+        var overlayList = scene._overlayCommandList;
+        var commandList = frameState.commandList;
+
+        if (scene.debugShowFrustums) {
+            scene._debugFrustumStatistics = {
+                totalCommands : 0,
+                commandsInFrustums : {}
+            };
+        }
+
+        var frustumCommandsList = scene._frustumCommandsList;
+        var numberOfFrustums = frustumCommandsList.length;
+        var numberOfPasses = Pass.NUMBER_OF_PASSES;
+        for (var n = 0; n < numberOfFrustums; ++n) {
+            for (var p = 0; p < numberOfPasses; ++p) {
+                frustumCommandsList[n].indices[p] = 0;
+            }
+        }
+
+        computeList.length = 0;
+        overlayList.length = 0;
+
+        var near = Number.MAX_VALUE;
+        var far = -Number.MAX_VALUE;
+        var undefBV = false;
+
+        var shadowsEnabled = frameState.shadowHints.shadowsEnabled;
+        var shadowNear = Number.MAX_VALUE;
+        var shadowFar = -Number.MAX_VALUE;
+        var shadowClosestObjectSize = Number.MAX_VALUE;
+
+        var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
+        var cullingVolume = frameState.cullingVolume;
+
+        // get user culling volume minus the far plane.
+        var planes = scratchCullingVolume.planes;
+        for (var k = 0; k < 5; ++k) {
+            planes[k] = cullingVolume.planes[k];
+        }
+        cullingVolume = scratchCullingVolume;
+
+        var length = commandList.length;
+        for (var i = 0; i < length; ++i) {
+            var command = commandList[i];
+            var pass = command.pass;
+
+            if (pass === Pass.COMPUTE) {
+                computeList.push(command);
+            } else if (pass === Pass.OVERLAY) {
+                overlayList.push(command);
+            } else {
+                var boundingVolume = command.boundingVolume;
+                if (defined(boundingVolume)) {
+                    if (!isVisible(command, cullingVolume, occluder)) {
+                        continue;
+                    }
+
+                    distances = boundingVolume.computePlaneDistances(position, direction, distances);
+                    near = Math.min(near, distances.start);
+                    far = Math.max(far, distances.stop);
+
+                    // Compute a tight near and far plane for commands that receive shadows. This helps compute
+                    // good splits for cascaded shadow maps. Ignore commands that exceed the maximum distance.
+                    // When moving the camera low LOD globe tiles begin to load, whose bounding volumes
+                    // throw off the near/far fitting for the shadow map. Only update for globe tiles that the
+                    // camera isn't inside.
+                    if (shadowsEnabled && command.receiveShadows && (distances.start < ShadowMap.MAXIMUM_DISTANCE) &&
+                        !((pass === Pass.GLOBE) && (distances.start < -100.0) && (distances.stop > 100.0))) {
+
+                        // Get the smallest bounding volume the camera is near. This is used to place more shadow detail near the object.
+                        var size = distances.stop - distances.start;
+                        if ((pass !== Pass.GLOBE) && (distances.start < 100.0)) {
+                            shadowClosestObjectSize = Math.min(shadowClosestObjectSize, size);
+                        }
+                        shadowNear = Math.min(shadowNear, distances.start);
+                        shadowFar = Math.max(shadowFar, distances.stop);
+                    }
+                } else {
+                    // Clear commands don't need a bounding volume - just add the clear to all frustums.
+                    // If another command has no bounding volume, though, we need to use the camera's
+                    // worst-case near and far planes to avoid clipping something important.
+                    distances.start = camera.frustum.near;
+                    distances.stop = camera.frustum.far;
+                    undefBV = !(command instanceof ClearCommand);
+                }
+
+                insertIntoBin(scene, command, distances);
+            }
+        }
+
+        if (undefBV) {
+            near = camera.frustum.near;
+            far = camera.frustum.far;
+        } else {
+            // The computed near plane must be between the user defined near and far planes.
+            // The computed far plane must between the user defined far and computed near.
+            // This will handle the case where the computed near plane is further than the user defined far plane.
+            near = Math.min(Math.max(near, camera.frustum.near), camera.frustum.far);
+            far = Math.max(Math.min(far, camera.frustum.far), near);
+
+            if (shadowsEnabled) {
+                shadowNear = Math.min(Math.max(shadowNear, camera.frustum.near), camera.frustum.far);
+                shadowFar = Math.max(Math.min(shadowFar, camera.frustum.far), shadowNear);
+            }
+        }
+
+        // Use the computed near and far for shadows
+        if (shadowsEnabled) {
+            frameState.shadowHints.nearPlane = shadowNear;
+            frameState.shadowHints.farPlane = shadowFar;
+            frameState.shadowHints.closestObjectSize = shadowClosestObjectSize;
+        }
+
+        // Exploit temporal coherence. If the frustums haven't changed much, use the frustums computed
+        // last frame, else compute the new frustums and sort them by frustum again.
+        var is2D = scene.mode === SceneMode.SCENE2D;
+        var farToNearRatio = scene.farToNearRatio;
+
+        var numFrustums;
+        if (!is2D) {
+            // The multifrustum for 3D/CV is non-uniformly distributed.
+            numFrustums = Math.ceil(Math.log(far / near) / Math.log(farToNearRatio));
+        } else {
+            // The multifrustum for 2D is uniformly distributed. To avoid z-fighting in 2D,
+            // the camera i smoved to just before the frustum and the frustum depth is scaled
+            // to be in [1.0, nearToFarDistance2D].
+            far = Math.min(far, camera.position.z + scene.nearToFarDistance2D);
+            near = Math.min(near, far);
+            numFrustums = Math.ceil(Math.max(1.0, far - near) / scene.nearToFarDistance2D);
+        }
+
+        if (near !== Number.MAX_VALUE && (numFrustums !== numberOfFrustums || (frustumCommandsList.length !== 0 &&
+                (near < frustumCommandsList[0].near || (far > frustumCommandsList[numberOfFrustums - 1].far && !CesiumMath.equalsEpsilon(far, frustumCommandsList[numberOfFrustums - 1].far, CesiumMath.EPSILON8)))))) {
+            updateFrustums(near, far, farToNearRatio, numFrustums, frustumCommandsList, is2D, scene.nearToFarDistance2D);
+            createPotentiallyVisibleSet(scene);
+        }
+
+        var frustumSplits = frameState.frustumSplits;
+        frustumSplits.length = numFrustums + 1;
+        for (var j = 0; j < numFrustums; ++j) {
+            frustumSplits[j] = frustumCommandsList[j].near;
+            if (j === numFrustums - 1) {
+                frustumSplits[j + 1] = frustumCommandsList[j].far;
+            }
+        }
+    }
 
     function getAttributeLocations(shaderProgram) {
         var attributeLocations = {};
@@ -1916,102 +1689,7 @@ define([
                                       0.0, 0.0, 0.0, 1.0);
     transformFrom2D = Matrix4.inverseTransformation(transformFrom2D, transformFrom2D);
 
-    function debugShowBoundingVolume(command, scene, passState, debugFramebuffer) {
-        // Debug code to draw bounding volume for command.  Not optimized!
-        // Assumes bounding volume is a bounding sphere or box
-        var frameState = scene._frameState;
-        var context = frameState.context;
-        var boundingVolume = command.boundingVolume;
-
-        if (defined(scene._debugVolume)) {
-            scene._debugVolume.destroy();
-        }
-
-        var geometry;
-
-        var center = Cartesian3.clone(boundingVolume.center);
-        if (frameState.mode !== SceneMode.SCENE3D) {
-            center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
-            var projection = frameState.mapProjection;
-            var centerCartographic = projection.unproject(center);
-            center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
-        }
-
-        if (defined(boundingVolume.radius)) {
-            var radius = boundingVolume.radius;
-
-            geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
-                radii : new Cartesian3(radius, radius, radius),
-                vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-            })));
-
-            scene._debugVolume = new Primitive({
-                geometryInstances : new GeometryInstance({
-                    geometry : geometry,
-                    modelMatrix : Matrix4.fromTranslation(center),
-                    attributes : {
-                        color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
-                    }
-                }),
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : false
-                }),
-                asynchronous : false
-            });
-        } else {
-            var halfAxes = boundingVolume.halfAxes;
-
-            geometry = GeometryPipeline.toWireframe(BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
-                dimensions : new Cartesian3(2.0, 2.0, 2.0),
-                vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
-            })));
-
-            scene._debugVolume = new Primitive({
-                geometryInstances : new GeometryInstance({
-                    geometry : geometry,
-                    modelMatrix : Matrix4.fromRotationTranslation(halfAxes, center, new Matrix4()),
-                    attributes : {
-                        color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
-                    }
-                }),
-                appearance : new PerInstanceColorAppearance({
-                    flat : true,
-                    translucent : false
-                }),
-                asynchronous : false
-            });
-        }
-
-        var savedCommandList = frameState.commandList;
-        var commandList = frameState.commandList = [];
-        scene._debugVolume.update(frameState);
-
-        command = commandList[0];
-
-        if (frameState.useLogDepth) {
-            var logDepth = DerivedCommand.createLogDepthCommand(command, context);
-            command = logDepth.command;
-        }
-
-        var framebuffer;
-        if (defined(debugFramebuffer)) {
-            framebuffer = passState.framebuffer;
-            passState.framebuffer = debugFramebuffer;
-        }
-
-        command.execute(context, passState);
-
-        if (defined(framebuffer)) {
-            passState.framebuffer = framebuffer;
-        }
-
-        frameState.commandList = savedCommandList;
-    }
-
     function executeCommand(command, scene, context, passState, debugFramebuffer) {
-        var frameState = scene._frameState;
-
         if ((defined(scene.debugCommandFilter)) && !scene.debugCommandFilter(command)) {
             return;
         }
@@ -2021,122 +1699,141 @@ define([
             return;
         }
 
-        if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
-            debugShowBoundingVolume(command, scene, passState, debugFramebuffer);
-        }
-
-        if (frameState.useLogDepth && defined(command.derivedCommands.logDepth)) {
-            command = command.derivedCommands.logDepth.command;
-        }
-
-        var passes = frameState.passes;
-        if (!passes.pick && scene._hdr && defined(command.derivedCommands) && defined(command.derivedCommands.hdr)) {
-            command = command.derivedCommands.hdr.command;
-        }
-
-        if (passes.pick || passes.depth) {
-            if (passes.pick && !passes.depth && defined(command.derivedCommands.picking)) {
-                command = command.derivedCommands.picking.pickCommand;
-                command.execute(context, passState);
-                return;
-            } else if (defined(command.derivedCommands.depth)) {
-                command = command.derivedCommands.depth.depthOnlyCommand;
-                command.execute(context, passState);
-                return;
-            }
-        }
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
+        var lightShadowsEnabled = shadowsEnabled && (scene.frameState.shadowHints.lightShadowMaps.length > 0);
 
         if (scene.debugShowCommands || scene.debugShowFrustums) {
             executeDebugCommand(command, scene, passState);
-            return;
-        }
-
-        if (frameState.shadowState.lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
+        } else if (lightShadowsEnabled && command.receiveShadows && defined(command.derivedCommands.shadows)) {
             // If the command receives shadows, execute the derived shadows command.
             // Some commands, such as OIT derived commands, do not have derived shadow commands themselves
             // and instead shadowing is built-in. In this case execute the command regularly below.
             command.derivedCommands.shadows.receiveCommand.execute(context, passState);
+        } else if (scene.frameState.passes.depth && defined(command.derivedCommands.depth)) {
+            command.derivedCommands.depth.depthOnlyCommand.execute(context, passState);
         } else {
             command.execute(context, passState);
         }
+
+        if (command.debugShowBoundingVolume && (defined(command.boundingVolume))) {
+            // Debug code to draw bounding volume for command.  Not optimized!
+            // Assumes bounding volume is a bounding sphere or box
+            var frameState = scene._frameState;
+            var boundingVolume = command.boundingVolume;
+
+            if (defined(scene._debugVolume)) {
+                scene._debugVolume.destroy();
+            }
+
+            var geometry;
+
+            var center = Cartesian3.clone(boundingVolume.center);
+            if (frameState.mode !== SceneMode.SCENE3D) {
+                center = Matrix4.multiplyByPoint(transformFrom2D, center, center);
+                var projection = frameState.mapProjection;
+                var centerCartographic = projection.unproject(center);
+                center = projection.ellipsoid.cartographicToCartesian(centerCartographic);
+            }
+
+            if (defined(boundingVolume.radius)) {
+                var radius = boundingVolume.radius;
+
+                geometry = GeometryPipeline.toWireframe(EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
+                    radii : new Cartesian3(radius, radius, radius),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                })));
+
+                scene._debugVolume = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : geometry,
+                        modelMatrix : Matrix4.fromTranslation(center),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
+                    }),
+                    asynchronous : false
+                });
+            } else {
+                var halfAxes = boundingVolume.halfAxes;
+
+                geometry = GeometryPipeline.toWireframe(BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
+                    dimensions : new Cartesian3(2.0, 2.0, 2.0),
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                })));
+
+                scene._debugVolume = new Primitive({
+                    geometryInstances : new GeometryInstance({
+                        geometry : geometry,
+                        modelMatrix : Matrix4.fromRotationTranslation(halfAxes, center, new Matrix4()),
+                        attributes : {
+                            color : new ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 1.0)
+                        }
+                    }),
+                    appearance : new PerInstanceColorAppearance({
+                        flat : true,
+                        translucent : false
+                    }),
+                    asynchronous : false
+                });
+            }
+
+            var savedCommandList = frameState.commandList;
+            var commandList = frameState.commandList = [];
+            scene._debugVolume.update(frameState);
+
+            var framebuffer;
+            if (defined(debugFramebuffer)) {
+                framebuffer = passState.framebuffer;
+                passState.framebuffer = debugFramebuffer;
+            }
+
+            commandList[0].execute(context, passState);
+
+            if (defined(framebuffer)) {
+                passState.framebuffer = framebuffer;
+            }
+
+            frameState.commandList = savedCommandList;
+        }
     }
 
-    function executeIdCommand(command, scene, context, passState) {
-        var frameState = scene._frameState;
-        var derivedCommands = command.derivedCommands;
-        if (!defined(derivedCommands)) {
-            return;
-        }
-
-        if (frameState.useLogDepth && defined(derivedCommands.logDepth)) {
-            command = derivedCommands.logDepth.command;
-        }
-
-        derivedCommands = command.derivedCommands;
-        if (defined(derivedCommands.picking)) {
-            command = derivedCommands.picking.pickCommand;
-            command.execute(context, passState);
-        } else if (defined(derivedCommands.depth)) {
-            command = derivedCommands.depth.depthOnlyCommand;
-            command.execute(context, passState);
-        }
-    }
-
-    function backToFront(a, b, position) {
+    function translucentCompare(a, b, position) {
         return b.boundingVolume.distanceSquaredTo(position) - a.boundingVolume.distanceSquaredTo(position);
     }
 
-    function frontToBack(a, b, position) {
-        // When distances are equal equal favor sorting b before a. This gives render priority to commands later in the list.
-        return a.boundingVolume.distanceSquaredTo(position) - b.boundingVolume.distanceSquaredTo(position) + CesiumMath.EPSILON12;
-    }
-
-    function executeTranslucentCommandsBackToFront(scene, executeFunction, passState, commands, invertClassification) {
+    function executeTranslucentCommandsSorted(scene, executeFunction, passState, commands, invertClassification) {
         var context = scene.context;
 
-        mergeSort(commands, backToFront, scene.camera.positionWC);
+        mergeSort(commands, translucentCompare, scene._camera.positionWC);
 
         if (defined(invertClassification)) {
             executeFunction(invertClassification.unclassifiedCommand, scene, context, passState);
         }
 
         var length = commands.length;
-        for (var i = 0; i < length; ++i) {
-            executeFunction(commands[i], scene, context, passState);
-        }
-    }
-
-    function executeTranslucentCommandsFrontToBack(scene, executeFunction, passState, commands, invertClassification) {
-        var context = scene.context;
-
-        mergeSort(commands, frontToBack, scene.camera.positionWC);
-
-        if (defined(invertClassification)) {
-            executeFunction(invertClassification.unclassifiedCommand, scene, context, passState);
-        }
-
-        var length = commands.length;
-        for (var i = 0; i < length; ++i) {
-            executeFunction(commands[i], scene, context, passState);
+        for (var j = 0; j < length; ++j) {
+            executeFunction(commands[j], scene, context, passState);
         }
     }
 
     function getDebugGlobeDepth(scene, index) {
-        var globeDepths = scene._view.debugGlobeDepths;
-        var globeDepth = globeDepths[index];
+        var globeDepth = scene._debugGlobeDepths[index];
         if (!defined(globeDepth) && scene.context.depthTexture) {
             globeDepth = new GlobeDepth();
-            globeDepths[index] = globeDepth;
+            scene._debugGlobeDepths[index] = globeDepth;
         }
         return globeDepth;
     }
 
     function getPickDepth(scene, index) {
-        var pickDepths = scene._view.pickDepths;
-        var pickDepth = pickDepths[index];
+        var pickDepth = scene._pickDepths[index];
         if (!defined(pickDepth)) {
             pickDepth = new PickDepth();
-            pickDepths[index] = pickDepth;
+            scene._pickDepths[index] = pickDepth;
         }
         return pickDepth;
     }
@@ -2147,7 +1844,7 @@ define([
     var scratchOrthographicOffCenterFrustum = new OrthographicOffCenterFrustum();
 
     function executeCommands(scene, passState) {
-        var camera = scene.camera;
+        var camera = scene._camera;
         var context = scene.context;
         var us = context.uniformState;
 
@@ -2172,12 +1869,11 @@ define([
         us.updateFrustum(frustum);
         us.updatePass(Pass.ENVIRONMENT);
 
+        var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
         var passes = scene._frameState.passes;
         var picking = passes.pick;
+        var depthOnly = passes.depth;
         var environmentState = scene._environmentState;
-        var view = scene._view;
-        var renderTranslucentDepthForPick = environmentState.renderTranslucentDepthForPick;
-        var useWebVR = environmentState.useWebVR;
 
         // Do not render environment primitives during a pick pass since they do not generate picking commands.
         if (!picking) {
@@ -2195,14 +1891,13 @@ define([
                 if (scene.sunBloom && !useWebVR) {
                     var framebuffer;
                     if (environmentState.useGlobeDepthFramebuffer) {
-                        framebuffer = view.globeDepth.framebuffer;
-                    } else if (environmentState.usePostProcess) {
-                        framebuffer = view.sceneFramebuffer.getFramebuffer();
+                        framebuffer = scene._globeDepth.framebuffer;
+                    } else if (environmentState.useFXAA) {
+                        framebuffer = scene._fxaa.getColorFramebuffer();
                     } else {
                         framebuffer = environmentState.originalFramebuffer;
                     }
-                    scene._sunPostProcess.execute(context);
-                    scene._sunPostProcess.copy(context, framebuffer);
+                    scene._sunPostProcess.execute(context, framebuffer);
                     passState.framebuffer = framebuffer;
                 }
             }
@@ -2218,29 +1913,24 @@ define([
         if (environmentState.useOIT) {
             if (!defined(scene._executeOITFunction)) {
                 scene._executeOITFunction = function(scene, executeFunction, passState, commands, invertClassification) {
-                    view.oit.executeCommands(scene, executeFunction, passState, commands, invertClassification);
+                    scene._oit.executeCommands(scene, executeFunction, passState, commands, invertClassification);
                 };
             }
             executeTranslucentCommands = scene._executeOITFunction;
-        } else if (passes.render) {
-            executeTranslucentCommands = executeTranslucentCommandsBackToFront;
         } else {
-            executeTranslucentCommands = executeTranslucentCommandsFrontToBack;
+            executeTranslucentCommands = executeTranslucentCommandsSorted;
         }
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
         var useDepthPlane = environmentState.useDepthPlane;
         var clearDepth = scene._depthClearCommand;
-        var clearStencil = scene._stencilClearCommand;
-        var clearClassificationStencil = scene._classificationStencilClearCommand;
         var depthPlane = scene._depthPlane;
-        var usePostProcessSelected = environmentState.usePostProcessSelected;
 
         var height2D = camera.position.z;
 
         // Execute commands in each frustum in back to front order
         var j;
-        var frustumCommandsList = view.frustumCommandsList;
+        var frustumCommandsList = scene._frustumCommandsList;
         var numFrustums = frustumCommandsList.length;
 
         for (var i = 0; i < numFrustums; ++i) {
@@ -2257,26 +1947,21 @@ define([
                 us.updateFrustum(frustum);
             } else {
                 // Avoid tearing artifacts between adjacent frustums in the opaque passes
-                frustum.near = index !== 0 ? frustumCommands.near * scene.opaqueFrustumNearOffset : frustumCommands.near;
+                frustum.near = index !== 0 ? frustumCommands.near * OPAQUE_FRUSTUM_NEAR_OFFSET : frustumCommands.near;
                 frustum.far = frustumCommands.far;
                 us.updateFrustum(frustum);
             }
 
-            var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : view.globeDepth;
+            var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : scene._globeDepth;
 
             var fb;
             if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                globeDepth.update(context, passState, view.viewport);
-                globeDepth.clear(context, passState, scene._clearColorCommand.color);
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
             }
 
             clearDepth.execute(context, passState);
-
-            if (context.stencilBuffer) {
-                clearStencil.execute(context, passState);
-            }
+            scene._stencilClearCommand.execute(context, passState);
 
             us.updatePass(Pass.GLOBE);
             var commands = frustumCommands.commands[Pass.GLOBE];
@@ -2285,7 +1970,8 @@ define([
                 executeCommand(commands[j], scene, context, passState);
             }
 
-            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+            if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer && (scene.copyGlobeDepth || scene.debugShowGlobeDepth)) {
+                globeDepth.update(context, passState);
                 globeDepth.executeCopyDepth(context, passState);
             }
 
@@ -2293,7 +1979,6 @@ define([
                 passState.framebuffer = fb;
             }
 
-            // Draw terrain classification
             us.updatePass(Pass.TERRAIN_CLASSIFICATION);
             commands = frustumCommands.commands[Pass.TERRAIN_CLASSIFICATION];
             length = frustumCommands.indices[Pass.TERRAIN_CLASSIFICATION];
@@ -2303,9 +1988,6 @@ define([
 
             if (clearGlobeDepth) {
                 clearDepth.execute(context, passState);
-                if (useDepthPlane) {
-                    depthPlane.execute(context, passState);
-                }
             }
 
             if (!environmentState.useInvertClassification || picking) {
@@ -2319,18 +2001,12 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
 
-                if (length > 0) {
-                    if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                        globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
-                    }
-
-                    // Draw classifications. Modifies 3D Tiles color.
-                    us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
-                    commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                    length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
-                    for (j = 0; j < length; ++j) {
-                        executeCommand(commands[j], scene, context, passState);
-                    }
+                // Draw classifications. Modifies 3D Tiles color.
+                us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION);
+                commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                length = frustumCommands.indices[Pass.CESIUM_3D_TILE_CLASSIFICATION];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
                 }
             } else {
                 // When the invert classification color is opaque:
@@ -2378,10 +2054,6 @@ define([
                     executeCommand(commands[j], scene, context, passState);
                 }
 
-                if (defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                    globeDepth.executeUpdateDepth(context, passState, clearGlobeDepth);
-                }
-
                 // Set stencil
                 us.updatePass(Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW);
                 commands = frustumCommands.commands[Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW];
@@ -2401,7 +2073,7 @@ define([
 
                 // Clear stencil set by the classification for the next classification pass
                 if (length > 0 && context.stencilBuffer) {
-                    clearClassificationStencil.execute(context, passState);
+                    scene._stencilClearCommand.execute(context, passState);
                 }
 
                 // Draw style over classification.
@@ -2414,14 +2086,24 @@ define([
             }
 
             if (length > 0 && context.stencilBuffer) {
-                clearStencil.execute(context, passState);
+                scene._stencilClearCommand.execute(context, passState);
             }
 
-            us.updatePass(Pass.OPAQUE);
-            commands = frustumCommands.commands[Pass.OPAQUE];
-            length = frustumCommands.indices[Pass.OPAQUE];
-            for (j = 0; j < length; ++j) {
-                executeCommand(commands[j], scene, context, passState);
+            if (clearGlobeDepth && useDepthPlane) {
+                depthPlane.execute(context, passState);
+            }
+
+            // Execute commands in order by pass up to the translucent pass.
+            // Translucent geometry needs special handling (sorting/OIT).
+            var startPass = Pass.CESIUM_3D_TILE_CLASSIFICATION_IGNORE_SHOW + 1;
+            var endPass = Pass.TRANSLUCENT;
+            for (var pass = startPass; pass < endPass; ++pass) {
+                us.updatePass(pass);
+                commands = frustumCommands.commands[pass];
+                length = frustumCommands.indices[pass];
+                for (j = 0; j < length; ++j) {
+                    executeCommand(commands[j], scene, context, passState);
+                }
             }
 
             if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
@@ -2442,65 +2124,13 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands, invertClassification);
 
-            if (context.depthTexture && scene.useDepthPicking && (environmentState.useGlobeDepthFramebuffer || renderTranslucentDepthForPick)) {
+            if (defined(globeDepth) && (environmentState.useGlobeDepthFramebuffer || depthOnly) && scene.useDepthPicking) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
-                var depthStencilTexture = renderTranslucentDepthForPick ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
+                var depthStencilTexture = depthOnly ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
                 var pickDepth = getPickDepth(scene, index);
                 pickDepth.update(context, depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
             }
-
-            if (picking || !usePostProcessSelected) {
-                continue;
-            }
-
-            var originalFramebuffer = passState.framebuffer;
-            passState.framebuffer = view.sceneFramebuffer.getIdFramebuffer();
-
-            // reset frustum
-            frustum.near = index !== 0 ? frustumCommands.near * scene.opaqueFrustumNearOffset : frustumCommands.near;
-            frustum.far = frustumCommands.far;
-            us.updateFrustum(frustum);
-
-            us.updatePass(Pass.GLOBE);
-            commands = frustumCommands.commands[Pass.GLOBE];
-            length = frustumCommands.indices[Pass.GLOBE];
-            for (j = 0; j < length; ++j) {
-                executeIdCommand(commands[j], scene, context, passState);
-            }
-
-            if (clearGlobeDepth) {
-                clearDepth.framebuffer = passState.framebuffer;
-                clearDepth.execute(context, passState);
-                clearDepth.framebuffer = undefined;
-            }
-
-            if (clearGlobeDepth && useDepthPlane) {
-                depthPlane.execute(context, passState);
-            }
-
-            us.updatePass(Pass.CESIUM_3D_TILE);
-            commands = frustumCommands.commands[Pass.CESIUM_3D_TILE];
-            length = frustumCommands.indices[Pass.CESIUM_3D_TILE];
-            for (j = 0; j < length; ++j) {
-                executeIdCommand(commands[j], scene, context, passState);
-            }
-
-            us.updatePass(Pass.OPAQUE);
-            commands = frustumCommands.commands[Pass.OPAQUE];
-            length = frustumCommands.indices[Pass.OPAQUE];
-            for (j = 0; j < length; ++j) {
-                executeIdCommand(commands[j], scene, context, passState);
-            }
-
-            us.updatePass(Pass.TRANSLUCENT);
-            commands = frustumCommands.commands[Pass.TRANSLUCENT];
-            length = frustumCommands.indices[Pass.TRANSLUCENT];
-            for (j = 0; j < length; ++j) {
-                executeIdCommand(commands[j], scene, context, passState);
-            }
-
-            passState.framebuffer = originalFramebuffer;
         }
     }
 
@@ -2541,10 +2171,10 @@ define([
         var length = commandList.length;
         for (var i = 0; i < length; ++i) {
             var command = commandList[i];
-            scene.updateDerivedCommands(command);
+            updateDerivedCommands(scene, command);
 
             if (command.castShadows && (command.pass === Pass.GLOBE || command.pass === Pass.CESIUM_3D_TILE || command.pass === Pass.OPAQUE || command.pass === Pass.TRANSLUCENT)) {
-                if (scene.isVisible(command, shadowVolume)) {
+                if (isVisible(command, shadowVolume)) {
                     if (isPointLight) {
                         for (var k = 0; k < numberOfPasses; ++k) {
                             passes[k].commandList.push(command);
@@ -2556,7 +2186,7 @@ define([
                         // Loop over cascades from largest to smallest
                         for (var j = numberOfPasses - 1; j >= 0; --j) {
                             var cascadeVolume = passes[j].cullingVolume;
-                            if (scene.isVisible(command, cascadeVolume)) {
+                            if (isVisible(command, cascadeVolume)) {
                                 passes[j].commandList.push(command);
                                 wasVisible = true;
                             } else if (wasVisible) {
@@ -2573,10 +2203,10 @@ define([
 
     function executeShadowMapCastCommands(scene) {
         var frameState = scene.frameState;
-        var shadowMaps = frameState.shadowState.shadowMaps;
+        var shadowMaps = frameState.shadowHints.shadowMaps;
         var shadowMapLength = shadowMaps.length;
 
-        if (!frameState.shadowState.shadowsEnabled) {
+        if (!frameState.shadowHints.shadowsEnabled) {
             return;
         }
 
@@ -2620,71 +2250,71 @@ define([
     var scratchEyeTranslation = new Cartesian3();
 
     function updateAndExecuteCommands(scene, passState, backgroundColor) {
-        var frameState = scene._frameState;
-        var mode = frameState.mode;
-        var useWebVR = scene._environmentState.useWebVR;
+        var context = scene._context;
 
-        if (useWebVR) {
-            executeWebVRCommands(scene, passState, backgroundColor);
+        var viewport = passState.viewport;
+        viewport.x = 0;
+        viewport.y = 0;
+        viewport.width = context.drawingBufferWidth;
+        viewport.height = context.drawingBufferHeight;
+
+        var frameState = scene._frameState;
+        var camera = frameState.camera;
+        var mode = frameState.mode;
+        var depthOnly = frameState.passes.depth;
+
+        if (scene._useWebVR && mode !== SceneMode.SCENE2D) {
+            updateAndClearFramebuffers(scene, passState, backgroundColor);
+
+            if (!depthOnly) {
+                updatePrimitives(scene);
+            }
+
+            createPotentiallyVisibleSet(scene);
+
+            if (!depthOnly) {
+                executeComputeCommands(scene);
+                executeShadowMapCastCommands(scene);
+            }
+
+            // Based on Calculating Stereo pairs by Paul Bourke
+            // http://paulbourke.net/stereographics/stereorender/
+
+            viewport.x = 0;
+            viewport.y = 0;
+            viewport.width = context.drawingBufferWidth * 0.5;
+            viewport.height = context.drawingBufferHeight;
+
+            var savedCamera = Camera.clone(camera, scene._cameraVR);
+
+            var near = camera.frustum.near;
+            var fo = near * defaultValue(scene.focalLength, 5.0);
+            var eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
+            var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
+
+            camera.frustum.aspectRatio = viewport.width / viewport.height;
+
+            var offset = 0.5 * eyeSeparation * near / fo;
+
+            Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
+            camera.frustum.xOffset = offset;
+
+            executeCommands(scene, passState);
+
+            viewport.x = passState.viewport.width;
+
+            Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
+            camera.frustum.xOffset = -offset;
+
+            executeCommands(scene, passState);
+
+            Camera.clone(savedCamera, camera);
         } else if (mode !== SceneMode.SCENE2D || scene._mapMode2D === MapMode2D.ROTATE) {
             executeCommandsInViewport(true, scene, passState, backgroundColor);
         } else {
             updateAndClearFramebuffers(scene, passState, backgroundColor);
             execute2DViewportCommands(scene, passState);
         }
-    }
-
-    function executeWebVRCommands(scene, passState, backgroundColor) {
-        var view = scene._view;
-        var camera = view.camera;
-        var environmentState = scene._environmentState;
-        var renderTranslucentDepthForPick = environmentState.renderTranslucentDepthForPick;
-
-        updateAndClearFramebuffers(scene, passState, backgroundColor);
-
-        if (!renderTranslucentDepthForPick) {
-            updateAndRenderPrimitives(scene);
-        }
-
-        view.createPotentiallyVisibleSet(scene);
-
-        if (!renderTranslucentDepthForPick) {
-            executeComputeCommands(scene);
-            executeShadowMapCastCommands(scene);
-        }
-
-        // Based on Calculating Stereo pairs by Paul Bourke
-        // http://paulbourke.net/stereographics/stereorender/
-        var viewport = passState.viewport;
-        viewport.x = 0;
-        viewport.y = 0;
-        viewport.width = viewport.width * 0.5;
-
-        var savedCamera = Camera.clone(camera, scene._cameraVR);
-        savedCamera.frustum = camera.frustum;
-
-        var near = camera.frustum.near;
-        var fo = near * defaultValue(scene.focalLength, 5.0);
-        var eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
-        var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
-
-        camera.frustum.aspectRatio = viewport.width / viewport.height;
-
-        var offset = 0.5 * eyeSeparation * near / fo;
-
-        Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
-        camera.frustum.xOffset = offset;
-
-        executeCommands(scene, passState);
-
-        viewport.x = viewport.width;
-
-        Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
-        camera.frustum.xOffset = -offset;
-
-        executeCommands(scene, passState);
-
-        Camera.clone(savedCamera, camera);
     }
 
     var scratch2DViewportCartographic = new Cartographic(Math.PI, CesiumMath.PI_OVER_TWO);
@@ -2810,25 +2440,23 @@ define([
     }
 
     function executeCommandsInViewport(firstViewport, scene, passState, backgroundColor) {
-        var environmentState = scene._environmentState;
-        var view = scene._view;
-        var renderTranslucentDepthForPick = environmentState.renderTranslucentDepthForPick;
+        var depthOnly = scene.frameState.passes.depth;
 
-        if (!firstViewport && !renderTranslucentDepthForPick) {
+        if (!firstViewport && !depthOnly) {
             scene.frameState.commandList.length = 0;
         }
 
-        if (!renderTranslucentDepthForPick) {
-            updateAndRenderPrimitives(scene);
+        if (!depthOnly) {
+            updatePrimitives(scene);
         }
 
-        view.createPotentiallyVisibleSet(scene);
+        createPotentiallyVisibleSet(scene);
 
         if (firstViewport) {
             if (defined(backgroundColor)) {
                 updateAndClearFramebuffers(scene, passState, backgroundColor);
             }
-            if (!renderTranslucentDepthForPick) {
+            if (!depthOnly) {
                 executeComputeCommands(scene);
                 executeShadowMapCastCommands(scene);
             }
@@ -2837,18 +2465,16 @@ define([
         executeCommands(scene, passState);
     }
 
-    function updateEnvironment(scene) {
+    function updateEnvironment(scene, passState) {
         var frameState = scene._frameState;
-        var view = scene._view;
 
         // Update celestial and terrestrial environment effects.
         var environmentState = scene._environmentState;
         var renderPass = frameState.passes.render;
-        var offscreenPass = frameState.passes.offscreen;
         var skyAtmosphere = scene.skyAtmosphere;
         var globe = scene.globe;
 
-        if (!renderPass || (scene._mode !== SceneMode.SCENE2D && view.camera.frustum instanceof OrthographicFrustum)) {
+        if (!renderPass || (scene._mode !== SceneMode.SCENE2D && frameState.camera.frustum instanceof OrthographicFrustum)) {
             environmentState.skyAtmosphereCommand = undefined;
             environmentState.skyBoxCommand = undefined;
             environmentState.sunDrawCommand = undefined;
@@ -2860,8 +2486,8 @@ define([
                 environmentState.isReadyForAtmosphere = environmentState.isReadyForAtmosphere || globe._surface._tilesToRender.length > 0;
             }
             environmentState.skyAtmosphereCommand = defined(skyAtmosphere) ? skyAtmosphere.update(frameState) : undefined;
-            environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState, scene._hdr) : undefined;
-            var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, view.passState, scene._hdr) : undefined;
+            environmentState.skyBoxCommand = defined(scene.skyBox) ? scene.skyBox.update(frameState) : undefined;
+            var sunCommands = defined(scene.sun) ? scene.sun.update(frameState, passState) : undefined;
             environmentState.sunDrawCommand = defined(sunCommands) ? sunCommands.drawCommand : undefined;
             environmentState.sunComputeCommand = defined(sunCommands) ? sunCommands.computeCommand : undefined;
             environmentState.moonCommand = defined(scene.moon) ? scene.moon.update(frameState) : undefined;
@@ -2876,9 +2502,6 @@ define([
             scene._depthPlane.update(frameState);
         }
 
-        environmentState.renderTranslucentDepthForPick = false;
-        environmentState.useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D  && !offscreenPass;
-
         var occluder = (frameState.mode === SceneMode.SCENE3D) ? frameState.occluder: undefined;
         var cullingVolume = frameState.cullingVolume;
 
@@ -2891,22 +2514,8 @@ define([
 
         // Determine visibility of celestial and terrestrial environment effects.
         environmentState.isSkyAtmosphereVisible = defined(environmentState.skyAtmosphereCommand) && environmentState.isReadyForAtmosphere;
-        environmentState.isSunVisible = scene.isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
-        environmentState.isMoonVisible = scene.isVisible(environmentState.moonCommand, cullingVolume, occluder);
-
-        var envMaps = scene.specularEnvironmentMaps;
-        var envMapAtlas = scene._specularEnvironmentMapAtlas;
-        if (defined(envMaps) && (!defined(envMapAtlas) || envMapAtlas.url !== envMaps)) {
-            envMapAtlas = envMapAtlas && envMapAtlas.destroy();
-            scene._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(envMaps);
-        } else if (!defined(envMaps) && defined(envMapAtlas)) {
-            envMapAtlas.destroy();
-            scene._specularEnvironmentMapAtlas = undefined;
-        }
-
-        if (defined(scene._specularEnvironmentMapAtlas)) {
-            scene._specularEnvironmentMapAtlas.update(frameState);
-        }
+        environmentState.isSunVisible = isVisible(environmentState.sunDrawCommand, cullingVolume, occluder);
+        environmentState.isMoonVisible = isVisible(environmentState.moonCommand, cullingVolume, occluder);
     }
 
     function updateDebugFrustumPlanes(scene) {
@@ -2934,13 +2543,11 @@ define([
         var length = shadowMaps.length;
 
         var shadowsEnabled = (length > 0) && !frameState.passes.pick && (scene.mode === SceneMode.SCENE3D);
-        if (shadowsEnabled !== frameState.shadowState.shadowsEnabled) {
+        if (shadowsEnabled !== frameState.shadowHints.shadowsEnabled) {
             // Update derived commands when shadowsEnabled changes
-            ++frameState.shadowState.lastDirtyTime;
-            frameState.shadowState.shadowsEnabled = shadowsEnabled;
+            ++frameState.shadowHints.lastDirtyTime;
+            frameState.shadowHints.shadowsEnabled = shadowsEnabled;
         }
-
-        frameState.shadowState.lightShadowsEnabled = false;
 
         if (!shadowsEnabled) {
             return;
@@ -2949,34 +2556,33 @@ define([
         // Check if the shadow maps are different than the shadow maps last frame.
         // If so, the derived commands need to be updated.
         for (var j = 0; j < length; ++j) {
-            if (shadowMaps[j] !== frameState.shadowState.shadowMaps[j]) {
-                ++frameState.shadowState.lastDirtyTime;
+            if (shadowMaps[j] !== frameState.shadowHints.shadowMaps[j]) {
+                ++frameState.shadowHints.lastDirtyTime;
                 break;
             }
         }
 
-        frameState.shadowState.shadowMaps.length = 0;
-        frameState.shadowState.lightShadowMaps.length = 0;
+        frameState.shadowHints.shadowMaps.length = 0;
+        frameState.shadowHints.lightShadowMaps.length = 0;
 
         for (var i = 0; i < length; ++i) {
             var shadowMap = shadowMaps[i];
             shadowMap.update(frameState);
 
-            frameState.shadowState.shadowMaps.push(shadowMap);
+            frameState.shadowHints.shadowMaps.push(shadowMap);
 
             if (shadowMap.fromLightSource) {
-                frameState.shadowState.lightShadowMaps.push(shadowMap);
-                frameState.shadowState.lightShadowsEnabled = true;
+                frameState.shadowHints.lightShadowMaps.push(shadowMap);
             }
 
             if (shadowMap.dirty) {
-                ++frameState.shadowState.lastDirtyTime;
+                ++frameState.shadowHints.lastDirtyTime;
                 shadowMap.dirty = false;
             }
         }
     }
 
-    function updateAndRenderPrimitives(scene) {
+    function updatePrimitives(scene) {
         var frameState = scene._frameState;
 
         scene._groundPrimitives.update(frameState);
@@ -2986,19 +2592,17 @@ define([
         updateShadowMaps(scene);
 
         if (scene._globe) {
-            scene._globe.render(frameState);
+            scene._globe.update(frameState);
         }
     }
 
     function updateAndClearFramebuffers(scene, passState, clearColor) {
         var context = scene._context;
-        var frameState = scene._frameState;
         var environmentState = scene._environmentState;
-        var view = scene._view;
 
         var passes = scene._frameState.passes;
         var picking = passes.pick;
-        var useWebVR = environmentState.useWebVR;
+        var useWebVR = scene._useWebVR && scene.mode !== SceneMode.SCENE2D;
 
         // Preserve the reference to the original framebuffer.
         environmentState.originalFramebuffer = passState.framebuffer;
@@ -3023,135 +2627,108 @@ define([
         clear.execute(context, passState);
 
         // Update globe depth rendering based on the current context and clear the globe depth framebuffer.
-        // Globe depth is copied for the pick pass to support picking batched geometries in GroundPrimitives.
-        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(view.globeDepth);
+        var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = !picking && defined(scene._globeDepth);
         if (useGlobeDepthFramebuffer) {
-            view.globeDepth.update(context, passState, view.viewport, scene._hdr);
-            view.globeDepth.clear(context, passState, clearColor);
+            scene._globeDepth.update(context, passState);
+            scene._globeDepth.clear(context, passState, clearColor);
         }
 
         // If supported, configure OIT to use the globe depth framebuffer and clear the OIT framebuffer.
-        var oit = view.oit;
-        var useOIT = environmentState.useOIT = !picking && defined(oit) && oit.isSupported();
+        var useOIT = environmentState.useOIT = !picking && defined(scene._oit) && scene._oit.isSupported();
         if (useOIT) {
-            oit.update(context, passState, view.globeDepth.framebuffer, scene._hdr);
-            oit.clear(context, passState, clearColor);
-            environmentState.useOIT = oit.isSupported();
+            scene._oit.update(context, passState, scene._globeDepth.framebuffer);
+            scene._oit.clear(context, passState, clearColor);
+            environmentState.useOIT = scene._oit.isSupported();
         }
 
-        var postProcess = scene.postProcessStages;
-        var usePostProcess = environmentState.usePostProcess = !picking && (scene._hdr || postProcess.length > 0 || postProcess.ambientOcclusion.enabled || postProcess.fxaa.enabled || postProcess.bloom.enabled);
-        environmentState.usePostProcessSelected = false;
-        if (usePostProcess) {
-            view.sceneFramebuffer.update(context, view.viewport, scene._hdr);
-            view.sceneFramebuffer.clear(context, passState, clearColor);
-
-            postProcess.update(context, frameState.useLogDepth, scene._hdr);
-            postProcess.clear(context);
-
-            usePostProcess = environmentState.usePostProcess = postProcess.ready;
-            environmentState.usePostProcessSelected = usePostProcess && postProcess.hasSelected;
+        // If supported, configure FXAA to use the globe depth color texture and clear the FXAA framebuffer.
+        var useFXAA = environmentState.useFXAA = !picking && scene.fxaa;
+        if (useFXAA) {
+            scene._fxaa.update(context, passState);
+            scene._fxaa.clear(context, passState, clearColor);
         }
 
         if (environmentState.isSunVisible && scene.sunBloom && !useWebVR) {
             passState.framebuffer = scene._sunPostProcess.update(passState);
-            scene._sunPostProcess.clear(context, passState, clearColor);
         } else if (useGlobeDepthFramebuffer) {
-            passState.framebuffer = view.globeDepth.framebuffer;
-        } else if (usePostProcess) {
-            passState.framebuffer = view.sceneFramebuffer.getFramebuffer();
+            passState.framebuffer = scene._globeDepth.framebuffer;
+        } else if (useFXAA) {
+            passState.framebuffer = scene._fxaa.getColorFramebuffer();
         }
 
         if (defined(passState.framebuffer)) {
             clear.execute(context, passState);
         }
 
-        var useInvertClassification = environmentState.useInvertClassification = !picking && defined(passState.framebuffer) && scene.invertClassification;
+        var useInvertClassification = environmentState.useInvertClassification = defined(passState.framebuffer) && scene.invertClassification;
         if (useInvertClassification) {
             var depthFramebuffer;
             if (scene.frameState.invertClassificationColor.alpha === 1.0) {
                 if (environmentState.useGlobeDepthFramebuffer) {
-                    depthFramebuffer = view.globeDepth.framebuffer;
+                    depthFramebuffer = scene._globeDepth.framebuffer;
+                } else if (environmentState.useFXAA) {
+                    depthFramebuffer = scene._fxaa.getColorFramebuffer();
                 }
             }
 
-            if (defined(depthFramebuffer) || context.depthTexture) {
-                scene._invertClassification.previousFramebuffer = depthFramebuffer;
-                scene._invertClassification.update(context);
-                scene._invertClassification.clear(context, passState);
+            scene._invertClassification.previousFramebuffer = depthFramebuffer;
+            scene._invertClassification.update(context);
+            scene._invertClassification.clear(context, passState);
 
-                if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
-                    var command = scene._invertClassification.unclassifiedCommand;
-                    var derivedCommands = command.derivedCommands;
-                    derivedCommands.oit = oit.createDerivedCommands(command, context, derivedCommands.oit);
-                }
-            } else {
-                environmentState.useInvertClassification = false;
+            if (scene.frameState.invertClassificationColor.alpha < 1.0 && useOIT) {
+                var command = scene._invertClassification.unclassifiedCommand;
+                var derivedCommands = command.derivedCommands;
+                derivedCommands.oit = scene._oit.createDerivedCommands(command, context, derivedCommands.oit);
             }
         }
     }
 
     function resolveFramebuffers(scene, passState) {
         var context = scene._context;
-        var frameState = scene._frameState;
         var environmentState = scene._environmentState;
-        var view = scene._view;
 
-        var useOIT = environmentState.useOIT;
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
-        var usePostProcess = environmentState.usePostProcess;
-
-        var defaultFramebuffer = environmentState.originalFramebuffer;
-        var globeFramebuffer = useGlobeDepthFramebuffer ? view.globeDepth.framebuffer : undefined;
-        var sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
-        var idFramebuffer = view.sceneFramebuffer.getIdFramebuffer();
-
-        if (useOIT) {
-            passState.framebuffer = usePostProcess ? sceneFramebuffer : defaultFramebuffer;
-            view.oit.execute(context, passState);
-        }
-
-        if (usePostProcess) {
-            var inputFramebuffer = sceneFramebuffer;
-            if (useGlobeDepthFramebuffer && !useOIT) {
-                inputFramebuffer = globeFramebuffer;
-            }
-
-            var postProcess = scene.postProcessStages;
-            var colorTexture = inputFramebuffer.getColorTexture(0);
-            var idTexture = idFramebuffer.getColorTexture(0);
-            var depthTexture = defaultValue(globeFramebuffer, sceneFramebuffer).depthStencilTexture;
-            postProcess.execute(context, colorTexture, depthTexture, idTexture);
-            postProcess.copy(context, defaultFramebuffer);
-        }
-
-        if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {
-            passState.framebuffer = defaultFramebuffer;
-            view.globeDepth.executeCopyColor(context, passState);
-        }
-
-        var useLogDepth = frameState.useLogDepth;
-
         if (scene.debugShowGlobeDepth && useGlobeDepthFramebuffer) {
             var gd = getDebugGlobeDepth(scene, scene.debugShowDepthFrustum - 1);
-            gd.executeDebugGlobeDepth(context, passState, useLogDepth);
+            gd.executeDebugGlobeDepth(context, passState);
         }
 
         if (scene.debugShowPickDepth && useGlobeDepthFramebuffer) {
             var pd = getPickDepth(scene, scene.debugShowDepthFrustum - 1);
-            pd.executeDebugPickDepth(context, passState, useLogDepth);
+            pd.executeDebugPickDepth(context, passState);
+        }
+
+        var useOIT = environmentState.useOIT;
+        var useFXAA = environmentState.useFXAA;
+
+        if (useOIT) {
+            passState.framebuffer = useFXAA ? scene._fxaa.getColorFramebuffer() : undefined;
+            scene._oit.execute(context, passState);
+        }
+
+        if (useFXAA) {
+            if (!useOIT && useGlobeDepthFramebuffer) {
+                passState.framebuffer = scene._fxaa.getColorFramebuffer();
+                scene._globeDepth.executeCopyColor(context, passState);
+            }
+
+            passState.framebuffer = environmentState.originalFramebuffer;
+            scene._fxaa.execute(context, passState);
+        }
+
+        if (!useOIT && !useFXAA && useGlobeDepthFramebuffer) {
+            passState.framebuffer = environmentState.originalFramebuffer;
+            scene._globeDepth.executeCopyColor(context, passState);
         }
     }
 
-    function callAfterRenderFunctions(scene) {
+    function callAfterRenderFunctions(frameState) {
         // Functions are queued up during primitive update and executed here in case
         // the function modifies scene state that should remain constant over the frame.
-        var functions = scene._frameState.afterRender;
+        var functions = frameState.afterRender;
         for (var i = 0, length = functions.length; i < length; ++i) {
             functions[i]();
-            scene.requestRender();
         }
-
         functions.length = 0;
     }
 
@@ -3159,11 +2736,10 @@ define([
      * @private
      */
     Scene.prototype.initializeFrame = function() {
-        // Destroy released shaders and textures once every 120 frames to avoid thrashing the cache
+        // Destroy released shaders once every 120 frames to avoid thrashing the cache
         if (this._shaderFrameCount++ === 120) {
             this._shaderFrameCount = 0;
             this._context.shaderCache.destroyReleasedShaderPrograms();
-            this._context.textureCache.destroyReleasedTextures();
         }
 
         this._tweens.update();
@@ -3173,76 +2749,42 @@ define([
             this._deviceOrientationCameraController.update();
         }
 
-        this.camera.update(this._mode);
-        this.camera._updateCameraChanged();
+        this._camera.update(this._mode);
+        this._camera._updateCameraChanged();
     };
 
-    function updateDebugShowFramesPerSecond(scene, renderedThisFrame) {
-        if (scene.debugShowFramesPerSecond) {
-            if (!defined(scene._performanceDisplay)) {
-                var performanceContainer = document.createElement('div');
-                performanceContainer.className = 'cesium-performanceDisplay-defaultContainer';
-                var container = scene._canvas.parentNode;
-                container.appendChild(performanceContainer);
-                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
-                scene._performanceDisplay = performanceDisplay;
-                scene._performanceContainer = performanceContainer;
-            }
-
-            scene._performanceDisplay.throttled = scene.requestRenderMode;
-            scene._performanceDisplay.update(renderedThisFrame);
-        } else if (defined(scene._performanceDisplay)) {
-            scene._performanceDisplay = scene._performanceDisplay && scene._performanceDisplay.destroy();
-            scene._performanceContainer.parentNode.removeChild(scene._performanceContainer);
-        }
-    }
-
-    function prePassesUpdate(scene) {
-        scene._jobScheduler.resetBudgets();
-
-        var frameState = scene._frameState;
-        var primitives = scene.primitives;
-        primitives.prePassesUpdate(frameState);
-
-        if (defined(scene.globe)) {
-            scene.globe.update(frameState);
-        }
-
+    function render(scene, time) {
         scene._pickPositionCacheDirty = true;
-        frameState.creditDisplay.update();
-    }
 
-    function postPassesUpdate(scene) {
-        var frameState = scene._frameState;
-        var primitives = scene.primitives;
-        primitives.postPassesUpdate(frameState);
+        if (!defined(time)) {
+            time = JulianDate.now();
+        }
 
-        RequestScheduler.update();
-    }
+        var camera = scene._camera;
+        if (!cameraEqual(camera, scene._cameraClone, CesiumMath.EPSILON6)) {
+            if (!scene._cameraStartFired) {
+                camera.moveStart.raiseEvent();
+                scene._cameraStartFired = true;
+            }
+            scene._cameraMovedTime = getTimestamp();
+            Camera.clone(camera, scene._cameraClone);
+        } else if (scene._cameraStartFired && getTimestamp() - scene._cameraMovedTime > scene.cameraEventWaitTime) {
+            camera.moveEnd.raiseEvent();
+            scene._cameraStartFired = false;
+        }
 
-    var scratchBackgroundColor = new Color();
-
-    function render(scene) {
-        var frameState = scene._frameState;
+        scene._preRender.raiseEvent(scene, time);
+        scene._jobScheduler.resetBudgets();
 
         var context = scene.context;
         var us = context.uniformState;
+        var frameState = scene._frameState;
 
-        var view = scene._defaultView;
-        scene._view = view;
-
-        updateFrameState(scene);
+        var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
+        updateFrameState(scene, frameNumber, time);
         frameState.passes.render = true;
-        frameState.passes.postProcess = scene.postProcessStages.hasSelected;
-        frameState.tilesetPassState = renderTilesetPassState;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
-        if (scene._hdr) {
-            backgroundColor = Color.clone(backgroundColor, scratchBackgroundColor);
-            backgroundColor.red = Math.pow(backgroundColor.red, scene.gamma);
-            backgroundColor.green = Math.pow(backgroundColor.green, scene.gamma);
-            backgroundColor.blue = Math.pow(backgroundColor.blue, scene.gamma);
-        }
         frameState.backgroundColor = backgroundColor;
 
         frameState.creditDisplay.beginFrame();
@@ -3261,151 +2803,63 @@ define([
         scene._computeCommandList.length = 0;
         scene._overlayCommandList.length = 0;
 
-        var viewport = view.viewport;
-        viewport.x = 0;
-        viewport.y = 0;
-        viewport.width = context.drawingBufferWidth;
-        viewport.height = context.drawingBufferHeight;
-
-        var passState = view.passState;
+        var passState = scene._passState;
         passState.framebuffer = undefined;
         passState.blendingEnabled = undefined;
         passState.scissorTest = undefined;
-        passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 
         if (defined(scene.globe)) {
             scene.globe.beginFrame(frameState);
         }
 
-        updateEnvironment(scene);
+        updateEnvironment(scene, passState);
         updateAndExecuteCommands(scene, passState, backgroundColor);
         resolveFramebuffers(scene, passState);
-
-        passState.framebuffer = undefined;
         executeOverlayCommands(scene, passState);
 
         if (defined(scene.globe)) {
             scene.globe.endFrame(frameState);
-
-            if (!scene.globe.tilesLoaded) {
-                scene._renderRequested = true;
-            }
         }
 
         frameState.creditDisplay.endFrame();
-        context.endFrame();
-    }
 
-    function tryAndCatchError(scene, functionToExecute) {
-        try {
-            functionToExecute(scene);
-        } catch (error) {
-            scene._renderError.raiseEvent(scene, error);
-
-            if (scene.rethrowRenderErrors) {
-                throw error;
+        if (scene.debugShowFramesPerSecond) {
+            if (!defined(scene._performanceDisplay)) {
+                var performanceContainer = document.createElement('div');
+                performanceContainer.className = 'cesium-performanceDisplay-defaultContainer';
+                var container = scene._canvas.parentNode;
+                container.appendChild(performanceContainer);
+                var performanceDisplay = new PerformanceDisplay({container: performanceContainer});
+                scene._performanceDisplay = performanceDisplay;
+                scene._performanceContainer = performanceContainer;
             }
+
+            scene._performanceDisplay.update();
+        } else if (defined(scene._performanceDisplay)) {
+            scene._performanceDisplay = scene._performanceDisplay && scene._performanceDisplay.destroy();
+            scene._performanceContainer.parentNode.removeChild(scene._performanceContainer);
         }
+
+        context.endFrame();
+        RequestScheduler.update();
+        callAfterRenderFunctions(frameState);
+
+        scene._postRender.raiseEvent(scene, time);
     }
 
     /**
-     * Update and render the scene.
-     * @param {JulianDate} [time] The simulation time at which to render.
-     *
      * @private
      */
     Scene.prototype.render = function(time) {
-        /**
-         *
-         * Pre passes update. Execute any pass invariant code that should run before the passes here.
-         *
-         */
-        this._preUpdate.raiseEvent(this, time);
+        try {
+            render(this, time);
+        } catch (error) {
+            this._renderError.raiseEvent(this, error);
 
-        var frameState = this._frameState;
-        frameState.newFrame = false;
-
-        if (!defined(time)) {
-            time = JulianDate.now();
+            if (this.rethrowRenderErrors) {
+                throw error;
+            }
         }
-
-        // Determine if shouldRender
-        var cameraChanged = this._view.checkForCameraUpdates(this);
-        var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || this._hdrDirty || (this.mode === SceneMode.MORPHING);
-        if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
-            var difference = Math.abs(JulianDate.secondsDifference(this._lastRenderTime, time));
-            shouldRender = shouldRender || difference > this.maximumRenderTimeChange;
-        }
-
-        if (shouldRender) {
-            this._lastRenderTime = JulianDate.clone(time, this._lastRenderTime);
-            this._renderRequested = false;
-            this._logDepthBufferDirty = false;
-            this._hdrDirty = false;
-
-            var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
-            updateFrameNumber(this, frameNumber, time);
-            frameState.newFrame = true;
-        }
-
-        tryAndCatchError(this, prePassesUpdate);
-
-        /**
-         *
-         * Passes update. Add any passes here
-         *
-         */
-        tryAndCatchError(this, updateMostDetailedRayPicks);
-        tryAndCatchError(this, updatePreloadPass);
-        tryAndCatchError(this, updatePreloadFlightPass);
-        if (!shouldRender) {
-            tryAndCatchError(this, updateRequestRenderModeDeferCheckPass);
-        }
-
-        this._postUpdate.raiseEvent(this, time);
-
-        if (shouldRender) {
-            this._preRender.raiseEvent(this, time);
-            tryAndCatchError(this, render);
-        }
-
-        /**
-         *
-         * Post passes update. Execute any pass invariant code that should run after the passes here.
-         *
-         */
-        updateDebugShowFramesPerSecond(this, shouldRender);
-        tryAndCatchError(this, postPassesUpdate);
-
-        // Often used to trigger events (so don't want in trycatch) that the user might be subscribed to. Things like the tile load events, ready promises, etc.
-        // We don't want those events to resolve during the render loop because the events might add new primitives
-        callAfterRenderFunctions(this);
-
-        if (shouldRender) {
-            this._postRender.raiseEvent(this, time);
-        }
-    };
-
-    /**
-     * Update and render the scene. Always forces a new render frame regardless of whether a render was
-     * previously requested.
-     * @param {JulianDate} [time] The simulation time at which to render.
-     *
-     * @private
-     */
-    Scene.prototype.forceRender = function(time) {
-        this._renderRequested = true;
-        this.render(time);
-    };
-
-    /**
-     * Requests a new rendered frame when {@link Scene#requestRenderMode} is set to <code>true</code>.
-     * The render rate will not exceed the {@link CesiumWidget#targetFrameRate}.
-     *
-     * @see Scene#requestRenderMode
-     */
-    Scene.prototype.requestRender = function() {
-        this._renderRequested = true;
     };
 
     /**
@@ -3421,13 +2875,14 @@ define([
     var scratchPixelSize = new Cartesian2();
     var scratchPickVolumeMatrix4 = new Matrix4();
 
-    function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height, viewport) {
-        var camera = scene.camera;
+    function getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height) {
+        var camera = scene._camera;
         var frustum = camera.frustum;
         if (defined(frustum._offCenterFrustum)) {
             frustum = frustum._offCenterFrustum;
         }
 
+        var viewport = scene._passState.viewport;
         var x = 2.0 * (drawingBufferPosition.x - viewport.x) / viewport.width - 1.0;
         x *= (frustum.right - frustum.left) * 0.5;
         var y = 2.0 * (viewport.height - drawingBufferPosition.y - viewport.y) / viewport.height - 1.0;
@@ -3463,14 +2918,15 @@ define([
 
     var perspPickingFrustum = new PerspectiveOffCenterFrustum();
 
-    function getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height, viewport) {
-        var camera = scene.camera;
+    function getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height) {
+        var camera = scene._camera;
         var frustum = camera.frustum;
         var near = frustum.near;
 
         var tanPhi = Math.tan(frustum.fovy * 0.5);
         var tanTheta = frustum.aspectRatio * tanPhi;
 
+        var viewport = scene._passState.viewport;
         var x = 2.0 * (drawingBufferPosition.x - viewport.x) / viewport.width - 1.0;
         var y = 2.0 * (viewport.height - drawingBufferPosition.y - viewport.y) / viewport.height - 1.0;
 
@@ -3492,13 +2948,13 @@ define([
         return offCenter.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
     }
 
-    function getPickCullingVolume(scene, drawingBufferPosition, width, height, viewport) {
+    function getPickCullingVolume(scene, drawingBufferPosition, width, height) {
         var frustum = scene.camera.frustum;
         if (frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum) {
-            return getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height, viewport);
+            return getPickOrthographicCullingVolume(scene, drawingBufferPosition, width, height);
         }
 
-        return getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height, viewport);
+        return getPickPerspectiveCullingVolume(scene, drawingBufferPosition, width, height);
     }
 
     // pick rectangle width and height, assumed odd
@@ -3511,7 +2967,7 @@ define([
     /**
      * Returns an object with a `primitive` property that contains the first (top) primitive in the scene
      * at a particular window coordinate or undefined if nothing is at the location. Other properties may
-     * potentially be set depending on the type of primitive and may be used to further identify the picked object.
+     * potentially be set depending on the type of primitive.
      * <p>
      * When a feature of a 3D Tiles tileset is picked, <code>pick</code> returns a {@link Cesium3DTileFeature} object.
      * </p>
@@ -3529,10 +2985,12 @@ define([
      * @param {Number} [width=3] Width of the pick rectangle.
      * @param {Number} [height=3] Height of the pick rectangle.
      * @returns {Object} Object containing the picked primitive.
+     *
+     * @exception {DeveloperError} windowPosition is undefined.
      */
     Scene.prototype.pick = function(windowPosition, width, height) {
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(windowPosition)) {
+        if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
         //>>includeEnd('debug');
@@ -3544,79 +3002,184 @@ define([
         var us = context.uniformState;
         var frameState = this._frameState;
 
-        var view = this._defaultView;
-        this._view = view;
-
-        var viewport = view.viewport;
-        viewport.x = 0;
-        viewport.y = 0;
-        viewport.width = context.drawingBufferWidth;
-        viewport.height = context.drawingBufferHeight;
-
-        var passState = view.passState;
-        passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
-
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
+
+        if (!defined(this._pickFramebuffer)) {
+            this._pickFramebuffer = context.createPickFramebuffer();
+        }
 
         this._jobScheduler.disableThisFrame();
 
-        updateFrameState(this);
-        frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight, viewport);
+        // Update with previous frame's number and time, assuming that render is called before picking.
+        updateFrameState(this, frameState.frameNumber, frameState.time);
+        frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
-        frameState.tilesetPassState = pickTilesetPassState;
 
         us.update(frameState);
-
-        updateEnvironment(this);
 
         scratchRectangle.x = drawingBufferPosition.x - ((rectangleWidth - 1.0) * 0.5);
         scratchRectangle.y = (this.drawingBufferHeight - drawingBufferPosition.y) - ((rectangleHeight - 1.0) * 0.5);
         scratchRectangle.width = rectangleWidth;
         scratchRectangle.height = rectangleHeight;
-        passState = view.pickFramebuffer.begin(scratchRectangle, view.viewport);
+        var passState = this._pickFramebuffer.begin(scratchRectangle);
 
+        updateEnvironment(this, passState);
         updateAndExecuteCommands(this, passState, scratchColorZero);
         resolveFramebuffers(this, passState);
 
-        var object = view.pickFramebuffer.end(scratchRectangle);
+        var object = this._pickFramebuffer.end(scratchRectangle);
         context.endFrame();
+        callAfterRenderFunctions(frameState);
         return object;
     };
+
+    var fragDepthRegex = /\bgl_FragDepthEXT\b/;
+    var discardRegex = /\bdiscard\b/;
+
+    function getDepthOnlyShaderProgram(context, shaderProgram) {
+        var shader = context.shaderCache.getDerivedShaderProgram(shaderProgram, 'depthOnly');
+        if (!defined(shader)) {
+            var attributeLocations = shaderProgram._attributeLocations;
+            var fs = shaderProgram.fragmentShaderSource;
+
+            var writesDepthOrDiscards = false;
+            var sources = fs.sources;
+            var length = sources.length;
+            for (var i = 0; i < length; ++i) {
+                if (fragDepthRegex.test(sources[i]) || discardRegex.test(sources[i])) {
+                    writesDepthOrDiscards = true;
+                    break;
+                }
+            }
+
+            if (!writesDepthOrDiscards) {
+                fs = new ShaderSource({
+                    sources : ['void main() { gl_FragColor = vec4(1.0); }']
+                });
+            }
+
+            shader = context.shaderCache.createDerivedShaderProgram(shaderProgram, 'depthOnly', {
+                vertexShaderSource : shaderProgram.vertexShaderSource,
+                fragmentShaderSource : fs,
+                attributeLocations : attributeLocations
+            });
+        }
+
+        return shader;
+    }
+
+    function getDepthOnlyRenderState(scene, renderState) {
+        var cache = scene._depthOnlyRenderStateCache;
+        var depthOnlyState = cache[renderState.id];
+        if (!defined(depthOnlyState)) {
+            var rs = RenderState.getState(renderState);
+            rs.depthMask = true;
+            rs.colorMask = {
+                red : false,
+                green : false,
+                blue : false,
+                alpha : false
+            };
+
+            depthOnlyState = RenderState.fromCache(rs);
+            cache[renderState.id] = depthOnlyState;
+        }
+
+        return depthOnlyState;
+    }
+
+    function createDepthOnlyDerivedCommand(scene, command, context, result) {
+        // For a depth only pass, we bind a framebuffer with only a depth attachment (no color attachments),
+        // do not write color, and write depth. If the fragment shader doesn't modify the fragment depth
+        // or discard, the driver can replace the fragment shader with a pass-through shader. We're unsure if this
+        // actually happens so we modify the shader to use a pass-through fragment shader.
+
+        if (!defined(result)) {
+            result = {};
+        }
+
+        var shader;
+        var renderState;
+        if (defined(result.depthOnlyCommand)) {
+            shader = result.depthOnlyCommand.shaderProgram;
+            renderState = result.depthOnlyCommand.renderState;
+        }
+
+        result.depthOnlyCommand = DrawCommand.shallowClone(command, result.depthOnlyCommand);
+
+        if (!defined(shader) || result.shaderProgramId !== command.shaderProgram.id) {
+            result.depthOnlyCommand.shaderProgram = getDepthOnlyShaderProgram(context, command.shaderProgram);
+            result.depthOnlyCommand.renderState = getDepthOnlyRenderState(scene, command.renderState);
+            result.shaderProgramId = command.shaderProgram.id;
+        } else {
+            result.depthOnlyCommand.shaderProgram = shader;
+            result.depthOnlyCommand.renderState = renderState;
+        }
+
+        return result;
+    }
 
     function renderTranslucentDepthForPick(scene, drawingBufferPosition) {
         // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
         var context = scene._context;
         var frameState = scene._frameState;
-        var environmentState = scene._environmentState;
-
-        var view = scene._defaultView;
-        scene._view = view;
-
-        var viewport = view.viewport;
-        viewport.x = 0;
-        viewport.y = 0;
-        viewport.width = context.drawingBufferWidth;
-        viewport.height = context.drawingBufferHeight;
-
-        var passState = view.passState;
-        passState.viewport = BoundingRectangle.clone(viewport, passState.viewport);
 
         clearPasses(frameState.passes);
         frameState.passes.pick = true;
         frameState.passes.depth = true;
-        frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1, viewport);
-        frameState.tilesetPassState = pickTilesetPassState;
+        frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1);
 
-        updateEnvironment(scene);
-        environmentState.renderTranslucentDepthForPick = true;
-        passState = view.pickDepthFramebuffer.update(context, drawingBufferPosition, viewport);
+        var passState = scene._pickDepthPassState;
+        if (!defined(passState)) {
+            passState = scene._pickDepthPassState = new PassState(context);
+            passState.scissorTest = {
+                enabled : true,
+                rectangle : new BoundingRectangle()
+            };
+            passState.viewport = new BoundingRectangle();
+        }
 
+        var width = context.drawingBufferWidth;
+        var height = context.drawingBufferHeight;
+
+        var framebuffer = scene._pickDepthFramebuffer;
+        var pickDepthFBWidth = scene._pickDepthFramebufferWidth;
+        var pickDepthFBHeight = scene._pickDepthFramebufferHeight;
+        if (!defined(framebuffer) || pickDepthFBWidth !== width || pickDepthFBHeight !== height) {
+            scene._pickDepthFramebuffer = scene._pickDepthFramebuffer && scene._pickDepthFramebuffer.destroy();
+            framebuffer = scene._pickDepthFramebuffer = new Framebuffer({
+                context : context,
+                depthStencilTexture : new Texture({
+                    context : context,
+                    width : width,
+                    height : height,
+                    pixelFormat : PixelFormat.DEPTH_STENCIL,
+                    pixelDatatype : PixelDatatype.UNSIGNED_INT_24_8
+                })
+            });
+
+            scene._pickDepthFramebufferWidth = width;
+            scene._pickDepthFramebufferHeight = height;
+        }
+
+        passState.framebuffer = framebuffer;
+        passState.viewport.width = width;
+        passState.viewport.height = height;
+        passState.scissorTest.rectangle.x = drawingBufferPosition.x;
+        passState.scissorTest.rectangle.y = height - drawingBufferPosition.y;
+        passState.scissorTest.rectangle.width = 1;
+        passState.scissorTest.rectangle.height = 1;
+
+        updateEnvironment(scene, passState);
         updateAndExecuteCommands(scene, passState, scratchColorZero);
         resolveFramebuffers(scene, passState);
 
         context.endFrame();
     }
+
+    var scratchPackedDepth = new Cartesian4();
+    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
 
     /**
      * Returns the cartesian position reconstructed from the depth buffer and window position.
@@ -3641,10 +3204,10 @@ define([
         }
 
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(windowPosition)) {
+        if(!defined(windowPosition)) {
             throw new DeveloperError('windowPosition is undefined.');
         }
-        if (!this._context.depthTexture) {
+        if (!defined(this._globeDepth)) {
             throw new DeveloperError('Picking from the depth buffer is not supported. Check pickPositionSupported.');
         }
         //>>includeEnd('debug');
@@ -3658,24 +3221,16 @@ define([
             return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
         }
 
-        var frameState = this._frameState;
         var context = this._context;
         var uniformState = context.uniformState;
-
-        var view = this._defaultView;
-        this._view = view;
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(this, windowPosition, scratchPosition);
         if (this.pickTranslucentDepth) {
             renderTranslucentDepthForPick(this, drawingBufferPosition);
-        } else {
-            updateFrameState(this, frameState.frameNumber, frameState.time);
-            uniformState.update(frameState);
-            updateEnvironment(this);
         }
         drawingBufferPosition.y = this.drawingBufferHeight - drawingBufferPosition.y;
 
-        var camera = this.camera;
+        var camera = this._camera;
 
         // Create a working frustum from the original camera frustum.
         var frustum;
@@ -3689,23 +3244,33 @@ define([
             frustum = camera.frustum.clone(scratchOrthographicOffCenterFrustum);
         }
 
-        var frustumCommandsList = view.frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
+        var numFrustums = this.numberOfFrustums;
         for (var i = 0; i < numFrustums; ++i) {
             var pickDepth = getPickDepth(this, i);
-            var depth = pickDepth.getDepth(context, drawingBufferPosition.x, drawingBufferPosition.y);
+            var pixels = context.readPixels({
+                x : drawingBufferPosition.x,
+                y : drawingBufferPosition.y,
+                width : 1,
+                height : 1,
+                framebuffer : pickDepth.framebuffer
+            });
+
+            var packedDepth = Cartesian4.unpack(pixels, 0, scratchPackedDepth);
+            Cartesian4.divideByScalar(packedDepth, 255.0, packedDepth);
+            var depth = Cartesian4.dot(packedDepth, packedDepthScale);
+
             if (depth > 0.0 && depth < 1.0) {
-                var renderedFrustum = frustumCommandsList[i];
+                var renderedFrustum = this._frustumCommandsList[i];
                 var height2D;
                 if (this.mode === SceneMode.SCENE2D) {
                     height2D = camera.position.z;
                     camera.position.z = height2D - renderedFrustum.near + 1.0;
                     frustum.far = Math.max(1.0, renderedFrustum.far - renderedFrustum.near);
                     frustum.near = 1.0;
-                    uniformState.update(frameState);
+                    uniformState.update(this.frameState);
                     uniformState.updateFrustum(frustum);
                 } else {
-                    frustum.near = renderedFrustum.near * (i !== 0 ? this.opaqueFrustumNearOffset : 1.0);
+                    frustum.near = renderedFrustum.near * (i !== 0 ? OPAQUE_FRUSTUM_NEAR_OFFSET : 1.0);
                     frustum.far = renderedFrustum.far;
                     uniformState.updateFrustum(frustum);
                 }
@@ -3714,7 +3279,7 @@ define([
 
                 if (this.mode === SceneMode.SCENE2D) {
                     camera.position.z = height2D;
-                    uniformState.update(frameState);
+                    uniformState.update(this.frameState);
                 }
 
                 this._pickPositionCache[cacheKey] = Cartesian3.clone(result);
@@ -3761,49 +3326,55 @@ define([
         return result;
     };
 
-    function drillPick(limit, pickCallback) {
+    /**
+     * Returns a list of objects, each containing a `primitive` property, for all primitives at
+     * a particular window coordinate position. Other properties may also be set depending on the
+     * type of primitive. The primitives in the list are ordered by their visual order in the
+     * scene (front to back).
+     *
+     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
+     * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
+     * @returns {Object[]} Array of objects, each containing 1 picked primitives.
+     *
+     * @exception {DeveloperError} windowPosition is undefined.
+     *
+     * @example
+     * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
+     */
+    Scene.prototype.drillPick = function(windowPosition, limit) {
         // PERFORMANCE_IDEA: This function calls each primitive's update for each pass. Instead
         // we could update the primitive once, and then just execute their commands for each pass,
         // and cull commands for picked primitives.  e.g., base on the command's owner.
+
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(windowPosition)) {
+            throw new DeveloperError('windowPosition is undefined.');
+        }
+        //>>includeEnd('debug');
+
         var i;
         var attributes;
         var result = [];
         var pickedPrimitives = [];
         var pickedAttributes = [];
-        var pickedFeatures = [];
         if (!defined(limit)) {
             limit = Number.MAX_VALUE;
         }
 
-        var pickedResult = pickCallback();
-        while (defined(pickedResult)) {
-            var object = pickedResult.object;
-            var position = pickedResult.position;
-            var exclude = pickedResult.exclude;
-
-            if (defined(position) && !defined(object)) {
-                result.push(pickedResult);
+        var pickedResult = this.pick(windowPosition);
+        while (defined(pickedResult) && defined(pickedResult.primitive)) {
+            result.push(pickedResult);
+            if (0 >= --limit) {
                 break;
             }
 
-            if (!defined(object) || !defined(object.primitive)) {
-                break;
-            }
-
-            if (!exclude) {
-                result.push(pickedResult);
-                if (0 >= --limit) {
-                    break;
-                }
-            }
-
-            var primitive = object.primitive;
+            var primitive = pickedResult.primitive;
             var hasShowAttribute = false;
 
-            // If the picked object has a show attribute, use it.
+            //If the picked object has a show attribute, use it.
             if (typeof primitive.getGeometryInstanceAttributes === 'function') {
-                if (defined(object.id)) {
-                    attributes = primitive.getGeometryInstanceAttributes(object.id);
+                if (defined(pickedResult.id)) {
+                    attributes = primitive.getGeometryInstanceAttributes(pickedResult.id);
                     if (defined(attributes) && defined(attributes.show)) {
                         hasShowAttribute = true;
                         attributes.show = ShowGeometryInstanceAttribute.toValue(false, attributes.show);
@@ -3812,22 +3383,16 @@ define([
                 }
             }
 
-            if (object instanceof Cesium3DTileFeature) {
-                hasShowAttribute = true;
-                object.show = false;
-                pickedFeatures.push(object);
-            }
-
-            // Otherwise, hide the entire primitive
+            //Otherwise, hide the entire primitive
             if (!hasShowAttribute) {
                 primitive.show = false;
                 pickedPrimitives.push(primitive);
             }
 
-            pickedResult = pickCallback();
+            pickedResult = this.pick(windowPosition);
         }
 
-        // Unhide everything we hid while drill picking
+        // unhide everything we hid while drill picking
         for (i = 0; i < pickedPrimitives.length; ++i) {
             pickedPrimitives[i].show = true;
         }
@@ -3837,657 +3402,7 @@ define([
             attributes.show = ShowGeometryInstanceAttribute.toValue(true, attributes.show);
         }
 
-        for (i = 0; i < pickedFeatures.length; ++i) {
-            pickedFeatures[i].show = true;
-        }
-
         return result;
-    }
-
-    /**
-     * Returns a list of objects, each containing a `primitive` property, for all primitives at
-     * a particular window coordinate position. Other properties may also be set depending on the
-     * type of primitive and may be used to further identify the picked object. The primitives in
-     * the list are ordered by their visual order in the scene (front to back).
-     *
-     * @param {Cartesian2} windowPosition Window coordinates to perform picking on.
-     * @param {Number} [limit] If supplied, stop drilling after collecting this many picks.
-     * @param {Number} [width=3] Width of the pick rectangle.
-     * @param {Number} [height=3] Height of the pick rectangle.
-     * @returns {Object[]} Array of objects, each containing 1 picked primitives.
-     *
-     * @exception {DeveloperError} windowPosition is undefined.
-     *
-     * @example
-     * var pickedObjects = scene.drillPick(new Cesium.Cartesian2(100.0, 200.0));
-     *
-     * @see Scene#pick
-     */
-    Scene.prototype.drillPick = function(windowPosition, limit, width, height) {
-        var that = this;
-        var pickCallback = function() {
-            var object = that.pick(windowPosition, width, height);
-            if (defined(object)) {
-                return {
-                    object : object,
-                    position : undefined,
-                    exclude : false
-                };
-            }
-        };
-        var objects = drillPick(limit, pickCallback);
-        return objects.map(function(element) {
-            return element.object;
-        });
-    };
-
-    function updatePreloadPass(scene) {
-        var frameState = scene._frameState;
-        preloadTilesetPassState.camera = frameState.camera;
-        preloadTilesetPassState.cullingVolume = frameState.cullingVolume;
-
-        var primitives = scene.primitives;
-        primitives.updateForPass(frameState, preloadTilesetPassState);
-    }
-
-    function updatePreloadFlightPass(scene) {
-        var frameState = scene._frameState;
-        var camera = frameState.camera;
-        if (!camera.hasCurrentFlight()) {
-            return;
-        }
-
-        preloadFlightTilesetPassState.camera = scene.preloadFlightCamera;
-        preloadFlightTilesetPassState.cullingVolume = scene.preloadFlightCullingVolume;
-
-        var primitives = scene.primitives;
-        primitives.updateForPass(frameState, preloadFlightTilesetPassState);
-    }
-
-    function updateRequestRenderModeDeferCheckPass(scene) {
-        // Check if any ignored requests are ready to go (to wake rendering up again)
-        scene.primitives.updateForPass(scene._frameState, requestRenderModeDeferCheckPassState);
-    }
-
-    var scratchRight = new Cartesian3();
-    var scratchUp = new Cartesian3();
-
-    function updateOffscreenCameraFromRay(scene, ray, width, camera) {
-        var direction = ray.direction;
-        var orthogonalAxis = Cartesian3.mostOrthogonalAxis(direction, scratchRight);
-        var right = Cartesian3.cross(direction, orthogonalAxis, scratchRight);
-        var up = Cartesian3.cross(direction, right, scratchUp);
-
-        camera.position = ray.origin;
-        camera.direction = direction;
-        camera.up = up;
-        camera.right = right;
-
-        camera.frustum.width = defaultValue(width, scene.pickOffscreenDefaultWidth);
-        return camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
-    }
-
-    function updateMostDetailedRayPick(scene, rayPick) {
-        var frameState = scene._frameState;
-
-        var ray = rayPick.ray;
-        var width = rayPick.width;
-        var tilesets = rayPick.tilesets;
-
-        var camera = scene._pickOffscreenView.camera;
-        var cullingVolume = updateOffscreenCameraFromRay(scene, ray, width, camera);
-
-        var tilesetPassState = mostDetailedPreloadTilesetPassState;
-        tilesetPassState.camera = camera;
-        tilesetPassState.cullingVolume = cullingVolume;
-
-        var ready = true;
-        var tilesetsLength = tilesets.length;
-        for (var i = 0; i < tilesetsLength; ++i) {
-            var tileset = tilesets[i];
-            if (tileset.show && scene.primitives.contains(tileset)) {
-                // Only update tilesets that are still contained in the scene's primitive collection and are still visible
-                // Update tilesets continually until all tilesets are ready. This way tiles are never removed from the cache.
-                tileset.updateForPass(frameState, tilesetPassState);
-                ready = (ready && tilesetPassState.ready);
-            }
-        }
-
-        if (ready) {
-            rayPick.deferred.resolve();
-        }
-
-        return ready;
-    }
-
-    function updateMostDetailedRayPicks(scene) {
-        // Modifies array during iteration
-        var rayPicks = scene._mostDetailedRayPicks;
-        for (var i = 0; i < rayPicks.length; ++i) {
-            if (updateMostDetailedRayPick(scene, rayPicks[i])) {
-                rayPicks.splice(i--, 1);
-            }
-        }
-    }
-
-    function getTilesets(primitives, objectsToExclude, tilesets) {
-        var length = primitives.length;
-        for (var i = 0; i < length; ++i) {
-            var primitive = primitives.get(i);
-            if (primitive.show) {
-                if ((primitive instanceof Cesium3DTileset)) {
-                    if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
-                        tilesets.push(primitive);
-                    }
-                } else if (primitive instanceof PrimitiveCollection) {
-                    getTilesets(primitive, objectsToExclude, tilesets);
-                }
-            }
-        }
-    }
-
-    function launchMostDetailedRayPick(scene, ray, objectsToExclude, width, callback) {
-        var tilesets = [];
-        getTilesets(scene.primitives, objectsToExclude, tilesets);
-        if (tilesets.length === 0) {
-            return when.resolve(callback());
-        }
-
-        var rayPick = new MostDetailedRayPick(ray, width, tilesets);
-        scene._mostDetailedRayPicks.push(rayPick);
-        return rayPick.promise.then(function() {
-            return callback();
-        });
-    }
-
-    function isExcluded(object, objectsToExclude) {
-        if (!defined(object) || !defined(objectsToExclude) || objectsToExclude.length === 0) {
-            return false;
-        }
-        return (objectsToExclude.indexOf(object) > -1) ||
-               (objectsToExclude.indexOf(object.primitive) > -1) ||
-               (objectsToExclude.indexOf(object.id) > -1);
-    }
-
-    function getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, mostDetailed) {
-        var context = scene._context;
-        var uniformState = context.uniformState;
-        var frameState = scene._frameState;
-
-        var view = scene._pickOffscreenView;
-        scene._view = view;
-
-        updateOffscreenCameraFromRay(scene, ray, width, view.camera);
-
-        scratchRectangle = BoundingRectangle.clone(view.viewport, scratchRectangle);
-
-        var passState = view.pickFramebuffer.begin(scratchRectangle, view.viewport);
-
-        scene._jobScheduler.disableThisFrame();
-
-        updateFrameState(scene);
-        frameState.invertClassification = false;
-        frameState.passes.pick = true;
-        frameState.passes.offscreen = true;
-
-        if (mostDetailed) {
-            frameState.tilesetPassState = mostDetailedPickTilesetPassState;
-        } else {
-            frameState.tilesetPassState = pickTilesetPassState;
-        }
-
-        uniformState.update(frameState);
-
-        updateEnvironment(scene, view);
-        updateAndExecuteCommands(scene, passState, scratchColorZero);
-        resolveFramebuffers(scene, passState);
-
-        var position;
-        var object = view.pickFramebuffer.end(context);
-
-        if (scene._context.depthTexture) {
-            var numFrustums = view.frustumCommandsList.length;
-            for (var i = 0; i < numFrustums; ++i) {
-                var pickDepth = getPickDepth(scene, i);
-                var depth = pickDepth.getDepth(context, 0, 0);
-                if (depth > 0.0 && depth < 1.0) {
-                    var renderedFrustum = view.frustumCommandsList[i];
-                    var near = renderedFrustum.near * (i !== 0 ? scene.opaqueFrustumNearOffset : 1.0);
-                    var far = renderedFrustum.far;
-                    var distance = near + depth * (far - near);
-                    position = Ray.getPoint(ray, distance);
-                    break;
-                }
-            }
-        }
-
-        scene._view = scene._defaultView;
-        context.endFrame();
-
-        if (defined(object) || defined(position)) {
-            return {
-                object : object,
-                position : position,
-                exclude : (!defined(position) && requirePosition) || isExcluded(object, objectsToExclude)
-            };
-        }
-    }
-
-    function getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, mostDetailed) {
-        var pickCallback = function() {
-            return getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, mostDetailed);
-        };
-        return drillPick(limit, pickCallback);
-    }
-
-    function pickFromRay(scene, ray, objectsToExclude, width, requirePosition, mostDetailed) {
-        var results = getRayIntersections(scene, ray, 1, objectsToExclude, width, requirePosition, mostDetailed);
-        if (results.length > 0) {
-            return results[0];
-        }
-    }
-
-    function drillPickFromRay(scene, ray, limit, objectsToExclude, width, requirePosition, mostDetailed) {
-        return getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, mostDetailed);
-    }
-
-    function deferPromiseUntilPostRender(scene, promise) {
-        // Resolve promise after scene's postRender in case entities are created when the promise resolves.
-        // Entities can't be created between viewer._onTick and viewer._postRender.
-        var deferred = when.defer();
-        promise.then(function(result) {
-            var removeCallback = scene.postRender.addEventListener(function() {
-                deferred.resolve(result);
-                removeCallback();
-            });
-        });
-        return deferred.promise;
-    }
-
-    /**
-     * Returns an object containing the first object intersected by the ray and the position of intersection,
-     * or <code>undefined</code> if there were no intersections. The intersected object has a <code>primitive</code>
-     * property that contains the intersected primitive. Other properties may be set depending on the type of primitive
-     * and may be used to further identify the picked object. The ray must be given in world coordinates.
-     * <p>
-     * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
-     * primitives regardless of their visibility.
-     * </p>
-     *
-     * @private
-     *
-     * @param {Ray} ray The ray.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
-     * @param {Number} [width=0.1] Width of the intersection volume in meters.
-     * @returns {Object} An object containing the object and position of the first intersection.
-     *
-     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
-     */
-    Scene.prototype.pickFromRay = function(ray, objectsToExclude, width) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('ray', ray);
-        if (this._mode !== SceneMode.SCENE3D) {
-            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
-        }
-        //>>includeEnd('debug');
-        return pickFromRay(this, ray, objectsToExclude, width, false, false);
-    };
-
-    /**
-     * Returns a list of objects, each containing the object intersected by the ray and the position of intersection.
-     * The intersected object has a <code>primitive</code> property that contains the intersected primitive. Other
-     * properties may also be set depending on the type of primitive and may be used to further identify the picked object.
-     * The primitives in the list are ordered by first intersection to last intersection. The ray must be given in
-     * world coordinates.
-     * <p>
-     * This function only picks globe tiles and 3D Tiles that are rendered in the current view. Picks all other
-     * primitives regardless of their visibility.
-     * </p>
-     *
-     * @private
-     *
-     * @param {Ray} ray The ray.
-     * @param {Number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
-     * @param {Number} [width=0.1] Width of the intersection volume in meters.
-     * @returns {Object[]} List of objects containing the object and position of each intersection.
-     *
-     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
-     */
-    Scene.prototype.drillPickFromRay = function(ray, limit, objectsToExclude, width) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('ray', ray);
-        if (this._mode !== SceneMode.SCENE3D) {
-            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
-        }
-        //>>includeEnd('debug');
-        return drillPickFromRay(this, ray, limit, objectsToExclude, width,false, false);
-    };
-
-    /**
-     * Initiates an asynchronous {@link Scene#pickFromRay} request using the maximum level of detail for 3D Tilesets
-     * regardless of visibility.
-     *
-     * @private
-     *
-     * @param {Ray} ray The ray.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
-     * @param {Number} [width=0.1] Width of the intersection volume in meters.
-     * @returns {Promise.<Object>} A promise that resolves to an object containing the object and position of the first intersection.
-     *
-     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
-     */
-    Scene.prototype.pickFromRayMostDetailed = function(ray, objectsToExclude, width) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('ray', ray);
-        if (this._mode !== SceneMode.SCENE3D) {
-            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
-        }
-        //>>includeEnd('debug');
-        var that = this;
-        ray = Ray.clone(ray);
-        objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return deferPromiseUntilPostRender(this, launchMostDetailedRayPick(this, ray, objectsToExclude, width, function() {
-            return pickFromRay(that, ray, objectsToExclude, width, false, true);
-        }));
-    };
-
-    /**
-     * Initiates an asynchronous {@link Scene#drillPickFromRay} request using the maximum level of detail for 3D Tilesets
-     * regardless of visibility.
-     *
-     * @private
-     *
-     * @param {Ray} ray The ray.
-     * @param {Number} [limit=Number.MAX_VALUE] If supplied, stop finding intersections after this many intersections.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to exclude from the ray intersection.
-     * @param {Number} [width=0.1] Width of the intersection volume in meters.
-     * @returns {Promise.<Object[]>} A promise that resolves to a list of objects containing the object and position of each intersection.
-     *
-     * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
-     */
-    Scene.prototype.drillPickFromRayMostDetailed = function(ray, limit, objectsToExclude, width) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('ray', ray);
-        if (this._mode !== SceneMode.SCENE3D) {
-            throw new DeveloperError('Ray intersections are only supported in 3D mode.');
-        }
-        //>>includeEnd('debug');
-        var that = this;
-        ray = Ray.clone(ray);
-        objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return deferPromiseUntilPostRender(this, launchMostDetailedRayPick(this, ray, objectsToExclude, width, function() {
-            return drillPickFromRay(that, ray, limit, objectsToExclude, width, false, true);
-        }));
-    };
-
-    var scratchSurfacePosition = new Cartesian3();
-    var scratchSurfaceNormal = new Cartesian3();
-    var scratchSurfaceRay = new Ray();
-    var scratchCartographic = new Cartographic();
-
-    function getRayForSampleHeight(scene, cartographic) {
-        var globe = scene.globe;
-        var ellipsoid = defined(globe) ? globe.ellipsoid : scene.mapProjection.ellipsoid;
-        var height = ApproximateTerrainHeights._defaultMaxTerrainHeight;
-        var surfaceNormal = ellipsoid.geodeticSurfaceNormalCartographic(cartographic, scratchSurfaceNormal);
-        var surfacePosition = Cartographic.toCartesian(cartographic, ellipsoid, scratchSurfacePosition);
-        var surfaceRay = scratchSurfaceRay;
-        surfaceRay.origin = surfacePosition;
-        surfaceRay.direction =  surfaceNormal;
-        var ray = new Ray();
-        Ray.getPoint(surfaceRay, height, ray.origin);
-        Cartesian3.negate(surfaceNormal, ray.direction);
-        return ray;
-    }
-
-    function getRayForClampToHeight(scene, cartesian) {
-        var globe = scene.globe;
-        var ellipsoid = defined(globe) ? globe.ellipsoid : scene.mapProjection.ellipsoid;
-        var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchCartographic);
-        return getRayForSampleHeight(scene, cartographic);
-    }
-
-    function getHeightFromCartesian(scene, cartesian) {
-        var globe = scene.globe;
-        var ellipsoid = defined(globe) ? globe.ellipsoid : scene.mapProjection.ellipsoid;
-        var cartographic = Cartographic.fromCartesian(cartesian, ellipsoid, scratchCartographic);
-        return cartographic.height;
-    }
-
-    function sampleHeightMostDetailed(scene, cartographic, objectsToExclude, width) {
-        var ray = getRayForSampleHeight(scene, cartographic);
-        return launchMostDetailedRayPick(scene, ray, objectsToExclude, width, function() {
-            var pickResult = pickFromRay(scene, ray, objectsToExclude, width, true, true);
-            if (defined(pickResult)) {
-                return getHeightFromCartesian(scene, pickResult.position);
-            }
-        });
-    }
-
-    function clampToHeightMostDetailed(scene, cartesian, objectsToExclude, width, result) {
-        var ray = getRayForClampToHeight(scene, cartesian);
-        return launchMostDetailedRayPick(scene, ray, objectsToExclude, width, function() {
-            var pickResult = pickFromRay(scene, ray, objectsToExclude, width, true, true);
-            if (defined(pickResult)) {
-                return Cartesian3.clone(pickResult.position, result);
-            }
-        });
-    }
-
-    /**
-     * Returns the height of scene geometry at the given cartographic position or <code>undefined</code> if there was no
-     * scene geometry to sample height from. The height of the input position is ignored. May be used to clamp objects to
-     * the globe, 3D Tiles, or primitives in the scene.
-     * <p>
-     * This function only samples height from globe tiles and 3D Tiles that are rendered in the current view. Samples height
-     * from all other primitives regardless of their visibility.
-     * </p>
-     *
-     * @param {Cartographic} position The cartographic position to sample height from.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
-     * @param {Number} [width=0.1] Width of the intersection volume in meters.
-     * @returns {Number} The height. This may be <code>undefined</code> if there was no scene geometry to sample height from.
-     *
-     * @example
-     * var position = new Cesium.Cartographic(-1.31968, 0.698874);
-     * var height = viewer.scene.sampleHeight(position);
-     * console.log(height);
-     *
-     * @see Scene#clampToHeight
-     * @see Scene#clampToHeightMostDetailed
-     * @see Scene#sampleHeightMostDetailed
-     *
-     * @exception {DeveloperError} sampleHeight is only supported in 3D mode.
-     * @exception {DeveloperError} sampleHeight requires depth texture support. Check sampleHeightSupported.
-     */
-    Scene.prototype.sampleHeight = function(position, objectsToExclude, width) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('position', position);
-        if (this._mode !== SceneMode.SCENE3D) {
-            throw new DeveloperError('sampleHeight is only supported in 3D mode.');
-        }
-        if (!this.sampleHeightSupported) {
-            throw new DeveloperError('sampleHeight requires depth texture support. Check sampleHeightSupported.');
-        }
-        //>>includeEnd('debug');
-        var ray = getRayForSampleHeight(this, position);
-        var pickResult = pickFromRay(this, ray, objectsToExclude, width, true, false);
-        if (defined(pickResult)) {
-            return getHeightFromCartesian(this, pickResult.position);
-        }
-    };
-
-    /**
-     * Clamps the given cartesian position to the scene geometry along the geodetic surface normal. Returns the
-     * clamped position or <code>undefined</code> if there was no scene geometry to clamp to. May be used to clamp
-     * objects to the globe, 3D Tiles, or primitives in the scene.
-     * <p>
-     * This function only clamps to globe tiles and 3D Tiles that are rendered in the current view. Clamps to
-     * all other primitives regardless of their visibility.
-     * </p>
-     *
-     * @param {Cartesian3} cartesian The cartesian position.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
-     * @param {Number} [width=0.1] Width of the intersection volume in meters.
-     * @param {Cartesian3} [result] An optional object to return the clamped position.
-     * @returns {Cartesian3} The modified result parameter or a new Cartesian3 instance if one was not provided. This may be <code>undefined</code> if there was no scene geometry to clamp to.
-     *
-     * @example
-     * // Clamp an entity to the underlying scene geometry
-     * var position = entity.position.getValue(Cesium.JulianDate.now());
-     * entity.position = viewer.scene.clampToHeight(position);
-     *
-     * @see Scene#sampleHeight
-     * @see Scene#sampleHeightMostDetailed
-     * @see Scene#clampToHeightMostDetailed
-     *
-     * @exception {DeveloperError} clampToHeight is only supported in 3D mode.
-     * @exception {DeveloperError} clampToHeight requires depth texture support. Check clampToHeightSupported.
-     */
-    Scene.prototype.clampToHeight = function(cartesian, objectsToExclude, width, result) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('cartesian', cartesian);
-        if (this._mode !== SceneMode.SCENE3D) {
-            throw new DeveloperError('sampleHeight is only supported in 3D mode.');
-        }
-        if (!this.clampToHeightSupported) {
-            throw new DeveloperError('clampToHeight requires depth texture support. Check clampToHeightSupported.');
-        }
-        //>>includeEnd('debug');
-
-        var ray = getRayForClampToHeight(this, cartesian);
-        var pickResult = pickFromRay(this, ray, objectsToExclude, width, true, false);
-        if (defined(pickResult)) {
-            return Cartesian3.clone(pickResult.position, result);
-        }
-    };
-
-    /**
-     * Initiates an asynchronous {@link Scene#sampleHeight} query for an array of {@link Cartographic} positions
-     * using the maximum level of detail for 3D Tilesets in the scene. The height of the input positions is ignored.
-     * Returns a promise that is resolved when the query completes. Each point height is modified in place.
-     * If a height cannot be determined because no geometry can be sampled at that location, or another error occurs,
-     * the height is set to undefined.
-     *
-     * @param {Cartographic[]} positions The cartographic positions to update with sampled heights.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not sample height from.
-     * @param {Number} [width=0.1] Width of the intersection volume in meters.
-     * @returns {Promise.<Number[]>} A promise that resolves to the provided list of positions when the query has completed.
-     *
-     * @example
-     * var positions = [
-     *     new Cesium.Cartographic(-1.31968, 0.69887),
-     *     new Cesium.Cartographic(-1.10489, 0.83923)
-     * ];
-     * var promise = viewer.scene.sampleHeightMostDetailed(positions);
-     * promise.then(function(updatedPosition) {
-     *     // positions[0].height and positions[1].height have been updated.
-     *     // updatedPositions is just a reference to positions.
-     * }
-     *
-     * @see Scene#sampleHeight
-     *
-     * @exception {DeveloperError} sampleHeightMostDetailed is only supported in 3D mode.
-     * @exception {DeveloperError} sampleHeightMostDetailed requires depth texture support. Check sampleHeightSupported.
-     */
-    Scene.prototype.sampleHeightMostDetailed = function(positions, objectsToExclude, width) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('positions', positions);
-        if (this._mode !== SceneMode.SCENE3D) {
-            throw new DeveloperError('sampleHeightMostDetailed is only supported in 3D mode.');
-        }
-        if (!this.sampleHeightSupported) {
-            throw new DeveloperError('sampleHeightMostDetailed requires depth texture support. Check sampleHeightSupported.');
-        }
-        //>>includeEnd('debug');
-        objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        var length = positions.length;
-        var promises = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            promises[i] = sampleHeightMostDetailed(this, positions[i], objectsToExclude, width);
-        }
-        return deferPromiseUntilPostRender(this, when.all(promises).then(function(heights) {
-            var length = heights.length;
-            for (var i = 0; i < length; ++i) {
-                positions[i].height = heights[i];
-            }
-            return positions;
-        }));
-    };
-
-    /**
-     * Initiates an asynchronous {@link Scene#clampToHeight} query for an array of {@link Cartesian3} positions
-     * using the maximum level of detail for 3D Tilesets in the scene. Returns a promise that is resolved when
-     * the query completes. Each position is modified in place. If a position cannot be clamped because no geometry
-     * can be sampled at that location, or another error occurs, the element in the array is set to undefined.
-     *
-     * @param {Cartesian3[]} cartesians The cartesian positions to update with clamped positions.
-     * @param {Object[]} [objectsToExclude] A list of primitives, entities, or 3D Tiles features to not clamp to.
-     * @param {Number} [width=0.1] Width of the intersection volume in meters.
-     * @returns {Promise.<Cartesian3[]>} A promise that resolves to the provided list of positions when the query has completed.
-     *
-     * @example
-     * var cartesians = [
-     *     entities[0].position.getValue(Cesium.JulianDate.now()),
-     *     entities[1].position.getValue(Cesium.JulianDate.now())
-     * ];
-     * var promise = viewer.scene.clampToHeightMostDetailed(cartesians);
-     * promise.then(function(updatedCartesians) {
-     *     entities[0].position = updatedCartesians[0];
-     *     entities[1].position = updatedCartesians[1];
-     * }
-     *
-     * @see Scene#clampToHeight
-     *
-     * @exception {DeveloperError} clampToHeightMostDetailed is only supported in 3D mode.
-     * @exception {DeveloperError} clampToHeightMostDetailed requires depth texture support. Check clampToHeightSupported.
-     */
-    Scene.prototype.clampToHeightMostDetailed = function(cartesians, objectsToExclude, width) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('cartesians', cartesians);
-        if (this._mode !== SceneMode.SCENE3D) {
-            throw new DeveloperError('clampToHeightMostDetailed is only supported in 3D mode.');
-        }
-        if (!this.clampToHeightSupported) {
-            throw new DeveloperError('clampToHeightMostDetailed requires depth texture support. Check clampToHeightSupported.');
-        }
-        //>>includeEnd('debug');
-        objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        var length = cartesians.length;
-        var promises = new Array(length);
-        for (var i = 0; i < length; ++i) {
-            promises[i] = clampToHeightMostDetailed(this, cartesians[i], objectsToExclude, width, cartesians[i]);
-        }
-        return deferPromiseUntilPostRender(this, when.all(promises).then(function(clampedCartesians) {
-            var length = clampedCartesians.length;
-            for (var i = 0; i < length; ++i) {
-                cartesians[i] = clampedCartesians[i];
-            }
-            return cartesians;
-        }));
-    };
-
-    /**
-     * Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place an
-     * HTML element at the same screen position as an object in the scene.
-     *
-     * @param {Cartesian3} position The position in cartesian coordinates.
-     * @param {Cartesian2} [result] An optional object to return the input position transformed to canvas coordinates.
-     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
-     *
-     * @example
-     * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
-     * var scene = widget.scene;
-     * var ellipsoid = scene.globe.ellipsoid;
-     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
-     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
-     * handler.setInputAction(function(movement) {
-     *     console.log(scene.cartesianToCanvasCoordinates(position));
-     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
-     */
-    Scene.prototype.cartesianToCanvasCoordinates = function(position, result) {
-        return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
     };
 
     /**
@@ -4567,6 +3482,8 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      *
+     * @returns {undefined}
+     *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *
      *
@@ -4580,6 +3497,8 @@ define([
         this._computeEngine = this._computeEngine && this._computeEngine.destroy();
         this._screenSpaceCameraController = this._screenSpaceCameraController && this._screenSpaceCameraController.destroy();
         this._deviceOrientationCameraController = this._deviceOrientationCameraController && !this._deviceOrientationCameraController.isDestroyed() && this._deviceOrientationCameraController.destroy();
+        this._pickFramebuffer = this._pickFramebuffer && this._pickFramebuffer.destroy();
+        this._pickDepthFramebuffer = this._pickDepthFramebuffer && this._pickDepthFramebuffer.destroy();
         this._primitives = this._primitives && this._primitives.destroy();
         this._groundPrimitives = this._groundPrimitives && this._groundPrimitives.destroy();
         this._globe = this._globe && this._globe.destroy();
@@ -4589,36 +3508,49 @@ define([
         this.sun = this.sun && this.sun.destroy();
         this._sunPostProcess = this._sunPostProcess && this._sunPostProcess.destroy();
         this._depthPlane = this._depthPlane && this._depthPlane.destroy();
-        this._transitioner = this._transitioner && this._transitioner.destroy();
+        this._transitioner.destroy();
         this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
         this._brdfLutGenerator = this._brdfLutGenerator && this._brdfLutGenerator.destroy();
 
-        this._defaultView = this._defaultView && this._defaultView.destroy();
-        this._pickOffscreenView = this._pickOffscreenView && this._pickOffscreenView.destroy();
-        this._view = undefined;
-
-        if (this._removeCreditContainer) {
-            this._canvas.parentNode.removeChild(this._creditContainer);
+        if (defined(this._globeDepth)) {
+            this._globeDepth.destroy();
         }
 
-        this.postProcessStages = this.postProcessStages && this.postProcessStages.destroy();
+        if (defined(this._oit)) {
+            this._oit.destroy();
+        }
+        this._fxaa.destroy();
 
         this._context = this._context && this._context.destroy();
-        this._frameState.creditDisplay = this._frameState.creditDisplay && this._frameState.creditDisplay.destroy();
-
+        this._frameState.creditDisplay.destroy();
         if (defined(this._performanceDisplay)){
             this._performanceDisplay = this._performanceDisplay && this._performanceDisplay.destroy();
             this._performanceContainer.parentNode.removeChild(this._performanceContainer);
         }
 
-        this._removeRequestListenerCallback();
-        this._removeTaskProcessorListenerCallback();
-        for (var i = 0; i < this._removeGlobeCallbacks.length; ++i) {
-            this._removeGlobeCallbacks[i]();
-        }
-        this._removeGlobeCallbacks.length = 0;
-
         return destroyObject(this);
+    };
+
+    /**
+     * Transforms a position in cartesian coordinates to canvas coordinates.  This is commonly used to place an
+     * HTML element at the same screen position as an object in the scene.
+     *
+     * @param {Cartesian3} position The position in cartesian coordinates.
+     * @param {Cartesian2} [result] An optional object to return the input position transformed to canvas coordinates.
+     * @returns {Cartesian2} The modified result parameter or a new Cartesian2 instance if one was not provided.  This may be <code>undefined</code> if the input position is near the center of the ellipsoid.
+     *
+     * @example
+     * // Output the canvas position of longitude/latitude (0, 0) every time the mouse moves.
+     * var scene = widget.scene;
+     * var ellipsoid = scene.globe.ellipsoid;
+     * var position = Cesium.Cartesian3.fromDegrees(0.0, 0.0);
+     * var handler = new Cesium.ScreenSpaceEventHandler(scene.canvas);
+     * handler.setInputAction(function(movement) {
+     *     console.log(scene.cartesianToCanvasCoordinates(position));
+     * }, Cesium.ScreenSpaceEventType.MOUSE_MOVE);
+     */
+    Scene.prototype.cartesianToCanvasCoordinates = function(position, result) {
+        return SceneTransforms.wgs84ToWindowCoordinates(this, position, result);
     };
 
     return Scene;

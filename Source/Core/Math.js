@@ -1,12 +1,10 @@
 define([
         '../ThirdParty/mersenne-twister',
-        './Check',
         './defaultValue',
         './defined',
         './DeveloperError'
     ], function(
         MersenneTwister,
-        Check,
         defaultValue,
         defined,
         DeveloperError) {
@@ -16,7 +14,6 @@ define([
      * Math functions.
      *
      * @exports CesiumMath
-     * @alias Math
      */
     var CesiumMath = {};
 
@@ -161,15 +158,7 @@ define([
     CesiumMath.EPSILON20 = 0.00000000000000000001;
 
     /**
-     * 0.000000000000000000001
-     * @type {Number}
-     * @constant
-     */
-    CesiumMath.EPSILON21 = 0.000000000000000000001;
-
-    /**
-     * The gravitational parameter of the Earth in meters cubed
-     * per second squared as defined by the WGS84 model: 3.986004418e14
+     * 3.986004418e14
      * @type {Number}
      * @constant
      */
@@ -199,28 +188,22 @@ define([
     CesiumMath.SIXTY_FOUR_KILOBYTES = 64 * 1024;
 
     /**
-     * 4 * 1024 * 1024 * 1024
-     * @type {Number}
-     * @constant
-     */
-    CesiumMath.FOUR_GIGABYTES = 4 * 1024 * 1024 * 1024;
-
-    /**
      * Returns the sign of the value; 1 if the value is positive, -1 if the value is
      * negative, or 0 if the value is 0.
      *
-     * @function
      * @param {Number} value The value to return the sign of.
      * @returns {Number} The sign of value.
      */
-    CesiumMath.sign = defaultValue(Math.sign, function sign(value) {
-        value = +value; // coerce to number
-        if (value === 0 || value !== value) {
-            // zero or NaN
-            return value;
+    CesiumMath.sign = function(value) {
+        if (value > 0) {
+            return 1;
         }
-        return value > 0 ? 1 : -1;
-    });
+        if (value < 0) {
+            return -1;
+        }
+
+        return 0;
+    };
 
     /**
      * Returns 1.0 if the given value is positive or zero, and -1.0 if it is negative.
@@ -234,41 +217,29 @@ define([
     };
 
     /**
-     * Converts a scalar value in the range [-1.0, 1.0] to a SNORM in the range [0, rangeMaximum]
+     * Converts a scalar value in the range [-1.0, 1.0] to a SNORM in the range [0, rangeMax]
      * @param {Number} value The scalar value in the range [-1.0, 1.0]
-     * @param {Number} [rangeMaximum=255] The maximum value in the mapped range, 255 by default.
-     * @returns {Number} A SNORM value, where 0 maps to -1.0 and rangeMaximum maps to 1.0.
+     * @param {Number} [rangeMax=255] The maximum value in the mapped range, 255 by default.
+     * @returns {Number} A SNORM value, where 0 maps to -1.0 and rangeMax maps to 1.0.
      *
      * @see CesiumMath.fromSNorm
      */
-    CesiumMath.toSNorm = function(value, rangeMaximum) {
-        rangeMaximum = defaultValue(rangeMaximum, 255);
-        return Math.round((CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMaximum);
+    CesiumMath.toSNorm = function(value, rangeMax) {
+        rangeMax = defaultValue(rangeMax, 255);
+        return Math.round((CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMax);
     };
 
     /**
-     * Converts a SNORM value in the range [0, rangeMaximum] to a scalar in the range [-1.0, 1.0].
-     * @param {Number} value SNORM value in the range [0, rangeMaximum]
-     * @param {Number} [rangeMaximum=255] The maximum value in the SNORM range, 255 by default.
+     * Converts a SNORM value in the range [0, rangeMax] to a scalar in the range [-1.0, 1.0].
+     * @param {Number} value SNORM value in the range [0, 255]
+     * @param {Number} [rangeMax=255] The maximum value in the SNORM range, 255 by default.
      * @returns {Number} Scalar in the range [-1.0, 1.0].
      *
      * @see CesiumMath.toSNorm
      */
-    CesiumMath.fromSNorm = function(value, rangeMaximum) {
-        rangeMaximum = defaultValue(rangeMaximum, 255);
-        return CesiumMath.clamp(value, 0.0, rangeMaximum) / rangeMaximum * 2.0 - 1.0;
-    };
-
-    /**
-     * Converts a scalar value in the range [rangeMinimum, rangeMaximum] to a scalar in the range [0.0, 1.0]
-     * @param {Number} value The scalar value in the range [rangeMinimum, rangeMaximum]
-     * @param {Number} rangeMinimum The minimum value in the mapped range.
-     * @param {Number} rangeMaximum The maximum value in the mapped range.
-     * @returns {Number} A scalar value, where rangeMinimum maps to 0.0 and rangeMaximum maps to 1.0.
-     */
-    CesiumMath.normalize = function(value, rangeMinimum, rangeMaximum) {
-        rangeMaximum = Math.max(rangeMaximum - rangeMinimum, 0.0);
-        return rangeMaximum === 0.0 ? 0.0 : CesiumMath.clamp((value - rangeMinimum) / rangeMaximum, 0.0, 1.0);
+    CesiumMath.fromSNorm = function(value, rangeMax) {
+        rangeMax = defaultValue(rangeMax, 255);
+        return CesiumMath.clamp(value, 0.0, rangeMax) / rangeMax * 2.0 - 1.0;
     };
 
     /**
@@ -289,13 +260,15 @@ define([
      *   </ul>
      *</p>
      *
-     * @function
      * @param {Number} value The number whose hyperbolic sine is to be returned.
      * @returns {Number} The hyperbolic sine of <code>value</code>.
      */
-    CesiumMath.sinh = defaultValue(Math.sinh, function sinh(value) {
-        return (Math.exp(value) - Math.exp(-value)) / 2.0;
-    });
+    CesiumMath.sinh = function(value) {
+        var part1 = Math.pow(Math.E, value);
+        var part2 = Math.pow(Math.E, -1.0 * value);
+
+        return (part1 - part2) * 0.5;
+    };
 
     /**
      * Returns the hyperbolic cosine of a number.
@@ -313,13 +286,15 @@ define([
      *   </ul>
      *</p>
      *
-     * @function
      * @param {Number} value The number whose hyperbolic cosine is to be returned.
      * @returns {Number} The hyperbolic cosine of <code>value</code>.
      */
-    CesiumMath.cosh = defaultValue(Math.cosh, function cosh(value) {
-        return (Math.exp(value) + Math.exp(-value)) / 2.0;
-    });
+    CesiumMath.cosh = function(value) {
+        var part1 = Math.pow(Math.E, value);
+        var part2 = Math.pow(Math.E, -1.0 * value);
+
+        return (part1 + part2) * 0.5;
+    };
 
     /**
      * Computes the linear interpolation of two values.
@@ -358,7 +333,7 @@ define([
      * @type {Number}
      * @constant
      */
-    CesiumMath.PI_OVER_TWO = Math.PI / 2.0;
+    CesiumMath.PI_OVER_TWO = Math.PI * 0.5;
 
     /**
      * pi/3
@@ -390,7 +365,7 @@ define([
      * @type {Number}
      * @constant
      */
-    CesiumMath.THREE_PI_OVER_TWO = 3.0 * Math.PI / 2.0;
+    CesiumMath.THREE_PI_OVER_TWO = (3.0 * Math.PI) * 0.5;
 
     /**
      * 2pi
@@ -602,108 +577,6 @@ define([
         return absDiff <= absoluteEpsilon || absDiff <= relativeEpsilon * Math.max(Math.abs(left), Math.abs(right));
     };
 
-    /**
-     * Determines if the left value is less than the right value. If the two values are within
-     * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns false.
-     *
-     * @param {Number} left The first number to compare.
-     * @param {Number} right The second number to compare.
-     * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
-     * @returns {Boolean} <code>true</code> if <code>left</code> is less than <code>right</code> by more than
-     *          <code>absoluteEpsilon<code>. <code>false</code> if <code>left</code> is greater or if the two
-     *          values are nearly equal.
-     */
-    CesiumMath.lessThan = function(left, right, absoluteEpsilon) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('first is required.');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('second is required.');
-        }
-        if (!defined(absoluteEpsilon)) {
-            throw new DeveloperError('relativeEpsilon is required.');
-        }
-        //>>includeEnd('debug');
-        return left - right < -absoluteEpsilon;
-    };
-
-    /**
-     * Determines if the left value is less than or equal to the right value. If the two values are within
-     * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns true.
-     *
-     * @param {Number} left The first number to compare.
-     * @param {Number} right The second number to compare.
-     * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
-     * @returns {Boolean} <code>true</code> if <code>left</code> is less than <code>right</code> or if the
-     *          the values are nearly equal.
-     */
-    CesiumMath.lessThanOrEquals = function(left, right, absoluteEpsilon) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('first is required.');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('second is required.');
-        }
-        if (!defined(absoluteEpsilon)) {
-            throw new DeveloperError('relativeEpsilon is required.');
-        }
-        //>>includeEnd('debug');
-        return left - right < absoluteEpsilon;
-    };
-
-    /**
-     * Determines if the left value is greater the right value. If the two values are within
-     * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns false.
-     *
-     * @param {Number} left The first number to compare.
-     * @param {Number} right The second number to compare.
-     * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
-     * @returns {Boolean} <code>true</code> if <code>left</code> is greater than <code>right</code> by more than
-     *          <code>absoluteEpsilon<code>. <code>false</code> if <code>left</code> is less or if the two
-     *          values are nearly equal.
-     */
-    CesiumMath.greaterThan = function(left, right, absoluteEpsilon) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('first is required.');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('second is required.');
-        }
-        if (!defined(absoluteEpsilon)) {
-            throw new DeveloperError('relativeEpsilon is required.');
-        }
-        //>>includeEnd('debug');
-        return left - right > absoluteEpsilon;
-    };
-
-    /**
-     * Determines if the left value is greater than or equal to the right value. If the two values are within
-     * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns true.
-     *
-     * @param {Number} left The first number to compare.
-     * @param {Number} right The second number to compare.
-     * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
-     * @returns {Boolean} <code>true</code> if <code>left</code> is greater than <code>right</code> or if the
-     *          the values are nearly equal.
-     */
-    CesiumMath.greaterThanOrEquals = function(left, right, absoluteEpsilon) {
-        //>>includeStart('debug', pragmas.debug);
-        if (!defined(left)) {
-            throw new DeveloperError('first is required.');
-        }
-        if (!defined(right)) {
-            throw new DeveloperError('second is required.');
-        }
-        if (!defined(absoluteEpsilon)) {
-            throw new DeveloperError('relativeEpsilon is required.');
-        }
-        //>>includeEnd('debug');
-        return left - right > -absoluteEpsilon;
-    };
-
     var factorials = [1];
 
     /**
@@ -732,9 +605,7 @@ define([
         if (n >= length) {
             var sum = factorials[length - 1];
             for (var i = length; i <= n; i++) {
-                var next = sum * i;
-                factorials.push(next);
-                sum = next;
+                factorials.push(sum * i);
             }
         }
         return factorials[n];
@@ -880,6 +751,7 @@ define([
         return randomNumberGenerator.random();
     };
 
+
     /**
      * Generates a random number between two numbers.
      *
@@ -964,93 +836,11 @@ define([
     };
 
     /**
-     * Finds the cube root of a number.
-     * Returns NaN if <code>number</code> is not provided.
-     *
-     * @function
-     * @param {Number} [number] The number.
-     * @returns {Number} The result.
-     */
-    CesiumMath.cbrt = defaultValue(Math.cbrt, function cbrt(number) {
-        var result = Math.pow(Math.abs(number), 1.0 / 3.0);
-        return number < 0.0 ? -result : result;
-    });
-
-    /**
-     * Finds the base 2 logarithm of a number.
-     *
-     * @function
-     * @param {Number} number The number.
-     * @returns {Number} The result.
-     */
-    CesiumMath.log2 = defaultValue(Math.log2, function log2(number) {
-        return Math.log(number) * Math.LOG2E;
-    });
-
-    /**
      * @private
      */
     CesiumMath.fog = function(distanceToCamera, density) {
         var scalar = distanceToCamera * density;
         return 1.0 - Math.exp(-(scalar * scalar));
-    };
-
-    /**
-     * Computes a fast approximation of Atan for input in the range [-1, 1].
-     *
-     * Based on Michal Drobot's approximation from ShaderFastLibs,
-     * which in turn is based on "Efficient approximations for the arctangent function,"
-     * Rajan, S. Sichun Wang Inkol, R. Joyal, A., May 2006.
-     * Adapted from ShaderFastLibs under MIT License.
-     *
-     * @param {Number} x An input number in the range [-1, 1]
-     * @returns {Number} An approximation of atan(x)
-     */
-    CesiumMath.fastApproximateAtan = function(x) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number('x', x);
-        //>>includeEnd('debug');
-
-        return x * (-0.1784 * Math.abs(x) - 0.0663 * x * x + 1.0301);
-    };
-
-    /**
-     * Computes a fast approximation of Atan2(x, y) for arbitrary input scalars.
-     *
-     * Range reduction math based on nvidia's cg reference implementation: http://developer.download.nvidia.com/cg/atan2.html
-     *
-     * @param {Number} x An input number that isn't zero if y is zero.
-     * @param {Number} y An input number that isn't zero if x is zero.
-     * @returns {Number} An approximation of atan2(x, y)
-     */
-    CesiumMath.fastApproximateAtan2 = function(x, y) {
-        //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number('x', x);
-        Check.typeOf.number('y', y);
-        //>>includeEnd('debug');
-
-        // atan approximations are usually only reliable over [-1, 1]
-        // So reduce the range by flipping whether x or y is on top based on which is bigger.
-        var opposite;
-        var adjacent;
-        var t = Math.abs(x); // t used as swap and atan result.
-        opposite = Math.abs(y);
-        adjacent = Math.max(t, opposite);
-        opposite = Math.min(t, opposite);
-
-        var oppositeOverAdjacent = opposite / adjacent;
-        //>>includeStart('debug', pragmas.debug);
-        if (isNaN(oppositeOverAdjacent)) {
-            throw new DeveloperError('either x or y must be nonzero');
-        }
-        //>>includeEnd('debug');
-        t = CesiumMath.fastApproximateAtan(oppositeOverAdjacent);
-
-        // Undo range reduction
-        t = Math.abs(y) > Math.abs(x) ? CesiumMath.PI_OVER_TWO - t : t;
-        t = x < 0.0 ?  CesiumMath.PI - t : t;
-        t = y < 0.0 ? -t : t;
-        return t;
     };
 
     return CesiumMath;

@@ -8,7 +8,7 @@ define([
         defineProperties,
         Ellipsoid,
         Event) {
-    'use strict';
+    "use strict";
 
     function createGlobe(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -20,14 +20,10 @@ define([
             beginFrame: function() {},
             endFrame: function() {},
             update : function() {},
-            render : function() {},
             getHeight : function() {
                 return 0.0;
             },
             _surface : {},
-            imageryLayersUpdatedEvent : new Event(),
-            _terrainProvider : undefined,
-            terrainProviderChanged : new Event(),
             destroy : function() {}
         };
 
@@ -42,11 +38,7 @@ define([
         globe.terrainProviderChanged = new Event();
         defineProperties(globe, {
             terrainProvider : {
-                get : function() {
-                    return this._terrainProvider;
-                },
                 set : function(value) {
-                    this._terrainProvider = value;
                     this.terrainProviderChanged.raiseEvent(value);
                 }
             }

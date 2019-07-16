@@ -20,7 +20,6 @@
 
     <script src="jsHintOptions.js"></script>
     <script src="gallery/gallery-index.js"></script>
-    <script type="text/javascript" src="Sandcastle-helpers.js"></script>
     <script src="CesiumSandcastle.js"></script>
     <!-- Needed for autocomplete -->
     <link rel="stylesheet" href="../../ThirdParty/codemirror-4.6/addon/hint/show-hint.css">
@@ -83,12 +82,11 @@
             <div id="buttonShareDrop" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'shareIcon', showLabel: true">
                 <span>Share</span>
                 <div id="dropDownShare" data-dojo-type="dijit.TooltipDialog" data-dojo-props="class: 'popDownDialog'">
-                    Be sure to re-share if you make any changes.
-                    <br />
-                    <input id="shareUrl" type="text" size="35" value="">
-                    <button class="copyButton" data-clipboard-target="#shareUrl">Copy</button>
+                    Be sure to re-share if you make any changes.<br />
+                        <textarea data-dojo-type="dijit.form.Textarea" id="link"
+                                  data-dojo-props="trim:true" style="width: 335px;"></textarea>
+                    </div>
                 </div>
-            </div>
             <span data-dojo-type="dijit.ToolbarSeparator"></span>
             <div id="buttonImportDrop" data-dojo-type="dijit.form.DropDownButton" data-dojo-props="iconClass: 'gitHubIcon', showLabel: true">
                 <span>Import Gist</span>

@@ -44,7 +44,7 @@ define([
         this._translucentMultipassSupport = false;
         this._translucentMRTSupport = false;
 
-        var extensionsSupported = context.colorBufferFloat && context.depthTexture;
+        var extensionsSupported = context.floatingPointTexture && context.depthTexture;
         this._translucentMRTSupport = context.drawBuffers && extensionsSupported;
         this._translucentMultipassSupport = !this._translucentMRTSupport && extensionsSupported;
 
@@ -89,8 +89,6 @@ define([
 
         this._useScissorTest = false;
         this._scissorRectangle = undefined;
-
-        this._useHDR = false;
     }
 
     function destroyTextures(oit) {
@@ -113,17 +111,20 @@ define([
     function updateTextures(oit, context, width, height) {
         destroyTextures(oit);
 
+        // Use zeroed arraybuffer instead of null to initialize texture
+        // to workaround Firefox 50. https://github.com/AnalyticalGraphicsInc/cesium/pull/4762
+        var source = new Float32Array(width * height * 4);
+
         oit._accumulationTexture = new Texture({
             context : context,
-            width : width,
-            height : height,
             pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : PixelDatatype.FLOAT
+            pixelDatatype : PixelDatatype.FLOAT,
+            source : {
+                arrayBufferView : source,
+                width : width,
+                height : height
+            }
         });
-
-        // Use zeroed arraybuffer instead of null to initialize texture
-        // to workaround Firefox. Only needed for the second color attachment.
-        var source = new Float32Array(width * height * 4);
         oit._revealageTexture = new Texture({
             context : context,
             pixelFormat : PixelFormat.RGBA,
@@ -132,8 +133,7 @@ define([
                 arrayBufferView : source,
                 width : width,
                 height : height
-            },
-            flipY : false
+            }
         });
     }
 
@@ -202,7 +202,7 @@ define([
         return supported;
     }
 
-    OIT.prototype.update = function(context, passState, framebuffer, useHDR) {
+    OIT.prototype.update = function(context, passState, framebuffer) {
         if (!this.isSupported()) {
             return;
         }
@@ -215,7 +215,7 @@ define([
         var height = this._opaqueTexture.height;
 
         var accumulationTexture = this._accumulationTexture;
-        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height || useHDR !== this._useHDR;
+        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height;
         if (textureChanged) {
             updateTextures(this, context, width, height);
         }
@@ -226,8 +226,6 @@ define([
                 return;
             }
         }
-
-        this._useHDR = useHDR;
 
         var that = this;
         var fs;
@@ -541,12 +539,10 @@ define([
         var j;
 
         var context = scene.context;
-        var useLogDepth = scene.frameState.useLogDepth;
-        var useHdr = scene._hdr;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
-        var lightShadowsEnabled = scene.frameState.shadowState.lightShadowsEnabled;
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
 
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);
@@ -558,15 +554,13 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            command = useLogDepth ? command.derivedCommands.logDepth.command : command;
-            command = useHdr ? command.derivedCommands.hdr.command : command;
-            derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
-            derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -574,15 +568,13 @@ define([
 
         for (j = 0; j < length; ++j) {
             command = commands[j];
-            command = useLogDepth ? command.derivedCommands.logDepth.command : command;
-            command = useHdr ? command.derivedCommands.hdr.command : command;
-            derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
-            derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.alphaCommand : command.derivedCommands.oit.alphaCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
@@ -591,12 +583,10 @@ define([
 
     function executeTranslucentCommandsSortedMRT(oit, scene, executeFunction, passState, commands, invertClassification) {
         var context = scene.context;
-        var useLogDepth = scene.frameState.useLogDepth;
-        var useHdr = scene._hdr;
         var framebuffer = passState.framebuffer;
         var length = commands.length;
 
-        var lightShadowsEnabled = scene.frameState.shadowState.lightShadowsEnabled;
+        var shadowsEnabled = scene.frameState.shadowHints.shadowsEnabled;
 
         passState.framebuffer = oit._adjustTranslucentFBO;
         oit._adjustTranslucentCommand.execute(context, passState);
@@ -609,15 +599,13 @@ define([
 
         for (var j = 0; j < length; ++j) {
             command = commands[j];
-            command = useLogDepth ? command.derivedCommands.logDepth.command : command;
-            command = useHdr ? command.derivedCommands.hdr.command : command;
-            derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 
         if (defined(invertClassification)) {
             command = invertClassification.unclassifiedCommand;
-            derivedCommand = (lightShadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
+            derivedCommand = (shadowsEnabled && command.receiveShadows) ? command.derivedCommands.oit.shadows.translucentCommand : command.derivedCommands.oit.translucentCommand;
             executeFunction(derivedCommand, scene, context, passState, debugFramebuffer);
         }
 

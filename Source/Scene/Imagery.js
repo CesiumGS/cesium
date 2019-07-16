@@ -84,10 +84,10 @@ define([
         return this.referenceCount;
     };
 
-    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, skipLoading) {
-        if (this.state === ImageryState.UNLOADED && !skipLoading) {
+    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, priorityFunction) {
+        if (this.state === ImageryState.UNLOADED) {
             this.state = ImageryState.TRANSITIONING;
-            this.imageryLayer._requestImagery(this);
+            this.imageryLayer._requestImagery(this, priorityFunction);
         }
 
         if (this.state === ImageryState.RECEIVED) {

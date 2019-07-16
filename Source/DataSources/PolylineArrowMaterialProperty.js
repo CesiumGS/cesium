@@ -26,7 +26,6 @@ define([
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
-
         this.color = color;
     }
 

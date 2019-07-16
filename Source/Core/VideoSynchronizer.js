@@ -26,7 +26,7 @@ define([
      * @param {JulianDate} [options.epoch=Iso8601.MINIMUM_VALUE] The simulation time that marks the start of the video.
      * @param {Number} [options.tolerance=1.0] The maximum amount of time, in seconds, that the clock and video can diverge.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Video.html|Video Material Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Video.html|Video Material Demo}
      */
     function VideoSynchronizer(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -35,7 +35,6 @@ define([
         this._element = undefined;
         this._clockSubscription = undefined;
         this._seekFunction = undefined;
-        this._lastPlaybackRate = undefined;
 
         this.clock = options.clock;
         this.element = options.element;
@@ -147,21 +146,6 @@ define([
         return false;
     };
 
-    VideoSynchronizer.prototype._trySetPlaybackRate = function(clock) {
-        if (this._lastPlaybackRate === clock.multiplier) {
-            return;
-        }
-
-        var element = this._element;
-        try {
-            element.playbackRate = clock.multiplier;
-        } catch(error) {
-            // Seek manually for unsupported playbackRates.
-            element.playbackRate = 0.0;
-        }
-        this._lastPlaybackRate = clock.multiplier;
-    };
-
     VideoSynchronizer.prototype._onTick = function(clock) {
         var element = this._element;
         if (!defined(element) || element.readyState < 2) {
@@ -188,7 +172,7 @@ define([
             return;
         }
 
-        this._trySetPlaybackRate(clock);
+        element.playbackRate = clock.multiplier;
 
         var clockTime = clock.currentTime;
         var epoch = defaultValue(this.epoch, Iso8601.MINIMUM_VALUE);

@@ -1,5 +1,4 @@
 define([
-        './ArcType',
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
@@ -19,7 +18,6 @@ define([
         './PrimitiveType',
         './VertexFormat'
     ], function(
-        ArcType,
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
@@ -89,8 +87,8 @@ define([
      * @param {Number} [options.width=1.0] The width in pixels.
      * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
-     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.arcType is not ArcType.NONE. Determines the number of positions in the buffer.
+     * @param {Boolean} [options.followSurface=true] A boolean that determines whether positions will be adjusted to the surface of the ellipsoid via a great arc.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.followSurface=true. Determines the number of positions in the buffer.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      *
@@ -100,7 +98,7 @@ define([
      *
      * @see PolylineGeometry#createGeometry
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
      *
      * @example
      * // A polyline with two connected line segments
@@ -138,8 +136,7 @@ define([
         this._width = width;
         this._colorsPerVertex = colorsPerVertex;
         this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
-
-        this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
+        this._followSurface = defaultValue(options.followSurface, true);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._workerName = 'createPolylineGeometry';
@@ -201,7 +198,7 @@ define([
 
         array[startingIndex++] = value._width;
         array[startingIndex++] = value._colorsPerVertex ? 1.0 : 0.0;
-        array[startingIndex++] = value._arcType;
+        array[startingIndex++] = value._followSurface ? 1.0 : 0.0;
         array[startingIndex]   = value._granularity;
 
         return array;
@@ -216,7 +213,7 @@ define([
         vertexFormat : scratchVertexFormat,
         width : undefined,
         colorsPerVertex : undefined,
-        arcType : undefined,
+        followSurface : undefined,
         granularity : undefined
     };
 
@@ -261,7 +258,7 @@ define([
 
         var width = array[startingIndex++];
         var colorsPerVertex = array[startingIndex++] === 1.0;
-        var arcType = array[startingIndex++];
+        var followSurface = array[startingIndex++] === 1.0;
         var granularity = array[startingIndex];
 
         if (!defined(result)) {
@@ -269,7 +266,7 @@ define([
             scratchOptions.colors = colors;
             scratchOptions.width = width;
             scratchOptions.colorsPerVertex = colorsPerVertex;
-            scratchOptions.arcType = arcType;
+            scratchOptions.followSurface = followSurface;
             scratchOptions.granularity = granularity;
             return new PolylineGeometry(scratchOptions);
         }
@@ -280,7 +277,7 @@ define([
         result._vertexFormat = VertexFormat.clone(vertexFormat, result._vertexFormat);
         result._width = width;
         result._colorsPerVertex = colorsPerVertex;
-        result._arcType = arcType;
+        result._followSurface = followSurface;
         result._granularity = granularity;
 
         return result;
@@ -302,7 +299,7 @@ define([
         var vertexFormat = polylineGeometry._vertexFormat;
         var colors = polylineGeometry._colors;
         var colorsPerVertex = polylineGeometry._colorsPerVertex;
-        var arcType = polylineGeometry._arcType;
+        var followSurface = polylineGeometry._followSurface;
         var granularity = polylineGeometry._granularity;
         var ellipsoid = polylineGeometry._ellipsoid;
 
@@ -319,23 +316,14 @@ define([
             return undefined;
         }
 
-        if (arcType === ArcType.GEODESIC || arcType === ArcType.RHUMB) {
-            var subdivisionSize;
-            var numberOfPointsFunction;
-            if (arcType === ArcType.GEODESIC) {
-                subdivisionSize = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
-                numberOfPointsFunction = PolylinePipeline.numberOfPoints;
-            } else {
-                subdivisionSize = granularity;
-                numberOfPointsFunction = PolylinePipeline.numberOfPointsRhumbLine;
-            }
-
+        if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
+            var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
             if (defined(colors)) {
                 var colorLength = 1;
                 for (i = 0; i < positionsLength - 1; ++i) {
-                    colorLength += numberOfPointsFunction(positions[i], positions[i + 1], subdivisionSize);
+                    colorLength += PolylinePipeline.numberOfPoints(positions[i], positions[i+1], minDistance);
                 }
 
                 var newColors = new Array(colorLength);
@@ -343,12 +331,12 @@ define([
 
                 for (i = 0; i < positionsLength - 1; ++i) {
                     var p0 = positions[i];
-                    var p1 = positions[i + 1];
+                    var p1 = positions[i+1];
                     var c0 = colors[i];
 
-                    var numColors = numberOfPointsFunction(p0, p1, subdivisionSize);
+                    var numColors = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
                     if (colorsPerVertex && i < colorLength) {
-                        var c1 = colors[i + 1];
+                        var c1 = colors[i+1];
                         var interpolatedColors = interpolateColors(p0, p1, c0, c1, numColors);
                         var interpolatedColorsLength = interpolatedColors.length;
                         for (j = 0; j < interpolatedColorsLength; ++j) {
@@ -361,27 +349,18 @@ define([
                     }
                 }
 
-                newColors[newColorIndex] = Color.clone(colors[colors.length - 1]);
+                newColors[newColorIndex] = Color.clone(colors[colors.length-1]);
                 colors = newColors;
 
                 scratchInterpolateColorsArray.length = 0;
             }
 
-            if (arcType === ArcType.GEODESIC) {
-                positions = PolylinePipeline.generateCartesianArc({
-                    positions: positions,
-                    minDistance: subdivisionSize,
-                    ellipsoid: ellipsoid,
-                    height: heights
-                });
-            } else {
-                positions = PolylinePipeline.generateCartesianRhumbArc({
-                    positions: positions,
-                    granularity: subdivisionSize,
-                    ellipsoid: ellipsoid,
-                    height: heights
-                });
-            }
+            positions = PolylinePipeline.generateCartesianArc({
+                positions: positions,
+                minDistance: minDistance,
+                ellipsoid: ellipsoid,
+                height: heights
+            });
         }
 
         positionsLength = positions.length;

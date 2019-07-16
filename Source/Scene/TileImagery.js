@@ -43,16 +43,13 @@ define([
      *
      * @param {Tile} tile The tile to which this instance belongs.
      * @param {FrameState} frameState The frameState.
-     * @param {Boolean} skipLoading True to skip loading, e.g. new requests, creating textures. This function will
-     *                  still synchronously process imagery that's already mostly ready to go, e.g. use textures
-     *                  already loaded on ancestor tiles.
      * @returns {Boolean} True if this instance is done loading; otherwise, false.
      */
-    TileImagery.prototype.processStateMachine = function(tile, frameState, skipLoading) {
+    TileImagery.prototype.processStateMachine = function(tile, frameState) {
         var loadingImagery = this.loadingImagery;
         var imageryLayer = loadingImagery.imageryLayer;
 
-        loadingImagery.processStateMachine(frameState, !this.useWebMercatorT, skipLoading);
+        loadingImagery.processStateMachine(frameState, !this.useWebMercatorT, tile._priorityFunction);
 
         if (loadingImagery.state === ImageryState.READY) {
             if (defined(this.readyImagery)) {
@@ -94,7 +91,7 @@ define([
                 // Push the ancestor's load process along a bit.  This is necessary because some ancestor imagery
                 // tiles may not be attached directly to a terrain tile.  Such tiles will never load if
                 // we don't do it here.
-                closestAncestorThatNeedsLoading.processStateMachine(frameState, !this.useWebMercatorT, skipLoading);
+                closestAncestorThatNeedsLoading.processStateMachine(frameState, !this.useWebMercatorT, tile._priorityFunction);
                 return false; // not done loading
             }
             // This imagery tile is failed or invalid, and we have the "best available" substitute.

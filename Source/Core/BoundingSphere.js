@@ -8,7 +8,6 @@ define([
         './GeographicProjection',
         './Intersect',
         './Interval',
-        './Math',
         './Matrix3',
         './Matrix4',
         './Rectangle'
@@ -22,7 +21,6 @@ define([
         GeographicProjection,
         Intersect,
         Interval,
-        CesiumMath,
         Matrix3,
         Matrix4,
         Rectangle) {
@@ -68,7 +66,6 @@ define([
     var fromPointsMinBoxPt = new Cartesian3();
     var fromPointsMaxBoxPt = new Cartesian3();
     var fromPointsNaiveCenterScratch = new Cartesian3();
-    var volumeConstant = (4.0 / 3.0) * CesiumMath.PI;
 
     /**
      * Computes a tight-fitting bounding sphere enclosing a list of 3D Cartesian points.
@@ -178,7 +175,7 @@ define([
         maxBoxPt.y = yMax.y;
         maxBoxPt.z = zMax.z;
 
-        var naiveCenter = Cartesian3.midpoint(minBoxPt, maxBoxPt, fromPointsNaiveCenterScratch);
+        var naiveCenter = Cartesian3.multiplyByScalar(Cartesian3.add(minBoxPt, maxBoxPt, fromPointsScratch), 0.5, fromPointsNaiveCenterScratch);
 
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0;
@@ -451,7 +448,7 @@ define([
         maxBoxPt.y = yMax.y;
         maxBoxPt.z = zMax.z;
 
-        var naiveCenter = Cartesian3.midpoint(minBoxPt, maxBoxPt, fromPointsNaiveCenterScratch);
+        var naiveCenter = Cartesian3.multiplyByScalar(Cartesian3.add(minBoxPt, maxBoxPt, fromPointsScratch), 0.5, fromPointsNaiveCenterScratch);
 
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0;
@@ -609,7 +606,7 @@ define([
         maxBoxPt.y = yMax.y;
         maxBoxPt.z = zMax.z;
 
-        var naiveCenter = Cartesian3.midpoint(minBoxPt, maxBoxPt, fromPointsNaiveCenterScratch);
+        var naiveCenter = Cartesian3.multiplyByScalar(Cartesian3.add(minBoxPt, maxBoxPt, fromPointsScratch), 0.5, fromPointsNaiveCenterScratch);
 
         // Begin 2nd pass to find naive radius and modify the ritter sphere.
         var naiveRadius = 0;
@@ -673,7 +670,9 @@ define([
             result = new BoundingSphere();
         }
 
-        var center = Cartesian3.midpoint(corner, oppositeCorner, result.center);
+        var center = result.center;
+        Cartesian3.add(corner, oppositeCorner, center);
+        Cartesian3.multiplyByScalar(center, 0.5, center);
         result.radius = Cartesian3.distance(center, oppositeCorner);
         return result;
     };
@@ -1301,15 +1300,6 @@ define([
      */
     BoundingSphere.prototype.clone = function(result) {
         return BoundingSphere.clone(this, result);
-    };
-
-    /**
-     * Computes the radius of the BoundingSphere.
-     * @returns {Number} The radius of the BoundingSphere.
-     */
-    BoundingSphere.prototype.volume = function() {
-        var radius = this.radius;
-        return volumeConstant * radius * radius * radius;
     };
 
     return BoundingSphere;

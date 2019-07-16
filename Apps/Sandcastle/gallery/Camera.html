@@ -39,7 +39,6 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 var scene = viewer.scene;
 var clock = viewer.clock;
-var referenceFramePrimitive;
 
 function flyToSanDiego() {
     Sandcastle.declare(flyToSanDiego);
@@ -134,7 +133,7 @@ function setReferenceFrame() {
     camera.lookAtTransform(transform, new Cesium.Cartesian3(-120000.0, -120000.0, 120000.0));
 
     // Show reference frame.  Not required.
-    referenceFramePrimitive = scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
+    scene.primitives.add(new Cesium.DebugModelMatrixPrimitive({
         modelMatrix : transform,
         length : 100000.0
     }));
@@ -174,7 +173,7 @@ function viewInICRF() {
     viewer.camera.flyHome(0);
 
     clock.multiplier = 3 * 60 * 60;
-    scene.postUpdate.addEventListener(icrf);
+    scene.preRender.addEventListener(icrf);
     scene.globe.enableLighting = true;
 }
 
@@ -365,7 +364,7 @@ Sandcastle.addToolbarMenu([{
 Sandcastle.reset = function() {
     scene.completeMorph();
     viewer.entities.removeAll();
-    scene.primitives.remove(referenceFramePrimitive);
+    scene.primitives.removeAll();
     scene.tweens.removeAll();
 
     if (Cesium.defined(removeStart)) {
@@ -388,7 +387,7 @@ Sandcastle.reset = function() {
     viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
 
     clock.multiplier = 1.0;
-    scene.postUpdate.removeEventListener(icrf);
+    scene.preRender.removeEventListener(icrf);
     scene.globe.enableLighting = false;
 };
 
@@ -398,10 +397,10 @@ scene.morphComplete.addEventListener(function() {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== 'undefined') {
+if (typeof Cesium !== "undefined") {
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
 }
 </script>
 </body>

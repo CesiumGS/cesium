@@ -1,12 +1,10 @@
 define([
-        './ArcType',
         './BoundingSphere',
         './Cartesian3',
         './Color',
         './ComponentDatatype',
         './defaultValue',
         './defined',
-        './deprecationWarning',
         './DeveloperError',
         './Ellipsoid',
         './Geometry',
@@ -17,14 +15,12 @@ define([
         './PolylinePipeline',
         './PrimitiveType'
     ], function(
-        ArcType,
         BoundingSphere,
         Cartesian3,
         Color,
         ComponentDatatype,
         defaultValue,
         defined,
-        deprecationWarning,
         DeveloperError,
         Ellipsoid,
         Geometry,
@@ -87,8 +83,8 @@ define([
      * @param {Cartesian3[]} options.positions An array of {@link Cartesian3} defining the positions in the polyline as a line strip.
      * @param {Color[]} [options.colors] An Array of {@link Color} defining the per vertex or per segment colors.
      * @param {Boolean} [options.colorsPerVertex=false] A boolean that determines whether the colors will be flat across each segment of the line or interpolated across the vertices.
-     * @param {ArcType} [options.arcType=ArcType.GEODESIC] The type of line the polyline segments must follow.
-     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.arcType is not ArcType.NONE. Determines the number of positions in the buffer.
+     * @param {Boolean} [options.followSurface=true] A boolean that determines whether positions will be adjusted to the surface of the ellipsoid via a great arc.
+     * @param {Number} [options.granularity=CesiumMath.RADIANS_PER_DEGREE] The distance, in radians, between each latitude and longitude if options.followSurface=true. Determines the number of positions in the buffer.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
      *
      * @exception {DeveloperError} At least two positions are required.
@@ -125,8 +121,7 @@ define([
         this._positions = positions;
         this._colors = colors;
         this._colorsPerVertex = colorsPerVertex;
-
-        this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
+        this._followSurface = defaultValue(options.followSurface, true);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._workerName = 'createSimplePolylineGeometry';
@@ -184,7 +179,7 @@ define([
         startingIndex += Ellipsoid.packedLength;
 
         array[startingIndex++] = value._colorsPerVertex ? 1.0 : 0.0;
-        array[startingIndex++] = value._arcType;
+        array[startingIndex++] = value._followSurface ? 1.0 : 0.0;
         array[startingIndex]   = value._granularity;
 
         return array;
@@ -227,7 +222,7 @@ define([
         startingIndex += Ellipsoid.packedLength;
 
         var colorsPerVertex = array[startingIndex++] === 1.0;
-        var arcType = array[startingIndex++];
+        var followSurface = array[startingIndex++] === 1.0;
         var granularity = array[startingIndex];
 
         if (!defined(result)) {
@@ -236,7 +231,7 @@ define([
                 colors : colors,
                 ellipsoid : ellipsoid,
                 colorsPerVertex : colorsPerVertex,
-                arcType : arcType,
+                followSurface : followSurface,
                 granularity : granularity
             });
         }
@@ -245,7 +240,7 @@ define([
         result._colors = colors;
         result._ellipsoid = ellipsoid;
         result._colorsPerVertex = colorsPerVertex;
-        result._arcType = arcType;
+        result._followSurface = followSurface;
         result._granularity = granularity;
 
         return result;
@@ -257,8 +252,7 @@ define([
         positions : scratchArray1,
         height: scratchArray2,
         ellipsoid: undefined,
-        minDistance : undefined,
-        granularity : undefined
+        minDistance : undefined
     };
 
     /**
@@ -271,7 +265,7 @@ define([
         var positions = simplePolylineGeometry._positions;
         var colors = simplePolylineGeometry._colors;
         var colorsPerVertex = simplePolylineGeometry._colorsPerVertex;
-        var arcType = simplePolylineGeometry._arcType;
+        var followSurface = simplePolylineGeometry._followSurface;
         var granularity = simplePolylineGeometry._granularity;
         var ellipsoid = simplePolylineGeometry._ellipsoid;
 
@@ -287,34 +281,16 @@ define([
         var color;
         var offset = 0;
 
-        if (arcType === ArcType.GEODESIC || arcType === ArcType.RHUMB) {
-            var subdivisionSize;
-            var numberOfPointsFunction;
-            var generateArcFunction;
-            if (arcType === ArcType.GEODESIC) {
-                subdivisionSize = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
-                numberOfPointsFunction = PolylinePipeline.numberOfPoints;
-                generateArcFunction = PolylinePipeline.generateArc;
-            } else {
-                subdivisionSize = granularity;
-                numberOfPointsFunction = PolylinePipeline.numberOfPointsRhumbLine;
-                generateArcFunction = PolylinePipeline.generateRhumbArc;
-            }
-
+        if (followSurface) {
             var heights = PolylinePipeline.extractHeights(positions, ellipsoid);
-
             var generateArcOptions = generateArcOptionsScratch;
-            if (arcType === ArcType.GEODESIC) {
-                generateArcOptions.minDistance = minDistance;
-            } else {
-                generateArcOptions.granularity = granularity;
-            }
+            generateArcOptions.minDistance = minDistance;
             generateArcOptions.ellipsoid = ellipsoid;
 
             if (perSegmentColors) {
                 var positionCount = 0;
                 for (i = 0; i < length - 1; i++) {
-                    positionCount += numberOfPointsFunction(positions[i], positions[i+1], subdivisionSize) + 1;
+                    positionCount += PolylinePipeline.numberOfPoints(positions[i], positions[i+1], minDistance) + 1;
                 }
 
                 positionValues = new Float64Array(positionCount * 3);
@@ -331,7 +307,7 @@ define([
                     scratchArray2[0] = heights[i];
                     scratchArray2[1] = heights[i + 1];
 
-                    var pos = generateArcFunction(generateArcOptions);
+                    var pos = PolylinePipeline.generateArc(generateArcOptions);
 
                     if (defined(colors)) {
                         var segLen = pos.length / 3;
@@ -350,7 +326,7 @@ define([
             } else {
                 generateArcOptions.positions = positions;
                 generateArcOptions.height= heights;
-                positionValues = new Float64Array(generateArcFunction(generateArcOptions));
+                positionValues = new Float64Array(PolylinePipeline.generateArc(generateArcOptions));
 
                 if (defined(colors)) {
                     colorValues = new Uint8Array(positionValues.length / 3 * 4);

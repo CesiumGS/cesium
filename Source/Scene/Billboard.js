@@ -13,7 +13,6 @@ define([
         '../Core/DistanceDisplayCondition',
         '../Core/Matrix4',
         '../Core/NearFarScalar',
-        '../Core/Resource',
         './HeightReference',
         './HorizontalOrigin',
         './SceneMode',
@@ -34,7 +33,6 @@ define([
         DistanceDisplayCondition,
         Matrix4,
         NearFarScalar,
-        Resource,
         HeightReference,
         HorizontalOrigin,
         SceneMode,
@@ -71,9 +69,8 @@ define([
      * @see Label
      *
      * @internalConstructor
-     * @class
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     function Billboard(options, billboardCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -141,7 +138,7 @@ define([
         this._pixelOffsetScaleByDistance = pixelOffsetScaleByDistance;
         this._sizeInMeters = defaultValue(options.sizeInMeters, false);
         this._distanceDisplayCondition = distanceDisplayCondition;
-        this._disableDepthTestDistance = options.disableDepthTestDistance;
+        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
         this._id = options.id;
         this._collection = defaultValue(options.collection, billboardCollection);
 
@@ -150,7 +147,6 @@ define([
         this._billboardCollection = billboardCollection;
         this._dirty = false;
         this._index = -1; //Used only by BillboardCollection
-        this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
 
         this._imageIndex = -1;
         this._imageIndexPromise = undefined;
@@ -159,10 +155,6 @@ define([
         this._imageSubRegion = undefined;
         this._imageWidth = undefined;
         this._imageHeight = undefined;
-
-        this._labelDimensions = undefined;
-        this._labelHorizontalOrigin = undefined;
-        this._labelTranslate = undefined;
 
         var image = options.image;
         var imageId = options.imageId;
@@ -195,8 +187,6 @@ define([
         this._mode = SceneMode.SCENE3D;
 
         this._clusterShow = true;
-        this._outlineColor = Color.clone(defaultValue(options.outlineColor, Color.BLACK));
-        this._outlineWidth = defaultValue(options.outlineWidth, 0.0);
 
         this._updateClamping();
     }
@@ -217,9 +207,7 @@ define([
     var PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = Billboard.PIXEL_OFFSET_SCALE_BY_DISTANCE_INDEX = 13;
     var DISTANCE_DISPLAY_CONDITION = Billboard.DISTANCE_DISPLAY_CONDITION = 14;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE = 15;
-    Billboard.TEXTURE_COORDINATE_BOUNDS = 16;
-    var SDF_INDEX = Billboard.SDF_INDEX = 17;
-    Billboard.NUMBER_OF_PROPERTIES = 18;
+    Billboard.NUMBER_OF_PROPERTIES = 16;
 
     function makeDirty(billboard, propertyChanged) {
         var billboardCollection = billboard._billboardCollection;
@@ -793,6 +781,7 @@ define([
          * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
          * @memberof Billboard.prototype
          * @type {Number}
+         * @default 0.0
          */
         disableDepthTestDistance : {
             get : function() {
@@ -801,7 +790,7 @@ define([
             set : function(value) {
                 if (this._disableDepthTestDistance !== value) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (defined(value) && value < 0.0) {
+                    if (!defined(value) || value < 0.0) {
                         throw new DeveloperError('disableDepthTestDistance must be greater than or equal to 0.0.');
                     }
                     //>>includeEnd('debug');
@@ -846,15 +835,6 @@ define([
         },
 
         /**
-         * @private
-         */
-        pickId : {
-            get : function() {
-                return this._pickId;
-            }
-        },
-
-        /**
          * <p>
          * Gets or sets the image to be used for this billboard.  If a texture has already been created for the
          * given image, the existing texture is used.
@@ -888,8 +868,6 @@ define([
                     makeDirty(this, IMAGE_INDEX_INDEX);
                 } else if (typeof value === 'string') {
                     this.setImage(value, value);
-                } else if (value instanceof Resource) {
-                    this.setImage(value.url, value);
                 } else if (defined(value.src)) {
                     this.setImage(value.src, value);
                 } else {
@@ -947,49 +925,6 @@ define([
                     makeDirty(this, SHOW_INDEX);
                 }
             }
-        },
-
-        /**
-         * The outline color of this Billboard.  Effective only for SDF billboards like Label glyphs.
-         * @memberof Billboard.prototype
-         * @type {Color}
-         * @private
-         */
-        outlineColor : {
-            get : function() {
-                return this._outlineColor;
-            },
-            set : function(value) {
-                //>>includeStart('debug', pragmas.debug);
-                if (!defined(value)) {
-                    throw new DeveloperError('value is required.');
-                }
-                //>>includeEnd('debug');
-
-                var outlineColor = this._outlineColor;
-                if (!Color.equals(outlineColor, value)) {
-                    Color.clone(value, outlineColor);
-                    makeDirty(this, SDF_INDEX);
-                }
-            }
-        },
-
-        /**
-         * The outline width of this Billboard in pixels.  Effective only for SDF billboards like Label glyphs.
-         * @memberof Billboard.prototype
-         * @type {Number}
-         * @private
-         */
-        outlineWidth : {
-            get : function() {
-                return this._outlineWidth;
-            },
-            set : function(value) {
-                if (this._outlineWidth !== value) {
-                    this._outlineWidth = value;
-                    makeDirty(this, SDF_INDEX);
-                }
-            }
         }
     });
 
@@ -1014,10 +949,10 @@ define([
 
     Billboard._updateClamping = function(collection, owner) {
         var scene = collection._scene;
-        if (!defined(scene) || !defined(scene.globe)) {
+        if (!defined(scene)) {
             //>>includeStart('debug', pragmas.debug);
             if (owner._heightReference !== HeightReference.NONE) {
-                throw new DeveloperError('Height reference is not supported without a scene and globe.');
+                throw new DeveloperError('Height reference is not supported without a scene.');
             }
             //>>includeEnd('debug');
             return;
@@ -1136,7 +1071,7 @@ define([
      * </p>
      *
      * @param {String} id The id of the image.  This can be any string that uniquely identifies the image.
-     * @param {Image|Canvas|String|Resource|Billboard~CreateImageCallback} image The image to load.  This parameter
+     * @param {Image|Canvas|String|Billboard~CreateImageCallback} image The image to load.  This parameter
      *        can either be a loaded Image or Canvas, a URL which will be loaded as an Image automatically,
      *        or a function which will be called to create the image if it hasn't been loaded already.
      * @example

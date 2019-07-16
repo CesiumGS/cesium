@@ -3,46 +3,52 @@ defineSuite([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
-        'Core/GeometryOffsetAttribute',
+        'Core/DistanceDisplayCondition',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/JulianDate',
-        'Core/Math',
         'Core/Quaternion',
+        'Core/ShowGeometryInstanceAttribute',
+        'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/EllipsoidGraphics',
         'DataSources/Entity',
+        'DataSources/GridMaterialProperty',
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
-        'Scene/HeightReference',
+        'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
+        'Scene/ShadowMode',
+        'Specs/createDynamicGeometryBoundingSphereSpecs',
         'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
         EllipsoidGeometryUpdater,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
-        GeometryOffsetAttribute,
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute,
         JulianDate,
-        CesiumMath,
         Quaternion,
+        ShowGeometryInstanceAttribute,
+        TimeInterval,
         TimeIntervalCollection,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
         EllipsoidGraphics,
         Entity,
+        GridMaterialProperty,
         SampledPositionProperty,
         SampledProperty,
-        HeightReference,
+        TimeIntervalCollectionProperty,
         PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
+        ShadowMode,
+        createDynamicGeometryBoundingSphereSpecs,
         createDynamicProperty,
-        createGeometryUpdaterSpecs,
         createScene) {
     'use strict';
 
@@ -67,21 +73,89 @@ defineSuite([
         return entity;
     }
 
-    function createDynamicEllipsoid() {
+    it('Constructor sets expected defaults', function() {
+        var entity = new Entity();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+
+        expect(updater.isDestroyed()).toBe(false);
+        expect(updater.entity).toBe(entity);
+        expect(updater.isClosed).toBe(true);
+        expect(updater.fillEnabled).toBe(false);
+        expect(updater.fillMaterialProperty).toBe(undefined);
+        expect(updater.outlineEnabled).toBe(false);
+        expect(updater.hasConstantFill).toBe(true);
+        expect(updater.hasConstantOutline).toBe(true);
+        expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.shadowsProperty).toBe(undefined);
+        expect(updater.distanceDisplayConditionProperty).toBe(undefined);
+        expect(updater.isDynamic).toBe(false);
+        expect(updater.isOutlineVisible(time)).toBe(false);
+        expect(updater.isFilled(time)).toBe(false);
+        updater.destroy();
+        expect(updater.isDestroyed()).toBe(true);
+    });
+
+    it('No geometry available when ellipsoid is undefined ', function() {
         var entity = createBasicEllipsoid();
-        entity.ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
-        return entity;
-    }
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid = undefined;
+
+        expect(updater.fillEnabled).toBe(false);
+        expect(updater.outlineEnabled).toBe(false);
+        expect(updater.isDynamic).toBe(false);
+    });
 
     it('No geometry available when radii is undefined', function() {
         var entity = createBasicEllipsoid();
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         entity.ellipsoid.radii = undefined;
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
 
         expect(updater.fillEnabled).toBe(false);
         expect(updater.outlineEnabled).toBe(false);
         expect(updater.isDynamic).toBe(false);
+    });
+
+    it('No geometry available when not filled or outline.', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.fill = new ConstantProperty(false);
+        entity.ellipsoid.outline = new ConstantProperty(false);
+
+        expect(updater.fillEnabled).toBe(false);
+        expect(updater.outlineEnabled).toBe(false);
+        expect(updater.isDynamic).toBe(false);
+    });
+
+    it('Values correct when using default graphics', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+
+        expect(updater.fillEnabled).toBe(true);
+        expect(updater.fillMaterialProperty).toEqual(new ColorMaterialProperty(Color.WHITE));
+        expect(updater.outlineEnabled).toBe(false);
+        expect(updater.hasConstantFill).toBe(true);
+        expect(updater.hasConstantOutline).toBe(true);
+        expect(updater.outlineColorProperty).toBe(undefined);
+        expect(updater.outlineWidth).toBe(1.0);
+        expect(updater.shadowsProperty).toEqual(new ConstantProperty(ShadowMode.DISABLED));
+        expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
+        expect(updater.isDynamic).toBe(false);
+    });
+
+    it('Ellipsoid material is correctly exposed.', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.material = new GridMaterialProperty(Color.BLUE);
+        expect(updater.fillMaterialProperty).toBe(entity.ellipsoid.material);
+    });
+
+    it('A time-varying outlineWidth causes geometry to be dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        entity.ellipsoid.outlineWidth = new SampledProperty(Number);
+        entity.ellipsoid.outlineWidth.addSample(time, 1);
+        expect(updater.isDynamic).toBe(true);
     });
 
     it('A time-varying position causes geometry to be dynamic', function() {
@@ -89,8 +163,6 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         entity.position = new SampledPositionProperty();
         entity.position.addSample(time, Cartesian3.ZERO);
-        updater._onEntityPropertyChanged(entity, 'position');
-
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -99,8 +171,6 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         entity.ellipsoid.radii = new SampledProperty(Cartesian3);
         entity.ellipsoid.radii.addSample(time, new Cartesian3(1, 2, 3));
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -109,8 +179,6 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         entity.ellipsoid.stackPartitions = new SampledProperty(Number);
         entity.ellipsoid.stackPartitions.addSample(time, 1);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -119,8 +187,6 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         entity.ellipsoid.slicePartitions = new SampledProperty(Number);
         entity.ellipsoid.slicePartitions.addSample(time, 1);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -129,97 +195,206 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         entity.ellipsoid.subdivisions = new SampledProperty(Number);
         entity.ellipsoid.subdivisions.addSample(time, 1);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('Creates geometry with expected properties', function() {
-        var options = {
-            radii : new Cartesian3(1, 2, 3),
-            stackPartitions : 32,
-            slicePartitions : 64,
-            subdivisions : 15
-        };
-
+    function validateGeometryInstance(options) {
         var entity = new Entity();
-        entity.position = new ConstantPositionProperty(new Cartesian3(4, 5, 6));
-        entity.orientation = new ConstantProperty(Quaternion.IDENTITY);
+        entity.position = new ConstantPositionProperty(options.position);
+        entity.orientation = new ConstantProperty(options.orientation);
 
         var ellipsoid = new EllipsoidGraphics();
-        ellipsoid.outline = true;
+        ellipsoid.show = new ConstantProperty(options.show);
+        ellipsoid.fill = new ConstantProperty(options.fill);
+        ellipsoid.material = options.material;
+        ellipsoid.outline = new ConstantProperty(options.outline);
+        ellipsoid.outlineColor = new ConstantProperty(options.outlineColor);
+        ellipsoid.numberOfVerticalLines = new ConstantProperty(options.numberOfVerticalLines);
         ellipsoid.radii = new ConstantProperty(options.radii);
         ellipsoid.stackPartitions = new ConstantProperty(options.stackPartitions);
         ellipsoid.slicePartitions = new ConstantProperty(options.slicePartitions);
         ellipsoid.subdivisions = new ConstantProperty(options.subdivisions);
+        ellipsoid.distanceDisplayCondition = options.distanceDisplayCondition;
         entity.ellipsoid = ellipsoid;
 
         var updater = new EllipsoidGeometryUpdater(entity, scene);
 
         var instance;
         var geometry;
-        instance = updater.createFillGeometryInstance(time);
-        geometry = instance.geometry;
-        expect(geometry._center).toEqual(options.center);
-        expect(geometry._radii).toEqual(options.radii);
-        expect(geometry._stackPartitions).toEqual(options.stackPartitions);
-        expect(geometry._slicePartitions).toEqual(options.slicePartitions);
-        expect(geometry._offsetAttribute).toBeUndefined();
+        var attributes;
+        if (options.fill) {
+            instance = updater.createFillGeometryInstance(time);
+            geometry = instance.geometry;
+            expect(geometry._center).toEqual(options.center);
+            expect(geometry._radii).toEqual(options.radii);
+            expect(geometry._stackPartitions).toEqual(options.stackPartitions);
+            expect(geometry._slicePartitions).toEqual(options.slicePartitions);
 
-        instance = updater.createOutlineGeometryInstance(time);
-        geometry = instance.geometry;
-        expect(geometry._center).toEqual(options.center);
-        expect(geometry._radii).toEqual(options.radii);
-        expect(geometry._stackPartitions).toEqual(options.stackPartitions);
-        expect(geometry._slicePartitions).toEqual(options.slicePartitions);
-        expect(geometry._subdivisions).toEqual(options.subdivisions);
-        expect(geometry._offsetAttribute).toBeUndefined();
+            attributes = instance.attributes;
+            if (options.material instanceof ColorMaterialProperty) {
+                expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.material.color.getValue(time)));
+            } else {
+                expect(attributes.color).toBeUndefined();
+            }
+            expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
+        }
+
+        if (options.outline) {
+            instance = updater.createOutlineGeometryInstance(time);
+            geometry = instance.geometry;
+            expect(geometry._center).toEqual(options.center);
+            expect(geometry._radii).toEqual(options.radii);
+            expect(geometry._stackPartitions).toEqual(options.stackPartitions);
+            expect(geometry._slicePartitions).toEqual(options.slicePartitions);
+            expect(geometry._subdivisions).toEqual(options.subdivisions);
+
+            attributes = instance.attributes;
+            expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(options.outlineColor));
+            expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(options.fill));
+            if (options.distanceDisplayCondition) {
+                expect(attributes.distanceDisplayCondition.value).toEqual(DistanceDisplayConditionGeometryInstanceAttribute.toValue(options.distanceDisplayCondition));
+            }
+        }
+    }
+
+    it('Creates expected per-color geometry', function() {
+        validateGeometryInstance({
+            position : new Cartesian3(4, 5, 6),
+            orientation : Quaternion.IDENTITY,
+            radii : new Cartesian3(1, 2, 3),
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            fill : true,
+            outline : true,
+            outlineColor : Color.BLUE,
+            stackPartitions : 32,
+            slicePartitions : 64,
+            subdivisions : 15
+        });
     });
 
-    it('Creates geometry with expected offsetAttribute', function() {
-        var entity = createBasicEllipsoid();
-        var graphics = entity.ellipsoid;
-        graphics.outline = true;
-        graphics.outlineColor = Color.BLACK;
-        graphics.height = new ConstantProperty(20.0);
-        graphics.extrudedHeight = new ConstantProperty(0.0);
-        var updater = new EllipsoidGeometryUpdater(entity, getScene());
-
-        var instance;
-
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-        instance = updater.createFillGeometryInstance(time);
-        expect(instance.geometry._offsetAttribute).toBeUndefined();
-        instance = updater.createOutlineGeometryInstance(time);
-        expect(instance.geometry._offsetAttribute).toBeUndefined();
-
-        graphics.heightReference = new ConstantProperty(HeightReference.NONE);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-        instance = updater.createFillGeometryInstance(time);
-        expect(instance.geometry._offsetAttribute).toBeUndefined();
-        instance = updater.createOutlineGeometryInstance(time);
-        expect(instance.geometry._offsetAttribute).toBeUndefined();
-
-        graphics.heightReference = new ConstantProperty(HeightReference.CLAMP_TO_GROUND);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-        instance = updater.createFillGeometryInstance(time);
-        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
-        instance = updater.createOutlineGeometryInstance(time);
-        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
-
-        graphics.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-        instance = updater.createFillGeometryInstance(time);
-        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
-        instance = updater.createOutlineGeometryInstance(time);
-        expect(instance.geometry._offsetAttribute).toEqual(GeometryOffsetAttribute.ALL);
+    it('Creates expected per-material geometry', function() {
+        validateGeometryInstance({
+            position : new Cartesian3(4, 5, 6),
+            orientation : Quaternion.IDENTITY,
+            radii : new Cartesian3(1, 2, 3),
+            show : true,
+            material : new GridMaterialProperty(),
+            fill : true,
+            outline : true,
+            outlineColor : Color.BLUE,
+            stackPartitions : 32,
+            slicePartitions : 64,
+            subdivisions : 15
+        });
     });
 
-    it('computes center', function() {
+    it('Creates expected distance display condition geometry', function() {
+        validateGeometryInstance({
+            position : new Cartesian3(4, 5, 6),
+            orientation : Quaternion.IDENTITY,
+            radii : new Cartesian3(1, 2, 3),
+            show : true,
+            material : new ColorMaterialProperty(Color.RED),
+            fill : true,
+            outline : true,
+            outlineColor : Color.BLUE,
+            stackPartitions : 32,
+            slicePartitions : 64,
+            subdivisions : 15,
+            distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
+        });
+    });
+
+    it('Correctly exposes outlineWidth', function() {
         var entity = createBasicEllipsoid();
+        entity.ellipsoid.outlineWidth = new ConstantProperty(8);
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        expect(updater.outlineWidth).toBe(8);
+    });
+
+    it('Attributes have expected values at creation time', function() {
+        var time1 = new JulianDate(0, 0);
+        var time2 = new JulianDate(10, 0);
+        var time3 = new JulianDate(20, 0);
+
+        var fill = new TimeIntervalCollectionProperty();
+        fill.intervals.addInterval(new TimeInterval({
+            start : time1,
+            stop : time2,
+            data : false
+        }));
+        fill.intervals.addInterval(new TimeInterval({
+            start : time2,
+            stop : time3,
+            isStartIncluded : false,
+            data : true
+        }));
+
+        var colorMaterial = new ColorMaterialProperty();
+        colorMaterial.color = new SampledProperty(Color);
+        colorMaterial.color.addSample(time, Color.YELLOW);
+        colorMaterial.color.addSample(time2, Color.BLUE);
+        colorMaterial.color.addSample(time3, Color.RED);
+
+        var outline = new TimeIntervalCollectionProperty();
+        outline.intervals.addInterval(new TimeInterval({
+            start : time1,
+            stop : time2,
+            data : false
+        }));
+        outline.intervals.addInterval(new TimeInterval({
+            start : time2,
+            stop : time3,
+            isStartIncluded : false,
+            data : true
+        }));
+
+        var outlineColor = new SampledProperty(Color);
+        outlineColor.addSample(time, Color.BLUE);
+        outlineColor.addSample(time2, Color.RED);
+        outlineColor.addSample(time3, Color.YELLOW);
+
+        var entity = createBasicEllipsoid();
+        entity.ellipsoid.fill = fill;
+        entity.ellipsoid.material = colorMaterial;
+        entity.ellipsoid.outline = outline;
+        entity.ellipsoid.outlineColor = outlineColor;
+
         var updater = new EllipsoidGeometryUpdater(entity, scene);
 
-        expect(updater._computeCenter(time)).toEqual(entity.position.getValue(time));
+        var instance = updater.createFillGeometryInstance(time2);
+        var attributes = instance.attributes;
+        expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(colorMaterial.color.getValue(time2)));
+        expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(fill.getValue(time2)));
+
+        instance = updater.createOutlineGeometryInstance(time2);
+        attributes = instance.attributes;
+        expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(outlineColor.getValue(time2)));
+        expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(outline.getValue(time2)));
+    });
+
+    it('createFillGeometryInstance obeys Entity.show is false.', function() {
+        var entity = createBasicEllipsoid();
+        entity.show = false;
+        entity.ellipsoid.fill = true;
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        var instance = updater.createFillGeometryInstance(new JulianDate());
+        var attributes = instance.attributes;
+        expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(false));
+    });
+
+    it('createOutlineGeometryInstance obeys Entity.show is false.', function() {
+        var entity = createBasicEllipsoid();
+        entity.show = false;
+        entity.ellipsoid.outline = true;
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        var instance = updater.createFillGeometryInstance(new JulianDate());
+        var attributes = instance.attributes;
+        expect(attributes.show.value).toEqual(ShowGeometryInstanceAttribute.toValue(false));
     });
 
     it('dynamic ellipsoid creates and updates', function() {
@@ -237,7 +412,7 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         var primitives = new PrimitiveCollection();
 
-        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(primitives);
         expect(dynamicUpdater.isDestroyed()).toBe(false);
         expect(primitives.length).toBe(0);
 
@@ -247,7 +422,6 @@ defineSuite([
         expect(primitives.get(1).show).toBe(true);
 
         ellipsoid.show.setValue(false);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
         dynamicUpdater.update(time);
         expect(primitives.get(0).show).toBe(false);
         expect(primitives.get(1).show).toBe(false);
@@ -272,7 +446,7 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         var primitives = scene.primitives;
 
-        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(primitives);
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2); //Ellipsoid always has both fill and outline primitives regardless of setting
 
@@ -281,7 +455,6 @@ defineSuite([
 
         //no position
         entity.position.setValue(undefined);
-        updater._onEntityPropertyChanged(entity, 'position');
         dynamicUpdater.update(time);
         expect(primitives.get(0).show).toBe(false);
         expect(primitives.get(1).show).toBe(false);
@@ -289,9 +462,7 @@ defineSuite([
 
         //no radii
         entity.position.setValue(Cartesian3.fromDegrees(0, 0, 0));
-        updater._onEntityPropertyChanged(entity, 'position');
         ellipsoid.radii.setValue(undefined);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
         dynamicUpdater.update(time);
         expect(primitives.get(0).show).toBe(false);
         expect(primitives.get(1).show).toBe(false);
@@ -299,7 +470,6 @@ defineSuite([
 
         //everything valid again
         ellipsoid.radii.setValue(new Cartesian3(1, 2, 3));
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
         dynamicUpdater.update(time);
         expect(primitives.get(0).show).toBe(true);
         expect(primitives.get(1).show).toBe(true);
@@ -327,7 +497,7 @@ defineSuite([
         var updater = new EllipsoidGeometryUpdater(entity, scene);
         var primitives = scene.primitives;
 
-        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
+        var dynamicUpdater = updater.createDynamicUpdater(primitives);
         dynamicUpdater.update(time);
         expect(primitives.length).toBe(2); //Ellipsoid always has both fill and outline primitives regardless of setting
 
@@ -338,7 +508,6 @@ defineSuite([
         ellipsoid.outline.setValue(false);
         ellipsoid.outlineColor = createDynamicProperty(Color.YELLOW);
         ellipsoid.material = new ColorMaterialProperty(Color.ORANGE);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
         dynamicUpdater.update(time);
 
         var attributes = primitives.get(0).getGeometryInstanceAttributes(entity);
@@ -358,36 +527,104 @@ defineSuite([
         updater.geometryChanged.addEventListener(listener);
 
         entity.position = new ConstantPositionProperty(Cartesian3.UNIT_Z);
-        updater._onEntityPropertyChanged(entity, 'position');
         expect(listener.calls.count()).toEqual(1);
 
         entity.ellipsoid.radii = new ConstantProperty(new Cartesian3(1, 2, 3));
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
         expect(listener.calls.count()).toEqual(2);
 
         entity.availability = new TimeIntervalCollection();
-        updater._onEntityPropertyChanged(entity, 'availability');
         expect(listener.calls.count()).toEqual(3);
 
         entity.ellipsoid.radii = undefined;
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
         expect(listener.calls.count()).toEqual(4);
 
         //Modifying an unrelated property should not have any effect.
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
-        updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(4);
 
         entity.ellipsoid.radii = new SampledProperty(Cartesian3);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
         expect(listener.calls.count()).toEqual(5);
     });
 
-    function getScene() {
+    it('createFillGeometryInstance throws if object is not filled', function() {
+        var entity = new Entity();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        expect(function() {
+            return updater.createFillGeometryInstance(time);
+        }).toThrowDeveloperError();
+    });
+
+    it('createFillGeometryInstance throws if no time provided', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        expect(function() {
+            return updater.createFillGeometryInstance(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('createOutlineGeometryInstance throws if object is not outlined', function() {
+        var entity = new Entity();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        expect(function() {
+            return updater.createOutlineGeometryInstance(time);
+        }).toThrowDeveloperError();
+    });
+
+    it('createOutlineGeometryInstance throws if no time provided', function() {
+        var entity = createBasicEllipsoid();
+        entity.ellipsoid.outline = new ConstantProperty(true);
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        expect(function() {
+            return updater.createOutlineGeometryInstance(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('createDynamicUpdater throws if not dynamic', function() {
+        var entity = createBasicEllipsoid();
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        expect(function() {
+            return updater.createDynamicUpdater(new PrimitiveCollection());
+        }).toThrowDeveloperError();
+    });
+
+    it('createDynamicUpdater throws if primitives undefined', function() {
+        var entity = createBasicEllipsoid();
+        entity.ellipsoid.radii = new SampledProperty(Number);
+        entity.ellipsoid.radii.addSample(time, 4);
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        expect(updater.isDynamic).toBe(true);
+        expect(function() {
+            return updater.createDynamicUpdater(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('dynamicUpdater.update throws if no time specified', function() {
+        var entity = createBasicEllipsoid();
+        entity.ellipsoid.radii = new SampledProperty(Number);
+        entity.ellipsoid.radii.addSample(time, 4);
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(new PrimitiveCollection());
+        expect(function() {
+            dynamicUpdater.update(undefined);
+        }).toThrowDeveloperError();
+    });
+
+    it('Constructor throws if no Entity supplied', function() {
+        expect(function() {
+            return new EllipsoidGeometryUpdater(undefined, scene);
+        }).toThrowDeveloperError();
+    });
+
+    it('Constructor throws if no scene supplied', function() {
+        var entity = createBasicEllipsoid();
+        expect(function() {
+            return new EllipsoidGeometryUpdater(entity, undefined);
+        }).toThrowDeveloperError();
+    });
+
+    var entity = createBasicEllipsoid();
+    entity.ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
+    createDynamicGeometryBoundingSphereSpecs(EllipsoidGeometryUpdater, entity, entity.ellipsoid, function() {
         return scene;
-    }
-
-    createGeometryUpdaterSpecs(EllipsoidGeometryUpdater, 'ellipsoid', createBasicEllipsoid, getScene);
-
-    createDynamicGeometryUpdaterSpecs(EllipsoidGeometryUpdater, 'ellipsoid', createDynamicEllipsoid, getScene);
+    });
 }, 'WebGL');

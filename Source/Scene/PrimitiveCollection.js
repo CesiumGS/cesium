@@ -42,9 +42,6 @@ define([
         this._primitives = [];
         this._guid = createGuid();
 
-        // Used by the OrderedGroundPrimitiveCollection
-        this._zIndex = undefined;
-
         /**
          * Determines if primitives in this collection will be shown.
          *
@@ -181,11 +178,10 @@ define([
      * @see PrimitiveCollection#destroyPrimitives
      */
     PrimitiveCollection.prototype.removeAll = function() {
-        var primitives = this._primitives;
-        var length = primitives.length;
-        for ( var i = 0; i < length; ++i) {
-            delete primitives[i]._external._composites[this._guid];
-            if (this.destroyPrimitives) {
+        if (this.destroyPrimitives) {
+            var primitives = this._primitives;
+            var length = primitives.length;
+            for ( var i = 0; i < length; ++i) {
                 primitives[i].destroy();
             }
         }
@@ -371,54 +367,6 @@ define([
     };
 
     /**
-     * @private
-     */
-    PrimitiveCollection.prototype.prePassesUpdate = function(frameState) {
-        var primitives = this._primitives;
-        // Using primitives.length in the loop is a temporary workaround
-        // to allow quadtree updates to add and remove primitives in
-        // update().  This will be changed to manage added and removed lists.
-        for (var i = 0; i < primitives.length; ++i) {
-            var primitive = primitives[i];
-            if (defined(primitive.prePassesUpdate)) {
-                primitive.prePassesUpdate(frameState);
-            }
-        }
-    };
-
-    /**
-     * @private
-     */
-    PrimitiveCollection.prototype.updateForPass = function(frameState, passState) {
-        var primitives = this._primitives;
-        // Using primitives.length in the loop is a temporary workaround
-        // to allow quadtree updates to add and remove primitives in
-        // update().  This will be changed to manage added and removed lists.
-        for (var i = 0; i < primitives.length; ++i) {
-            var primitive = primitives[i];
-            if (defined(primitive.updateForPass)) {
-                primitive.updateForPass(frameState, passState);
-            }
-        }
-    };
-
-    /**
-     * @private
-     */
-    PrimitiveCollection.prototype.postPassesUpdate = function(frameState) {
-        var primitives = this._primitives;
-        // Using primitives.length in the loop is a temporary workaround
-        // to allow quadtree updates to add and remove primitives in
-        // update().  This will be changed to manage added and removed lists.
-        for (var i = 0; i < primitives.length; ++i) {
-            var primitive = primitives[i];
-            if (defined(primitive.postPassesUpdate)) {
-                primitive.postPassesUpdate(frameState);
-            }
-        }
-    };
-
-    /**
      * Returns true if this object was destroyed; otherwise, false.
      * <br /><br />
      * If this object was destroyed, it should not be used; calling any function other than
@@ -443,6 +391,8 @@ define([
      * Once this collection is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

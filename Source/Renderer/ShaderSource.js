@@ -248,11 +248,6 @@ define([
             result += '#define OUTPUT_DECLARATION\n\n';
         }
 
-        // Define a constant for the OES_texture_float_linear extension since WebGL does not.
-        if (context.textureFloatLinear) {
-            result += '#define OES_texture_float_linear\n\n';
-        }
-
         // append built-ins
         if (shaderSource.includeBuiltIns) {
             result += getBuiltinsAndAutomaticUniforms(combinedSources);
@@ -318,7 +313,7 @@ define([
         return new ShaderSource({
             sources : this.sources,
             defines : this.defines,
-            pickColorQualifier : this.pickColorQualifier,
+            pickColorQuantifier : this.pickColorQualifier,
             includeBuiltIns : this.includeBuiltIns
         });
     };

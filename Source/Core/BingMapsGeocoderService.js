@@ -4,16 +4,16 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './Rectangle',
-        './Resource'
+        './loadJsonp',
+        './Rectangle'
     ], function(
         BingMapsApi,
         Check,
         defaultValue,
         defined,
         defineProperties,
-        Rectangle,
-        Resource) {
+        loadJsonp,
+        Rectangle) {
     'use strict';
 
     var url = 'https://dev.virtualearth.net/REST/v1/Locations';
@@ -24,27 +24,31 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
+     * @param {Scene} options.scene The scene
      * @param {String} [options.key] A key to use with the Bing Maps geocoding service
      */
     function BingMapsGeocoderService(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('options.scene', options.scene);
+        //>>includeEnd('debug');
 
         var key = options.key;
         this._key = BingMapsApi.getKey(key);
 
-        this._resource = new Resource({
-            url: url,
-            queryParameters: {
-                key: this._key
+        if (defined(key)) {
+            var errorCredit = BingMapsApi.getErrorCredit(key);
+            if (defined(errorCredit)) {
+                options.scene._frameState.creditDisplay.addDefaultCredit(errorCredit);
             }
-        });
+        }
     }
 
     defineProperties(BingMapsGeocoderService.prototype, {
         /**
          * The URL endpoint for the Bing geocoder service
          * @type {String}
-         * @memberof BingMapsGeocoderService.prototype
+         * @memberof {BingMapsGeocoderService.prototype}
          * @readonly
          */
         url : {
@@ -56,7 +60,7 @@ define([
         /**
          * The key for the Bing geocoder service
          * @type {String}
-         * @memberof BingMapsGeocoderService.prototype
+         * @memberof {BingMapsGeocoderService.prototype}
          * @readonly
          */
         key : {
@@ -70,20 +74,23 @@ define([
      * @function
      *
      * @param {String} query The query to be sent to the geocoder service
-     * @returns {Promise<GeocoderService~Result[]>}
+     * @returns {Promise<GeocoderResult[]>}
      */
     BingMapsGeocoderService.prototype.geocode = function(query) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.string('query', query);
         //>>includeEnd('debug');
 
-        var resource = this._resource.getDerivedResource({
-            queryParameters: {
-                query: query
-            }
+        var key = this.key;
+        var promise = loadJsonp(url, {
+            parameters : {
+                query : query,
+                key : key
+            },
+            callbackParameterName : 'jsonp'
         });
 
-        return resource.fetchJsonp('jsonp').then(function(result) {
+        return promise.then(function(result) {
             if (result.resourceSets.length === 0) {
                 return [];
             }

@@ -1,18 +1,17 @@
 defineSuite([
         'Scene/ArcGisMapServerImageryProvider',
-        'Core/appendForwardSlash',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/DefaultProxy',
         'Core/defined',
         'Core/GeographicTilingScheme',
-        'Core/getAbsoluteUri',
-        'Core/objectToQuery',
+        'Core/loadImage',
+        'Core/loadJsonp',
+        'Core/loadWithXhr',
         'Core/queryToObject',
         'Core/Rectangle',
         'Core/RequestScheduler',
-        'Core/Resource',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
         'Scene/DiscardMissingTileImagePolicy',
@@ -25,19 +24,18 @@ defineSuite([
         'ThirdParty/Uri'
     ], function(
         ArcGisMapServerImageryProvider,
-        appendForwardSlash,
         Cartesian2,
         Cartesian3,
         Cartographic,
         DefaultProxy,
         defined,
         GeographicTilingScheme,
-        getAbsoluteUri,
-        objectToQuery,
+        loadImage,
+        loadJsonp,
+        loadWithXhr,
         queryToObject,
         Rectangle,
         RequestScheduler,
-        Resource,
         WebMercatorProjection,
         WebMercatorTilingScheme,
         DiscardMissingTileImagePolicy,
@@ -50,24 +48,14 @@ defineSuite([
         Uri) {
     'use strict';
 
-    var supportsImageBitmapOptions;
-    beforeAll(function() {
-        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
-        // We run it here to avoid interfering with the tests.
-        return Resource.supportsImageBitmapOptions()
-            .then(function(result) {
-                supportsImageBitmapOptions = result;
-            });
-    });
-
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
     });
 
     afterEach(function() {
-        Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
-        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
-        Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
+        loadJsonp.loadAndExecuteScript = loadJsonp.defaultLoadAndExecuteScript;
+        loadImage.createImage = loadImage.defaultCreateImage;
+        loadWithXhr.load = loadWithXhr.defaultLoad;
     });
 
     function expectCorrectUrl(expectedBaseUrl, actualUrl, functionName, withProxy, token) {
@@ -82,7 +70,7 @@ defineSuite([
         var uriWithoutQuery = new Uri(uri);
         uriWithoutQuery.query = '';
 
-        expect(uriWithoutQuery.toString()).toEqual(appendForwardSlash(expectedBaseUrl));
+        expect(uriWithoutQuery.toString()).toEqual(expectedBaseUrl);
 
         var expectedParams = {
             callback : functionName,
@@ -95,7 +83,7 @@ defineSuite([
     }
 
     function stubJSONPCall(baseUrl, result, withProxy, token) {
-        Resource._Implementations.loadAndExecuteScript = function(url, functionName) {
+        loadJsonp.loadAndExecuteScript = function(url, functionName) {
             expectCorrectUrl(baseUrl, url, functionName, withProxy, token);
             setTimeout(function() {
                 window[functionName](result);
@@ -114,30 +102,30 @@ defineSuite([
     });
 
     var webMercatorResult = {
-        'currentVersion' : 10.01,
-        'copyrightText' : 'Test copyright text',
-        'tileInfo' : {
-            'rows' : 128,
-            'cols' : 256,
-            'origin' : {
-                'x' : -20037508.342787,
-                'y' : 20037508.342787
+        "currentVersion" : 10.01,
+        "copyrightText" : "Test copyright text",
+        "tileInfo" : {
+            "rows" : 128,
+            "cols" : 256,
+            "origin" : {
+                "x" : -20037508.342787,
+                "y" : 20037508.342787
             },
-            'spatialReference' : {
-                'wkid' : 102100
+            "spatialReference" : {
+                "wkid" : 102100
             },
-            'lods' : [{
-                'level' : 0,
-                'resolution' : 156543.033928,
-                'scale' : 591657527.591555
+            "lods" : [{
+                "level" : 0,
+                "resolution" : 156543.033928,
+                "scale" : 591657527.591555
             }, {
-                'level' : 1,
-                'resolution' : 78271.5169639999,
-                'scale' : 295828763.795777
+                "level" : 1,
+                "resolution" : 78271.5169639999,
+                "scale" : 295828763.795777
             }, {
-                'level' : 2,
-                'resolution' : 39135.7584820001,
-                'scale' : 147914381.897889
+                "level" : 2,
+                "resolution" : 39135.7584820001,
+                "scale" : 147914381.897889
             }]
         }
     };
@@ -149,25 +137,6 @@ defineSuite([
 
         var provider = new ArcGisMapServerImageryProvider({
             url : baseUrl
-        });
-
-        return provider.readyPromise.then(function(result) {
-            expect(result).toBe(true);
-            expect(provider.ready).toBe(true);
-        });
-    });
-
-    it('resolves readyPromise with Resource', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid';
-
-        stubJSONPCall(baseUrl, webMercatorResult);
-
-        var resource = new Resource({
-            url : baseUrl
-        });
-
-        var provider = new ArcGisMapServerImageryProvider({
-            url : resource
         });
 
         return provider.readyPromise.then(function(result) {
@@ -192,7 +161,7 @@ defineSuite([
     });
 
     it('supports tiled servers in web mercator projection', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         stubJSONPCall(baseUrl, webMercatorResult);
 
@@ -215,61 +184,62 @@ defineSuite([
             expect(provider.usingPrecachedTiles).toEqual(true);
             expect(provider.hasAlphaChannel).toBeDefined();
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            loadImage.createImage = function(url, crossOrigin, deferred) {
                 if (/^blob:/.test(url)) {
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                    // load blob url normally
+                    loadImage.defaultCreateImage(url, crossOrigin, deferred);
                 } else {
-                    expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
+                    expect(url).toEqual(baseUrl + '/tile/0/0/0');
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
                 }
             };
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toEqual(baseUrl + '/tile/0/0/0');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeImageOrImageBitmap();
+                expect(image).toBeInstanceOf(Image);
             });
         });
     });
 
     var geographicResult = {
-        'currentVersion' : 10.01,
-        'copyrightText' : 'Test copyright text',
-        'tileInfo' : {
-            'rows' : 128,
-            'cols' : 256,
-            'origin' : {
-                'x' : -180,
-                'y' : 90
+        "currentVersion" : 10.01,
+        "copyrightText" : "Test copyright text",
+        "tileInfo" : {
+            "rows" : 128,
+            "cols" : 256,
+            "origin" : {
+                "x" : -180,
+                "y" : 90
             },
-            'spatialReference' : {
-                'wkid' : 4326
+            "spatialReference" : {
+                "wkid" : 4326
             },
-            'lods' : [{
-                'level' : 0,
-                'resolution' : 0.3515625,
-                'scale' : 147748799.285417
+            "lods" : [{
+                "level" : 0,
+                "resolution" : 0.3515625,
+                "scale" : 147748799.285417
             }, {
-                'level' : 1,
-                'resolution' : 0.17578125,
-                'scale' : 73874399.6427087
+                "level" : 1,
+                "resolution" : 0.17578125,
+                "scale" : 73874399.6427087
             }, {
-                'level' : 2,
-                'resolution' : 0.087890625,
-                'scale' : 36937199.8213544
+                "level" : 2,
+                "resolution" : 0.087890625,
+                "scale" : 36937199.8213544
             }]
         }
     };
 
     it('supports tiled servers in geographic projection', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         stubJSONPCall(baseUrl, geographicResult);
 
@@ -291,37 +261,37 @@ defineSuite([
             expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
             expect(provider.usingPrecachedTiles).toEqual(true);
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url) || supportsImageBitmapOptions) {
-                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                if (/^blob:/.test(url)) {
+                    // load blob url normally
+                    loadImage.defaultCreateImage(url, crossOrigin, deferred);
                 } else {
-                    expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
+                    expect(url).toEqual(baseUrl + '/tile/0/0/0');
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
                 }
             };
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url).toEqual(getAbsoluteUri(baseUrl + 'tile/0/0/0'));
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toEqual(baseUrl + '/tile/0/0/0');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeImageOrImageBitmap();
+                expect(image).toBeInstanceOf(Image);
             });
         });
     });
 
     it('supports non-tiled servers', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         stubJSONPCall(baseUrl, {
-            'currentVersion' : 10.01,
-            'copyrightText' : 'Test copyright text'
+            "currentVersion" : 10.01,
+            "copyrightText" : "Test copyright text"
         });
 
         var provider = new ArcGisMapServerImageryProvider({
@@ -343,14 +313,14 @@ defineSuite([
             expect(provider.usingPrecachedTiles).toEqual(false);
             expect(provider.enablePickFeatures).toBe(true);
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            loadImage.createImage = function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
                 var uriWithoutQuery = new Uri(uri);
                 uriWithoutQuery.query = '';
 
-                expect(uriWithoutQuery.toString()).toEqual(getAbsoluteUri(baseUrl + 'export'));
+                expect(uriWithoutQuery.toString()).toEqual(baseUrl + '/export');
 
                 expect(params.f).toEqual('image');
                 expect(params.bboxSR).toEqual('4326');
@@ -360,22 +330,22 @@ defineSuite([
                 expect(params.size).toEqual('256,256');
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeImageOrImageBitmap();
+                expect(image).toBeInstanceOf(Image);
             });
         });
     });
 
     it('supports non-tiled servers with various constructor parameters', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
         var token = '5e(u|2!7Y';
 
         stubJSONPCall(baseUrl, {
-            'currentVersion' : 10.01,
-            'copyrightText' : 'Test copyright text'
+            "currentVersion" : 10.01,
+            "copyrightText" : "Test copyright text"
         }, undefined, token);
 
         var provider = new ArcGisMapServerImageryProvider({
@@ -405,14 +375,14 @@ defineSuite([
             expect(provider.enablePickFeatures).toBe(false);
             expect(provider.layers).toEqual('foo,bar');
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+            loadImage.createImage = function(url, crossOrigin, deferred) {
                 var uri = new Uri(url);
                 var params = queryToObject(uri.query);
 
                 var uriWithoutQuery = new Uri(uri);
                 uriWithoutQuery.query = '';
 
-                expect(uriWithoutQuery.toString()).toEqual(getAbsoluteUri(baseUrl + 'export'));
+                expect(uriWithoutQuery.toString()).toEqual(baseUrl + '/export');
 
                 expect(params.f).toEqual('image');
                 expect(params.bboxSR).toEqual('3857');
@@ -424,17 +394,17 @@ defineSuite([
                 expect(params.token).toEqual(token);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeImageOrImageBitmap();
+                expect(image).toBeInstanceOf(Image);
             });
         });
     });
 
     it('includes security token in requests if one is specified', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/',
+        var baseUrl = '//tiledArcGisMapServer.invalid',
             token = '5e(u|2!7Y';
 
         stubJSONPCall(baseUrl, webMercatorResult, false, token);
@@ -443,10 +413,6 @@ defineSuite([
             url : baseUrl,
             token : token
         });
-
-        var expectedTileUrl = getAbsoluteUri(baseUrl + 'tile/0/0/0?' + objectToQuery({
-            token: token
-        }));
 
         expect(provider.url).toEqual(baseUrl);
         expect(provider.token).toEqual(token);
@@ -464,59 +430,110 @@ defineSuite([
             expect(provider.usingPrecachedTiles).toEqual(true);
             expect(provider.hasAlphaChannel).toBeDefined();
 
-            Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url) || supportsImageBitmapOptions) {
-                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                if (/^blob:/.test(url)) {
+                    // load blob url normally
+                    loadImage.defaultCreateImage(url, crossOrigin, deferred);
                 } else {
-                    expect(url).toEqual(expectedTileUrl);
+                    expect(url).toEqual(baseUrl + '/tile/0/0/0?token=' + token);
 
                     // Just return any old image.
-                    Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                    loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
                 }
             };
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                expect(url).toEqual(expectedTileUrl);
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toEqual(baseUrl + '/tile/0/0/0?token=' + token);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.loadWithXhr('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeImageOrImageBitmap();
+                expect(image).toBeInstanceOf(Image);
+            });
+        });
+    });
+
+    it('routes requests through a proxy if one is specified', function() {
+        var baseUrl = '//tiledArcGisMapServer.invalid';
+        var proxy = new DefaultProxy('/proxy/');
+
+        stubJSONPCall(baseUrl, geographicResult, true);
+
+        var provider = new ArcGisMapServerImageryProvider({
+            url : baseUrl,
+            proxy : proxy
+        });
+
+        expect(provider.url).toEqual(baseUrl);
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider.tileWidth).toEqual(128);
+            expect(provider.tileHeight).toEqual(256);
+            expect(provider.maximumLevel).toEqual(2);
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+            expect(provider.credit).toBeDefined();
+            expect(provider.tileDiscardPolicy).toBeInstanceOf(DiscardMissingTileImagePolicy);
+            expect(provider.rectangle).toEqual(new GeographicTilingScheme().rectangle);
+            expect(provider.proxy).toEqual(proxy);
+            expect(provider.usingPrecachedTiles).toEqual(true);
+
+            loadImage.createImage = function(url, crossOrigin, deferred) {
+                if (/^blob:/.test(url)) {
+                    // load blob url normally
+                    loadImage.defaultCreateImage(url, crossOrigin, deferred);
+                } else {
+                    expect(url).toEqual(baseUrl + '/tile/0/0/0');
+
+                    // Just return any old image.
+                    loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                }
+            };
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toEqual(proxy.getURL(baseUrl + '/tile/0/0/0'));
+
+                // Just return any old image.
+                loadWithXhr.defaultLoad('Data/Images/Red16x16.png', responseType, method, data, headers, deferred);
+            };
+
+            return provider.requestImage(0, 0, 0).then(function(image) {
+                expect(image).toBeInstanceOf(Image);
             });
         });
     });
 
     it('raises error on unsupported WKID', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         var unsupportedWKIDResult = {
-            'currentVersion' : 10.01,
-            'copyrightText' : 'Test copyright text',
-            'tileInfo' : {
-                'rows' : 128,
-                'cols' : 256,
-                'origin' : {
-                    'x' : -180,
-                    'y' : 90
+            "currentVersion" : 10.01,
+            "copyrightText" : "Test copyright text",
+            "tileInfo" : {
+                "rows" : 128,
+                "cols" : 256,
+                "origin" : {
+                    "x" : -180,
+                    "y" : 90
                 },
-                'spatialReference' : {
-                    'wkid' : 1234
+                "spatialReference" : {
+                    "wkid" : 1234
                 },
-                'lods' : [{
-                    'level' : 0,
-                    'resolution' : 0.3515625,
-                    'scale' : 147748799.285417
+                "lods" : [{
+                    "level" : 0,
+                    "resolution" : 0.3515625,
+                    "scale" : 147748799.285417
                 }, {
-                    'level' : 1,
-                    'resolution' : 0.17578125,
-                    'scale' : 73874399.6427087
+                    "level" : 1,
+                    "resolution" : 0.17578125,
+                    "scale" : 73874399.6427087
                 }, {
-                    'level' : 2,
-                    'resolution' : 0.087890625,
-                    'scale' : 36937199.8213544
+                    "level" : 2,
+                    "resolution" : 0.087890625,
+                    "scale" : 36937199.8213544
                 }]
             }
         };
@@ -547,7 +564,7 @@ defineSuite([
     });
 
     it('raises error on invalid URL', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         var provider = new ArcGisMapServerImageryProvider({
             url : baseUrl
@@ -570,11 +587,11 @@ defineSuite([
     });
 
     it('raises error event when image cannot be loaded', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         stubJSONPCall(baseUrl, {
-            'currentVersion' : 10.01,
-            'copyrightText' : 'Test copyright text'
+            "currentVersion" : 10.01,
+            "copyrightText" : "Test copyright text"
         });
 
         var provider = new ArcGisMapServerImageryProvider({
@@ -595,10 +612,10 @@ defineSuite([
             }, 1);
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        loadImage.createImage = function(url, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -618,7 +635,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeImageOrImageBitmap();
+                expect(imagery.image).toBeInstanceOf(Image);
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
@@ -626,42 +643,42 @@ defineSuite([
     });
 
     it('honors fullExtent of tiled server with web mercator projection', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         var webMercatorFullExtentResult = {
-            'currentVersion' : 10.01,
-            'copyrightText' : 'Test copyright text',
-            'tileInfo' : {
-                'rows' : 128,
-                'cols' : 256,
-                'origin' : {
-                    'x' : -20037508.342787,
-                    'y' : 20037508.342787
+            "currentVersion" : 10.01,
+            "copyrightText" : "Test copyright text",
+            "tileInfo" : {
+                "rows" : 128,
+                "cols" : 256,
+                "origin" : {
+                    "x" : -20037508.342787,
+                    "y" : 20037508.342787
                 },
-                'spatialReference' : {
-                    'wkid' : 102100
+                "spatialReference" : {
+                    "wkid" : 102100
                 },
-                'lods' : [{
-                    'level' : 0,
-                    'resolution' : 156543.033928,
-                    'scale' : 591657527.591555
+                "lods" : [{
+                    "level" : 0,
+                    "resolution" : 156543.033928,
+                    "scale" : 591657527.591555
                 }, {
-                    'level' : 1,
-                    'resolution' : 78271.5169639999,
-                    'scale' : 295828763.795777
+                    "level" : 1,
+                    "resolution" : 78271.5169639999,
+                    "scale" : 295828763.795777
                 }, {
-                    'level' : 2,
-                    'resolution' : 39135.7584820001,
-                    'scale' : 147914381.897889
+                    "level" : 2,
+                    "resolution" : 39135.7584820001,
+                    "scale" : 147914381.897889
                 }]
             },
             fullExtent : {
-                'xmin' : 1.1148026611962173E7,
-                'ymin' : -6443518.758206591,
-                'xmax' : 1.8830976498143446E7,
-                'ymax' : -265936.19697360107,
-                'spatialReference' : {
-                    'wkid' : 102100
+                "xmin" : 1.1148026611962173E7,
+                "ymin" : -6443518.758206591,
+                "xmax" : 1.8830976498143446E7,
+                "ymax" : -265936.19697360107,
+                "spatialReference" : {
+                    "wkid" : 102100
                 }
             }
         };
@@ -686,42 +703,42 @@ defineSuite([
     });
 
     it('constrains extent to the tiling scheme\'s rectangle', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         var webMercatorOutsideBoundsResult = {
-            'currentVersion' : 10.01,
-            'copyrightText' : 'Test copyright text',
-            'tileInfo' : {
-                'rows' : 128,
-                'cols' : 256,
-                'origin' : {
-                    'x' : -20037508.342787,
-                    'y' : 20037508.342787
+            "currentVersion" : 10.01,
+            "copyrightText" : "Test copyright text",
+            "tileInfo" : {
+                "rows" : 128,
+                "cols" : 256,
+                "origin" : {
+                    "x" : -20037508.342787,
+                    "y" : 20037508.342787
                 },
-                'spatialReference' : {
-                    'wkid' : 102100
+                "spatialReference" : {
+                    "wkid" : 102100
                 },
-                'lods' : [{
-                    'level' : 0,
-                    'resolution' : 156543.033928,
-                    'scale' : 591657527.591555
+                "lods" : [{
+                    "level" : 0,
+                    "resolution" : 156543.033928,
+                    "scale" : 591657527.591555
                 }, {
-                    'level' : 1,
-                    'resolution' : 78271.5169639999,
-                    'scale' : 295828763.795777
+                    "level" : 1,
+                    "resolution" : 78271.5169639999,
+                    "scale" : 295828763.795777
                 }, {
-                    'level' : 2,
-                    'resolution' : 39135.7584820001,
-                    'scale' : 147914381.897889
+                    "level" : 2,
+                    "resolution" : 39135.7584820001,
+                    "scale" : 147914381.897889
                 }]
             },
             fullExtent : {
-                'xmin' :  -2.0037507067161843E7,
-                'ymin' : -1.4745615008589065E7,
-                'xmax' : 2.0037507067161843E7,
-                'ymax' : 3.0240971958386205E7,
-                'spatialReference' : {
-                    'wkid' : 102100
+                "xmin" :  -2.0037507067161843E7,
+                "ymin" : -1.4745615008589065E7,
+                "xmax" : 2.0037507067161843E7,
+                "ymax" : 3.0240971958386205E7,
+                "spatialReference" : {
+                    "wkid" : 102100
                 }
             }
         };
@@ -737,50 +754,50 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            expect(provider.rectangle.west).toBeGreaterThanOrEqualTo(-Math.PI);
-            expect(provider.rectangle.east).toBeLessThanOrEqualTo(Math.PI);
-            expect(provider.rectangle.south).toBeGreaterThanOrEqualTo(-WebMercatorProjection.MaximumLatitude);
-            expect(provider.rectangle.north).toBeLessThanOrEqualTo(WebMercatorProjection.MaximumLatitude);
+            expect(provider.rectangle.west >= -Math.PI).toBe(true);
+            expect(provider.rectangle.east <= Math.PI).toBe(true);
+            expect(provider.rectangle.south >= -WebMercatorProjection.MaximumLatitude).toBe(true);
+            expect(provider.rectangle.north <= WebMercatorProjection.MaximumLatitude).toBe(true);
         });
     });
 
     it('honors fullExtent of tiled server with geographic projection', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         var geographicFullExtentResult = {
-            'currentVersion' : 10.01,
-            'copyrightText' : 'Test copyright text',
-            'tileInfo' : {
-                'rows' : 128,
-                'cols' : 256,
-                'origin' : {
-                    'x' : -20037508.342787,
-                    'y' : 20037508.342787
+            "currentVersion" : 10.01,
+            "copyrightText" : "Test copyright text",
+            "tileInfo" : {
+                "rows" : 128,
+                "cols" : 256,
+                "origin" : {
+                    "x" : -20037508.342787,
+                    "y" : 20037508.342787
                 },
-                'spatialReference' : {
-                    'wkid' : 102100
+                "spatialReference" : {
+                    "wkid" : 102100
                 },
-                'lods' : [{
-                    'level' : 0,
-                    'resolution' : 156543.033928,
-                    'scale' : 591657527.591555
+                "lods" : [{
+                    "level" : 0,
+                    "resolution" : 156543.033928,
+                    "scale" : 591657527.591555
                 }, {
-                    'level' : 1,
-                    'resolution' : 78271.5169639999,
-                    'scale' : 295828763.795777
+                    "level" : 1,
+                    "resolution" : 78271.5169639999,
+                    "scale" : 295828763.795777
                 }, {
-                    'level' : 2,
-                    'resolution' : 39135.7584820001,
-                    'scale' : 147914381.897889
+                    "level" : 2,
+                    "resolution" : 39135.7584820001,
+                    "scale" : 147914381.897889
                 }]
             },
             fullExtent : {
-                'xmin' : -123.4,
-                'ymin' : -23.2,
-                'xmax' : 100.7,
-                'ymax' : 45.2,
-                'spatialReference' : {
-                    'wkid' : 4326
+                "xmin" : -123.4,
+                "ymin" : -23.2,
+                "xmax" : 100.7,
+                "ymax" : 45.2,
+                "spatialReference" : {
+                    "wkid" : 4326
                 }
             }
         };
@@ -801,42 +818,42 @@ defineSuite([
     });
 
     it('raises error if the spatialReference of the fullExtent is unknown', function() {
-        var baseUrl = '//tiledArcGisMapServer.invalid/';
+        var baseUrl = '//tiledArcGisMapServer.invalid';
 
         var unknownSpatialReferenceResult = {
-            'currentVersion' : 10.01,
-            'copyrightText' : 'Test copyright text',
-            'tileInfo' : {
-                'rows' : 128,
-                'cols' : 256,
-                'origin' : {
-                    'x' : -180,
-                    'y' : 90
+            "currentVersion" : 10.01,
+            "copyrightText" : "Test copyright text",
+            "tileInfo" : {
+                "rows" : 128,
+                "cols" : 256,
+                "origin" : {
+                    "x" : -180,
+                    "y" : 90
                 },
-                'spatialReference' : {
-                    'wkid' : 1234
+                "spatialReference" : {
+                    "wkid" : 1234
                 },
-                'lods' : [{
-                    'level' : 0,
-                    'resolution' : 0.3515625,
-                    'scale' : 147748799.285417
+                "lods" : [{
+                    "level" : 0,
+                    "resolution" : 0.3515625,
+                    "scale" : 147748799.285417
                 }, {
-                    'level' : 1,
-                    'resolution' : 0.17578125,
-                    'scale' : 73874399.6427087
+                    "level" : 1,
+                    "resolution" : 0.17578125,
+                    "scale" : 73874399.6427087
                 }, {
-                    'level' : 2,
-                    'resolution' : 0.087890625,
-                    'scale' : 36937199.8213544
+                    "level" : 2,
+                    "resolution" : 0.087890625,
+                    "scale" : 36937199.8213544
                 }]
             },
             fullExtent : {
-                'xmin' : -123.4,
-                'ymin' : -23.2,
-                'xmax' : 100.7,
-                'ymax' : 45.2,
-                'spatialReference' : {
-                    'wkid' : 1234
+                "xmin" : -123.4,
+                "ymin" : -23.2,
+                "xmax" : 100.7,
+                "ymax" : 45.2,
+                "spatialReference" : {
+                    "wkid" : 1234
                 }
             }
         };
@@ -873,9 +890,9 @@ defineSuite([
                 usePreCachedTilesIfAvailable : false
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('identify');
-                Resource._DefaultImplementations.loadWithXhr('Data/ArcGIS/identify-WebMercator.json', responseType, method, data, headers, deferred, overrideMimeType);
+                loadWithXhr.defaultLoad('Data/ArcGIS/identify-WebMercator.json', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
@@ -898,9 +915,9 @@ defineSuite([
                 usePreCachedTilesIfAvailable : false
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 expect(url).toContain('identify');
-                Resource._DefaultImplementations.loadWithXhr('Data/ArcGIS/identify-Geographic.json', responseType, method, data, headers, deferred, overrideMimeType);
+                loadWithXhr.defaultLoad('Data/ArcGIS/identify-Geographic.json', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
@@ -970,12 +987,9 @@ defineSuite([
                 layers : 'someLayer,anotherLayerYay'
             });
 
-            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
-                var uri = new Uri(url);
-                var query = queryToObject(uri.getQuery());
-
-                expect(query.layers).toContain('visible:someLayer,anotherLayerYay');
-                Resource._DefaultImplementations.loadWithXhr('Data/ArcGIS/identify-WebMercator.json', responseType, method, data, headers, deferred, overrideMimeType);
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                expect(url).toContain('layers=visible:someLayer,anotherLayerYay');
+                loadWithXhr.defaultLoad('Data/ArcGIS/identify-WebMercator.json', responseType, method, data, headers, deferred, overrideMimeType);
             };
 
             return pollToPromise(function() {
@@ -984,6 +998,35 @@ defineSuite([
                 return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function(pickResult) {
                     expect(pickResult.length).toBe(1);
                 });
+            });
+        });
+
+        it('picks using proxy if one is specified', function() {
+            var baseUrl = 'made/up/map/server';
+            var proxy = new DefaultProxy('/proxy/');
+            var layers = '0,1';
+
+            var provider = new ArcGisMapServerImageryProvider({
+                url : baseUrl,
+                usePreCachedTilesIfAvailable : false,
+                layers : layers,
+                proxy : proxy
+            });
+
+            loadWithXhr.load = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                var proxiedUri = new Uri(url);
+                var originalUriQuery = new Uri(decodeURIComponent(proxiedUri.query)).query;
+
+                // DefaultProxy simply puts the original request as the query string; duplicate it here expect match
+                expect(proxiedUri.toString()).toEqual(proxy.getURL(baseUrl + '/identify?' + originalUriQuery));
+
+                loadWithXhr.defaultLoad('Data/ArcGIS/identify-WebMercator.json', responseType, method, data, headers, deferred, overrideMimeType);
+            };
+
+            return pollToPromise(function() {
+                return provider.ready;
+            }).then(function() {
+                return provider.pickFeatures(0, 0, 0, 0.5, 0.5);
             });
         });
     });

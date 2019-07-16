@@ -6,8 +6,7 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/PixelFormat',
-        './ContextLimits',
-        './PixelDatatype'
+        './ContextLimits'
     ], function(
         Check,
         defaultValue,
@@ -16,8 +15,7 @@ define([
         destroyObject,
         DeveloperError,
         PixelFormat,
-        ContextLimits,
-        PixelDatatype) {
+        ContextLimits) {
     'use strict';
 
     function attachTexture(framebuffer, attachment, texture) {
@@ -47,8 +45,6 @@ define([
      * @exception {DeveloperError} The depth-texture pixel-format must be DEPTH_COMPONENT.
      * @exception {DeveloperError} The depth-stencil-texture pixel-format must be DEPTH_STENCIL.
      * @exception {DeveloperError} The number of color attachments exceeds the number supported.
-     * @exception {DeveloperError} The color-texture pixel datatype is HALF_FLOAT and the WebGL implementation does not support the EXT_color_buffer_half_float extension.
-     * @exception {DeveloperError} The color-texture pixel datatype is FLOAT and the WebGL implementation does not support the EXT_color_buffer_float or WEBGL_color_buffer_float extensions.
      *
      * @example
      * // Create a framebuffer with color and depth texture attachments.
@@ -76,12 +72,11 @@ define([
     function Framebuffer(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var context = options.context;
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.context', context);
+        Check.defined('options.context', options.context);
         //>>includeEnd('debug');
 
-        var gl = context._gl;
+        var gl = options.context._gl;
         var maximumColorAttachments = ContextLimits.maximumColorAttachments;
 
         this._gl = gl;
@@ -166,12 +161,6 @@ define([
                 //>>includeStart('debug', pragmas.debug);
                 if (!PixelFormat.isColorFormat(texture.pixelFormat)) {
                     throw new DeveloperError('The color-texture pixel-format must be a color format.');
-                }
-                if (texture.pixelDatatype === PixelDatatype.FLOAT && !context.colorBufferFloat) {
-                    throw new DeveloperError('The color texture pixel datatype is FLOAT and the WebGL implementation does not support the EXT_color_buffer_float or WEBGL_color_buffer_float extensions. See Context.colorBufferFloat.');
-                }
-                if (texture.pixelDatatype === PixelDatatype.HALF_FLOAT && !context.colorBufferHalfFloat) {
-                    throw new DeveloperError('The color texture pixel datatype is HALF_FLOAT and the WebGL implementation does not support the EXT_color_buffer_half_float extension. See Context.colorBufferHalfFloat.');
                 }
                 //>>includeEnd('debug');
 

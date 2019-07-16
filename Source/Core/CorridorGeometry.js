@@ -1,21 +1,19 @@
 define([
-        './arrayFill',
         './arrayRemoveDuplicates',
         './BoundingSphere',
         './Cartesian3',
         './Cartographic',
-        './Check',
         './ComponentDatatype',
         './CornerType',
         './CorridorGeometryLibrary',
         './defaultValue',
         './defined',
         './defineProperties',
+        './DeveloperError',
         './Ellipsoid',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './GeometryOffsetAttribute',
         './IndexDatatype',
         './Math',
         './PolygonPipeline',
@@ -23,23 +21,21 @@ define([
         './Rectangle',
         './VertexFormat'
     ], function(
-        arrayFill,
         arrayRemoveDuplicates,
         BoundingSphere,
         Cartesian3,
         Cartographic,
-        Check,
         ComponentDatatype,
         CornerType,
         CorridorGeometryLibrary,
         defaultValue,
         defined,
         defineProperties,
+        DeveloperError,
         Ellipsoid,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        GeometryOffsetAttribute,
         IndexDatatype,
         CesiumMath,
         PolygonPipeline,
@@ -623,21 +619,6 @@ define([
                 attributes.normal = undefined;
             }
         }
-        if (defined(params.offsetAttribute)) {
-            var applyOffset = new Uint8Array(size * 6);
-            if (params.offsetAttribute === GeometryOffsetAttribute.TOP) {
-                applyOffset = arrayFill(applyOffset, 1, 0, size); // top face
-                applyOffset = arrayFill(applyOffset, 1, size*2, size * 4); // top wall
-            } else {
-                var applyOffsetValue = params.offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                applyOffset = arrayFill(applyOffset, applyOffsetValue);
-            }
-            attributes.applyOffset = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 1,
-                values: applyOffset
-            });
-        }
 
         var iLength = indices.length;
         var twoSize = size + size;
@@ -723,7 +704,7 @@ define([
     var scratchCartographicMin = new Cartographic();
     var scratchCartographicMax = new Cartographic();
 
-    function computeRectangle(positions, ellipsoid, width, cornerType, result) {
+    function computeRectangle(positions, ellipsoid, width, cornerType) {
         positions = scaleToSurface(positions, ellipsoid);
         var cleanPositions = arrayRemoveDuplicates(positions, Cartesian3.equalsEpsilon);
         var length = cleanPositions.length;
@@ -781,7 +762,7 @@ define([
             scratchCartographicMax.longitude = Math.max(scratchCartographicMax.longitude, lon);
         }
 
-        var rectangle = defined(result) ? result : new Rectangle();
+        var rectangle = new Rectangle();
         rectangle.north = scratchCartographicMax.latitude;
         rectangle.south = scratchCartographicMin.latitude;
         rectangle.east = scratchCartographicMax.longitude;
@@ -809,7 +790,7 @@ define([
      * @see CorridorGeometry.createGeometry
      * @see Packable
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
      *
      * @example
      * var corridor = new Cesium.CorridorGeometry({
@@ -824,31 +805,31 @@ define([
         var width = options.width;
 
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.positions', positions);
-        Check.defined('options.width', width);
+        if (!defined(positions)) {
+            throw new DeveloperError('options.positions is required.');
+        }
+        if (!defined(width)) {
+            throw new DeveloperError('options.width is required.');
+        }
         //>>includeEnd('debug');
-
-        var height = defaultValue(options.height, 0.0);
-        var extrudedHeight = defaultValue(options.extrudedHeight, height);
 
         this._positions = positions;
         this._ellipsoid = Ellipsoid.clone(defaultValue(options.ellipsoid, Ellipsoid.WGS84));
         this._vertexFormat = VertexFormat.clone(defaultValue(options.vertexFormat, VertexFormat.DEFAULT));
         this._width = width;
-        this._height = Math.max(height, extrudedHeight);
-        this._extrudedHeight = Math.min(height, extrudedHeight);
+        this._height = defaultValue(options.height, 0);
+        this._extrudedHeight = defaultValue(options.extrudedHeight, this._height);
         this._cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._shadowVolume = defaultValue(options.shadowVolume, false);
         this._workerName = 'createCorridorGeometry';
-        this._offsetAttribute = options.offsetAttribute;
-        this._rectangle = undefined;
+        this._rectangle = computeRectangle(positions, this._ellipsoid, width, this._cornerType);
 
         /**
          * The number of elements used to pack the object into an array.
          * @type {Number}
          */
-        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + 7;
+        this.packedLength = 1 + positions.length * Cartesian3.packedLength + Ellipsoid.packedLength + VertexFormat.packedLength + Rectangle.packedLength + 6;
     }
 
     /**
@@ -862,8 +843,12 @@ define([
      */
     CorridorGeometry.pack = function(value, array, startingIndex) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('value', value);
-        Check.defined('array', array);
+        if (!defined(value)) {
+            throw new DeveloperError('value is required');
+        }
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -882,19 +867,22 @@ define([
         VertexFormat.pack(value._vertexFormat, array, startingIndex);
         startingIndex += VertexFormat.packedLength;
 
+        Rectangle.pack(value._rectangle, array, startingIndex);
+        startingIndex += Rectangle.packedLength;
+
         array[startingIndex++] = value._width;
         array[startingIndex++] = value._height;
         array[startingIndex++] = value._extrudedHeight;
         array[startingIndex++] = value._cornerType;
         array[startingIndex++] = value._granularity;
-        array[startingIndex++] = value._shadowVolume ? 1.0 : 0.0;
-        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+        array[startingIndex] = value._shadowVolume ? 1.0 : 0.0;
 
         return array;
     };
 
     var scratchEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
     var scratchVertexFormat = new VertexFormat();
+    var scratchRectangle = new Rectangle();
     var scratchOptions = {
         positions : undefined,
         ellipsoid : scratchEllipsoid,
@@ -904,8 +892,7 @@ define([
         extrudedHeight : undefined,
         cornerType : undefined,
         granularity : undefined,
-        shadowVolume: undefined,
-        offsetAttribute: undefined
+        shadowVolume: undefined
     };
 
     /**
@@ -918,7 +905,9 @@ define([
      */
     CorridorGeometry.unpack = function(array, startingIndex, result) {
         //>>includeStart('debug', pragmas.debug);
-        Check.defined('array', array);
+        if (!defined(array)) {
+            throw new DeveloperError('array is required');
+        }
         //>>includeEnd('debug');
 
         startingIndex = defaultValue(startingIndex, 0);
@@ -936,13 +925,15 @@ define([
         var vertexFormat = VertexFormat.unpack(array, startingIndex, scratchVertexFormat);
         startingIndex += VertexFormat.packedLength;
 
+        var rectangle = Rectangle.unpack(array, startingIndex, scratchRectangle);
+        startingIndex += Rectangle.packedLength;
+
         var width = array[startingIndex++];
         var height = array[startingIndex++];
         var extrudedHeight = array[startingIndex++];
         var cornerType = array[startingIndex++];
         var granularity = array[startingIndex++];
-        var shadowVolume = array[startingIndex++] === 1.0;
-        var offsetAttribute = array[startingIndex];
+        var shadowVolume = array[startingIndex] === 1.0;
 
         if (!defined(result)) {
             scratchOptions.positions = positions;
@@ -952,8 +943,6 @@ define([
             scratchOptions.cornerType = cornerType;
             scratchOptions.granularity = granularity;
             scratchOptions.shadowVolume = shadowVolume;
-            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
-
             return new CorridorGeometry(scratchOptions);
         }
 
@@ -965,38 +954,10 @@ define([
         result._extrudedHeight = extrudedHeight;
         result._cornerType = cornerType;
         result._granularity = granularity;
+        result._rectangle = Rectangle.clone(rectangle);
         result._shadowVolume = shadowVolume;
-        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
-    };
-
-    /**
-     * Computes the bounding rectangle given the provided options
-     *
-     * @param {Object} options Object with the following properties:
-     * @param {Cartesian3[]} options.positions An array of positions that define the center of the corridor.
-     * @param {Number} options.width The distance between the edges of the corridor in meters.
-     * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid to be used as a reference.
-     * @param {CornerType} [options.cornerType=CornerType.ROUNDED] Determines the style of the corners.
-     * @param {Rectangle} [result] An object in which to store the result.
-     *
-     * @returns {Rectangle} The result rectangle.
-     */
-    CorridorGeometry.computeRectangle = function(options, result) {
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        var positions = options.positions;
-        var width = options.width;
-
-        //>>includeStart('debug', pragmas.debug);
-        Check.defined('options.positions', positions);
-        Check.defined('options.width', width);
-        //>>includeEnd('debug');
-
-        var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
-        var cornerType = defaultValue(options.cornerType, CornerType.ROUNDED);
-
-        return computeRectangle(positions, ellipsoid, width, cornerType, result);
     };
 
     /**
@@ -1007,7 +968,10 @@ define([
      */
     CorridorGeometry.createGeometry = function(corridorGeometry) {
         var positions = corridorGeometry._positions;
+        var height = corridorGeometry._height;
         var width = corridorGeometry._width;
+        var extrudedHeight = corridorGeometry._extrudedHeight;
+        var extrude = (height !== extrudedHeight);
         var ellipsoid = corridorGeometry._ellipsoid;
 
         positions = scaleToSurface(positions, ellipsoid);
@@ -1016,10 +980,6 @@ define([
         if ((cleanPositions.length < 2) || (width <= 0)) {
             return;
         }
-
-        var height = corridorGeometry._height;
-        var extrudedHeight = corridorGeometry._extrudedHeight;
-        var extrude = !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         var vertexFormat = corridorGeometry._vertexFormat;
         var params = {
@@ -1032,27 +992,17 @@ define([
         };
         var attr;
         if (extrude) {
+            var h = Math.max(height, extrudedHeight);
+            extrudedHeight = Math.min(height, extrudedHeight);
+            height = h;
             params.height = height;
             params.extrudedHeight = extrudedHeight;
             params.shadowVolume = corridorGeometry._shadowVolume;
-            params.offsetAttribute = corridorGeometry._offsetAttribute;
             attr = computePositionsExtruded(params, vertexFormat);
         } else {
             var computedPositions = CorridorGeometryLibrary.computePositions(params);
             attr = combine(computedPositions, vertexFormat, ellipsoid);
             attr.attributes.position.values = PolygonPipeline.scaleToGeodeticHeight(attr.attributes.position.values, height, ellipsoid);
-
-            if (defined(corridorGeometry._offsetAttribute)) {
-                var applyOffsetValue = corridorGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-                var length = attr.attributes.position.values.length;
-                var applyOffset = new Uint8Array(length / 3);
-                arrayFill(applyOffset, applyOffsetValue);
-                attr.attributes.applyOffset = new GeometryAttribute({
-                    componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                    componentsPerAttribute : 1,
-                    values: applyOffset
-                });
-            }
         }
         var attributes = attr.attributes;
         var boundingSphere = BoundingSphere.fromVertices(attributes.position.values, undefined, 3);
@@ -1064,8 +1014,7 @@ define([
             attributes : attributes,
             indices : attr.indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : boundingSphere,
-            offsetAttribute : corridorGeometry._offsetAttribute
+            boundingSphere : boundingSphere
         });
     };
 
@@ -1098,22 +1047,7 @@ define([
          */
         rectangle : {
             get : function() {
-                if (!defined(this._rectangle)) {
-                    this._rectangle = computeRectangle(this._positions, this._ellipsoid, this._width, this._cornerType);
-                }
                 return this._rectangle;
-            }
-        },
-        /**
-         * For remapping texture coordinates when rendering CorridorGeometries as GroundPrimitives.
-         *
-         * Corridors don't support stRotation,
-         * so just return the corners of the original system.
-         * @private
-         */
-        textureCoordinateRotationPoints : {
-            get : function() {
-                return [0, 0, 0, 1, 1, 0];
             }
         }
     });

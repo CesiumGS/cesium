@@ -19,7 +19,6 @@ defineSuite([
                 name : knockout.observable('name'),
                 tooltip : knockout.observable('tooltip'),
                 iconUrl : knockout.observable('iconUrl'),
-                category: 'mycategory',
                 creationFunction : createCommand(spyCreationFunction)
             };
 
@@ -27,7 +26,6 @@ defineSuite([
             expect(viewModel.name).toBe(options.name());
             expect(viewModel.tooltip).toBe(options.tooltip());
             expect(viewModel.iconUrl).toBe(options.iconUrl());
-            expect(viewModel.category).toBe(options.category);
 
             expect(viewModel.creationCommand).toBeDefined();
             viewModel.creationCommand();

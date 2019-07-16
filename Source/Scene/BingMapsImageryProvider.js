@@ -1,42 +1,40 @@
 define([
         '../Core/BingMapsApi',
-        '../Core/buildModuleUrl',
-        '../Core/Check',
+        '../Core/Cartesian2',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/loadJsonp',
         '../Core/Math',
         '../Core/Rectangle',
-        '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/TileProviderError',
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './BingMapsStyle',
-        './DiscardEmptyTileImagePolicy',
+        './DiscardMissingTileImagePolicy',
         './ImageryProvider'
     ], function(
         BingMapsApi,
-        buildModuleUrl,
-        Check,
+        Cartesian2,
         Credit,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         Event,
+        loadJsonp,
         CesiumMath,
         Rectangle,
-        Resource,
         RuntimeError,
         TileProviderError,
         WebMercatorTilingScheme,
         when,
         BingMapsStyle,
-        DiscardEmptyTilePolicy,
+        DiscardMissingTileImagePolicy,
         ImageryProvider) {
     'use strict';
 
@@ -47,21 +45,34 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {Resource|String} options.url The url of the Bing Maps server hosting the imagery.
+     * @param {String} options.url The url of the Bing Maps server hosting the imagery.
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com/}.
-     *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
-     * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
+     *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used.
+     *        If {@link BingMapsApi.defaultKey} is undefined as well, a message is
+     *        written to the console reminding you that you must create and supply a Bing Maps
+     *        key as soon as possible.  Please do not deploy an application that uses
+     *        Bing Maps imagery without creating a separate key for your application.
+     * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
      *        By default, tiles are loaded using the same protocol as the page.
-     * @param {BingMapsStyle} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
+     * @param {String} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps
+     *        imagery to load.
      * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
      *        all cultures are supported. See {@link http://msdn.microsoft.com/en-us/library/hh441729.aspx}
      *        for information on the supported cultures.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
-     *        is invalid and should be discarded.  By default, a {@link DiscardEmptyTileImagePolicy}
-     *        will be used, with the expectation that the Bing Maps server will send a zero-length response for missing tiles.
-     *        To ensure that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this parameter.
+     *        is invalid and should be discarded.  If this value is not specified, a default
+     *        {@link DiscardMissingTileImagePolicy} is used which requests
+     *        tile 0,0 at the maximum tile level and checks pixels (0,0), (120,140), (130,160),
+     *        (200,50), and (200,200).  If all of these pixels are transparent, the discard check is
+     *        disabled and no tiles are discarded.  If any of them have a non-transparent color, any
+     *        tile that has the same values in these pixel locations is discarded.  The end result of
+     *        these defaults should be correct tile discarding for a standard Bing Maps server.  To ensure
+     *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
+     *        parameter.
+     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
+     *        expected to have a getURL function which returns the proxied URL, if needed.
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
@@ -93,19 +104,15 @@ define([
         //>>includeEnd('debug');
 
         this._key = BingMapsApi.getKey(options.key);
-        this._resource = Resource.createIfNeeded(options.url);
-        this._resource.appendForwardSlash();
+        this._keyErrorCredit = BingMapsApi.getErrorCredit(options.key);
+
+        this._url = options.url;
         this._tileProtocol = options.tileProtocol;
         this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
         this._culture = defaultValue(options.culture, '');
-
         this._tileDiscardPolicy = options.tileDiscardPolicy;
-        if (!defined(this._tileDiscardPolicy)) {
-            this._tileDiscardPolicy = new DiscardEmptyTilePolicy();
-        }
-
         this._proxy = options.proxy;
-        this._credit = new Credit('<a href="http://www.bing.com"><img src="' + BingMapsImageryProvider.logoUrl + '" title="Bing Imagery"/></a>');
+        this._credit = new Credit('Bing Imagery', BingMapsImageryProvider._logoData, 'http://www.bing.com');
 
         /**
          * The default {@link ImageryLayer#gamma} to use for imagery layers created for this provider.
@@ -134,43 +141,36 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
-        var tileProtocol = this._tileProtocol;
-
-        // For backward compatibility reasons, the tileProtocol may end with
-        // a `:`. Remove it.
-        if (defined(tileProtocol)) {
-            if (tileProtocol.length > 0 && tileProtocol[tileProtocol.length - 1] === ':') {
-                tileProtocol = tileProtocol.substr(0, tileProtocol.length - 1);
-            }
-        } else {
-            // use http if the document's protocol is http, otherwise use https
-            var documentProtocol = document.location.protocol;
-            tileProtocol = documentProtocol === 'http:' ? 'http' : 'https';
-        }
-
-        var metadataResource = this._resource.getDerivedResource({
-            url:'REST/v1/Imagery/Metadata/' + this._mapStyle,
-            queryParameters: {
-                incl: 'ImageryProviders',
-                key: this._key,
-                uriScheme: tileProtocol
-            }
-        });
+        var metadataUrl = this._url + '/REST/v1/Imagery/Metadata/' + this._mapStyle + '?incl=ImageryProviders&key=' + this._key;
         var that = this;
         var metadataError;
 
         function metadataSuccess(data) {
-            if (data.resourceSets.length !== 1) {
-                metadataFailure();
-                return;
-            }
             var resource = data.resourceSets[0].resources[0];
 
             that._tileWidth = resource.imageWidth;
             that._tileHeight = resource.imageHeight;
             that._maximumLevel = resource.zoomMax - 1;
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
-            that._imageUrlTemplate = resource.imageUrl;
+            that._imageUrlTemplate = resource.imageUrl.replace('{culture}', that._culture);
+
+            var tileProtocol = that._tileProtocol;
+            if (!defined(tileProtocol)) {
+                // use the document's protocol, unless it's not http or https
+                var documentProtocol = document.location.protocol;
+                tileProtocol = /^http/.test(documentProtocol) ? documentProtocol : 'http:';
+            }
+
+            that._imageUrlTemplate = that._imageUrlTemplate.replace(/^http:/, tileProtocol);
+
+            // Install the default tile discard policy if none has been supplied.
+            if (!defined(that._tileDiscardPolicy)) {
+                that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
+                    missingImageUrl : buildImageUrl(that, 0, 0, that._maximumLevel),
+                    pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
+                    disableCheckIfAllPixelsAreTransparent : true
+                });
+            }
 
             var attributionList = that._attributionList = resource.imageryProviders;
             if (!attributionList) {
@@ -180,14 +180,8 @@ define([
             for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
                 var attribution = attributionList[attributionIndex];
 
-                if (attribution.credit instanceof Credit) {
-                    // If attribution.credit has already been created
-                    // then we are using a cached value, which means
-                    // none of the remaining processing needs to be done.
-                    break;
-                }
-
                 attribution.credit = new Credit(attribution.attribution);
+
                 var coverageAreas = attribution.coverageAreas;
 
                 for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; areaIndex < areaLength; ++areaIndex) {
@@ -207,24 +201,20 @@ define([
         }
 
         function metadataFailure(e) {
-            var message = 'An error occurred while accessing ' + metadataResource.url + '.';
+            var message = 'An error occurred while accessing ' + metadataUrl + '.';
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
             that._readyPromise.reject(new RuntimeError(message));
         }
 
-        var cacheKey = metadataResource.url;
         function requestMetadata() {
-            var promise = metadataResource.fetchJsonp('jsonp');
-            BingMapsImageryProvider._metadataCache[cacheKey] = promise;
-            promise.then(metadataSuccess).otherwise(metadataFailure);
+            var metadata = loadJsonp(metadataUrl, {
+                callbackParameterName : 'jsonp',
+                proxy : that._proxy
+            });
+            when(metadata, metadataSuccess, metadataFailure);
         }
 
-        var promise = BingMapsImageryProvider._metadataCache[cacheKey];
-        if (defined(promise)) {
-            promise.then(metadataSuccess).otherwise(metadataFailure);
-        } else {
-            requestMetadata();
-        }
+        requestMetadata();
     }
 
     defineProperties(BingMapsImageryProvider.prototype, {
@@ -236,7 +226,7 @@ define([
          */
         url : {
             get : function() {
-                return this._resource.url;
+                return this._url;
             }
         },
 
@@ -248,9 +238,10 @@ define([
          */
         proxy : {
             get : function() {
-                return this._resource.proxy;
+                return this._proxy;
             }
         },
+
 
         /**
          * Gets the Bing Maps key.
@@ -327,6 +318,7 @@ define([
                 return this._tileHeight;
             }
         },
+
 
         /**
          * Gets the maximum level-of-detail that can be requested.  This function should
@@ -515,6 +507,10 @@ define([
         var rectangle = this._tilingScheme.tileXYToRectangle(x, y, level, rectangleScratch);
         var result = getRectangleAttribution(this._attributionList, level, rectangle);
 
+        if (defined(this._keyErrorCredit)) {
+            result.push(this._keyErrorCredit);
+        }
+
         return result;
     };
 
@@ -540,21 +536,8 @@ define([
         }
         //>>includeEnd('debug');
 
-        var promise = ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
-
-        if (defined(promise)) {
-            return promise.otherwise(function(error) {
-                // One cause of an error here is that the image we tried to load was zero-length.
-                // This isn't actually a problem, since it indicates that there is no tile.
-                // So, in that case we return the EMPTY_IMAGE sentinel value for later discarding.
-                if (defined(error.blob) && error.blob.size === 0) {
-                    return DiscardEmptyTilePolicy.EMPTY_IMAGE;
-                }
-                return when.reject(error);
-            });
-        }
-
-        return undefined;
+        var url = buildImageUrl(this, x, y, level);
+        return ImageryProvider.loadImage(this, url, request);
     };
 
     /**
@@ -574,6 +557,8 @@ define([
     BingMapsImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
+
+    BingMapsImageryProvider._logoData = 'data:image/png;base64,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';
 
     /**
      * Converts a tiles (x, y, level) position into a quadkey used to request an image
@@ -637,51 +622,22 @@ define([
         };
     };
 
-    BingMapsImageryProvider._logoUrl = undefined;
-
-    defineProperties(BingMapsImageryProvider, {
-        /**
-         * Gets or sets the URL to the Bing logo for display in the credit.
-         * @memberof BingMapsImageryProvider
-         * @type {String}
-         */
-        logoUrl: {
-            get: function() {
-                if (!defined(BingMapsImageryProvider._logoUrl)) {
-                    BingMapsImageryProvider._logoUrl = buildModuleUrl('Assets/Images/bing_maps_credit.png');
-                }
-                return BingMapsImageryProvider._logoUrl;
-            },
-            set: function(value) {
-                //>>includeStart('debug', pragmas.debug);
-                Check.defined('value', value);
-                //>>includeEnd('debug');
-
-                BingMapsImageryProvider._logoUrl = value;
-            }
-        }
-    });
-
-    function buildImageResource(imageryProvider, x, y, level, request) {
+    function buildImageUrl(imageryProvider, x, y, level) {
         var imageUrl = imageryProvider._imageUrlTemplate;
+
+        var quadkey = BingMapsImageryProvider.tileXYToQuadKey(x, y, level);
+        imageUrl = imageUrl.replace('{quadkey}', quadkey);
 
         var subdomains = imageryProvider._imageUrlSubdomains;
         var subdomainIndex = (x + y + level) % subdomains.length;
+        imageUrl = imageUrl.replace('{subdomain}', subdomains[subdomainIndex]);
 
-        return imageryProvider._resource.getDerivedResource({
-            url: imageUrl,
-            request: request,
-            templateValues: {
-                quadkey: BingMapsImageryProvider.tileXYToQuadKey(x, y, level),
-                subdomain: subdomains[subdomainIndex],
-                culture: imageryProvider._culture
-            },
-            queryParameters: {
-                // this parameter tells the Bing servers to send a zero-length response
-                // instead of a placeholder image for missing tiles.
-                n: 'z'
-            }
-        });
+        var proxy = imageryProvider._proxy;
+        if (defined(proxy)) {
+            imageUrl = proxy.getURL(imageUrl);
+        }
+
+        return imageUrl;
     }
 
     var intersectionScratch = new Rectangle();
@@ -715,9 +671,6 @@ define([
 
         return result;
     }
-
-    // Exposed for testing
-    BingMapsImageryProvider._metadataCache = {};
 
     return BingMapsImageryProvider;
 });

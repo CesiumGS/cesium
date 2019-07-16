@@ -19,7 +19,6 @@ define([
      *
      * @alias ModelMaterial
      * @internalConstructor
-     * @class
      *
      * @see Model#getMaterial
      */
@@ -27,15 +26,14 @@ define([
         this._name = material.name;
         this._id = id;
         this._uniformMap = model._uniformMaps[id];
-
-        this._technique = undefined;
-        this._program = undefined;
-        this._values = undefined;
     }
 
     defineProperties(ModelMaterial.prototype, {
         /**
-         * The value of the <code>name</code> property of this material.
+         * The value of the <code>name</code> property of this material.  This is the
+         * name assigned by the artist when the asset is created.  This can be
+         * different than the name of the material property ({@link ModelMaterial#id}),
+         * which is internal to glTF.
          *
          * @memberof ModelMaterial.prototype
          *
@@ -49,7 +47,10 @@ define([
         },
 
         /**
-         * The index of the material.
+         * The name of the glTF JSON property for this material.  This is guaranteed
+         * to be unique among all materials.  It may not match the material's <code>
+         * name</code> property (@link ModelMaterial#name), which is assigned by
+         * the artist when the asset is created.
          *
          * @memberof ModelMaterial.prototype
          *
@@ -69,13 +70,13 @@ define([
      * number, Cartesian, or matrix.
      *
      * @param {String} name The name of the parameter.
-     * @param {*} [value] The value to assign to the parameter.
+     * @param {Object} [value] The value to assign to the parameter.
      *
      * @exception {DeveloperError} name must match a parameter name in the material's technique that is targetable and not optimized out.
      *
      * @example
      * material.setValue('diffuse', new Cesium.Cartesian4(1.0, 0.0, 0.0, 1.0));  // vec4
-     * material.setValue('shininess', 256.0); // scalar
+     * material.setValue('shininess', 256.0);                             // scalar
      */
     ModelMaterial.prototype.setValue = function(name, value) {
         //>>includeStart('debug', pragmas.debug);
@@ -84,8 +85,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var uniformName = 'u_' + name;
-        var v = this._uniformMap.values[uniformName];
+        var v = this._uniformMap.values[name];
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(v)) {
@@ -102,7 +102,7 @@ define([
      * number, Cartesian, or matrix.
      *
      * @param {String} name The name of the parameter.
-     * @returns {*} The value of the parameter or <code>undefined</code> if the parameter does not exist.
+     * @returns {Object} The value of the parameter or <code>undefined</code> if the parameter does not exist.
      */
     ModelMaterial.prototype.getValue = function(name) {
         //>>includeStart('debug', pragmas.debug);
@@ -111,8 +111,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var uniformName = 'u_' + name;
-        var v = this._uniformMap.values[uniformName];
+        var v = this._uniformMap.values[name];
 
         if (!defined(v)) {
             return undefined;

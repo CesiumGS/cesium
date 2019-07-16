@@ -6,14 +6,13 @@ defineSuite([
         'Core/Cartesian3',
         'Core/CesiumTerrainProvider',
         'Core/Color',
-        'Core/createGuid',
         'Core/DistanceDisplayCondition',
+        'Core/loadImage',
         'Core/Math',
         'Core/NearFarScalar',
         'Core/OrthographicOffCenterFrustum',
         'Core/PerspectiveFrustum',
         'Core/Rectangle',
-        'Core/Resource',
         'Scene/Billboard',
         'Scene/BlendOption',
         'Scene/HeightReference',
@@ -32,14 +31,13 @@ defineSuite([
         Cartesian3,
         CesiumTerrainProvider,
         Color,
-        createGuid,
         DistanceDisplayCondition,
+        loadImage,
         CesiumMath,
         NearFarScalar,
         OrthographicOffCenterFrustum,
         PerspectiveFrustum,
         Rectangle,
-        Resource,
         Billboard,
         BlendOption,
         HeightReference,
@@ -68,19 +66,18 @@ defineSuite([
         camera = scene.camera;
 
         return when.join(
-            Resource.fetchImage('./Data/Images/Green2x2.png').then(function(result) {
+            loadImage('./Data/Images/Green2x2.png').then(function(result) {
                 greenImage = result;
             }),
-            Resource.fetchImage('./Data/Images/Blue2x2.png').then(function(result) {
+            loadImage('./Data/Images/Blue2x2.png').then(function(result) {
                 blueImage = result;
             }),
-            Resource.fetchImage('./Data/Images/White2x2.png').then(function(result) {
+            loadImage('./Data/Images/White2x2.png').then(function(result) {
                 whiteImage = result;
             }),
-            Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(result) {
+            loadImage('./Data/Images/Blue10x10.png').then(function(result) {
                 largeBlueImage = result;
-            })
-        );
+            }));
     });
 
     afterAll(function() {
@@ -116,23 +113,23 @@ defineSuite([
         expect(b.horizontalOrigin).toEqual(HorizontalOrigin.CENTER);
         expect(b.verticalOrigin).toEqual(VerticalOrigin.CENTER);
         expect(b.scale).toEqual(1.0);
-        expect(b.image).toBeUndefined();
+        expect(b.image).not.toBeDefined();
         expect(b.color.red).toEqual(1.0);
         expect(b.color.green).toEqual(1.0);
         expect(b.color.blue).toEqual(1.0);
         expect(b.color.alpha).toEqual(1.0);
         expect(b.rotation).toEqual(0.0);
         expect(b.alignedAxis).toEqual(Cartesian3.ZERO);
-        expect(b.scaleByDistance).toBeUndefined();
-        expect(b.translucencyByDistance).toBeUndefined();
-        expect(b.pixelOffsetScaleByDistance).toBeUndefined();
-        expect(b.width).toBeUndefined();
-        expect(b.height).toBeUndefined();
-        expect(b.id).toBeUndefined();
+        expect(b.scaleByDistance).not.toBeDefined();
+        expect(b.translucencyByDistance).not.toBeDefined();
+        expect(b.pixelOffsetScaleByDistance).not.toBeDefined();
+        expect(b.width).not.toBeDefined();
+        expect(b.height).not.toBeDefined();
+        expect(b.id).not.toBeDefined();
         expect(b.heightReference).toEqual(HeightReference.NONE);
         expect(b.sizeInMeters).toEqual(false);
-        expect(b.distanceDisplayCondition).toBeUndefined();
-        expect(b.disableDepthTestDistance).toBeUndefined();
+        expect(b.distanceDisplayCondition).not.toBeDefined();
+        expect(b.disableDepthTestDistance).toEqual(0.0);
     });
 
     it('can add and remove before first update.', function() {
@@ -177,7 +174,7 @@ defineSuite([
         expect(b.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(b.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
         expect(b.scale).toEqual(2.0);
-        expect(b.image).toEqual(b._imageId);
+        expect(b.image).toEqual(greenImage.src);
         expect(b.color.red).toEqual(1.0);
         expect(b.color.green).toEqual(2.0);
         expect(b.color.blue).toEqual(3.0);
@@ -224,7 +221,7 @@ defineSuite([
         expect(b.horizontalOrigin).toEqual(HorizontalOrigin.LEFT);
         expect(b.verticalOrigin).toEqual(VerticalOrigin.BOTTOM);
         expect(b.scale).toEqual(2.0);
-        expect(b.image).toEqual(b._imageId);
+        expect(b.image).toEqual(greenImage.src);
         expect(b.color.red).toEqual(1.0);
         expect(b.color.green).toEqual(2.0);
         expect(b.color.blue).toEqual(3.0);
@@ -290,7 +287,7 @@ defineSuite([
             scaleByDistance : new NearFarScalar(1.0, 3.0, 1.0e6, 0.0)
         });
         b.scaleByDistance = undefined;
-        expect(b.scaleByDistance).toBeUndefined();
+        expect(b.scaleByDistance).not.toBeDefined();
     });
 
     it('disables billboard translucencyByDistance', function() {
@@ -298,7 +295,7 @@ defineSuite([
             translucencyByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
         });
         b.translucencyByDistance = undefined;
-        expect(b.translucencyByDistance).toBeUndefined();
+        expect(b.translucencyByDistance).not.toBeDefined();
     });
 
     it('disables billboard pixelOffsetScaleByDistance', function() {
@@ -306,7 +303,7 @@ defineSuite([
             pixelOffsetScaleByDistance : new NearFarScalar(1.0, 1.0, 1.0e6, 0.0)
         });
         b.pixelOffsetScaleByDistance = undefined;
-        expect(b.pixelOffsetScaleByDistance).toBeUndefined();
+        expect(b.pixelOffsetScaleByDistance).not.toBeDefined();
     });
 
     it('renders billboard with scaleByDistance', function() {
@@ -623,7 +620,7 @@ defineSuite([
     });
 
     it('sets and gets a texture atlas', function() {
-        expect(billboards.textureAtlas).toBeUndefined();
+        expect(billboards.textureAtlas).not.toBeDefined();
 
         var atlas = new TextureAtlas({ context : scene.context });
         billboards.textureAtlas = atlas;
@@ -825,7 +822,7 @@ defineSuite([
 
         expect(scene).toRender([0, 255, 0, 255]);
 
-        b.setImage(createGuid(), largeBlueImage);
+        b.setImage(largeBlueImage.src, largeBlueImage);
         expect(scene).toRender([0, 0, 255, 255]);
     });
 
@@ -837,10 +834,8 @@ defineSuite([
 
         expect(scene).toRender([0, 255, 0, 255]);
 
-        var guid = createGuid();
-
-        billboards.textureAtlas.addImage(guid, largeBlueImage);
-        b.setImageSubRegion(guid, new BoundingRectangle(5.0, 5.0, 1.0, 1.0));
+        billboards.textureAtlas.addImage(largeBlueImage.src, largeBlueImage);
+        b.setImageSubRegion(largeBlueImage.src, new BoundingRectangle(5.0, 5.0, 1.0, 1.0));
         expect(scene).toRender([0, 0, 255, 255]);
     });
 
@@ -1406,7 +1401,7 @@ defineSuite([
         var expected = BoundingSphere.fromPoints(projectedPositions);
         expected.center = new Cartesian3(0.0, expected.center.x, expected.center.y);
         expect(actual.center).toEqualEpsilon(expected.center, CesiumMath.EPSILON8);
-        expect(actual.radius).toBeGreaterThanOrEqualTo(expected.radius);
+        expect(actual.radius).toBeGreaterThan(expected.radius);
     });
 
     it('computes bounding sphere in 2D', function() {
@@ -1795,24 +1790,6 @@ defineSuite([
         return deferred.promise;
     });
 
-    it('can add a billboard without a globe', function() {
-        scene.globe = undefined;
-
-        var billboardsWithoutGlobe = new BillboardCollection({
-            scene : scene
-        });
-
-        var position = Cartesian3.fromDegrees(-73.0, 40.0);
-        var b = billboardsWithoutGlobe.add({
-            position : position
-        });
-
-        scene.renderForSpecs();
-
-        expect(b.position).toEqual(position);
-        expect(b._actualClampedPosition).toBeUndefined();
-    });
-
     describe('height referenced billboards', function() {
         var billboardsWithHeight;
         beforeEach(function() {
@@ -1869,7 +1846,7 @@ defineSuite([
             scene.globe.removedCallback = false;
             b.heightReference = HeightReference.NONE;
             expect(scene.globe.removedCallback).toEqual(true);
-            expect(scene.globe.callback).toBeUndefined();
+            expect(scene.globe.callback).not.toBeDefined();
         });
 
         it('changing the position updates the callback', function() {
@@ -1935,29 +1912,6 @@ defineSuite([
             var b = billboards.add({
                 position : Cartesian3.fromDegrees(-72.0, 40.0)
             });
-
-            expect(function() {
-                b.heightReference = HeightReference.CLAMP_TO_GROUND;
-            }).toThrowDeveloperError();
-        });
-
-        it('height reference without a globe rejects', function() {
-            scene.globe = undefined;
-
-            expect(function() {
-                return billboardsWithHeight.add({
-                    heightReference : HeightReference.CLAMP_TO_GROUND,
-                    position : Cartesian3.fromDegrees(-72.0, 40.0)
-                });
-            }).toThrowDeveloperError();
-        });
-
-        it('changing height reference without a globe throws DeveloperError', function() {
-            var b = billboardsWithHeight.add({
-                position : Cartesian3.fromDegrees(-72.0, 40.0)
-            });
-
-            scene.globe = undefined;
 
             expect(function() {
                 b.heightReference = HeightReference.CLAMP_TO_GROUND;

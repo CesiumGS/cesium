@@ -14,7 +14,6 @@ define([
         '../Renderer/loadCubeMap',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../Shaders/SkyBoxFS',
         '../Shaders/SkyBoxVS',
@@ -36,7 +35,6 @@ define([
         loadCubeMap,
         RenderState,
         ShaderProgram,
-        ShaderSource,
         VertexArray,
         SkyBoxFS,
         SkyBoxVS,
@@ -100,9 +98,6 @@ define([
             owner : this
         });
         this._cubeMap = undefined;
-
-        this._attributeLocations = undefined;
-        this._useHdr = undefined;
     }
 
     /**
@@ -116,7 +111,7 @@ define([
      * @exception {DeveloperError} this.sources is required and must have positiveX, negativeX, positiveY, negativeY, positiveZ, and negativeZ properties.
      * @exception {DeveloperError} this.sources properties must all be the same type.
      */
-    SkyBox.prototype.update = function(frameState, useHdr) {
+    SkyBox.prototype.update = function(frameState) {
         var that = this;
 
         if (!this.show) {
@@ -186,7 +181,7 @@ define([
                 dimensions : new Cartesian3(2.0, 2.0, 2.0),
                 vertexFormat : VertexFormat.POSITION_ONLY
             }));
-            var attributeLocations = this._attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
+            var attributeLocations = GeometryPipeline.createAttributeLocations(geometry);
 
             command.vertexArray = VertexArray.fromGeometry({
                 context : context,
@@ -195,23 +190,16 @@ define([
                 bufferUsage : BufferUsage.STATIC_DRAW
             });
 
-            command.renderState = RenderState.fromCache({
-                blending : BlendingState.ALPHA_BLEND
-            });
-        }
-
-        if (!defined(command.shaderProgram) || this._useHdr !== useHdr) {
-            var fs = new ShaderSource({
-                defines : [useHdr ? 'HDR' : ''],
-                sources : [SkyBoxFS]
-            });
             command.shaderProgram = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : SkyBoxVS,
-                fragmentShaderSource : fs,
-                attributeLocations : this._attributeLocations
+                fragmentShaderSource : SkyBoxFS,
+                attributeLocations : attributeLocations
             });
-            this._useHdr = useHdr;
+
+            command.renderState = RenderState.fromCache({
+                blending : BlendingState.ALPHA_BLEND
+            });
         }
 
         if (!defined(this._cubeMap)) {
@@ -242,6 +230,8 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

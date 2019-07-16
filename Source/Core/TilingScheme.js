@@ -44,6 +44,7 @@ define([
             get : DeveloperError.throwInstantiationError
         },
 
+
         /**
          * Gets the map projection used by the tiling scheme.
          * @memberof TilingScheme.prototype

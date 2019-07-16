@@ -30,7 +30,7 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ll.b3dm"
+          "url": "ll.b3dm"
         }
       },
       {
@@ -46,7 +46,7 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "lr.b3dm"
+          "url": "lr.b3dm"
         }
       },
       {
@@ -62,7 +62,7 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ur.b3dm"
+          "url": "ur.b3dm"
         }
       },
       {
@@ -78,7 +78,7 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "ul.b3dm"
+          "url": "ul.b3dm"
         }
       },
       {
@@ -118,7 +118,7 @@
         },
         "geometricError": 0,
         "content": {
-          "uri": "points.pnts"
+          "url": "points.pnts"
         }
       }
     ]

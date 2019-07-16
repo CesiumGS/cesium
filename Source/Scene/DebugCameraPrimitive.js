@@ -79,9 +79,9 @@ define([
         this.show = defaultValue(options.show, true);
 
         /**
-         * User-defined value returned when the primitive is picked.
+         * User-defined object returned when the primitive is picked.
          *
-         * @type {*}
+         * @type {Object}
          * @default undefined
          *
          * @see Scene#pick
@@ -245,6 +245,8 @@ define([
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
      * </p>
+     *
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

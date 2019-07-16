@@ -3,8 +3,8 @@ defineSuite([
         'Core/DefaultProxy',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
+        'Core/loadImage',
         'Core/Rectangle',
-        'Core/Resource',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
@@ -16,8 +16,8 @@ defineSuite([
         DefaultProxy,
         Ellipsoid,
         GeographicTilingScheme,
+        loadImage,
         Rectangle,
-        Resource,
         Imagery,
         ImageryLayer,
         ImageryProvider,
@@ -27,7 +27,7 @@ defineSuite([
     'use strict';
 
     afterEach(function() {
-        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
+        loadImage.createImage = loadImage.defaultCreateImage;
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -37,21 +37,6 @@ defineSuite([
     it('resolves readyPromise', function() {
         var provider = new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
-        });
-
-        return provider.readyPromise.then(function(result) {
-            expect(result).toBe(true);
-            expect(provider.ready).toBe(true);
-        });
-    });
-
-    it('resolves readyPromise with Resource', function() {
-        var resource = new Resource({
-            url : 'Data/Images/Red16x16.png'
-        });
-
-        var provider = new SingleTileImageryProvider({
-            url : resource
         });
 
         return provider.readyPromise.then(function(result) {
@@ -135,22 +120,22 @@ defineSuite([
     it('requests the single image immediately upon construction', function() {
         var imageUrl = 'Data/Images/Red16x16.png';
 
-        spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+        spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
             expect(url).toEqual(imageUrl);
-            Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+            loadImage.defaultCreateImage(url, crossOrigin, deferred);
         });
 
         var provider = new SingleTileImageryProvider({
             url : imageUrl
         });
 
-        expect(Resource._Implementations.createImage).toHaveBeenCalled();
+        expect(loadImage.createImage).toHaveBeenCalled();
 
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
             return when(provider.requestImage(0, 0, 0), function(image) {
-                expect(image).toBeImageOrImageBitmap();
+                expect(image).toBeInstanceOf(Image);
             });
         });
     });
@@ -178,6 +163,26 @@ defineSuite([
         });
     });
 
+    it('routes requests through a proxy if one is specified', function() {
+        var imageUrl = 'Data/Images/Red16x16.png';
+        var proxy = new DefaultProxy('/proxy/');
+
+        spyOn(loadImage, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+            expect(url.indexOf(proxy.getURL('Data/Images/Red16x16.png'))).toEqual(0);
+            loadImage.defaultCreateImage(url, crossOrigin, deferred);
+        });
+
+        var provider = new SingleTileImageryProvider({
+            url : imageUrl,
+            proxy : proxy
+        });
+
+        expect(loadImage.createImage).toHaveBeenCalled();
+
+        expect(provider).toBeDefined();
+        expect(provider.proxy).toEqual(proxy);
+    });
+
     it('raises error event when image cannot be loaded', function() {
         var provider = new SingleTileImageryProvider({
             url : 'made/up/url'
@@ -194,10 +199,10 @@ defineSuite([
             }
         });
 
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        loadImage.createImage = function(url, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                loadImage.defaultCreateImage('Data/Images/Red16x16.png', crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
@@ -216,7 +221,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeImageOrImageBitmap();
+                expect(imagery.image).toBeInstanceOf(Image);
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

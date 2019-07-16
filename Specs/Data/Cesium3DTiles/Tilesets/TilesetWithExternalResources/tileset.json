@@ -32,7 +32,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "uri": "tileset2/tileset2.json"
+          "url": "tileset2/tileset2.json"
         }
       },
       {
@@ -49,7 +49,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "uri": "external.b3dm"
+          "url": "external.b3dm"
         },
         "transform": [
           0.9686325809759725,
@@ -84,7 +84,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "uri": "external.i3dm"
+          "url": "external.i3dm"
         },
         "transform": [
           0.9686335987925251,
@@ -119,7 +119,7 @@
         "geometricError": 70,
         "refine": "ADD",
         "content": {
-          "uri": "embed.i3dm"
+          "url": "embed.i3dm"
         },
         "transform": [
           0.9686346165928273,

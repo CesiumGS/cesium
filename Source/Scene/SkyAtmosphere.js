@@ -51,7 +51,7 @@ define([
      * {@link http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html|Accurate Atmospheric Scattering}
      * in GPU Gems 2.
      * <p>
-     * This is only supported in 3D. Atmosphere is faded out when morphing to 2D or Columbus view.
+     * This is only supported in 3D.  atmosphere is faded out when morphing to 2D or Columbus view.
      * </p>
      *
      * @alias SkyAtmosphere
@@ -61,8 +61,6 @@ define([
      *
      * @example
      * scene.skyAtmosphere = new Cesium.SkyAtmosphere();
-     *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sky%20Atmosphere.html|Sky atmosphere demo in Sandcastle}
      *
      * @see Scene.skyAtmosphere
      */
@@ -201,8 +199,7 @@ define([
                     enabled : true,
                     face : CullFace.FRONT
                 },
-                blending : BlendingState.ALPHA_BLEND,
-                depthMask : false
+                blending : BlendingState.ALPHA_BLEND
             });
 
             var vs = new ShaderSource({
@@ -300,6 +297,8 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

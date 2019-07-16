@@ -50,8 +50,6 @@ define([
      * @param {Number} [options.minimumHeight=0.0] The minimum height of the region.
      * @param {Number} [options.maximumHeight=0.0] The maximum height of the region.
      * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84] The ellipsoid.
-     * @param {Boolean} [options.computeBoundingVolumes=true] True to compute the {@link TileBoundingRegion#boundingVolume} and
-     *                  {@link TileBoundingVolume#boundingSphere}. If false, these properties will be undefined.
      *
      * @private
      */
@@ -124,12 +122,10 @@ define([
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         computeBox(this, options.rectangle, ellipsoid);
 
-        if (defaultValue(options.computeBoundingVolumes, true)) {
-            // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
-            this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
+        // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
+        this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
 
-            this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
-        }
+        this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
     }
 
     defineProperties(TileBoundingRegion.prototype, {
@@ -304,24 +300,16 @@ define([
         }
 
         var cameraHeight;
-        var minimumHeight;
-        var maximumHeight;
         if (frameState.mode === SceneMode.SCENE3D) {
             cameraHeight = cameraCartographicPosition.height;
-            minimumHeight = this.minimumHeight;
-            maximumHeight = this.maximumHeight;
         } else {
             cameraHeight = cameraCartesianPosition.x;
-            minimumHeight = 0.0;
-            maximumHeight = 0.0;
         }
 
-        if (cameraHeight > maximumHeight) {
-            var distanceAboveTop = cameraHeight - maximumHeight;
-            result += distanceAboveTop * distanceAboveTop;
-        } else if (cameraHeight < minimumHeight) {
-            var distanceBelowBottom = minimumHeight - cameraHeight;
-            result += distanceBelowBottom * distanceBelowBottom;
+        var maximumHeight = frameState.mode === SceneMode.SCENE3D ? this.maximumHeight : 0.0;
+        var distanceFromTop = cameraHeight - maximumHeight;
+        if (distanceFromTop > 0.0) {
+            result += distanceFromTop * distanceFromTop;
         }
 
         return Math.sqrt(result);
@@ -364,7 +352,6 @@ define([
         });
         var instance = new GeometryInstance({
             geometry : geometry,
-            id : 'outline',
             modelMatrix : modelMatrix,
             attributes : {
                 color : ColorGeometryInstanceAttribute.fromColor(color)

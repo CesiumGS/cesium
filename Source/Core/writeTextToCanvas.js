@@ -32,7 +32,6 @@ define([
      * @returns {Canvas} A new canvas with the given text drawn into it.  The dimensions object
      *                   from measureText will also be added to the returned canvas. If text is
      *                   blank, returns undefined.
-     * @exports writeTextToCanvas
      */
     function writeTextToCanvas(text, options) {
         //>>includeStart('debug', pragmas.debug);
@@ -103,9 +102,8 @@ define([
         //While the height of the letter is correct, we need to adjust
         //where we start drawing it so that letters like j and y properly dip
         //below the line.
-
         var height = dimensions.height + doublePadding;
-        var baseline = height - dimensions.ascent + padding;
+        var baseline = height - dimensions.ascent + doublePadding;
         var y = height - baseline + doublePadding;
 
         canvas.width = width;

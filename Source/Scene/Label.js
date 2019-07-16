@@ -14,7 +14,6 @@ define([
         './HeightReference',
         './HorizontalOrigin',
         './LabelStyle',
-        './SDFSettings',
         './VerticalOrigin'
     ], function(
         BoundingRectangle,
@@ -32,7 +31,6 @@ define([
         HeightReference,
         HorizontalOrigin,
         LabelStyle,
-        SDFSettings,
         VerticalOrigin) {
     'use strict';
 
@@ -59,32 +57,12 @@ define([
         label._repositionAllGlyphs = true;
     }
 
-    function getCSSValue(element, property) {
-        return document.defaultView.getComputedStyle(element, null).getPropertyValue(property);
-    }
-
-    function parseFont(label) {
-        var div = document.createElement('div');
-        div.style.position = 'absolute';
-        div.style.opacity = 0;
-        div.style.font = label._font;
-        document.body.appendChild(div);
-
-        label._fontFamily = getCSSValue(div,'font-family');
-        label._fontSize = getCSSValue(div,'font-size').replace('px', '');
-        label._fontStyle = getCSSValue(div,'font-style');
-        label._fontWeight = getCSSValue(div,'font-weight');
-
-        document.body.removeChild(div);
-    }
-
     /**
      * A Label draws viewport-aligned text positioned in the 3D scene.  This constructor
      * should not be used directly, instead create labels by calling {@link LabelCollection#add}.
      *
      * @alias Label
      * @internalConstructor
-     * @class
      *
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
      * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
@@ -93,7 +71,7 @@ define([
      * @see LabelCollection
      * @see LabelCollection#add
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     function Label(options, labelCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -164,12 +142,11 @@ define([
         this._scaleByDistance = scaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._distanceDisplayCondition = distanceDisplayCondition;
-        this._disableDepthTestDistance = options.disableDepthTestDistance;
+        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
         this._backgroundBillboard = undefined;
-        this._batchIndex = undefined; // Used only by Vector3DTilePoints and BillboardCollection
 
         this._rebindAllGlyphs = true;
         this._repositionAllGlyphs = true;
@@ -181,10 +158,6 @@ define([
         this._clusterShow = true;
 
         this.text = defaultValue(options.text, '');
-
-        this._relativeSize = 1.0;
-
-        parseFont(this);
 
         this._updateClamping();
     }
@@ -347,7 +320,6 @@ define([
                 if (this._font !== value) {
                     this._font = value;
                     rebindAllGlyphs(this);
-                    parseFont(this);
                 }
             }
         },
@@ -904,30 +876,16 @@ define([
                     for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
-                            glyph.billboard.scale = value * this._relativeSize;
+                            glyph.billboard.scale = value;
                         }
                     }
                     var backgroundBillboard = this._backgroundBillboard;
                     if (defined(backgroundBillboard)) {
-                        backgroundBillboard.scale = value * this._relativeSize;
+                        backgroundBillboard.scale = value;
                     }
 
                     repositionAllGlyphs(this);
                 }
-            }
-        },
-
-        /**
-         * Gets the total scale of the label, which is the label's scale multiplied by the computed relative size
-         * of the desired font compared to the generated glyph size.
-         * </div>
-         * @memberof Label.prototype
-         * @type {Number}
-         * @default 1.0
-         */
-        totalScale: {
-            get : function() {
-                return this._scale * this._relativeSize;
             }
         },
 
@@ -970,6 +928,7 @@ define([
          * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
          * @memberof Label.prototype
          * @type {Number}
+         * @default 0.0
          */
         disableDepthTestDistance : {
             get : function() {
@@ -978,7 +937,7 @@ define([
             set : function(value) {
                 if (this._disableDepthTestDistance !== value) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (defined(value) && value < 0.0) {
+                    if (!defined(value) || value < 0.0) {
                         throw new DeveloperError('disableDepthTestDistance must be greater than 0.0.');
                     }
                     //>>includeEnd('debug');
@@ -1000,9 +959,9 @@ define([
         },
 
         /**
-         * Gets or sets the user-defined value returned when the label is picked.
+         * Gets or sets the user-defined object returned when the label is picked.
          * @memberof Label.prototype
-         * @type {*}
+         * @type {Object}
          */
         id : {
             get : function() {
@@ -1024,18 +983,6 @@ define([
                         backgroundBillboard.id = value;
                     }
                 }
-            }
-        },
-
-        /**
-         * @private
-         */
-        pickId : {
-            get : function() {
-                if (this._glyphs.length === 0 || !defined(this._glyphs[0].billboard)) {
-                    return undefined;
-                }
-                return this._glyphs[0].billboard.pickId;
             }
         },
 
@@ -1153,7 +1100,7 @@ define([
         var y = 0;
         var width = 0;
         var height = 0;
-        var scale = label.totalScale;
+        var scale = label.scale;
         var resolutionScale = label._labelCollection._resolutionScale;
 
         var backgroundBillboard = label._backgroundBillboard;
@@ -1184,20 +1131,13 @@ define([
 
                 var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
                 var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
-                var glyphWidth = glyph.dimensions.width * scale;
-                var glyphHeight = glyph.dimensions.height * scale;
+                var glyphWidth = billboard.width * scale;
+                var glyphHeight = billboard.height * scale;
 
                 if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
                     glyphY -= glyphHeight;
                 } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
                     glyphY -= glyphHeight * 0.5;
-                }
-
-                if (label._verticalOrigin === VerticalOrigin.TOP) {
-                    glyphY += SDFSettings.PADDING * scale;
-                }
-                else if (label._verticalOrigin === VerticalOrigin.BOTTOM || label._verticalOrigin === VerticalOrigin.BASELINE) {
-                    glyphY -= SDFSettings.PADDING * scale;
                 }
 
                 x = Math.min(x, glyphX);
@@ -1371,9 +1311,9 @@ define([
         }
     }
 
-    //To add another language, simply add its Unicode block range(s) to the below regex.
+    //To add another language, simply add it's Unicode block range(s) to the below regex.
     var hebrew = '\u05D0-\u05EA';
-    var arabic = '\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF';
+    var arabic = '\u0600-\u06FF\u0750–\u077F\u08A0–\u08FF';
     var rtlChars = new RegExp('[' + hebrew + arabic + ']');
 
     /**
@@ -1387,7 +1327,6 @@ define([
         var result = '';
         for (var i = 0; i < texts.length; i++) {
             var text = texts[i];
-            // first character of the line is a RTL character, so need to manage different cases
             var rtlDir = rtlChars.test(text.charAt(0));
             var parsedText = convertTextToTypes(text, rtlChars);
 
@@ -1395,10 +1334,10 @@ define([
             var line = '';
             for (var wordIndex = 0; wordIndex < parsedText.length; ++wordIndex) {
                 var subText = parsedText[wordIndex];
-                var reverse = subText.Type === textTypes.BRACKETS ? reverseBrackets(subText.Word) : reverseWord(subText.Word);
+                var reverse = subText.Type === textTypes.BRACKETS ? reverseBrackets(subText.Word) : subText.Word;
                 if (rtlDir) {
                     if (subText.Type === textTypes.RTL) {
-                        line = reverse + line;
+                        line = reverseWord(subText.Word) + line;
                         splicePointer = 0;
                     }
                     else if (subText.Type === textTypes.LTR) {
@@ -1406,18 +1345,14 @@ define([
                         splicePointer += subText.Word.length;
                     }
                     else if (subText.Type === textTypes.WEAK || subText.Type === textTypes.BRACKETS) {
-                        // current word is weak, last one was bracket
                         if (subText.Type === textTypes.WEAK && parsedText[wordIndex - 1].Type === textTypes.BRACKETS) {
-                            line = reverse + line;
+                            line = reverseWord(subText.Word) + line;
                         }
-                        // current word is weak or bracket, last one was rtl
                         else if (parsedText[wordIndex - 1].Type === textTypes.RTL) {
                             line = reverse + line;
                             splicePointer = 0;
                         }
-                        // current word is weak or bracket, there is at least one more word
                         else if (parsedText.length > wordIndex + 1) {
-                            // next word is rtl
                             if (parsedText[wordIndex + 1].Type === textTypes.RTL) {
                                 line = reverse + line;
                                 splicePointer = 0;
@@ -1427,30 +1362,22 @@ define([
                                 splicePointer += subText.Word.length;
                             }
                         }
-                        // current word is weak or bracket, and it the last in this line
                         else {
                             line = spliceWord(line, 0, reverse);
                         }
                     }
                 }
-                // ltr line, rtl word
                 else if (subText.Type === textTypes.RTL) {
-                    line = spliceWord(line, splicePointer, reverse);
+                    line = spliceWord(line, splicePointer, reverseWord(subText.Word));
                 }
-                // ltr line, ltr word
                 else if (subText.Type === textTypes.LTR) {
                     line += subText.Word;
                     splicePointer = line.length;
                 }
-                // ltr line, weak or bracket word
                 else if (subText.Type === textTypes.WEAK || subText.Type === textTypes.BRACKETS) {
-                    // not first word in line
                     if (wordIndex > 0) {
-                        // last word was rtl
                         if (parsedText[wordIndex - 1].Type === textTypes.RTL) {
-                            // there is at least one more word
                             if (parsedText.length > wordIndex + 1) {
-                                // next word is rtl
                                 if (parsedText[wordIndex + 1].Type === textTypes.RTL) {
                                     line = spliceWord(line, splicePointer, reverse);
                                 }

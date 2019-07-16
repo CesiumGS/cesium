@@ -85,16 +85,5 @@ define([
         }
     });
 
-    Sampler.equals = function(left, right) {
-        return (left === right) ||
-               ((defined(left)) &&
-                (defined(right)) &&
-                (left._wrapS === right._wrapS) &&
-                (left._wrapT === right._wrapT) &&
-                (left._minificationFilter === right._minificationFilter) &&
-                (left._magnificationFilter === right._magnificationFilter) &&
-                (left._maximumAnisotropy === right._maximumAnisotropy));
-    };
-
     return Sampler;
 });

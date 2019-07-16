@@ -127,7 +127,6 @@ defineSuite([
         camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
 
         expect(scene).notToRender([0, 0, 0, 255]);
-        scene.destroyForSpecs();
     });
 
     it('does not render when show is false', function() {

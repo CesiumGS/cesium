@@ -428,12 +428,12 @@ defineSuite([
         var camera = scene.camera;
         var testCamera = new Camera(scene);
         testCamera.viewBoundingSphere(boxGeometry.boundingSphere);
-        scene.camera = testCamera;
+        scene._camera = testCamera;
 
         scene.frameState.scene3DOnly = true;
         verifyPrimitiveRender(primitive);
 
-        scene.camera = camera;
+        scene._camera = camera;
     });
 
     it('renders with depth fail appearance', function() {
@@ -1074,12 +1074,11 @@ defineSuite([
         scene.primitives.add(primitive);
 
         return pollToPromise(function() {
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
+            if (scene.frameState.afterRender.length > 0) {
+                scene.frameState.afterRender[0]();
                 return true;
             }
-
-            primitive.update(frameState);
+            scene.render();
             return false;
         }).then(function() {
             return primitive.readyPromise.then(function() {
@@ -1110,12 +1109,11 @@ defineSuite([
         scene.frameState.afterRender.length = 0;
 
         return pollToPromise(function() {
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
+            if (scene.frameState.afterRender.length > 0) {
+                scene.frameState.afterRender[0]();
                 return true;
             }
-
-            primitive.update(frameState);
+            primitive.update(scene.frameState);
             return false;
         }).then(function() {
             return primitive.readyPromise.then(function(arg) {
@@ -1307,8 +1305,8 @@ defineSuite([
         var frameState = scene.frameState;
         return pollToPromise(function() {
             primitive.update(frameState);
-            for (var i = 0; i < frameState.afterRender.length; ++i) {
-                frameState.afterRender[i]();
+            if (frameState.afterRender.length > 0) {
+                frameState.afterRender[0]();
             }
             return primitive.ready;
         }).then(function() {

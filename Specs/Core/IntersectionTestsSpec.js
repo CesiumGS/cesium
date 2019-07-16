@@ -173,6 +173,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+
     it('lineSegmentTriangle throws without v1', function() {
         expect(function() {
             IntersectionTests.lineSegmentTriangle(new Cartesian3());

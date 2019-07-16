@@ -16,7 +16,6 @@ define([
         '../Renderer/BufferUsage',
         '../Renderer/ComputeCommand',
         '../Renderer/DrawCommand',
-        '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/Texture',
@@ -45,7 +44,6 @@ define([
         BufferUsage,
         ComputeCommand,
         DrawCommand,
-        PixelDatatype,
         RenderState,
         ShaderProgram,
         Texture,
@@ -101,8 +99,6 @@ define([
         this.glowFactor = 1.0;
         this._glowFactorDirty = false;
 
-        this._useHdr = undefined;
-
         var that = this;
         this._uniformMap = {
             u_texture : function() {
@@ -142,7 +138,7 @@ define([
     /**
      * @private
      */
-    Sun.prototype.update = function(frameState, passState, useHdr) {
+    Sun.prototype.update = function(frameState, passState) {
         if (!this.show) {
             return undefined;
         }
@@ -163,13 +159,11 @@ define([
         if (!defined(this._texture) ||
                 drawingBufferWidth !== this._drawingBufferWidth ||
                 drawingBufferHeight !== this._drawingBufferHeight ||
-                this._glowFactorDirty ||
-                useHdr !== this._useHdr) {
+                this._glowFactorDirty) {
             this._texture = this._texture && this._texture.destroy();
             this._drawingBufferWidth = drawingBufferWidth;
             this._drawingBufferHeight = drawingBufferHeight;
             this._glowFactorDirty = false;
-            this._useHdr = useHdr;
 
             var size = Math.max(drawingBufferWidth, drawingBufferHeight);
             size = Math.pow(2.0, Math.ceil(Math.log(size) / Math.log(2.0)) - 2.0);
@@ -179,13 +173,11 @@ define([
             // errors in the tests.
             size = Math.max(1.0, size);
 
-            var pixelDatatype = useHdr ? (context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT) : PixelDatatype.UNSIGNED_BYTE;
             this._texture = new Texture({
                 context : context,
                 width : size,
                 height : size,
-                pixelFormat : PixelFormat.RGBA,
-                pixelDatatype : pixelDatatype
+                pixelFormat : PixelFormat.RGBA
             });
 
             this._glowLengthTS = this._glowFactor * 5.0;
@@ -193,6 +185,9 @@ define([
 
             var that = this;
             var uniformMap = {
+                u_glowLengthTS : function() {
+                    return that._glowLengthTS;
+                },
                 u_radiusTS : function() {
                     return that._radiusTS;
                 }
@@ -333,6 +328,8 @@ define([
      * Once an object is destroyed, it should not be used; calling any function other than
      * <code>isDestroyed</code> will result in a {@link DeveloperError} exception.  Therefore,
      * assign the return value (<code>undefined</code>) to the object as done in the example.
+     *
+     * @returns {undefined}
      *
      * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
      *

@@ -9,7 +9,6 @@ defineSuite([
         'Core/Matrix3',
         'Core/Matrix4',
         'Renderer/ContextLimits',
-        'Scene/Batched3DModel3DTileContent',
         'Scene/Cesium3DTileStyle',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
@@ -24,7 +23,6 @@ defineSuite([
         Matrix3,
         Matrix4,
         ContextLimits,
-        Batched3DModel3DTileContent,
         Cesium3DTileStyle,
         Cesium3DTilesTester,
         createScene) {
@@ -34,26 +32,21 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/tileset.json';
-    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/tileset.json';
-    var noBatchIdsUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/tileset.json';
-    var batchTableHierarchyUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/tileset.json';
-    var batchTableHierarchyBinaryUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyBinary/tileset.json';
-    var batchTableHierarchyMultipleParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents/tileset.json';
-    var batchTableHierarchyNoParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyNoParents/tileset.json';
-    var batchTableHierarchyLegacyUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyLegacy/tileset.json';
+    var withBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithBatchTable/';
+    var withoutBatchTableUrl = './Data/Cesium3DTiles/Batched/BatchedWithoutBatchTable/';
+    var noBatchIdsUrl = './Data/Cesium3DTiles/Batched/BatchedNoBatchIds/';
+    var batchTableHierarchyUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchy/';
+    var batchTableHierarchyBinaryUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyBinary/';
+    var batchTableHierarchyMultipleParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyMultipleParents/';
+    var batchTableHierarchyNoParentsUrl = './Data/Cesium3DTiles/Hierarchy/BatchTableHierarchyNoParents/';
 
     var result = new Color();
 
     var mockTileset = {
         _statistics : {
             texturesByteLength : 0
-        },
-        getFeature : function(batchId) {
-            return { batchId : batchId };
         }
     };
-    mockTileset._tileset = mockTileset;
 
     beforeAll(function() {
         scene = createScene();
@@ -61,10 +54,6 @@ defineSuite([
         // One feature is located at the center, point the camera there
         var center = Cartesian3.fromRadians(centerLongitude, centerLatitude);
         scene.camera.lookAt(center, new HeadingPitchRange(0.0, -1.57, 20.0));
-
-        // Keep the error from logging to the console when running tests
-        spyOn(Cesium3DTileBatchTable, '_deprecationWarning');
-        spyOn(Batched3DModel3DTileContent, '_deprecationWarning');
     });
 
     afterAll(function() {
@@ -95,7 +84,7 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
-    it('setShow sets show', function() {
+    it('setShow', function() {
         var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
 
         // Batch table resources are undefined by default
@@ -373,7 +362,7 @@ defineSuite([
         var batchTable = new Cesium3DTileBatchTable(mockTileset, 3);
         batchTable.setProperty(0, 'height', 1.0);
 
-        expect(batchTable._properties.height.length).toEqual(3);
+        expect(batchTable.batchTableJson.height.length).toEqual(3);
         expect(batchTable.getProperty(0, 'height')).toEqual(1.0);
         expect(batchTable.getProperty(1, 'height')).toBeUndefined();
         expect(batchTable.getProperty(2, 'height')).toBeUndefined();
@@ -550,7 +539,7 @@ defineSuite([
 
     it('renders tileset with batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withBatchTableUrl).then(function(tileset) {
-            var content = tileset.root.content;
+            var content = tileset._root.content;
 
             // Each feature in the b3dm file has an id property from 0 to 9,
             // check that the 2nd resource has an id of 2
@@ -568,7 +557,7 @@ defineSuite([
 
     it('renders tileset without batch table', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var content = tileset.root.content;
+            var content = tileset._root.content;
 
             expect(content.getFeature(2).getProperty('id')).toBeUndefined();
 
@@ -595,7 +584,7 @@ defineSuite([
         ContextLimits._maximumTextureSize = 4;
 
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var content = tileset.root.content;
+            var content = tileset._root.content;
             expect(content.featuresLength).toBeGreaterThan(ContextLimits._maximumTextureSize);
             Cesium3DTilesTester.expectRenderTileset(scene, tileset);
 
@@ -616,7 +605,7 @@ defineSuite([
     });
 
     function expectRenderTranslucent(tileset) {
-        var batchTable = tileset.root.content.batchTable;
+        var batchTable = tileset._root.content.batchTable;
 
         // Get initial color
         var opaqueColor;
@@ -799,7 +788,7 @@ defineSuite([
 
     function checkHierarchyProperties(tileset, multipleParents) {
         // Check isExactClass, isClass, and getExactClassName in Cesium3DTileFeature
-        var content = tileset.root.content;
+        var content = tileset._root.content;
         var batchTable = content.batchTable;
         var hierarchy = batchTable._batchTableHierarchy;
 
@@ -861,7 +850,7 @@ defineSuite([
 
     function checkHierarchyPropertiesNoParents(tileset) {
         // Check isExactClass, isClass, and getExactClassName in Cesium3DTileFeature
-        var content = tileset.root.content;
+        var content = tileset._root.content;
         var doorFeature = content.getFeature(4);
         expect(doorFeature.isExactClass('door')).toBe(true);
         expect(doorFeature.isExactClass('doorknob')).toBe(false);
@@ -903,7 +892,7 @@ defineSuite([
         });
     }
 
-    it('renders tileset with batch table hierarchy extension', function() {
+    it('renders tileset with batch table hierarchy', function() {
         return checkBatchTableHierarchy(batchTableHierarchyUrl, false);
     });
 
@@ -917,17 +906,6 @@ defineSuite([
 
     it('renders tileset with batch table hierarchy with no parents', function() {
         return checkBatchTableHierarchyNoParents(batchTableHierarchyNoParentsUrl);
-    });
-
-    it('renders tileset with legacy batch table hierarchy (pre-version 1.0)', function() {
-        return checkBatchTableHierarchy(batchTableHierarchyLegacyUrl, false);
-    });
-
-    it('warns about deprecated batch hierarchy (pre-version 1.0)', function() {
-        return checkBatchTableHierarchy(batchTableHierarchyLegacyUrl, false)
-            .then(function(tileset) {
-                expect(Cesium3DTileBatchTable._deprecationWarning).toHaveBeenCalled();
-            });
     });
 
     it('validates hierarchy with multiple parents', function() {
@@ -1111,7 +1089,7 @@ defineSuite([
 
     it('destroys', function() {
         return Cesium3DTilesTester.loadTileset(scene, withoutBatchTableUrl).then(function(tileset) {
-            var content = tileset.root.content;
+            var content = tileset._root.content;
             var batchTable = content.batchTable;
             expect(batchTable.isDestroyed()).toEqual(false);
             scene.primitives.remove(tileset);

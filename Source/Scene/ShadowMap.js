@@ -112,7 +112,6 @@ define([
      *
      * @alias ShadowMap
      * @internalConstructor
-     * @class
      *
      * @param {Object} options An object containing the following properties:
      * @param {Camera} options.lightCamera A camera representing the light source.
@@ -129,7 +128,7 @@ define([
      *
      * @exception {DeveloperError} Only one or four cascades are supported.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
+     * @demo {@link http://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Shadows.html|Cesium Sandcastle Shadows Demo}
      */
     function ShadowMap(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -1024,7 +1023,7 @@ define([
         // When the camera is close to a relatively small model, provide more detail in the closer cascades.
         // If the camera is near or inside a large model, such as the root tile of a city, then use the default values.
         // To get the most accurate cascade splits we would need to find the min and max values from the depth texture.
-        if (frameState.shadowState.closestObjectSize < 200.0) {
+        if (frameState.shadowHints.closestObjectSize < 200.0) {
             clampCascadeDistances = true;
             lambda = 0.9;
         }
@@ -1338,8 +1337,8 @@ define([
         if (shadowMap._fitNearFar) {
             // shadowFar can be very large, so limit to shadowMap.maximumDistance
             // Push the far plane slightly further than the near plane to avoid degenerate frustum
-            near = Math.min(frameState.shadowState.nearPlane, shadowMap.maximumDistance);
-            far = Math.min(frameState.shadowState.farPlane, shadowMap.maximumDistance + 1.0);
+            near = Math.min(frameState.shadowHints.nearPlane, shadowMap.maximumDistance);
+            far = Math.min(frameState.shadowHints.farPlane, shadowMap.maximumDistance + 1.0);
         } else {
             near = camera.frustum.near;
             far = shadowMap.maximumDistance;
@@ -1528,7 +1527,7 @@ define([
         return result;
     }
 
-    ShadowMap.createReceiveDerivedCommand = function(lightShadowMaps, command, shadowsDirty, context, result) {
+    ShadowMap.createDerivedCommands = function(shadowMaps, lightShadowMaps, command, shadowsDirty, context, result) {
         if (!defined(result)) {
             result = {};
         }
@@ -1541,7 +1540,25 @@ define([
 
         var hasTerrainNormal = false;
         if (isTerrain) {
-            hasTerrainNormal = command.owner.data.renderedMesh.encoding.hasVertexNormals;
+            hasTerrainNormal = command.owner.data.pickTerrain.mesh.encoding.hasVertexNormals;
+        }
+
+        if (command.castShadows) {
+            var castCommands = result.castCommands;
+            if (!defined(castCommands)) {
+                castCommands = result.castCommands = [];
+            }
+
+            var oldShaderId = result.castShaderProgramId;
+
+            var shadowMapLength = shadowMaps.length;
+            castCommands.length = shadowMapLength;
+
+            for (var i = 0; i < shadowMapLength; ++i) {
+                castCommands[i] = createCastDerivedCommand(shadowMaps[i], shadowsDirty, command, context, oldShaderId, castCommands[i]);
+            }
+
+            result.castShaderProgramId = command.shaderProgram.id;
         }
 
         if (command.receiveShadows && lightShadowMapsEnabled) {
@@ -1583,32 +1600,6 @@ define([
             result.receiveCommand.uniformMap = receiveUniformMap;
             result.receiveShaderProgramId = command.shaderProgram.id;
             result.receiveShaderCastShadows = command.castShadows;
-        }
-
-        return result;
-    };
-
-    ShadowMap.createCastDerivedCommand = function(shadowMaps, command, shadowsDirty, context, result) {
-        if (!defined(result)) {
-            result = {};
-        }
-
-        if (command.castShadows) {
-            var castCommands = result.castCommands;
-            if (!defined(castCommands)) {
-                castCommands = result.castCommands = [];
-            }
-
-            var oldShaderId = result.castShaderProgramId;
-
-            var shadowMapLength = shadowMaps.length;
-            castCommands.length = shadowMapLength;
-
-            for (var i = 0; i < shadowMapLength; ++i) {
-                castCommands[i] = createCastDerivedCommand(shadowMaps[i], shadowsDirty, command, context, oldShaderId, castCommands[i]);
-            }
-
-            result.castShaderProgramId = command.shaderProgram.id;
         }
 
         return result;

@@ -31,7 +31,6 @@ define([
      *
      * @alias Polyline
      * @internalConstructor
-     * @class
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Boolean} [options.show=true] <code>true</code> if this polyline will be shown; otherwise, <code>false</code>.
@@ -275,9 +274,9 @@ define([
         },
 
         /**
-         * Gets or sets the user-defined value returned when the polyline is picked.
+         * Gets or sets the user-defined object returned when the polyline is picked.
          * @memberof Polyline.prototype
-         * @type {*}
+         * @type {Object}
          */
         id : {
             get : function() {
@@ -288,15 +287,6 @@ define([
                 if (defined(this._pickId)) {
                     this._pickId.object.id = value;
                 }
-            }
-        },
-
-        /**
-         * @private
-         */
-        pickId : {
-            get : function() {
-                return this._pickId;
             }
         },
 

@@ -1,5 +1,4 @@
 define([
-        './arrayFill',
         './BoundingSphere',
         './Cartesian2',
         './Cartesian3',
@@ -11,13 +10,11 @@ define([
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
-        './GeometryOffsetAttribute',
         './IndexDatatype',
         './Math',
         './PrimitiveType',
         './VertexFormat'
     ], function(
-        arrayFill,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -29,7 +26,6 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        GeometryOffsetAttribute,
         IndexDatatype,
         CesiumMath,
         PrimitiveType,
@@ -41,6 +37,7 @@ define([
     var bitangentScratch = new Cartesian3();
     var tangentScratch = new Cartesian3();
     var positionScratch = new Cartesian3();
+
 
     /**
      * A description of a cylinder.
@@ -55,6 +52,10 @@ define([
      * @param {Number} [options.slices=128] The number of edges around the perimeter of the cylinder.
      * @param {VertexFormat} [options.vertexFormat=VertexFormat.DEFAULT] The vertex attributes to be computed.
      *
+     * @exception {DeveloperError} options.length must be greater than 0.
+     * @exception {DeveloperError} options.topRadius must be greater than 0.
+     * @exception {DeveloperError} options.bottomRadius must be greater than 0.
+     * @exception {DeveloperError} bottomRadius and topRadius cannot both equal 0.
      * @exception {DeveloperError} options.slices must be greater than or equal to 3.
      *
      * @see CylinderGeometry.createGeometry
@@ -90,9 +91,6 @@ define([
         if (slices < 3) {
             throw new DeveloperError('options.slices must be greater than or equal to 3.');
         }
-        if (defined(options.offsetAttribute) && options.offsetAttribute === GeometryOffsetAttribute.TOP) {
-            throw new DeveloperError('GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.');
-        }
         //>>includeEnd('debug');
 
         this._length = length;
@@ -100,7 +98,6 @@ define([
         this._bottomRadius = bottomRadius;
         this._vertexFormat = VertexFormat.clone(vertexFormat);
         this._slices = slices;
-        this._offsetAttribute = options.offsetAttribute;
         this._workerName = 'createCylinderGeometry';
     }
 
@@ -108,7 +105,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    CylinderGeometry.packedLength = VertexFormat.packedLength + 5;
+    CylinderGeometry.packedLength = VertexFormat.packedLength + 4;
 
     /**
      * Stores the provided instance into the provided array.
@@ -137,8 +134,7 @@ define([
         array[startingIndex++] = value._length;
         array[startingIndex++] = value._topRadius;
         array[startingIndex++] = value._bottomRadius;
-        array[startingIndex++] = value._slices;
-        array[startingIndex] = defaultValue(value._offsetAttribute, -1);
+        array[startingIndex]   = value._slices;
 
         return array;
     };
@@ -149,8 +145,7 @@ define([
         length : undefined,
         topRadius : undefined,
         bottomRadius : undefined,
-        slices : undefined,
-        offsetAttribute : undefined
+        slices : undefined
     };
 
     /**
@@ -176,15 +171,13 @@ define([
         var length = array[startingIndex++];
         var topRadius = array[startingIndex++];
         var bottomRadius = array[startingIndex++];
-        var slices = array[startingIndex++];
-        var offsetAttribute = array[startingIndex];
+        var slices = array[startingIndex];
 
         if (!defined(result)) {
             scratchOptions.length = length;
             scratchOptions.topRadius = topRadius;
             scratchOptions.bottomRadius = bottomRadius;
             scratchOptions.slices = slices;
-            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
             return new CylinderGeometry(scratchOptions);
         }
 
@@ -193,7 +186,6 @@ define([
         result._topRadius = topRadius;
         result._bottomRadius = bottomRadius;
         result._slices = slices;
-        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -236,17 +228,15 @@ define([
             var tangentIndex = 0;
             var bitangentIndex = 0;
 
-            var theta = Math.atan2(bottomRadius - topRadius, length);
             var normal = normalScratch;
-            normal.z = Math.sin(theta);
-            var normalScale = Math.cos(theta);
+            normal.z = 0;
             var tangent = tangentScratch;
             var bitangent = bitangentScratch;
 
             for (i = 0; i < slices; i++) {
                 var angle = i / slices * CesiumMath.TWO_PI;
-                var x = normalScale * Math.cos(angle);
-                var y = normalScale * Math.sin(angle);
+                var x = Math.cos(angle);
+                var y = Math.sin(angle);
                 if (computeNormal) {
                     normal.x = x;
                     normal.y = y;
@@ -256,12 +246,12 @@ define([
                     }
 
                     if (vertexFormat.normal) {
-                        normals[normalIndex++] = normal.x;
-                        normals[normalIndex++] = normal.y;
-                        normals[normalIndex++] = normal.z;
-                        normals[normalIndex++] = normal.x;
-                        normals[normalIndex++] = normal.y;
-                        normals[normalIndex++] = normal.z;
+                        normals[normalIndex++] = x;
+                        normals[normalIndex++] = y;
+                        normals[normalIndex++] = 0;
+                        normals[normalIndex++] = x;
+                        normals[normalIndex++] = y;
+                        normals[normalIndex++] = 0;
                     }
 
                     if (vertexFormat.tangent) {
@@ -413,45 +403,12 @@ define([
 
         var boundingSphere = new BoundingSphere(Cartesian3.ZERO, Cartesian2.magnitude(radiusScratch));
 
-        if (defined(cylinderGeometry._offsetAttribute)) {
-            length = positions.length;
-            var applyOffset = new Uint8Array(length / 3);
-            var offsetValue = cylinderGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
-            arrayFill(applyOffset, offsetValue);
-            attributes.applyOffset = new GeometryAttribute({
-                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
-                componentsPerAttribute : 1,
-                values: applyOffset
-            });
-        }
-
         return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.TRIANGLES,
-            boundingSphere : boundingSphere,
-            offsetAttribute : cylinderGeometry._offsetAttribute
+            boundingSphere : boundingSphere
         });
-    };
-
-    var unitCylinderGeometry;
-
-    /**
-     * Returns the geometric representation of a unit cylinder, including its vertices, indices, and a bounding sphere.
-     * @returns {Geometry} The computed vertices and indices.
-     *
-     * @private
-     */
-    CylinderGeometry.getUnitCylinder = function() {
-        if (!defined(unitCylinderGeometry)) {
-            unitCylinderGeometry = CylinderGeometry.createGeometry(new CylinderGeometry({
-                topRadius : 1.0,
-                bottomRadius : 1.0,
-                length : 1.0,
-                vertexFormat : VertexFormat.POSITION_ONLY
-            }));
-        }
-        return unitCylinderGeometry;
     };
 
     return CylinderGeometry;
