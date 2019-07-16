@@ -147,6 +147,23 @@ define([
     };
 
     /**
+     * Creates a new Cartesian3 instance from a Cartographic input. The values in the inputted
+     * object should be in radians.
+     *
+     * @param {Cartographic} cartographic Input to be converted into a Cartesian3 output.
+     * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid on which the position lies.
+     * @param {Cartesian3} [result] The object onto which to store the result.
+     * @returns {Cartesian3} The position
+     */
+    Cartographic.toCartesian = function(cartographic, ellipsoid, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('cartographic', cartographic);
+        //>>includeEnd('debug');
+
+        return Cartesian3.fromRadians(cartographic.longitude, cartographic.latitude, cartographic.height, ellipsoid, result);
+    };
+
+    /**
      * Duplicates a Cartographic instance.
      *
      * @param {Cartographic} cartographic The cartographic to duplicate.

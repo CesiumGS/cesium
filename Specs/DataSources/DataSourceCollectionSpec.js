@@ -53,6 +53,37 @@ defineSuite([
         expect(removeSpy).toHaveBeenCalledWith(collection, source);
     });
 
+    it('move event works', function() {
+        var source = new MockDataSource();
+        var collection = new DataSourceCollection();
+        collection.add(source);
+
+        var moveSpy = jasmine.createSpy('dataSourceMoved');
+        collection.dataSourceMoved.addEventListener(moveSpy);
+
+        collection.raise(source);
+        collection.lower(source);
+        collection.raiseToTop(source);
+        collection.lowerToBottom(source);
+
+        expect(moveSpy).not.toHaveBeenCalled();
+
+        collection.add(new MockDataSource());
+        collection.add(new MockDataSource());
+
+        collection.raise(source);
+        expect(moveSpy).toHaveBeenCalledWith(source, 1, 0);
+
+        collection.lower(source);
+        expect(moveSpy).toHaveBeenCalledWith(source, 0, 1);
+
+        collection.raiseToTop(source);
+        expect(moveSpy).toHaveBeenCalledWith(source, 2, 0);
+
+        collection.lowerToBottom(source);
+        expect(moveSpy).toHaveBeenCalledWith(source, 0, 2);
+    });
+
     it('add works with promise', function() {
         var promise = when.defer();
         var source = new MockDataSource();

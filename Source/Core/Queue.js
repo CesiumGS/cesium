@@ -35,7 +35,7 @@ define([
     /**
      * Enqueues the specified item.
      *
-     * @param {Object} item The item to enqueue.
+     * @param {*} item The item to enqueue.
      */
     Queue.prototype.enqueue = function(item) {
         this._array.push(item);
@@ -45,7 +45,7 @@ define([
     /**
      * Dequeues an item.  Returns undefined if the queue is empty.
      *
-     * @returns {Object} The the dequeued item.
+     * @returns {*} The the dequeued item.
      */
     Queue.prototype.dequeue = function() {
         if (this._length === 0) {
@@ -73,7 +73,7 @@ define([
     /**
      * Returns the item at the front of the queue.  Returns undefined if the queue is empty.
      *
-     * @returns {Object} The item at the front of the queue.
+     * @returns {*} The item at the front of the queue.
      */
     Queue.prototype.peek = function() {
         if (this._length === 0) {
@@ -86,7 +86,7 @@ define([
     /**
      * Check whether this queue contains the specified item.
      *
-     * @param {Object} item The item to search for.
+     * @param {*} item The item to search for.
      */
     Queue.prototype.contains = function(item) {
         return this._array.indexOf(item) !== -1;
@@ -118,8 +118,8 @@ define([
      * A function used to compare two items while sorting a queue.
      * @callback Queue~Comparator
      *
-     * @param {Object} a An item in the array.
-     * @param {Object} b An item in the array.
+     * @param {*} a An item in the array.
+     * @param {*} b An item in the array.
      * @returns {Number} Returns a negative value if <code>a</code> is less than <code>b</code>,
      *          a positive value if <code>a</code> is greater than <code>b</code>, or
      *          0 if <code>a</code> is equal to <code>b</code>.

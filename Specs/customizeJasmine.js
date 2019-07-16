@@ -6,7 +6,7 @@ define([
         when,
         addDefaultMatchers,
         equalsMethodEqualityTester) {
-    "use strict";
+    'use strict';
 
     return function (env, includedCategory, excludedCategory, webglValidation, webglStub, release) {
         function defineSuite(deps, name, suite, categories, focus) {
@@ -31,7 +31,7 @@ define([
             define(deps, function() {
                 var args = arguments;
                 if (focus) {
-                    fdescribe(name, function() {
+                    fdescribe(name, function() { //eslint-disable-line
                         suite.apply(null, args);
                     }, categories);
                 } else {

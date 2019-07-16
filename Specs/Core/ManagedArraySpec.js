@@ -55,6 +55,16 @@ defineSuite([
         expect(array.length).toEqual(6);
     });
 
+    it('peeks at the last element of the array', function() {
+        var array = new ManagedArray();
+        expect(array.peek()).toBeUndefined();
+        array.push(0);
+        expect(array.peek()).toBe(0);
+        array.push(1);
+        array.push(2);
+        expect(array.peek()).toBe(2);
+    });
+
     it('can push values', function() {
         var array = new ManagedArray();
         var length = 10;

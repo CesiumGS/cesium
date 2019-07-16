@@ -157,7 +157,6 @@ define([
         return result;
     };
 
-
     var tempVecScratch = new Cartesian3();
 
     /**

@@ -4,10 +4,10 @@
  * The default normal value is given by materialInput.normalEC.
  *
  * @name czm_getDefaultMaterial
- * @glslFunction 
+ * @glslFunction
  *
  * @param {czm_materialInput} input The input used to construct the default material.
- * 
+ *
  * @returns {czm_material} The default material.
  *
  * @see czm_materialInput

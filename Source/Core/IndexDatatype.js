@@ -73,6 +73,27 @@ define([
     };
 
     /**
+     * Gets the datatype with a given size in bytes.
+     *
+     * @param {Number} sizeInBytes The size of a single index in bytes.
+     * @returns {IndexDatatype} The index datatype with the given size.
+     */
+    IndexDatatype.fromSizeInBytes = function(sizeInBytes) {
+        switch (sizeInBytes) {
+            case 2:
+                return IndexDatatype.UNSIGNED_SHORT;
+            case 4:
+                return IndexDatatype.UNSIGNED_INT;
+            case 1:
+                return IndexDatatype.UNSIGNED_BYTE;
+            //>>includeStart('debug', pragmas.debug);
+            default:
+                throw new DeveloperError('Size in bytes cannot be mapped to an IndexDatatype');
+            //>>includeEnd('debug');
+        }
+    };
+
+    /**
      * Validates that the provided index datatype is a valid {@link IndexDatatype}.
      *
      * @param {IndexDatatype} indexDatatype The index datatype to validate.
@@ -95,7 +116,7 @@ define([
      * or <code>Uint32Array</code> depending on the number of vertices.
      *
      * @param {Number} numberOfVertices Number of vertices that the indices will reference.
-     * @param {*} indicesLengthOrArray Passed through to the typed array constructor.
+     * @param {Number|Array} indicesLengthOrArray Passed through to the typed array constructor.
      * @returns {Uint16Array|Uint32Array} A <code>Uint16Array</code> or <code>Uint32Array</code> constructed with <code>indicesLengthOrArray</code>.
      *
      * @example

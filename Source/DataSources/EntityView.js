@@ -1,9 +1,9 @@
 define([
         '../Core/Cartesian3',
+        '../Core/Check',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/DeveloperError',
         '../Core/Ellipsoid',
         '../Core/HeadingPitchRange',
         '../Core/JulianDate',
@@ -14,10 +14,10 @@ define([
         '../Scene/SceneMode'
     ], function(
         Cartesian3,
+        Check,
         defaultValue,
         defined,
         defineProperties,
-        DeveloperError,
         Ellipsoid,
         HeadingPitchRange,
         JulianDate,
@@ -84,10 +84,7 @@ define([
                     Cartesian3.subtract(inertialCartesian, inertialDeltaCartesian, updateTransformCartesian3Scratch4);
                     var inertialVelocity = Cartesian3.magnitude(updateTransformCartesian3Scratch4) * 1000.0; // meters/sec
 
-                    // http://en.wikipedia.org/wiki/Standard_gravitational_parameter
-                    // Consider adding this to Cesium.Ellipsoid?
-                    var mu = 3.986004418e14; // m^3 / sec^2
-
+                    var mu = CesiumMath.GRAVITATIONALPARAMETER; // m^3 / sec^2
                     var semiMajorAxis = -mu / (inertialVelocity * inertialVelocity - (2 * mu / Cartesian3.magnitude(inertialCartesian)));
 
                     if (semiMajorAxis < 0 || semiMajorAxis > northUpAxisFactor * ellipsoid.maximumRadius) {
@@ -208,6 +205,10 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid to use for orienting the camera.
      */
     function EntityView(entity, scene, ellipsoid) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.defined('entity', entity);
+        Check.defined('scene', scene);
+        //>>includeEnd('debug');
 
         /**
          * The entity to track with the camera.
@@ -233,7 +234,7 @@ define([
          */
         this.boundingSphere = undefined;
 
-        //Shadow copies of the objects so we can detect changes.
+        // Shadow copies of the objects so we can detect changes.
         this._lastEntity = undefined;
         this._mode = undefined;
 
@@ -268,45 +269,31 @@ define([
     var scratchCartesian = new Cartesian3();
 
     /**
-    * Should be called each animation frame to update the camera
-    * to the latest settings.
-    * @param {JulianDate} time The current animation time.
-    * @param {BoundingSphere} boundingSphere bounding sphere of the object.
-    *
-    */
+     * Should be called each animation frame to update the camera
+     * to the latest settings.
+     * @param {JulianDate} time The current animation time.
+     * @param {BoundingSphere} [boundingSphere] bounding sphere of the object.
+     */
     EntityView.prototype.update = function(time, boundingSphere) {
-        var scene = this.scene;
-        var entity = this.entity;
-        var ellipsoid = this.ellipsoid;
-
         //>>includeStart('debug', pragmas.debug);
-        if (!defined(time)) {
-            throw new DeveloperError('time is required.');
-        }
-        if (!defined(scene)) {
-            throw new DeveloperError('EntityView.scene is required.');
-        }
-        if (!defined(entity)) {
-            throw new DeveloperError('EntityView.entity is required.');
-        }
-        if (!defined(ellipsoid)) {
-            throw new DeveloperError('EntityView.ellipsoid is required.');
-        }
-        if (!defined(entity.position)) {
-            throw new DeveloperError('entity.position is required.');
-        }
+        Check.defined('time', time);
         //>>includeEnd('debug');
 
+        var scene = this.scene;
+        var ellipsoid = this.ellipsoid;
         var sceneMode = scene.mode;
         if (sceneMode === SceneMode.MORPHING) {
             return;
         }
 
+        var entity = this.entity;
         var positionProperty = entity.position;
+        if (!defined(positionProperty)) {
+            return;
+        }
         var objectChanged = entity !== this._lastEntity;
         var sceneModeChanged = sceneMode !== this._mode;
 
-        var offset3D = this._offset3D;
         var camera = scene.camera;
 
         var updateLookAt = objectChanged || sceneModeChanged;
@@ -317,9 +304,9 @@ define([
             var hasViewFrom = defined(viewFromProperty);
 
             if (!hasViewFrom && defined(boundingSphere)) {
-                //The default HPR is not ideal for high altitude objects so
-                //we scale the pitch as we get further from the earth for a more
-                //downward view.
+                // The default HPR is not ideal for high altitude objects so
+                // we scale the pitch as we get further from the earth for a more
+                // downward view.
                 scratchHeadingPitchRange.pitch = -CesiumMath.PI_OVER_FOUR;
                 scratchHeadingPitchRange.range = 0;
                 var position = positionProperty.getValue(time, scratchCartesian);
@@ -332,19 +319,17 @@ define([
                 this.boundingSphere = boundingSphere;
                 updateLookAt = false;
                 saveCamera = false;
-            } else if (!hasViewFrom || !defined(viewFromProperty.getValue(time, offset3D))) {
-                Cartesian3.clone(EntityView._defaultOffset3D, offset3D);
+            } else if (!hasViewFrom || !defined(viewFromProperty.getValue(time, this._offset3D))) {
+                Cartesian3.clone(EntityView._defaultOffset3D, this._offset3D);
             }
-        } else if (!sceneModeChanged && scene.mode !== SceneMode.MORPHING && this._mode !== SceneMode.SCENE2D) {
-            Cartesian3.clone(camera.position, offset3D);
+        } else if (!sceneModeChanged && this._mode !== SceneMode.SCENE2D) {
+            Cartesian3.clone(camera.position, this._offset3D);
         }
 
         this._lastEntity = entity;
-        this._mode = scene.mode !== SceneMode.MORPHING ? scene.mode : this._mode;
+        this._mode = sceneMode;
 
-        if (scene.mode !== SceneMode.MORPHING) {
-            updateTransform(this, camera, updateLookAt, saveCamera, positionProperty, time, ellipsoid);
-        }
+        updateTransform(this, camera, updateLookAt, saveCamera, positionProperty, time, ellipsoid);
     };
 
     return EntityView;

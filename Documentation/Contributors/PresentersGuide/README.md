@@ -45,7 +45,7 @@ Focus less on details, and instead **focus on providing context**, especially at
 
 Your audience loves stories. Tell one.
 
-Early in a presentation, **a story will help build context**.  For example, see Slides 2-6 of [3D Tiles](http://cesiumjs.org/presentations/SIGGRAPH2015/Cesium3DTiles.pdf).
+Early in a presentation, **a story will help build context**.  For example, see Slides 2-6 of [3D Tiles](https://cesium.com/presentations/files/SIGGRAPH2015/Cesium3DTiles.pdf).
 
 Stories will help you connect with your audience.  It will make them more likely to [engage you](#engage-the-audience). And it will make them more likely to remember your talk later.
 

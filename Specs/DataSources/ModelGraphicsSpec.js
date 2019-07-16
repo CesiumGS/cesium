@@ -1,5 +1,6 @@
 defineSuite([
         'DataSources/ModelGraphics',
+        'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
@@ -8,11 +9,13 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/NodeTransformationProperty',
         'DataSources/PropertyBag',
+        'Scene/ClippingPlaneCollection',
         'Scene/ColorBlendMode',
         'Scene/HeightReference',
         'Scene/ShadowMode'
     ], function(
         ModelGraphics,
+        Cartesian2,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
@@ -21,6 +24,7 @@ defineSuite([
         ConstantProperty,
         NodeTransformationProperty,
         PropertyBag,
+        ClippingPlaneCollection,
         ColorBlendMode,
         HeightReference,
         ShadowMode) {
@@ -44,12 +48,18 @@ defineSuite([
             color : new Color(0.0, 1.0, 0.0, 0.2),
             colorBlendMode : ColorBlendMode.HIGHLIGHT,
             colorBlendAmount : 0.5,
+            clippingPlanes : new ClippingPlaneCollection(),
+            imageBasedLightingFactor : new Cartesian2(0.5, 0.5),
+            lightColor : new Color(1.0, 1.0, 0.0, 1.0),
             nodeTransformations : {
                 node1 : {
                     translation : Cartesian3.UNIT_Y,
                     rotation : new Quaternion(0.5, 0.5, 0.5, 0.5),
                     scale : Cartesian3.UNIT_X
                 }
+            },
+            articulations : {
+                'articulation1 stage1' : 45
             }
         };
 
@@ -68,10 +78,14 @@ defineSuite([
         expect(model.color).toBeInstanceOf(ConstantProperty);
         expect(model.colorBlendMode).toBeInstanceOf(ConstantProperty);
         expect(model.colorBlendAmount).toBeInstanceOf(ConstantProperty);
+        expect(model.clippingPlanes).toBeInstanceOf(ConstantProperty);
+        expect(model.imageBasedLightingFactor).toBeInstanceOf(ConstantProperty);
+        expect(model.lightColor).toBeInstanceOf(ConstantProperty);
         expect(model.runAnimations).toBeInstanceOf(ConstantProperty);
         expect(model.clampAnimations).toBeInstanceOf(ConstantProperty);
 
         expect(model.nodeTransformations).toBeInstanceOf(PropertyBag);
+        expect(model.articulations).toBeInstanceOf(PropertyBag);
 
         expect(model.uri.getValue()).toEqual(options.uri);
         expect(model.scale.getValue()).toEqual(options.scale);
@@ -87,6 +101,9 @@ defineSuite([
         expect(model.color.getValue()).toEqual(options.color);
         expect(model.colorBlendMode.getValue()).toEqual(options.colorBlendMode);
         expect(model.colorBlendAmount.getValue()).toEqual(options.colorBlendAmount);
+        expect(model.clippingPlanes.getValue().planes).toEqual(options.clippingPlanes.planes);
+        expect(model.imageBasedLightingFactor.getValue()).toEqual(options.imageBasedLightingFactor);
+        expect(model.lightColor.getValue()).toEqual(options.lightColor);
         expect(model.runAnimations.getValue()).toEqual(options.runAnimations);
         expect(model.clampAnimations.getValue()).toEqual(options.clampAnimations);
 
@@ -97,6 +114,14 @@ defineSuite([
         actualNodeTransformations = JSON.parse(JSON.stringify(actualNodeTransformations));
         expectedNodeTransformations = JSON.parse(JSON.stringify(expectedNodeTransformations));
         expect(actualNodeTransformations).toEqual(expectedNodeTransformations);
+
+        var actualArticulations = model.articulations.getValue(new JulianDate());
+        var expectedArticulations = options.articulations;
+
+        // by default toEqual requires constructors to match.  for the purposes of this test, we only care about the structure.
+        actualArticulations = JSON.parse(JSON.stringify(actualArticulations));
+        expectedArticulations = JSON.parse(JSON.stringify(expectedArticulations));
+        expect(actualArticulations).toEqual(expectedArticulations);
     });
 
     it('merge assigns unassigned properties', function() {
@@ -115,6 +140,9 @@ defineSuite([
         source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
+        source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
+        source.imageBasedLightingFactor = new ConstantProperty(new Cartesian2(0.5, 0.5));
+        source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
@@ -126,6 +154,10 @@ defineSuite([
             node2 : new NodeTransformationProperty({
                 scale : Cartesian3.UNIT_Z
             })
+        };
+        source.articulations = {
+            'a1 s1' : 10,
+            'a2 s2' : 20
         };
 
         var target = new ModelGraphics();
@@ -145,9 +177,13 @@ defineSuite([
         expect(target.color).toBe(source.color);
         expect(target.colorBlendMode).toBe(source.colorBlendMode);
         expect(target.colorBlendAmount).toBe(source.colorBlendAmount);
+        expect(target.clippingPlanes).toBe(source.clippingPlanes);
+        expect(target.imageBasedLightingFactor).toBe(source.imageBasedLightingFactor);
+        expect(target.lightColor).toBe(source.lightColor);
         expect(target.runAnimations).toBe(source.runAnimations);
         expect(target.clampAnimations).toBe(source.clampAnimations);
         expect(target.nodeTransformations).toEqual(source.nodeTransformations);
+        expect(target.articulations).toEqual(source.articulations);
     });
 
     it('merge does not assign assigned properties', function() {
@@ -166,10 +202,17 @@ defineSuite([
         source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
+        source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
+        source.imageBasedLightingFactor = new ConstantProperty(new Cartesian2(0.5, 0.5));
+        source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             transform : new NodeTransformationProperty()
+        };
+        source.articulations = {
+            'a1 s1' : 10,
+            'a2 s2' : 20
         };
 
         var uri = new ConstantProperty('');
@@ -186,10 +229,17 @@ defineSuite([
         var color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         var colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         var colorBlendAmount = new ConstantProperty(0.5);
+        var clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
+        var imageBasedLightingFactor = new ConstantProperty(new Cartesian2(0.5, 0.5));
+        var lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         var runAnimations = new ConstantProperty(true);
         var clampAnimations = new ConstantProperty(true);
         var nodeTransformations = new PropertyBag({
             transform : new NodeTransformationProperty()
+        });
+        var articulations = new PropertyBag({
+            'a1 s1' : 10,
+            'a2 s2' : 20
         });
 
         var target = new ModelGraphics();
@@ -207,9 +257,13 @@ defineSuite([
         target.color = color;
         target.colorBlendMode = colorBlendMode;
         target.colorBlendAmount = colorBlendAmount;
+        target.clippingPlanes = clippingPlanes;
+        target.imageBasedLightingFactor = imageBasedLightingFactor;
+        target.lightColor = lightColor;
         target.runAnimations = runAnimations;
         target.clampAnimations = clampAnimations;
         target.nodeTransformations = nodeTransformations;
+        target.articulations = articulations;
 
         target.merge(source);
 
@@ -227,9 +281,13 @@ defineSuite([
         expect(target.color).toBe(color);
         expect(target.colorBlendMode).toBe(colorBlendMode);
         expect(target.colorBlendAmount).toBe(colorBlendAmount);
+        expect(target.clippingPlanes).toBe(clippingPlanes);
+        expect(target.imageBasedLightingFactor).toBe(imageBasedLightingFactor);
+        expect(target.lightColor).toBe(lightColor);
         expect(target.runAnimations).toBe(runAnimations);
         expect(target.clampAnimations).toBe(clampAnimations);
         expect(target.nodeTransformations).toBe(nodeTransformations);
+        expect(target.articulations).toBe(articulations);
     });
 
     it('clone works', function() {
@@ -248,11 +306,18 @@ defineSuite([
         source.color = new ConstantProperty(new Color(0.0, 1.0, 0.0, 0.2));
         source.colorBlendMode = new ConstantProperty(ColorBlendMode.HIGHLIGHT);
         source.colorBlendAmount = new ConstantProperty(0.5);
+        source.clippingPlanes = new ConstantProperty(new ClippingPlaneCollection());
+        source.imageBasedLightingFactor = new ConstantProperty(new Cartesian2(0.5, 0.5));
+        source.lightColor = new ConstantProperty(new Color(1.0, 1.0, 0.0, 1.0));
         source.runAnimations = new ConstantProperty(true);
         source.clampAnimations = new ConstantProperty(true);
         source.nodeTransformations = {
             node1 : new NodeTransformationProperty(),
             node2 : new NodeTransformationProperty()
+        };
+        source.articulations = {
+            'a1 s1' : 10,
+            'a2 s2' : 20
         };
 
         var result = source.clone();
@@ -270,9 +335,13 @@ defineSuite([
         expect(result.color).toBe(source.color);
         expect(result.colorBlendMode).toBe(source.colorBlendMode);
         expect(result.colorBlendAmount).toBe(source.colorBlendAmount);
+        expect(result.clippingPlanes).toBe(source.clippingPlanes);
+        expect(result.imageBasedLightingFactor).toBe(source.imageBasedLightingFactor);
+        expect(result.lightColor).toBe(source.lightColor);
         expect(result.runAnimations).toBe(source.runAnimations);
         expect(result.clampAnimations).toBe(source.clampAnimations);
         expect(result.nodeTransformations).toEqual(source.nodeTransformations);
+        expect(result.articulations).toEqual(source.articulations);
     });
 
     it('merge throws if source undefined', function() {

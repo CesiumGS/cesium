@@ -56,16 +56,15 @@ Cesium.knockout.track(viewModel);
 var toolbar = document.getElementById('toolbar');
 Cesium.knockout.applyBindings(viewModel, toolbar);
 
-var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
-    url : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset'
-}));
+var tileset = new Cesium.Cesium3DTileset({
+    url: '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
+});
 
-tileset.readyPromise.then(function() {
-    var boundingSphere = tileset.boundingSphere;
-    viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.0, -0.5, boundingSphere.radius * 2));
-    viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
+tileset.readyPromise.then(function(tileset) {
+    viewer.scene.primitives.add(tileset);
+    viewer.zoomTo(tileset, new Cesium.HeadingPitchRange(0.0, -0.5, tileset.boundingSphere.radius * 2.0));
 }).otherwise(function(error) {
-    throw(error);
+    console.log(error);
 });
 
 Cesium.knockout.getObservable(viewModel, 'height').subscribe(function(height) {
@@ -80,13 +79,14 @@ Cesium.knockout.getObservable(viewModel, 'height').subscribe(function(height) {
     var translation = Cesium.Cartesian3.subtract(offset, surface, new Cesium.Cartesian3());
     tileset.modelMatrix = Cesium.Matrix4.fromTranslation(translation);
 });
+
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

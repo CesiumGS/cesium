@@ -306,7 +306,7 @@ var uiOptions = {
         '3D Tiles' : {
             'centerLongitude' : -1.31968,
             'centerLatitude' : 0.698874,
-            'tileset' : '../../../Specs/Data/Cesium3DTiles/Tilesets/Tileset'
+            'tileset' : '../../SampleData/Cesium3DTiles/Tilesets/Tileset/tileset.json'
         }
     }
 };
@@ -486,11 +486,7 @@ function updateUI() {
 
 scene.debugShowFramesPerSecond = true;
 
-var cesiumTerrainProvider = new Cesium.CesiumTerrainProvider({
-    url : 'https://assets.agi.com/stk-terrain/v1/tilesets/world/tiles',
-    requestWaterMask : true,
-    requestVertexNormals : true
-});
+var cesiumTerrainProvider = Cesium.createWorldTerrain();
 
 var ellipsoidTerrainProvider = new Cesium.EllipsoidTerrainProvider();
 
@@ -593,10 +589,15 @@ function updateModels() {
     }
 }
 
-function createTileset(url) {
-    scene.primitives.add(new Cesium.Cesium3DTileset({
-        url : url
-    }));
+function createTileset(resource) {
+    resource.then(function(url) {
+        viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+            url : url
+        }));
+    })
+    .otherwise(function(error) {
+        console.log(error);
+    });
 }
 
 function createModel(url, origin) {
@@ -610,7 +611,7 @@ function createModel(url, origin) {
     model.readyPromise.then(function(model) {
         // Play and loop all animations at half-speed
         model.activeAnimations.addAll({
-            speedup : 0.5,
+            multiplier : 0.5,
             loop : Cesium.ModelAnimationLoop.REPEAT
         });
     }).otherwise(function(error){
@@ -741,10 +742,10 @@ handler.setInputAction(function(movement) {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

@@ -38,7 +38,6 @@ defineSuite([
         expect(matrix[Matrix3.COLUMN2ROW2]).toEqual(9.0);
     });
 
-
     it('can pack and unpack', function() {
         var array = [];
         var matrix = new Matrix3(
@@ -160,7 +159,6 @@ defineSuite([
         expect(result).toBe(returnedResult);
         expect(returnedResult).toEqualEpsilon(expected, CesiumMath.EPSILON15);
     });
-
 
     it('fromScale works without a result parameter', function() {
         var expected = new Matrix3(

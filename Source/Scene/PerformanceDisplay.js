@@ -1,6 +1,7 @@
 define([
         '../Core/defaultValue',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/getTimestamp',
@@ -8,6 +9,7 @@ define([
     ], function(
         defaultValue,
         defined,
+        defineProperties,
         destroyObject,
         DeveloperError,
         getTimestamp,
@@ -47,19 +49,60 @@ define([
         this._lastMsSampleTime = getTimestamp();
         this._fpsFrameCount = 0;
         this._msFrameCount = 0;
+
+        this._throttled = false;
+        var throttledElement = document.createElement('div');
+        throttledElement.className = 'cesium-performanceDisplay-throttled';
+        this._throttledText = document.createTextNode('');
+        throttledElement.appendChild(this._throttledText);
+        display.appendChild(throttledElement);
     }
+
+     defineProperties(PerformanceDisplay.prototype, {
+        /**
+         * The display should indicate the FPS is being throttled.
+         * @memberof PerformanceDisplay.prototype
+         *
+         * @type {Boolean}
+         */
+        throttled : {
+            get : function() {
+                return this._throttled;
+            },
+            set : function(value) {
+                if (this._throttled === value) {
+                    return;
+                }
+
+                if (value) {
+                    this._throttledText.nodeValue = '(throttled)';
+                } else {
+                    this._throttledText.nodeValue = '';
+                }
+
+                this._throttled = value;
+            }
+        }
+    });
 
     /**
      * Update the display.  This function should only be called once per frame, because
      * each call records a frame in the internal buffer and redraws the display.
+     *
+     * @param {Boolean} [renderedThisFrame=true] If provided, the FPS count will only update and display if true.
      */
-    PerformanceDisplay.prototype.update = function() {
+    PerformanceDisplay.prototype.update = function(renderedThisFrame) {
         var time = getTimestamp();
+        var updateDisplay = defaultValue(renderedThisFrame, true);
 
         this._fpsFrameCount++;
         var fpsElapsedTime = time - this._lastFpsSampleTime;
         if (fpsElapsedTime > 1000) {
-            var fps = this._fpsFrameCount * 1000 / fpsElapsedTime | 0;
+            var fps = 'N/A';
+            if (updateDisplay) {
+                fps = this._fpsFrameCount * 1000 / fpsElapsedTime | 0;
+            }
+
             this._fpsText.nodeValue = fps + ' FPS';
             this._lastFpsSampleTime = time;
             this._fpsFrameCount = 0;
@@ -68,7 +111,12 @@ define([
         this._msFrameCount++;
         var msElapsedTime = time - this._lastMsSampleTime;
         if (msElapsedTime > 200) {
-            this._msText.nodeValue = (msElapsedTime / this._msFrameCount).toFixed(2) + ' MS';
+            var ms = 'N/A';
+            if (updateDisplay) {
+                ms = (msElapsedTime / this._msFrameCount).toFixed(2);
+            }
+
+            this._msText.nodeValue = ms + ' MS';
             this._lastMsSampleTime = time;
             this._msFrameCount = 0;
         }

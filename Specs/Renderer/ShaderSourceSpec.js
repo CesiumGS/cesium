@@ -76,4 +76,22 @@ defineSuite([
         var shaderText = source.createCombinedVertexShader(mockContext);
         expect(shaderText).toStartWith('#version 300 es\n');
     });
+
+    it('clones', function() {
+        var source = new ShaderSource({
+            defines : ['A'],
+            sources : ['void main() { gl_FragColor = vec4(1.0); }'],
+            pickColorQualifier : 'varying',
+            includeBuiltIns : false
+        });
+        var clone = source.clone();
+        expect(clone.defines).toBeDefined();
+        expect(clone.defines.length).toEqual(1);
+        expect(clone.defines[0]).toEqual(source.defines[0]);
+        expect(clone.sources).toBeDefined();
+        expect(clone.sources.length).toEqual(1);
+        expect(clone.sources[0]).toEqual(source.sources[0]);
+        expect(clone.pickColorQualifier).toEqual(source.pickColorQualifier);
+        expect(clone.includeBuiltIns).toEqual(source.includeBuiltIns);
+    });
 });

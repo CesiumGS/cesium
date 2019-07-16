@@ -302,7 +302,20 @@ define([
         var context = scene.context;
         var uniformState = context.uniformState;
 
-        var viewport = scene._passState.viewport;
+        var currentFrustum = uniformState.currentFrustum;
+        var near = currentFrustum.x;
+        var far = currentFrustum.y;
+
+        if (scene.frameState.useLogDepth) {
+            // transforming logarithmic depth of form
+            // log2(z + 1) / log2( far + 1);
+            // to perspective form
+            // (far - far * near / z) / (far - near)
+            depth = Math.pow(2.0, depth * CesiumMath.log2(far + 1.0)) - 1.0;
+            depth = far * (1.0 - near / depth) / (far - near);
+        }
+
+        var viewport = scene._view.passState.viewport;
         var ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
         ndc.x = (drawingBufferPosition.x - viewport.x) / viewport.width * 2.0 - 1.0;
         ndc.y = (drawingBufferPosition.y - viewport.y) / viewport.height * 2.0 - 1.0;
@@ -315,11 +328,10 @@ define([
             if (defined(frustum._offCenterFrustum)) {
                 frustum = frustum._offCenterFrustum;
             }
-            var currentFrustum = uniformState.currentFrustum;
             worldCoords = scratchWorldCoords;
             worldCoords.x = (ndc.x * (frustum.right - frustum.left) + frustum.left + frustum.right) * 0.5;
             worldCoords.y = (ndc.y * (frustum.top - frustum.bottom) + frustum.bottom + frustum.top) * 0.5;
-            worldCoords.z = (ndc.z * (currentFrustum.x - currentFrustum.y) - currentFrustum.x - currentFrustum.y) * 0.5;
+            worldCoords.z = (ndc.z * (near - far) - near - far) * 0.5;
             worldCoords.w = 1.0;
 
             worldCoords = Matrix4.multiplyByVector(uniformState.inverseView, worldCoords, worldCoords);
@@ -330,7 +342,6 @@ define([
             var w = 1.0 / worldCoords.w;
             Cartesian3.multiplyByScalar(worldCoords, w, worldCoords);
         }
-
         return Cartesian3.fromCartesian4(worldCoords, result);
     };
 

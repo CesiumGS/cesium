@@ -1,11 +1,13 @@
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
+        '../Core/Resource',
         '../Scene/ColorBlendMode',
         '../Scene/HeightReference',
         '../Scene/Model',
@@ -16,11 +18,13 @@ define([
     ], function(
         AssociativeArray,
         BoundingSphere,
+        Cartesian2,
         Color,
         defined,
         destroyObject,
         DeveloperError,
         Matrix4,
+        Resource,
         ColorBlendMode,
         HeightReference,
         Model,
@@ -41,6 +45,7 @@ define([
     var defaultColor = Color.WHITE;
     var defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
     var defaultColorBlendAmount = 0.5;
+    var defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -95,15 +100,15 @@ define([
             var entity = entities[i];
             var modelGraphics = entity._model;
 
-            var uri;
+            var resource;
             var modelData = modelHash[entity.id];
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(modelGraphics._show, time, true);
 
             var modelMatrix;
             if (show) {
                 modelMatrix = entity.computeModelMatrix(time, modelMatrixScratch);
-                uri = Property.getValueOrUndefined(modelGraphics._uri, time);
-                show = defined(modelMatrix) && defined(uri);
+                resource = Resource.createIfNeeded(Property.getValueOrUndefined(modelGraphics._uri, time));
+                show = defined(modelMatrix) && defined(resource);
             }
 
             if (!show) {
@@ -114,30 +119,30 @@ define([
             }
 
             var model = defined(modelData) ? modelData.modelPrimitive : undefined;
-            if (!defined(model) || uri !== modelData.uri) {
+            if (!defined(model) || resource.url !== modelData.url) {
                 if (defined(model)) {
                     primitives.removeAndDestroy(model);
                     delete modelHash[entity.id];
                 }
                 model = Model.fromGltf({
-                    url : uri,
+                    url : resource,
                     incrementallyLoadTextures : Property.getValueOrDefault(modelGraphics._incrementallyLoadTextures, time, defaultIncrementallyLoadTextures),
                     scene : this._scene
                 });
-
-                model.readyPromise.otherwise(onModelError);
-
                 model.id = entity;
                 primitives.add(model);
 
                 modelData = {
                     modelPrimitive : model,
-                    uri : uri,
+                    url : resource.url,
                     animationsRunning : false,
                     nodeTransformationsScratch : {},
-                    originalNodeMatrixHash : {}
+                    articulationsScratch : {},
+                    loadFail : false
                 };
                 modelHash[entity.id] = modelData;
+
+                checkModelLoad(model, entity, modelHash);
             }
 
             model.show = true;
@@ -153,7 +158,10 @@ define([
             model.color = Property.getValueOrDefault(modelGraphics._color, time, defaultColor, model._color);
             model.colorBlendMode = Property.getValueOrDefault(modelGraphics._colorBlendMode, time, defaultColorBlendMode);
             model.colorBlendAmount = Property.getValueOrDefault(modelGraphics._colorBlendAmount, time, defaultColorBlendAmount);
+            model.clippingPlanes = Property.getValueOrUndefined(modelGraphics._clippingPlanes, time);
             model.clampAnimations = Property.getValueOrDefault(modelGraphics._clampAnimations, time, defaultClampAnimations);
+            model.imageBasedLightingFactor = Property.getValueOrDefault(modelGraphics._imageBasedLightingFactor, time, defaultImageBasedLightingFactor);
+            model.lightColor = Property.getValueOrUndefined(modelGraphics._lightColor, time);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
@@ -171,7 +179,6 @@ define([
                 // Apply node transformations
                 var nodeTransformations = Property.getValueOrUndefined(modelGraphics._nodeTransformations, time, modelData.nodeTransformationsScratch);
                 if (defined(nodeTransformations)) {
-                    var originalNodeMatrixHash = modelData.originalNodeMatrixHash;
                     var nodeNames = Object.keys(nodeTransformations);
                     for (var nodeIndex = 0, nodeLength = nodeNames.length; nodeIndex < nodeLength; ++nodeIndex) {
                         var nodeName = nodeNames[nodeIndex];
@@ -186,15 +193,31 @@ define([
                             continue;
                         }
 
-                        var originalNodeMatrix = originalNodeMatrixHash[nodeName];
-                        if (!defined(originalNodeMatrix)) {
-                            originalNodeMatrix = modelNode.matrix.clone();
-                            originalNodeMatrixHash[nodeName] = originalNodeMatrix;
+                        var transformationMatrix = Matrix4.fromTranslationRotationScale(nodeTransformation, nodeMatrixScratch);
+                        modelNode.matrix = Matrix4.multiply(modelNode.originalMatrix, transformationMatrix, transformationMatrix);
+                    }
+                }
+
+                // Apply articulations
+                var anyArticulationUpdated = false;
+                var articulations = Property.getValueOrUndefined(modelGraphics._articulations, time, modelData.articulationsScratch);
+                if (defined(articulations)) {
+                    var articulationStageKeys = Object.keys(articulations);
+                    for (var s = 0, numKeys = articulationStageKeys.length; s < numKeys; ++s) {
+                        var key = articulationStageKeys[s];
+
+                        var articulationStageValue = articulations[key];
+                        if (!defined(articulationStageValue)) {
+                            continue;
                         }
 
-                        var transformationMatrix = Matrix4.fromTranslationRotationScale(nodeTransformation, nodeMatrixScratch);
-                        modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformationMatrix, transformationMatrix);
+                        anyArticulationUpdated = true;
+                        model.setArticulationStage(key, articulationStageValue);
                     }
+                }
+
+                if (anyArticulationUpdated) {
+                    model.applyArticulations();
                 }
             }
         }
@@ -247,7 +270,7 @@ define([
         //>>includeEnd('debug');
 
         var modelData = this._modelHash[entity.id];
-        if (!defined(modelData)) {
+        if (!defined(modelData) || modelData.loadFail) {
             return BoundingSphereState.FAILED;
         }
 
@@ -291,7 +314,7 @@ define([
         for (i = changed.length - 1; i > -1; i--) {
             entity = changed[i];
             if (defined(entity._model) && defined(entity._position)) {
-                clearNodeTransformationsScratch(entity, modelHash);
+                clearNodeTransformationsArticulationsScratch(entity, modelHash);
                 entities.set(entity.id, entity);
             } else {
                 removeModel(this, entity, modelHash, primitives);
@@ -314,15 +337,19 @@ define([
         }
     }
 
-    function clearNodeTransformationsScratch(entity, modelHash) {
+    function clearNodeTransformationsArticulationsScratch(entity, modelHash) {
         var modelData = modelHash[entity.id];
         if (defined(modelData)) {
             modelData.nodeTransformationsScratch = {};
+            modelData.articulationsScratch = {};
         }
     }
 
-    function onModelError(error) {
-        console.error(error);
+    function checkModelLoad(model, entity, modelHash){
+        model.readyPromise.otherwise(function(error){
+            console.error(error);
+            modelHash[entity.id].loadFail = true;
+        });
     }
 
     return ModelVisualizer;

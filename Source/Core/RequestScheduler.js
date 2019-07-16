@@ -2,8 +2,10 @@ define([
         '../ThirdParty/Uri',
         '../ThirdParty/when',
         './Check',
+        './defaultValue',
         './defined',
         './defineProperties',
+        './Event',
         './Heap',
         './isBlobUri',
         './isDataUri',
@@ -12,8 +14,10 @@ define([
         Uri,
         when,
         Check,
+        defaultValue,
         defined,
         defineProperties,
+        Event,
         Heap,
         isBlobUri,
         isDataUri,
@@ -30,7 +34,8 @@ define([
         numberOfCancelledRequests : 0,
         numberOfCancelledActiveRequests : 0,
         numberOfFailedRequests : 0,
-        numberOfActiveRequestsEver : 0
+        numberOfActiveRequestsEver : 0,
+        lastNumberOfActiveRequests : 0
     };
 
     var priorityHeapLength = 20;
@@ -44,6 +49,8 @@ define([
     var numberOfActiveRequestsByServer = {};
 
     var pageUri = typeof document !== 'undefined' ? new Uri(document.location.href) : new Uri();
+
+    var requestCompletedEvent = new Event();
 
     /**
      * Tracks the number of active requests and prioritizes incoming requests.
@@ -63,11 +70,20 @@ define([
     RequestScheduler.maximumRequests = 50;
 
     /**
-     * The maximum number of simultaneous active requests per server. Un-throttled requests do not observe this limit.
+     * The maximum number of simultaneous active requests per server. Un-throttled requests or servers specifically
+     * listed in requestsByServer do not observe this limit.
      * @type {Number}
      * @default 6
      */
     RequestScheduler.maximumRequestsPerServer = 6;
+
+    /**
+     * A per serverKey list of overrides to use for throttling instead of maximumRequestsPerServer
+     */
+    RequestScheduler.requestsByServer = {
+        'api.cesium.com:443': 18,
+        'assets.cesium.com:443': 18
+    };
 
     /**
      * Specifies if the request scheduler should throttle incoming requests, or let the browser queue requests under its control.
@@ -82,6 +98,15 @@ define([
      * @default false
      */
     RequestScheduler.debugShowStatistics = false;
+
+    /**
+     * An event that's raised when a request is completed.  Event handlers are passed
+     * the error object if the request fails.
+     *
+     * @type {Event}
+     * @default Event()
+     */
+    RequestScheduler.requestCompletedEvent = requestCompletedEvent;
 
     defineProperties(RequestScheduler, {
         /**
@@ -133,7 +158,8 @@ define([
     }
 
     function serverHasOpenSlots(serverKey) {
-        return numberOfActiveRequestsByServer[serverKey] < RequestScheduler.maximumRequestsPerServer;
+        var maxRequests = defaultValue(RequestScheduler.requestsByServer[serverKey], RequestScheduler.maximumRequestsPerServer);
+        return numberOfActiveRequestsByServer[serverKey] < maxRequests;
     }
 
     function issueRequest(request) {
@@ -152,6 +178,7 @@ define([
             }
             --statistics.numberOfActiveRequests;
             --numberOfActiveRequestsByServer[request.serverKey];
+            requestCompletedEvent.raiseEvent();
             request.state = RequestState.RECEIVED;
             request.deferred.resolve(results);
         };
@@ -166,6 +193,7 @@ define([
             ++statistics.numberOfFailedRequests;
             --statistics.numberOfActiveRequests;
             --numberOfActiveRequestsByServer[request.serverKey];
+            requestCompletedEvent.raiseEvent(error);
             request.state = RequestState.FAILED;
             request.deferred.reject(error);
         };
@@ -304,6 +332,7 @@ define([
         //>>includeEnd('debug');
 
         if (isDataUri(request.url) || isBlobUri(request.url)) {
+            requestCompletedEvent.raiseEvent();
             request.state = RequestState.RECEIVED;
             return request.requestFunction();
         }
@@ -314,17 +343,17 @@ define([
             request.serverKey = RequestScheduler.getServerKey(request.url);
         }
 
+        if (request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
+            // Server is saturated. Try again later.
+            return undefined;
+        }
+
         if (!RequestScheduler.throttleRequests || !request.throttle) {
             return startRequest(request);
         }
 
         if (activeRequests.length >= RequestScheduler.maximumRequests) {
             // Active requests are saturated. Try again later.
-            return undefined;
-        }
-
-        if (request.throttleByServer && !serverHasOpenSlots(request.serverKey)) {
-            // Server is saturated. Try again later.
             return undefined;
         }
 
@@ -345,34 +374,34 @@ define([
         return issueRequest(request);
     };
 
-    function clearStatistics() {
-        statistics.numberOfAttemptedRequests = 0;
-        statistics.numberOfCancelledRequests = 0;
-        statistics.numberOfCancelledActiveRequests = 0;
-    }
-
     function updateStatistics() {
         if (!RequestScheduler.debugShowStatistics) {
             return;
         }
 
-        if (statistics.numberOfAttemptedRequests > 0) {
-            console.log('Number of attempted requests: ' + statistics.numberOfAttemptedRequests);
-        }
-        if (statistics.numberOfActiveRequests > 0) {
-            console.log('Number of active requests: ' + statistics.numberOfActiveRequests);
-        }
-        if (statistics.numberOfCancelledRequests > 0) {
-            console.log('Number of cancelled requests: ' + statistics.numberOfCancelledRequests);
-        }
-        if (statistics.numberOfCancelledActiveRequests > 0) {
-            console.log('Number of cancelled active requests: ' + statistics.numberOfCancelledActiveRequests);
-        }
-        if (statistics.numberOfFailedRequests > 0) {
-            console.log('Number of failed requests: ' + statistics.numberOfFailedRequests);
+        if (statistics.numberOfActiveRequests === 0 && statistics.lastNumberOfActiveRequests > 0) {
+            if (statistics.numberOfAttemptedRequests > 0) {
+                console.log('Number of attempted requests: ' + statistics.numberOfAttemptedRequests);
+                statistics.numberOfAttemptedRequests = 0;
+            }
+
+            if (statistics.numberOfCancelledRequests > 0) {
+                console.log('Number of cancelled requests: ' + statistics.numberOfCancelledRequests);
+                statistics.numberOfCancelledRequests = 0;
+            }
+
+            if (statistics.numberOfCancelledActiveRequests > 0) {
+                console.log('Number of cancelled active requests: ' + statistics.numberOfCancelledActiveRequests);
+                statistics.numberOfCancelledActiveRequests = 0;
+            }
+
+            if (statistics.numberOfFailedRequests > 0) {
+                console.log('Number of failed requests: ' + statistics.numberOfFailedRequests);
+                statistics.numberOfFailedRequests = 0;
+            }
         }
 
-        clearStatistics();
+        statistics.lastNumberOfActiveRequests = statistics.numberOfActiveRequests;
     }
 
     /**
@@ -399,6 +428,7 @@ define([
         statistics.numberOfCancelledActiveRequests = 0;
         statistics.numberOfFailedRequests = 0;
         statistics.numberOfActiveRequestsEver = 0;
+        statistics.lastNumberOfActiveRequests = 0;
     };
 
     /**

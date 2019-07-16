@@ -17,7 +17,7 @@ define([
      *
      * @alias ModelNode
      * @internalConstructor
-     *
+     * @class
      *
      * @example
      * var node = model.getNode('LOD3sp');
@@ -38,14 +38,12 @@ define([
 
         this._show = true;
         this._matrix = Matrix4.clone(matrix);
+        this._originalMatrix = Matrix4.clone(matrix);
     }
 
     defineProperties(ModelNode.prototype, {
         /**
-         * The value of the <code>name</code> property of this node.  This is the
-         * name assigned by the artist when the asset is created.  This can be
-         * different than the name of the node property ({@link ModelNode#id}),
-         * which is internal to glTF.
+         * The value of the <code>name</code> property of this node.
          *
          * @memberof ModelNode.prototype
          *
@@ -59,10 +57,7 @@ define([
         },
 
         /**
-         * The name of the glTF JSON property for this node.  This is guaranteed
-         * to be unique among all nodes.  It may not match the node's <code>
-         * name</code> property (@link ModelNode#name), which is assigned by
-         * the artist when the asset is created.
+         * The index of the node.
          *
          * @memberof ModelNode.prototype
          *
@@ -117,6 +112,19 @@ define([
                 var model = this._model;
                 model._cesiumAnimationsDirty = true;
                 this._runtimeNode.dirtyNumber = model._maxDirtyNumber;
+            }
+        },
+
+        /**
+         * Gets the node's original 4x4 matrix transform from its local coordinates to
+         * its parent's, without any node transformations or articulations applied.
+         *
+         * @memberof ModelNode.prototype
+         * @type {Matrix4}
+         */
+        originalMatrix : {
+            get : function() {
+                return this._originalMatrix;
             }
         }
     });

@@ -1,8 +1,10 @@
 # Coding Guide
 
-Cesium is one of the largest JavaScript codebases in the world.  Since its start, we have maintained a high standard for code quality, which has made the codebase easier to work with for both new and experienced contributors.  We hope you find the codebase to be clean and consistent.
+CesiumJS is one of the largest JavaScript codebases in the world.  Since its start, we have maintained a high standard for code quality, which has made the codebase easier to work with for both new and experienced contributors.  We hope you find the codebase to be clean and consistent.
 
 In addition to describing typical coding conventions, this guide also covers best practices for design, maintainability, and performance.  It is the cumulative advice of many developers after years of production development, research, and experimentation.
+
+This guide applies to CesiumJS and all parts of the Cesium ecosystem written in JavaScript.
 
 :art: The color palette icon indicates a design tip.
 
@@ -501,6 +503,17 @@ The code is not as clean, but the performance improvement is often dramatic.
 
 As described below, `from` constructors also use optional `result` parameters.
 
+Because result parameters aren't always required or returned, don't strictly rely on the result parameter you passed in to be modified.  For example:
+```js
+Cartesian3.add(v0, v1, result);
+Cartesian3.add(result, v2, result);
+```
+is better written as
+```js
+result = Cartesian3.add(v0, v1, result);
+result = Cartesian3.add(result, v2, result);
+```
+
 ## Classes
 
 * :art: Classes should be **cohesive**. A class should represent one abstraction.
@@ -530,6 +543,21 @@ p.w = 4.0; // Adds the w property to p, slows down property access since the obj
 var p = new Cartesian3(1.0, 2.0, 3.0);
 p.x = 'Cesium'; // Changes x to a string, slows down property access
 ```
+
+* In a constructor function, consider properties as write once; do not write to them or read them multiple times. Create a local variable if they need to be ready. For example:
+
+  Instead of
+  ```javascript
+  this._x = 2;
+  this._xSquared = this._x * this._x;
+  ```
+
+  prefer
+  ```javascript
+  var x = 2;
+  this._x = x;
+  this._xSquared = x * x;
+  ```
 
 ### `from` Constructors
 
@@ -570,11 +598,11 @@ Cartesian3.prototype.toString = function() {
 
 :art: Fundamental math classes such as `Cartesian3`, `Quaternion`, `Matrix4`, and `JulianDate` use prototype functions sparingly.  For example, `Cartesian3` does not have a prototype `add` function like this:
 ```javascript
-v0.add(v1, result);
+var v2 = v0.add(v1, result);
 ```
 Instead, this is written as
 ```javascript
-Cartesian3.add(v0, v1, result);
+var v2 = Cartesian3.add(v0, v1, result);
 ```
 The only exceptions are
 * `clone`
@@ -796,6 +824,8 @@ SkyBox.prototype.destroy = function() {
 From release to release, we strive to keep the public Cesium API stable but also maintain mobility for speedy development and to take the API in the right direction.  As such, we sparingly deprecate and then remove or replace parts of the public API.
 
 A `@private` API is considered a Cesium implementation detail and can be broken immediately without deprecation.
+
+An `@experimental` API is subject to breaking changes in future Cesium releases without deprecation. It allows for new experimental features, for instance implementing draft formats.
 
 A public identifier (class, function, property) should be deprecated before being removed.  To do so:
 

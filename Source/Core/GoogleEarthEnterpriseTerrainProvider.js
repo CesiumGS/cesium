@@ -11,12 +11,12 @@ define([
         './GoogleEarthEnterpriseTerrainData',
         './HeightmapTerrainData',
         './JulianDate',
-        './loadArrayBuffer',
         './Math',
         './Rectangle',
         './Request',
         './RequestState',
         './RequestType',
+        './Resource',
         './RuntimeError',
         './TaskProcessor',
         './TileProviderError'
@@ -33,12 +33,12 @@ define([
         GoogleEarthEnterpriseTerrainData,
         HeightmapTerrainData,
         JulianDate,
-        loadArrayBuffer,
         CesiumMath,
         Rectangle,
         Request,
         RequestState,
         RequestType,
+        Resource,
         RuntimeError,
         TaskProcessor,
         TileProviderError) {
@@ -99,10 +99,8 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The url of the Google Earth Enterprise server hosting the imagery.
+     * @param {Resource|String} options.url The url of the Google Earth Enterprise server hosting the imagery.
      * @param {GoogleEarthEnterpriseMetadata} options.metadata A metadata object that can be used to share metadata requests with a GoogleEarthEnterpriseImageryProvider.
-     * @param {Proxy} [options.proxy] A proxy to use for requests. This object is
-     *        expected to have a getURL function which returns the proxied URL, if needed.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
@@ -128,15 +126,13 @@ define([
 
         var metadata;
         if (defined(options.metadata)) {
-            metadata = this._metadata = options.metadata;
+            metadata = options.metadata;
         } else {
-            metadata = this._metadata = new GoogleEarthEnterpriseMetadata({
-                url : options.url,
-                proxy : options.proxy
-            });
+            var resource = Resource.createIfNeeded(options.url);
+            metadata = new GoogleEarthEnterpriseMetadata(resource);
         }
-        this._proxy = defaultValue(options.proxy, this._metadata.proxy);
 
+        this._metadata = metadata;
         this._tilingScheme = new GeographicTilingScheme({
             numberOfLevelZeroTilesX : 2,
             numberOfLevelZeroTilesY : 2,
@@ -201,7 +197,7 @@ define([
          */
         proxy : {
             get : function() {
-                return this._proxy;
+                return this._metadata.proxy;
             }
         },
 
@@ -378,13 +374,13 @@ define([
         var buffer = terrainCache.get(quadKey);
         if (defined(buffer)) {
             var credit = metadata.providers[info.terrainProvider];
-            return new GoogleEarthEnterpriseTerrainData({
+            return when.resolve(new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
                 childTileMask : computeChildMask(quadKey, info, metadata),
                 credits : defined(credit) ? [credit] : undefined,
                 negativeAltitudeExponentBias: metadata.negativeAltitudeExponentBias,
                 negativeElevationThreshold: metadata.negativeAltitudeThreshold
-            });
+            }));
         }
 
         // Clean up the cache
@@ -393,11 +389,11 @@ define([
         // We have a tile, check to see if no ancestors have terrain or that we know for sure it doesn't
         if (!info.ancestorHasTerrain) {
             // We haven't reached a level with terrain, so return the ellipsoid
-            return new HeightmapTerrainData({
+            return when.resolve(new HeightmapTerrainData({
                 buffer : new Uint8Array(16 * 16),
                 width : 16,
                 height : 16
-            });
+            }));
         } else if (terrainState === TerrainState.NONE) {
             // Already have info and there isn't any terrain here
             return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
@@ -437,7 +433,6 @@ define([
         // Load that terrain
         var terrainPromises = this._terrainPromises;
         var terrainRequests = this._terrainRequests;
-        var url = buildTerrainUrl(this, q, terrainVersion);
         var sharedPromise;
         var sharedRequest;
         if (defined(terrainPromises[q])) { // Already being loaded possibly from another child, so return existing promise
@@ -445,7 +440,7 @@ define([
             sharedRequest = terrainRequests[q];
         } else { // Create new request for terrain
             sharedRequest = request;
-            var requestPromise = loadArrayBuffer(url, undefined, sharedRequest);
+            var requestPromise = buildTerrainResource(this, q, terrainVersion, sharedRequest).fetchArrayBuffer();
 
             if (!defined(requestPromise)) {
                 return undefined; // Throttled
@@ -585,19 +580,27 @@ define([
         return false;
     };
 
+    /**
+     * Makes sure we load availability data for a tile
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+     */
+    GoogleEarthEnterpriseTerrainProvider.prototype.loadTileDataAvailability = function(x, y, level) {
+        return undefined;
+    };
+
     //
     // Functions to handle imagery packets
     //
-    function buildTerrainUrl(terrainProvider, quadKey, version) {
+    function buildTerrainResource(terrainProvider, quadKey, version, request) {
         version = (defined(version) && version > 0) ? version : 1;
-        var terrainUrl = terrainProvider.url + 'flatfile?f1c-0' + quadKey + '-t.' + version.toString();
-
-        var proxy = terrainProvider._proxy;
-        if (defined(proxy)) {
-            terrainUrl = proxy.getURL(terrainUrl);
-        }
-
-        return terrainUrl;
+        return terrainProvider._metadata.resource.getDerivedResource({
+            url: 'flatfile?f1c-0' + quadKey + '-t.' + version.toString(),
+            request: request
+        });
     }
 
     return GoogleEarthEnterpriseTerrainProvider;

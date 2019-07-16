@@ -70,7 +70,7 @@ function addPointAndModel() {
     });
 
     scene.primitives.add(Cesium.Model.fromGltf({
-        url : '../../SampleData/models/CesiumGround/Cesium_Ground.glb',
+        url : '../../SampleData/models/GroundVehicle/GroundVehicle.glb',
         modelMatrix : Cesium.Transforms.eastNorthUpToFixedFrame(position),
         distanceDisplayCondition : new Cesium.DistanceDisplayCondition(0.0, 250.5)
     }));
@@ -98,10 +98,10 @@ Sandcastle.reset = function () {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

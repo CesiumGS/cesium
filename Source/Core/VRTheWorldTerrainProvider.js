@@ -10,10 +10,9 @@ define([
         './GeographicTilingScheme',
         './getImagePixels',
         './HeightmapTerrainData',
-        './loadImage',
-        './loadXML',
         './Math',
         './Rectangle',
+        './Resource',
         './TerrainProvider',
         './TileProviderError'
     ], function(
@@ -28,10 +27,9 @@ define([
         GeographicTilingScheme,
         getImagePixels,
         HeightmapTerrainData,
-        loadImage,
-        loadXML,
         CesiumMath,
         Rectangle,
+        Resource,
         TerrainProvider,
         TileProviderError) {
     'use strict';
@@ -49,8 +47,7 @@ define([
      * @constructor
      *
      * @param {Object} options Object with the following properties:
-     * @param {String} options.url The URL of the VR-TheWorld TileMap.
-     * @param {Object} [options.proxy] A proxy to use for requests. This object is expected to have a getURL function which returns the proxied URL, if needed.
+     * @param {Resource|String} options.url The URL of the VR-TheWorld TileMap.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid.  If this parameter is not
      *                    specified, the WGS84 ellipsoid is used.
      * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
@@ -72,27 +69,24 @@ define([
         }
         //>>includeEnd('debug');
 
-        this._url = options.url;
-        if (this._url.length > 0 && this._url[this._url.length - 1] !== '/') {
-            this._url += '/';
-        }
+        var resource = Resource.createIfNeeded(options.url);
+
+        this._resource = resource;
 
         this._errorEvent = new Event();
         this._ready = false;
         this._readyPromise = when.defer();
 
-        this._proxy = options.proxy;
-
         this._terrainDataStructure = {
-                heightScale : 1.0 / 1000.0,
-                heightOffset : -1000.0,
-                elementsPerHeight : 3,
-                stride : 4,
-                elementMultiplier : 256.0,
-                isBigEndian : true,
-                lowestEncodedHeight : 0,
-                highestEncodedHeight : 256 * 256 * 256 - 1
-            };
+            heightScale : 1.0 / 1000.0,
+            heightOffset : -1000.0,
+            elementsPerHeight : 3,
+            stride : 4,
+            elementMultiplier : 256.0,
+            isBigEndian : true,
+            lowestEncodedHeight : 0,
+            highestEncodedHeight : 256 * 256 * 256 - 1
+        };
 
         var credit = options.credit;
         if (typeof credit === 'string') {
@@ -110,7 +104,7 @@ define([
         function metadataSuccess(xml) {
             var srs = xml.getElementsByTagName('SRS')[0].textContent;
             if (srs === 'EPSG:4326') {
-                that._tilingScheme = new GeographicTilingScheme({ ellipsoid : ellipsoid });
+                that._tilingScheme = new GeographicTilingScheme({ellipsoid : ellipsoid});
             } else {
                 metadataFailure('SRS ' + srs + ' is not supported.');
                 return;
@@ -140,12 +134,12 @@ define([
         }
 
         function metadataFailure(e) {
-            var message = defaultValue(e, 'An error occurred while accessing ' + that._url + '.');
+            var message = defaultValue(e, 'An error occurred while accessing ' + that._resource.url + '.');
             metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, message, undefined, undefined, undefined, requestMetadata);
         }
 
         function requestMetadata() {
-            when(loadXML(that._url), metadataSuccess, metadataFailure);
+            when(that._resource.fetchXML(), metadataSuccess, metadataFailure);
         }
 
         requestMetadata();
@@ -266,28 +260,31 @@ define([
         //>>includeEnd('debug');
 
         var yTiles = this._tilingScheme.getNumberOfYTilesAtLevel(level);
-        var url = this._url + level + '/' + x + '/' + (yTiles - y - 1) + '.tif?cesium=true';
-
-        var proxy = this._proxy;
-        if (defined(proxy)) {
-            url = proxy.getURL(url);
-        }
-
-        var promise = loadImage(url, undefined, request);
+        var resource = this._resource.getDerivedResource({
+            url : level + '/' + x + '/' + (yTiles - y - 1) + '.tif',
+            queryParameters : {
+                cesium : true
+            },
+            request : request
+        });
+        var promise = resource.fetchImage({
+            preferImageBitmap: true
+        });
         if (!defined(promise)) {
             return undefined;
         }
 
         var that = this;
-        return when(promise, function(image) {
-            return new HeightmapTerrainData({
-                buffer : getImagePixels(image),
-                width : that._heightmapWidth,
-                height : that._heightmapHeight,
-                childTileMask : getChildMask(that, x, y, level),
-                structure : that._terrainDataStructure
+        return when(promise)
+            .then(function(image) {
+                return new HeightmapTerrainData({
+                    buffer : getImagePixels(image),
+                    width : that._heightmapWidth,
+                    height : that._heightmapHeight,
+                    childTileMask : getChildMask(that, x, y, level),
+                    structure : that._terrainDataStructure
+                });
             });
-        });
     };
 
     /**
@@ -357,6 +354,18 @@ define([
      * @returns {Boolean} Undefined if not supported, otherwise true or false.
      */
     VRTheWorldTerrainProvider.prototype.getTileDataAvailable = function(x, y, level) {
+        return undefined;
+    };
+
+    /**
+     * Makes sure we load availability data for a tile
+     *
+     * @param {Number} x The X coordinate of the tile for which to request geometry.
+     * @param {Number} y The Y coordinate of the tile for which to request geometry.
+     * @param {Number} level The level of the tile for which to request geometry.
+     * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
+     */
+    VRTheWorldTerrainProvider.prototype.loadTileDataAvailability = function(x, y, level) {
         return undefined;
     };
 

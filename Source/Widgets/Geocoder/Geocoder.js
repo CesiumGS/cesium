@@ -34,6 +34,7 @@ define([
      * @param {GeocoderService[]} [options.geocoderServices] The geocoder services to be used
      * @param {Boolean} [options.autoComplete = true] True if the geocoder should query as the user types to autocomplete
      * @param {Number} [options.flightDuration=1.5] The duration of the camera flight to an entered location, in seconds.
+     * @param {Geocoder~DestinationFoundFunction} [options.destinationFound=GeocoderViewModel.flyToDestination] A callback function that is called after a successful geocode.  If not supplied, the default behavior is to fly the camera to the result destination.
      */
     function Geocoder(options) {
         //>>includeStart('debug', pragmas.debug);
@@ -209,6 +210,13 @@ css: { active: $data === $parent._selectedSuggestion }');
 
         return destroyObject(this);
     };
+
+    /**
+     * A function that handles the result of a successful geocode.
+     * @callback Geocoder~DestinationFoundFunction
+     * @param {GeocoderViewModel} viewModel The view model.
+     * @param {Cartesian3|Rectangle} destination The destination result of the geocode.
+     */
 
     return Geocoder;
 });

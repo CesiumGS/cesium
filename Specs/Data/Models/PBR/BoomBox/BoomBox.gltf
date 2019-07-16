@@ -115,10 +115,10 @@
   ],
   "images": [
     {
-      "uri": "BoomBox_baseColor.jpg"
+      "uri": "BoomBox_baseColor.png"
     },
     {
-      "uri": "BoomBox_occlusionRoughnessMetallic.jpg"
+      "uri": "BoomBox_occlusionRoughnessMetallic.png"
     },
     {
       "uri": "BoomBox_normal.png"

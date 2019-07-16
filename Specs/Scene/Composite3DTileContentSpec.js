@@ -4,7 +4,7 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
-    ], function(
+    ], 'Scene/Composite3DTileContent', function(
         Cartesian3,
         Color,
         HeadingPitchRange,
@@ -16,9 +16,9 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/';
-    var compositeOfComposite = './Data/Cesium3DTiles/Composite/CompositeOfComposite/';
-    var compositeOfInstanced = './Data/Cesium3DTiles/Composite/CompositeOfInstanced/';
+    var compositeUrl = './Data/Cesium3DTiles/Composite/Composite/tileset.json';
+    var compositeOfComposite = './Data/Cesium3DTiles/Composite/CompositeOfComposite/tileset.json';
+    var compositeOfInstanced = './Data/Cesium3DTiles/Composite/CompositeOfInstanced/tileset.json';
 
     beforeAll(function() {
         scene = createScene();
