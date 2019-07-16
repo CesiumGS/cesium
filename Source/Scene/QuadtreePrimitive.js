@@ -899,6 +899,7 @@ define([
         var occluders = primitive._occluders;
 
         var quadDetails = traversalQuadsByLevel[southwest.level];
+		if (quadDetails) return;
         var southwestDetails = quadDetails.southwest;
         var southeastDetails = quadDetails.southeast;
         var northwestDetails = quadDetails.northwest;
