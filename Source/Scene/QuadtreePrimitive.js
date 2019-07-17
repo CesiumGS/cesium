@@ -900,7 +900,7 @@ define([
 
         var quadDetails = traversalQuadsByLevel[southwest.level];
 
-        if (quadDetails) {
+        if (!quadDetails) {
             traversalDetails.allAreRenderable = true;
             traversalDetails.anyWereRenderedLastFrame = false;
             traversalDetails.notYetRenderableCount = 0;
