@@ -158,7 +158,7 @@ define([
      * Flattens an array of Cartesian2s into and array of components.
      *
      * @param {Cartesian2[]} array The array of cartesians to pack.
-     * @param {Number[]} result The array onto which to store the result.
+     * @param {Number[]} [result] The array onto which to store the result.
      * @returns {Number[]} The packed array.
      */
     Cartesian2.packArray = function(array, result) {
@@ -183,7 +183,7 @@ define([
      * Unpacks an array of cartesian components into and array of Cartesian2s.
      *
      * @param {Number[]} array The array of components to unpack.
-     * @param {Cartesian2[]} result The array onto which to store the result.
+     * @param {Cartesian2[]} [result] The array onto which to store the result.
      * @returns {Cartesian2[]} The unpacked array.
      */
     Cartesian2.unpackArray = function(array, result) {
