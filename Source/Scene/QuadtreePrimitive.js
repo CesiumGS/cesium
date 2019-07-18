@@ -655,7 +655,7 @@ define([
         result.notYetRenderableCount = southwest.notYetRenderableCount + southeast.notYetRenderableCount + northwest.notYetRenderableCount + northeast.notYetRenderableCount;
     };
 
-    var traversalQuadsByLevel = new Array(30); // level 30 tiles are ~2cm wide at the equator, should be good enough.
+    var traversalQuadsByLevel = new Array(31); // level 30 tiles are ~2cm wide at the equator, should be good enough.
     for (var i = 0; i < traversalQuadsByLevel.length; ++i) {
         traversalQuadsByLevel[i] = new TraversalQuadDetails();
     }
@@ -899,14 +899,6 @@ define([
         var occluders = primitive._occluders;
 
         var quadDetails = traversalQuadsByLevel[southwest.level];
-
-        if (!quadDetails) {
-            traversalDetails.allAreRenderable = true;
-            traversalDetails.anyWereRenderedLastFrame = false;
-            traversalDetails.notYetRenderableCount = 0;
-            return;
-        }
-
         var southwestDetails = quadDetails.southwest;
         var southeastDetails = quadDetails.southeast;
         var northwestDetails = quadDetails.northwest;
