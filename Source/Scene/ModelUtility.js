@@ -83,73 +83,62 @@ define([
      * @returns {Object} The glTF asset with modified materials.
      */
     ModelUtility.splitIncompatibleMaterials = function(gltf) {
-        var accessors = gltf.accessors;
         var materials = gltf.materials;
         var primitiveInfoByMaterial = {};
+        var primitiveInfoCache = {};
+
         ForEach.mesh(gltf, function(mesh) {
             ForEach.meshPrimitive(mesh, function(primitive) {
                 var materialIndex = primitive.material;
                 var material = materials[materialIndex];
 
-                var jointAccessorId = primitive.attributes.JOINTS_0;
-                var componentType;
-                var type;
-                if (defined(jointAccessorId)) {
-                    var jointAccessor = accessors[jointAccessorId];
-                    componentType = jointAccessor.componentType;
-                    type = jointAccessor.type;
-                }
-                var isSkinned = defined(jointAccessorId);
-                var hasVertexColors = defined(primitive.attributes.COLOR_0);
-                var hasMorphTargets = defined(primitive.targets);
-                var hasNormals = defined(primitive.attributes.NORMAL);
-                var hasTangents = defined(primitive.attributes.TANGENT);
-                var hasTexCoords = defined(primitive.attributes.TEXCOORD_0);
-
-                var primitiveInfo = primitiveInfoByMaterial[materialIndex];
-                if (!defined(primitiveInfo)) {
-                    primitiveInfoByMaterial[materialIndex] = {
-                        skinning: {
-                            skinned: isSkinned,
-                            componentType: componentType,
-                            type: type
-                        },
-                        hasVertexColors: hasVertexColors,
-                        hasMorphTargets: hasMorphTargets,
-                        hasNormals: hasNormals,
-                        hasTangents: hasTangents,
-                        hasTexCoords: hasTexCoords
-                    };
-                } else if ((primitiveInfo.skinning.skinned !== isSkinned) ||
-                    (primitiveInfo.skinning.type !== type) ||
-                    (primitiveInfo.hasVertexColors !== hasVertexColors) ||
-                    (primitiveInfo.hasMorphTargets !== hasMorphTargets) ||
-                    (primitiveInfo.hasNormals !== hasNormals) ||
-                    (primitiveInfo.hasTangents !== hasTangents) ||
-                    (primitiveInfo.hasTexCoords !== hasTexCoords)) {
+                var primitiveInfo = getPrimitiveInfo(gltf.accessors, primitive);
+                if(!defined(primitiveInfoByMaterial[materialIndex])) {
+                    primitiveInfoByMaterial[materialIndex] = primitiveInfo;
+                } else if(!equalsPrimitiveInfo(primitiveInfo, primitiveInfoByMaterial[materialIndex])){
                     // This primitive uses the same material as another one that either:
                     // * Isn't skinned
                     // * Uses a different type to store joints and weights
                     // * Doesn't have vertex colors, morph targets, normals, tangents, or texCoords
-                    var clonedMaterial = clone(material, true);
-                    // Split this off as a separate material
-                    materialIndex = addToArray(materials, clonedMaterial);
-                    primitive.material = materialIndex;
-                    primitiveInfoByMaterial[materialIndex] = {
-                        skinning: {
-                            skinned: isSkinned,
-                            componentType: componentType,
-                            type: type
-                        },
-                        hasVertexColors: hasVertexColors,
-                        hasMorphTargets: hasMorphTargets,
-                        hasNormals: hasNormals,
-                        hasTangents: hasTangents,
-                        hasTexCoords: hasTexCoords
-                    };
+                    if(!primitiveInfoCache[materialIndex]) {
+                        primitiveInfoCache[materialIndex] = {
+                            primitiveInfos: [],
+                            primitives: [],
+                            materials: []
+                        };
+                    }
+                    var foundEntry = false;
+                    for (var i = 0; i < primitiveInfoCache[materialIndex].primitiveInfos.length; i++) {
+                        var primitiveToCheck = primitiveInfoCache[materialIndex].primitiveInfos[i];
+                        if (equalsPrimitiveInfo(primitiveInfo, primitiveToCheck)) {
+                            foundEntry = true;
+                            primitiveInfoCache[materialIndex].primitives[i].push(primitive);
+                            break;
+                        }
+                    }
+                    if (!foundEntry) {
+                        primitiveInfoCache[materialIndex].primitiveInfos.push(primitiveInfo);
+                        primitiveInfoCache[materialIndex].materials.push(clone(material, true));
+                        primitiveInfoCache[materialIndex].primitives.push([primitive]);
+                    }
                 }
             });
         });
+
+        for (var materialId in primitiveInfoCache) {
+            if (primitiveInfoCache.hasOwnProperty(materialId)) {
+                var cacheEntry = primitiveInfoCache[materialId];
+                for (var i = 0; i < cacheEntry.materials.length; i++) {
+                    var material = cacheEntry.materials[i];
+                    var materialIndex = addToArray(materials, material);
+                    primitiveInfoByMaterial[materialIndex] = cacheEntry.primitiveInfos[i];
+                    var primitives = cacheEntry.primitives[i];
+                    for (var j = 0; j < primitives.length; j++) {
+                        primitives[j].material = materialIndex;
+                    }
+                }
+            }
+        }
 
         return primitiveInfoByMaterial;
     };
@@ -324,6 +313,45 @@ define([
                 }
             }
         }
+    }
+
+    function getPrimitiveInfo(accessors, primitive) {
+        var jointAccessorId = primitive.attributes.JOINTS_0;
+        var componentType;
+        var type;
+        if (defined(jointAccessorId)) {
+            var jointAccessor = accessors[jointAccessorId];
+            componentType = jointAccessor.componentType;
+            type = jointAccessor.type;
+        }
+        var isSkinned = defined(jointAccessorId);
+        var hasVertexColors = defined(primitive.attributes.COLOR_0);
+        var hasMorphTargets = defined(primitive.targets);
+        var hasNormals = defined(primitive.attributes.NORMAL);
+        var hasTangents = defined(primitive.attributes.TANGENT);
+        var hasTexCoords = defined(primitive.attributes.TEXCOORD_0);
+        return {
+            skinning: {
+                skinned: isSkinned,
+                componentType: componentType,
+                type: type
+            },
+            hasVertexColors: hasVertexColors,
+            hasMorphTargets: hasMorphTargets,
+            hasNormals: hasNormals,
+            hasTangents: hasTangents,
+            hasTexCoords: hasTexCoords
+        };
+    }
+    function equalsPrimitiveInfo(left, right) {
+        return left.skinning.skinned === right.skinning.skinned &&
+            left.skinning.componentType === right.skinning.componentType &&
+            left.skinning.type === right.skinning.type &&
+            left.hasVertexColors === right.hasVertexColors &&
+            left.hasMorphTargets === right.hasMorphTargets &&
+            left.hasNormals === right.hasNormals &&
+            left.hasTangents === right.hasTangents &&
+            left.hasTexCoords === right.hasTexCoords;
     }
 
     /**
