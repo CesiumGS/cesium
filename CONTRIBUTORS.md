@@ -108,7 +108,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
   * [Yonatan Kra](https://github.com/yonatankra)
 * [Novetta](http://www.novetta.com/)
    * [Joshua Bernstein](https://github.com/jbernstein/)
-   * [Natanael Rivera](https://github.com/nrivera-Novetta/)
+   * [Natanael Rivera](https://github.com/njrivera/)
    * [Justin Burr](https://github.com/jburr-nc/)
    * [Jeremy Marzano](https://github.com/JeremyMarzano-ISPA/)
 * [Orbit Logic](http://www.orbitlogic.com)
