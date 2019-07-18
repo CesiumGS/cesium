@@ -11,6 +11,7 @@ Change Log
 
 ##### Fixes :wrench:
 * `PolygonGraphics.hierarchy` now converts constant array values to a `PolygonHierarchy` when set, so code that accesses the value of the property can rely on it always being a `PolygonHierarchy`.
+* Fixed undefined `quadDetails` error from zooming into the map really close
 
 ### 1.59 - 2019-07-01
 
