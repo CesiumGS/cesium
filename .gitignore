@@ -1,4 +1,5 @@
 /.metadata
+/Build
 /Instrumented
 /Cesium-*.zip
 /cesium-*.tgz
@@ -11,6 +12,13 @@ Thumbs.db
 /Apps/Sandcastle/jsHintOptions.js
 /Apps/Sandcastle/gallery/gallery-index.js
 /Apps/Sandcastle/templates/bucket.css
+
+/Source/Cesium.js
+
+/Source/Shaders/*.js
+/Source/Shaders/*/*.js
+/Source/Shaders/*/*/*.js
+/Source/ThirdParty/Shaders/*.js
 
 /Specs/SpecList.js
 
