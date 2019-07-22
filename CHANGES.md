@@ -11,6 +11,7 @@ Change Log
 
 ##### Fixes :wrench:
 * `PolygonGraphics.hierarchy` now converts constant array values to a `PolygonHierarchy` when set, so code that accesses the value of the property can rely on it always being a `PolygonHierarchy`.
+* Fixed a bug with lengthwise texture coordinates in the first segment of ground polylines, as observed in some WebGL implementations such as Chrome on Linux. [#8017](https://github.com/AnalyticalGraphicsInc/cesium/issues/8017)
 
 ### 1.59 - 2019-07-01
 
