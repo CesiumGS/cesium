@@ -2517,7 +2517,7 @@ define([
         };
     }
 
-    function loadTexturesFromBufferViews(model) {
+    function loadTexturesFromBufferViews(model, context) {
 
         var loadResources = model._loadResources;
 
@@ -2538,7 +2538,7 @@ define([
                 loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/basis') {
-                ktx2.loadKTX2(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
+                ktx2.loadKTX2(loadResources.getBuffer(bufferView), context).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/crn') {
                 loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
@@ -3796,7 +3796,7 @@ define([
             createBuffers(model, frameState); // using glTF bufferViews
             createPrograms(model, frameState);
             createSamplers(model, context);
-            loadTexturesFromBufferViews(model);
+            loadTexturesFromBufferViews(model, context);
             createTextures(model, frameState);
         }
 
