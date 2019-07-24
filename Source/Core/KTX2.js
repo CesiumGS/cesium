@@ -173,11 +173,11 @@ define([
         if (has_alpha)
         {
             format = BASIS_FORMAT.cTFBC3;
-            console.log('Decoding .basis data to BC3');
+            // console.log('Decoding .basis data to BC3');
         }
         else
         {
-            console.log('Decoding .basis data to BC1');
+            // console.log('Decoding .basis data to BC1');
         }
         if (!basisFile.startTranscoding()) {
             console.warn('startTranscoding failed');
@@ -198,11 +198,11 @@ define([
 
         basisFile.close();
         basisFile.delete();
-        console.log('width: ' + width);
-        console.log('height: ' + height);
-        console.log('images: ' + images);
-        console.log('first image mipmap levels: ' + levels);
-        console.log('has_alpha: ' + has_alpha);
+        // console.log('width: ' + width);
+        // console.log('height: ' + height);
+        // console.log('images: ' + images);
+        // console.log('first image mipmap levels: ' + levels);
+        // console.log('has_alpha: ' + has_alpha);
 
         // TODO: context._gl is prob the WebGLRenderContext, needed for basis init
         if (context._gl.getExtension('WEBKIT_WEBGL_compressed_texture_s3tc') || context._gl.getExtension('WEBGL_compressed_texture_s3tc')) {
