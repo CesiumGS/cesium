@@ -309,6 +309,7 @@ define([
 
         // Transition imagery states
         var tileImageryCollection = surfaceTile.imagery;
+        var isAnyTileLoaded = tileImageryCollection.length === 0;
         var i, len;
         for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
@@ -337,14 +338,16 @@ define([
             isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.
-            isRenderable = isRenderable && (thisTileDoneLoading || defined(tileImagery.readyImagery));
+            isAnyTileLoaded = isAnyTileLoaded || (thisTileDoneLoading || defined(tileImagery.readyImagery));
 
             isUpsampledOnly = isUpsampledOnly && defined(tileImagery.loadingImagery) &&
                               (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
         }
 
         tile.upsampledFromParent = isUpsampledOnly;
-        tile.renderable = isRenderable;
+
+        // Allow rendering if any available layers are loaded
+        tile.renderable = isRenderable && isAnyTileLoaded;
 
         return isDoneLoading;
     };
