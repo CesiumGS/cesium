@@ -1013,7 +1013,7 @@ define([
 
                 var texcoordNormalization = texcoordNormalization3DY * topBottomSide;
                 if (texcoordNormalization === 0.0 && topBottomSide < 0.0) {
-                    texcoordNormalization = Number.POSITIVE_INFINITY;
+                    texcoordNormalization = 9.0; // some value greater than 1.0
                 }
                 rightNormalAndTextureCoordinateNormalizationY[wIndex] = texcoordNormalization;
 
@@ -1038,7 +1038,7 @@ define([
 
                     texcoordNormalization = texcoordNormalization2DY * topBottomSide;
                     if (texcoordNormalization === 0.0 && topBottomSide < 0.0) {
-                        texcoordNormalization = Number.POSITIVE_INFINITY;
+                        texcoordNormalization = 9.0; // some value greater than 1.0
                     }
                     texcoordNormalization2D[vec2Index + 1] = texcoordNormalization;
                 }
