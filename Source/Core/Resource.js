@@ -1379,6 +1379,9 @@ define([
      * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
      *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
      *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
+     * @param {String} [options.returnType] Settings for if to modify the xhr object.
+     *                 Current values are RAWXHR, returns unmodified xhr object
+     *                                    XHRJSONHEADERS, returns xhr object where headers have been turned into an object
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      *
      *
@@ -1420,11 +1423,14 @@ define([
      * @param {Number} [options.timeout] The timeout of the request, in milliseconds.  If the request does not complete
      *                 within this timeout, it is aborted and the promise is rejected with a RequestErrorEvent with the
      *                 isTimeout property set to true.  If this property is undefined, no client-side timeout applies.
-     * @param {String} [options.returnType] whether to return "RAWXHR" the xhr object unmodified or "XHRJSONHEADERS" the xhr object with the headers turned into a json object
+     * @param {String} [options.returnType] Settings for if to modify the xhr object.
+     *                 Current values are RAWXHR, returns unmodified xhr object
+     *                                    XHRJSONHEADERS, returns xhr object where headers have been turned into an object
      * @returns {Promise.<Object>|undefined} a promise that will resolve to the requested data when loaded. Returns undefined if <code>request.throttle</code> is true and the request does not have high enough priority.
      */
     Resource.fetchXHR = function(options) {
         var resource = new Resource(options);
+
         return resource.fetch({
             // Make copy of just the needed fields because headers can be passed to both the constructor and to fetch
             responseType: options.responseType,
