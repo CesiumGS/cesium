@@ -34,8 +34,9 @@ define([
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(primitives, appearanceType, materialProperty, usingSphericalTextureCoordinates, zIndex) {
+    function Batch(primitives, classificationType, appearanceType, materialProperty, usingSphericalTextureCoordinates, zIndex) {
         this.primitives = primitives; // scene level primitive collection
+        this.classificationType = classificationType;
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
         this.updaters = new AssociativeArray();
@@ -117,7 +118,6 @@ define([
         var primitive = this.primitive;
         var primitives = this.primitives;
         var geometries = this.geometry.values;
-        var attributes;
         var i;
 
         if (this.createPrimitive) {
@@ -133,21 +133,6 @@ define([
                     }
                 }
 
-                for (i = 0; i < geometriesLength; i++) {
-                    var geometry = geometries[i];
-                    var originalAttributes = geometry.attributes;
-                    attributes = this.attributes.get(geometry.id.id);
-
-                    if (defined(attributes)) {
-                        if (defined(originalAttributes.show)) {
-                            originalAttributes.show.value = attributes.show;
-                        }
-                        if (defined(originalAttributes.color)) {
-                            originalAttributes.color.value = attributes.color;
-                        }
-                    }
-                }
-
                 this.material = MaterialProperty.getValue(time, this.materialProperty, this.material);
 
                 primitive = new GroundPrimitive({
@@ -158,7 +143,7 @@ define([
                         material : this.material
                         // translucent and closed properties overridden
                     }),
-                    classificationType : ClassificationType.TERRAIN
+                    classificationType : this.classificationType
                 });
 
                 primitives.add(primitive, this.zIndex);
@@ -195,7 +180,7 @@ define([
                 var entity = updater.entity;
                 var instance = this.geometry.get(updater.id);
 
-                attributes = this.attributes.get(instance.id.id);
+                var attributes = this.attributes.get(instance.id.id);
                 if (!defined(attributes)) {
                     attributes = primitive.getGeometryInstanceAttributes(instance.id);
                     this.attributes.set(instance.id.id, attributes);
@@ -242,6 +227,7 @@ define([
             var currentShow = attributes.show[0] === 1;
             if (show !== currentShow) {
                 attributes.show = ShowGeometryInstanceAttribute.toValue(show, attributes.show);
+                instance.attributes.show.value[0] = attributes.show[0];
             }
         }
         this.showsUpdated.removeAll();
@@ -281,9 +267,10 @@ define([
     /**
      * @private
      */
-    function StaticGroundGeometryPerMaterialBatch(primitives, appearanceType) {
+    function StaticGroundGeometryPerMaterialBatch(primitives, classificationType, appearanceType) {
         this._items = [];
         this._primitives = primitives;
+        this._classificationType = classificationType;
         this._appearanceType = appearanceType;
     }
 
@@ -308,7 +295,7 @@ define([
             }
         }
         // If a compatible batch wasn't found, create a new batch.
-        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, usingSphericalTextureCoordinates, zIndex);
+        var batch = new Batch(this._primitives, this._classificationType, this._appearanceType, updater.fillMaterialProperty, usingSphericalTextureCoordinates, zIndex);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
     };
@@ -347,7 +334,7 @@ define([
         }
 
         var isUpdated = true;
-        for (i = 0; i < length; i++) {
+        for (i = 0; i < items.length; i++) {
             isUpdated = items[i].update(time) && isUpdated;
         }
         return isUpdated;

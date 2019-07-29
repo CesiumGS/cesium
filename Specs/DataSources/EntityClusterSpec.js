@@ -50,7 +50,6 @@ defineSuite([
                     tilesWaitingForChildren : 0
                 }
             },
-            tileLoadedEvent : new Event(),
             terrainProviderChanged : new Event(),
             imageryLayersUpdatedEvent : new Event(),
             beginFrame : function() {},
@@ -146,7 +145,7 @@ defineSuite([
 
         var context2D = canvas.getContext('2d');
         context2D.clearRect(0, 0, length, length);
-        context2D.fillStyle="#FF0000";
+        context2D.fillStyle='#FF0000';
         context2D.fillRect(0, 0, length, length);
 
         return canvas;

@@ -23,47 +23,50 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
+     * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
+     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
      * @param {Property} [options.outline=false] A boolean Property specifying whether the ellipsoid is outlined.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
-     * @param {Property} [options.subdivisions=128] A Property specifying the number of samples per outline ring, determining the granularity of the curvature.
      * @param {Property} [options.stackPartitions=64] A Property specifying the number of stacks.
      * @param {Property} [options.slicePartitions=64] A Property specifying the number of radial slices.
+     * @param {Property} [options.subdivisions=128] A Property specifying the number of samples per outline ring, determining the granularity of the curvature.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the ellipsoid casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this ellipsoid will be displayed.
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Spheres%20and%20Ellipsoids.html|Cesium Sandcastle Spheres and Ellipsoids Demo}
      */
     function EllipsoidGraphics(options) {
+        this._definitionChanged = new Event();
         this._show = undefined;
         this._showSubscription = undefined;
         this._radii = undefined;
         this._radiiSubscription = undefined;
-        this._material = undefined;
-        this._materialSubscription = undefined;
-        this._stackPartitions = undefined;
-        this._stackPartitionsSubscription = undefined;
-        this._slicePartitions = undefined;
-        this._slicePartitionsSubscription = undefined;
-        this._subdivisions = undefined;
-        this._subdivisionsSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
         this._fill = undefined;
         this._fillSubscription = undefined;
+        this._material = undefined;
+        this._materialSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
+        this._stackPartitions = undefined;
+        this._stackPartitionsSubscription = undefined;
+        this._slicePartitions = undefined;
+        this._slicePartitionsSubscription = undefined;
+        this._subdivisions = undefined;
+        this._subdivisionsSubscription = undefined;
         this._shadows = undefined;
         this._shadowsSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
-        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -98,12 +101,12 @@ define([
         radii : createPropertyDescriptor('radii'),
 
         /**
-         * Gets or sets the Property specifying the material used to fill the ellipsoid.
+         * Gets or sets the Property specifying the {@link HeightReference}.
          * @memberof EllipsoidGraphics.prototype
-         * @type {MaterialProperty}
-         * @default Color.WHITE
+         * @type {Property}
+         * @default HeightReference.NONE
          */
-        material : createMaterialPropertyDescriptor('material'),
+        heightReference : createPropertyDescriptor('heightReference'),
 
         /**
          * Gets or sets the boolean Property specifying whether the ellipsoid is filled with the provided material.
@@ -112,6 +115,14 @@ define([
          * @default true
          */
         fill : createPropertyDescriptor('fill'),
+
+        /**
+         * Gets or sets the Property specifying the material used to fill the ellipsoid.
+         * @memberof EllipsoidGraphics.prototype
+         * @type {MaterialProperty}
+         * @default Color.WHITE
+         */
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Property specifying whether the ellipsoid is outlined.
@@ -190,8 +201,9 @@ define([
         }
         result.show = this.show;
         result.radii = this.radii;
-        result.material = this.material;
+        result.heightReference = this.heightReference;
         result.fill = this.fill;
+        result.material = this.material;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
@@ -200,7 +212,6 @@ define([
         result.subdivisions = this.subdivisions;
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
-
         return result;
     };
 
@@ -219,8 +230,9 @@ define([
 
         this.show = defaultValue(this.show, source.show);
         this.radii = defaultValue(this.radii, source.radii);
-        this.material = defaultValue(this.material, source.material);
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.fill = defaultValue(this.fill, source.fill);
+        this.material = defaultValue(this.material, source.material);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);

@@ -32,12 +32,12 @@ define([
     var defaultPixelSize = 1.0;
     var defaultDisableDepthTestDistance = 0.0;
 
-    var color = new Color();
-    var position = new Cartesian3();
-    var outlineColor = new Color();
-    var scaleByDistance = new NearFarScalar();
-    var translucencyByDistance = new NearFarScalar();
-    var distanceDisplayCondition = new DistanceDisplayCondition();
+    var colorScratch = new Color();
+    var positionScratch = new Cartesian3();
+    var outlineColorScratch = new Color();
+    var scaleByDistanceScratch = new NearFarScalar();
+    var translucencyByDistanceScratch = new NearFarScalar();
+    var distanceDisplayConditionScratch = new DistanceDisplayCondition();
 
     function EntityData(entity) {
         this.entity = entity;
@@ -99,8 +99,9 @@ define([
             var billboard = item.billboard;
             var heightReference = Property.getValueOrDefault(pointGraphics._heightReference, time, HeightReference.NONE);
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(pointGraphics._show, time, true);
+            var position;
             if (show) {
-                position = Property.getValueOrUndefined(entity._position, time, position);
+                position = Property.getValueOrUndefined(entity._position, time, positionScratch);
                 show = defined(position);
             }
             if (!show) {
@@ -113,6 +114,7 @@ define([
             }
 
             var needsRedraw = false;
+            var updateClamping = false;
             if ((heightReference !== HeightReference.NONE) && !defined(billboard)) {
                 if (defined(pointPrimitive)) {
                     returnPrimitive(item, entity, cluster);
@@ -124,6 +126,12 @@ define([
                 billboard.image = undefined;
                 item.billboard = billboard;
                 needsRedraw = true;
+
+                // If this new billboard happens to have a position and height reference that match our new values,
+                // billboard._updateClamping will not be called automatically. That's a problem because the clamped
+                // height may be based on different terrain than is now loaded. So we'll manually call
+                // _updateClamping below.
+                updateClamping = Cartesian3.equals(billboard.position, position) && billboard.heightReference === heightReference;
             } else if ((heightReference === HeightReference.NONE) && !defined(pointPrimitive)) {
                 if (defined(billboard)) {
                     returnPrimitive(item, entity, cluster);
@@ -138,25 +146,25 @@ define([
             if (defined(pointPrimitive)) {
                 pointPrimitive.show = true;
                 pointPrimitive.position = position;
-                pointPrimitive.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
-                pointPrimitive.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
-                pointPrimitive.color = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
-                pointPrimitive.outlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+                pointPrimitive.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistanceScratch);
+                pointPrimitive.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistanceScratch);
+                pointPrimitive.color = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, colorScratch);
+                pointPrimitive.outlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColorScratch);
                 pointPrimitive.outlineWidth = Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth);
                 pointPrimitive.pixelSize = Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize);
-                pointPrimitive.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
+                pointPrimitive.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayConditionScratch);
                 pointPrimitive.disableDepthTestDistance = Property.getValueOrDefault(pointGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
             } else if (defined(billboard)) {
                 billboard.show = true;
                 billboard.position = position;
-                billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistance);
-                billboard.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistance);
-                billboard.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayCondition);
+                billboard.scaleByDistance = Property.getValueOrUndefined(pointGraphics._scaleByDistance, time, scaleByDistanceScratch);
+                billboard.translucencyByDistance = Property.getValueOrUndefined(pointGraphics._translucencyByDistance, time, translucencyByDistanceScratch);
+                billboard.distanceDisplayCondition = Property.getValueOrUndefined(pointGraphics._distanceDisplayCondition, time, distanceDisplayConditionScratch);
                 billboard.disableDepthTestDistance = Property.getValueOrDefault(pointGraphics._disableDepthTestDistance, time, defaultDisableDepthTestDistance);
                 billboard.heightReference = heightReference;
 
-                var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, color);
-                var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColor);
+                var newColor = Property.getValueOrDefault(pointGraphics._color, time, defaultColor, colorScratch);
+                var newOutlineColor = Property.getValueOrDefault(pointGraphics._outlineColor, time, defaultOutlineColor, outlineColorScratch);
                 var newOutlineWidth = Math.round(Property.getValueOrDefault(pointGraphics._outlineWidth, time, defaultOutlineWidth));
                 var newPixelSize = Math.max(1, Math.round(Property.getValueOrDefault(pointGraphics._pixelSize, time, defaultPixelSize)));
 
@@ -188,6 +196,10 @@ define([
                     var textureId = JSON.stringify([cssColor, newPixelSize, cssOutlineColor, newOutlineWidth]);
 
                     billboard.setImage(textureId, createBillboardPointCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPixelSize));
+                }
+
+                if (updateClamping) {
+                    billboard._updateClamping();
                 }
             }
         }

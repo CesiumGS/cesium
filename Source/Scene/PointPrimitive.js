@@ -52,6 +52,7 @@ define([
      * @see PointPrimitiveCollection#add
      *
      * @internalConstructor
+     * @class
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Points.html|Cesium Sandcastle Points Demo}
      */
@@ -435,6 +436,15 @@ define([
                 if (defined(this._pickId)) {
                     this._pickId.object.id = value;
                 }
+            }
+        },
+
+        /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                return this._pickId;
             }
         },
 

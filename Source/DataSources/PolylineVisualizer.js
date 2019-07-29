@@ -2,8 +2,10 @@ define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
         '../Core/Check',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
+        '../Scene/ClassificationType',
         '../Scene/PolylineColorAppearance',
         '../Scene/PolylineMaterialAppearance',
         '../Scene/ShadowMode',
@@ -12,13 +14,16 @@ define([
         './DynamicGeometryBatch',
         './PolylineGeometryUpdater',
         './StaticGeometryColorBatch',
-        './StaticGeometryPerMaterialBatch'
+        './StaticGeometryPerMaterialBatch',
+        './StaticGroundPolylinePerMaterialBatch'
     ], function(
         AssociativeArray,
         BoundingSphere,
         Check,
+        defaultValue,
         defined,
         destroyObject,
+        ClassificationType,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
         ShadowMode,
@@ -27,7 +32,8 @@ define([
         DynamicGeometryBatch,
         PolylineGeometryUpdater,
         StaticGeometryColorBatch,
-        StaticGeometryPerMaterialBatch) {
+        StaticGeometryPerMaterialBatch,
+        StaticGroundPolylinePerMaterialBatch) {
     'use strict';
 
     var emptyArray = [];
@@ -44,6 +50,12 @@ define([
     function insertUpdaterIntoBatch(that, time, updater) {
         if (updater.isDynamic) {
             that._dynamicBatch.add(time, updater);
+            return;
+        }
+
+        if (updater.clampToGround && updater.fillEnabled) { // Also checks for support
+            var classificationType = updater.classificationTypeProperty.getValue(time);
+            that._groundBatches[classificationType].add(time, updater);
             return;
         }
 
@@ -78,14 +90,17 @@ define([
      *
      * @param {Scene} scene The scene the primitives will be rendered in.
      * @param {EntityCollection} entityCollection The entityCollection to visualize.
+     * @param {PrimitiveCollection} [primitives=scene.primitives] A collection to add primitives related to the entities
+     * @param {PrimitiveCollection} [groundPrimitives=scene.groundPrimitives] A collection to add ground primitives related to the entities
      */
-    function PolylineVisualizer(scene, entityCollection) {
+    function PolylineVisualizer(scene, entityCollection, primitives, groundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('scene', scene);
         Check.defined('entityCollection', entityCollection);
         //>>includeEnd('debug');
 
-        var primitives = scene.primitives;
+        groundPrimitives = defaultValue(groundPrimitives, scene.groundPrimitives);
+        primitives = defaultValue(primitives, scene.primitives);
 
         this._scene = scene;
         this._primitives = primitives;
@@ -94,11 +109,12 @@ define([
         this._removedObjects = new AssociativeArray();
         this._changedObjects = new AssociativeArray();
 
+        var i;
         var numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
         this._colorBatches = new Array(numberOfShadowModes * 3);
         this._materialBatches = new Array(numberOfShadowModes * 3);
 
-        for (var i = 0; i < numberOfShadowModes; ++i) {
+        for (i = 0; i < numberOfShadowModes; ++i) {
             this._colorBatches[i] = new StaticGeometryColorBatch(primitives, PolylineColorAppearance, undefined, false, i); // no depth fail appearance
             this._materialBatches[i] = new StaticGeometryPerMaterialBatch(primitives, PolylineMaterialAppearance, undefined, false, i);
 
@@ -109,9 +125,16 @@ define([
             this._materialBatches[i + numberOfShadowModes * 2] = new StaticGeometryPerMaterialBatch(primitives, PolylineMaterialAppearance, PolylineMaterialAppearance, false, i);
         }
 
-        this._dynamicBatch = new DynamicGeometryBatch(primitives);
+        this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
 
-        this._batches = this._colorBatches.concat(this._materialBatches, this._dynamicBatch);
+        var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
+        this._groundBatches = new Array(numberOfClassificationTypes);
+
+        for (i = 0; i < numberOfClassificationTypes; ++i) {
+            this._groundBatches[i] = new StaticGroundPolylinePerMaterialBatch(groundPrimitives, i);
+        }
+
+        this._batches = this._colorBatches.concat(this._materialBatches, this._dynamicBatch, this._groundBatches);
 
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();

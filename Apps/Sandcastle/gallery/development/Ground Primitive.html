@@ -31,6 +31,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider: Cesium.createWorldTerrain()
 });
 var scene = viewer.scene;
+viewer.extend(Cesium.viewerCesiumInspectorMixin);
 
 function offsetPositions(positions, degreeOffset) {
     positions = scene.globe.ellipsoid.cartesianArrayToCartographicArray(positions);
@@ -325,6 +326,26 @@ Sandcastle.addToolbarButton('Create large polygons', function() {
         }),
         classificationType : Cesium.ClassificationType.TERRAIN
     }));
+
+    // Rhumb line polygon geometry
+    scene.groundPrimitives.add(new Cesium.GroundPrimitive({
+        geometryInstances : new Cesium.GeometryInstance({
+            geometry : new Cesium.PolygonGeometry({
+                polygonHierarchy: new Cesium.PolygonHierarchy(Cesium.Cartesian3.fromDegreesArray([
+                    -130, 55,
+                    -100, 55,
+                    -100, 45,
+                    -130, 45
+                ])),
+                arcType : Cesium.ArcType.RHUMB
+            }),
+            attributes: {
+                color: Cesium.ColorGeometryInstanceAttribute.fromColor(new Cesium.Color(1.0, 1.0, 0.0, 0.5))
+            },
+            id : 'rhumbPolygon'
+        }),
+        classificationType : Cesium.ClassificationType.TERRAIN
+    }));
 });
 
 Sandcastle.reset = function() {
@@ -339,10 +360,10 @@ Sandcastle.reset = function() {
 //Sandcastle_End
     Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

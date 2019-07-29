@@ -14,10 +14,13 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/Transforms',
         'Renderer/Pass',
+        'Renderer/RenderState',
         'Scene/Cesium3DTileBatchTable',
+        'Scene/ClassificationType',
         'Scene/ColorBlendMode',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
+        'Scene/StencilConstants',
         'Specs/createContext',
         'Specs/createScene',
         'Specs/pollToPromise'
@@ -37,10 +40,13 @@ defineSuite([
         RectangleGeometry,
         Transforms,
         Pass,
+        RenderState,
         Cesium3DTileBatchTable,
+        ClassificationType,
         ColorBlendMode,
         PerInstanceColorAppearance,
         Primitive,
+        StencilConstants,
         createContext,
         createScene,
         pollToPromise) {
@@ -59,64 +65,43 @@ defineSuite([
 
         var scene;
         var rectangle;
-        var depthPrimitive;
         var polygons;
+        var globePrimitive;
+        var tilesetPrimitive;
+        var reusableGlobePrimitive;
+        var reusableTilesetPrimitive;
 
         var ellipsoid = Ellipsoid.WGS84;
-
-        beforeAll(function() {
-            scene = createScene({ contextOptions : contextOptions });
-        });
-
-        afterAll(function() {
-            scene.destroyForSpecs();
-        });
 
         var mockTileset = {
             _statistics : {
                 texturesByteLength : 0
             },
-            _tileset : {
+            tileset : {
                 _statistics : {
                     batchTableByteLength : 0
                 },
                 colorBlendMode : ColorBlendMode.HIGHLIGHT
+            },
+            getFeature : function(id) { return { batchId : id }; }
+        };
+
+        function createPrimitive(rectangle, pass) {
+            var renderState;
+            if (pass === Pass.CESIUM_3D_TILE) {
+                renderState = RenderState.fromCache({
+                    stencilTest : StencilConstants.setCesium3DTileBit(),
+                    stencilMask : StencilConstants.CESIUM_3D_TILE_MASK,
+                    depthTest : {
+                        enabled : true
+                    }
+                });
             }
-        };
-
-        function MockGlobePrimitive(primitive) {
-            this._primitive = primitive;
-            this.pass = Pass.CESIUM_3D_TILE;
-        }
-
-        MockGlobePrimitive.prototype.update = function(frameState) {
-            var commandList = frameState.commandList;
-            var startLength = commandList.length;
-            this._primitive.update(frameState);
-
-            for (var i = startLength; i < commandList.length; ++i) {
-                var command = commandList[i];
-                command.pass = this.pass;
-            }
-        };
-
-        MockGlobePrimitive.prototype.isDestroyed = function() {
-            return false;
-        };
-
-        MockGlobePrimitive.prototype.destroy = function() {
-            this._primitive.destroy();
-            return destroyObject(this);
-        };
-
-        beforeEach(function() {
-            rectangle = Rectangle.fromDegrees(-40.0, -40.0, 40.0, 40.0);
-
             var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 0.0, 0.0, 1.0));
-            var primitive = new Primitive({
+            return new Primitive({
                 geometryInstances : new GeometryInstance({
                     geometry : new RectangleGeometry({
-                        ellipsoid : ellipsoid,
+                        ellipsoid : Ellipsoid.WGS84,
                         rectangle : rectangle
                     }),
                     id : 'depth rectangle',
@@ -126,19 +111,67 @@ defineSuite([
                 }),
                 appearance : new PerInstanceColorAppearance({
                     translucent : false,
-                    flat : true
+                    flat : true,
+                    renderState : renderState
                 }),
                 asynchronous : false
             });
+        }
 
-            // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
-            depthPrimitive = new MockGlobePrimitive(primitive);
+        function MockPrimitive(primitive, pass) {
+            this._primitive = primitive;
+            this._pass = pass;
+            this.show = true;
+        }
+
+        MockPrimitive.prototype.update = function(frameState) {
+            if (!this.show) {
+                return;
+            }
+
+            var commandList = frameState.commandList;
+            var startLength = commandList.length;
+            this._primitive.update(frameState);
+
+            for (var i = startLength; i < commandList.length; ++i) {
+                var command = commandList[i];
+                command.pass = this._pass;
+            }
+        };
+
+        MockPrimitive.prototype.isDestroyed = function() {
+            return false;
+        };
+
+        MockPrimitive.prototype.destroy = function() {
+            return destroyObject(this);
+        };
+
+        beforeAll(function() {
+            scene = createScene({ contextOptions : contextOptions });
+
+            rectangle = Rectangle.fromDegrees(-40.0, -40.0, 40.0, 40.0);
+            reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
+            reusableTilesetPrimitive = createPrimitive(rectangle, Pass.CESIUM_3D_TILE);
+        });
+
+        afterAll(function() {
+            reusableGlobePrimitive.destroy();
+            reusableTilesetPrimitive.destroy();
+            scene.destroyForSpecs();
+        });
+
+        beforeEach(function() {
+            // wrap rectangle primitive so it gets executed during the globe pass and 3D Tiles pass to lay down depth
+            globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
+            tilesetPrimitive = new MockPrimitive(reusableTilesetPrimitive, Pass.CESIUM_3D_TILE);
         });
 
         afterEach(function() {
             scene.primitives.removeAll();
+            globePrimitive = globePrimitive && !globePrimitive.isDestroyed() && globePrimitive.destroy();
+            tilesetPrimitive = tilesetPrimitive && !tilesetPrimitive.isDestroyed() && tilesetPrimitive.destroy();
             polygons = polygons && !polygons.isDestroyed() && polygons.destroy();
-            depthPrimitive = depthPrimitive && !depthPrimitive.isDestroyed() && depthPrimitive.destroy();
         });
 
         function loadPolygons(polygons) {
@@ -210,7 +243,7 @@ defineSuite([
             var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
             batchTable.update(mockTileset, scene.frameState);
 
-            scene.primitives.add(depthPrimitive);
+            scene.primitives.add(globePrimitive);
 
             var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
             polygons = scene.primitives.add(new Vector3DTilePolygons(combine(polygonOptions, {
@@ -255,7 +288,7 @@ defineSuite([
             var batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
             batchTable.update(mockTileset, scene.frameState);
 
-            scene.primitives.add(depthPrimitive);
+            scene.primitives.add(globePrimitive);
 
             var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
             polygons = scene.primitives.add(new Vector3DTilePolygons({
@@ -315,7 +348,7 @@ defineSuite([
             var batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
             batchTable.update(mockTileset, scene.frameState);
 
-            scene.primitives.add(depthPrimitive);
+            scene.primitives.add(globePrimitive);
 
             var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
             polygons = scene.primitives.add(new Vector3DTilePolygons({
@@ -376,7 +409,7 @@ defineSuite([
             var batchTable = new Cesium3DTileBatchTable(mockTileset, 2);
             batchTable.update(mockTileset, scene.frameState);
 
-            scene.primitives.add(depthPrimitive);
+            scene.primitives.add(globePrimitive);
 
             var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
             polygons = scene.primitives.add(new Vector3DTilePolygons({
@@ -423,7 +456,7 @@ defineSuite([
             var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
             batchTable.update(mockTileset, scene.frameState);
 
-            scene.primitives.add(depthPrimitive);
+            scene.primitives.add(tilesetPrimitive);
 
             var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
             polygons = scene.primitives.add(new Vector3DTilePolygons(combine(polygonOptions, {
@@ -464,7 +497,7 @@ defineSuite([
             var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
             batchTable.update(mockTileset, scene.frameState);
 
-            scene.primitives.add(depthPrimitive);
+            scene.primitives.add(globePrimitive);
 
             var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
             polygons = scene.primitives.add(new Vector3DTilePolygons(combine(polygonOptions, {
@@ -492,14 +525,68 @@ defineSuite([
             });
         });
 
-        it('picks polygons' + webglMessage, function() {
+        it('renders based on classificationType' + webglMessage, function() {
             var rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
             var polygonOptions = createPolygon(rectangle);
 
             var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
             batchTable.update(mockTileset, scene.frameState);
 
-            scene.primitives.add(depthPrimitive);
+            scene.primitives.add(globePrimitive);
+            scene.primitives.add(tilesetPrimitive);
+
+            var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
+            polygons = scene.primitives.add(new Vector3DTilePolygons(combine(polygonOptions, {
+                minimumHeight : -10000.0,
+                maximumHeight : 10000.0,
+                center : center,
+                rectangle : rectangle,
+                boundingVolume : new BoundingSphere(center, 10000.0),
+                batchTable : batchTable,
+                batchIds : new Uint32Array([0]),
+                isCartographic : true
+            })));
+            return loadPolygons(polygons).then(function() {
+                scene.camera.setView({
+                    destination : rectangle
+                });
+
+                polygons.classificationType = ClassificationType.CESIUM_3D_TILE;
+                globePrimitive.show = false;
+                tilesetPrimitive.show = true;
+                expect(scene).toRender([255, 255, 255, 255]);
+                globePrimitive.show = true;
+                tilesetPrimitive.show = false;
+                expect(scene).toRender([255, 0, 0, 255]);
+
+                polygons.classificationType = ClassificationType.TERRAIN;
+                globePrimitive.show = false;
+                tilesetPrimitive.show = true;
+                expect(scene).toRender([255, 0, 0, 255]);
+                globePrimitive.show = true;
+                tilesetPrimitive.show = false;
+                expect(scene).toRender([255, 255, 255, 255]);
+
+                polygons.classificationType = ClassificationType.BOTH;
+                globePrimitive.show = false;
+                tilesetPrimitive.show = true;
+                expect(scene).toRender([255, 255, 255, 255]);
+                globePrimitive.show = true;
+                tilesetPrimitive.show = false;
+                expect(scene).toRender([255, 255, 255, 255]);
+
+                globePrimitive.show = true;
+                tilesetPrimitive.show = true;
+            });
+        });
+
+        it('picks polygons' + webglMessage, function() {
+            var rectangle = Rectangle.fromDegrees(-1.0, -1.0, 1.0, 1.0);
+            var polygonOptions = createPolygon(rectangle);
+
+            var batchTable = new Cesium3DTileBatchTable(mockTileset, 1);
+
+            scene.primitives.add(globePrimitive);
 
             var center = ellipsoid.cartographicToCartesian(Rectangle.center(rectangle));
             polygons = scene.primitives.add(new Vector3DTilePolygons(combine(polygonOptions, {
@@ -520,6 +607,8 @@ defineSuite([
 
                 var features = [];
                 polygons.createFeatures(mockTileset, features);
+
+                var getFeature = mockTileset.getFeature;
                 mockTileset.getFeature = function(index) {
                     return features[index];
                 };
@@ -530,7 +619,7 @@ defineSuite([
                     expect(result).toBe(features[0]);
                 });
 
-                mockTileset.getFeature = undefined;
+                mockTileset.getFeature = getFeature;
             });
         });
 

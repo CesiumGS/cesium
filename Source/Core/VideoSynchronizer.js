@@ -35,6 +35,7 @@ define([
         this._element = undefined;
         this._clockSubscription = undefined;
         this._seekFunction = undefined;
+        this._lastPlaybackRate = undefined;
 
         this.clock = options.clock;
         this.element = options.element;
@@ -146,6 +147,21 @@ define([
         return false;
     };
 
+    VideoSynchronizer.prototype._trySetPlaybackRate = function(clock) {
+        if (this._lastPlaybackRate === clock.multiplier) {
+            return;
+        }
+
+        var element = this._element;
+        try {
+            element.playbackRate = clock.multiplier;
+        } catch(error) {
+            // Seek manually for unsupported playbackRates.
+            element.playbackRate = 0.0;
+        }
+        this._lastPlaybackRate = clock.multiplier;
+    };
+
     VideoSynchronizer.prototype._onTick = function(clock) {
         var element = this._element;
         if (!defined(element) || element.readyState < 2) {
@@ -172,7 +188,7 @@ define([
             return;
         }
 
-        element.playbackRate = clock.multiplier;
+        this._trySetPlaybackRate(clock);
 
         var clockTime = clock.currentTime;
         var epoch = defaultValue(this.epoch, Iso8601.MINIMUM_VALUE);

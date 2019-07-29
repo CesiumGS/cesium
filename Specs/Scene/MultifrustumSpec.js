@@ -218,7 +218,7 @@ defineSuite([
         var found = false;
         var sources = billboardCall.object.shaderProgram.fragmentShaderSource.sources;
         for (var j = 0; j < sources.length; ++j) {
-            if (sources[i].indexOf('czm_Debug_main') !== -1) {
+            if (sources[j].indexOf('czm_Debug_main') !== -1) {
                 found = true;
                 break;
             }
@@ -367,10 +367,10 @@ defineSuite([
         createBillboards();
 
         scene.render();
-        expect(scene._frustumCommandsList.length).toEqual(3);
+        expect(scene.frustumCommandsList.length).toEqual(3);
 
         scene.logarithmicDepthBuffer = true;
         scene.render();
-        expect(scene._frustumCommandsList.length).toEqual(1);
+        expect(scene.frustumCommandsList.length).toEqual(1);
     });
 }, 'WebGL');

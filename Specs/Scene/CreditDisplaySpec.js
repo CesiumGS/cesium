@@ -73,6 +73,14 @@ defineSuite([
         expect(credit1.id).toEqual(credit3.id);
     });
 
+    it('credit clone works', function() {
+        var credit1 = new Credit('<a href="http://cesiumjs.org/">credit1</a>');
+        var credit2 = Credit.clone(credit1);
+        expect(credit1).toEqual(credit2);
+        var credit3 = Credit.clone(undefined);
+        expect(credit3).toBeUndefined();
+    });
+
     it('credit display displays a credit', function() {
         creditDisplay = new CreditDisplay(container);
         var credit = new Credit('<a href="http://cesiumjs.org">CesiumJS.org</a>', true);
@@ -366,5 +374,13 @@ defineSuite([
         creditDisplay.endFrame();
         expect(creditDisplay._cesiumCreditContainer.childNodes.length).toBe(0);
         CreditDisplay.cesiumCredit = cesiumCredit;
+    });
+
+    it('each credit display has a unique cesium credit', function() {
+        creditDisplay = new CreditDisplay(container);
+        var container2 = document.createElement('div');
+        var creditDisplay2 = new CreditDisplay(container2);
+        expect(creditDisplay._currentCesiumCredit).toEqual(creditDisplay2._currentCesiumCredit);
+        expect(creditDisplay._currentCesiumCredit).not.toBe(creditDisplay2._currentCesiumCredit);
     });
 });

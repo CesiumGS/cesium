@@ -24,9 +24,16 @@ defineSuite([
         when) {
     'use strict';
 
+    var imageUrl = 'Data/Images/Red16x16.png';
+
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+            if (url === imageUrl) {
+                Resource._DefaultImplementations.loadWithXhr(url, responseType, method, data, headers, deferred, overrideMimeType);
+                return;
+            }
+
             setTimeout(function() {
                 var parser = new DOMParser();
                 var xmlString =
@@ -49,7 +56,7 @@ defineSuite([
                     '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
                     '</DataExtents>' +
                     '</TileMap>';
-                var xml = parser.parseFromString(xmlString, "text/xml");
+                var xml = parser.parseFromString(xmlString, 'text/xml');
                 deferred.resolve(xml);
             }, 1);
         };
@@ -202,7 +209,7 @@ defineSuite([
                     '<DataExtent minx="24.999584" miny="-0.000417" maxx="30.000417" maxy="5.000417" minlevel="0" maxlevel="13"/>' +
                     '</DataExtents>' +
                     '</TileMap>';
-                var xml = parser.parseFromString(xmlString, "text/xml");
+                var xml = parser.parseFromString(xmlString, 'text/xml');
                 deferred.resolve(xml);
             }, 1);
         };
@@ -239,7 +246,7 @@ defineSuite([
                 expect(url.indexOf('.tif?cesium=true')).toBeGreaterThanOrEqualTo(0);
 
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(imageUrl, crossOrigin, deferred);
             };
 
             var terrainProvider = new VRTheWorldTerrainProvider({
@@ -249,10 +256,10 @@ defineSuite([
             return pollToPromise(function() {
                 return terrainProvider.ready;
             }).then(function() {
-                expect(terrainProvider.tilingScheme instanceof GeographicTilingScheme).toBe(true);
-                return terrainProvider.requestTileGeometry(0, 0, 0).then(function(loadedData) {
-                    expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
-                });
+                expect(terrainProvider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
+                return terrainProvider.requestTileGeometry(0, 0, 0);
+            }).then(function(loadedData) {
+                expect(loadedData).toBeInstanceOf(HeightmapTerrainData);
             });
         });
 

@@ -55,9 +55,11 @@ define([
             stageDependencies[getLastStageName(previous)] = true;
         }
         var uniforms = stage.uniforms;
-        for (var name in uniforms) {
-            if (uniforms.hasOwnProperty(name)) {
-                var value = uniforms[name];
+        if (defined(uniforms)) {
+            var uniformNames = Object.getOwnPropertyNames(uniforms);
+            var uniformNamesLength = uniformNames.length;
+            for (var i = 0; i < uniformNamesLength; ++i) {
+                var value = uniforms[uniformNames[i]];
                 if (typeof value === 'string') {
                     var dependent = collection.getStageByName(value);
                     if (defined(dependent)) {
@@ -74,6 +76,8 @@ define([
         if ((defined(composite.enabled) && !composite.enabled) || (defined(composite._isSupported) && !composite._isSupported(context))) {
             return previousName;
         }
+
+        var originalDependency = previousName;
 
         var inSeries = !defined(composite.inputPreviousStageTexture) || composite.inputPreviousStageTexture;
         var currentName = previousName;
@@ -94,13 +98,23 @@ define([
         // Stages not in a series depend on every stage executed before it since it could reference it as a uniform.
         // This prevents looking at the dependencies of each stage in the composite, but might create more framebuffers than necessary.
         // In practice, there are only 2-3 stages in these composites.
+        var j;
+        var name;
         if (!inSeries) {
-            for (var j = 1; j < length; ++j) {
-                var current = composite.get(j);
-                var currentDependencies = dependencies[current.name];
+            for (j = 1; j < length; ++j) {
+                name = getLastStageName(composite.get(j));
+                var currentDependencies = dependencies[name];
                 for (var k = 0; k < j; ++k) {
                     currentDependencies[getLastStageName(composite.get(k))] = true;
                 }
+            }
+        } else {
+            for (j = 1; j < length; ++j) {
+                name = getLastStageName(composite.get(j));
+                if (!defined(dependencies[name])) {
+                    dependencies[name] = {};
+                }
+                dependencies[name][originalDependency] = true;
             }
         }
 
@@ -113,10 +127,12 @@ define([
         if (defined(collection.ambientOcclusion)) {
             var ao = collection.ambientOcclusion;
             var bloom = collection.bloom;
+            var tonemapping = collection._tonemapping;
             var fxaa = collection.fxaa;
 
             var previousName = getCompositeDependencies(collection, context, dependencies, ao, undefined);
             previousName = getCompositeDependencies(collection, context, dependencies, bloom, previousName);
+            previousName = getStageDependencies(collection, context, dependencies, tonemapping, previousName);
             previousName = getCompositeDependencies(collection, context, dependencies, collection, previousName);
             getStageDependencies(collection, context, dependencies, fxaa, previousName);
         } else {
@@ -256,8 +272,9 @@ define([
         var updateDependencies = this._updateDependencies;
         var aoEnabled = defined(collection.ambientOcclusion) && collection.ambientOcclusion.enabled && collection.ambientOcclusion._isSupported(context);
         var bloomEnabled = defined(collection.bloom) && collection.bloom.enabled && collection.bloom._isSupported(context);
+        var tonemappingEnabled = defined(collection._tonemapping) && collection._tonemapping.enabled && collection._tonemapping._isSupported(context);
         var fxaaEnabled = defined(collection.fxaa) && collection.fxaa.enabled && collection.fxaa._isSupported(context);
-        var needsCheckDimensionsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || aoEnabled || bloomEnabled || fxaaEnabled;
+        var needsCheckDimensionsUpdate = !defined(collection._activeStages) || collection._activeStages.length > 0 || aoEnabled || bloomEnabled || tonemappingEnabled || fxaaEnabled;
         if (updateDependencies || (!needsCheckDimensionsUpdate && this._framebuffers.length > 0)) {
             releaseResources(this);
             this._framebuffers.length = 0;
@@ -295,8 +312,7 @@ define([
      */
     PostProcessStageTextureCache.prototype.clear = function(context) {
         var framebuffers = this._framebuffers;
-        var length = 0;
-        for (var i = 0; i < length; ++i) {
+        for (var i = 0; i < framebuffers.length; ++i) {
             framebuffers[i].clear.execute(context);
         }
     };

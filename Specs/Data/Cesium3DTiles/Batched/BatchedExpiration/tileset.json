@@ -1,6 +1,6 @@
 {
   "asset": {
-    "version": "0.0"
+    "version": "1.0"
   },
   "properties": {
     "id": {
@@ -8,16 +8,16 @@
       "maximum": 9
     },
     "Longitude": {
-      "minimum": -1.3196972173766555,
-      "maximum": -1.3196718547473905
+      "minimum": -1.3196959060375169,
+      "maximum": -1.3196607462778132
     },
     "Latitude": {
-      "minimum": 0.6988624606923348,
-      "maximum": 0.6988888301460953
+      "minimum": 0.6988590050687061,
+      "maximum": 0.6988864387845588
     },
     "Height": {
-      "minimum": 6.2074098233133554,
-      "maximum": 12.83180232718587
+      "minimum": 6.1022464875131845,
+      "maximum": 13.410263679921627
     }
   },
   "geometricError": 70,
@@ -25,7 +25,7 @@
     "expire": {
       "duration": 5
     },
-    "refine": "add",
+    "refine": "ADD",
     "boundingVolume": {
       "region": [
         -1.3197004795898053,
@@ -38,7 +38,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "batchedExpiration.b3dm"
+      "uri": "batchedExpiration.b3dm"
     }
   }
 }

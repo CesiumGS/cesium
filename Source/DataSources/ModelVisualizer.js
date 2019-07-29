@@ -1,12 +1,14 @@
 define([
         '../Core/AssociativeArray',
         '../Core/BoundingSphere',
+        '../Core/Cartesian2',
         '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
         '../Core/Resource',
+        '../Scene/Axis',
         '../Scene/ColorBlendMode',
         '../Scene/HeightReference',
         '../Scene/Model',
@@ -17,12 +19,14 @@ define([
     ], function(
         AssociativeArray,
         BoundingSphere,
+        Cartesian2,
         Color,
         defined,
         destroyObject,
         DeveloperError,
         Matrix4,
         Resource,
+        Axis,
         ColorBlendMode,
         HeightReference,
         Model,
@@ -43,6 +47,8 @@ define([
     var defaultColor = Color.WHITE;
     var defaultColorBlendMode = ColorBlendMode.HIGHLIGHT;
     var defaultColorBlendAmount = 0.5;
+    var defaultImageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+    var defaultUpAxis = Axis.Y;
 
     var modelMatrixScratch = new Matrix4();
     var nodeMatrixScratch = new Matrix4();
@@ -134,7 +140,7 @@ define([
                     url : resource.url,
                     animationsRunning : false,
                     nodeTransformationsScratch : {},
-                    originalNodeMatrixHash : {},
+                    articulationsScratch : {},
                     loadFail : false
                 };
                 modelHash[entity.id] = modelData;
@@ -157,6 +163,10 @@ define([
             model.colorBlendAmount = Property.getValueOrDefault(modelGraphics._colorBlendAmount, time, defaultColorBlendAmount);
             model.clippingPlanes = Property.getValueOrUndefined(modelGraphics._clippingPlanes, time);
             model.clampAnimations = Property.getValueOrDefault(modelGraphics._clampAnimations, time, defaultClampAnimations);
+            model.imageBasedLightingFactor = Property.getValueOrDefault(modelGraphics._imageBasedLightingFactor, time, defaultImageBasedLightingFactor);
+            model.lightColor = Property.getValueOrUndefined(modelGraphics._lightColor, time);
+            model._upAxis = Property.getValueOrDefault(modelGraphics._upAxis, time, defaultUpAxis);
+            model._forwardAxis = Property.getValueOrUndefined(modelGraphics._forwardAxis, time);
 
             if (model.ready) {
                 var runAnimations = Property.getValueOrDefault(modelGraphics._runAnimations, time, true);
@@ -174,7 +184,6 @@ define([
                 // Apply node transformations
                 var nodeTransformations = Property.getValueOrUndefined(modelGraphics._nodeTransformations, time, modelData.nodeTransformationsScratch);
                 if (defined(nodeTransformations)) {
-                    var originalNodeMatrixHash = modelData.originalNodeMatrixHash;
                     var nodeNames = Object.keys(nodeTransformations);
                     for (var nodeIndex = 0, nodeLength = nodeNames.length; nodeIndex < nodeLength; ++nodeIndex) {
                         var nodeName = nodeNames[nodeIndex];
@@ -189,15 +198,31 @@ define([
                             continue;
                         }
 
-                        var originalNodeMatrix = originalNodeMatrixHash[nodeName];
-                        if (!defined(originalNodeMatrix)) {
-                            originalNodeMatrix = modelNode.matrix.clone();
-                            originalNodeMatrixHash[nodeName] = originalNodeMatrix;
+                        var transformationMatrix = Matrix4.fromTranslationRotationScale(nodeTransformation, nodeMatrixScratch);
+                        modelNode.matrix = Matrix4.multiply(modelNode.originalMatrix, transformationMatrix, transformationMatrix);
+                    }
+                }
+
+                // Apply articulations
+                var anyArticulationUpdated = false;
+                var articulations = Property.getValueOrUndefined(modelGraphics._articulations, time, modelData.articulationsScratch);
+                if (defined(articulations)) {
+                    var articulationStageKeys = Object.keys(articulations);
+                    for (var s = 0, numKeys = articulationStageKeys.length; s < numKeys; ++s) {
+                        var key = articulationStageKeys[s];
+
+                        var articulationStageValue = articulations[key];
+                        if (!defined(articulationStageValue)) {
+                            continue;
                         }
 
-                        var transformationMatrix = Matrix4.fromTranslationRotationScale(nodeTransformation, nodeMatrixScratch);
-                        modelNode.matrix = Matrix4.multiply(originalNodeMatrix, transformationMatrix, transformationMatrix);
+                        anyArticulationUpdated = true;
+                        model.setArticulationStage(key, articulationStageValue);
                     }
+                }
+
+                if (anyArticulationUpdated) {
+                    model.applyArticulations();
                 }
             }
         }
@@ -266,7 +291,7 @@ define([
         if (model.heightReference === HeightReference.NONE) {
             BoundingSphere.transform(model.boundingSphere, model.modelMatrix, result);
         } else {
-            if (!defined(model._clampedModelMatrix)) {
+            if (!defined(model._clampedModelMatrix) || model._heightChanged) {
                 return BoundingSphereState.PENDING;
             }
             BoundingSphere.transform(model.boundingSphere, model._clampedModelMatrix, result);
@@ -294,7 +319,7 @@ define([
         for (i = changed.length - 1; i > -1; i--) {
             entity = changed[i];
             if (defined(entity._model) && defined(entity._position)) {
-                clearNodeTransformationsScratch(entity, modelHash);
+                clearNodeTransformationsArticulationsScratch(entity, modelHash);
                 entities.set(entity.id, entity);
             } else {
                 removeModel(this, entity, modelHash, primitives);
@@ -317,10 +342,11 @@ define([
         }
     }
 
-    function clearNodeTransformationsScratch(entity, modelHash) {
+    function clearNodeTransformationsArticulationsScratch(entity, modelHash) {
         var modelData = modelHash[entity.id];
         if (defined(modelData)) {
             modelData.nodeTransformationsScratch = {};
+            modelData.articulationsScratch = {};
         }
     }
 

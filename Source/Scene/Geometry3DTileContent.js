@@ -317,7 +317,7 @@ define([
             return;
         }
 
-        var modelMatrix = content._tile.computedTransform;
+        var modelMatrix = content.tile.computedTransform;
 
         var center;
         if (defined(featureTableJson.RTC_CENTER)) {
@@ -365,7 +365,7 @@ define([
                 center : center,
                 modelMatrix : modelMatrix,
                 batchTable : batchTable,
-                boundingVolume : content._tile._boundingVolume.boundingVolume
+                boundingVolume : content.tile.boundingVolume.boundingVolume
             });
         }
     }
@@ -403,21 +403,21 @@ define([
         }
     };
 
-    Geometry3DTileContent.prototype.applyStyle = function(frameState, style) {
+    Geometry3DTileContent.prototype.applyStyle = function(style) {
         createFeatures(this);
         if (defined(this._geometries)) {
-            this._geometries.applyStyle(frameState, style, this._features);
+            this._geometries.applyStyle(style, this._features);
         }
     };
 
     Geometry3DTileContent.prototype.update = function(tileset, frameState) {
-        if (defined(this._batchTable)) {
-            this._batchTable.update(tileset, frameState);
-        }
         if (defined(this._geometries)) {
             this._geometries.classificationType = this._tileset.classificationType;
             this._geometries.debugWireframe = this._tileset.debugWireframe;
             this._geometries.update(frameState);
+        }
+        if (defined(this._batchTable) && this._geometries._ready) {
+            this._batchTable.update(tileset, frameState);
         }
 
         if (!defined(this._contentReadyPromise)) {

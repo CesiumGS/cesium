@@ -27,11 +27,13 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 // An example showing a point cloud tileset classified by a Geometry tileset.
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider : Cesium.createWorldTerrain()
+});
 
 //Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
 var tileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(3838)
+    url: Cesium.IonResource.fromAssetId(16421)
 });
 viewer.scene.primitives.add(tileset);
 
@@ -39,7 +41,7 @@ viewer.scene.primitives.add(tileset);
 // For more details, see:
 //    https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/3d-tiles-next/TileFormats/Geometry
 var classificationTileset = new Cesium.Cesium3DTileset({
-    url: Cesium.IonResource.fromAssetId(3842),
+    url: '../../SampleData/Cesium3DTiles/Classification/PointCloud/tileset.json',
     classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
 });
 viewer.scene.primitives.add(classificationTileset);
@@ -53,17 +55,14 @@ classificationTileset.style = new Cesium.Cesium3DTileStyle({
             ["${id} === 'roof2'", "color('#004FFF', 0.5)"],
             ["${id} === 'tower3'", "color('#FF8833', 0.5)"],
             ["${id} === 'tower4'", "color('#FFAA22', 0.5)"],
-            ["true", "color('#FFFF00', 0.5)"]
+            ['true', "color('#FFFF00', 0.5)"]
         ]
     }
 });
 
 viewer.scene.camera.setView({
-    destination : new Cesium.Cartesian3(4401448.974612145, 225038.45962842644, 4595135.776680152),
-    orientation : {
-        heading : 5.36861655457269,
-        pitch : -0.4029289137364358
-    }
+    destination: new Cesium.Cartesian3(4401744.644145314, 225051.41078911052, 4595420.374784433),
+    orientation: new Cesium.HeadingPitchRoll(5.646733805039757, -0.276607153839886, 6.281110875400085)
 });
 
 // Information about the currently highlighted feature
@@ -94,10 +93,10 @@ viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>

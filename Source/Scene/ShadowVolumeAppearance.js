@@ -36,6 +36,13 @@ define([
         ShadowVolumeAppearanceFS) {
     'use strict';
 
+    var projectionExtentDefines = {
+        eastMostYhighDefine : '',
+        eastMostYlowDefine : '',
+        westMostYhighDefine : '',
+        westMostYlowDefine : ''
+    };
+
     /**
      * Creates shaders for a ClassificationPrimitive to use a given Appearance, as well as for picking.
      *
@@ -183,15 +190,17 @@ define([
      * @param {String[]} defines External defines to pass to the vertex shader.
      * @param {String} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position.
      * @param {Boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
+     * @param {MapProjection} mapProjection Current scene's map projection.
      * @returns {String} Shader source for the vertex shader.
      */
-    ShadowVolumeAppearance.prototype.createVertexShader = function(defines, vertexShaderSource, columbusView2D) {
+    ShadowVolumeAppearance.prototype.createVertexShader = function(defines, vertexShaderSource, columbusView2D, mapProjection) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('defines', defines);
         Check.typeOf.string('vertexShaderSource', vertexShaderSource);
         Check.typeOf.bool('columbusView2D', columbusView2D);
+        Check.defined('mapProjection', mapProjection);
         //>>includeEnd('debug');
-        return createShadowVolumeAppearanceVS(this._colorShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, this._appearance);
+        return createShadowVolumeAppearanceVS(this._colorShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, this._appearance, mapProjection);
     };
 
     /**
@@ -200,19 +209,54 @@ define([
      * @param {String[]} defines External defines to pass to the vertex shader.
      * @param {String} vertexShaderSource ShadowVolumeAppearanceVS with any required modifications for computing position and picking.
      * @param {Boolean} columbusView2D Whether the shader will be used for Columbus View or 2D.
+     * @param {MapProjection} mapProjection Current scene's map projection.
      * @returns {String} Shader source for the vertex shader.
      */
-    ShadowVolumeAppearance.prototype.createPickVertexShader = function(defines, vertexShaderSource, columbusView2D) {
+    ShadowVolumeAppearance.prototype.createPickVertexShader = function(defines, vertexShaderSource, columbusView2D, mapProjection) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('defines', defines);
         Check.typeOf.string('vertexShaderSource', vertexShaderSource);
         Check.typeOf.bool('columbusView2D', columbusView2D);
+        Check.defined('mapProjection', mapProjection);
         //>>includeEnd('debug');
-        return createShadowVolumeAppearanceVS(this._pickShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource);
+        return createShadowVolumeAppearanceVS(this._pickShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, undefined, mapProjection);
     };
 
-    function createShadowVolumeAppearanceVS(shaderDependencies, planarExtents, columbusView2D, defines, vertexShaderSource, appearance) {
+    var longitudeExtentsCartesianScratch = new Cartesian3();
+    var longitudeExtentsCartographicScratch = new Cartographic();
+    var longitudeExtentsEncodeScratch = {
+        high : 0.0,
+        low : 0.0
+    };
+    function createShadowVolumeAppearanceVS(shaderDependencies, planarExtents, columbusView2D, defines, vertexShaderSource, appearance, mapProjection) {
         var allDefines = defines.slice();
+
+        if (projectionExtentDefines.eastMostYhighDefine === '') {
+            var eastMostCartographic = longitudeExtentsCartographicScratch;
+            eastMostCartographic.longitude = CesiumMath.PI;
+            eastMostCartographic.latitude = 0.0;
+            eastMostCartographic.height = 0.0;
+            var eastMostCartesian = mapProjection.project(eastMostCartographic, longitudeExtentsCartesianScratch);
+            var encoded = EncodedCartesian3.encode(eastMostCartesian.x, longitudeExtentsEncodeScratch);
+            projectionExtentDefines.eastMostYhighDefine = 'EAST_MOST_X_HIGH ' + encoded.high.toFixed((encoded.high + '').length + 1);
+            projectionExtentDefines.eastMostYlowDefine = 'EAST_MOST_X_LOW ' + encoded.low.toFixed((encoded.low + '').length + 1);
+
+            var westMostCartographic = longitudeExtentsCartographicScratch;
+            westMostCartographic.longitude = -CesiumMath.PI;
+            westMostCartographic.latitude = 0.0;
+            westMostCartographic.height = 0.0;
+            var westMostCartesian = mapProjection.project(westMostCartographic, longitudeExtentsCartesianScratch);
+            encoded = EncodedCartesian3.encode(westMostCartesian.x, longitudeExtentsEncodeScratch);
+            projectionExtentDefines.westMostYhighDefine = 'WEST_MOST_X_HIGH ' + encoded.high.toFixed((encoded.high + '').length + 1);
+            projectionExtentDefines.westMostYlowDefine = 'WEST_MOST_X_LOW ' + encoded.low.toFixed((encoded.low + '').length + 1);
+        }
+
+        if (columbusView2D) {
+            allDefines.push(projectionExtentDefines.eastMostYhighDefine);
+            allDefines.push(projectionExtentDefines.eastMostYlowDefine);
+            allDefines.push(projectionExtentDefines.westMostYhighDefine);
+            allDefines.push(projectionExtentDefines.westMostYlowDefine);
+        }
 
         if (defined(appearance) && appearance instanceof PerInstanceColorAppearance) {
             allDefines.push('PER_INSTANCE_COLOR');
@@ -636,13 +680,27 @@ define([
         // rectangle cartographic coords !== spherical because it's on an ellipsoid
         var southWestExtents = latLongToSpherical(boundingRectangle.south, boundingRectangle.west, ellipsoid, sphericalScratch);
 
-        // Slightly pad extents to avoid floating point error when fragment culling at edges.
-        var south = southWestExtents.x - CesiumMath.EPSILON5;
-        var west = southWestExtents.y - CesiumMath.EPSILON5;
+        var south = southWestExtents.x;
+        var west = southWestExtents.y;
 
         var northEastExtents = latLongToSpherical(boundingRectangle.north, boundingRectangle.east, ellipsoid, sphericalScratch);
-        var north = northEastExtents.x + CesiumMath.EPSILON5;
-        var east = northEastExtents.y + CesiumMath.EPSILON5;
+        var north = northEastExtents.x;
+        var east = northEastExtents.y;
+
+        // If the bounding rectangle crosses the IDL, rotate the spherical extents so the cross no longer happens.
+        // This rotation must happen in the shader too.
+        var rotationRadians = 0.0;
+        if (west > east) {
+            rotationRadians = CesiumMath.PI - west;
+            west = -CesiumMath.PI;
+            east += rotationRadians;
+        }
+
+        // Slightly pad extents to avoid floating point error when fragment culling at edges.
+        south -= CesiumMath.EPSILON5;
+        west -= CesiumMath.EPSILON5;
+        north += CesiumMath.EPSILON5;
+        east += CesiumMath.EPSILON5;
 
         var longitudeRangeInverse = 1.0 / (east - west);
         var latitudeRangeInverse = 1.0 / (north - south);
@@ -653,6 +711,12 @@ define([
                 componentsPerAttribute: 4,
                 normalize: false,
                 value : [south, west, latitudeRangeInverse, longitudeRangeInverse]
+            }),
+            longitudeRotation : new GeometryInstanceAttribute({
+                componentDatatype: ComponentDatatype.FLOAT,
+                componentsPerAttribute: 1,
+                normalize: false,
+                value : [rotationRadians]
             })
         };
 
@@ -669,7 +733,7 @@ define([
     };
 
     ShadowVolumeAppearance.hasAttributesForSphericalExtents = function(attributes) {
-        return defined(attributes.sphericalExtents) &&
+        return defined(attributes.sphericalExtents) && defined(attributes.longitudeRotation) &&
         defined(attributes.planes2D_HIGH) && defined(attributes.planes2D_LOW) &&
         defined(attributes.uMaxVmax) && defined(attributes.uvMinAndExtents);
     };

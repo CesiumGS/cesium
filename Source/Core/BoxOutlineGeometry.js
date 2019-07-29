@@ -1,24 +1,30 @@
 define([
+        './arrayFill',
         './BoundingSphere',
         './Cartesian3',
         './Check',
         './ComponentDatatype',
         './defaultValue',
         './defined',
+        './DeveloperError',
         './Geometry',
         './GeometryAttribute',
         './GeometryAttributes',
+        './GeometryOffsetAttribute',
         './PrimitiveType'
     ], function(
+        arrayFill,
         BoundingSphere,
         Cartesian3,
         Check,
         ComponentDatatype,
         defaultValue,
         defined,
+        DeveloperError,
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
+        GeometryOffsetAttribute,
         PrimitiveType) {
     'use strict';
 
@@ -54,10 +60,14 @@ define([
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('min', min);
         Check.typeOf.object('max', max);
+        if (defined(options.offsetAttribute) && options.offsetAttribute === GeometryOffsetAttribute.TOP) {
+            throw new DeveloperError('GeometryOffsetAttribute.TOP is not a supported options.offsetAttribute for this geometry.');
+        }
         //>>includeEnd('debug');
 
         this._min = Cartesian3.clone(min);
         this._max = Cartesian3.clone(max);
+        this._offsetAttribute = options.offsetAttribute;
         this._workerName = 'createBoxOutlineGeometry';
     }
 
@@ -94,7 +104,8 @@ define([
 
         return new BoxOutlineGeometry({
             minimum : Cartesian3.negate(corner, new Cartesian3()),
-            maximum : corner
+            maximum : corner,
+            offsetAttribute: options.offsetAttribute
         });
     };
 
@@ -133,7 +144,7 @@ define([
      * The number of elements used to pack the object into an array.
      * @type {Number}
      */
-    BoxOutlineGeometry.packedLength = 2 * Cartesian3.packedLength;
+    BoxOutlineGeometry.packedLength = 2 * Cartesian3.packedLength + 1;
 
     /**
      * Stores the provided instance into the provided array.
@@ -154,6 +165,8 @@ define([
 
         Cartesian3.pack(value._min, array, startingIndex);
         Cartesian3.pack(value._max, array, startingIndex + Cartesian3.packedLength);
+        array[startingIndex + (Cartesian3.packedLength * 2)] = defaultValue(value._offsetAttribute, -1);
+
         return array;
     };
 
@@ -161,7 +174,8 @@ define([
     var scratchMax = new Cartesian3();
     var scratchOptions = {
         minimum : scratchMin,
-        maximum : scratchMax
+        maximum : scratchMax,
+        offsetAttribute : undefined
     };
 
     /**
@@ -181,13 +195,16 @@ define([
 
         var min = Cartesian3.unpack(array, startingIndex, scratchMin);
         var max = Cartesian3.unpack(array, startingIndex + Cartesian3.packedLength, scratchMax);
+        var offsetAttribute = array[startingIndex + Cartesian3.packedLength * 2];
 
         if (!defined(result)) {
+            scratchOptions.offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
             return new BoxOutlineGeometry(scratchOptions);
         }
 
         result._min = Cartesian3.clone(min, result._min);
         result._max = Cartesian3.clone(max, result._max);
+        result._offsetAttribute = offsetAttribute === -1 ? undefined : offsetAttribute;
 
         return result;
     };
@@ -277,11 +294,24 @@ define([
         var diff = Cartesian3.subtract(max, min, diffScratch);
         var radius = Cartesian3.magnitude(diff) * 0.5;
 
+        if (defined(boxGeometry._offsetAttribute)) {
+            var length = positions.length;
+            var applyOffset = new Uint8Array(length / 3);
+            var offsetValue = boxGeometry._offsetAttribute === GeometryOffsetAttribute.NONE ? 0 : 1;
+            arrayFill(applyOffset, offsetValue);
+            attributes.applyOffset = new GeometryAttribute({
+                componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
+                componentsPerAttribute : 1,
+                values: applyOffset
+            });
+        }
+
         return new Geometry({
             attributes : attributes,
             indices : indices,
             primitiveType : PrimitiveType.LINES,
-            boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius)
+            boundingSphere : new BoundingSphere(Cartesian3.ZERO, radius),
+            offsetAttribute : boxGeometry._offsetAttribute
         });
     };
 

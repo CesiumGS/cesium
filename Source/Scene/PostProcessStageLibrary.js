@@ -1,9 +1,13 @@
 define([
         '../Core/buildModuleUrl',
+        '../Core/createGuid',
         '../Core/Color',
+        '../Core/defined',
         '../Core/defineProperties',
+        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
+        '../Shaders/PostProcessStages/AcesTonemapping',
         '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
         '../Shaders/PostProcessStages/AmbientOcclusionModulate',
         '../Shaders/PostProcessStages/BlackAndWhite',
@@ -13,22 +17,29 @@ define([
         '../Shaders/PostProcessStages/DepthOfField',
         '../Shaders/PostProcessStages/DepthView',
         '../Shaders/PostProcessStages/EdgeDetection',
+        '../Shaders/PostProcessStages/FilmicTonemapping',
         '../Shaders/PostProcessStages/FXAA',
         '../Shaders/PostProcessStages/GaussianBlur1D',
         '../Shaders/PostProcessStages/LensFlare',
-        '../Shaders/PostProcessStages/LinearDepth',
+        '../Shaders/PostProcessStages/ModifiedReinhardTonemapping',
         '../Shaders/PostProcessStages/NightVision',
+        '../Shaders/PostProcessStages/ReinhardTonemapping',
         '../Shaders/PostProcessStages/Silhouette',
         '../ThirdParty/Shaders/FXAA3_11',
+        './AutoExposure',
         './PostProcessStage',
         './PostProcessStageComposite',
         './PostProcessStageSampleMode'
     ], function(
         buildModuleUrl,
+        createGuid,
         Color,
+        defined,
         defineProperties,
+        deprecationWarning,
         destroyObject,
         Ellipsoid,
+        AcesTonemapping,
         AmbientOcclusionGenerate,
         AmbientOcclusionModulate,
         BlackAndWhite,
@@ -38,13 +49,16 @@ define([
         DepthOfField,
         DepthView,
         EdgeDetection,
+        FilmicTonemapping,
         FXAA,
         GaussianBlur1D,
         LensFlare,
-        LinearDepth,
+        ModifiedReinhardTonemapping,
         NightVision,
+        ReinhardTonemapping,
         Silhouette,
         FXAA3_11,
+        AutoExposure,
         PostProcessStage,
         PostProcessStageComposite,
         PostProcessStageSampleMode) {
@@ -215,9 +229,25 @@ define([
     };
 
     /**
-     * Creates a post-process stage that applies a silhouette effect.
+     * Whether or not a depth of field stage is supported.
      * <p>
-     * A silhouette effect highlights the edges of an object.
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isDepthOfFieldSupported = function(scene) {
+        return scene.context.depthTexture;
+    };
+
+    /**
+     * Creates a post-process stage that detects edges.
+     * <p>
+     * Writes the color to the output texture with alpha set to 1.0 when it is on an edge.
      * </p>
      * <p>
      * This stage has the following uniforms: <code>color</code> and <code>length</code>
@@ -226,58 +256,148 @@ define([
      * <li><code>color</code> is the color of the highlighted edge. The default is {@link Color#BLACK}.</li>
      * <li><code>length</code> is the length of the edges in pixels. The default is <code>0.5</code>.</li>
      * </ul>
-     * @return {PostProcessStageComposite} A post-process stage that applies a silhouette effect.
+     * <p>
+     * This stage is not supported in 2D.
+     * </p>
+     * @return {PostProcessStageComposite} A post-process stage that applies an edge detection effect.
+     *
+     * @example
+     * // multiple silhouette effects
+     * var yellowEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
+     * yellowEdge.uniforms.color = Cesium.Color.YELLOW;
+     * yellowEdge.selected = [feature0];
+     *
+     * var greenEdge = Cesium.PostProcessLibrary.createEdgeDetectionStage();
+     * greenEdge.uniforms.color = Cesium.Color.LIME;
+     * greenEdge.selected = [feature1];
+     *
+     * // draw edges around feature0 and feature1
+     * postProcessStages.add(Cesium.PostProcessLibrary.createSilhouetteEffect([yellowEdge, greenEdge]);
      */
-    PostProcessStageLibrary.createSilhouetteStage = function() {
-        var silhouetteDepth = new PostProcessStage({
-            name : 'czm_silhouette_depth',
-            fragmentShader : LinearDepth
-        });
-        var edgeDetection = new PostProcessStage({
-            name : 'czm_silhouette_edge_detection',
+    PostProcessStageLibrary.createEdgeDetectionStage = function() {
+        // unique name generated on call so more than one effect can be added
+        var name = createGuid();
+        return new PostProcessStage({
+            name : 'czm_edge_detection_' + name,
             fragmentShader : EdgeDetection,
             uniforms : {
                 length : 0.25,
                 color : Color.clone(Color.BLACK)
             }
         });
-        var silhouetteGenerateProcess = new PostProcessStageComposite({
-            name : 'czm_silhouette_generate',
-            stages : [silhouetteDepth, edgeDetection]
+    };
+
+    /**
+     * Whether or not an edge detection stage is supported.
+     * <p>
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isEdgeDetectionSupported = function(scene) {
+        return scene.context.depthTexture;
+    };
+
+    function getSilhouetteEdgeDetection(edgeDetectionStages) {
+        if (!defined(edgeDetectionStages)) {
+            return PostProcessStageLibrary.createEdgeDetectionStage();
+        }
+
+        var edgeDetection = new PostProcessStageComposite({
+            name : 'czm_edge_detection_multiple',
+            stages : edgeDetectionStages,
+            inputPreviousStageTexture : false
         });
+
+        var compositeUniforms = {};
+        var fsDecl = '';
+        var fsLoop = '';
+        for (var i = 0; i < edgeDetectionStages.length; ++i) {
+            fsDecl += 'uniform sampler2D edgeTexture' + i + '; \n';
+            fsLoop +=
+                '        vec4 edge' + i + ' = texture2D(edgeTexture' + i + ', v_textureCoordinates); \n' +
+                '        if (edge' + i + '.a > 0.0) \n' +
+                '        { \n' +
+                '            color = edge' + i + '; \n' +
+                '            break; \n' +
+                '        } \n';
+            compositeUniforms['edgeTexture' + i] = edgeDetectionStages[i].name;
+        }
+
+        var fs =
+            fsDecl +
+            'varying vec2 v_textureCoordinates; \n' +
+            'void main() { \n' +
+            '    vec4 color = vec4(0.0); \n' +
+            '    for (int i = 0; i < ' + edgeDetectionStages.length + '; i++) \n' +
+            '    { \n' +
+            fsLoop +
+            '    } \n' +
+            '    gl_FragColor = color; \n' +
+            '} \n';
+
+        var edgeComposite = new PostProcessStage({
+            name : 'czm_edge_detection_combine',
+            fragmentShader : fs,
+            uniforms : compositeUniforms
+        });
+        return new PostProcessStageComposite({
+            name : 'czm_edge_detection_composite',
+            stages : [edgeDetection, edgeComposite]
+        });
+    }
+
+    /**
+     * Creates a post-process stage that applies a silhouette effect.
+     * <p>
+     * A silhouette effect composites the color from the edge detection pass with input color texture.
+     * </p>
+     * <p>
+     * This stage has the following uniforms when <code>edgeDetectionStages</code> is <code>undefined</code>: <code>color</code> and <code>length</code>
+     * </p>
+     * <p>
+     * <code>color</code> is the color of the highlighted edge. The default is {@link Color#BLACK}.
+     * <code>length</code> is the length of the edges in pixels. The default is <code>0.5</code>.
+     * </p>
+     * @return {PostProcessStageComposite} A post-process stage that applies a silhouette effect.
+     */
+    PostProcessStageLibrary.createSilhouetteStage = function(edgeDetectionStages) {
+        var edgeDetection = getSilhouetteEdgeDetection(edgeDetectionStages);
         var silhouetteProcess = new PostProcessStage({
             name : 'czm_silhouette_color_edges',
             fragmentShader : Silhouette,
             uniforms : {
-                silhouetteTexture : silhouetteGenerateProcess.name
+                silhouetteTexture : edgeDetection.name
             }
         });
 
-        var uniforms = {};
-        defineProperties(uniforms, {
-            length : {
-                get : function() {
-                    return edgeDetection.uniforms.length;
-                },
-                set : function(value) {
-                    edgeDetection.uniforms.length = value;
-                }
-            },
-            color : {
-                get : function() {
-                    return edgeDetection.uniforms.color;
-                },
-                set : function(value) {
-                    edgeDetection.uniforms.color = value;
-                }
-            }
-        });
         return new PostProcessStageComposite({
             name : 'czm_silhouette',
-            stages : [silhouetteGenerateProcess, silhouetteProcess],
+            stages : [edgeDetection, silhouetteProcess],
             inputPreviousStageTexture : false,
-            uniforms : uniforms
+            uniforms : edgeDetection.uniforms
         });
+    };
+
+    /**
+     * Whether or not a silhouette stage is supported.
+     * <p>
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isSilhouetteSupported = function(scene) {
+        return scene.context.depthTexture;
     };
 
     /**
@@ -540,6 +660,22 @@ define([
         });
     };
 
+    /**
+     * Whether or not an ambient occlusion stage is supported.
+     * <p>
+     * This stage requires the WEBGL_depth_texture extension.
+     * </p>
+     *
+     * @param {Scene} scene The scene.
+     * @return {Boolean} Whether this post process stage is supported.
+     *
+     * @see {Context#depthTexture}
+     * @see {@link http://www.khronos.org/registry/webgl/extensions/WEBGL_depth_texture/|WEBGL_depth_texture}
+     */
+    PostProcessStageLibrary.isAmbientOcclusionSupported = function(scene) {
+        return scene.context.depthTexture;
+    };
+
     var fxaaFS =
         '#define FXAA_QUALITY_PRESET 39 \n' +
         FXAA3_11 + '\n' +
@@ -557,6 +693,88 @@ define([
             fragmentShader : fxaaFS,
             sampleMode : PostProcessStageSampleMode.LINEAR
         });
+    };
+
+    /**
+     * Creates a post-process stage that applies ACES tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies ACES tonemapping operator.
+     * @private
+     */
+    PostProcessStageLibrary.createAcesTonemappingStage = function(useAutoExposure) {
+        var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
+        fs += AcesTonemapping;
+        return new PostProcessStage({
+            name : 'czm_aces',
+            fragmentShader : fs,
+            uniforms : {
+                autoExposure : undefined
+            }
+        });
+    };
+
+    /**
+     * Creates a post-process stage that applies filmic tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies filmic tonemapping operator.
+     * @private
+     */
+    PostProcessStageLibrary.createFilmicTonemappingStage = function(useAutoExposure) {
+        var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
+        fs += FilmicTonemapping;
+        return new PostProcessStage({
+            name : 'czm_filmic',
+            fragmentShader : fs,
+            uniforms : {
+                autoExposure : undefined
+            }
+        });
+    };
+
+    /**
+     * Creates a post-process stage that applies Reinhard tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies Reinhard tonemapping operator.
+     * @private
+     */
+    PostProcessStageLibrary.createReinhardTonemappingStage = function(useAutoExposure) {
+        var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
+        fs += ReinhardTonemapping;
+        return new PostProcessStage({
+            name : 'czm_reinhard',
+            fragmentShader : fs,
+            uniforms : {
+                autoExposure : undefined
+            }
+        });
+    };
+
+    /**
+     * Creates a post-process stage that applies modified Reinhard tonemapping operator.
+     * @param {Boolean} useAutoExposure Whether or not to use auto-exposure.
+     * @return {PostProcessStage} A post-process stage that applies modified Reinhard tonemapping operator.
+     * @private
+     */
+    PostProcessStageLibrary.createModifiedReinhardTonemappingStage = function(useAutoExposure) {
+        var fs = useAutoExposure ? '#define AUTO_EXPOSURE\n' : '';
+        fs += ModifiedReinhardTonemapping;
+        return new PostProcessStage({
+            name : 'czm_modified_reinhard',
+            fragmentShader : fs,
+            uniforms : {
+                white : Color.WHITE,
+                autoExposure : undefined
+            }
+        });
+    };
+
+    /**
+     * Creates a post-process stage that finds the average luminance of the input texture.
+     * @return {PostProcessStage} A post-process stage that finds the average luminance of the input texture.
+     * @private
+     */
+    PostProcessStageLibrary.createAutoExposureStage = function() {
+        return new AutoExposure();
     };
 
     /**
@@ -627,14 +845,14 @@ define([
      * <li><code>starTexture</code> is the texture sampled for the star pattern of the flare.</li>
      * <li><code>intensity</code> is a scalar multiplied by the result of the lens flare. The default value is <code>2.0</code>.</li>
      * <li><code>distortion</code> is a scalar value that affects the chromatic effect distortion. The default value is <code>10.0</code>.</li>
-     * <li><code>ghostDispesal</code> is a scalar indicating how far the halo effect is from the center of the texture. The default value is <code>0.4</code>.</li>
+     * <li><code>ghostDispersal</code> is a scalar indicating how far the halo effect is from the center of the texture. The default value is <code>0.4</code>.</li>
      * <li><code>haloWidth</code> is a scalar representing the width of the halo  from the ghost dispersal. The default value is <code>0.4</code>.</li>
      * <li><code>earthRadius</code> is the maximum radius of the earth. The default value is <code>Ellipsoid.WGS84.maximumRadius</code>.</li>
      * </ul>
      * </p>
      * @return {PostProcessStage} A post-process stage for applying a lens flare effect.
      */
-    PostProcessStageLibrary.createLensFlarStage = function() {
+    PostProcessStageLibrary.createLensFlareStage = function() {
         return new PostProcessStage({
             name : 'czm_lens_flare',
             fragmentShader : LensFlare,

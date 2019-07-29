@@ -1,6 +1,7 @@
 defineSuite([
         'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',
+        'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
         'Core/Color',
         'Core/Credit',
@@ -8,7 +9,6 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/EllipsoidTerrainProvider',
         'Core/GeographicProjection',
-        'Core/Intersect',
         'Core/Rectangle',
         'Core/WebMercatorProjection',
         'Renderer/ContextLimits',
@@ -32,6 +32,7 @@ defineSuite([
     ], function(
         GlobeSurfaceTileProvider,
         Cartesian3,
+        Cartesian4,
         CesiumTerrainProvider,
         Color,
         Credit,
@@ -39,7 +40,6 @@ defineSuite([
         Ellipsoid,
         EllipsoidTerrainProvider,
         GeographicProjection,
-        Intersect,
         Rectangle,
         WebMercatorProjection,
         ContextLimits,
@@ -92,12 +92,13 @@ defineSuite([
         });
     }
 
+    var cameraDestination = new Rectangle(0.0001, 0.0001, 0.0030, 0.0030);
     function switchViewMode(mode, projection) {
         scene.mode = mode;
         scene.frameState.mapProjection = projection;
         scene.camera.update(scene.mode);
         scene.camera.setView({
-            destination : new Rectangle(0.0001, 0.0001, 0.0030, 0.0030)
+            destination : cameraDestination
         });
     }
 
@@ -116,6 +117,7 @@ defineSuite([
 
     afterEach(function() {
         scene.imageryLayers.removeAll();
+        scene.primitives.removeAll();
     });
 
     it('conforms to QuadtreeTileProvider interface', function() {
@@ -304,7 +306,7 @@ defineSuite([
                 // Verify that each tile has 2 imagery objects and no loaded callbacks
                 forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
                     expect(tile.data.imagery.length).toBe(2);
-                    expect(Object.keys(tile._loadedCallbacks).length).toBe(1);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
                 });
 
                 // Reload each layer
@@ -319,14 +321,14 @@ defineSuite([
                 //  and also has 2 callbacks so the old imagery will be removed once loaded.
                 forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
                     expect(tile.data.imagery.length).toBe(4);
-                    expect(Object.keys(tile._loadedCallbacks).length).toBe(3);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(2);
                 });
 
                 return updateUntilDone(scene.globe).then(function() {
                     // Verify the old imagery was removed and the callbacks are no longer there
                     forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
                         expect(tile.data.imagery.length).toBe(2);
-                        expect(Object.keys(tile._loadedCallbacks).length).toBe(1);
+                        expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
                     });
                 });
             });
@@ -562,6 +564,77 @@ defineSuite([
         });
     });
 
+    it('renders imagery cutout', function() {
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        var layer = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        }));
+        layer.cutoutRectangle = cameraDestination;
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        var baseColor;
+        return updateUntilDone(scene.globe).then(function() {
+            expect(scene).toRenderAndCall(function(rgba) {
+                baseColor = rgba;
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+            layer.cutoutRectangle = undefined;
+
+            return updateUntilDone(scene.globe);
+        })
+        .then(function() {
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(baseColor);
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+        });
+    });
+
+    it('renders imagery with color-to-alpha', function() {
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        var layer = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        }));
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        var layerColor;
+        return updateUntilDone(scene.globe).then(function() {
+            expect(scene).toRenderAndCall(function(rgba) {
+                layerColor = rgba;
+                // Expect the layer color to be mostly red
+                expect(layerColor[0]).toBeGreaterThan(layerColor[1]);
+                expect(layerColor[0]).toBeGreaterThan(layerColor[2]);
+            });
+
+            layer.colorToAlpha = new Color(1.0, 0.0, 0.0);
+            layer.colorToAlphaThreshold = 0.1;
+
+            return updateUntilDone(scene.globe);
+        })
+        .then(function() {
+            var commandList = scene.frameState.commandList;
+
+            for (var i = 0; i < commandList.length; ++i) {
+                var command = commandList[i];
+
+                var uniforms = command.uniformMap;
+                if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
+                    continue;
+                }
+
+                expect(uniforms.u_colorsToAlpha()).toEqual([new Cartesian4(1.0, 0.0, 0.0, 0.1)]);
+            }
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(layerColor);
+            });
+        });
+    });
+
     it('skips layer with uniform alpha value of zero', function() {
         var layer = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
             url : 'Data/Images/Red16x16.png'
@@ -674,12 +747,14 @@ defineSuite([
                 var surface = scene.globe._surface;
                 var replacementQueue = surface._tileReplacementQueue;
                 expect(replacementQueue.count).toBeGreaterThan(0);
+                var oldTile = replacementQueue.head;
 
                 surface.tileProvider.terrainProvider = new EllipsoidTerrainProvider();
 
                 scene.renderForSpecs();
 
-                expect(replacementQueue.count).toBe(0);
+                expect(replacementQueue.count).toBeGreaterThan(0);
+                expect(replacementQueue.head).not.toBe(oldTile);
             });
         });
 
@@ -935,6 +1010,59 @@ defineSuite([
         expect(function() {
             globe.clippingPlanes = clippingPlanes;
         }).toThrowDeveloperError();
+    });
+
+    it('cartographicLimitRectangle selectively enables rendering globe surface', function() {
+        expect(scene).toRender([0, 0, 0, 255]);
+         switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
+        var result;
+         return updateUntilDone(scene.globe).then(function() {
+            expect(scene).notToRender([0, 0, 0, 255]);
+            expect(scene).toRenderAndCall(function(rgba) {
+                result = rgba;
+                expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
+             expect(scene).notToRender(result);
+             scene.camera.setView({
+                destination : scene.globe.cartographicLimitRectangle
+            });
+             return updateUntilDone(scene.globe);
+        })
+            .then(function() {
+                expect(scene).toRender(result);
+            });
+    });
+
+    it('cartographicLimitRectangle defaults to Rectangle.MAX_VALUE', function() {
+        scene.globe.cartographicLimitRectangle = undefined;
+        expect(scene.globe.cartographicLimitRectangle.equals(Rectangle.MAX_VALUE)).toBe(true);
+    });
+
+    it('cartographicLimitRectangle culls tiles outside the region', function() {
+        switchViewMode(SceneMode.COLUMBUS_VIEW, new GeographicProjection(Ellipsoid.WGS84));
+         var unculledCommandCount;
+        return updateUntilDone(scene.globe).then(function() {
+            unculledCommandCount = scene.frameState.commandList.length;
+             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(-2, -2, -1, -1);
+             return updateUntilDone(scene.globe);
+        })
+            .then(function() {
+                expect(unculledCommandCount).toBeGreaterThan(scene.frameState.commandList.length);
+            });
+    });
+
+    it('cartographicLimitRectangle may cross the antimeridian', function() {
+        switchViewMode(SceneMode.SCENE2D, new GeographicProjection(Ellipsoid.WGS84));
+         var unculledCommandCount;
+        return updateUntilDone(scene.globe).then(function() {
+            unculledCommandCount = scene.frameState.commandList.length;
+             scene.globe.cartographicLimitRectangle = Rectangle.fromDegrees(179, -2, -179, -1);
+             return updateUntilDone(scene.globe);
+        })
+            .then(function() {
+                expect(unculledCommandCount).toBeGreaterThan(scene.frameState.commandList.length);
+            });
     });
 
 }, 'WebGL');

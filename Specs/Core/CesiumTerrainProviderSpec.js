@@ -89,6 +89,10 @@ defineSuite([
         };
     }
 
+    function returnMetadataAvailabilityTileJson() {
+        return returnTileJson('Data/CesiumTerrainTileJson/MetadataAvailability.tile.json');
+    }
+
     function waitForTile(level, x, y, requestNormals, requestWaterMask, f) {
         var terrainProvider = new CesiumTerrainProvider({
             url : 'made/up/url',
@@ -190,8 +194,7 @@ defineSuite([
         return pollToPromise(function() {
             return provider.ready;
         }).then(function() {
-            var tilingScheme = provider.tilingScheme;
-            expect(tilingScheme instanceof GeographicTilingScheme).toBe(true);
+            expect(provider.tilingScheme).toBeInstanceOf(GeographicTilingScheme);
         });
     });
 
@@ -461,6 +464,78 @@ defineSuite([
         });
     });
 
+    it('do not add blank attribution if layer.json does not have one', function() {
+        returnTileJson('Data/CesiumTerrainTileJson/WaterMask.tile.json');
+
+        var provider = new CesiumTerrainProvider({
+            url : 'made/up/url'
+        });
+
+        return pollToPromise(function() {
+            return provider.ready;
+        }).then(function() {
+            expect(provider._tileCredit).toBeUndefined();
+        });
+    });
+
+    it('The undefined availability tile is returned at level 0', function() {
+        var layer = {
+            availabilityLevels: 10
+        };
+
+        expect(CesiumTerrainProvider._getAvailabilityTile(layer, 0, 0, 0)).toBeUndefined();
+        expect(CesiumTerrainProvider._getAvailabilityTile(layer, 1, 0, 0)).toBeUndefined();
+    });
+
+    it('The correct availability tile is computed in first level', function() {
+        var layer = {
+            availabilityLevels: 10
+        };
+
+        expect(CesiumTerrainProvider._getAvailabilityTile(layer, 1, 1, 1)).toEqual({
+            level: 0,
+            x: 0,
+            y: 0
+        });
+        expect(CesiumTerrainProvider._getAvailabilityTile(layer, 4, 2, 2)).toEqual({
+            level: 0,
+            x: 1,
+            y: 0
+        });
+
+        expect(CesiumTerrainProvider._getAvailabilityTile(layer, 80, 50, 10)).toEqual({
+            level: 0,
+            x: 0,
+            y: 0
+        });
+    });
+
+    it('The correct availability tile is computed in second level', function() {
+        var layer = {
+            availabilityLevels: 10
+        };
+
+        var expected = {
+            level: 10,
+            x: 80,
+            y: 50
+        };
+
+        var xs = [expected.x, expected.x];
+        var ys = [expected.y, expected.y];
+
+        // Compute level 20 tiles by always taking SW or NE child
+        for (var i = 0; i < 10; ++i) {
+            xs[0] *= 2;
+            ys[0] *= 2;
+            xs[1] = xs[1] * 2 + 1;
+            ys[1] = ys[1] * 2 + 1;
+        }
+
+        expect(CesiumTerrainProvider._getAvailabilityTile(layer, xs[0], ys[0], 20)).toEqual(expected);
+        expect(CesiumTerrainProvider._getAvailabilityTile(layer, xs[1], ys[1], 20)).toEqual(expected);
+    });
+
     describe('requestTileGeometry', function() {
 
         it('uses multiple urls specified in layer.json', function() {
@@ -638,6 +713,33 @@ defineSuite([
             });
         });
 
+        it('provides QuantizedMeshTerrainData with Metadata availability', function() {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                Resource._DefaultImplementations.loadWithXhr('Data/CesiumTerrainTileJson/tile.metadataavailability.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnMetadataAvailabilityTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : 'made/up/url'
+            });
+
+            return pollToPromise(function() {
+                return terrainProvider.ready;
+            }).then(function() {
+                expect(terrainProvider.hasMetadata).toBe(true);
+                expect(terrainProvider._layers[0].availabilityLevels).toBe(10);
+                expect(terrainProvider.availability.isTileAvailable(0,0,0)).toBe(true);
+                expect(terrainProvider.availability.isTileAvailable(0,1,0)).toBe(true);
+                expect(terrainProvider.availability.isTileAvailable(1,0,0)).toBe(false);
+
+                return terrainProvider.requestTileGeometry(0, 0, 0);
+            }).then(function(loadedData) {
+                expect(loadedData).toBeInstanceOf(QuantizedMeshTerrainData);
+                expect(terrainProvider.availability.isTileAvailable(1,0,0)).toBe(true);
+            });
+        });
+
         it('returns undefined if too many requests are already in progress', function() {
             var baseUrl = 'made/up/url';
 
@@ -712,6 +814,29 @@ defineSuite([
             });
         });
 
+        it('getTileDataAvailable() with Metadata availability', function() {
+            Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
+                Resource._DefaultImplementations.loadWithXhr('Data/CesiumTerrainTileJson/tile.metadataavailability.terrain', responseType, method, data, headers, deferred);
+            };
+
+            returnMetadataAvailabilityTileJson();
+
+            var terrainProvider = new CesiumTerrainProvider({
+                url : 'made/up/url'
+            });
+
+            return pollToPromise(function() {
+                return terrainProvider.ready;
+            }).then(function() {
+                expect(terrainProvider.getTileDataAvailable(0,0,0)).toBe(true);
+                expect(terrainProvider.getTileDataAvailable(0,0,1)).toBeUndefined();
+
+                return terrainProvider.requestTileGeometry(0, 0, 0);
+            }).then(function() {
+                expect(terrainProvider.getTileDataAvailable(0,0,1)).toBe(true);
+            });
+        });
+
         it('supports a query string in the base URL', function() {
             Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
                 // Just return any old file, as long as its big enough
@@ -738,7 +863,7 @@ defineSuite([
                 var getDerivedResource = spyOn(IonResource.prototype, 'getDerivedResource').and.callThrough();
                 terrainProvider.requestTileGeometry(0, 0, 0);
                 var options = getDerivedResource.calls.argsFor(0)[0];
-                expect(options.queryParameters.extensions).toEqual('octvertexnormals-watermask');
+                expect(options.queryParameters.extensions).toEqual('octvertexnormals-watermask-metadata');
             });
         });
     });

@@ -23,7 +23,7 @@
     },
     "geometricError": 0,
     "content": {
-      "url": "instancedRTC.i3dm"
+      "uri": "instancedRTC.i3dm"
     }
   }
 }

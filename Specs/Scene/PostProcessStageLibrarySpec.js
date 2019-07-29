@@ -3,27 +3,35 @@ defineSuite([
         'Core/Cartesian3',
         'Core/defined',
         'Core/destroyObject',
+        'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
+        'Core/Matrix4',
         'Core/Transforms',
         'Scene/Model',
         'Renderer/Pass',
         'Renderer/RenderState',
+        'ThirdParty/when',
         'Specs/createCanvas',
         'Specs/createScene',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'Specs/ViewportPrimitive'
     ], function(
         PostProcessStageLibrary,
         Cartesian3,
         defined,
         destroyObject,
+        HeadingPitchRange,
         HeadingPitchRoll,
+        Matrix4,
         Transforms,
         Model,
         Pass,
         RenderState,
+        when,
         createCanvas,
         createScene,
-        pollToPromise) {
+        pollToPromise,
+        ViewportPrimitive) {
     'use strict';
 
     var scene;
@@ -45,33 +53,33 @@ defineSuite([
         scene.postProcessStages.fxaa.enabled = false;
         scene.postProcessStages.bloom.enabled = false;
         scene.postProcessStages.ambientOcclusion.enabled = false;
+        scene.renderForSpecs();
     });
 
-    var ViewportPrimitive = function(fragmentShader) {
-        this._fs = fragmentShader;
-        this._command = undefined;
-    };
+    var model;
 
-    ViewportPrimitive.prototype.update = function(frameState) {
-        if (!defined(this._command)) {
-            this._command = frameState.context.createViewportQuadCommand(this._fs, {
-                renderState : RenderState.fromCache(),
-                pass : Pass.OPAQUE
-            });
-        }
-        frameState.commandList.push(this._command);
-    };
+    function loadModel(url) {
+        model = scene.primitives.add(Model.fromGltf({
+            modelMatrix : Transforms.eastNorthUpToFixedFrame(Cartesian3.fromDegrees(0.0, 0.0, 100.0)),
+            url : url
+        }));
+        model.zoomTo = function() {
+            var camera = scene.camera;
+            var center = Matrix4.multiplyByPoint(model.modelMatrix, model.boundingSphere.center, new Cartesian3());
+            var r = 4.0 * Math.max(model.boundingSphere.radius, camera.frustum.near);
+            camera.lookAt(center, new HeadingPitchRange(0.0, 0.0, r));
+        };
 
-    ViewportPrimitive.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    ViewportPrimitive.prototype.destroy = function() {
-        if (defined(this._command)) {
-            this._command.shaderProgram = this._command.shaderProgram && this._command.shaderProgram.destroy();
-        }
-        return destroyObject(this);
-    };
+        return pollToPromise(function() {
+            // Render scene to progressively load the model
+            scene.renderForSpecs();
+            return model.ready;
+        }, { timeout: 10000 }).then(function() {
+            return model;
+        }).otherwise(function() {
+            return when.reject(model);
+        });
+    }
 
     it('black and white', function() {
         var fs =
@@ -109,6 +117,33 @@ defineSuite([
                     expect(rgba[k + 3]).toEqual(rgba[3]);
                 }
             }
+        });
+    });
+
+    it('per-feature black and white', function() {
+        return loadModel('./Data/Models/Box/CesiumBoxTest.gltf').then(function() {
+            model.zoomTo();
+
+            var stage = scene.postProcessStages.add(PostProcessStageLibrary.createBlackAndWhiteStage());
+            stage.selected = [];
+
+            return pollToPromise(function() {
+                scene.renderForSpecs();
+                return stage.ready;
+            }).then(function() {
+                var color;
+                expect(scene).toRenderAndCall(function(rgba) {
+                    color = rgba;
+                    expect(rgba[1]).toEqual(rgba[0]);
+                    expect(rgba[2]).toEqual(rgba[0]);
+                    expect(rgba[3]).toEqual(255);
+                });
+
+                stage.selected = [model];
+                expect(scene).toRenderAndCall(function(rgba) {
+                    expect(rgba).not.toEqual(color);
+                });
+            });
         });
     });
 

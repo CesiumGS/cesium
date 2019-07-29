@@ -8,8 +8,6 @@ define([
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/Matrix4',
-        '../Core/OrthographicFrustum',
-        '../Core/OrthographicOffCenterFrustum',
         '../Core/VertexFormat',
         '../Renderer/BufferUsage',
         '../Renderer/DrawCommand',
@@ -34,8 +32,6 @@ define([
         destroyObject,
         DeveloperError,
         Matrix4,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
         VertexFormat,
         BufferUsage,
         DrawCommand,
@@ -213,7 +209,8 @@ define([
             owner : defaultValue(options._owner, this)
         });
         this._pickCommand = new DrawCommand({
-            owner : defaultValue(options._owner, this)
+            owner : defaultValue(options._owner, this),
+            pickOnly : true
         });
 
         var that = this;
@@ -354,8 +351,7 @@ define([
         var lightingChanged = this.onlySunLighting !== this._onlySunLighting;
         this._onlySunLighting = this.onlySunLighting;
 
-        var frustum = frameState.camera.frustum;
-        var useLogDepth = context.fragmentDepth && !(frustum instanceof OrthographicFrustum || frustum instanceof OrthographicOffCenterFrustum);
+        var useLogDepth = frameState.useLogDepth;
         var useLogDepthChanged = this._useLogDepth !== useLogDepth;
         this._useLogDepth = useLogDepth;
 

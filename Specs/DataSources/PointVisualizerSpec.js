@@ -51,7 +51,6 @@ defineSuite([
         scene.globe = {
             ellipsoid : Ellipsoid.WGS84,
             _surface : {},
-            tileLoadedEvent : new Event(),
             imageryLayersUpdatedEvent : new Event(),
             terrainProviderChanged : new Event()
         };
@@ -176,7 +175,7 @@ defineSuite([
         visualizer.update(time);
 
         var pointPrimitiveCollection = entityCluster._pointCollection;
-        expect(pointPrimitiveCollection instanceof PointPrimitiveCollection).toBe(true);
+        expect(pointPrimitiveCollection).toBeInstanceOf(PointPrimitiveCollection);
         expect(pointPrimitiveCollection.length).toEqual(1);
         var pointPrimitive = pointPrimitiveCollection.get(0);
 
@@ -238,7 +237,7 @@ defineSuite([
         visualizer.update(time);
 
         var billboardCollection = entityCluster._billboardCollection;
-        expect(billboardCollection instanceof BillboardCollection).toBe(true);
+        expect(billboardCollection).toBeInstanceOf(BillboardCollection);
         expect(billboardCollection.length).toEqual(1);
         var billboard = billboardCollection.get(0);
 

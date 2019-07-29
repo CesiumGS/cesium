@@ -16,9 +16,9 @@ float czm_private_getSpecularOfMaterial(vec3 lightDirectionEC, vec3 toEyeEC, czm
  *
  * @param {vec3} toEye A normalized vector from the fragment to the eye in eye coordinates.
  * @param {czm_material} material The fragment's material.
- * 
+ *
  * @returns {vec4} The computed color.
- * 
+ *
  * @example
  * vec3 positionToEyeEC = // ...
  * czm_material material = // ...
@@ -40,11 +40,16 @@ vec4 czm_phong(vec3 toEye, czm_material material)
 
     // Temporary workaround for adding ambient.
     vec3 materialDiffuse = material.diffuse * 0.5;
-    
+
     vec3 ambient = materialDiffuse;
     vec3 color = ambient + material.emission;
     color += materialDiffuse * diffuse;
     color += material.specular * specular;
+
+#ifdef HDR
+    float sunDiffuse = czm_private_getLambertDiffuseOfMaterial(czm_sunDirectionEC, material);
+    color += materialDiffuse * sunDiffuse * czm_sunColor;
+#endif
 
     return vec4(color, material.alpha);
 }

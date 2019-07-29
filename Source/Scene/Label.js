@@ -63,6 +63,7 @@ define([
      *
      * @alias Label
      * @internalConstructor
+     * @class
      *
      * @exception {DeveloperError} translucencyByDistance.far must be greater than translucencyByDistance.near
      * @exception {DeveloperError} pixelOffsetScaleByDistance.far must be greater than pixelOffsetScaleByDistance.near
@@ -142,7 +143,7 @@ define([
         this._scaleByDistance = scaleByDistance;
         this._heightReference = defaultValue(options.heightReference, HeightReference.NONE);
         this._distanceDisplayCondition = distanceDisplayCondition;
-        this._disableDepthTestDistance = defaultValue(options.disableDepthTestDistance, 0.0);
+        this._disableDepthTestDistance = options.disableDepthTestDistance;
 
         this._labelCollection = labelCollection;
         this._glyphs = [];
@@ -929,7 +930,6 @@ define([
          * When set to zero, the depth test is always applied. When set to Number.POSITIVE_INFINITY, the depth test is never applied.
          * @memberof Label.prototype
          * @type {Number}
-         * @default 0.0
          */
         disableDepthTestDistance : {
             get : function() {
@@ -938,7 +938,7 @@ define([
             set : function(value) {
                 if (this._disableDepthTestDistance !== value) {
                     //>>includeStart('debug', pragmas.debug);
-                    if (!defined(value) || value < 0.0) {
+                    if (defined(value) && value < 0.0) {
                         throw new DeveloperError('disableDepthTestDistance must be greater than 0.0.');
                     }
                     //>>includeEnd('debug');
@@ -984,6 +984,18 @@ define([
                         backgroundBillboard.id = value;
                     }
                 }
+            }
+        },
+
+        /**
+         * @private
+         */
+        pickId : {
+            get : function() {
+                if (this._glyphs.length === 0 || !defined(this._glyphs[0].billboard)) {
+                    return undefined;
+                }
+                return this._glyphs[0].billboard.pickId;
             }
         },
 
@@ -1328,6 +1340,7 @@ define([
         var result = '';
         for (var i = 0; i < texts.length; i++) {
             var text = texts[i];
+            // first character of the line is a RTL character, so need to manage different cases
             var rtlDir = rtlChars.test(text.charAt(0));
             var parsedText = convertTextToTypes(text, rtlChars);
 
@@ -1335,10 +1348,10 @@ define([
             var line = '';
             for (var wordIndex = 0; wordIndex < parsedText.length; ++wordIndex) {
                 var subText = parsedText[wordIndex];
-                var reverse = subText.Type === textTypes.BRACKETS ? reverseBrackets(subText.Word) : subText.Word;
+                var reverse = subText.Type === textTypes.BRACKETS ? reverseBrackets(subText.Word) : reverseWord(subText.Word);
                 if (rtlDir) {
                     if (subText.Type === textTypes.RTL) {
-                        line = reverseWord(subText.Word) + line;
+                        line = reverse + line;
                         splicePointer = 0;
                     }
                     else if (subText.Type === textTypes.LTR) {
@@ -1346,14 +1359,18 @@ define([
                         splicePointer += subText.Word.length;
                     }
                     else if (subText.Type === textTypes.WEAK || subText.Type === textTypes.BRACKETS) {
+                        // current word is weak, last one was bracket
                         if (subText.Type === textTypes.WEAK && parsedText[wordIndex - 1].Type === textTypes.BRACKETS) {
-                            line = reverseWord(subText.Word) + line;
+                            line = reverse + line;
                         }
+                        // current word is weak or bracket, last one was rtl
                         else if (parsedText[wordIndex - 1].Type === textTypes.RTL) {
                             line = reverse + line;
                             splicePointer = 0;
                         }
+                        // current word is weak or bracket, there is at least one more word
                         else if (parsedText.length > wordIndex + 1) {
+                            // next word is rtl
                             if (parsedText[wordIndex + 1].Type === textTypes.RTL) {
                                 line = reverse + line;
                                 splicePointer = 0;
@@ -1363,22 +1380,30 @@ define([
                                 splicePointer += subText.Word.length;
                             }
                         }
+                        // current word is weak or bracket, and it the last in this line
                         else {
                             line = spliceWord(line, 0, reverse);
                         }
                     }
                 }
+                // ltr line, rtl word
                 else if (subText.Type === textTypes.RTL) {
-                    line = spliceWord(line, splicePointer, reverseWord(subText.Word));
+                    line = spliceWord(line, splicePointer, reverse);
                 }
+                // ltr line, ltr word
                 else if (subText.Type === textTypes.LTR) {
                     line += subText.Word;
                     splicePointer = line.length;
                 }
+                // ltr line, weak or bracket word
                 else if (subText.Type === textTypes.WEAK || subText.Type === textTypes.BRACKETS) {
+                    // not first word in line
                     if (wordIndex > 0) {
+                        // last word was rtl
                         if (parsedText[wordIndex - 1].Type === textTypes.RTL) {
+                            // there is at least one more word
                             if (parsedText.length > wordIndex + 1) {
+                                // next word is rtl
                                 if (parsedText[wordIndex + 1].Type === textTypes.RTL) {
                                     line = spliceWord(line, splicePointer, reverse);
                                 }

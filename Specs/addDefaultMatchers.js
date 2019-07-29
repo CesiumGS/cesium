@@ -4,6 +4,7 @@ define([
         'Core/defaultValue',
         'Core/defined',
         'Core/DeveloperError',
+        'Core/FeatureDetection',
         'Core/Math',
         'Core/PrimitiveType',
         'Core/RuntimeError',
@@ -19,6 +20,7 @@ define([
         defaultValue,
         defined,
         DeveloperError,
+        FeatureDetection,
         CesiumMath,
         PrimitiveType,
         RuntimeError,
@@ -220,7 +222,22 @@ define([
             toBeInstanceOf : function(util, customEqualityTesters) {
                 return {
                     compare : function(actual, expectedConstructor) {
-                        return { pass : actual instanceof expectedConstructor };
+                        var result = {};
+                        if (expectedConstructor === String) {
+                            result.pass = typeof actual === 'string' || actual instanceof String;
+                        } else if (expectedConstructor === Number) {
+                            result.pass = typeof actual === 'number' || actual instanceof Number;
+                        } else if (expectedConstructor === Function) {
+                            result.pass = typeof actual === 'function' || actual instanceof Function;
+                        } else if (expectedConstructor === Object) {
+                            result.pass = actual !== null && typeof actual === 'object';
+                        } else if (expectedConstructor === Boolean) {
+                            result.pass = typeof actual === 'boolean';
+                        } else {
+                            result.pass = actual instanceof expectedConstructor;
+                        }
+                        result.message = 'Expected ' + Object.prototype.toString.call(actual) + ' to be instance of ' + expectedConstructor.name + ', but was instance of ' + (actual && actual.constructor.name);
+                        return result;
                     }
                 };
             },
@@ -291,8 +308,24 @@ define([
 
             notToPick : function(util, customEqualityTesters) {
                 return {
-                    compare : function(actual, expected, x, y, width, height) {
+                    compare : function(actual, x, y, width, height) {
                         return pickPrimitiveEquals(actual, undefined, x, y, width, height);
+                    }
+                };
+            },
+
+            toDrillPickPrimitive : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, x, y, width, height) {
+                        return drillPickPrimitiveEquals(actual, 1, x, y, width, height);
+                    }
+                };
+            },
+
+            notToDrillPick : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, x, y, width, height) {
+                        return drillPickPrimitiveEquals(actual, 0, x, y, width, height);
                     }
                 };
             },
@@ -320,9 +353,9 @@ define([
 
             toDrillPickAndCall : function(util, customEqualityTesters) {
                 return {
-                    compare : function(actual, expected) {
+                    compare : function(actual, expected, limit) {
                         var scene = actual;
-                        var pickedObjects = scene.drillPick(new Cartesian2(0, 0));
+                        var pickedObjects = scene.drillPick(new Cartesian2(0, 0), limit);
 
                         var webglStub = !!window.webglStub;
                         if (!webglStub) {
@@ -330,6 +363,114 @@ define([
                             // spec fail, as we desired, even though this matcher sets pass to true.
                             var callback = expected;
                             callback(pickedObjects);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toPickFromRayAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, ray, objectsToExclude, width) {
+                        var scene = actual;
+                        var result = scene.pickFromRay(ray, objectsToExclude, width);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(result);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toDrillPickFromRayAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, ray, limit, objectsToExclude, width) {
+                        var scene = actual;
+                        var results = scene.drillPickFromRay(ray, limit, objectsToExclude, width);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(results);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toSampleHeightAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, position, objectsToExclude, width) {
+                        var scene = actual;
+                        var results = scene.sampleHeight(position, objectsToExclude, width);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(results);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toClampToHeightAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, cartesian, objectsToExclude, width) {
+                        var scene = actual;
+                        var results = scene.clampToHeight(cartesian, objectsToExclude, width);
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(results);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
+            toPickPositionAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected, x, y) {
+                        var scene = actual;
+                        var canvas = scene.canvas;
+                        x = defaultValue(x, canvas.clientWidth / 2);
+                        y = defaultValue(y, canvas.clientHeight / 2);
+                        var result = scene.pickPosition(new Cartesian2(x, y));
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(result);
                         }
 
                         return {
@@ -414,6 +555,26 @@ define([
                 };
             },
 
+            contextToRenderAndCall : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual, expected) {
+                        var actualRgba = contextRenderAndReadPixels(actual).color;
+
+                        var webglStub = !!window.webglStub;
+                        if (!webglStub) {
+                            // The callback may have expectations that fail, which still makes the
+                            // spec fail, as we desired, even though this matcher sets pass to true.
+                            var callback = expected;
+                            callback(actualRgba);
+                        }
+
+                        return {
+                            pass : true
+                        };
+                    }
+                };
+            },
+
             contextToRender : function(util, customEqualityTesters) {
                 return {
                     compare : function(actual, expected) {
@@ -430,6 +591,21 @@ define([
                 };
             },
 
+            toBeImageOrImageBitmap : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual) {
+                        if (typeof createImageBitmap !== 'function') {
+                            return {
+                                pass : actual instanceof Image
+                            };
+                        }
+
+                        return {
+                            pass : actual instanceof ImageBitmap || actual instanceof Image
+                        };
+                    }
+                };
+            },
             toThrowDeveloperError : makeThrowFunction(debug, DeveloperError, 'DeveloperError'),
 
             toThrowRuntimeError : makeThrowFunction(true, RuntimeError, 'RuntimeError'),
@@ -475,6 +651,19 @@ define([
         return scene.context.readPixels();
     }
 
+    function isTypedArray(o) {
+        return FeatureDetection.typedArrayTypes.some(function(type) {
+            return o instanceof type;
+        });
+    }
+
+    function typedArrayToArray(array) {
+        if (isTypedArray(array)) {
+            return Array.prototype.slice.call(array, 0);
+        }
+        return array;
+    }
+
     function renderEquals(util, customEqualityTesters, actual, expected, expectEqual) {
         var actualRgba = renderAndReadPixels(actual);
 
@@ -493,7 +682,7 @@ define([
 
         var message;
         if (!pass) {
-            message = 'Expected ' + (expectEqual ? '' : 'not ')  + 'to render [' + expected + '], but actually rendered [' + actualRgba + '].';
+            message = 'Expected ' + (expectEqual ? '' : 'not ')  + 'to render [' + typedArrayToArray(expected) + '], but actually rendered [' + typedArrayToArray(actualRgba) + '].';
         }
 
         return {
@@ -532,8 +721,37 @@ define([
         };
     }
 
-    function expectContextToRender(actual, expected, expectEqual) {
-        var options = actual;
+    function drillPickPrimitiveEquals(actual, expected, x, y, width, height) {
+        var scene = actual;
+        var windowPosition = new Cartesian2(x, y);
+        var result = scene.drillPick(windowPosition, undefined, width, height);
+
+        if (!!window.webglStub) {
+            return {
+                pass : true
+            };
+        }
+
+        var pass = true;
+        var message;
+
+        if (defined(expected)) {
+            pass = (result.length === expected);
+        } else {
+            pass = !defined(result);
+        }
+
+        if (!pass) {
+            message = 'Expected to pick ' + expected + ', but picked: ' + result;
+        }
+
+        return {
+            pass : pass,
+            message : message
+        };
+    }
+
+    function contextRenderAndReadPixels(options) {
         var context = options.context;
         var vs = options.vertexShader;
         var fs = options.fragmentShader;
@@ -542,11 +760,7 @@ define([
         var modelMatrix = options.modelMatrix;
         var depth = defaultValue(options.depth, 0.0);
         var clear = defaultValue(options.clear, true);
-        var epsilon = defaultValue(options.epsilon, 0);
-
-        if (!defined(expected)) {
-            expected = [255, 255, 255, 255];
-        }
+        var clearColor;
 
         if (!defined(context)) {
             throw new DeveloperError('options.context is required.');
@@ -591,12 +805,47 @@ define([
             }]
         });
 
-        var webglStub = !!window.webglStub;
-
         if (clear) {
             ClearCommand.ALL.execute(context);
+            clearColor = context.readPixels();
+        }
 
-            var clearedRgba = context.readPixels();
+        var command = new DrawCommand({
+            primitiveType : PrimitiveType.POINTS,
+            shaderProgram : sp,
+            vertexArray : va,
+            uniformMap : uniformMap,
+            modelMatrix : modelMatrix
+        });
+
+        command.execute(context);
+        var rgba = context.readPixels();
+
+        sp = sp.destroy();
+        va = va.destroy();
+
+        return {
+            color : rgba,
+            clearColor : clearColor
+        };
+    }
+
+    function expectContextToRender(actual, expected, expectEqual) {
+        var options = actual;
+        var context = options.context;
+        var clear = defaultValue(options.clear, true);
+        var epsilon = defaultValue(options.epsilon, 0);
+
+        if (!defined(expected)) {
+            expected = [255, 255, 255, 255];
+        }
+
+        var webglStub = !!window.webglStub;
+
+        var output = contextRenderAndReadPixels(options);
+
+        if (clear) {
+            var clearedRgba = output.clearColor;
             if (!webglStub) {
                 var expectedAlpha = context.options.webgl.alpha ? 0 : 255;
                 if ((clearedRgba[0] !== 0) ||
@@ -611,15 +860,8 @@ define([
             }
         }
 
-        var command = new DrawCommand({
-            primitiveType : PrimitiveType.POINTS,
-            shaderProgram : sp,
-            vertexArray : va,
-            uniformMap : uniformMap,
-            modelMatrix : modelMatrix
-        });
-        command.execute(context);
-        var rgba = context.readPixels();
+        var rgba = output.color;
+
         if (!webglStub) {
             if (expectEqual) {
                 if (!CesiumMath.equalsEpsilon(rgba[0], expected[0], 0, epsilon) ||
@@ -641,9 +883,6 @@ define([
                 };
             }
         }
-
-        sp = sp.destroy();
-        va = va.destroy();
 
         return {
             pass : true

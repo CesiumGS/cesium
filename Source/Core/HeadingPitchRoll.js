@@ -50,7 +50,7 @@ define([
         var numeratorHeading = 2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
         result.heading = -Math.atan2(numeratorHeading, denominatorHeading);
         result.roll = Math.atan2(numeratorRoll, denominatorRoll);
-        result.pitch = -Math.asin(test);
+        result.pitch = -CesiumMath.asinClamped(test);
         return result;
     };
 

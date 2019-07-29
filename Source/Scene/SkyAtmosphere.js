@@ -20,6 +20,7 @@ define([
         '../Shaders/SkyAtmosphereVS',
         './BlendingState',
         './CullFace',
+        './ImagerySplitDirection',
         './SceneMode'
     ], function(
         Cartesian3,
@@ -43,6 +44,7 @@ define([
         SkyAtmosphereVS,
         BlendingState,
         CullFace,
+        ImagerySplitDirection,
         SceneMode) {
     'use strict';
 
@@ -51,7 +53,7 @@ define([
      * {@link http://http.developer.nvidia.com/GPUGems2/gpugems2_chapter16.html|Accurate Atmospheric Scattering}
      * in GPU Gems 2.
      * <p>
-     * This is only supported in 3D.  atmosphere is faded out when morphing to 2D or Columbus view.
+     * This is only supported in 3D. Atmosphere is faded out when morphing to 2D or Columbus view.
      * </p>
      *
      * @alias SkyAtmosphere
@@ -61,6 +63,8 @@ define([
      *
      * @example
      * scene.skyAtmosphere = new Cesium.SkyAtmosphere();
+     *
+     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sky%20Atmosphere.html|Sky atmosphere demo in Sandcastle}
      *
      * @see Scene.skyAtmosphere
      */
@@ -109,6 +113,16 @@ define([
          */
         this.brightnessShift = 0.0;
 
+        /**
+         * The {@link ImagerySplitDirection} to apply, showing the terrain only on
+         * the left or right of the splitter control.
+         *
+         * @type {ImagerySplitDirection}
+         * @default {@link ImagerySplitDirection.NONE}
+         */
+        this.splitDirection = ImagerySplitDirection.NONE;
+        this._splitDirection = undefined;
+
         this._hueSaturationBrightness = new Cartesian3();
 
         // camera height, outer radius, inner radius, dynamic atmosphere color flag
@@ -132,6 +146,9 @@ define([
                 that._hueSaturationBrightness.y = that.saturationShift;
                 that._hueSaturationBrightness.z = that.brightnessShift;
                 return that._hueSaturationBrightness;
+            },
+            u_splitDirection : function() {
+                return that.splitDirection;
             }
         };
     }
@@ -179,9 +196,9 @@ define([
 
         var command = this._command;
 
-        if (!defined(command.vertexArray)) {
-            var context = frameState.context;
+        var context = frameState.context;
 
+        if (!defined(command.vertexArray)) {
             var geometry = EllipsoidGeometry.createGeometry(new EllipsoidGeometry({
                 radii : Cartesian3.multiplyByScalar(this._ellipsoid.radii, 1.025, new Cartesian3()),
                 slicePartitions : 256,
@@ -202,16 +219,31 @@ define([
                 blending : BlendingState.ALPHA_BLEND,
                 depthMask : false
             });
+        }
+
+        if (this.splitDirection !== this._splitDirection) {
+            this._spSkyFromSpace = this._spSkyFromSpace && this._spSkyFromSpace.destroy();
+            this._spSkyFromAtmosphere = this._spSkyFromAtmosphere && this._spSkyFromAtmosphere.destroy();
+            this._spSkyFromSpaceColorCorrect = this._spSkyFromSpaceColorCorrect && this._spSkyFromSpaceColorCorrect.destroy();
+            this._spSkyFromAtmosphereColorCorrect = this._spSkyFromAtmosphereColorCorrect && this._spSkyFromAtmosphereColorCorrect.destroy();
 
             var vs = new ShaderSource({
                 defines : ['SKY_FROM_SPACE'],
                 sources : [SkyAtmosphereVS]
             });
 
+            var fs = SkyAtmosphereFS;
+            if (this.splitDirection !== ImagerySplitDirection.NONE) {
+                fs = new ShaderSource({
+                    defines : ['SPLIT_ATMOSPHERE'],
+                    sources : [SkyAtmosphereFS]
+                });
+            }
+
             this._spSkyFromSpace = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : vs,
-                fragmentShaderSource : SkyAtmosphereFS
+                fragmentShaderSource : fs
             });
 
             vs = new ShaderSource({
@@ -221,8 +253,10 @@ define([
             this._spSkyFromAtmosphere = ShaderProgram.fromCache({
                 context : context,
                 vertexShaderSource : vs,
-                fragmentShaderSource : SkyAtmosphereFS
+                fragmentShaderSource : fs
             });
+
+            this._splitDirection = this.splitDirection;
         }
 
         // Compile the color correcting versions of the shader on demand
@@ -235,7 +269,7 @@ define([
                 sources : [SkyAtmosphereVS]
             });
             var fsColorCorrect = new ShaderSource({
-                defines : ['COLOR_CORRECT'],
+                defines : ImagerySplitDirection.NONE ? ['COLOR_CORRECT'] : ['COLOR_CORRECT', 'SPLIT_ATMOSPHERE'],
                 sources : [SkyAtmosphereFS]
             });
 

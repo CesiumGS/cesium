@@ -1,7 +1,10 @@
 defineSuite([
         'DataSources/RectangleGeometryUpdater',
+        'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
+        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
+        'Core/Math',
         'Core/Rectangle',
         'Core/TimeIntervalCollection',
         'DataSources/ConstantProperty',
@@ -16,8 +19,11 @@ defineSuite([
         'Specs/createScene'
     ], function(
         RectangleGeometryUpdater,
+        ApproximateTerrainHeights,
         Cartesian3,
+        GeometryOffsetAttribute,
         JulianDate,
+        CesiumMath,
         Rectangle,
         TimeIntervalCollection,
         ConstantProperty,
@@ -38,17 +44,22 @@ defineSuite([
     beforeAll(function() {
         scene = createScene();
         time = new JulianDate(0, 0);
+
+        return ApproximateTerrainHeights.initialize();
     });
 
     afterAll(function() {
         scene.destroyForSpecs();
+
+        ApproximateTerrainHeights._initPromise = undefined;
+        ApproximateTerrainHeights._terrainHeights = undefined;
     });
 
     function createBasicRectangle() {
         var rectangle = new RectangleGraphics();
         var entity = new Entity();
         entity.rectangle = rectangle;
-        entity.rectangle.coordinates = new ConstantProperty(new Rectangle(0, 0, 1, 1));
+        entity.rectangle.coordinates = new ConstantProperty(new Rectangle(-1, -1, 1, 1));
         entity.rectangle.height = new ConstantProperty(0);
         return entity;
     }
@@ -161,12 +172,14 @@ defineSuite([
         expect(geometry._surfaceHeight).toEqual(options.height);
         expect(geometry._granularity).toEqual(options.granularity);
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
+        expect(geometry._offsetAttribute).toBeUndefined();
 
         instance = updater.createOutlineGeometryInstance(time);
         geometry = instance.geometry;
         expect(geometry._surfaceHeight).toEqual(options.height);
         expect(geometry._granularity).toEqual(options.granularity);
         expect(geometry._extrudedHeight).toEqual(options.extrudedHeight);
+        expect(geometry._offsetAttribute).toBeUndefined();
     });
 
     it('dynamic updater sets properties', function() {
@@ -194,6 +207,7 @@ defineSuite([
         expect(options.extrudedHeight).toEqual(rectangle.extrudedHeight.getValue());
         expect(options.granularity).toEqual(rectangle.granularity.getValue());
         expect(options.stRotation).toEqual(rectangle.stRotation.getValue());
+        expect(options.offsetAttribute).toBeUndefined();
     });
 
     it('geometryChanged event is raised when expected', function() {
@@ -222,6 +236,13 @@ defineSuite([
         entity.viewFrom = new ConstantProperty(Cartesian3.UNIT_X);
         updater._onEntityPropertyChanged(entity, 'viewFrom');
         expect(listener.calls.count()).toEqual(3);
+    });
+
+    it('computes center', function() {
+        var entity = createBasicRectangle();
+        var updater = new RectangleGeometryUpdater(entity, scene);
+
+        expect(updater._computeCenter(time)).toEqualEpsilon(Cartesian3.fromDegrees(0.0, 0.0), CesiumMath.EPSILON10);
     });
 
     function getScene() {

@@ -1,6 +1,8 @@
 define([
+        './addToArray',
         '../../Core/defined'
     ], function(
+        addToArray,
         defined) {
     'use strict';
 
@@ -10,6 +12,8 @@ define([
      *
      * @param {Object} gltf A javascript object containing a glTF asset.
      * @param {String} extension The extension to add.
+     *
+     * @private
      */
     function addExtensionsUsed(gltf, extension) {
         var extensionsUsed = gltf.extensionsUsed;
@@ -17,9 +21,8 @@ define([
             extensionsUsed = [];
             gltf.extensionsUsed = extensionsUsed;
         }
-        if (extensionsUsed.indexOf(extension) < 0) {
-            extensionsUsed.push(extension);
-        }
+        addToArray(extensionsUsed, extension, true);
     }
+
     return addExtensionsUsed;
 });

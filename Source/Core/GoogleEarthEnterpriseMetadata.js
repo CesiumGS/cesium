@@ -1,6 +1,7 @@
 define([
-        '../ThirdParty/google-earth-dbroot-parser',
+        '../ThirdParty/protobuf-minimal',
         '../ThirdParty/when',
+        './buildModuleUrl',
         './Check',
         './Credit',
         './defaultValue',
@@ -8,14 +9,16 @@ define([
         './defineProperties',
         './GoogleEarthEnterpriseTileInformation',
         './isBitSet',
+        './loadAndExecuteScript',
         './Math',
         './Request',
         './Resource',
         './RuntimeError',
         './TaskProcessor'
     ], function(
-        dbrootParser,
+        protobufMinimal,
         when,
+        buildModuleUrl,
         Check,
         Credit,
         defaultValue,
@@ -23,6 +26,7 @@ define([
         defineProperties,
         GoogleEarthEnterpriseTileInformation,
         isBitSet,
+        loadAndExecuteScript,
         CesiumMath,
         Request,
         Resource,
@@ -488,6 +492,8 @@ define([
         });
     }
 
+    var dbrootParser;
+    var dbrootParserPromise;
     function requestDbRoot(that) {
         var resource = that._resource.getDerivedResource({
             url: 'dbRoot.v5',
@@ -496,8 +502,23 @@ define([
             }
         });
 
-        return resource.fetchArrayBuffer()
-            .then(function(buf) {
+        if (!defined(dbrootParserPromise)) {
+            var url = buildModuleUrl('ThirdParty/google-earth-dbroot-parser.js');
+            var oldValue = window.cesiumGoogleEarthDbRootParser;
+            dbrootParserPromise = loadAndExecuteScript(url)
+                .then(function() {
+                    dbrootParser = window.cesiumGoogleEarthDbRootParser(protobufMinimal);
+                    if (defined(oldValue)) {
+                        window.cesiumGoogleEarthDbRootParser = oldValue;
+                    } else {
+                        delete window.cesiumGoogleEarthDbRootParser;
+                    }
+                });
+        }
+
+        return dbrootParserPromise.then(function() {
+            return resource.fetchArrayBuffer();
+            }).then(function(buf) {
                 var encryptedDbRootProto = dbrootParser.EncryptedDbRootProto.decode(new Uint8Array(buf));
 
                 var byteArray = encryptedDbRootProto.encryptionData;

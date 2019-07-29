@@ -103,7 +103,7 @@ define([
         return depthQuadScratch;
     }
 
-    DepthPlane.prototype.update = function(frameState, useLogDepth) {
+    DepthPlane.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         if (frameState.mode !== SceneMode.SCENE3D) {
             return;
@@ -111,6 +111,7 @@ define([
 
         var context = frameState.context;
         var ellipsoid = frameState.mapProjection.ellipsoid;
+        var useLogDepth = frameState.useLogDepth;
 
         if (!defined(this._command)) {
             this._rs = RenderState.fromCache({ // Write depth, not color

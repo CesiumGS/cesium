@@ -106,7 +106,7 @@ However, many users build apps using the built Cesium.js in `Build/Cesium` (whic
 
 The **Run All Tests against Combined File with Debug Code Removed** is the same except it is for use with the release version of the built Cesium.js (which is created, for example, by running `npm run combineRelease`).  The release version has `DeveloperError` exceptions optimized out so this test option makes `toThrowDeveloperError` always pass.
 
-See the [Contributor's Guide](https://github.com/AnalyticalGraphicsInc/cesium/wiki/Contributor%27s-Guide) for all the CesiumJS build options.
+See the [Build Guide](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 
 ### Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)
 
@@ -757,8 +757,6 @@ You can run or debug the tests by using the first two buttons.  The third button
 ![](webstorm-test-runner.png)
 
 This runner has lots of options, such as only showing failing tests or automatically re-running the tests on a test interval (great for development when combined with `fdefineSuite`!).  You can hover over each of the buttons to see what they do.
-
-Instead of using Chrome or Firefox, the WebStorm configuration uses [Electron](https://github.com/atom/electron) as the browser, which runs V8 (Chrome) inside of a node process. We have configured it to run headless so that no browser window pops up while testing.  If you ever have a need to run a specific browser from within WebStorm, simply click the `Run tests` combo box and select `edit configuration`.  From there it's self-explanatory.'
 
 To make jumping between the source and spec files easier download the  [Cesium WebStorm plugin](https://github.com/AnalyticalGraphicsInc/cesium-webstorm-plugin).
 

@@ -8,7 +8,7 @@ define([
 
     /**
      * Represents empty content for tiles in a
-     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/blob/master/README.md|3D Tiles} tileset that
+     * {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles} tileset that
      * do not have content, e.g., because they are used to optimize hierarchical culling.
      * <p>
      * Implements the {@link Cesium3DTileContent} interface.
@@ -119,7 +119,7 @@ define([
     Empty3DTileContent.prototype.applyDebugSettings = function(enabled, color) {
     };
 
-    Empty3DTileContent.prototype.applyStyle = function(frameState, style) {
+    Empty3DTileContent.prototype.applyStyle = function(style) {
     };
 
     Empty3DTileContent.prototype.update = function(tileset, frameState) {

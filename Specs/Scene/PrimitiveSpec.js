@@ -428,12 +428,12 @@ defineSuite([
         var camera = scene.camera;
         var testCamera = new Camera(scene);
         testCamera.viewBoundingSphere(boxGeometry.boundingSphere);
-        scene._camera = testCamera;
+        scene.camera = testCamera;
 
         scene.frameState.scene3DOnly = true;
         verifyPrimitiveRender(primitive);
 
-        scene._camera = camera;
+        scene.camera = camera;
     });
 
     it('renders with depth fail appearance', function() {

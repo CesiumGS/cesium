@@ -1,6 +1,8 @@
 define([
         '../Core/defaultValue',
         '../Core/defineProperties',
+        '../Core/defined',
+        '../Core/deprecationWarning',
         '../Core/Event',
         '../Core/JulianDate',
         './ModelAnimationLoop',
@@ -8,6 +10,8 @@ define([
     ], function(
         defaultValue,
         defineProperties,
+        defined,
+        deprecationWarning,
         Event,
         JulianDate,
         ModelAnimationLoop,
@@ -26,6 +30,7 @@ define([
      *
      * @alias ModelAnimation
      * @internalConstructor
+     * @class
      *
      * @see ModelAnimationCollection#add
      */
@@ -44,8 +49,7 @@ define([
          * @default false
          */
         this.removeOnStop = defaultValue(options.removeOnStop, false);
-
-        this._speedup = defaultValue(options.speedup, 1.0);
+        this._multiplier = defaultValue(options.multiplier, 1.0);
         this._reverse = defaultValue(options.reverse, false);
         this._loop = defaultValue(options.loop, ModelAnimationLoop.NONE);
 
@@ -188,13 +192,12 @@ define([
                 return this._stopTime;
             }
         },
-
         /**
          * Values greater than <code>1.0</code> increase the speed that the animation is played relative
          * to the scene clock speed; values less than <code>1.0</code> decrease the speed.  A value of
          * <code>1.0</code> plays the animation at the speed in the glTF animation mapped to the scene
          * clock speed.  For example, if the scene is played at 2x real-time, a two-second glTF animation
-         * will play in one second even if <code>speedup</code> is <code>1.0</code>.
+         * will play in one second even if <code>multiplier</code> is <code>1.0</code>.
          *
          * @memberof ModelAnimation.prototype
          *
@@ -203,9 +206,9 @@ define([
          *
          * @default 1.0
          */
-        speedup : {
+        multiplier : {
             get : function() {
-                return this._speedup;
+                return this._multiplier;
             }
         },
 

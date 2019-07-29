@@ -1,4 +1,5 @@
 define([
+        '../Core/Cartesian4',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/PixelFormat',
@@ -8,6 +9,7 @@ define([
         '../Renderer/ShaderSource',
         '../Renderer/Texture'
     ], function(
+        Cartesian4,
         defined,
         destroyObject,
         PixelFormat,
@@ -22,7 +24,7 @@ define([
      * @private
      */
     function PickDepth() {
-        this.framebuffer = undefined;
+        this._framebuffer = undefined;
 
         this._depthTexture = undefined;
         this._textureToCopy = undefined;
@@ -73,7 +75,7 @@ define([
     }
 
     function destroyFramebuffers(pickDepth) {
-        pickDepth.framebuffer = pickDepth.framebuffer && !pickDepth.framebuffer.isDestroyed() && pickDepth.framebuffer.destroy();
+        pickDepth._framebuffer = pickDepth._framebuffer && !pickDepth._framebuffer.isDestroyed() && pickDepth._framebuffer.destroy();
     }
 
     function createTextures(pickDepth, context, width, height) {
@@ -92,7 +94,7 @@ define([
 
         createTextures(pickDepth, context, width, height);
 
-        pickDepth.framebuffer = new Framebuffer({
+        pickDepth._framebuffer = new Framebuffer({
             context : context,
             colorTextures : [pickDepth._depthTexture],
             destroyAttachments : false
@@ -105,7 +107,7 @@ define([
 
         var texture = pickDepth._depthTexture;
         var textureChanged = !defined(texture) || texture.width !== width || texture.height !== height;
-        if (!defined(pickDepth.framebuffer) || textureChanged) {
+        if (!defined(pickDepth._framebuffer) || textureChanged) {
             createFramebuffers(pickDepth, context, width, height);
         }
     }
@@ -131,7 +133,7 @@ define([
         }
 
         pickDepth._textureToCopy = depthTexture;
-        pickDepth._copyDepthCommand.framebuffer = pickDepth.framebuffer;
+        pickDepth._copyDepthCommand.framebuffer = pickDepth._framebuffer;
     }
 
     PickDepth.prototype.executeDebugPickDepth = function(context, passState, useLogDepth) {
@@ -141,6 +143,23 @@ define([
     PickDepth.prototype.update = function(context, depthTexture) {
         updateFramebuffers(this, context, depthTexture);
         updateCopyCommands(this, context, depthTexture);
+    };
+
+    var scratchPackedDepth = new Cartesian4();
+    var packedDepthScale = new Cartesian4(1.0, 1.0 / 255.0, 1.0 / 65025.0, 1.0 / 16581375.0);
+
+    PickDepth.prototype.getDepth = function(context, x, y) {
+        var pixels = context.readPixels({
+            x : x,
+            y : y,
+            width : 1,
+            height : 1,
+            framebuffer : this._framebuffer
+        });
+
+        var packedDepth = Cartesian4.unpack(pixels, 0, scratchPackedDepth);
+        Cartesian4.divideByScalar(packedDepth, 255.0, packedDepth);
+        return Cartesian4.dot(packedDepth, packedDepthScale);
     };
 
     PickDepth.prototype.executeCopyDepth = function(context, passState) {

@@ -30,7 +30,7 @@ defineSuite([
     var centerLongitude = -1.31968;
     var centerLatitude = 0.698874;
 
-    var pointCloudNoColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNoColor';
+    var pointCloudNoColorUrl = './Data/Cesium3DTiles/PointCloud/PointCloudNoColor/tileset.json';
 
     function setCamera(longitude, latitude) {
         // Point the camera to the center of the tile

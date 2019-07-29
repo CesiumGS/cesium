@@ -11,6 +11,7 @@ define([
         '../Core/writeTextToCanvas',
         './BillboardCollection',
         './BlendOption',
+        './HeightReference',
         './HorizontalOrigin',
         './Label',
         './LabelStyle',
@@ -29,6 +30,7 @@ define([
         writeTextToCanvas,
         BillboardCollection,
         BlendOption,
+        HeightReference,
         HorizontalOrigin,
         Label,
         LabelStyle,
@@ -249,6 +251,8 @@ define([
                         billboard = labelCollection._billboardCollection.add({
                             collection : labelCollection
                         });
+                        billboard._labelDimensions = new Cartesian2();
+                        billboard._labelTranslate = new Cartesian2();
                     }
                     glyph.billboard = billboard;
                 }
@@ -302,14 +306,13 @@ define([
         var maxGlyphDescent = Number.NEGATIVE_INFINITY;
         var maxGlyphY = 0;
         var numberOfLines = 1;
-        var glyphIndex = 0;
+        var glyphIndex;
         var glyphLength = glyphs.length;
 
         var backgroundBillboard = label._backgroundBillboard;
-        var backgroundPadding = scratchBackgroundPadding;
-        Cartesian2.clone(
+        var backgroundPadding = Cartesian2.clone(
             (defined(backgroundBillboard) ? label._backgroundPadding : Cartesian2.ZERO),
-            backgroundPadding);
+            scratchBackgroundPadding);
 
         for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
             if (text.charAt(glyphIndex) === '\n') {
@@ -341,6 +344,14 @@ define([
         var widthOffset = calculateWidthOffset(lineWidth, horizontalOrigin, backgroundPadding);
         var lineSpacing = defaultLineSpacingPercent * maxLineHeight;
         var otherLinesHeight = lineSpacing * (numberOfLines - 1);
+        var totalLineWidth = maxLineWidth;
+        var totalLineHeight = maxLineHeight + otherLinesHeight;
+
+        if (defined(backgroundBillboard)) {
+            totalLineWidth += (backgroundPadding.x * 2);
+            totalLineHeight += (backgroundPadding.y * 2);
+            backgroundBillboard._labelHorizontalOrigin = horizontalOrigin;
+        }
 
         glyphPixelOffset.x = widthOffset * scale * resolutionScale;
         glyphPixelOffset.y = 0;
@@ -371,9 +382,12 @@ define([
 
                 if (defined(glyph.billboard)) {
                     glyph.billboard._setTranslate(glyphPixelOffset);
+                    glyph.billboard._labelDimensions.x = totalLineWidth;
+                    glyph.billboard._labelDimensions.y = totalLineHeight;
+                    glyph.billboard._labelHorizontalOrigin = horizontalOrigin;
                 }
 
-                //Compute the next x offset taking into acocunt the kerning performed
+                //Compute the next x offset taking into account the kerning performed
                 //on both the current letter as well as the next letter to be drawn
                 //as well as any applied scale.
                 if (glyphIndex < glyphLength - 1) {
@@ -405,9 +419,20 @@ define([
             }
             glyphPixelOffset.y = glyphPixelOffset.y * scale * resolutionScale;
 
-            backgroundBillboard.width = maxLineWidth + (backgroundPadding.x * 2);
-            backgroundBillboard.height = maxLineHeight + otherLinesHeight + (backgroundPadding.y * 2);
+            backgroundBillboard.width = totalLineWidth;
+            backgroundBillboard.height = totalLineHeight;
             backgroundBillboard._setTranslate(glyphPixelOffset);
+            backgroundBillboard._labelTranslate = Cartesian2.clone(glyphPixelOffset, backgroundBillboard._labelTranslate);
+        }
+
+        if (label.heightReference === HeightReference.CLAMP_TO_GROUND) {
+            for (glyphIndex = 0; glyphIndex < glyphLength; ++glyphIndex) {
+                glyph = glyphs[glyphIndex];
+                var billboard = glyph.billboard;
+                if (defined(billboard)) {
+                    billboard._labelTranslate = Cartesian2.clone(glyphPixelOffset, billboard._labelTranslate);
+                }
+            }
         }
     }
 
@@ -705,6 +730,7 @@ define([
      * @returns {Boolean} true if this collection contains the label, false otherwise.
      *
      * @see LabelCollection#get
+     *
      */
     LabelCollection.prototype.contains = function(label) {
         return defined(label) && label._labelCollection === this;
@@ -750,6 +776,7 @@ define([
 
     /**
      * @private
+     *
      */
     LabelCollection.prototype.update = function(frameState) {
         var billboardCollection = this._billboardCollection;

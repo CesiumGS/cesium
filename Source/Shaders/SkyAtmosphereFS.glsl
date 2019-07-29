@@ -39,6 +39,10 @@ uniform vec3 u_hsbShift; // Hue, saturation, brightness
 
 uniform vec4 u_cameraAndRadiiAndDynamicAtmosphereColor; // Camera height, outer radius, inner radius, dynamic atmosphere color flag
 
+#ifdef SPLIT_ATMOSPHERE
+uniform float u_splitDirection;
+#endif
+
 const float g = -0.95;
 const float g2 = g * g;
 
@@ -49,17 +53,26 @@ varying vec3 v_positionEC;
 
 void main (void)
 {
+#ifdef SPLIT_ATMOSPHERE
+    float splitPosition = czm_imagerySplitPosition;
+    if (u_splitDirection < 0.0 && gl_FragCoord.x > splitPosition) {
+        discard;
+    } else if (u_splitDirection > 0.0 && gl_FragCoord.x < splitPosition) {
+        discard;
+    }
+#endif
+
     // Extra normalize added for Android
     float cosAngle = dot(czm_sunDirectionWC, normalize(v_toCamera)) / length(v_toCamera);
     float rayleighPhase = 0.75 * (1.0 + cosAngle * cosAngle);
     float miePhase = 1.5 * ((1.0 - g2) / (2.0 + g2)) * (1.0 + cosAngle * cosAngle) / pow(1.0 + g2 - 2.0 * g * cosAngle, 1.5);
 
-    const float exposure = 2.0;
-
     vec3 rgb = rayleighPhase * v_rayleighColor + miePhase * v_mieColor;
+
+#ifndef HDR
+    const float exposure = 1.1;
     rgb = vec3(1.0) - exp(-exposure * rgb);
-    // Compute luminance before color correction to avoid strangely gray night skies
-    float l = czm_luminance(rgb);
+#endif
 
 #ifdef COLOR_CORRECT
     // Convert rgb color to hsb
@@ -70,9 +83,6 @@ void main (void)
     hsb.z = hsb.z > czm_epsilon7 ? hsb.z + u_hsbShift.z : 0.0; // brightness
     // Convert shifted hsb back to rgb
     rgb = czm_HSBToRGB(hsb);
-
-    // Check if correction decreased the luminance to 0
-    l = min(l, czm_luminance(rgb));
 #endif
 
     // Alter alpha based on how close the viewer is to the ground (1.0 = on ground, 0.0 = at edge of atmosphere)

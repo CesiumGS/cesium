@@ -4,9 +4,11 @@ define([
         '../Core/Cartesian3',
         '../Core/Cartesian4',
         '../Core/Cartographic',
+        '../Core/Check',
         '../Core/clone',
         '../Core/Color',
         '../Core/combine',
+        '../Core/createGuid',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -18,20 +20,17 @@ define([
         '../Core/getMagic',
         '../Core/getStringFromTypedArray',
         '../Core/IndexDatatype',
+        '../Core/isArray',
         '../Core/loadCRN',
         '../Core/loadImageFromTypedArray',
         '../Core/loadKTX',
         '../Core/Math',
-        '../Core/Matrix2',
         '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/PixelFormat',
-        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/Quaternion',
-        '../Core/Queue',
         '../Core/Resource',
-        '../Core/RuntimeError',
         '../Core/Transforms',
         '../Core/WebGLConstants',
         '../Renderer/Buffer',
@@ -50,14 +49,12 @@ define([
         '../ThirdParty/GltfPipeline/addPipelineExtras',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/GltfPipeline/getAccessorByteStride',
+        '../ThirdParty/GltfPipeline/hasExtension',
         '../ThirdParty/GltfPipeline/numberOfComponentsForType',
-        '../ThirdParty/GltfPipeline/parseBinaryGltf',
-        '../ThirdParty/GltfPipeline/processModelMaterialsCommon',
-        '../ThirdParty/GltfPipeline/processPbrMetallicRoughness',
+        '../ThirdParty/GltfPipeline/parseGlb',
+        '../ThirdParty/GltfPipeline/removePipelineExtras',
         '../ThirdParty/GltfPipeline/updateVersion',
-        '../ThirdParty/Uri',
         '../ThirdParty/when',
-        './AttributeType',
         './Axis',
         './BlendingState',
         './ClippingPlaneCollection',
@@ -74,6 +71,9 @@ define([
         './ModelMesh',
         './ModelNode',
         './ModelUtility',
+        './OctahedralProjectedCubeMap',
+        './processModelMaterialsCommon',
+        './processPbrMaterials',
         './SceneMode',
         './ShadowMode'
     ], function(
@@ -82,9 +82,11 @@ define([
         Cartesian3,
         Cartesian4,
         Cartographic,
+        Check,
         clone,
         Color,
         combine,
+        createGuid,
         defaultValue,
         defined,
         defineProperties,
@@ -96,20 +98,17 @@ define([
         getMagic,
         getStringFromTypedArray,
         IndexDatatype,
+        isArray,
         loadCRN,
         loadImageFromTypedArray,
         loadKTX,
         CesiumMath,
-        Matrix2,
         Matrix3,
         Matrix4,
         PixelFormat,
-        Plane,
         PrimitiveType,
         Quaternion,
-        Queue,
         Resource,
-        RuntimeError,
         Transforms,
         WebGLConstants,
         Buffer,
@@ -128,14 +127,12 @@ define([
         addPipelineExtras,
         ForEach,
         getAccessorByteStride,
+        hasExtension,
         numberOfComponentsForType,
-        parseBinaryGltf,
-        processModelMaterialsCommon,
-        processPbrMetallicRoughness,
+        parseGlb,
+        removePipelineExtras,
         updateVersion,
-        Uri,
         when,
-        AttributeType,
         Axis,
         BlendingState,
         ClippingPlaneCollection,
@@ -152,6 +149,9 @@ define([
         ModelMesh,
         ModelNode,
         ModelUtility,
+        OctahedralProjectedCubeMap,
+        processModelMaterialsCommon,
+        processPbrMaterials,
         SceneMode,
         ShadowMode) {
     'use strict';
@@ -164,15 +164,12 @@ define([
 
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
-    var ModelState = {
-        NEEDS_LOAD : 0,
-        LOADING : 1,
-        LOADED : 2,  // Renderable, but textures can still be pending when incrementallyLoadTextures is true.
-        FAILED : 3
-    };
+    var ModelState = ModelUtility.ModelState;
 
     // glTF MIME types discussed in https://github.com/KhronosGroup/glTF/issues/412 and https://github.com/KhronosGroup/glTF/issues/943
     var defaultModelAccept = 'model/gltf-binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
+
+    var articulationEpsilon = CesiumMath.EPSILON16;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -221,7 +218,7 @@ define([
     };
 
     var gltfCache = {};
-
+    var uriToGuid = {};
     ///////////////////////////////////////////////////////////////////////////
 
     /**
@@ -242,13 +239,25 @@ define([
      * Cesium supports glTF assets with the following extensions:
      * <ul>
      * <li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes (glTF 1.0)}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations/README.md|AGI_articulations}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/pull/1302|KHR_blend (draft)}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
      * </li>
      * </ul>
      * </p>
@@ -262,7 +271,7 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] The object for the glTF JSON or an arraybuffer of Binary glTF defined by the KHR_binary_glTF extension.
+     * @param {Object|ArrayBuffer|Uint8Array} [options.gltf] A glTF JSON object, or a binary glTF buffer.
      * @param {Resource|String} [options.basePath=''] The base path that paths in the glTF JSON are relative to.
      * @param {Boolean} [options.show=true] Determines if the model primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the model from model to world coordinates.
@@ -287,9 +296,11 @@ define([
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
-     *
-     * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
-     * @exception {DeveloperError} Only glTF Binary version 1 is supported.
+     * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
+     * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade the model.
+     * @param {Number} [options.luminanceAtZenith=0.5] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+     * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
+     * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
      *
      * @see Model.fromGltf
      *
@@ -319,7 +330,7 @@ define([
 
                 if (gltf instanceof Uint8Array) {
                     // Binary glTF
-                    var parsedGltf = parseBinaryGltf(gltf);
+                    var parsedGltf = parseGlb(gltf);
 
                     cachedGltf = new CachedGltf({
                         gltf : parsedGltf,
@@ -442,8 +453,6 @@ define([
         /**
          * Returns the height reference of the model
          *
-         * @memberof Model.prototype
-         *
          * @type {HeightReference}
          *
          * @default HeightReference.NONE
@@ -509,7 +518,6 @@ define([
         this.color = defaultValue(options.color, Color.WHITE);
         this._color = new Color();
         this._colorPreviousAlpha = 1.0;
-        this._hasPremultipliedAlpha = false;
 
         /**
          * Defines how the color blends with the model.
@@ -537,6 +545,10 @@ define([
         this.clippingPlanes = options.clippingPlanes;
         // Used for checking if shaders need to be regenerated due to clipping plane changes.
         this._clippingPlanesState = 0;
+        // If defined, use this matrix to position the clipping planes instead of the modelMatrix.
+        // This is so that when models are part of a tileset they all get clipped relative
+        // to the root tile.
+        this.clippingPlanesOriginMatrix = undefined;
 
         /**
          * This property is for debugging only; it is not for production use nor is it optimized.
@@ -573,12 +585,12 @@ define([
         this._vertexShaderLoaded = options.vertexShaderLoaded;
         this._fragmentShaderLoaded = options.fragmentShaderLoaded;
         this._uniformMapLoaded = options.uniformMapLoaded;
-        this._pickVertexShaderLoaded = options.pickVertexShaderLoaded;
-        this._pickFragmentShaderLoaded = options.pickFragmentShaderLoaded;
-        this._pickUniformMapLoaded = options.pickUniformMapLoaded;
+        this._pickIdLoaded = options.pickIdLoaded;
         this._ignoreCommands = defaultValue(options.ignoreCommands, false);
         this._requestType = options.requestType;
         this._upAxis = defaultValue(options.upAxis, Axis.Y);
+        this._gltfForwardAxis = Axis.Z;
+        this._forwardAxis = options.forwardAxis;
 
         /**
          * @private
@@ -593,7 +605,7 @@ define([
         this.opaquePass = defaultValue(options.opaquePass, Pass.OPAQUE);
 
         this._computedModelMatrix = new Matrix4(); // Derived from modelMatrix and scale
-        this._modelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
+        this._clippingPlaneModelViewMatrix = Matrix4.clone(Matrix4.IDENTITY); // Derived from modelMatrix, scale, and the current view matrix
         this._initialRadius = undefined;           // Radius without model's scale property, model-matrix scale, animations, or skins
         this._boundingSphere = undefined;
         this._scaledBoundingSphere = new BoundingSphere();
@@ -609,13 +621,16 @@ define([
 
         this._runtime = {
             animations : undefined,
+            articulationsByName : undefined,
+            articulationsByStageKey : undefined,
+            stagesByKey : undefined,
             rootNodes : undefined,
-            nodes : undefined,            // Indexed with the node property's name, i.e., glTF id
+            nodes : undefined,            // Indexed with the node's index
             nodesByName : undefined,      // Indexed with name property in the node
             skinnedNodes : undefined,
             meshesByName : undefined,     // Indexed with the name property in the mesh
             materialsByName : undefined,  // Indexed with the name property in the material
-            materialsById : undefined     // Indexed with the material's property name
+            materialsById : undefined     // Indexed with the material's index
         };
 
         this._uniformMaps = {};           // Not cached since it can be targeted by glTF animation
@@ -627,7 +642,7 @@ define([
             buffers : {},
             vertexArrays : {},
             programs : {},
-            pickPrograms : {},
+            sourceShaders : {},
             silhouettePrograms : {},
             textures : {},
             samplers : {},
@@ -635,7 +650,6 @@ define([
         };
         this._cachedRendererResources = undefined;
         this._loadRendererResourcesFromCache = false;
-        this._updatedGltfVersion = false;
 
         this._dequantizeInShader = defaultValue(options.dequantizeInShader, true);
         this._decodedData = {};
@@ -646,10 +660,10 @@ define([
         this._texturesByteLength = 0;
         this._trianglesLength = 0;
 
-        // Hold references to programs and shaders for shader reconstruction.
+        // Hold references for shader reconstruction.
         // Hold these separately because _cachedGltf may get released (this.releaseGltfJson)
-        this._sourcePrograms = undefined;
-        this._sourceShaders = undefined;
+        this._sourceTechniques = {};
+        this._sourcePrograms = {};
         this._quantizedVertexShaders = {};
 
         this._nodeCommands = [];
@@ -660,6 +674,26 @@ define([
         this._rtcCenterEye = undefined; // in eye coordinates
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
+
+        this._sourceVersion = undefined;
+        this._sourceKHRTechniquesWebGL = undefined;
+
+        this._imageBasedLightingFactor = new Cartesian2(1.0, 1.0);
+        Cartesian2.clone(options.imageBasedLightingFactor, this._imageBasedLightingFactor);
+        this._lightColor = Cartesian3.clone(options.lightColor);
+
+        this._luminanceAtZenith = undefined;
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.5);
+
+        this._sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
+        this._specularEnvironmentMaps = options.specularEnvironmentMaps;
+        this._shouldUpdateSpecularMapAtlas = true;
+        this._specularEnvironmentMapAtlas = undefined;
+
+        this._useDefaultSphericalHarmonics = false;
+        this._useDefaultSpecularMaps = false;
+
+        this._shouldRegenerateShaders = false;
     }
 
     defineProperties(Model.prototype, {
@@ -824,7 +858,7 @@ define([
          * // Play all animations at half-speed when the model is ready to render
          * Cesium.when(model.readyPromise).then(function(model) {
          *   model.activeAnimations.addAll({
-         *     speedup : 0.5
+         *     multiplier : 0.5
          *   });
          * }).otherwise(function(error){
          *   window.alert(error);
@@ -974,6 +1008,28 @@ define([
         },
 
         /**
+         * Gets the model's forward axis.
+         * By default, glTF 2.0 models are z-forward according to the glTF spec, however older
+         * glTF (1.0, 0.8) models used x-forward.  Note that only Axis.X and Axis.Z are supported.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Number}
+         * @default Axis.Z
+         * @readonly
+         *
+         * @private
+         */
+        forwardAxis : {
+            get : function() {
+                if (defined(this._forwardAxis)) {
+                    return this._forwardAxis;
+                }
+                return this._gltfForwardAxis;
+            }
+        },
+
+        /**
          * Gets the model's triangle count.
          *
          * @private
@@ -1046,6 +1102,150 @@ define([
                 // Handle destroying, checking of unknown, checking for existing ownership
                 ClippingPlaneCollection.setOwner(value, this, '_clippingPlanes');
             }
+        },
+
+        /**
+         * @private
+         */
+        pickIds : {
+            get : function() {
+                return this._pickIds;
+            }
+        },
+
+        /**
+         * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
+         * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Cartesian2}
+         * @default Cartesian2(1.0, 1.0)
+         */
+        imageBasedLightingFactor : {
+            get : function() {
+                return this._imageBasedLightingFactor;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.object('imageBasedLightingFactor', value);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.x', value.x, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.x', value.x, 1.0);
+                Check.typeOf.number.greaterThanOrEquals('imageBasedLightingFactor.y', value.y, 0.0);
+                Check.typeOf.number.lessThanOrEquals('imageBasedLightingFactor.y', value.y, 1.0);
+                //>>includeEnd('debug');
+                var imageBasedLightingFactor = this._imageBasedLightingFactor;
+                if ((value === imageBasedLightingFactor) || Cartesian2.equals(value, imageBasedLightingFactor)) {
+                    return;
+                }
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (this._imageBasedLightingFactor.x > 0.0 && value.x === 0.0) || (this._imageBasedLightingFactor.x === 0.0 && value.x > 0.0);
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (this._imageBasedLightingFactor.y > 0.0 && value.y === 0.0) || (this._imageBasedLightingFactor.y === 0.0 && value.y > 0.0);
+                Cartesian2.clone(value, this._imageBasedLightingFactor);
+            }
+        },
+
+        /**
+         * The color and intensity of the sunlight used to shade the model.
+         * <p>
+         * For example, disabling additional light sources by setting <code>model.imageBasedLightingFactor = new Cesium.Cartesian2(0.0, 0.0)</code> will make the
+         * model much darker. Here, increasing the intensity of the light source will make the model brighter.
+         * </p>
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Cartesian3}
+         * @default undefined
+         */
+        lightColor : {
+            get : function() {
+                return this._lightColor;
+            },
+            set : function(value) {
+                var lightColor = this._lightColor;
+                if (value === lightColor || Cartesian3.equals(value, lightColor)) {
+                    return;
+                }
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (defined(lightColor) && !defined(value)) || (defined(value) && !defined(lightColor));
+                this._lightColor = Cartesian3.clone(value, lightColor);
+            }
+        },
+
+        /**
+         * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+         * This is used when {@link Model#specularEnvironmentMaps} and {@link Model#sphericalHarmonicCoefficients} are not defined.
+         *
+         * @memberof Model.prototype
+         *
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @type {Number}
+         * @default 0.5
+         */
+        luminanceAtZenith : {
+            get : function() {
+                return this._luminanceAtZenith;
+            },
+            set : function(value) {
+                var lum = this._luminanceAtZenith;
+                if (value === lum) {
+                    return;
+                }
+                this._shouldRegenerateShaders = this._shouldRegenerateShaders || (defined(lum) && !defined(value)) || (defined(value) && !defined(lum));
+                this._luminanceAtZenith = value;
+            }
+        },
+
+        /**
+         * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
+         * computed from the atmosphere color is used.
+         * <p>
+         * There are nine <code>Cartesian3</code> coefficients.
+         * The order of the coefficients is: L<sub>00</sub>, L<sub>1-1</sub>, L<sub>10</sub>, L<sub>11</sub>, L<sub>2-2</sub>, L<sub>2-1</sub>, L<sub>20</sub>, L<sub>21</sub>, L<sub>22</sub>
+         * </p>
+         *
+         * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
+         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * supplied to {@link Model#specularEnvironmentMaps}.
+         *
+         * @memberof Model.prototype
+         *
+         * @type {Cartesian3[]}
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
+         */
+        sphericalHarmonicCoefficients : {
+            get : function() {
+                return this._sphericalHarmonicCoefficients;
+            },
+            set : function(value) {
+                //>>includeStart('debug', pragmas.debug);
+                if (defined(value) && (!isArray(value) || value.length !== 9)) {
+                    throw new DeveloperError('sphericalHarmonicCoefficients must be an array of 9 Cartesian3 values.');
+                }
+                //>>includeEnd('debug');
+                if (value === this._sphericalHarmonicCoefficients) {
+                    return;
+                }
+                this._sphericalHarmonicCoefficients = value;
+                this._shouldRegenerateShaders = true;
+            }
+        },
+
+        /**
+         * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+         *
+         * @memberof Model.prototype
+         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @type {String}
+         * @see Model#sphericalHarmonicCoefficients
+         */
+        specularEnvironmentMaps : {
+            get : function() {
+                return this._specularEnvironmentMaps;
+            },
+            set : function(value) {
+                this._shouldUpdateSpecularMapAtlas = this._shouldUpdateSpecularMapAtlas || value !== this._specularEnvironmentMaps;
+                this._specularEnvironmentMaps = value;
+            }
         }
     });
 
@@ -1059,7 +1259,7 @@ define([
 
     function isClippingEnabled(model) {
         var clippingPlanes = model._clippingPlanes;
-        return defined(clippingPlanes) && clippingPlanes.enabled;
+        return defined(clippingPlanes) && clippingPlanes.enabled && clippingPlanes.length !== 0;
     }
 
     /**
@@ -1083,20 +1283,31 @@ define([
      * and shader files are downloaded and the WebGL resources are created, the {@link Model#readyPromise} is resolved.
      * </p>
      * <p>
-     * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the
-     * KHR_binary_glTF extension with a .glb extension.
+     * The model can be a traditional glTF asset with a .gltf extension or a Binary glTF using the .glb extension.
      * </p>
      * <p>
      * Cesium supports glTF assets with the following extensions:
      * <ul>
      * <li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes (glTF 1.0)}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations/README.md|AGI_articulations}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/pull/1302|KHR_blend (draft)}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
      * </li>
      * </ul>
      * </p>
@@ -1134,9 +1345,6 @@ define([
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      *
      * @returns {Model} The newly created model.
-     *
-     * @exception {DeveloperError} bgltf is not a valid Binary glTF file.
-     * @exception {DeveloperError} Only glTF Binary version 1 is supported.
      *
      * @example
      * // Example 1. Create a model from a glTF asset
@@ -1183,9 +1391,14 @@ define([
         var basePath = defaultValue(options.basePath, modelResource.clone());
         var resource = Resource.createIfNeeded(basePath);
 
-        // If no cache key is provided, use the absolute URL, since two URLs with
-        // different relative paths could point to the same model.
-        var cacheKey = defaultValue(options.cacheKey, getAbsoluteUri(modelResource.url));
+        // If no cache key is provided, use a GUID.
+        // Check using a URI to GUID dictionary that we have not already added this model.
+        var cacheKey = defaultValue(options.cacheKey, uriToGuid[getAbsoluteUri(modelResource.url)]);
+        if (!defined(cacheKey)) {
+            cacheKey = createGuid();
+            uriToGuid[getAbsoluteUri(modelResource.url)] = cacheKey;
+        }
+
         if (defined(options.basePath) && !defined(options.cacheKey)) {
             cacheKey += resource.url;
         }
@@ -1213,15 +1426,14 @@ define([
                 var array = new Uint8Array(arrayBuffer);
                 if (containsGltfMagic(array)) {
                     // Load binary glTF
-                    var parsedGltf = parseBinaryGltf(array);
-                    // KHR_binary_glTF is from the beginning of the binary section
-                    cachedGltf.makeReady(parsedGltf, array);
+                    var parsedGltf = parseGlb(array);
+                    cachedGltf.makeReady(parsedGltf);
                 } else {
                     // Load text (JSON) glTF
                     var json = getStringFromTypedArray(array);
                     cachedGltf.makeReady(JSON.parse(json));
                 }
-            }).otherwise(getFailedLoadFunction(model, 'model', url));
+            }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', modelResource.url));
         } else if (!cachedGltf.ready) {
             // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
             ++cachedGltf.count;
@@ -1298,84 +1510,148 @@ define([
         return getRuntime(this, 'materialsByName', name);
     };
 
-    var aMinScratch = new Cartesian3();
-    var aMaxScratch = new Cartesian3();
+    /**
+     * Sets the current value of an articulation stage.  After setting one or multiple stage values, call
+     * Model.applyArticulations() to cause the node matrices to be recalculated.
+     *
+     * @param {String} articulationStageKey The name of the articulation, a space, and the name of the stage.
+     * @param {Number} value The numeric value of this stage of the articulation.
+     *
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+     *
+     * @see Model#applyArticulations
+     */
+    Model.prototype.setArticulationStage = function(articulationStageKey, value) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('value', value);
+        //>>includeEnd('debug');
 
-    function computeBoundingSphere(model) {
-        var gltf = model.gltf;
-        var gltfNodes = gltf.nodes;
-        var gltfMeshes = gltf.meshes;
-        var rootNodes = gltf.scenes[gltf.scene].nodes;
-        var rootNodesLength = rootNodes.length;
+        var stage = getRuntime(this, 'stagesByKey', articulationStageKey);
+        var articulation = getRuntime(this, 'articulationsByStageKey', articulationStageKey);
+        if (defined(stage) && defined(articulation)) {
+            value = CesiumMath.clamp(value, stage.minimumValue, stage.maximumValue);
+            if (!CesiumMath.equalsEpsilon(stage.currentValue, value, articulationEpsilon)) {
+                stage.currentValue = value;
+                articulation.isDirty = true;
+            }
+        }
+    };
 
-        var nodeStack = [];
+    var scratchArticulationCartesian = new Cartesian3();
+    var scratchArticulationRotation = new Matrix3();
 
-        var min = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-        var max = new Cartesian3(-Number.MAX_VALUE, -Number.MAX_VALUE, -Number.MAX_VALUE);
+    /**
+     * Modifies a Matrix4 by applying a transformation for a given value of a stage.  Note this is different usage
+     * from the typical <code>result</code> parameter, in that the incoming value of <code>result</code> is
+     * meaningful.  Various stages of an articulation can be multiplied together, so their
+     * transformations are all merged into a composite Matrix4 representing them all.
+     *
+     * @param {object} stage The stage of an articulation that is being evaluated.
+     * @param {Matrix4} result The matrix to be modified.
+     * @returns {Matrix4} A matrix transformed as requested by the articulation stage.
+     *
+     * @private
+     */
+    function applyArticulationStageMatrix(stage, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('stage', stage);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
 
-        for (var i = 0; i < rootNodesLength; ++i) {
-            var n = gltfNodes[rootNodes[i]];
-            n._transformToRoot = ModelUtility.getTransform(n);
-            nodeStack.push(n);
+        var value = stage.currentValue;
+        var cartesian = scratchArticulationCartesian;
+        var rotation;
+        switch (stage.type) {
+            case 'xRotate':
+                rotation = Matrix3.fromRotationX(CesiumMath.toRadians(value), scratchArticulationRotation);
+                Matrix4.multiplyByMatrix3(result, rotation, result);
+                break;
+            case 'yRotate':
+                rotation = Matrix3.fromRotationY(CesiumMath.toRadians(value), scratchArticulationRotation);
+                Matrix4.multiplyByMatrix3(result, rotation, result);
+                break;
+            case 'zRotate':
+                rotation = Matrix3.fromRotationZ(CesiumMath.toRadians(value), scratchArticulationRotation);
+                Matrix4.multiplyByMatrix3(result, rotation, result);
+                break;
+            case 'xTranslate':
+                cartesian.x = value;
+                cartesian.y = 0.0;
+                cartesian.z = 0.0;
+                Matrix4.multiplyByTranslation(result, cartesian, result);
+                break;
+            case 'yTranslate':
+                cartesian.x = 0.0;
+                cartesian.y = value;
+                cartesian.z = 0.0;
+                Matrix4.multiplyByTranslation(result, cartesian, result);
+                break;
+            case 'zTranslate':
+                cartesian.x = 0.0;
+                cartesian.y = 0.0;
+                cartesian.z = value;
+                Matrix4.multiplyByTranslation(result, cartesian, result);
+                break;
+            case 'xScale':
+                cartesian.x = value;
+                cartesian.y = 1.0;
+                cartesian.z = 1.0;
+                Matrix4.multiplyByScale(result, cartesian, result);
+                break;
+            case 'yScale':
+                cartesian.x = 1.0;
+                cartesian.y = value;
+                cartesian.z = 1.0;
+                Matrix4.multiplyByScale(result, cartesian, result);
+                break;
+            case 'zScale':
+                cartesian.x = 1.0;
+                cartesian.y = 1.0;
+                cartesian.z = value;
+                Matrix4.multiplyByScale(result, cartesian, result);
+                break;
+            case 'uniformScale':
+                Matrix4.multiplyByUniformScale(result, value, result);
+                break;
+            default:
+                break;
+        }
+        return result;
+    }
 
-            while (nodeStack.length > 0) {
-                n = nodeStack.pop();
-                var transformToRoot = n._transformToRoot;
+    var scratchApplyArticulationTransform = new Matrix4();
 
-                var meshId = n.mesh;
-                if (defined(meshId)) {
-                    var mesh = gltfMeshes[meshId];
-                    var primitives = mesh.primitives;
-                    var primitivesLength = primitives.length;
-                    for (var m = 0; m < primitivesLength; ++m) {
-                        var positionAccessor = primitives[m].attributes.POSITION;
-                        if (defined(positionAccessor)) {
-                            var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
-                            var aMin = Cartesian3.fromArray(minMax.min, 0, aMinScratch);
-                            var aMax = Cartesian3.fromArray(minMax.max, 0, aMaxScratch);
-                            if (defined(min) && defined(max)) {
-                                Matrix4.multiplyByPoint(transformToRoot, aMin, aMin);
-                                Matrix4.multiplyByPoint(transformToRoot, aMax, aMax);
-                                Cartesian3.minimumByComponent(min, aMin, min);
-                                Cartesian3.maximumByComponent(max, aMax, max);
-                            }
+    /**
+     * Applies any modified articulation stages to the matrix of each node that participates
+     * in any articulation.  Note that this will overwrite any nodeTransformations on participating nodes.
+     *
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+     */
+    Model.prototype.applyArticulations = function() {
+        var articulationsByName = this._runtime.articulationsByName;
+        for (var articulationName in articulationsByName) {
+            if (articulationsByName.hasOwnProperty(articulationName)) {
+                var articulation = articulationsByName[articulationName];
+                if (articulation.isDirty) {
+                    articulation.isDirty = false;
+                    var numNodes = articulation.nodes.length;
+                    for (var n = 0; n < numNodes; ++n) {
+                        var node = articulation.nodes[n];
+                        var transform = Matrix4.clone(node.originalMatrix, scratchApplyArticulationTransform);
+
+                        var numStages = articulation.stages.length;
+                        for (var s = 0; s < numStages; ++s) {
+                            var stage = articulation.stages[s];
+                            transform = applyArticulationStageMatrix(stage, transform);
                         }
+                        node.matrix = transform;
                     }
                 }
-
-                var children = n.children;
-                var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
-                    var child = gltfNodes[children[k]];
-                    child._transformToRoot = ModelUtility.getTransform(child);
-                    Matrix4.multiplyTransformation(transformToRoot, child._transformToRoot, child._transformToRoot);
-                    nodeStack.push(child);
-                }
-                delete n._transformToRoot;
             }
         }
-
-        var boundingSphere = BoundingSphere.fromCornerPoints(min, max);
-        if (model._upAxis === Axis.Y) {
-            BoundingSphere.transformWithoutScale(boundingSphere, Axis.Y_UP_TO_Z_UP, boundingSphere);
-        } else if (model._upAxis === Axis.X) {
-            BoundingSphere.transformWithoutScale(boundingSphere, Axis.X_UP_TO_Z_UP, boundingSphere);
-        }
-        return boundingSphere;
-    }
+    };
 
     ///////////////////////////////////////////////////////////////////////////
-
-    function getFailedLoadFunction(model, type, path) {
-        return function(error) {
-            model._state = ModelState.FAILED;
-            var message = 'Failed to load ' + type + ': ' + path;
-            if (defined(error)) {
-                message += '\n' + error.message;
-            }
-            model._readyPromise.reject(new RuntimeError(message));
-        };
-    }
 
     function addBuffersToLoadResources(model) {
         var gltf = model.gltf;
@@ -1394,31 +1670,8 @@ define([
         };
     }
 
-    function parseBuffers(model) {
-        var loadResources = model._loadResources;
-        // Iterate this way for compatibility with objects and arrays
-        var buffers = model.gltf.buffers;
-        for (var id in buffers) {
-            if (buffers.hasOwnProperty(id)) {
-                var buffer = buffers[id];
-                buffer.extras = defaultValue(buffer.extras, {});
-                buffer.extras._pipeline = defaultValue(buffer.extras._pipeline, {});
-                if (defined(buffer.extras._pipeline.source)) {
-                    loadResources.buffers[id] = buffer.extras._pipeline.source;
-                } else {
-                    var bufferResource = model._resource.getDerivedResource({
-                        url : buffer.uri
-                    });
-                    ++loadResources.pendingBufferLoads;
-                    bufferResource.fetchArrayBuffer().then(bufferLoad(model, id)).otherwise(getFailedLoadFunction(model, 'buffer', bufferResource.url));
-                }
-            }
-        }
-    }
-
     function parseBufferViews(model) {
         var bufferViews = model.gltf.bufferViews;
-
         var vertexBuffersToCreate = model._loadResources.vertexBuffersToCreate;
 
         // Only ARRAY_BUFFER here.  ELEMENT_ARRAY_BUFFER created below.
@@ -1451,6 +1704,27 @@ define([
         });
     }
 
+    function parseTechniques(model) {
+        // retain references to gltf techniques
+        var gltf = model.gltf;
+        if (!hasExtension(gltf, 'KHR_techniques_webgl')) {
+            return;
+        }
+
+        var sourcePrograms = model._sourcePrograms;
+        var sourceTechniques = model._sourceTechniques;
+        var programs = gltf.extensions.KHR_techniques_webgl.programs;
+
+        ForEach.technique(gltf, function(technique, techniqueId) {
+            sourceTechniques[techniqueId] = clone(technique);
+
+            var programId = technique.program;
+            if (!defined(sourcePrograms[programId])) {
+                sourcePrograms[programId] = clone(programs[programId]);
+            }
+        });
+    }
+
     function shaderLoad(model, type, id) {
         return function(source) {
             var loadResources = model._loadResources;
@@ -1460,7 +1734,7 @@ define([
                 bufferView : undefined
             };
             --loadResources.pendingShaderLoads;
-            model.gltf.shaders[id].extras._pipeline.source = source;
+            model._rendererResources.sourceShaders[id] = source;
         };
     }
 
@@ -1468,6 +1742,7 @@ define([
         var gltf = model.gltf;
         var buffers = gltf.buffers;
         var bufferViews = gltf.bufferViews;
+        var sourceShaders = model._rendererResources.sourceShaders;
         ForEach.shader(gltf, function(shader, id) {
             // Shader references either uri (external or base64-encoded) or bufferView
             if (defined(shader.bufferView)) {
@@ -1476,37 +1751,76 @@ define([
                 var bufferId = bufferView.buffer;
                 var buffer = buffers[bufferId];
                 var source = getStringFromTypedArray(buffer.extras._pipeline.source, bufferView.byteOffset, bufferView.byteLength);
-                model._loadResources.shaders[id] = {
-                    source : source,
-                    bufferView : undefined
-                };
-                shader.extras._pipeline.source = source;
+                sourceShaders[id] = source;
             } else if (defined(shader.extras._pipeline.source)) {
-                model._loadResources.shaders[id] = {
-                    source : shader.extras._pipeline.source,
-                    bufferView : undefined
-                };
+                sourceShaders[id] = shader.extras._pipeline.source;
             } else {
                 ++model._loadResources.pendingShaderLoads;
 
                 var shaderResource = model._resource.getDerivedResource({
-                    url : shader.uri
+                    url: shader.uri
                 });
 
-                shaderResource.fetchText().then(shaderLoad(model, shader.type, id)).otherwise(getFailedLoadFunction(model, 'shader', shaderResource.url));
+                shaderResource.fetchText()
+                    .then(shaderLoad(model, shader.type, id))
+                    .otherwise(ModelUtility.getFailedLoadFunction(model, 'shader', shaderResource.url));
             }
         });
     }
 
     function parsePrograms(model) {
-        ForEach.program(model.gltf, function(program, id) {
-            model._loadResources.programsToCreate.enqueue(id);
-        });
+        var sourceTechniques = model._sourceTechniques;
+        for (var techniqueId in sourceTechniques) {
+            if (sourceTechniques.hasOwnProperty(techniqueId)) {
+                var technique = sourceTechniques[techniqueId];
+                model._loadResources.programsToCreate.enqueue({
+                    programId: technique.program,
+                    techniqueId: techniqueId
+                });
+            }
+        }
     }
 
-    function imageLoad(model, textureId, imageId) {
+    function parseArticulations(model) {
+        var articulationsByName = {};
+        var articulationsByStageKey = {};
+        var runtimeStagesByKey = {};
+
+        model._runtime.articulationsByName = articulationsByName;
+        model._runtime.articulationsByStageKey = articulationsByStageKey;
+        model._runtime.stagesByKey = runtimeStagesByKey;
+
+        var gltf = model.gltf;
+        if (!hasExtension(gltf, 'AGI_articulations') || !defined(gltf.extensions) || !defined(gltf.extensions.AGI_articulations)) {
+            return;
+        }
+
+        var gltfArticulations = gltf.extensions.AGI_articulations.articulations;
+        if (!defined(gltfArticulations)) {
+            return;
+        }
+
+        var numArticulations = gltfArticulations.length;
+        for (var i = 0; i < numArticulations; ++i) {
+            var articulation = clone(gltfArticulations[i]);
+            articulation.nodes = [];
+            articulation.isDirty = true;
+            articulationsByName[articulation.name] = articulation;
+
+            var numStages = articulation.stages.length;
+            for (var s = 0; s < numStages; ++s) {
+                var stage = articulation.stages[s];
+                stage.currentValue = stage.initialValue;
+
+                var stageKey = articulation.name + ' ' + stage.name;
+                articulationsByStageKey[stageKey] = articulation;
+                runtimeStagesByKey[stageKey] = stage;
+            }
+        }
+    }
+
+    function imageLoad(model, textureId) {
         return function(image) {
-            var gltf = model.gltf;
             var loadResources = model._loadResources;
             --loadResources.pendingTextureLoads;
             loadResources.texturesToCreate.enqueue({
@@ -1517,19 +1831,23 @@ define([
                 height : image.height,
                 internalFormat : image.internalFormat
             });
-            gltf.images[imageId].extras._pipeline.source = image;
         };
     }
 
     var ktxRegex = /(^data:image\/ktx)|(\.ktx$)/i;
     var crnRegex = /(^data:image\/crn)|(\.crn$)/i;
 
-    function parseTextures(model, context) {
+    function parseTextures(model, context, supportsWebP) {
         var gltf = model.gltf;
         var images = gltf.images;
         var uri;
         ForEach.texture(gltf, function(texture, id) {
             var imageId = texture.source;
+
+            if (defined(texture.extensions) && defined(texture.extensions.EXT_texture_webp) && supportsWebP) {
+                imageId = texture.extensions.EXT_texture_webp.source;
+            }
+
             var gltfImage = images[imageId];
             var extras = gltfImage.extras;
 
@@ -1598,10 +1916,12 @@ define([
                 } else {
                     promise = imageResource.fetchImage();
                 }
-                promise.then(imageLoad(model, id, imageId)).otherwise(getFailedLoadFunction(model, 'image', imageResource.url));
+                promise.then(imageLoad(model, id, imageId)).otherwise(ModelUtility.getFailedLoadFunction(model, 'image', imageResource.url));
             }
         });
     }
+
+    var scratchArticulationStageInitialTransform = new Matrix4();
 
     function parseNodes(model) {
         var runtimeNodes = {};
@@ -1609,6 +1929,7 @@ define([
         var skinnedNodes = [];
 
         var skinnedNodesIds = model._loadResources.skinnedNodesIds;
+        var articulationsByName = model._runtime.articulationsByName;
 
         ForEach.node(model.gltf, function(node, id) {
             var runtimeNode = {
@@ -1656,6 +1977,22 @@ define([
                 skinnedNodesIds.push(id);
                 skinnedNodes.push(runtimeNode);
             }
+
+            if (defined(node.extensions) && defined(node.extensions.AGI_articulations)) {
+                var articulationName = node.extensions.AGI_articulations.articulationName;
+                if (defined(articulationName)) {
+                    var transform = Matrix4.clone(runtimeNode.publicNode.originalMatrix, scratchArticulationStageInitialTransform);
+                    var articulation = articulationsByName[articulationName];
+                    articulation.nodes.push(runtimeNode.publicNode);
+
+                    var numStages = articulation.stages.length;
+                    for (var s = 0; s < numStages; ++s) {
+                        var stage = articulation.stages[s];
+                        transform = applyArticulationStageMatrix(stage, transform);
+                    }
+                    runtimeNode.publicNode.matrix = transform;
+                }
+            }
         });
 
         model._runtime.nodes = runtimeNodes;
@@ -1664,22 +2001,40 @@ define([
     }
 
     function parseMaterials(model) {
+        var gltf = model.gltf;
+        var techniques = model._sourceTechniques;
+
         var runtimeMaterialsByName = {};
         var runtimeMaterialsById = {};
         var uniformMaps = model._uniformMaps;
 
-        ForEach.material(model.gltf, function(material, id) {
+        ForEach.material(gltf, function(material, materialId) {
             // Allocated now so ModelMaterial can keep a reference to it.
-            uniformMaps[id] = {
+            uniformMaps[materialId] = {
                 uniformMap : undefined,
                 values : undefined,
                 jointMatrixUniformName : undefined,
                 morphWeightsUniformName : undefined
             };
 
-            var modelMaterial = new ModelMaterial(model, material, id);
+            var modelMaterial = new ModelMaterial(model, material, materialId);
+
+            if (defined(material.extensions) && defined(material.extensions.KHR_techniques_webgl)) {
+                var techniqueId = material.extensions.KHR_techniques_webgl.technique;
+                modelMaterial._technique = techniqueId;
+                modelMaterial._program = techniques[techniqueId].program;
+
+                ForEach.materialValue(material, function(value, uniformName) {
+                    if (!defined(modelMaterial._values)) {
+                        modelMaterial._values = {};
+                    }
+
+                    modelMaterial._values[uniformName] = clone(value);
+                });
+            }
+
             runtimeMaterialsByName[material.name] = modelMaterial;
-            runtimeMaterialsById[id] = modelMaterial;
+            runtimeMaterialsById[materialId] = modelMaterial;
         });
 
         model._runtime.materialsByName = runtimeMaterialsByName;
@@ -1690,22 +2045,19 @@ define([
         var runtimeMeshesByName = {};
         var runtimeMaterialsById = model._runtime.materialsById;
 
-        ForEach.mesh(model.gltf, function(mesh, id) {
-            runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, id);
+        ForEach.mesh(model.gltf, function(mesh, meshId) {
+            runtimeMeshesByName[mesh.name] = new ModelMesh(mesh, runtimeMaterialsById, meshId);
             if (defined(model.extensionsUsed.WEB3D_quantized_attributes) || model._dequantizeInShader) {
                 // Cache primitives according to their program
-                var primitives = mesh.primitives;
-                var primitivesLength = primitives.length;
-                for (var i = 0; i < primitivesLength; i++) {
-                    var primitive = primitives[i];
+                ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
                     var programId = getProgramForPrimitive(model, primitive);
                     var programPrimitives = model._programPrimitives[programId];
                     if (!defined(programPrimitives)) {
                         programPrimitives = {};
                         model._programPrimitives[programId] = programPrimitives;
                     }
-                    programPrimitives[id + '.primitive.' + i] = primitive;
-                }
+                    programPrimitives[meshId + '.primitive.' + primitiveId] = primitive;
+                });
             }
         });
 
@@ -1839,38 +2191,13 @@ define([
         }
     }
 
-    function createAttributeLocations(model, attributes) {
-        var attributeLocations = {};
-        var length = attributes.length;
-        var i;
-
-        // Set the position attribute to the 0th index. In some WebGL implementations the shader
-        // will not work correctly if the 0th attribute is not active. For example, some glTF models
-        // list the normal attribute first but derived shaders like the cast-shadows shader do not use
-        // the normal attribute.
-        for (i = 1; i < length; ++i) {
-            var attribute = attributes[i];
-            if (/pos/i.test(attribute)) {
-                attributes[i] = attributes[0];
-                attributes[0] = attribute;
-                break;
-            }
-        }
-
-        for (i = 0; i < length; ++i) {
-            attributeLocations[attributes[i]] = i;
-        }
-
-        return attributeLocations;
-    }
-
     function getProgramForPrimitive(model, primitive) {
-        var gltf = model.gltf;
-        var materialId = primitive.material;
-        var material = gltf.materials[materialId];
-        var techniqueId = material.technique;
-        var technique = gltf.techniques[techniqueId];
-        return technique.program;
+        var material = model._runtime.materialsById[primitive.material];
+        if (!defined(material)) {
+            return;
+        }
+
+        return material._program;
     }
 
     function modifyShaderForQuantizedAttributes(shader, programName, model) {
@@ -1892,7 +2219,10 @@ define([
             }
         }
 
-        var result = shader;
+        // This is not needed after the program is processed, free the memory
+        model._programPrimitives[programName] = undefined;
+
+        var result;
         if (model.extensionsUsed.WEB3D_quantized_attributes) {
             result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
             model._quantizedUniforms[programName] = result.uniforms;
@@ -1900,44 +2230,22 @@ define([
             var decodedData = model._decodedData[primitiveId];
             if (defined(decodedData)) {
                 result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
+            } else {
+                return shader;
             }
         }
-
-        // This is not needed after the program is processed, free the memory
-        model._programPrimitives[programName] = undefined;
 
         return result.shader;
     }
 
-    function hasPremultipliedAlpha(model) {
-        var gltf = model.gltf;
-        return defined(gltf.asset) ? defaultValue(gltf.asset.premultipliedAlpha, false) : false;
-    }
-
-    function modifyShaderForColor(shader, premultipliedAlpha) {
+    function modifyShaderForColor(shader) {
         shader = ShaderSource.replaceMain(shader, 'gltf_blend_main');
         shader +=
             'uniform vec4 gltf_color; \n' +
             'uniform float gltf_colorBlend; \n' +
             'void main() \n' +
             '{ \n' +
-            '    gltf_blend_main(); \n';
-
-        // Un-premultiply the alpha so that blending is correct.
-
-        // Avoid divide-by-zero. The code below is equivalent to:
-        // if (gl_FragColor.a > 0.0)
-        // {
-        //     gl_FragColor.rgb /= gl_FragColor.a;
-        // }
-
-        if (premultipliedAlpha) {
-            shader +=
-                '    float alpha = 1.0 - ceil(gl_FragColor.a) + gl_FragColor.a; \n' +
-                '    gl_FragColor.rgb /= alpha; \n';
-        }
-
-        shader +=
+            '    gltf_blend_main(); \n' +
             '    gl_FragColor.rgb = mix(gl_FragColor.rgb, gltf_color.rgb, gltf_colorBlend); \n' +
             '    float highlight = ceil(gltf_colorBlend); \n' +
             '    gl_FragColor.rgb *= mix(gltf_color.rgb, vec3(1.0), highlight); \n' +
@@ -1955,45 +2263,49 @@ define([
     }
 
     var CreateProgramJob = function() {
-        this.id = undefined;
+        this.programToCreate = undefined;
         this.model = undefined;
         this.context = undefined;
     };
 
-    CreateProgramJob.prototype.set = function(id, model, context) {
-        this.id = id;
+    CreateProgramJob.prototype.set = function(programToCreate, model, context) {
+        this.programToCreate = programToCreate;
         this.model = model;
         this.context = context;
     };
 
     CreateProgramJob.prototype.execute = function() {
-        createProgram(this.id, this.model, this.context);
+        createProgram(this.programToCreate, this.model, this.context);
     };
 
     ///////////////////////////////////////////////////////////////////////////
 
     // When building programs for the first time, do not include modifiers for clipping planes and color
     // since this is the version of the program that will be cached for use with other Models.
-    function createProgram(id, model, context) {
-        var program = model._sourcePrograms[id];
-        var shaders = model._sourceShaders;
-        var quantizedVertexShaders = model._quantizedVertexShaders;
-        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[id];
+    function createProgram(programToCreate, model, context) {
+        var programId = programToCreate.programId;
+        var techniqueId = programToCreate.techniqueId;
+        var program = model._sourcePrograms[programId];
+        var shaders = model._rendererResources.sourceShaders;
 
-        var vs = shaders[program.vertexShader].extras._pipeline.source;
-        var fs = shaders[program.fragmentShader].extras._pipeline.source;
+        var vs = shaders[program.vertexShader];
+        var fs = shaders[program.fragmentShader];
+        var isOutline = program.isOutline;
+
+        var quantizedVertexShaders = model._quantizedVertexShaders;
+        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[programId];
 
         if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
-            var quantizedVS = quantizedVertexShaders[id];
+            var quantizedVS = quantizedVertexShaders[programId];
             if (!defined(quantizedVS)) {
-                quantizedVS = modifyShaderForQuantizedAttributes(vs, id, model);
-                quantizedVertexShaders[id] = quantizedVS;
+                quantizedVS = modifyShaderForQuantizedAttributes(vs, programId, model);
+                quantizedVertexShaders[programId] = quantizedVS;
             }
             vs = quantizedVS;
         }
 
-        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(fs, id, model._fragmentShaderLoaded);
+        var drawVS = modifyShader(vs, programId, model._vertexShaderLoaded);
+        var drawFS = modifyShader(fs, programId, model._fragmentShaderLoaded);
 
         // Internet Explorer seems to have problems with discard (for clipping planes) after too many levels of indirection:
         // https://github.com/AnalyticalGraphicsInc/cesium/issues/6575.
@@ -2001,112 +2313,174 @@ define([
         if (!FeatureDetection.isInternetExplorer()) {
             drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
             drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
-        }
 
-        var pickFS;
-        var pickVS;
-        if (model.allowPicking) {
-            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
-            pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
-
-            if (!model._pickFragmentShaderLoaded) {
-                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-            }
-
-            if (!FeatureDetection.isInternetExplorer()) {
-                pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
-                pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
+            if (isOutline) {
+                drawFS = drawFS.replace('czm_writeLogDepth();',
+                    '    czm_writeLogDepth();\n' +
+                    '#if defined(LOG_DEPTH) && !defined(DISABLE_LOG_DEPTH_FRAGMENT_WRITE)\n' +
+                    '    gl_FragDepthEXT -= 5e-5;\n' +
+                    '#endif');
             }
         }
-        createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
+
+        if (!defined(model._uniformMapLoaded)) {
+            drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
+        }
+
+        var useIBL = model._imageBasedLightingFactor.x > 0.0 || model._imageBasedLightingFactor.y > 0.0;
+        if (useIBL) {
+            drawFS = '#define USE_IBL_LIGHTING \n\n' + drawFS;
+        }
+
+        if (defined(model._lightColor)) {
+            drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
+        }
+
+        if (model._sourceVersion !== '2.0' || model._sourceKHRTechniquesWebGL) {
+            drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
+            drawFS =
+                drawFS +
+                '\n' +
+                'void main() { \n' +
+                '    non_gamma_corrected_main(); \n' +
+                '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
+                '} \n';
+        }
+
+        if (OctahedralProjectedCubeMap.isSupported(context)) {
+            var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
+            var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
+            var addMatrix = usesSH || usesSM || useIBL;
+            if (addMatrix) {
+                drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
+            }
+
+            if (defined(model._sphericalHarmonicCoefficients)) {
+                drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+            } else if (model._useDefaultSphericalHarmonics) {
+                drawFS = '#define DIFFUSE_IBL \n' + drawFS;
+            }
+
+            if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
+                drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+            } else if (model._useDefaultSpecularMaps) {
+                drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            }
+        }
+
+        if (defined(model._luminanceAtZenith)) {
+            drawFS = '#define USE_SUN_LUMINANCE \n' + 'uniform float gltf_luminanceAtZenith;\n' + drawFS;
+        }
+
+        createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
     }
 
-    function recreateProgram(id, model, context) {
-        var program = model._sourcePrograms[id];
-        var shaders = model._sourceShaders;
+    function recreateProgram(programToCreate, model, context) {
+        var programId = programToCreate.programId;
+        var techniqueId = programToCreate.techniqueId;
+        var program = model._sourcePrograms[programId];
+        var shaders = model._rendererResources.sourceShaders;
+
         var quantizedVertexShaders = model._quantizedVertexShaders;
-        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[id];
+        var toClipCoordinatesGLSL = model._toClipCoordinatesGLSL[programId];
 
         var clippingPlaneCollection = model.clippingPlanes;
         var addClippingPlaneCode = isClippingEnabled(model);
 
-        var vs = shaders[program.vertexShader].extras._pipeline.source;
-        var fs = shaders[program.fragmentShader].extras._pipeline.source;
+        var vs = shaders[program.vertexShader];
+        var fs = shaders[program.fragmentShader];
 
         if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
-            vs = quantizedVertexShaders[id];
+            vs = quantizedVertexShaders[programId];
         }
 
         var finalFS = fs;
         if (isColorShadingEnabled(model)) {
-            finalFS = Model._modifyShaderForColor(finalFS, model._hasPremultipliedAlpha);
+            finalFS = Model._modifyShaderForColor(finalFS);
         }
         if (addClippingPlaneCode) {
             finalFS = modifyShaderForClippingPlanes(finalFS, clippingPlaneCollection, context);
         }
 
-        var drawVS = modifyShader(vs, id, model._vertexShaderLoaded);
-        var drawFS = modifyShader(finalFS, id, model._fragmentShaderLoaded);
+        var drawVS = modifyShader(vs, programId, model._vertexShaderLoaded);
+        var drawFS = modifyShader(finalFS, programId, model._fragmentShaderLoaded);
 
         if (!FeatureDetection.isInternetExplorer()) {
             drawVS = ModelUtility.modifyVertexShaderForLogDepth(drawVS, toClipCoordinatesGLSL);
             drawFS = ModelUtility.modifyFragmentShaderForLogDepth(drawFS);
-        }
 
-        var pickFS;
-        var pickVS;
-        if (model.allowPicking) {
-            // PERFORMANCE_IDEA: Can optimize this shader with a glTF hint. https://github.com/KhronosGroup/glTF/issues/181
-            pickVS = modifyShader(vs, id, model._pickVertexShaderLoaded);
-            pickFS = modifyShader(fs, id, model._pickFragmentShaderLoaded);
-
-            if (!model._pickFragmentShaderLoaded) {
-                pickFS = ShaderSource.createPickFragmentShaderSource(fs, 'uniform');
-            }
-
-            if (addClippingPlaneCode) {
-                pickFS = modifyShaderForClippingPlanes(pickFS, clippingPlaneCollection, context);
-            }
-
-            if (!FeatureDetection.isInternetExplorer()) {
-                pickVS = ModelUtility.modifyVertexShaderForLogDepth(pickVS, toClipCoordinatesGLSL);
-                pickFS = ModelUtility.modifyFragmentShaderForLogDepth(pickFS);
+            var isOutline = program.isOutline;
+            if (isOutline) {
+                drawFS = drawFS.replace('czm_writeLogDepth();',
+                    '    czm_writeLogDepth();\n' +
+                    '#if defined(LOG_DEPTH) && !defined(DISABLE_LOG_DEPTH_FRAGMENT_WRITE)\n' +
+                    '    gl_FragDepthEXT -= 5e-5;\n' +
+                    '#endif');
             }
         }
-        createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context);
+
+        if (!defined(model._uniformMapLoaded)) {
+            drawFS = 'uniform vec4 czm_pickColor;\n' + drawFS;
+        }
+
+        var useIBL = model._imageBasedLightingFactor.x > 0.0 || model._imageBasedLightingFactor.y > 0.0;
+        if (useIBL) {
+            drawFS = '#define USE_IBL_LIGHTING \n\n' + drawFS;
+        }
+
+        if (defined(model._lightColor)) {
+            drawFS = '#define USE_CUSTOM_LIGHT_COLOR \n\n' + drawFS;
+        }
+
+        if (model._sourceVersion !== '2.0' || model._sourceKHRTechniquesWebGL) {
+            drawFS = ShaderSource.replaceMain(drawFS, 'non_gamma_corrected_main');
+            drawFS =
+                drawFS +
+                '\n' +
+                'void main() { \n' +
+                '    non_gamma_corrected_main(); \n' +
+                '    gl_FragColor = czm_gammaCorrect(gl_FragColor); \n' +
+                '} \n';
+        }
+
+        if (OctahedralProjectedCubeMap.isSupported(context)) {
+            var usesSH = defined(model._sphericalHarmonicCoefficients) || model._useDefaultSphericalHarmonics;
+            var usesSM = (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) || model._useDefaultSpecularMaps;
+            var addMatrix = !addClippingPlaneCode && (usesSH || usesSM || useIBL);
+            if (addMatrix) {
+                drawFS = 'uniform mat4 gltf_clippingPlanesMatrix; \n' + drawFS;
+            }
+
+            if (defined(model._sphericalHarmonicCoefficients)) {
+                drawFS = '#define DIFFUSE_IBL \n' + '#define CUSTOM_SPHERICAL_HARMONICS \n' + 'uniform vec3 gltf_sphericalHarmonicCoefficients[9]; \n' + drawFS;
+            } else if (model._useDefaultSphericalHarmonics) {
+                drawFS = '#define DIFFUSE_IBL \n' + drawFS;
+            }
+
+            if (defined(model._specularEnvironmentMapAtlas) && model._specularEnvironmentMapAtlas.ready) {
+                drawFS = '#define SPECULAR_IBL \n' + '#define CUSTOM_SPECULAR_IBL \n' + 'uniform sampler2D gltf_specularMap; \n' + 'uniform vec2 gltf_specularMapSize; \n' + 'uniform float gltf_maxSpecularLOD; \n' + drawFS;
+            } else if (model._useDefaultSpecularMaps) {
+                drawFS = '#define SPECULAR_IBL \n' + drawFS;
+            }
+        }
+
+        if (defined(model._luminanceAtZenith)) {
+            drawFS = '#define USE_SUN_LUMINANCE \n' + 'uniform float gltf_luminanceAtZenith;\n' + drawFS;
+        }
+
+        createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context);
     }
 
-    function createAttributesAndProgram(id, drawFS, drawVS, pickFS, pickVS, model, context) {
-        var program = model._sourcePrograms[id];
-        var attributeLocations = createAttributeLocations(model, program.attributes);
+    function createAttributesAndProgram(programId, techniqueId, drawFS, drawVS, model, context) {
+        var technique = model._sourceTechniques[techniqueId];
+        var attributeLocations = ModelUtility.createAttributeLocations(technique, model._precreatedAttributes);
 
-        // Add pre-created attributes to attributeLocations
-        var attributesLength = program.attributes.length;
-        var precreatedAttributes = model._precreatedAttributes;
-        if (defined(precreatedAttributes)) {
-            for (var attrName in precreatedAttributes) {
-                if (precreatedAttributes.hasOwnProperty(attrName)) {
-                    attributeLocations[attrName] = attributesLength++;
-                }
-            }
-        }
-
-        model._rendererResources.programs[id] = ShaderProgram.fromCache({
+        model._rendererResources.programs[programId] = ShaderProgram.fromCache({
             context : context,
             vertexShaderSource : drawVS,
             fragmentShaderSource : drawFS,
             attributeLocations : attributeLocations
         });
-
-        if (model.allowPicking) {
-            model._rendererResources.pickPrograms[id] = ShaderProgram.fromCache({
-                context : context,
-                vertexShaderSource : pickVS,
-                fragmentShaderSource : pickFS,
-                attributeLocations : attributeLocations
-            });
-        }
     }
 
     var scratchCreateProgramJob = new CreateProgramJob();
@@ -2169,7 +2543,7 @@ define([
             var bufferView = gltf.bufferViews[gltfTexture.bufferView];
             var imageId = gltf.textures[gltfTexture.id].source;
 
-            var onerror = getFailedLoadFunction(model, 'image', 'id: ' + gltfTexture.id + ', bufferView: ' + gltfTexture.bufferView);
+            var onerror = ModelUtility.getFailedLoadFunction(model, 'image', 'id: ' + gltfTexture.id + ', bufferView: ' + gltfTexture.bufferView);
 
             if (gltfTexture.mimeType === 'image/ktx') {
                 loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
@@ -2179,33 +2553,31 @@ define([
                 ++model._loadResources.pendingTextureLoads;
             } else {
                 var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
-                loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType)
+                loadImageFromTypedArray({
+                    uint8Array: loadResources.getBuffer(bufferView),
+                    format: gltfTexture.mimeType,
+                    flipY: false
+                })
                     .then(onload).otherwise(onerror);
                 ++loadResources.pendingBufferViewToImage;
             }
         }
     }
 
-    function createSamplers(model, context) {
+    function createSamplers(model) {
         var loadResources = model._loadResources;
-
         if (loadResources.createSamplers) {
             loadResources.createSamplers = false;
 
             var rendererSamplers = model._rendererResources.samplers;
-            var samplers = model.gltf.samplers;
-            for (var id in samplers) {
-                if (samplers.hasOwnProperty(id)) {
-                    var sampler = samplers[id];
-
-                    rendererSamplers[id] = new Sampler({
-                        wrapS : sampler.wrapS,
-                        wrapT : sampler.wrapT,
-                        minificationFilter : sampler.minFilter,
-                        magnificationFilter : sampler.magFilter
-                    });
-                }
-            }
+            ForEach.sampler(model.gltf, function(sampler, samplerId) {
+                rendererSamplers[samplerId] = new Sampler({
+                    wrapS: sampler.wrapS,
+                    wrapT: sampler.wrapT,
+                    minificationFilter: sampler.minFilter,
+                    magnificationFilter: sampler.magFilter
+                });
+            });
         }
     }
 
@@ -2235,29 +2607,72 @@ define([
 
         var rendererSamplers = model._rendererResources.samplers;
         var sampler = rendererSamplers[texture.sampler];
-        sampler = defaultValue(sampler, new Sampler({
-            wrapS : TextureWrap.REPEAT,
-            wrapT : TextureWrap.REPEAT
-        }));
+        if (!defined(sampler)) {
+            sampler = new Sampler({
+                wrapS : TextureWrap.REPEAT,
+                wrapT : TextureWrap.REPEAT
+            });
+        }
+
+        var usesTextureTransform = false;
+        var materials = model.gltf.materials;
+        var materialsLength = materials.length;
+        for (var i = 0; i < materialsLength; ++i) {
+            var material = materials[i];
+            if (defined(material.extensions) && defined(material.extensions.KHR_techniques_webgl)) {
+                var values = material.extensions.KHR_techniques_webgl.values;
+                for (var valueName in values) {
+                    if (values.hasOwnProperty(valueName) && valueName.indexOf('Texture') !== -1) {
+                        var value = values[valueName];
+                        if (value.index === gltfTexture.id && defined(value.extensions) && defined(value.extensions.KHR_texture_transform)) {
+                            usesTextureTransform = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (usesTextureTransform) {
+                break;
+            }
+        }
+
+        var wrapS = sampler.wrapS;
+        var wrapT = sampler.wrapT;
+        var minFilter = sampler.minificationFilter;
+
+        if (usesTextureTransform && minFilter !== TextureMinificationFilter.LINEAR && minFilter !== TextureMinificationFilter.NEAREST) {
+            if (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST || minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) {
+                minFilter = TextureMinificationFilter.NEAREST;
+            } else {
+                minFilter = TextureMinificationFilter.LINEAR;
+            }
+
+            sampler = new Sampler({
+                wrapS : sampler.wrapS,
+                wrapT : sampler.wrapT,
+                textureMinificationFilter : minFilter,
+                textureMagnificationFilter : sampler.magnificationFilter
+            });
+        }
 
         var internalFormat = gltfTexture.internalFormat;
 
         var mipmap =
             (!(defined(internalFormat) && PixelFormat.isCompressedFormat(internalFormat))) &&
-            ((sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
-             (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
-             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
-             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
+            ((minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+             (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+             (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+             (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
         var requiresNpot = mipmap ||
-           (sampler.wrapS === TextureWrap.REPEAT) ||
-           (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
-           (sampler.wrapT === TextureWrap.REPEAT) ||
-           (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
+           (wrapS === TextureWrap.REPEAT) ||
+           (wrapS === TextureWrap.MIRRORED_REPEAT) ||
+           (wrapT === TextureWrap.REPEAT) ||
+           (wrapT === TextureWrap.MIRRORED_REPEAT);
 
         var tx;
         var source = gltfTexture.image;
 
-        if (defined(internalFormat) && texture.target === WebGLConstants.TEXTURE_2D) {
+        if (defined(internalFormat)) {
             tx = new Texture({
                 context : context,
                 source : {
@@ -2281,19 +2696,17 @@ define([
                 source = canvas;
             }
 
-            if (texture.target === WebGLConstants.TEXTURE_2D) {
-                tx = new Texture({
-                    context : context,
-                    source : source,
-                    pixelFormat : texture.internalFormat,
-                    pixelDatatype : texture.type,
-                    sampler : sampler,
-                    flipY : false
-                });
-                // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
-                if (mipmap) {
-                    tx.generateMipmap();
-                }
+            tx = new Texture({
+                context : context,
+                source : source,
+                pixelFormat : texture.internalFormat,
+                pixelDatatype : texture.type,
+                sampler : sampler,
+                flipY : false
+            });
+            // GLTF_SPEC: Support TEXTURE_CUBE_MAP.  https://github.com/KhronosGroup/glTF/issues/40
+            if (mipmap) {
+                tx.generateMipmap();
             }
         }
         if (defined(tx)) {
@@ -2325,17 +2738,23 @@ define([
     }
 
     function getAttributeLocations(model, primitive) {
-        var gltf = model.gltf;
-        var techniques = gltf.techniques;
-        var materials = gltf.materials;
+        var techniques = model._sourceTechniques;
 
         // Retrieve the compiled shader program to assign index values to attributes
         var attributeLocations = {};
 
         var location;
         var index;
-        var technique = techniques[materials[primitive.material].technique];
-        var parameters = technique.parameters;
+        var material = model._runtime.materialsById[primitive.material];
+        if (!defined(material)) {
+            return attributeLocations;
+        }
+
+        var technique = techniques[material._technique];
+        if (!defined(technique)) {
+            return attributeLocations;
+        }
+
         var attributes = technique.attributes;
         var program = model._rendererResources.programs[technique.program];
         var programVertexAttributes = program.vertexAttributes;
@@ -2345,10 +2764,9 @@ define([
         for (location in programVertexAttributes) {
             if (programVertexAttributes.hasOwnProperty(location)) {
                 var attribute = attributes[location];
-                index = programVertexAttributes[location].index;
                 if (defined(attribute)) {
-                    var parameter = parameters[attribute];
-                    attributeLocations[parameter.semantic] = index;
+                    index = programAttributeLocations[location];
+                    attributeLocations[attribute.semantic] = index;
                 }
             }
         }
@@ -2386,9 +2804,11 @@ define([
                 }
 
                 var children = n.children;
-                var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
-                    stack.push(children[k]);
+                if (defined(children)) {
+                    var childrenLength = children.length;
+                    for (var k = 0; k < childrenLength; ++k) {
+                        stack.push(children[k]);
+                    }
                 }
             }
         }
@@ -2496,12 +2916,9 @@ define([
         model._runtime.animations = [];
 
         var runtimeNodes = model._runtime.nodes;
-        var animations = model.gltf.animations;
         var accessors = model.gltf.accessors;
 
-        var length = animations.length;
-        for (var i = 0; i < length; ++i) {
-            var animation = animations[i];
+        ForEach.animation(model.gltf, function (animation, i) {
             var channels = animation.channels;
             var samplers = animation.samplers;
 
@@ -2535,17 +2952,13 @@ define([
                 stopTime : stopTime,
                 channelEvaluators : channelEvaluators
             };
-        }
+        });
     }
 
     function createVertexArrays(model, context) {
         var loadResources = model._loadResources;
-
-        if (!loadResources.finishedBuffersCreation() || !loadResources.finishedProgramCreation()) {
-            return;
-        }
-
-        if (!loadResources.createVertexArrays) {
+        if (!loadResources.finishedBuffersCreation() || !loadResources.finishedProgramCreation()
+                || !loadResources.createVertexArrays) {
             return;
         }
         loadResources.createVertexArrays = false;
@@ -2554,216 +2967,155 @@ define([
         var rendererVertexArrays = model._rendererResources.vertexArrays;
         var gltf = model.gltf;
         var accessors = gltf.accessors;
-        var meshes = gltf.meshes;
-
-        for (var meshId in meshes) {
-            if (meshes.hasOwnProperty(meshId)) {
-                var primitives = meshes[meshId].primitives;
-                var primitivesLength = primitives.length;
-
-                for (var i = 0; i < primitivesLength; ++i) {
-                    var primitive = primitives[i];
-                    var decodedData = model._decodedData[meshId + '.primitive.' + i];
-
-                    // GLTF_SPEC: This does not take into account attribute arrays,
-                    // indicated by when an attribute points to a parameter with a
-                    // count property.
-                    //
-                    // https://github.com/KhronosGroup/glTF/issues/258
-
-                    var attributeLocations = getAttributeLocations(model, primitive);
-                    var attributeName;
-                    var attributeLocation;
-                    var attribute;
-                    var attributes = [];
-                    var primitiveAttributes = primitive.attributes;
-                    for (attributeName in primitiveAttributes) {
-                        if (primitiveAttributes.hasOwnProperty(attributeName)) {
-                            attributeLocation = attributeLocations[attributeName];
-                            // Skip if the attribute is not used by the material, e.g., because the asset was exported
-                            // with an attribute that wasn't used and the asset wasn't optimized.
-                            if (defined(attributeLocation)) {
-                                // Use attributes of previously decoded draco geometry
-                                if (defined(decodedData)) {
-                                    var decodedAttributes = decodedData.attributes;
-                                    if (decodedAttributes.hasOwnProperty(attributeName)) {
-                                        var decodedAttribute = decodedAttributes[attributeName];
-                                        attributes.push({
-                                            index : attributeLocation,
-                                            vertexBuffer : rendererBuffers[decodedAttribute.bufferView],
-                                            componentsPerAttribute : decodedAttribute.componentsPerAttribute,
-                                            componentDatatype : decodedAttribute.componentDatatype,
-                                            normalize: decodedAttribute.normalized,
-                                            offsetInBytes : decodedAttribute.byteOffset,
-                                            strideInBytes : decodedAttribute.byteStride
-                                        });
-
-                                        continue;
-                                    }
-                                }
-
-                                var a = accessors[primitiveAttributes[attributeName]];
-
-                                var normalize = false;
-                                if (defined(a.normalized) && a.normalized) {
-                                    normalize = true;
-                                }
-
-                                attributes.push({
-                                    index : attributeLocation,
-                                    vertexBuffer : rendererBuffers[a.bufferView],
-                                    componentsPerAttribute : numberOfComponentsForType(a.type),
-                                    componentDatatype : a.componentType,
-                                    normalize : normalize,
-                                    offsetInBytes : a.byteOffset,
-                                    strideInBytes : getAccessorByteStride(gltf, a)
-                                });
-                            }
-                        }
-                    }
-
-                    // Add pre-created attributes
-                    var precreatedAttributes = model._precreatedAttributes;
-                    if (defined(precreatedAttributes)) {
-                        for (attributeName in precreatedAttributes) {
-                            if (precreatedAttributes.hasOwnProperty(attributeName)) {
-                                attributeLocation = attributeLocations[attributeName];
-                                if (defined(attributeLocation)) {
-                                    attribute = precreatedAttributes[attributeName];
-                                    attribute.index = attributeLocation;
-                                    attributes.push(attribute);
-                                }
-                            }
-                        }
-                    }
-
-                    var indexBuffer;
-                    if (defined(primitive.indices)) {
-                        var accessor = accessors[primitive.indices];
-                        var bufferView = accessor.bufferView;
-
-                        // Use buffer of previously decoded draco geometry
+        ForEach.mesh(gltf, function(mesh, meshId) {
+            ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
+                var attributes = [];
+                var attributeLocation;
+                var attributeLocations = getAttributeLocations(model, primitive);
+                var decodedData = model._decodedData[meshId + '.primitive.' + primitiveId];
+                ForEach.meshPrimitiveAttribute(primitive, function(accessorId, attributeName) {
+                    // Skip if the attribute is not used by the material, e.g., because the asset
+                    // was exported with an attribute that wasn't used and the asset wasn't optimized.
+                    attributeLocation = attributeLocations[attributeName];
+                    if (defined(attributeLocation)) {
+                        // Use attributes of previously decoded draco geometry
                         if (defined(decodedData)) {
-                            bufferView = decodedData.bufferView;
+                            var decodedAttributes = decodedData.attributes;
+                            if (decodedAttributes.hasOwnProperty(attributeName)) {
+                                var decodedAttribute = decodedAttributes[attributeName];
+                                attributes.push({
+                                    index: attributeLocation,
+                                    vertexBuffer: rendererBuffers[decodedAttribute.bufferView],
+                                    componentsPerAttribute: decodedAttribute.componentsPerAttribute,
+                                    componentDatatype: decodedAttribute.componentDatatype,
+                                    normalize: decodedAttribute.normalized,
+                                    offsetInBytes: decodedAttribute.byteOffset,
+                                    strideInBytes: decodedAttribute.byteStride
+                                });
+
+                                return;
+                            }
                         }
 
-                        indexBuffer = rendererBuffers[bufferView];
+                        var a = accessors[accessorId];
+                        var normalize = defined(a.normalized) && a.normalized;
+                        attributes.push({
+                            index: attributeLocation,
+                            vertexBuffer: rendererBuffers[a.bufferView],
+                            componentsPerAttribute: numberOfComponentsForType(a.type),
+                            componentDatatype: a.componentType,
+                            normalize: normalize,
+                            offsetInBytes: a.byteOffset,
+                            strideInBytes: getAccessorByteStride(gltf, a)
+                        });
                     }
-                    rendererVertexArrays[meshId + '.primitive.' + i] = new VertexArray({
-                        context : context,
-                        attributes : attributes,
-                        indexBuffer : indexBuffer
-                    });
+                });
+
+                // Add pre-created attributes
+                var attribute;
+                var attributeName;
+                var precreatedAttributes = model._precreatedAttributes;
+                if (defined(precreatedAttributes)) {
+                    for (attributeName in precreatedAttributes) {
+                        if (precreatedAttributes.hasOwnProperty(attributeName)) {
+                            attributeLocation = attributeLocations[attributeName];
+                            if (defined(attributeLocation)) {
+                                attribute = precreatedAttributes[attributeName];
+                                attribute.index = attributeLocation;
+                                attributes.push(attribute);
+                            }
+                        }
+                    }
                 }
-            }
-        }
+
+                var indexBuffer;
+                if (defined(primitive.indices)) {
+                    var accessor = accessors[primitive.indices];
+                    var bufferView = accessor.bufferView;
+
+                    // Use buffer of previously decoded draco geometry
+                    if (defined(decodedData)) {
+                        bufferView = decodedData.bufferView;
+                    }
+
+                    indexBuffer = rendererBuffers[bufferView];
+                }
+                rendererVertexArrays[meshId + '.primitive.' + primitiveId] = new VertexArray({
+                    context: context,
+                    attributes: attributes,
+                    indexBuffer: indexBuffer
+                });
+            });
+        });
     }
 
-    function getBooleanStates(states) {
-        // GLTF_SPEC: SAMPLE_ALPHA_TO_COVERAGE not used by Cesium
-        var booleanStates = {};
-        booleanStates[WebGLConstants.BLEND] = false;
-        booleanStates[WebGLConstants.CULL_FACE] = false;
-        booleanStates[WebGLConstants.DEPTH_TEST] = false;
-        booleanStates[WebGLConstants.POLYGON_OFFSET_FILL] = false;
-
-        var enable = states.enable;
-        var length = enable.length;
-        var i;
-        for (i = 0; i < length; ++i) {
-            booleanStates[enable[i]] = true;
-        }
-
-        return booleanStates;
-    }
-
-    function createRenderStates(model, context) {
+    function createRenderStates(model) {
         var loadResources = model._loadResources;
-        var techniques = model.gltf.techniques;
-
         if (loadResources.createRenderStates) {
             loadResources.createRenderStates = false;
-            for (var id in techniques) {
-                if (techniques.hasOwnProperty(id)) {
-                    createRenderStateForTechnique(model, id, context);
-                }
-            }
+
+            ForEach.material(model.gltf, function (material, materialId) {
+                createRenderStateForMaterial(model, material, materialId);
+            });
         }
     }
 
-    function createRenderStateForTechnique(model, id, context) {
+    function createRenderStateForMaterial(model, material, materialId) {
         var rendererRenderStates = model._rendererResources.renderStates;
-        var techniques = model.gltf.techniques;
-        var technique = techniques[id];
-        var states = technique.states;
 
-        var booleanStates = getBooleanStates(states);
-        var statesFunctions = defaultValue(states.functions, defaultValue.EMPTY_OBJECT);
-        var blendColor = defaultValue(statesFunctions.blendColor, [0.0, 0.0, 0.0, 0.0]);
-        var blendEquationSeparate = defaultValue(statesFunctions.blendEquationSeparate, [
+        var blendEquationSeparate = [
             WebGLConstants.FUNC_ADD,
-            WebGLConstants.FUNC_ADD]);
-        var blendFuncSeparate = defaultValue(statesFunctions.blendFuncSeparate, [
+            WebGLConstants.FUNC_ADD
+        ];
+        var blendFuncSeparate = [
             WebGLConstants.ONE,
-            WebGLConstants.ZERO,
+            WebGLConstants.ONE_MINUS_SRC_ALPHA,
             WebGLConstants.ONE,
-            WebGLConstants.ZERO]);
-        var colorMask = defaultValue(statesFunctions.colorMask, [true, true, true, true]);
-        var depthRange = defaultValue(statesFunctions.depthRange, [0.0, 1.0]);
-        var polygonOffset = defaultValue(statesFunctions.polygonOffset, [0.0, 0.0]);
+            WebGLConstants.ONE_MINUS_SRC_ALPHA
+        ];
 
-        // Change the render state to use traditional alpha blending instead of premultiplied alpha blending
-        if (booleanStates[WebGLConstants.BLEND] && model._hasPremultipliedAlpha) {
-            if ((blendFuncSeparate[0] === WebGLConstants.ONE) && (blendFuncSeparate[1] === WebGLConstants.ONE_MINUS_SRC_ALPHA)) {
-                blendFuncSeparate[0] = WebGLConstants.SRC_ALPHA;
-                blendFuncSeparate[1] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
-                blendFuncSeparate[2] = WebGLConstants.SRC_ALPHA;
-                blendFuncSeparate[3] = WebGLConstants.ONE_MINUS_SRC_ALPHA;
-            }
+        if (defined(material.extensions) && defined(material.extensions.KHR_blend)) {
+            blendEquationSeparate = material.extensions.KHR_blend.blendEquation;
+            blendFuncSeparate = material.extensions.KHR_blend.blendFactors;
         }
 
-        rendererRenderStates[id] = RenderState.fromCache({
-            frontFace : defined(statesFunctions.frontFace) ? statesFunctions.frontFace[0] : WebGLConstants.CCW,
+        // If we have outlines but this material is not one of them, set the
+        // polygonOffset render state to push this material back slightly in the
+        // depth buffer so that the outlines are clearly visible.
+        // Note that this render state will have no effect when we're using
+        // logarithmic depth; that is handled separately.
+        var hasOutlines = hasExtension(model.gltf, 'TERRIA_solid_outlines');
+        var isOutline = defined(material.extensions) && defined(material.extensions.TERRIA_solid_outlines);
+
+        var polygonOffset;
+        if (hasOutlines && !isOutline) {
+            polygonOffset = {
+                enabled : true,
+                factor : 0.75,
+                units : 1.0
+            };
+        }
+
+        var enableCulling = !material.doubleSided;
+        var blendingEnabled = (material.alphaMode === 'BLEND');
+        rendererRenderStates[materialId] = RenderState.fromCache({
             cull : {
-                enabled : booleanStates[WebGLConstants.CULL_FACE],
-                face : defined(statesFunctions.cullFace) ? statesFunctions.cullFace[0] : WebGLConstants.BACK
-            },
-            lineWidth : defined(statesFunctions.lineWidth) ? statesFunctions.lineWidth[0] : 1.0,
-            polygonOffset : {
-                enabled : booleanStates[WebGLConstants.POLYGON_OFFSET_FILL],
-                factor : polygonOffset[0],
-                units : polygonOffset[1]
-            },
-            depthRange : {
-                near : depthRange[0],
-                far : depthRange[1]
+                enabled : enableCulling
             },
             depthTest : {
-                enabled : booleanStates[WebGLConstants.DEPTH_TEST],
-                func : defined(statesFunctions.depthFunc) ? statesFunctions.depthFunc[0] : WebGLConstants.LESS
+                enabled : true
             },
-            colorMask : {
-                red : colorMask[0],
-                green : colorMask[1],
-                blue : colorMask[2],
-                alpha : colorMask[3]
-            },
-            depthMask : defined(statesFunctions.depthMask) ? statesFunctions.depthMask[0] : true,
+            depthMask : !blendingEnabled,
             blending : {
-                enabled : booleanStates[WebGLConstants.BLEND],
-                color : {
-                    red : blendColor[0],
-                    green : blendColor[1],
-                    blue : blendColor[2],
-                    alpha : blendColor[3]
-                },
+                enabled : blendingEnabled,
                 equationRgb : blendEquationSeparate[0],
                 equationAlpha : blendEquationSeparate[1],
                 functionSourceRgb : blendFuncSeparate[0],
                 functionDestinationRgb : blendFuncSeparate[1],
                 functionSourceAlpha : blendFuncSeparate[2],
                 functionDestinationAlpha : blendFuncSeparate[3]
-            }
+            },
+            polygonOffset : polygonOffset
         });
     }
 
@@ -2871,6 +3223,67 @@ define([
         return gltfUniformsFromNode[semantic](uniformState, model, runtimeNode);
     }
 
+    function createUniformsForMaterial(model, material, technique, instanceValues, context, textures, defaultTexture) {
+        var uniformMap = {};
+        var uniformValues = {};
+        var jointMatrixUniformName;
+        var morphWeightsUniformName;
+
+        ForEach.techniqueUniform(technique, function(uniform, uniformName) {
+            // GLTF_SPEC: This does not take into account uniform arrays,
+            // indicated by uniforms with a count property.
+            //
+            // https://github.com/KhronosGroup/glTF/issues/258
+
+            // GLTF_SPEC: In this implementation, material parameters with a
+            // semantic or targeted via a source (for animation) are not
+            // targetable for material animations.  Is this too strict?
+            //
+            // https://github.com/KhronosGroup/glTF/issues/142
+
+            var uv;
+            if (defined(instanceValues) && defined(instanceValues[uniformName])) {
+                // Parameter overrides by the instance technique
+                uv = ModelUtility.createUniformFunction(uniform.type, instanceValues[uniformName], textures, defaultTexture);
+                uniformMap[uniformName] = uv.func;
+                uniformValues[uniformName] = uv;
+            } else if (defined(uniform.node)) {
+                uniformMap[uniformName] = getUniformFunctionFromSource(uniform.node, model, uniform.semantic, context.uniformState);
+            } else if (defined(uniform.semantic)) {
+                if (uniform.semantic === 'JOINTMATRIX') {
+                    jointMatrixUniformName = uniformName;
+                } else if (uniform.semantic === 'MORPHWEIGHTS') {
+                    morphWeightsUniformName = uniformName;
+                } else if (uniform.semantic === 'ALPHACUTOFF') {
+                    // The material's alphaCutoff value uses a uniform with semantic ALPHACUTOFF.
+                    // A uniform with this semantic will ignore the instance or default values.
+                    var alphaMode = material.alphaMode;
+                    if (defined(alphaMode) && alphaMode === 'MASK') {
+                        var alphaCutoffValue = defaultValue(material.alphaCutoff, 0.5);
+                        uv = ModelUtility.createUniformFunction(uniform.type, alphaCutoffValue, textures, defaultTexture);
+                        uniformMap[uniformName] = uv.func;
+                        uniformValues[uniformName] = uv;
+                    }
+                } else {
+                    // Map glTF semantic to Cesium automatic uniform
+                    uniformMap[uniformName] = ModelUtility.getGltfSemanticUniforms()[uniform.semantic](context.uniformState, model);
+                }
+            } else if (defined(uniform.value)) {
+                // Technique value that isn't overridden by a material
+                var uv2 = ModelUtility.createUniformFunction(uniform.type, uniform.value, textures, defaultTexture);
+                uniformMap[uniformName] = uv2.func;
+                uniformValues[uniformName] = uv2;
+            }
+        });
+
+        return {
+            map : uniformMap,
+            values : uniformValues,
+            jointMatrixUniformName : jointMatrixUniformName,
+            morphWeightsUniformName : morphWeightsUniformName
+        };
+    }
+
     function createUniformMaps(model, context) {
         var loadResources = model._loadResources;
 
@@ -2884,76 +3297,25 @@ define([
         loadResources.createUniformMaps = false;
 
         var gltf = model.gltf;
-        var materials = gltf.materials;
-        var techniques = gltf.techniques;
+        var techniques = model._sourceTechniques;
         var uniformMaps = model._uniformMaps;
 
         var textures = model._rendererResources.textures;
         var defaultTexture = model._defaultTexture;
 
-        for (var materialId in materials) {
-            if (materials.hasOwnProperty(materialId)) {
-                var material = materials[materialId];
-                var instanceParameters;
-                instanceParameters = material.values;
-                var technique = techniques[material.technique];
-                var parameters = technique.parameters;
-                var uniforms = technique.uniforms;
+        ForEach.material(gltf, function (material, materialId) {
+            var modelMaterial = model._runtime.materialsById[materialId];
+            var technique = techniques[modelMaterial._technique];
+            var instanceValues = modelMaterial._values;
 
-                var uniformMap = {};
-                var uniformValues = {};
-                var jointMatrixUniformName;
-                var morphWeightsUniformName;
+            var uniforms = createUniformsForMaterial(model, material, technique, instanceValues, context, textures, defaultTexture);
 
-                // Uniform parameters
-                for (var name in uniforms) {
-                    if (uniforms.hasOwnProperty(name) && name !== 'extras') {
-                        var parameterName = uniforms[name];
-                        var parameter = parameters[parameterName];
-
-                        // GLTF_SPEC: This does not take into account uniform arrays,
-                        // indicated by parameters with a count property.
-                        //
-                        // https://github.com/KhronosGroup/glTF/issues/258
-
-                        // GLTF_SPEC: In this implementation, material parameters with a
-                        // semantic or targeted via a source (for animation) are not
-                        // targetable for material animations.  Is this too strict?
-                        //
-                        // https://github.com/KhronosGroup/glTF/issues/142
-
-                        if (defined(instanceParameters[parameterName])) {
-                            // Parameter overrides by the instance technique
-                            var uv = ModelUtility.createUniformFunction(parameter.type, instanceParameters[parameterName], textures, defaultTexture);
-                            uniformMap[name] = uv.func;
-                            uniformValues[parameterName] = uv;
-                        } else if (defined(parameter.node)) {
-                            uniformMap[name] = getUniformFunctionFromSource(parameter.node, model, parameter.semantic, context.uniformState);
-                        } else if (defined(parameter.semantic)) {
-                            if (parameter.semantic === 'JOINTMATRIX') {
-                                jointMatrixUniformName = name;
-                            } else if (parameter.semantic === 'MORPHWEIGHTS') {
-                                morphWeightsUniformName = name;
-                            } else {
-                                // Map glTF semantic to Cesium automatic uniform
-                                uniformMap[name] = ModelUtility.getGltfSemanticUniforms()[parameter.semantic](context.uniformState, model);
-                            }
-                        } else if (defined(parameter.value)) {
-                            // Technique value that isn't overridden by a material
-                            var uv2 = ModelUtility.createUniformFunction(parameter.type, parameter.value, textures, defaultTexture);
-                            uniformMap[name] = uv2.func;
-                            uniformValues[parameterName] = uv2;
-                        }
-                    }
-                }
-
-                var u = uniformMaps[materialId];
-                u.uniformMap = uniformMap;                          // uniform name -> function for the renderer
-                u.values = uniformValues;                           // material parameter name -> ModelMaterial for modifying the parameter at runtime
-                u.jointMatrixUniformName = jointMatrixUniformName;
-                u.morphWeightsUniformName = morphWeightsUniformName;
-            }
-        }
+            var u = uniformMaps[materialId];
+            u.uniformMap = uniforms.map;                          // uniform name -> function for the renderer
+            u.values = uniforms.values;                           // material parameter name -> ModelMaterial for modifying the parameter at runtime
+            u.jointMatrixUniformName = uniforms.jointMatrixUniformName;
+            u.morphWeightsUniformName = uniforms.morphWeightsUniformName;
+        });
     }
 
     function createUniformsForDracoQuantizedAttributes(decodedData) {
@@ -3006,10 +3368,11 @@ define([
     function createClippingPlanesMatrixFunction(model) {
         return function() {
             var clippingPlanes = model.clippingPlanes;
-            if (!defined(clippingPlanes)) {
+            if (!defined(clippingPlanes) && !defined(model._sphericalHarmonicCoefficients) && !defined(model._specularEnvironmentMaps)) {
                 return Matrix4.IDENTITY;
             }
-            return Matrix4.multiply(model._modelViewMatrix, clippingPlanes.modelMatrix, scratchClippingPlaneMatrix);
+            var modelMatrix = defined(clippingPlanes) ? clippingPlanes.modelMatrix : Matrix4.IDENTITY;
+            return Matrix4.multiply(model._clippingPlaneModelViewMatrix, modelMatrix, scratchClippingPlaneMatrix);
         };
     }
 
@@ -3039,6 +3402,48 @@ define([
         };
     }
 
+    function createIBLFactorFunction(model) {
+        return function() {
+            return model._imageBasedLightingFactor;
+        };
+    }
+
+    function createLightColorFunction(model) {
+        return function() {
+            return model._lightColor;
+        };
+    }
+
+    function createLuminanceAtZenithFunction(model) {
+        return function() {
+            return model.luminanceAtZenith;
+        };
+    }
+
+    function createSphericalHarmonicCoefficientsFunction(model) {
+        return function() {
+            return model._sphericalHarmonicCoefficients;
+        };
+    }
+
+    function createSpecularEnvironmentMapFunction(model) {
+        return function() {
+            return model._specularEnvironmentMapAtlas.texture;
+        };
+    }
+
+    function createSpecularEnvironmentMapSizeFunction(model) {
+        return function() {
+            return model._specularEnvironmentMapAtlas.texture.dimensions;
+        };
+    }
+
+    function createSpecularEnvironmentMapLOD(model) {
+        return function() {
+            return model._specularEnvironmentMapAtlas.maximumMipmapLevel;
+        };
+    }
+
     function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
         switch (primitive.mode) {
             case PrimitiveType.TRIANGLES:
@@ -3060,15 +3465,12 @@ define([
         var resources = model._rendererResources;
         var rendererVertexArrays = resources.vertexArrays;
         var rendererPrograms = resources.programs;
-        var rendererPickPrograms = resources.pickPrograms;
         var rendererRenderStates = resources.renderStates;
         var uniformMaps = model._uniformMaps;
 
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var gltfMeshes = gltf.meshes;
-        var techniques = gltf.techniques;
-        var materials = gltf.materials;
 
         var id = gltfNode.mesh;
         var mesh = gltfMeshes[id];
@@ -3083,9 +3485,8 @@ define([
         for (var i = 0; i < length; ++i) {
             var primitive = primitives[i];
             var ix = accessors[primitive.indices];
-            var material = materials[primitive.material];
-            var technique = techniques[material.technique];
-            var programId = technique.program;
+            var material = model._runtime.materialsById[primitive.material];
+            var programId = material._program;
             var decodedData = model._decodedData[id + '.primitive.' + i];
 
             var boundingSphere;
@@ -3098,17 +3499,15 @@ define([
             var vertexArray = rendererVertexArrays[id + '.primitive.' + i];
             var offset;
             var count;
-            if (defined(ix)) {
+
+            // Use indices of the previously decoded Draco geometry.
+            if (defined(decodedData)) {
+                count = decodedData.numberOfIndices;
+                offset = 0;
+            } else if (defined(ix)) {
                 count = ix.count;
-
-                // Use indices of the previously decoded Draco geometry.
-                if (defined(decodedData)) {
-                    count = decodedData.numberOfIndices;
-                }
-
-                offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
-            }
-            else {
+                offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType)); // glTF has offset in bytes.  Cesium has offsets in indices
+            } else {
                 var positions = accessors[primitive.attributes.POSITION];
                 count = positions.count;
                 offset = 0;
@@ -3135,9 +3534,16 @@ define([
             uniformMap = combine(uniformMap, {
                 gltf_color : createColorFunction(model),
                 gltf_colorBlend : createColorBlendFunction(model),
-                gltf_clippingPlanes: createClippingPlanesFunction(model),
-                gltf_clippingPlanesEdgeStyle: createClippingPlanesEdgeStyleFunction(model),
-                gltf_clippingPlanesMatrix: createClippingPlanesMatrixFunction(model)
+                gltf_clippingPlanes : createClippingPlanesFunction(model),
+                gltf_clippingPlanesEdgeStyle : createClippingPlanesEdgeStyleFunction(model),
+                gltf_clippingPlanesMatrix : createClippingPlanesMatrixFunction(model),
+                gltf_iblFactor : createIBLFactorFunction(model),
+                gltf_lightColor : createLightColorFunction(model),
+                gltf_sphericalHarmonicCoefficients : createSphericalHarmonicCoefficientsFunction(model),
+                gltf_specularMap : createSpecularEnvironmentMapFunction(model),
+                gltf_specularMapSize : createSpecularEnvironmentMapSizeFunction(model),
+                gltf_maxSpecularLOD : createSpecularEnvironmentMapLOD(model),
+                gltf_luminanceAtZenith : createLuminanceAtZenithFunction(model)
             });
 
             // Allow callback to modify the uniformMap
@@ -3154,9 +3560,7 @@ define([
             }
             uniformMap = combine(uniformMap, quantizedUniformMap);
 
-            var rs = rendererRenderStates[material.technique];
-
-            // GLTF_SPEC: Offical means to determine translucency. https://github.com/KhronosGroup/glTF/issues/105
+            var rs = rendererRenderStates[primitive.material];
             var isTranslucent = rs.blending.enabled;
 
             var owner = model._pickObject;
@@ -3172,6 +3576,24 @@ define([
             var castShadows = ShadowMode.castShadows(model._shadows);
             var receiveShadows = ShadowMode.receiveShadows(model._shadows);
 
+            var pickId;
+            if (allowPicking && !defined(model._uniformMapLoaded)) {
+                pickId = context.createPickId(owner);
+                pickIds.push(pickId);
+                var pickUniforms = {
+                    czm_pickColor : createPickColorFunction(pickId.color)
+                };
+                uniformMap = combine(uniformMap, pickUniforms);
+            }
+
+            if (allowPicking) {
+                if (defined(model._pickIdLoaded) && defined(model._uniformMapLoaded)) {
+                    pickId = model._pickIdLoaded();
+                } else {
+                    pickId = 'czm_pickColor';
+                }
+            }
+
             var command = new DrawCommand({
                 boundingVolume : new BoundingSphere(), // updated in update()
                 cull : model.cull,
@@ -3186,70 +3608,22 @@ define([
                 uniformMap : uniformMap,
                 renderState : rs,
                 owner : owner,
-                pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
+                pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass,
+                pickId : pickId
             });
 
-            var pickCommand;
-
-            if (allowPicking) {
-                var pickUniformMap;
-
-                // Callback to override default model picking
-                if (defined(model._pickFragmentShaderLoaded)) {
-                    if (defined(model._pickUniformMapLoaded)) {
-                        pickUniformMap = model._pickUniformMapLoaded(uniformMap);
-                    } else {
-                        // This is unlikely, but could happen if the override shader does not
-                        // need new uniforms since, for example, its pick ids are coming from
-                        // a vertex attribute or are baked into the shader source.
-                        pickUniformMap = combine(uniformMap);
-                    }
-                } else {
-                    var pickId = context.createPickId(owner);
-                    pickIds.push(pickId);
-                    var pickUniforms = {
-                        czm_pickColor : createPickColorFunction(pickId.color)
-                    };
-                    pickUniformMap = combine(uniformMap, pickUniforms);
-                }
-
-                pickCommand = new DrawCommand({
-                    boundingVolume : new BoundingSphere(), // updated in update()
-                    cull : model.cull,
-                    modelMatrix : new Matrix4(),           // computed in update()
-                    primitiveType : primitive.mode,
-                    vertexArray : vertexArray,
-                    count : count,
-                    offset : offset,
-                    shaderProgram : rendererPickPrograms[programId],
-                    uniformMap : pickUniformMap,
-                    renderState : rs,
-                    owner : owner,
-                    pass : isTranslucent ? Pass.TRANSLUCENT : model.opaquePass
-                });
-            }
-
             var command2D;
-            var pickCommand2D;
             if (!scene3DOnly) {
                 command2D = DrawCommand.shallowClone(command);
                 command2D.boundingVolume = new BoundingSphere(); // updated in update()
                 command2D.modelMatrix = new Matrix4();           // updated in update()
-
-                if (allowPicking) {
-                    pickCommand2D = DrawCommand.shallowClone(pickCommand);
-                    pickCommand2D.boundingVolume = new BoundingSphere(); // updated in update()
-                    pickCommand2D.modelMatrix = new Matrix4();           // updated in update()
-                }
             }
 
             var nodeCommand = {
                 show : true,
                 boundingSphere : boundingSphere,
                 command : command,
-                pickCommand : pickCommand,
                 command2D : command2D,
-                pickCommand2D : pickCommand2D,
                 // Generated on demand when silhouette size is greater than 0.0 and silhouette alpha is greater than 0.0
                 silhouetteModelCommand : undefined,
                 silhouetteModelCommand2D : undefined,
@@ -3332,15 +3706,17 @@ define([
                 }
 
                 var children = gltfNode.children;
-                var childrenLength = children.length;
-                for (var j = 0; j < childrenLength; j++) {
-                    var childId = children[j];
-                    if (!seen[childId]) {
-                        stack.push({
-                            parentRuntimeNode : runtimeNode,
-                            gltfNode : nodes[childId],
-                            id : children[j]
-                        });
+                if (defined(children)) {
+                    var childrenLength = children.length;
+                    for (var j = 0; j < childrenLength; j++) {
+                        var childId = children[j];
+                        if (!seen[childId]) {
+                            stack.push({
+                                parentRuntimeNode : runtimeNode,
+                                gltfNode : nodes[childId],
+                                id : children[j]
+                            });
+                        }
                     }
                 }
 
@@ -3391,41 +3767,45 @@ define([
     function createResources(model, frameState) {
         var context = frameState.context;
         var scene3DOnly = frameState.scene3DOnly;
-
-        // Retain references to updated source shaders and programs for rebuilding as needed
-        var programs = model._sourcePrograms = model.gltf.programs;
-        var shaders = model._sourceShaders = model.gltf.shaders;
-        model._hasPremultipliedAlpha = hasPremultipliedAlpha(model);
-
         var quantizedVertexShaders = model._quantizedVertexShaders;
         var toClipCoordinates = model._toClipCoordinatesGLSL = {};
-        for (var id in programs) {
-            if (programs.hasOwnProperty(id)) {
-                var program = programs[id];
-                var shader = shaders[program.vertexShader].extras._pipeline.source;
+        var techniques = model._sourceTechniques;
+        var programs = model._sourcePrograms;
+
+        var resources = model._rendererResources;
+        var shaders = resources.sourceShaders;
+        if (model._loadRendererResourcesFromCache) {
+            shaders = resources.sourceShaders = model._cachedRendererResources.sourceShaders;
+        }
+
+        for (var techniqueId in techniques) {
+            if (techniques.hasOwnProperty(techniqueId)) {
+                var programId = techniques[techniqueId].program;
+                var program = programs[programId];
+                var shader = shaders[program.vertexShader];
+
+                ModelUtility.checkSupportedGlExtensions(program.glExtensions, context);
+
                 if (model.extensionsUsed.WEB3D_quantized_attributes || model._dequantizeInShader) {
-                    var quantizedVS = quantizedVertexShaders[id];
+                    var quantizedVS = quantizedVertexShaders[programId];
                     if (!defined(quantizedVS)) {
-                        quantizedVS = modifyShaderForQuantizedAttributes(shader, id, model);
-                        quantizedVertexShaders[id] = quantizedVS;
+                        quantizedVS = modifyShaderForQuantizedAttributes(shader, programId, model);
+                        quantizedVertexShaders[programId] = quantizedVS;
                     }
                     shader = quantizedVS;
                 }
 
-                shader = modifyShader(shader, id, model._vertexShaderLoaded);
-                toClipCoordinates[id] = ModelUtility.toClipCoordinatesGLSL(model.gltf, shader);
+                shader = modifyShader(shader, programId, model._vertexShaderLoaded);
+                toClipCoordinates[programId] = ModelUtility.toClipCoordinatesGLSL(model.gltf, shader);
             }
         }
 
-        ModelUtility.checkSupportedGlExtensions(model.gltf.glExtensionsUsed, context);
         if (model._loadRendererResourcesFromCache) {
-            var resources = model._rendererResources;
             var cachedResources = model._cachedRendererResources;
 
             resources.buffers = cachedResources.buffers;
             resources.vertexArrays = cachedResources.vertexArrays;
             resources.programs = cachedResources.programs;
-            resources.pickPrograms = cachedResources.pickPrograms;
             resources.silhouettePrograms = cachedResources.silhouettePrograms;
             resources.textures = cachedResources.textures;
             resources.samplers = cachedResources.samplers;
@@ -3451,7 +3831,7 @@ define([
 
         if (!model._loadRendererResourcesFromCache) {
             createVertexArrays(model, context); // using glTF meshes
-            createRenderStates(model, context); // using glTF materials/techniques/states
+            createRenderStates(model); // using glTF materials/techniques/states
             // Long-term, we might not cache render states if they could change
             // due to an animation, e.g., a uniform going from opaque to transparent.
             // Could use copy-on-write if it is worth it.  Probably overkill.
@@ -3468,7 +3848,7 @@ define([
         var publicMatrix = publicNode.matrix;
 
         if (publicNode.useMatrix && defined(publicMatrix)) {
-            // Public matrix overrides orginial glTF matrix and glTF animations
+            // Public matrix overrides original glTF matrix and glTF animations
             Matrix4.clone(publicMatrix, result);
         } else if (defined(node.matrix)) {
             Matrix4.clone(node.matrix, result);
@@ -3485,7 +3865,6 @@ define([
 
     function updateNodeHierarchyModelMatrix(model, modelTransformChanged, justLoaded, projection) {
         var maxDirtyNumber = model._maxDirtyNumber;
-        var allowPicking = model.allowPicking;
 
         var rootNodes = model._runtime.rootNodes;
         var length = rootNodes.length;
@@ -3538,12 +3917,6 @@ define([
                                 Cartesian3.add(model._rtcCenter, command.boundingVolume.center, command.boundingVolume.center);
                             }
 
-                            if (allowPicking) {
-                                var pickCommand = primitiveCommand.pickCommand;
-                                Matrix4.clone(command.modelMatrix, pickCommand.modelMatrix);
-                                BoundingSphere.clone(command.boundingVolume, pickCommand.boundingVolume);
-                            }
-
                             // If the model crosses the IDL in 2D, it will be drawn in one viewport, but part of it
                             // will be clipped by the viewport. We create a second command that translates the model
                             // model matrix to the opposite side of the map so the part that was clipped in one viewport
@@ -3553,40 +3926,36 @@ define([
                                 Matrix4.clone(nodeMatrix, command.modelMatrix);
                                 command.modelMatrix[13] -= CesiumMath.sign(command.modelMatrix[13]) * 2.0 * CesiumMath.PI * projection.ellipsoid.maximumRadius;
                                 BoundingSphere.transform(primitiveCommand.boundingSphere, command.modelMatrix, command.boundingVolume);
-
-                                if (allowPicking) {
-                                    var pickCommand2D = primitiveCommand.pickCommand2D;
-                                    Matrix4.clone(command.modelMatrix, pickCommand2D.modelMatrix);
-                                    BoundingSphere.clone(command.boundingVolume, pickCommand2D.boundingVolume);
-                                }
                             }
                         }
                     }
                 }
 
                 var children = n.children;
-                var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
-                    var child = children[k];
+                if (defined(children)) {
+                    var childrenLength = children.length;
+                    for (var k = 0; k < childrenLength; ++k) {
+                        var child = children[k];
 
-                    // A node's transform needs to be updated if
-                    // - It was targeted for animation this frame, or
-                    // - Any of its ancestors were targeted for animation this frame
+                        // A node's transform needs to be updated if
+                        // - It was targeted for animation this frame, or
+                        // - Any of its ancestors were targeted for animation this frame
 
-                    // PERFORMANCE_IDEA: if a child has multiple parents and only one of the parents
-                    // is dirty, all the subtrees for each child instance will be dirty; we probably
-                    // won't see this in the wild often.
-                    child.dirtyNumber = Math.max(child.dirtyNumber, n.dirtyNumber);
+                        // PERFORMANCE_IDEA: if a child has multiple parents and only one of the parents
+                        // is dirty, all the subtrees for each child instance will be dirty; we probably
+                        // won't see this in the wild often.
+                        child.dirtyNumber = Math.max(child.dirtyNumber, n.dirtyNumber);
 
-                    if ((child.dirtyNumber === maxDirtyNumber) || justLoaded) {
-                        // Don't check for modelTransformChanged since if only the model's model matrix changed,
-                        // we do not need to rebuild the local transform-to-root, only the final
-                        // [model's-model-matrix][transform-to-root] above.
-                        getNodeMatrix(child, child.transformToRoot);
-                        Matrix4.multiplyTransformation(transformToRoot, child.transformToRoot, child.transformToRoot);
+                        if ((child.dirtyNumber === maxDirtyNumber) || justLoaded) {
+                            // Don't check for modelTransformChanged since if only the model's model matrix changed,
+                            // we do not need to rebuild the local transform-to-root, only the final
+                            // [model's-model-matrix][transform-to-root] above.
+                            getNodeMatrix(child, child.transformToRoot);
+                            Matrix4.multiplyTransformation(transformToRoot, child.transformToRoot, child.transformToRoot);
+                        }
+
+                        nodeStack.push(child);
                     }
-
-                    nodeStack.push(child);
                 }
             }
         }
@@ -3652,12 +4021,14 @@ define([
                 // if commandsLength is zero, the node has a light or camera
 
                 var children = n.children;
-                var childrenLength = children.length;
-                for (var k = 0; k < childrenLength; ++k) {
-                    var child = children[k];
-                    // Parent needs to be shown for child to be shown.
-                    child.computedShow = show && child.publicNode.show;
-                    nodeStack.push(child);
+                if (defined(children)) {
+                    var childrenLength = children.length;
+                    for (var k = 0; k < childrenLength; ++k) {
+                        var child = children[k];
+                        // Parent needs to be shown for child to be shown.
+                        child.computedShow = show && child.publicNode.show;
+                        nodeStack.push(child);
+                    }
                 }
             }
         }
@@ -3796,7 +4167,7 @@ define([
             'uniform vec4 gltf_silhouetteColor; \n' +
             'void main() \n' +
             '{ \n' +
-            '    gl_FragColor = gltf_silhouetteColor; \n' +
+            '    gl_FragColor = czm_gammaCorrect(gltf_silhouetteColor); \n' +
             '}';
 
         return ShaderProgram.fromCache({
@@ -4069,7 +4440,7 @@ define([
         this.buffers = undefined;
         this.vertexArrays = undefined;
         this.programs = undefined;
-        this.pickPrograms = undefined;
+        this.sourceShaders = undefined;
         this.silhouettePrograms = undefined;
         this.textures = undefined;
         this.samplers = undefined;
@@ -4093,7 +4464,6 @@ define([
         destroy(resources.buffers);
         destroy(resources.vertexArrays);
         destroy(resources.programs);
-        destroy(resources.pickPrograms);
         destroy(resources.silhouettePrograms);
         destroy(resources.textures);
     }
@@ -4226,6 +4596,12 @@ define([
             return;
         }
 
+        if (!FeatureDetection.supportsWebP.initialized) {
+            FeatureDetection.supportsWebP.initialize();
+            return;
+        }
+        var supportsWebP = FeatureDetection.supportsWebP();
+
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
 
@@ -4279,10 +4655,12 @@ define([
                     }
                 }
 
+                addPipelineExtras(this.gltf);
+
                 this._loadResources = new ModelLoadResources();
                 if (!this._loadRendererResourcesFromCache) {
                     // Buffers are required to updateVersion
-                    parseBuffers(this);
+                    ModelUtility.parseBuffers(this, bufferLoad);
                 }
             }
         }
@@ -4296,48 +4674,68 @@ define([
             // Textures may continue to stream in while in the LOADED state.
             if (loadResources.pendingBufferLoads === 0) {
                 if (!loadResources.initialized) {
-                    // glTF pipeline updates
-                    var options = {
-                        optimizeForCesium: true,
-                        addBatchIdToGeneratedShaders : this._addBatchIdToGeneratedShaders
-                    };
                     frameState.brdfLutGenerator.update(frameState);
-                    updateVersion(this.gltf);
-                    ModelUtility.checkSupportedExtensions(this.extensionsRequired);
-                    addPipelineExtras(this.gltf);
-                    addDefaults(this.gltf);
-                    processModelMaterialsCommon(this.gltf, options);
-                    processPbrMetallicRoughness(this.gltf, options);
+
+                    ModelUtility.checkSupportedExtensions(this.extensionsRequired, supportsWebP);
+                    ModelUtility.updateForwardAxis(this);
+
+                    // glTF pipeline updates, not needed if loading from cache
+                    if (!defined(this.gltf.extras.sourceVersion)) {
+                        var gltf = this.gltf;
+                        // Add the original version so it remains cached
+                        gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
+                        gltf.extras.sourceKHRTechniquesWebGL = defined(ModelUtility.getUsedExtensions(gltf).KHR_techniques_webgl);
+
+                        this._sourceVersion = gltf.extras.sourceVersion;
+                        this._sourceKHRTechniquesWebGL = gltf.extras.sourceKHRTechniquesWebGL;
+
+                        updateVersion(gltf);
+                        addDefaults(gltf);
+
+                        var options = {
+                            addBatchIdToGeneratedShaders: this._addBatchIdToGeneratedShaders
+                        };
+
+                        processModelMaterialsCommon(gltf, options);
+                        processPbrMaterials(gltf, options);
+                    }
+
+                    this._sourceVersion = this.gltf.extras.sourceVersion;
+                    this._sourceKHRTechniquesWebGL = this.gltf.extras.sourceKHRTechniquesWebGL;
 
                     // Skip dequantizing in the shader if not encoded
                     this._dequantizeInShader = this._dequantizeInShader && DracoLoader.hasExtension(this);
 
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
+                    parseArticulations(this);
+                    parseTechniques(this);
                     if (!this._loadRendererResourcesFromCache) {
                         parseBufferViews(this);
                         parseShaders(this);
                         parsePrograms(this);
-                        parseTextures(this, context);
+                        parseTextures(this, context, supportsWebP);
                     }
                     parseMaterials(this);
                     parseMeshes(this);
                     parseNodes(this);
 
                     // Start draco decoding
-                    DracoLoader.parse(this);
+                    DracoLoader.parse(this, context);
 
                     loadResources.initialized = true;
                 }
 
                 if (!loadResources.finishedDecoding()) {
-                    DracoLoader.decode(this, context)
-                        .otherwise(getFailedLoadFunction(this, 'model', this.basePath));
+                    DracoLoader.decodeModel(this, context)
+                        .otherwise(ModelUtility.getFailedLoadFunction(this, 'model', this.basePath));
                 }
 
                 if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
-                    this._boundingSphere = computeBoundingSphere(this);
+                    this._boundingSphere = ModelUtility.computeBoundingSphere(this);
                     this._initialRadius = this._boundingSphere.radius;
+
+                    DracoLoader.cacheDataForModel(this);
 
                     loadResources.resourcesParsed = true;
                 }
@@ -4370,7 +4768,7 @@ define([
                 cachedResources.buffers = resources.buffers;
                 cachedResources.vertexArrays = resources.vertexArrays;
                 cachedResources.programs = resources.programs;
-                cachedResources.pickPrograms = resources.pickPrograms;
+                cachedResources.sourceShaders = resources.sourceShaders;
                 cachedResources.silhouettePrograms = resources.silhouettePrograms;
                 cachedResources.textures = resources.textures;
                 cachedResources.samplers = resources.samplers;
@@ -4390,6 +4788,38 @@ define([
                 }
             }
         }
+
+        var iblSupported = OctahedralProjectedCubeMap.isSupported(context);
+        if (this._shouldUpdateSpecularMapAtlas && iblSupported) {
+            this._shouldUpdateSpecularMapAtlas = false;
+            this._specularEnvironmentMapAtlas = this._specularEnvironmentMapAtlas && this._specularEnvironmentMapAtlas.destroy();
+            this._specularEnvironmentMapAtlas = undefined;
+            if (defined(this._specularEnvironmentMaps)) {
+                this._specularEnvironmentMapAtlas = new OctahedralProjectedCubeMap(this._specularEnvironmentMaps);
+                var that = this;
+                this._specularEnvironmentMapAtlas.readyPromise.then(function() {
+                    that._shouldRegenerateShaders = true;
+                });
+            }
+
+            // Regenerate shaders to not use an environment map. Will be set to true again if there was a new environment map and it is ready.
+            this._shouldRegenerateShaders = true;
+        }
+
+        if (defined(this._specularEnvironmentMapAtlas)) {
+            this._specularEnvironmentMapAtlas.update(frameState);
+        }
+
+        var recompileWithDefaultAtlas = !defined(this._specularEnvironmentMapAtlas) && defined(frameState.specularEnvironmentMaps) && !this._useDefaultSpecularMaps;
+        var recompileWithoutDefaultAtlas = !defined(frameState.specularEnvironmentMaps) && this._useDefaultSpecularMaps;
+
+        var recompileWithDefaultSHCoeffs = !defined(this._sphericalHarmonicCoefficients) && defined(frameState.sphericalHarmonicCoefficients) && !this._useDefaultSphericalHarmonics;
+        var recompileWithoutDefaultSHCoeffs = !defined(frameState.sphericalHarmonicCoefficients) && this._useDefaultSphericalHarmonics;
+
+        this._shouldRegenerateShaders = this._shouldRegenerateShaders || recompileWithDefaultAtlas || recompileWithoutDefaultAtlas || recompileWithDefaultSHCoeffs || recompileWithoutDefaultSHCoeffs;
+
+        this._useDefaultSpecularMaps = !defined(this._specularEnvironmentMapAtlas) && defined(frameState.specularEnvironmentMaps);
+        this._useDefaultSphericalHarmonics = !defined(this._sphericalHarmonicCoefficients) && defined(frameState.sphericalHarmonicCoefficients);
 
         var silhouette = hasSilhouette(this, frameState);
         var translucent = isTranslucent(this);
@@ -4437,6 +4867,10 @@ define([
                 } else if (this._upAxis === Axis.X) {
                     Matrix4.multiplyTransformation(computedModelMatrix, Axis.X_UP_TO_Z_UP, computedModelMatrix);
                 }
+                if (this.forwardAxis === Axis.Z) {
+                    // glTF 2.0 has a Z-forward convention that must be adapted here to X-forward.
+                    Matrix4.multiplyTransformation(computedModelMatrix, Axis.Z_UP_TO_X_UP, computedModelMatrix);
+                }
             }
 
             // Update modelMatrix throughout the graph as needed
@@ -4460,15 +4894,23 @@ define([
             updateShadows(this);
             updateClippingPlanes(this, frameState);
 
-            // Regnerate shaders if ClippingPlaneCollection state changed or it was removed
+            // Regenerate shaders if ClippingPlaneCollection state changed or it was removed
             var clippingPlanes = this._clippingPlanes;
             var currentClippingPlanesState = 0;
-            if (defined(clippingPlanes) && clippingPlanes.enabled) {
-                Matrix4.multiply(context.uniformState.view3D, modelMatrix, this._modelViewMatrix);
+            var useClippingPlanes = defined(clippingPlanes) && clippingPlanes.enabled && clippingPlanes.length > 0;
+            var usesSH = defined(this._sphericalHarmonicCoefficients) || this._useDefaultSphericalHarmonics;
+            var usesSM = (defined(this._specularEnvironmentMapAtlas) && this._specularEnvironmentMapAtlas.ready) || this._useDefaultSpecularMaps;
+            if (useClippingPlanes || usesSH || usesSM) {
+                var clippingPlanesOriginMatrix = defaultValue(this.clippingPlanesOriginMatrix, modelMatrix);
+                Matrix4.multiply(context.uniformState.view3D, clippingPlanesOriginMatrix, this._clippingPlaneModelViewMatrix);
+            }
+
+            if (useClippingPlanes) {
                 currentClippingPlanesState = clippingPlanes.clippingPlanesState;
             }
 
-            var shouldRegenerateShaders = this._clippingPlanesState !== currentClippingPlanesState;
+            var shouldRegenerateShaders = this._shouldRegenerateShaders;
+            shouldRegenerateShaders = shouldRegenerateShaders || this._clippingPlanesState !== currentClippingPlanesState;
             this._clippingPlanesState = currentClippingPlanesState;
 
             // Regenerate shaders if color shading changed from last update
@@ -4511,7 +4953,7 @@ define([
             var idl2D = frameState.mapProjection.ellipsoid.maximumRadius * CesiumMath.PI;
             var boundingVolume;
 
-            if (passes.render) {
+            if (passes.render || (passes.pick && this.allowPicking)) {
                 for (i = 0; i < length; ++i) {
                     nc = nodeCommands[i];
                     if (nc.show) {
@@ -4528,7 +4970,7 @@ define([
                     }
                 }
 
-                if (silhouette) {
+                if (silhouette && !passes.pick) {
                     // Render second silhouette pass
                     for (i = 0; i < length; ++i) {
                         nc = nodeCommands[i];
@@ -4543,31 +4985,12 @@ define([
                     }
                 }
             }
-
-            if (passes.pick && this.allowPicking) {
-                for (i = 0; i < length; ++i) {
-                    nc = nodeCommands[i];
-                    if (nc.show) {
-                        var pickCommand = nc.pickCommand;
-                        commandList.push(pickCommand);
-
-                        boundingVolume = pickCommand.boundingVolume;
-                        if (frameState.mode === SceneMode.SCENE2D &&
-                            (boundingVolume.center.y + boundingVolume.radius > idl2D || boundingVolume.center.y - boundingVolume.radius < idl2D)) {
-                            commandList.push(nc.pickCommand2D);
-                        }
-                    }
-                }
-            }
         }
     };
 
     function destroyIfNotCached(rendererResources, cachedRendererResources) {
         if (rendererResources.programs !== cachedRendererResources.programs) {
             destroy(rendererResources.programs);
-        }
-        if (rendererResources.pickPrograms !== cachedRendererResources.pickPrograms) {
-            destroy(rendererResources.pickPrograms);
         }
         if (rendererResources.silhouettePrograms !== cachedRendererResources.silhouettePrograms) {
             destroy(rendererResources.silhouettePrograms);
@@ -4595,44 +5018,48 @@ define([
         var cachedRendererResources = model._cachedRendererResources;
         destroyIfNotCached(rendererResources, cachedRendererResources);
 
-        if (isClippingEnabled(model) || isColorShadingEnabled(model)) {
+        var programId;
+        if (isClippingEnabled(model) || isColorShadingEnabled(model) || model._shouldRegenerateShaders) {
+            model._shouldRegenerateShaders = false;
+
             rendererResources.programs = {};
-            rendererResources.pickPrograms = {};
             rendererResources.silhouettePrograms = {};
 
-            var sourcePrograms = model._sourcePrograms;
+            var visitedPrograms = {};
+            var techniques = model._sourceTechniques;
+            var technique;
 
-            ForEach.object(sourcePrograms, function(program, id) {
-                recreateProgram(id, model, frameState.context);
-            });
+            for (var techniqueId in techniques) {
+                if (techniques.hasOwnProperty(techniqueId)) {
+                    technique = techniques[techniqueId];
+                    programId = technique.program;
+                    if (!visitedPrograms[programId]) {
+                        visitedPrograms[programId] = true;
+                        recreateProgram({
+                            programId: programId,
+                            techniqueId: techniqueId
+                        }, model, frameState.context);
+                    }
+                }
+            }
         } else {
             rendererResources.programs = cachedRendererResources.programs;
-            rendererResources.pickPrograms = cachedRendererResources.pickPrograms;
             rendererResources.silhouettePrograms = cachedRendererResources.silhouettePrograms;
         }
 
         // Fix all the commands, marking them as dirty so everything that derives will re-derive
         var rendererPrograms = rendererResources.programs;
-        var rendererPickPrograms = rendererResources.pickPrograms;
 
         var nodeCommands = model._nodeCommands;
         var commandCount = nodeCommands.length;
         for (var i = 0; i < commandCount; ++i) {
             var nodeCommand = nodeCommands[i];
-            var programId = nodeCommand.programId;
+            programId = nodeCommand.programId;
 
             var renderProgram = rendererPrograms[programId];
-            var pickProgram = rendererPickPrograms[programId];
-
             nodeCommand.command.shaderProgram = renderProgram;
             if (defined(nodeCommand.command2D)) {
                 nodeCommand.command2D.shaderProgram = renderProgram;
-            }
-            if (model.allowPicking) {
-                nodeCommand.pickCommand.shaderProgram = pickProgram;
-                if (defined(nodeCommand.pickCommand2D)) {
-                    nodeCommand.pickCommand2D.shaderProgram = pickProgram;
-                }
             }
         }
 
@@ -4694,6 +5121,7 @@ define([
 
         this._rendererResources = undefined;
         this._cachedRendererResources = this._cachedRendererResources && this._cachedRendererResources.release();
+        DracoLoader.destroyCachedDataForModel(this);
 
         var pickIds = this._pickIds;
         var length = pickIds.length;
@@ -4702,8 +5130,6 @@ define([
         }
 
         releaseCachedGltf(this);
-        this._sourcePrograms = undefined;
-        this._sourceShaders = undefined;
         this._quantizedVertexShaders = undefined;
 
         // Only destroy the ClippingPlaneCollection if this is the owner - if this model is part of a Cesium3DTileset,
@@ -4713,6 +5139,8 @@ define([
             clippingPlaneCollection.destroy();
         }
         this._clippingPlanes = undefined;
+
+        this._specularEnvironmentMapAtlas = this._specularEnvironmentMapAtlas && this._specularEnvironmentMapAtlas.destroy();
 
         return destroyObject(this);
     };

@@ -93,10 +93,11 @@ for (var name in viewModel) {
     }
 }
 
-var depthOfField = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createDepthOfFieldStage());
-if (!depthOfField.isSupported(viewer.scene)) {
+if (!Cesium.PostProcessStageLibrary.isDepthOfFieldSupported(viewer.scene)) {
     console.log('This browser does not support the depth of field post process.');
 }
+
+var depthOfField = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createDepthOfFieldStage());
 
 function updatePostProcess() {
     depthOfField.enabled = Boolean(viewModel.show);
@@ -113,10 +114,10 @@ viewer.scene.camera.lookAt(target, offset);
 //Sandcastle_End
 Sandcastle.finishedLoading();
 }
-if (typeof Cesium !== "undefined") {
+if (typeof Cesium !== 'undefined') {
     startup(Cesium);
-} else if (typeof require === "function") {
-    require(["Cesium"], startup);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
 }
 </script>
 </body>
