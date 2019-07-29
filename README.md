@@ -1,6 +1,6 @@
 **This is Terria's fork of the Cesium repository. Changes should be made against the `terriajs` branch, and not `master`. Before submitting a pull request against this repository, please consider if your changes would be better made upstream in Cesium.**
 
-You can find our main repository, along with futher instructors for contributors at https://github.com/TerriaJS/terriajs.
+You can find our main repository, along with futher instructions for contributors at https://github.com/TerriaJS/terriajs.
 
 Cesium's README continues below.
 
