@@ -8,7 +8,7 @@ Change Log
 * Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Labels%20SDF.html) to showcase the new SDF labels.
 * Added `totalScale` property to `Label` which is the total scale of the label taking into account the label's scale and the relative size of the desired font compared to the generated glyph size.
 * Added support for polygon holes to CZML. [#7991](https://github.com/AnalyticalGraphicsInc/cesium/pull/7991)
-* Clipping plane with Arcgis terrain cause WebGL Error [#7998](https://github.com/AnalyticalGraphicsInc/cesium/pull/7998).
+* Fixed crash when using ArcGIS terrain with clipping planes. [#7998](https://github.com/AnalyticalGraphicsInc/cesium/pull/7998)
 
 ##### Fixes :wrench:
 * `PolygonGraphics.hierarchy` now converts constant array values to a `PolygonHierarchy` when set, so code that accesses the value of the property can rely on it always being a `PolygonHierarchy`.
@@ -3625,5 +3625,3 @@ Alpha Releases
 ### a0 - 2011-06-17
 
 * Initial Release.
-
-

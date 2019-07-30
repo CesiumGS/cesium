@@ -1622,7 +1622,7 @@ define([
         if (defined(frameState.shadowState) && frameState.shadowState.shadowsEnabled) {
             --maxTextures;
         }
-        if (defined(tileProvider.clippingPlanes)) {
+        if (defined(tileProvider.clippingPlanes) && tileProvider.clippingPlanes.enabled) {
             --maxTextures;
         }
 
