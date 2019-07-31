@@ -1,12 +1,26 @@
 Change Log
 ==========
 
+### 1.60 - 2019-08-01
+
+##### Additions :tada:
+* Reworked label rendering to use signed distance fields (SDF) for crisper text. [#7730](https://github.com/AnalyticalGraphicsInc/cesium/pull/7730)
+* Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Labels%20SDF.html) to showcase the new SDF labels.
+* Added `totalScale` property to `Label` which is the total scale of the label taking into account the label's scale and the relative size of the desired font compared to the generated glyph size.
+* Added support for polygon holes to CZML. [#7991](https://github.com/AnalyticalGraphicsInc/cesium/pull/7991)
+
+##### Fixes :wrench:
+* `PolygonGraphics.hierarchy` now converts constant array values to a `PolygonHierarchy` when set, so code that accesses the value of the property can rely on it always being a `PolygonHierarchy`.
+* Fixed a bug with lengthwise texture coordinates in the first segment of ground polylines, as observed in some WebGL implementations such as Chrome on Linux. [#8017](https://github.com/AnalyticalGraphicsInc/cesium/issues/8017)
+
 ### 1.59 - 2019-07-01
 
 ##### Additions :tada:
-* Added support for the [AGI_articulations](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations) vendor extension of glTF 2.0 to the Entity API and CZML. [#7907](https://github.com/AnalyticalGraphicsInc/cesium/pull/7907)
+* Adds `ArcGISTiledElevationTerrainProvider` to support LERC encoded terrain from ArcGIS ImageServer. [#7940](https://github.com/AnalyticalGraphicsInc/cesium/pull/7940)
 * Added CZML support for `heightReference` to `box`, `cylinder`, and `ellipsoid`, and added CZML support for `classificationType` to `corridor`, `ellipse`, `polygon`, `polyline`, and `rectangle`. [#7899](https://github.com/AnalyticalGraphicsInc/cesium/pull/7899)
-* Adds `ArcGISTiledElevationTerrainProvider` to support LERC encoded terrain from ArcGIS ImageServer.
+* Adds `exportKML` function to export `Entity` instances with Point, Billboard, Model, Label, Polyline and Polygon graphics. [#7921](https://github.com/AnalyticalGraphicsInc/cesium/pull/7921)
+* Added support for new Mapbox Style API. [#7698](https://github.com/AnalyticalGraphicsInc/cesium/pull/7698)
+* Added support for the [AGI_articulations](https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations) vendor extension of glTF 2.0 to the Entity API and CZML. [#7907](https://github.com/AnalyticalGraphicsInc/cesium/pull/7907)
 
 ##### Fixes :wrench:
 * Fixed a bug that caused missing segments for ground polylines with coplanar points over large distances and problems with polylines containing duplicate points. [#7885](https://github.com/AnalyticalGraphicsInc/cesium//pull/7885)
@@ -15,6 +29,8 @@ Change Log
 * Fixed polyline colors when `scene.highDynamicRange` is enabled. [#7924](https://github.com/AnalyticalGraphicsInc/cesium/pull/7924)
 * Fixed a bug in the inspector where the min/max height values of a picked tile were undefined. [#7904](https://github.com/AnalyticalGraphicsInc/cesium/pull/7904)
 * Reduces size of approximateTerrainHeights.json by rounding the numbers [#7959](https://github.com/AnalyticalGraphicsInc/cesium/pull/7959)
+* Fixed `Math.factorial` to return the correct values. (https://github.com/AnalyticalGraphicsInc/cesium/pull/7969)
+* Fixed a bug that caused 3D models to appear darker on Android devices. [#7944](https://github.com/AnalyticalGraphicsInc/cesium/pull/7944)
 
 ### 1.58.1 - 2018-06-03
 _This is an npm-only release to fix a publishing issue_.

@@ -1,6 +1,7 @@
 defineSuite([
         'DataSources/PolygonGraphics',
         'Core/ArcType',
+        'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/PolygonHierarchy',
@@ -13,6 +14,7 @@ defineSuite([
     ], function(
         PolygonGraphics,
         ArcType,
+        Cartesian3,
         Color,
         DistanceDisplayCondition,
         PolygonHierarchy,
@@ -274,5 +276,30 @@ defineSuite([
         testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
         testDefinitionChanged(property, 'arcType', ArcType.GEODESIC, ArcType.RHUMB);
         testDefinitionChanged(property, 'zIndex', 54, 3);
+    });
+
+    it('converts an array of positions to a PolygonHierarchy', function() {
+        var positions = [
+            new Cartesian3(1, 2, 3),
+            new Cartesian3(4, 5, 6),
+            new Cartesian3(7, 8, 9)
+        ];
+
+        var graphics = new PolygonGraphics({
+            hierarchy: positions
+        });
+
+        expect(graphics.hierarchy).toBeInstanceOf(ConstantProperty);
+        var hierarchy = graphics.hierarchy.getValue();
+        expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+        expect(hierarchy.positions).toEqual(positions);
+
+        graphics = new PolygonGraphics();
+        graphics.hierarchy = positions;
+
+        expect(graphics.hierarchy).toBeInstanceOf(ConstantProperty);
+        hierarchy = graphics.hierarchy.getValue();
+        expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+        expect(hierarchy.positions).toEqual(positions);
     });
 });
