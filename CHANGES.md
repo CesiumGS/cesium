@@ -4,7 +4,7 @@ Change Log
 ### 1.61 - 2019-09-02
 
 #### Fixes :wrench:
-* Fixed a bug where extruded polygons would sometimes be missing segments.
+* Fixed a bug where extruded polygons would sometimes be missing segments. [#8035](https://github.com/AnalyticalGraphicsInc/cesium/pull/8035)
 
 ### 1.60 - 2019-08-01
 
