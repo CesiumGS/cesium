@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.61 - 2019-09-02
+
+#### Fixes :wrench:
+* Fixed a bug where extruded polygons would sometimes be missing segments.
+
 ### 1.60 - 2019-08-01
 
 ##### Additions :tada:

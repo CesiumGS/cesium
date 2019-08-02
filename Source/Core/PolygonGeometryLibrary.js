@@ -579,7 +579,9 @@ define([
         }
 
         length = edgePositions.length;
-        var indices = IndexDatatype.createTypedArray(length / 3, length - positions.length * 6);
+        var vertexCount = length / 3;
+        var indices = IndexDatatype.createTypedArray(vertexCount, vertexCount * 3); // Assuming no vertices drop, each segment takes 6 indices and there are vertexCount / 2 walls
+
         var edgeIndex = 0;
         length /= 6;
 
@@ -601,6 +603,10 @@ define([
             indices[edgeIndex++] = UR;
             indices[edgeIndex++] = LL;
             indices[edgeIndex++] = LR;
+        }
+
+        if (edgeIndex !== indices.length) {
+            indices = indices.slice(0, edgeIndex);
         }
 
         return new Geometry({
