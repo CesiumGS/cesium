@@ -108,14 +108,14 @@ define([
                 scene.groundPrimitives.add(groundPrimitives);
                 removeDefaultDataSoureListener();
                 removeDataSourceCollectionListener();
-                that._removeDefaultDataSoureListener = undefined;
+                that._removeDefaultDataSourceListener = undefined;
                 that._removeDataSourceCollectionListener = undefined;
             };
             removeDefaultDataSoureListener = defaultDataSource.entities.collectionChanged.addEventListener(addPrimitives);
             removeDataSourceCollectionListener = dataSourceCollection.dataSourceAdded.addEventListener(addPrimitives);
         }
 
-        this._removeDefaultDataSoureListener = removeDefaultDataSoureListener;
+        this._removeDefaultDataSourceListener = removeDefaultDataSoureListener;
         this._removeDataSourceCollectionListener = removeDataSourceCollectionListener;
 
         this._ready = false;
