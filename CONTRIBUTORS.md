@@ -216,3 +216,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Dennis Adams](https://github.com/dennisadams)
 * [Hai Zhou](https://github.com/verybigzhouhai)
 * [Pascal Poulain](https://github.com/ppoulainpro)
+* [TJKoury] (https://github.com/tjkoury)
