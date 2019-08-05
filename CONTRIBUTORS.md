@@ -127,6 +127,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Chris Andrews](https://github.com/chri7928/)
 * [Cesium GS, Inc.](https://cesium.com/)
    * [Tom Fili](https://github.com/tfili)
+   * [Sarah Chow](https://github.com/slchow)
+   * [Omar Shehata](https://github.com/OmarShehata)
+   * [Hannah Pinkos](https://github.com/hpinkos)
+   * [Kangning Li](https://github.com/likangning93)
+   * [Sean Lilley](https://github.com/lilleyse)
+   
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 * [Victor Berchet](https://github.com/vicb)
