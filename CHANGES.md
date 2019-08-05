@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.61 - 2019-09-03
+
+##### Additions :tada:
+* Added optional `index` parameter to `PrimitiveCollection.add`. [#8041](https://github.com/AnalyticalGraphicsInc/cesium/pull/8041)
+
 ### 1.60 - 2019-08-01
 
 ##### Additions :tada:
