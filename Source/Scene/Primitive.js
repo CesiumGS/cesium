@@ -2181,7 +2181,6 @@ define([
         var i;
 
         this._sp = this._sp && this._sp.destroy();
-        this._pickSP = this._pickSP && this._pickSP.destroy();
         this._spDepthFail = this._spDepthFail && this._spDepthFail.destroy();
 
         var va = this._va;
