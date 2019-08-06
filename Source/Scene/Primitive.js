@@ -115,6 +115,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {GeometryInstance[]|GeometryInstance} [options.geometryInstances] The geometry instances - or a single geometry instance - to render.
      * @param {Appearance} [options.appearance] The appearance used to render the primitive.
+     * @param {Appearance} [options.depthFailAppearance] The appearance used to shade this primitive when it fails the depth test.
      * @param {Boolean} [options.show=true] Determines if this primitive will be shown.
      * @param {Matrix4} [options.modelMatrix=Matrix4.IDENTITY] The 4x4 transformation matrix that transforms the primitive (all geometry instances) from model to world coordinates.
      * @param {Boolean} [options.vertexCacheOptimize=false] When <code>true</code>, geometry vertices are optimized for the pre and post-vertex-shader caches.
