@@ -321,7 +321,7 @@ define([
         this.rtcCenter = options.rtcCenter;
 
         //>>includeStart('debug', pragmas.debug);
-        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances !== 1))) {
+        if (defined(this.rtcCenter) && (!defined(this.geometryInstances) || (isArray(this.geometryInstances) && this.geometryInstances.length !== 1))) {
             throw new DeveloperError('Relative-to-center rendering only supports one geometry instance.');
         }
         //>>includeEnd('debug');
