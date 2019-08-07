@@ -1498,6 +1498,8 @@ define([
          * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
          * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
          *
+         * @memberof Cesium3DTileset.prototype
+         *
          * @type {Cartesian2}
          * @default Cartesian2(1.0, 1.0)
          */
