@@ -13,6 +13,19 @@ Change Log
 * Added the ability to enable/disable shadows on an Instanced 3D Model tileset.
 * Added support for the `TERRIA_solid_outlines` extension to glTF.
 
+### 1.60 - 2019-08-01
+
+##### Additions :tada:
+* Reworked label rendering to use signed distance fields (SDF) for crisper text. [#7730](https://github.com/AnalyticalGraphicsInc/cesium/pull/7730)
+* Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Labels%20SDF.html) to showcase the new SDF labels.
+* Added support for polygon holes to CZML. [#7991](https://github.com/AnalyticalGraphicsInc/cesium/pull/7991)
+* Added `totalScale` property to `Label` which is the total scale of the label taking into account the label's scale and the relative size of the desired font compared to the generated glyph size.
+
+##### Fixes :wrench:
+* Fixed crash when using ArcGIS terrain with clipping planes. [#7998](https://github.com/AnalyticalGraphicsInc/cesium/pull/7998)
+* `PolygonGraphics.hierarchy` now converts constant array values to a `PolygonHierarchy` when set, so code that accesses the value of the property can rely on it always being a `PolygonHierarchy`.
+* Fixed a bug with lengthwise texture coordinates in the first segment of ground polylines, as observed in some WebGL implementations such as Chrome on Linux. [#8017](https://github.com/AnalyticalGraphicsInc/cesium/issues/8017)
+
 ### 1.59 - 2019-07-01
 
 ##### Additions :tada:

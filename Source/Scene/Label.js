@@ -14,6 +14,7 @@ define([
         './HeightReference',
         './HorizontalOrigin',
         './LabelStyle',
+        './SDFSettings',
         './VerticalOrigin'
     ], function(
         BoundingRectangle,
@@ -31,6 +32,7 @@ define([
         HeightReference,
         HorizontalOrigin,
         LabelStyle,
+        SDFSettings,
         VerticalOrigin) {
     'use strict';
 
@@ -55,6 +57,25 @@ define([
             label._labelCollection._labelsToUpdate.push(label);
         }
         label._repositionAllGlyphs = true;
+    }
+
+    function getCSSValue(element, property) {
+        return document.defaultView.getComputedStyle(element, null).getPropertyValue(property);
+    }
+
+    function parseFont(label) {
+        var div = document.createElement('div');
+        div.style.position = 'absolute';
+        div.style.opacity = 0;
+        div.style.font = label._font;
+        document.body.appendChild(div);
+
+        label._fontFamily = getCSSValue(div,'font-family');
+        label._fontSize = getCSSValue(div,'font-size').replace('px', '');
+        label._fontStyle = getCSSValue(div,'font-style');
+        label._fontWeight = getCSSValue(div,'font-weight');
+
+        document.body.removeChild(div);
     }
 
     /**
@@ -160,6 +181,10 @@ define([
         this._clusterShow = true;
 
         this.text = defaultValue(options.text, '');
+
+        this._relativeSize = 1.0;
+
+        parseFont(this);
 
         this._updateClamping();
     }
@@ -322,6 +347,7 @@ define([
                 if (this._font !== value) {
                     this._font = value;
                     rebindAllGlyphs(this);
+                    parseFont(this);
                 }
             }
         },
@@ -878,16 +904,30 @@ define([
                     for (var i = 0, len = glyphs.length; i < len; i++) {
                         var glyph = glyphs[i];
                         if (defined(glyph.billboard)) {
-                            glyph.billboard.scale = value;
+                            glyph.billboard.scale = value * this._relativeSize;
                         }
                     }
                     var backgroundBillboard = this._backgroundBillboard;
                     if (defined(backgroundBillboard)) {
-                        backgroundBillboard.scale = value;
+                        backgroundBillboard.scale = value * this._relativeSize;
                     }
 
                     repositionAllGlyphs(this);
                 }
+            }
+        },
+
+        /**
+         * Gets the total scale of the label, which is the label's scale multiplied by the computed relative size
+         * of the desired font compared to the generated glyph size.
+         * </div>
+         * @memberof Label.prototype
+         * @type {Number}
+         * @default 1.0
+         */
+        totalScale: {
+            get : function() {
+                return this._scale * this._relativeSize;
             }
         },
 
@@ -1113,7 +1153,7 @@ define([
         var y = 0;
         var width = 0;
         var height = 0;
-        var scale = label.scale;
+        var scale = label.totalScale;
         var resolutionScale = label._labelCollection._resolutionScale;
 
         var backgroundBillboard = label._backgroundBillboard;
@@ -1144,13 +1184,20 @@ define([
 
                 var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
                 var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
-                var glyphWidth = billboard.width * scale;
-                var glyphHeight = billboard.height * scale;
+                var glyphWidth = glyph.dimensions.width * scale;
+                var glyphHeight = glyph.dimensions.height * scale;
 
                 if (label.verticalOrigin === VerticalOrigin.BOTTOM || label.verticalOrigin === VerticalOrigin.BASELINE) {
                     glyphY -= glyphHeight;
                 } else if (label.verticalOrigin === VerticalOrigin.CENTER) {
                     glyphY -= glyphHeight * 0.5;
+                }
+
+                if (label._verticalOrigin === VerticalOrigin.TOP) {
+                    glyphY += SDFSettings.PADDING * scale;
+                }
+                else if (label._verticalOrigin === VerticalOrigin.BOTTOM || label._verticalOrigin === VerticalOrigin.BASELINE) {
+                    glyphY -= SDFSettings.PADDING * scale;
                 }
 
                 x = Math.min(x, glyphX);
