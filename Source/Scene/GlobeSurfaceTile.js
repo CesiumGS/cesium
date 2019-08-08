@@ -304,7 +304,6 @@ define([
     GlobeSurfaceTile.prototype.processImagery = function(tile, terrainProvider, frameState, skipLoading) {
         var surfaceTile = tile.data;
         var isUpsampledOnly = tile.upsampledFromParent;
-        var isRenderable = tile.renderable;
         var isDoneLoading = true;
 
         // Transition imagery states
@@ -347,7 +346,7 @@ define([
         tile.upsampledFromParent = isUpsampledOnly;
 
         // Allow rendering if any available layers are loaded
-        tile.renderable = isRenderable && isAnyTileLoaded;
+        tile.renderable = tile.renderable && isAnyTileLoaded;
 
         return isDoneLoading;
     };
