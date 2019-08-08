@@ -130,6 +130,33 @@ defineSuite([
         expect(primitives.length).toEqual(1);
     });
 
+    it('add works with an index', function() {
+        var p0 = createLabels();
+        var p1 = createLabels();
+
+        expect(function() {
+            primitives.add(p0, 1);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            primitives.add(p0, -1);
+        }).toThrowDeveloperError();
+
+        primitives.add(p0, 0);
+        expect(primitives.get(0)).toBe(p0);
+
+        expect(function() {
+            primitives.add(p1, -1);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            primitives.add(p1, 2);
+        }).toThrowDeveloperError();
+
+        primitives.add(p1, 0);
+        expect(primitives.get(0)).toBe(p1);
+    });
+
     it('removes the first primitive', function() {
         var p0 = createLabels();
         var p1 = createLabels();

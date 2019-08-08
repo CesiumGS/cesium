@@ -1619,6 +1619,13 @@ define([
             --maxTextures;
         }
 
+        if (defined(frameState.shadowState) && frameState.shadowState.shadowsEnabled) {
+            --maxTextures;
+        }
+        if (defined(tileProvider.clippingPlanes) && tileProvider.clippingPlanes.enabled) {
+            --maxTextures;
+        }
+
         var mesh = surfaceTile.renderedMesh;
         var rtc = mesh.center;
         var encoding = mesh.encoding;
