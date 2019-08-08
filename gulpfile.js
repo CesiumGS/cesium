@@ -133,12 +133,16 @@ gulp.task('requirejs', function(done) {
     }, done);
 });
 
+// optimizeApproximateTerrainHeights can be used to regenerate the approximateTerrainHeights
+// file from an overly precise terrain heights file to reduce bandwidth
 gulp.task('optimizeApproximateTerrainHeights', function() {
+    const precision = 1;
     return gulp.src('Source/Assets/approximateTerrainHeightsPrecise.json')
         .pipe(gulpJsonTransform(function(data, file) {
             Object.entries(data).forEach(function(entry) {
                 var values = entry[1];
-                data[entry[0]] = [Math.floor(values[0]), Math.ceil(values[1]) ];
+                data[entry[0]] = [Math.floor(values[0] * precision) / precision,
+                                  Math.ceil(values[1] * precision) / precision ];
             });
             return data;
         }))
