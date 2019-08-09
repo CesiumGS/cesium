@@ -449,13 +449,11 @@ define([
         }
     };
 
-    var scratchColor = new Color();
-
     Batched3DModel3DTileContent.prototype.applyStyle = function(style) {
         if (this.featuresLength === 0) {
             var hasColorStyle = defined(style) && defined(style.color);
             var hasShowStyle = defined(style) && defined(style.show);
-            this._model.color = hasColorStyle ? style.color.evaluateColor(undefined, scratchColor) : Color.WHITE;
+            this._model.color = hasColorStyle ? style.color.evaluateColor(undefined, this._model.color) : Color.clone(Color.WHITE, this._model.color);
             this._model.show = hasShowStyle ? style.show.evaluate(undefined) : true;
         } else {
             this._batchTable.applyStyle(style);
