@@ -201,6 +201,7 @@ define([
         this._url = undefined;
         this._basePath = undefined;
         this._root = undefined;
+        this._tilingScheme = undefined;
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
@@ -892,16 +893,15 @@ define([
                 return Cesium3DTileset.loadJson(resource);
             })
             .then(function(tilesetJson) {
-                that._root = that.loadTileset(resource, tilesetJson);
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
                 var asset = tilesetJson.asset;
                 that._asset = asset;
+                that._tilingScheme = tilesetJson.tilingScheme;
                 that._properties = tilesetJson.properties;
                 that._geometricError = tilesetJson.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
-
                 var extras = asset.extras;
                 if (defined(extras) && defined(extras.cesium) && defined(extras.cesium.credits)) {
                     var extraCredits = extras.cesium.credits;
@@ -916,9 +916,17 @@ define([
                     }
                 }
 
+                var hasTilingScheme = defined(that._tilingScheme);
+                if (hasTilingScheme) {
+                    // do stuff
+                } else {
+                    that._root = that.loadTileset(resource, tilesetJson);
+                }
+
                 // Save the original, untransformed bounding volume position so we can apply
                 // the tile transform and model matrix at run time
-                var boundingVolume = that._root.createBoundingVolume(tilesetJson.root.boundingVolume, Matrix4.IDENTITY);
+                var rootBoundingVolume = hasTilingScheme ? tilesetJson.tilingScheme.boundingVolume : tilesetJson.root.boundingVolume;
+                var boundingVolume = that._root.createBoundingVolume(rootBoundingVolume, Matrix4.IDENTITY);
                 var clippingPlanesOrigin = boundingVolume.boundingSphere.center;
                 // If this origin is above the surface of the earth
                 // we want to apply an ENU orientation as our best guess of orientation.
