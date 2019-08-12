@@ -202,6 +202,7 @@ define([
         this._basePath = undefined;
         this._root = undefined;
         this._tilingScheme = undefined;
+        this._availability = [];
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
@@ -873,6 +874,8 @@ define([
 
         var that = this;
         var resource;
+        var tilesetJson;
+        var layerJson;
         when(options.url)
             .then(function(url) {
                 var basePath;
@@ -892,7 +895,8 @@ define([
 
                 return Cesium3DTileset.loadJson(resource);
             })
-            .then(function(tilesetJson) {
+            .then(function(result) {
+                tilesetJson = result;
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
                 var asset = tilesetJson.asset;
                 that._asset = asset;
@@ -915,17 +919,44 @@ define([
                         credits.push(new Credit(credit.html, credit.showOnScreen));
                     }
                 }
+            })
+            .then(function() {
+                if (!defined(that._tilingScheme)) {
+                    return undefined;
+                }
 
-                var hasTilingScheme = defined(that._tilingScheme);
-                if (hasTilingScheme) {
-                    // do stuff
+                var regex = /tileset\.json/;
+                var layerUrl = that._url.replace(regex, 'layer.json');
+                var layerResource = Resource.createIfNeeded(layerUrl);
+                return Cesium3DTileset.loadJson(layerResource);
+            })
+            .then(function(result) {
+                layerJson = result;
+                var hasLayerJson = defined(layerJson);
+
+                if (hasLayerJson) {
+                    that._availability = layerJson.available;
+                    var startZ = -1;
+                    while (that._availability[++startZ].length === 0) {}
+                    that._tilingScheme.startZ = startZ; // endZ is _availability.length
+
+                    // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
+                    // Get the basePath relative to the external tileset.
+                    var rootInfo = {
+                        boundingVolume: that._tilingScheme.boundingVolume,
+                        geometricError: that._geometricError,
+                        content: undefined,
+                        replace: that._tilingScheme.replace,
+                    };
+
+                    that._root = new Cesium3DTile(that, resource, rootInfo, undefined);
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
                 }
 
                 // Save the original, untransformed bounding volume position so we can apply
                 // the tile transform and model matrix at run time
-                var rootBoundingVolume = hasTilingScheme ? tilesetJson.tilingScheme.boundingVolume : tilesetJson.root.boundingVolume;
+                var rootBoundingVolume = hasLayerJson ? that._tilingScheme.boundingVolume : tilesetJson.root.boundingVolume;
                 var boundingVolume = that._root.createBoundingVolume(rootBoundingVolume, Matrix4.IDENTITY);
                 var clippingPlanesOrigin = boundingVolume.boundingSphere.center;
                 // If this origin is above the surface of the earth
