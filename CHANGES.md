@@ -3,6 +3,7 @@ Change Log
 
 ### TerriaJS-only
 
+* Added `fetchXHR` method to `Resource` for fetching a resource and returning the raw XHR data.
 * Added support for refreshing expired tokens for `ArcGisMapServerImageryProvider` via callback registered with `options.requestNewToken` in constructor.
 * Added support for `parameters` to `ArcGisMapServerImageryProvider`.
 * Hacky fix/workaround for https://github.com/AnalyticalGraphicsInc/cesium/issues/7121.
