@@ -91,7 +91,6 @@ void main()
 
     vec4 p = czm_translateRelativeToEye(positionHigh, positionLow);
     vec4 positionEC = czm_modelViewRelativeToEye * p;
-    positionEC.xyz *= show;
 
     ///////////////////////////////////////////////////////////////////////////
 
@@ -173,7 +172,8 @@ void main()
 
     v_innerPercent = 1.0 - outlinePercent;
     v_pixelDistance = 2.0 / totalSize;
-    gl_PointSize = totalSize;
+    gl_PointSize = totalSize * show;
+    gl_Position *= show;
 
     v_pickColor = pickColor;
 }
