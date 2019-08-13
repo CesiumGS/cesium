@@ -1802,7 +1802,7 @@ define([
         if (defined(scene.globe)) {
             frameState.maximumScreenSpaceError = scene.globe.maximumScreenSpaceError;
         } else {
-            frameState.maximumScreenSpaceError = 2;
+            frameState.maximumScreenSpaceError = 2 * window.devicePixelRatio;
         }
 
         clearPasses(frameState.passes);
