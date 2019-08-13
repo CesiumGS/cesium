@@ -61,6 +61,11 @@ layer.json has an available field that is a 2d array of ranges the first array h
  * I want a function that given a camera, culling volume, and tileset, get a list of z,x,y coords I need to request
  * consult availability to trim this list then assign priorities
 
+ * so that the z/x/y is only reserved for tiles could have an externalAvailibility.json that tells you ranges of
+ * layer.jsons in that are named z/x/ylayer.json that tell you the availablity for that tile and below
+ * TODO: how to make this not insane in terms of hitt level 10 and then suddelny needing to request a bunch of jsons?
+ * i.e. how to stagger?
+
 /////////////USEFUL CODE////////////////////////
 
     NOTE: TerrainProvider.js

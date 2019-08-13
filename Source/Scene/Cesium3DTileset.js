@@ -202,7 +202,7 @@ define([
         this._basePath = undefined;
         this._root = undefined;
         this._tilingScheme = undefined;
-        this._availability = [];
+        this._available = [];
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
@@ -935,21 +935,22 @@ define([
                 var hasLayerJson = defined(layerJson);
 
                 if (hasLayerJson) {
-                    that._availability = layerJson.available;
+                    that._available = layerJson.available;
                     var startZ = -1;
-                    while (that._availability[++startZ].length === 0) {}
-                    that._tilingScheme.startZ = startZ; // endZ is _availability.length
-
+                    while (that._available[++startZ].length === 0) {}
+                    that._tilingScheme.startZ = startZ; // endZ is _available.length
+                    this._allTilesAdditive = that._tilingScheme.refine === Cesium3DTileRefine.ADD;
                     // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
                     // Get the basePath relative to the external tileset.
                     var rootInfo = {
                         boundingVolume: that._tilingScheme.boundingVolume,
                         geometricError: that._geometricError,
                         content: undefined,
-                        replace: that._tilingScheme.replace,
+                        refine: that._tilingScheme.refine,
                     };
 
                     that._root = new Cesium3DTile(that, resource, rootInfo, undefined);
+                    // that._root = that.updateTilesetFromLayerJson(resource, layerJson);
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
                 }
@@ -1576,6 +1577,183 @@ define([
      */
     Cesium3DTileset.prototype.makeStyleDirty = function() {
         this._styleEngine.makeDirty();
+    };
+
+    function updateAvailable(available) {
+        // If we don't have one yet just assign and return
+        if (!defined(this._available)) {
+            this._available = available;
+            return;
+        }
+
+        var length = available.length;
+        var tilesetAvailable = this._available;
+        var array = [];
+        var i;
+        for (i = 0; i < length; ++i) {
+            array = available[i];
+            if (array.length === 0) {
+                // No addtional info for this level, continue.
+                continue;
+            } else if (tilesetAvailable[i].length === 0) {
+                // Don't have any info on this level yet, push.
+                tilesetAvailable.push(array);
+            } else {
+                // Has addtional info, concat.
+                tilesetAvailable[i].concat(array);
+            }
+        }
+
+        // update the startZ (is this useful)
+        var startZ = 0;
+        while (tilesetAvailable[startZ].length === 0) {
+            startZ++;
+        }
+        this._tilingScheme.startZ = startZ; // endZ is _available.length
+    }
+
+    function deriveImplicitBoundsFromParent(parentTile) {
+        var parentBounds = parentTile.boundingVolume;
+        // cut the bounds in half in xy starting from min xy
+        return parentBounds;
+    }
+
+    /**
+     * Updates the _available arrays as well as updates the metadata view of
+     * the tileset tree given a layerJson
+     *
+     * @private
+     */
+    Cesium3DTileset.prototype.updateTilesetFromLayerJson = function(resource, layerJson, parentTile) {
+        var available = layerJson.available;
+        if (!defined(available)) {
+            throw new RuntimeError('Layer json must have an available property.');
+        }
+
+        var statistics = this._statistics;
+
+        updateAvailable(available);
+
+        var hasParent = defined(parentTile);
+
+        // Maybe don't worry about the external tileset case quite yet
+        // var boundingVolume = hasParent ? deriveImplicitBoundsFromParent(parentTile) : this._tilingScheme.boundingVolume;
+        // var geometricError = hasParent ? parentTile._geometricError / 2 : this._geometricError;
+        // var content = // TODO: put the { uri : "0/0/0" } or whatever the z/x/y is for the tile unless its the contentless root
+        // TODO: for quad/oct lat/long spllitting, I think you must construct empty tiles all the way up to the
+        // lvl 0 root(s) or until you get to a single tile. In either case still
+        // generate a contentless root above that
+        // on heads specified
+        var rootInfo = {
+            boundingVolume: this._tilingScheme.boundingVolume,
+            geometricError: this._geometricError,
+            content: undefined,
+            refine: this._tilingScheme.refine
+        };
+
+        var rootTile = new Cesium3DTile(this, resource, rootInfo, parentTile);
+
+        // If there is a parentTile, add the root of the currently loading tileset
+        // to parentTile's children, and update its _depth.
+        if (hasParent) {
+            parentTile.children.push(rootTile);
+            rootTile._depth = parentTile._depth + 1;
+        }
+
+        var stack = [];
+
+        var isOct = this._tilingScheme.type === 'oct';
+
+        var x,y,z;
+        var xTiles,yTiles;
+        var tile, childTile;
+        var uri, tileInfo;
+        var startZ = this._tilingScheme.startZ;
+        var ranges = this._available[startZ][0];
+        // TODO: merge with loop version but wait till the other todo's are ironed out
+        if (!hasParent) {
+            // Go to startZ and grab the tiles there (hopefully there's 1 or 2)
+            // and push those children
+            z = this._tilingScheme.startZ;
+            xTiles = ranges.endX - ranges.startX;
+            yTiles = ranges.endY - ranges.startY;
+            for (y = ranges.startY; y <= ranges.endY; ++y) {
+                for (x = ranges.startX; x <= ranges.endX; ++x) {
+                    if (!this.tileAvailable(x,y,z)) {
+                        continue;
+                    }
+
+                    uri = z + '/' + x + '/' + y;
+                    tileInfo = {
+                        boundingVolume: deriveImplicitBoundsFromParent(rootTile, xTiles, yTiles),
+                        geometricError: deriveGeometricErrorFromParent(rootTile, xTiles, yTiles),
+                        content: {uri: uri},
+                        key: new Cartesian3(x,y,z),
+                        refine: this._tilingScheme.refine
+                    };
+
+                    childTile = new Cesium3DTile(this, resource, tileInfo, rootTile);
+                    rootTile.children.push(childTile);
+                    childTile._depth =  childTile._depth + 1;
+                    stack.push(childTile);
+                }
+            }
+        } else {
+            stack.push(rootTile);
+        }
+
+        while (stack.length > 0) {
+            tile = stack.pop();
+            ++statistics.numberOfTilesTotal;
+            // this._allTilesAdditive = this._allTilesAdditive && (tile.refine === Cesium3DTileRefine.ADD);
+
+            // get the tile's chilrens' xyz range
+            // loop over that like we did above
+            // Go to startZ and grab the tiles there (hopefully there's 1 or 2)
+            // and push those children
+            var childStartCoords = tile.childStartCoords;
+            z = childStartCoords.z;
+            xTiles = 2;
+            yTiles = 2;
+            for (y = childStartCoords.y; y < childStartCoords.y + yTiles; ++y) {
+                for (x = childStartCoords.x; x < childStartCoords.x + xTiles; ++x) {
+                    if (!this.tileAvailable(x,y,z)) {
+                        continue;
+                    }
+
+                    uri = z + '/' + x + '/' + y;
+                    tileInfo = {
+                        boundingVolume: deriveImplicitBoundsFromParent(tile, xTiles, yTiles),
+                        geometricError: deriveGeometricErrorFromParent(tile, xTiles, yTiles),
+                        content: {uri: uri},
+                        refine: this._tilingScheme.refine
+                    };
+
+                    childTile = new Cesium3DTile(this, resource, tileInfo, tile);
+                    tile.children.push(childTile);
+                    childTile._depth =  tile._depth + 1;
+                    stack.push(childTile);
+                }
+            }
+
+            // var children = tile._header.children;
+            // if (defined(children)) {
+            //     var length = children.length;
+            //     for (var i = 0; i < length; ++i) {
+            //         var childHeader = children[i];
+            //         var childTile = new Cesium3DTile(this, resource, childHeader, tile);
+            //         tile.children.push(childTile);
+            //         childTile._depth = tile._depth + 1;
+            //         stack.push(childTile);
+            //     }
+            // }
+
+            if (this._cullWithChildrenBounds) {
+                Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
+            }
+        }
+
+        return rootTile;
     };
 
     /**

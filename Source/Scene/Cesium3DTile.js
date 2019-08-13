@@ -191,6 +191,24 @@ define([
          */
         this.parent = parent;
 
+        /**
+         * This tiles x,y,z key for the tileset._tilingScheme, if it has one
+         *
+         * @type {Cartesian3}
+         * @readonly
+         */
+        this.key = header.key;
+        this.childStartKey = new Cartesian3();
+        if (defined(this.key)) {
+            // var scheme = this._tileset._tilingScheme;
+            // var isOct = scheme.type === 'oct';
+            var childStartKey = this.childStartKey;
+            var key = this.key;
+            childStartKey[0] = key[0] * 2;
+            childStartKey[1] = key[1] * 2;
+            childStartKey[2] = key[2] + 1;
+        }
+
         var content;
         var hasEmptyContent;
         var contentState;
