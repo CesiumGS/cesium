@@ -6,6 +6,9 @@ Change Log
 ##### Additions :tada:
 * Added optional `index` parameter to `PrimitiveCollection.add`. [#8041](https://github.com/AnalyticalGraphicsInc/cesium/pull/8041)
 
+##### Fixes :wrench:
+* Fixed a bug that causes hidden point primitives to still appear on some operating systems. [#8043](https://github.com/AnalyticalGraphicsInc/cesium/issues/8043)
+
 ### 1.60 - 2019-08-01
 
 ##### Additions :tada:
