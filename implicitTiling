@@ -1,0 +1,97 @@
+availability?  giant string of bits (only care about the runs of 0's, fill in rough parts with empty tiles to reduce need for a ton of ranges down in the leaves
+root transform.
+asset
+gerror for root and gerrors are derived from that (knowing that its quad oct bin)
+quadtree: give me tile at level z node x,y
+tileset.json abailbiilty  points a requet that
+
+tileset of tilesets, i.e. external tilesets (fetching json vs b3dm) cmpt wrapper? no extesions, just magic checks.
+mix implicit and custom(tileset.json as it is today)
+
+Custom binary can be unwieldy to deal with. strike a balance of size vs usability
+
+actual terrain layer.json is huge 10+ MB they split it up now so that level 0 has it and level 10 tiles have it (to cover 20 levels in 2 fetch stages)
+
+[x] Use roadhouse to generate a few levels using shehzan's instructions
+Here are the steps:
+• Use branch: https://github.com/AnalyticalGraphicsInc/agi-swayze/tree/fix-implicit-tiling-output
+• Download data at: https://drive.google.com/open?id=1Zqbmm-5mAakwkXmyYG7-JAHaGJck0Uct
+• To create a tileset, say at level 13 do:
+./bin/roadHouse.js -I Database --disable-geometry-compression -i ~/data/NYC-12-CE-G-0.sqlite3 --tiler TMSGeodetic -x 8 -o ~/data/implicitRoadhouse/NYC-13 --content-level 13
+• You can repeat this for as many levels as you want. Then combine all the directories and you'll get a replacement refinement tree (edited)
+Maybe do 9-13
+Can almost ignore the json use the root min max height as min max height for everything
+Probably need the terrain way of calculating the sse (should i just find alaska.terraindb and use terrain to 3dtiles converter)
+Don't need boundingVolume since region is implicit (height is not, at least for quadtree)
+[x] Replace/add hint b3dm hint in properties hints
+[x] Remove extensions
+[x] Find an example layers.json
+Content bounding volume can be had from the glb
+if "root"exists then its traditional if "tilingScheme" exists then it's implicit
+  * type: quad, oct, tms, wtms, cdb, xyz
+  * transform
+  * height min/max (implies long lat subdivision) OR boundingBox (implies subdivision within that bounding box)
+  * availability: layers.json, double single head implied from this
+  * geometric error of root, others derived from this (see calculation in terrain to 3dtiles converter)
+  * content boundingbox is in the glb's minmax of positions so actual geom error could be the diag of this box?
+  [ ] Should provide a hint to amount of heads it is based on, though you could figure it out give the boundingRegion and first availability
+layer.json has an available field that is a 2d array of ranges the first array holds arrays for each level
+
+[ ] Make a new tileset traversal class to handle implicit tiling
+ * Just build a tree from the tile availablity and the root tile bound then traverse as normal
+ * What does terrain do? does it just build a tree from the layer.json?
+ * FILES OF NOTE:
+        Scene/Globe.js // has members like terrainProvider, imageryLayerCollection, maxsse, quadtreeprim, ellipsoid
+                        // has functions for ray intersection
+        Scene/QuadtreePrimitive.js // This is like 3dtileset AND traversal
+        Scene/QuadtreeTile.js // This is sort of like 3dtile
+        Scene/GlobeSurfaceTileProvider.js // This is sort of like traversal but makes requests, renders and get dist. Its quadtree is QuadtreePrimitive
+        Core/EllipsoidTerrainProvider.js
+        Core/CesiumTerrainProvider.js
+        Core/GeographicTilingScheme.js // NOTE: Has a bunch of rect convertsions (pos, xy, etc)
+        Core/TilingScheme.js // The interface of *TilingScheme.js files
+        Core/TerrainProvider.js // The interface of *TerrainProvider.js files
+ * Will probably be heavily inspired by CesiumTerrainProvider.js
+ * Each level has a fixed gError
+ * if lat long based maybe don't provide a geom error (just assume its the same as global terrain and do sse that same way with that same function (see terrain to 3dtiles converter))
+ * camera height off ellisoid probably tells you min level
+ * and then some progressive ring distances away tell you level switches
+ * those ring distaces would be like traveling back up, in fact you could precalc these elevation min z changes for a given maxSSE
+ * and the delta between the elevation min z changes tell you the progressive ring distances.
+ * I want a function that given a camera, culling volume, and tileset, get a list of z,x,y coords I need to request
+ * consult availability to trim this list then assign priorities
+
+/////////////USEFUL CODE////////////////////////
+
+    NOTE: TerrainProvider.js
+    /**
+     * Specifies the quality of terrain created from heightmaps.  A value of 1.0 will
+     * ensure that adjacent heightmap vertices are separated by no more than
+     * {@link Globe.maximumScreenSpaceError} screen pixels and will probably go very slowly.
+     * A value of 0.5 will cut the estimated level zero geometric error in half, allowing twice the
+     * screen pixels between adjacent heightmap vertices and thus rendering more quickly.
+     * @type {Number}
+     */
+    TerrainProvider.heightmapTerrainQuality = 0.25;
+    /**
+     * Determines an appropriate geometric error estimate when the geometry comes from a heightmap.
+     *
+     * @param {Ellipsoid} ellipsoid The ellipsoid to which the terrain is attached.
+     * @param {Number} tileImageWidth The width, in pixels, of the heightmap associated with a single tile.
+     * @param {Number} numberOfTilesAtLevelZero The number of tiles in the horizontal direction at tile level zero.
+     * @returns {Number} An estimated geometric error.
+     */
+    TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap = function(ellipsoid, tileImageWidth, numberOfTilesAtLevelZero) {
+        return ellipsoid.maximumRadius * 2 * Math.PI * TerrainProvider.heightmapTerrainQuality / (tileImageWidth * numberOfTilesAtLevelZero);
+    };
+
+    NOTE: CesiumTerrainProvider.js
+    this._tilingScheme = new GeographicTilingScheme({
+        numberOfLevelZeroTilesX : 2,
+        numberOfLevelZeroTilesY : 1,
+        ellipsoid : options.ellipsoid
+    });
+    this._heightmapWidth = 65;
+    this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, this._heightmapWidth, this._tilingScheme.getNumberOfXTilesAtLevel(0));
+
+/////////////USEFUL CODE////////////////////////
