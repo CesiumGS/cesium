@@ -100,9 +100,6 @@ define([
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
         var resolutionScale = widget._resolutionScale;
-        if (!widget._supportsImageRenderingPixelated) {
-            resolutionScale *= defaultValue(window.devicePixelRatio, 1.0);
-        }
 
         widget._canvasWidth = width;
         widget._canvasHeight = height;
@@ -246,7 +243,7 @@ define([
         this._canRender = false;
         this._renderLoopRunning = false;
         this._showRenderLoopErrors = showRenderLoopErrors;
-        this._resolutionScale = 1.0;
+        this._resolutionScale = window.devicePixelRatio;
         this._forceResize = false;
         this._clock = defined(options.clock) ? options.clock : new Clock();
 
