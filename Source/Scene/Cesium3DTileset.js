@@ -1637,7 +1637,7 @@ define([
             if (xTiles === 1) {
                 east = rect.east;
             } else {
-                east = xQuadCoord === 0 ? xMid : rect.west;
+                east = xQuadCoord === 0 ? xMid : rect.east;
             }
 
             if (yTiles === 1) {
