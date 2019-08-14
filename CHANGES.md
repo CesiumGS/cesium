@@ -7,8 +7,10 @@ Change Log
 * Added optional `index` parameter to `PrimitiveCollection.add`. [#8041](https://github.com/AnalyticalGraphicsInc/cesium/pull/8041)
 
 ##### Fixes :wrench:
-* Disable FXAA by default. [#7875](https://github.com/AnalyticalGraphicsInc/cesium/issues/7875)
-* Now multiply the default maximum screen space error by a users device pixel ratio. This changes effects 3DTilesets, Imagery and items depending on Globe SSE. [#7875](https://github.com/AnalyticalGraphicsInc/cesium/issues/7875)
+* Disable FXAA by default. To renable, `scene.postProcessStages.fxaa.enabled = true` [#7875](https://github.com/AnalyticalGraphicsInc/cesium/issues/7875)
+* Improve label legibility and overall visual quality by rendering at device native resolution regardless of the window.devicePixelRatio setting. [#7875](https://github.com/AnalyticalGraphicsInc/cesium/issues/7875)
+    * Updated default values for `globe.maximumScreenSpaceError` and `Cesium3DTileset.maximumScreenSpaceError` to improve bandwidth and memory usage on devices with window.devicePixelRatio values greater than 1.
+    * To go back to old behavior: `scene.glove.maximumScreenSpaceError 2` and `tileset.maximumScreenSpaceError = 16`
 
 ### 1.60 - 2019-08-01
 
