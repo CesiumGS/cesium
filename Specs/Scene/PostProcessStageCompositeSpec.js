@@ -169,6 +169,7 @@ defineSuite([
 
     it('does not run a stage that requires depth textures when depth textures are not supported', function() {
         var s = createScene();
+        s.postProcessStages.fxaa.enabled = true;
         s.context._depthTexture = false;
 
         if (defined(s._view.globeDepth)) {
