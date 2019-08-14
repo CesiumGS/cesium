@@ -1614,8 +1614,8 @@ define([
         var xMid, yMid;
         if (parentBounds instanceof TileBoundingRegion) {
             var rect = parentBounds.rectangle;
-            xMid = (rect.east - rect.west) / 2;
-            yMid = (rect.north - rect.south) / 2;
+            xMid = (rect.east + rect.west) / 2;
+            yMid = (rect.north + rect.south) / 2;
             return { region: [
                 xQuadCoord === 0 ? rect.west : xMid, // West
                 yQuadCoord === 0 ? rect.south : yMid, // South
@@ -1651,7 +1651,7 @@ define([
 
         // Unless these are sorted, you must search all ranges on the level
         var ranges = available[z];
-        for (var range in ranges) {
+        for (var range of ranges) {
             if (x >= range.startX && x <=range.endX && y >= range.startY && y <= range.endY) {
                 return true;
             }

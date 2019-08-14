@@ -204,9 +204,9 @@ define([
             // var isOct = scheme.type === 'oct';
             var childStartKey = this.childStartKey;
             var key = this.key;
-            childStartKey[0] = key[0] * 2;
-            childStartKey[1] = key[1] * 2;
-            childStartKey[2] = key[2] + 1;
+            childStartKey.x = key.x * 2;
+            childStartKey.y = key.y * 2;
+            childStartKey.z = key.z + 1;
         }
 
         var content;
