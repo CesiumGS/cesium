@@ -15,5 +15,7 @@ void main()
     color /= texture2D(autoExposure, vec2(0.5)).r;
 #endif
     color = czm_acesTonemapping(color);
+    color = czm_inverseGamma(color);
+
     gl_FragColor = vec4(color, fragmentColor.a);
 }

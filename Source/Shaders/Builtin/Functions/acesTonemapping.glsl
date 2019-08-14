@@ -11,7 +11,6 @@ vec3 czm_acesTonemapping(vec3 color) {
     color = (color * (color + a) - b) / (color * (g * color + c) + d);
 
     color = clamp(color, 0.0, 1.0);
-    color = czm_inverseGamma(color);
 
     return color;
 }

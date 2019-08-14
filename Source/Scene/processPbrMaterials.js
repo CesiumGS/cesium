@@ -544,7 +544,7 @@ define([
             'vec3 LINEARtoSRGB(vec3 linearIn) \n' +
             '{\n' +
             '#ifndef HDR \n' +
-            '    return pow(linearIn, vec3(1.0/2.2));\n' +
+            '    return pow(czm_acesTonemapping(linearIn), vec3(1.0/2.2));\n' +
             '#else \n' +
             '    return linearIn;\n' +
             '#endif \n' +
