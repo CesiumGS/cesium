@@ -1,3 +1,6 @@
+// See:
+//    https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+
 vec3 czm_acesTonemapping(vec3 color) {
     float g = 0.985;
     float a = 0.065;

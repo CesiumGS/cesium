@@ -6,9 +6,6 @@ varying vec2 v_textureCoordinates;
 uniform sampler2D autoExposure;
 #endif
 
-// See:
-//    https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
-
 void main()
 {
     vec4 fragmentColor = texture2D(colorTexture, v_textureCoordinates);
