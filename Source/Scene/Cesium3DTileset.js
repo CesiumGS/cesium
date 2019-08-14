@@ -935,11 +935,8 @@ define([
                 var hasLayerJson = defined(layerJson);
 
                 if (hasLayerJson) {
-                    that._available = layerJson.available;
-                    var startZ = -1;
-                    while (that._available[++startZ].length === 0) {}
-                    that._tilingScheme.startZ = startZ; // endZ is _available.length
-                    this._allTilesAdditive = that._tilingScheme.refine === Cesium3DTileRefine.ADD;
+                    // that._available = layerJson.available;
+                    that._allTilesAdditive = that._tilingScheme.refine === Cesium3DTileRefine.ADD;
                     // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
                     // Get the basePath relative to the external tileset.
                     var rootInfo = {
@@ -949,8 +946,8 @@ define([
                         refine: that._tilingScheme.refine,
                     };
 
-                    that._root = new Cesium3DTile(that, resource, rootInfo, undefined);
-                    // that._root = that.updateTilesetFromLayerJson(resource, layerJson);
+                    // that._root = new Cesium3DTile(that, resource, rootInfo, undefined);
+                    that._root = that.updateTilesetFromLayerJson(resource, layerJson);
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
                 }
@@ -1579,7 +1576,10 @@ define([
         this._styleEngine.makeDirty();
     };
 
-    function updateAvailable(available) {
+    /**
+     * update _available
+     */
+    Cesium3DTileset.prototype.updateAvailable = function(available) {
         // If we don't have one yet just assign and return
         if (!defined(this._available)) {
             this._available = available;
@@ -1592,31 +1592,73 @@ define([
         var i;
         for (i = 0; i < length; ++i) {
             array = available[i];
-            if (array.length === 0) {
+
+            if (tilesetAvailable.length < (i + 1)) {
+                // level info doesn't exist yet, make an empty entry
+                tilesetAvailable.push(array);
+                continue;
+            } else if (array.length === 0) {
                 // No addtional info for this level, continue.
                 continue;
-            } else if (tilesetAvailable[i].length === 0) {
-                // Don't have any info on this level yet, push.
-                tilesetAvailable.push(array);
             } else {
                 // Has addtional info, concat.
                 tilesetAvailable[i].concat(array);
             }
         }
-
-        // update the startZ (is this useful)
-        var startZ = 0;
-        while (tilesetAvailable[startZ].length === 0) {
-            startZ++;
-        }
-        this._tilingScheme.startZ = startZ; // endZ is _available.length
     }
 
-    function deriveImplicitBoundsFromParent(parentTile) {
-        var parentBounds = parentTile.boundingVolume;
+    function deriveImplicitBoundsFromParent(parent, xQuadCoord, yQuadCoord) {
+        // xQuadCoord, yQuadCoord should be in range 0-1
         // cut the bounds in half in xy starting from min xy
+        var parentBounds = parent.boundingVolume;
+        var xMid, yMid;
+        if (parentBounds instanceof TileBoundingRegion) {
+            var rect = parentBounds.rectangle;
+            xMid = (rect.east - rect.west) / 2;
+            yMid = (rect.north - rect.south) / 2;
+            return { region: [
+                xQuadCoord === 0 ? rect.west : xMid, // West
+                yQuadCoord === 0 ? rect.south : yMid, // South
+                xQuadCoord === 0 ? xMid : rect.east, // East
+                yQuadCoord === 0 ? yMid : rect.north, // North
+                parentBounds.minimumHeight,
+                parentBounds.maximumHeight
+            ]};
+        } else if (parentBounds instanceof TileOrientedBoundingBox) {
+
+        } else {
+            // doh
+        }
+
         return parentBounds;
     }
+
+    function deriveGeometricErrorFromParent(parent, xQuadCoord, yQuadCoord) {
+        // TODO: is this correct?
+        return parent.geometricError / 2;
+    }
+
+    /**
+     * Determine if the tile is available
+     *
+     * @private
+     */
+    Cesium3DTileset.prototype.isTileAvailable = function(x, y, z) {
+        var available = this._available;
+        if (z > available.length) {
+            return false;
+        }
+
+        // Unless these are sorted, you must search all ranges on the level
+        var ranges = available[z];
+        for (var range in ranges) {
+            if (x >= range.startX && x <=range.endX && y >= range.startY && y <= range.endY) {
+                return true;
+            }
+        }
+
+        return false;
+    };
 
     /**
      * Updates the _available arrays as well as updates the metadata view of
@@ -1632,7 +1674,7 @@ define([
 
         var statistics = this._statistics;
 
-        updateAvailable(available);
+        this.updateAvailable(available);
 
         var hasParent = defined(parentTile);
 
@@ -1644,6 +1686,7 @@ define([
         // lvl 0 root(s) or until you get to a single tile. In either case still
         // generate a contentless root above that
         // on heads specified
+        // TODO: if has parent need to properly create this
         var rootInfo = {
             boundingVolume: this._tilingScheme.boundingVolume,
             geometricError: this._geometricError,
@@ -1668,25 +1711,35 @@ define([
         var xTiles,yTiles;
         var tile, childTile;
         var uri, tileInfo;
-        var startZ = this._tilingScheme.startZ;
-        var ranges = this._available[startZ][0];
+        var startZ = 0;
+        var available = this._available;
+        var length =  available.length;
+        while (available[startZ].length === 0 && startZ < length) {
+            startZ++;
+        }
+        var ranges = available[startZ][0];
+        var xOffset, yOffset;
         // TODO: merge with loop version but wait till the other todo's are ironed out
+
+        // main layer.json, construct child tiles of contentless root
         if (!hasParent) {
             // Go to startZ and grab the tiles there (hopefully there's 1 or 2)
             // and push those children
-            z = this._tilingScheme.startZ;
+            z = startZ;
             xTiles = ranges.endX - ranges.startX;
             yTiles = ranges.endY - ranges.startY;
             for (y = ranges.startY; y <= ranges.endY; ++y) {
                 for (x = ranges.startX; x <= ranges.endX; ++x) {
-                    if (!this.tileAvailable(x,y,z)) {
+                    if (!this.isTileAvailable(x,y,z)) {
                         continue;
                     }
 
                     uri = z + '/' + x + '/' + y;
+                    xOffset = x - ranges.startX;
+                    yOffset = y - ranges.startY;
                     tileInfo = {
-                        boundingVolume: deriveImplicitBoundsFromParent(rootTile, xTiles, yTiles),
-                        geometricError: deriveGeometricErrorFromParent(rootTile, xTiles, yTiles),
+                        boundingVolume: deriveImplicitBoundsFromParent(rootTile, xOffset, yOffset),
+                        geometricError: deriveGeometricErrorFromParent(rootTile, xOffset, yOffset),
                         content: {uri: uri},
                         key: new Cartesian3(x,y,z),
                         refine: this._tilingScheme.refine
@@ -1705,27 +1758,30 @@ define([
         while (stack.length > 0) {
             tile = stack.pop();
             ++statistics.numberOfTilesTotal;
-            // this._allTilesAdditive = this._allTilesAdditive && (tile.refine === Cesium3DTileRefine.ADD);
+           // this._allTilesAdditive = this._allTilesAdditive && (tile.refine === Cesium3DTileRefine.ADD);
 
             // get the tile's chilrens' xyz range
             // loop over that like we did above
-            // Go to startZ and grab the tiles there (hopefully there's 1 or 2)
+            // Go to z and grab the tiles there (hopefully there's 1 or 2)
             // and push those children
             var childStartCoords = tile.childStartCoords;
             z = childStartCoords.z;
             xTiles = 2;
             yTiles = 2;
-            for (y = childStartCoords.y; y < childStartCoords.y + yTiles; ++y) {
-                for (x = childStartCoords.x; x < childStartCoords.x + xTiles; ++x) {
-                    if (!this.tileAvailable(x,y,z)) {
+            for (y = childStartCoords.y; y < (childStartCoords.y + yTiles); ++y) {
+                for (x = childStartCoords.x; x < (childStartCoords.x + xTiles); ++x) {
+                    if (!this.isTileAvailable(x,y,z)) {
                         continue;
                     }
 
                     uri = z + '/' + x + '/' + y;
+                    xOffset = x - ranges.startX;
+                    yOffset = y - ranges.startY;
                     tileInfo = {
-                        boundingVolume: deriveImplicitBoundsFromParent(tile, xTiles, yTiles),
-                        geometricError: deriveGeometricErrorFromParent(tile, xTiles, yTiles),
+                        boundingVolume: deriveImplicitBoundsFromParent(rootTile, xOffset, yOffset),
+                        geometricError: deriveGeometricErrorFromParent(rootTile, xOffset, yOffset),
                         content: {uri: uri},
+                        key: new Cartesian3(x,y,z),
                         refine: this._tilingScheme.refine
                     };
 
