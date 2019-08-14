@@ -6,6 +6,9 @@ Change Log
 ##### Additions :tada:
 * Added optional `index` parameter to `PrimitiveCollection.add`. [#8041](https://github.com/AnalyticalGraphicsInc/cesium/pull/8041)
 
+##### Fixes :wrench:
+Disabled HDR by default to improve visual quality in most standard use cases. Set `viewer.scene.highDynamicRange = true` to re-enable it. [#7966](https://github.com/AnalyticalGraphicsInc/cesium/issues/7966)
+
 ### 1.60 - 2019-08-01
 
 ##### Additions :tada:
