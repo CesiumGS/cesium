@@ -132,7 +132,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Hannah Pinkos](https://github.com/hpinkos)
    * [Kangning Li](https://github.com/likangning93)
    * [Sean Lilley](https://github.com/lilleyse)
-   
+   * [Brandon Barker](https://github.com/ProjectBarks)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 * [Victor Berchet](https://github.com/vicb)
@@ -222,4 +222,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Dennis Adams](https://github.com/dennisadams)
 * [Hai Zhou](https://github.com/verybigzhouhai)
 * [Pascal Poulain](https://github.com/ppoulainpro)
-* [Brandon Barker](https://github.com/ProjectBarks)

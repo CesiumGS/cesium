@@ -17,16 +17,6 @@ void main()
 #ifdef AUTO_EXPOSURE
     color /= texture2D(autoExposure, vec2(0.5)).r;
 #endif
-    float g = 0.985;
-
-    float a = 0.065;
-    float b = 0.0001;
-    float c = 0.433;
-    float d = 0.238;
-
-    color = (color * (color + a) - b) / (color * (g * color + c) + d);
-
-    color = clamp(color, 0.0, 1.0);
-    color = czm_inverseGamma(color);
+    color = czm_acestoneMapping(color);
     gl_FragColor = vec4(color, fragmentColor.a);
 }
