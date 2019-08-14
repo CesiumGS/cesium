@@ -247,7 +247,7 @@ defineSuite([
             expect(tile.boundingVolume).toEqual(obb);
         });
 
-        it('can`t have an oriented bounding box with 0 volume', function() {
+        it('does not crash for bounding box with 0 volume', function() {
             var box = tileWithBoundingBox0Volume.boundingVolume.box;
             var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox0Volume, undefined);
             expect(tile.boundingVolume).toBeDefined();
