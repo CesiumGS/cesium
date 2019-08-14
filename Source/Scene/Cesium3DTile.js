@@ -200,8 +200,7 @@ define([
         this.key = header.key;
         this.childStartKey = new Cartesian3();
         if (defined(this.key)) {
-            // var scheme = this._tileset._tilingScheme;
-            // var isOct = scheme.type === 'oct';
+            // var isOct = this._tileset._tilingScheme.type === 'oct';
             var childStartKey = this.childStartKey;
             var key = this.key;
             childStartKey.x = key.x * 2;

@@ -948,8 +948,21 @@ define([
 
                     // that._root = new Cesium3DTile(that, resource, rootInfo, undefined);
                     that._root = that.updateTilesetFromLayerJson(resource, layerJson);
+                    // console.log("rsc: " + that._root._boundingVolume._boundingSphere.center);
+                    // console.log("rsr: " + that._root._boundingVolume._boundingSphere.radius);
+                    // console.log("robc: " + that._root._boundingVolume._orientedBoundingBox.center);
+                    // console.log("robha: " + that._root._boundingVolume._orientedBoundingBox.halfAxes);
+                    //
+                    // console.log("c0sc: " + that._root.children[0]._boundingVolume._boundingSphere.center);
+                    // console.log("c0sr: " + that._root.children[0]._boundingVolume._boundingSphere.radius);
+                    // console.log("c0obc: " + that._root.children[0]._boundingVolume._orientedBoundingBox.center);
+                    // console.log("c0obha: " + that._root.children[0]._boundingVolume._orientedBoundingBox.halfAxes);
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
+                    // console.log("rsc: " + that._root._boundingVolume._boundingSphere.center);
+                    // console.log("rsr: " + that._root._boundingVolume._boundingSphere.radius);
+                    // console.log("robc: " + that._root._boundingVolume._orientedBoundingBox.center);
+                    // console.log("robha: " + that._root._boundingVolume._orientedBoundingBox.halfAxes);
                 }
 
                 // Save the original, untransformed bounding volume position so we can apply
@@ -1607,20 +1620,37 @@ define([
         }
     }
 
-    function deriveImplicitBoundsFromParent(parent, xQuadCoord, yQuadCoord) {
+    function deriveImplicitBoundsFromParent(parent, xQuadCoord, yQuadCoord, xTiles, yTiles) {
         // xQuadCoord, yQuadCoord should be in range 0-1
         // cut the bounds in half in xy starting from min xy
         var parentBounds = parent.boundingVolume;
         var xMid, yMid;
         if (parentBounds instanceof TileBoundingRegion) {
             var rect = parentBounds.rectangle;
-            xMid = (rect.east + rect.west) / 2;
-            yMid = (rect.north + rect.south) / 2;
+            xMid = (rect.east + rect.west) / xTiles;
+            yMid = (rect.north + rect.south) / yTiles;
+
+            var west = xQuadCoord === 0 ? rect.west : xMid;
+            var south = yQuadCoord === 0 ? rect.south : yMid;
+
+            var east, north;
+            if (xTiles === 1) {
+                east = rect.east;
+            } else {
+                east = xQuadCoord === 0 ? xMid : rect.west;
+            }
+
+            if (yTiles === 1) {
+                north = rect.north;
+            } else {
+                north = yQuadCoord === 0 ? yMid : rect.north;
+            }
+
             return { region: [
-                xQuadCoord === 0 ? rect.west : xMid, // West
-                yQuadCoord === 0 ? rect.south : yMid, // South
-                xQuadCoord === 0 ? xMid : rect.east, // East
-                yQuadCoord === 0 ? yMid : rect.north, // North
+                west,
+                south,
+                east,
+                north,
                 parentBounds.minimumHeight,
                 parentBounds.maximumHeight
             ]};
@@ -1633,9 +1663,10 @@ define([
         return parentBounds;
     }
 
-    function deriveGeometricErrorFromParent(parent, xQuadCoord, yQuadCoord) {
+    function deriveGeometricErrorFromParent(parent, xQuadCoord, yQuadCoord, xTiles, yTiles) {
         // TODO: is this correct?
-        return parent.geometricError / 2;
+        var denom = (xTiles * yTiles) === 1 ? 1 : 2;
+        return parent.geometricError / denom;
     }
 
     /**
@@ -1645,7 +1676,7 @@ define([
      */
     Cesium3DTileset.prototype.isTileAvailable = function(x, y, z) {
         var available = this._available;
-        if (z > available.length) {
+        if (z > available.length - 1) {
             return false;
         }
 
@@ -1708,7 +1739,6 @@ define([
         var isOct = this._tilingScheme.type === 'oct';
 
         var x,y,z;
-        var xTiles,yTiles;
         var tile, childTile;
         var uri, tileInfo;
         var startZ = 0;
@@ -1718,28 +1748,32 @@ define([
             startZ++;
         }
         var ranges = available[startZ][0];
-        var xOffset, yOffset;
+        var xOffset, yOffset, xTiles, yTiles;
         // TODO: merge with loop version but wait till the other todo's are ironed out
 
         // main layer.json, construct child tiles of contentless root
+        var startX = ranges.startX;
+        var endX = ranges.endX;
+        var startY = ranges.startY;
+        var endY = ranges.endY;
         if (!hasParent) {
             // Go to startZ and grab the tiles there (hopefully there's 1 or 2)
             // and push those children
             z = startZ;
-            xTiles = ranges.endX - ranges.startX;
-            yTiles = ranges.endY - ranges.startY;
-            for (y = ranges.startY; y <= ranges.endY; ++y) {
-                for (x = ranges.startX; x <= ranges.endX; ++x) {
+            xTiles = endX-startX+1;
+            yTiles = endY-startY+1;
+            for (y = startY; y <= endY; ++y) {
+                for (x = startX; x <= endX; ++x) {
                     if (!this.isTileAvailable(x,y,z)) {
                         continue;
                     }
 
                     uri = z + '/' + x + '/' + y;
-                    xOffset = x - ranges.startX;
-                    yOffset = y - ranges.startY;
+                    xOffset = x - startX;
+                    yOffset = y - startY;
                     tileInfo = {
-                        boundingVolume: deriveImplicitBoundsFromParent(rootTile, xOffset, yOffset),
-                        geometricError: deriveGeometricErrorFromParent(rootTile, xOffset, yOffset),
+                        boundingVolume: deriveImplicitBoundsFromParent(rootTile, xOffset, yOffset, xTiles, yTiles),
+                        geometricError: deriveGeometricErrorFromParent(rootTile, xOffset, yOffset, xTiles, yTiles),
                         content: {uri: uri},
                         key: new Cartesian3(x,y,z),
                         refine: this._tilingScheme.refine
@@ -1764,31 +1798,37 @@ define([
             // loop over that like we did above
             // Go to z and grab the tiles there (hopefully there's 1 or 2)
             // and push those children
-            var childStartCoords = tile.childStartCoords;
-            z = childStartCoords.z;
+            var childStartKey = tile.childStartKey;
+            z = childStartKey.z;
+            startX = childStartKey.x;
             xTiles = 2;
             yTiles = 2;
-            for (y = childStartCoords.y; y < (childStartCoords.y + yTiles); ++y) {
-                for (x = childStartCoords.x; x < (childStartCoords.x + xTiles); ++x) {
-                    if (!this.isTileAvailable(x,y,z)) {
-                        continue;
+            endX = startX + xTiles;
+            startY = childStartKey.y;
+            endY = startY + yTiles;
+            if (z < this._available.length) {
+                for (y = startY; y < endY; ++y) {
+                    for (x = startX; x < endX; ++x) {
+                        if (!this.isTileAvailable(x,y,z)) {
+                            continue;
+                        }
+
+                        uri = z + '/' + x + '/' + y;
+                        xOffset = x - startX;
+                        yOffset = y - startY;
+                        tileInfo = {
+                            boundingVolume: deriveImplicitBoundsFromParent(rootTile, xOffset, yOffset, xTiles, yTiles),
+                            geometricError: deriveGeometricErrorFromParent(rootTile, xOffset, yOffset, xTiles, yTiles),
+                            content: {uri: uri},
+                            key: new Cartesian3(x,y,z),
+                            refine: this._tilingScheme.refine
+                        };
+
+                        childTile = new Cesium3DTile(this, resource, tileInfo, tile);
+                        tile.children.push(childTile);
+                        childTile._depth =  tile._depth + 1;
+                        stack.push(childTile);
                     }
-
-                    uri = z + '/' + x + '/' + y;
-                    xOffset = x - ranges.startX;
-                    yOffset = y - ranges.startY;
-                    tileInfo = {
-                        boundingVolume: deriveImplicitBoundsFromParent(rootTile, xOffset, yOffset),
-                        geometricError: deriveGeometricErrorFromParent(rootTile, xOffset, yOffset),
-                        content: {uri: uri},
-                        key: new Cartesian3(x,y,z),
-                        refine: this._tilingScheme.refine
-                    };
-
-                    childTile = new Cesium3DTile(this, resource, tileInfo, tile);
-                    tile.children.push(childTile);
-                    childTile._depth =  tile._depth + 1;
-                    stack.push(childTile);
                 }
             }
 
