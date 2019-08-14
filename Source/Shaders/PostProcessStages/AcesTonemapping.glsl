@@ -17,6 +17,6 @@ void main()
 #ifdef AUTO_EXPOSURE
     color /= texture2D(autoExposure, vec2(0.5)).r;
 #endif
-    color = czm_acestoneMapping(color);
+    color = czm_acesTonemapping(color);
     gl_FragColor = vec4(color, fragmentColor.a);
 }

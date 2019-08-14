@@ -869,6 +869,11 @@ define([
         } else {
             fragmentShader += '    gl_FragColor = vec4(color, 1.0);\n';
         }
+        
+        fragmentShader += '#ifndef HDR \n'
+        fragmentShader += '    gl_FragColor = vec4(czm_acesTonemapping(gl_FragColor.rgb), gl_FragColor.a); \n'
+        fragmentShader += '#endif \n'
+
         fragmentShader += '}\n';
 
         // Add shaders

@@ -1,5 +1,4 @@
-vec3 czm_acestoneMapping(vec3 color)
-{
+vec3 czm_acesTonemapping(vec3 color) {
     float g = 0.985;
     float a = 0.065;
     float b = 0.0001;
@@ -11,5 +10,5 @@ vec3 czm_acestoneMapping(vec3 color)
     color = clamp(color, 0.0, 1.0);
     color = czm_inverseGamma(color);
 
-    return color
+    return color;
 }
