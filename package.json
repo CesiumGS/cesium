@@ -67,7 +67,7 @@
     "mime": "^2.0.3",
     "mkdirp": "^0.5.1",
     "request": "^2.79.0",
-    "rimraf": "^2.6.1",
+    "rimraf": "^3.0.0",
     "stream-to-promise": "^2.2.0",
     "yargs": "^13.2.0"
   },
