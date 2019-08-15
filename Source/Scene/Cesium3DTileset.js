@@ -955,28 +955,57 @@ define([
                     console.log("robha: " + r._boundingVolume._orientedBoundingBox.halfAxes);
 
                     var c0 = r.children[0];
-                    console.log("c0sc: " + c0._boundingVolume._boundingSphere.center);
-                    console.log("c0sr: " + c0._boundingVolume._boundingSphere.radius);
-                    console.log("c0obc: " + c0._boundingVolume._orientedBoundingBox.center);
-                    console.log("c0obha: " + c0._boundingVolume._orientedBoundingBox.halfAxes);
+                    if (defined(c0)) {
+                        console.log("c0sc: " + c0._boundingVolume._boundingSphere.center);
+                        console.log("c0sr: " + c0._boundingVolume._boundingSphere.radius);
+                        console.log("c0obc: " + c0._boundingVolume._orientedBoundingBox.center);
+                        console.log("c0obha: " + c0._boundingVolume._orientedBoundingBox.halfAxes);
 
-                    var c0c0 = c0.children[0];
-                    console.log("c0c0sc: " + c0c0._boundingVolume._boundingSphere.center);
-                    console.log("c0c0sr: " + c0c0._boundingVolume._boundingSphere.radius);
-                    console.log("c0c0obc: " + c0c0._boundingVolume._orientedBoundingBox.center);
-                    console.log("c0c0obha: " + c0c0._boundingVolume._orientedBoundingBox.halfAxes);
-
-                    var c0c1 = c0.children[1];
-                    console.log("c0c1sc: " + c0c1._boundingVolume._boundingSphere.center);
-                    console.log("c0c1sr: " + c0c1._boundingVolume._boundingSphere.radius);
-                    console.log("c0c1obc: " + c0c1._boundingVolume._orientedBoundingBox.center);
-                    console.log("c0c1obha: " + c0c1._boundingVolume._orientedBoundingBox.halfAxes);
+                        var c0c0 = c0.children[0];
+                        if (defined(c0c0)) {
+                            console.log("c0c0sc: " + c0c0._boundingVolume._boundingSphere.center);
+                            console.log("c0c0sr: " + c0c0._boundingVolume._boundingSphere.radius);
+                            console.log("c0c0obc: " + c0c0._boundingVolume._orientedBoundingBox.center);
+                            console.log("c0c0obha: " + c0c0._boundingVolume._orientedBoundingBox.halfAxes);
+                            if (defined(c0c0)) {
+                                var c0c1 = c0.children[1];
+                                console.log("c0c1sc: " + c0c1._boundingVolume._boundingSphere.center);
+                                console.log("c0c1sr: " + c0c1._boundingVolume._boundingSphere.radius);
+                                console.log("c0c1obc: " + c0c1._boundingVolume._orientedBoundingBox.center);
+                                console.log("c0c1obha: " + c0c1._boundingVolume._orientedBoundingBox.halfAxes);
+                            }
+                        }
+                    }
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
-                    // console.log("rsc: " + that._root._boundingVolume._boundingSphere.center);
-                    // console.log("rsr: " + that._root._boundingVolume._boundingSphere.radius);
-                    // console.log("robc: " + that._root._boundingVolume._orientedBoundingBox.center);
-                    // console.log("robha: " + that._root._boundingVolume._orientedBoundingBox.halfAxes);
+                    var r = that._root;
+                    console.log("rsc: " + r._boundingVolume._boundingSphere.center);
+                    console.log("rsr: " + r._boundingVolume._boundingSphere.radius);
+                    console.log("robc: " + r._boundingVolume._orientedBoundingBox.center);
+                    console.log("robha: " + r._boundingVolume._orientedBoundingBox.halfAxes);
+
+                    var c0 = r.children[0];
+                    if (defined(c0)) {
+                        console.log("c0sc: " + c0._boundingVolume._boundingSphere.center);
+                        console.log("c0sr: " + c0._boundingVolume._boundingSphere.radius);
+                        console.log("c0obc: " + c0._boundingVolume._orientedBoundingBox.center);
+                        console.log("c0obha: " + c0._boundingVolume._orientedBoundingBox.halfAxes);
+
+                        var c0c0 = c0.children[0];
+                        if (defined(c0c0)) {
+                            console.log("c0c0sc: " + c0c0._boundingVolume._boundingSphere.center);
+                            console.log("c0c0sr: " + c0c0._boundingVolume._boundingSphere.radius);
+                            console.log("c0c0obc: " + c0c0._boundingVolume._orientedBoundingBox.center);
+                            console.log("c0c0obha: " + c0c0._boundingVolume._orientedBoundingBox.halfAxes);
+                            if (defined(c0c0)) {
+                                var c0c1 = c0.children[1];
+                                console.log("c0c1sc: " + c0c1._boundingVolume._boundingSphere.center);
+                                console.log("c0c1sr: " + c0c1._boundingVolume._boundingSphere.radius);
+                                console.log("c0c1obc: " + c0c1._boundingVolume._orientedBoundingBox.center);
+                                console.log("c0c1obha: " + c0c1._boundingVolume._orientedBoundingBox.halfAxes);
+                            }
+                        }
+                    }
                 }
 
                 // Save the original, untransformed bounding volume position so we can apply
