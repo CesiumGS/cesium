@@ -8,6 +8,7 @@ Change Log
 
 ##### Fixes :wrench:
 * Fixed post-processing selection filtering to work for bloom. [#7984](https://github.com/AnalyticalGraphicsInc/cesium/issues/7984)
+* Disabled HDR by default to improve visual quality in most standard use cases. Set `viewer.scene.highDynamicRange = true` to re-enable it. [#7966](https://github.com/AnalyticalGraphicsInc/cesium/issues/7966)
 
 ### 1.60 - 2019-08-01
 
