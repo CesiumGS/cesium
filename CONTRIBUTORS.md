@@ -132,6 +132,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Hannah Pinkos](https://github.com/hpinkos)
    * [Kangning Li](https://github.com/likangning93)
    * [Sean Lilley](https://github.com/lilleyse)
+   * [Matthew Amato](https://github.com/mramato)
    * [Brandon Barker](https://github.com/ProjectBarks)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
