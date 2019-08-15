@@ -1,6 +1,6 @@
 define([
         'Cesium/Core/Cartesian3',
-        'Cesium/Core/createWorldTerrain',
+        'Cesium/Core/ArcGISTiledElevationTerrainProvider',
         'Cesium/Core/defined',
         'Cesium/Core/formatError',
         'Cesium/Core/Math',
@@ -16,7 +16,7 @@ define([
         'domReady!'
     ], function(
         Cartesian3,
-        createWorldTerrain,
+        ArcGISTiledElevationTerrainProvider,
         defined,
         formatError,
         CesiumMath,
@@ -67,18 +67,21 @@ define([
             imageryProvider : imageryProvider,
             baseLayerPicker : hasBaseLayerPicker,
             scene3DOnly : endUserOptions.scene3DOnly,
-            requestRenderMode : true
+            requestRenderMode : true,
+            terrainProvider : new ArcGISTiledElevationTerrainProvider({
+                url: 'http://ec2-54-242-35-218.compute-1.amazonaws.com/server/rest/services/Cesium/Terrain_3D_Esri_4326v1/ImageServer'
+            })
         });
 
-        if (hasBaseLayerPicker) {
-            var viewModel = viewer.baseLayerPicker.viewModel;
-            viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
-        } else {
-            viewer.terrainProvider = createWorldTerrain({
-                requestWaterMask: true,
-                requestVertexNormals: true
-            });
-        }
+        // if (hasBaseLayerPicker) {
+        //     var viewModel = viewer.baseLayerPicker.viewModel;
+        //     viewModel.selectedTerrain = viewModel.terrainProviderViewModels[1];
+        // } else {
+        //     viewer.terrainProvider = createWorldTerrain({
+        //         requestWaterMask: true,
+        //         requestVertexNormals: true
+        //     });
+        // }
     } catch (exception) {
         loadingIndicator.style.display = 'none';
         var message = formatError(exception);

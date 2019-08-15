@@ -29,11 +29,22 @@ define([
             }
 
             var lercStatistics = result.statistics[0];
-            if (lercStatistics.minValue === Number.MAX_VALUE) {
+
+            //Filter out nodata values and treat tham as height 0
+            var nodataCount = 0;
+            var pixels = result.pixels[0];
+            for (var i = 0; i < pixels.length; i++) {
+                if (pixels[i] === lercStatistics.noDataValue) {
+                    pixels[i] = 0.0;
+                    nodataCount++;
+                }
+            }
+
+            if (nodataCount !== pixels.length && lercStatistics.minValue === Number.MAX_VALUE) {
                 throw new RuntimeError('Invalid tile data');
             }
 
-            parameters.heightmap = result.pixels[0];
+            parameters.heightmap = pixels;
             parameters.width = result.width;
             parameters.height = result.height;
         }
