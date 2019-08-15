@@ -99,7 +99,7 @@ define([
                     wrapT: WebGLConstants.REPEAT
                 };
             } else {
-                sampler = gltf.samplers[samplerSelector]
+                sampler = gltf.samplers[samplerSelector];
             }
 
             var repeatS = sampler.wrapS === WebGLConstants.REPEAT ? 'true' : 'false';
