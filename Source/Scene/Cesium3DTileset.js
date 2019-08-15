@@ -953,6 +953,7 @@ define([
                     console.log("rsr: " + r._boundingVolume._boundingSphere.radius);
                     console.log("robc: " + r._boundingVolume._orientedBoundingBox.center);
                     console.log("robha: " + r._boundingVolume._orientedBoundingBox.halfAxes);
+                    console.log("rge: " + r.geometricError);
 
                     var c0 = r.children[0];
                     if (defined(c0)) {
@@ -960,6 +961,7 @@ define([
                         console.log("c0sr: " + c0._boundingVolume._boundingSphere.radius);
                         console.log("c0obc: " + c0._boundingVolume._orientedBoundingBox.center);
                         console.log("c0obha: " + c0._boundingVolume._orientedBoundingBox.halfAxes);
+                        console.log("c0ge: " + c0.geometricError);
 
                         var c0c0 = c0.children[0];
                         if (defined(c0c0)) {
@@ -967,12 +969,14 @@ define([
                             console.log("c0c0sr: " + c0c0._boundingVolume._boundingSphere.radius);
                             console.log("c0c0obc: " + c0c0._boundingVolume._orientedBoundingBox.center);
                             console.log("c0c0obha: " + c0c0._boundingVolume._orientedBoundingBox.halfAxes);
+                            console.log("c0c0ge: " + c0c0.geometricError);
                             if (defined(c0c0)) {
                                 var c0c1 = c0.children[1];
                                 console.log("c0c1sc: " + c0c1._boundingVolume._boundingSphere.center);
                                 console.log("c0c1sr: " + c0c1._boundingVolume._boundingSphere.radius);
                                 console.log("c0c1obc: " + c0c1._boundingVolume._orientedBoundingBox.center);
                                 console.log("c0c1obha: " + c0c1._boundingVolume._orientedBoundingBox.halfAxes);
+                                console.log("c0c1ge: " + c0c1.geometricError);
                             }
                         }
                     }
@@ -983,6 +987,7 @@ define([
                     console.log("rsr: " + r._boundingVolume._boundingSphere.radius);
                     console.log("robc: " + r._boundingVolume._orientedBoundingBox.center);
                     console.log("robha: " + r._boundingVolume._orientedBoundingBox.halfAxes);
+                    console.log("rge: " + r.geometricError);
 
                     var c0 = r.children[0];
                     if (defined(c0)) {
@@ -990,6 +995,7 @@ define([
                         console.log("c0sr: " + c0._boundingVolume._boundingSphere.radius);
                         console.log("c0obc: " + c0._boundingVolume._orientedBoundingBox.center);
                         console.log("c0obha: " + c0._boundingVolume._orientedBoundingBox.halfAxes);
+                        console.log("c0ge: " + c0.geometricError);
 
                         var c0c0 = c0.children[0];
                         if (defined(c0c0)) {
@@ -997,12 +1003,14 @@ define([
                             console.log("c0c0sr: " + c0c0._boundingVolume._boundingSphere.radius);
                             console.log("c0c0obc: " + c0c0._boundingVolume._orientedBoundingBox.center);
                             console.log("c0c0obha: " + c0c0._boundingVolume._orientedBoundingBox.halfAxes);
+                            console.log("c0c0ge: " + c0c0.geometricError);
                             if (defined(c0c0)) {
                                 var c0c1 = c0.children[1];
                                 console.log("c0c1sc: " + c0c1._boundingVolume._boundingSphere.center);
                                 console.log("c0c1sr: " + c0c1._boundingVolume._boundingSphere.radius);
                                 console.log("c0c1obc: " + c0c1._boundingVolume._orientedBoundingBox.center);
                                 console.log("c0c1obha: " + c0c1._boundingVolume._orientedBoundingBox.halfAxes);
+                                console.log("c0c1ge: " + c0c1.geometricError);
                             }
                         }
                     }
@@ -1670,24 +1678,13 @@ define([
         var xMid, yMid;
         if (parentBounds instanceof TileBoundingRegion) {
             var rect = parentBounds.rectangle;
-            xMid = (rect.east + rect.west) / xTiles;
-            yMid = (rect.north + rect.south) / yTiles;
+            xMid = xTiles === 1 ? rect.east : (rect.east + rect.west) / xTiles;
+            yMid = yTiles === 1 ? rect.north : (rect.north + rect.south) / yTiles;
 
             var west = xQuadCoord === 0 ? rect.west : xMid;
             var south = yQuadCoord === 0 ? rect.south : yMid;
-
-            var east, north;
-            if (xTiles === 1) {
-                east = rect.east;
-            } else {
-                east = xQuadCoord === 0 ? xMid : rect.east;
-            }
-
-            if (yTiles === 1) {
-                north = rect.north;
-            } else {
-                north = yQuadCoord === 0 ? yMid : rect.north;
-            }
+            var east = xQuadCoord === 0 ? xMid : rect.east;
+            var north = yQuadCoord === 0 ? yMid : rect.north;
 
             return { region: [
                 west,
@@ -1846,12 +1843,12 @@ define([
             startX = childStartKey.x;
             xTiles = 2;
             yTiles = 2;
-            endX = startX + xTiles;
+            endX = startX + xTiles - 1;
             startY = childStartKey.y;
-            endY = startY + yTiles;
+            endY = startY + yTiles - 1;
             if (z < this._available.length) {
-                for (y = startY; y < endY; ++y) {
-                    for (x = startX; x < endX; ++x) {
+                for (y = startY; y <= endY; ++y) {
+                    for (x = startX; x <= endX; ++x) {
                         if (!this.isTileAvailable(x,y,z)) {
                             continue;
                         }
