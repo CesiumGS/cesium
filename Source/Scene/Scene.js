@@ -825,7 +825,7 @@ define([
 
         this._hdr = undefined;
         this._hdrDirty = undefined;
-        this.highDynamicRange = true;
+        this.highDynamicRange = false;
         this.gamma = 2.2;
         this._sunColor = new Cartesian3(1.8, 1.85, 2.0);
 

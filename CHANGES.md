@@ -11,6 +11,7 @@ Change Log
 * Improve label legibility and overall visual quality by rendering at device native resolution regardless of the window.devicePixelRatio setting. [#7875](https://github.com/AnalyticalGraphicsInc/cesium/issues/7875)
     * Updated default values for `globe.maximumScreenSpaceError` and `Cesium3DTileset.maximumScreenSpaceError` to improve bandwidth and memory usage on devices with window.devicePixelRatio values greater than 1.
     * To go back to old behavior: `scene.glove.maximumScreenSpaceError 2` and `tileset.maximumScreenSpaceError = 16`
+Disabled HDR by default to improve visual quality in most standard use cases. Set `viewer.scene.highDynamicRange = true` to re-enable it. [#7966](https://github.com/AnalyticalGraphicsInc/cesium/issues/7966)
 
 ### 1.60 - 2019-08-01
 
