@@ -90,9 +90,9 @@ define([
     function addTextureCoordinates(gltf, textureName, generatedMaterialValues, defaultTexCoord, result) {
         var texCoord;
         if (defined(generatedMaterialValues[textureName + 'Offset'])) {
-            var repeatS = "true";
-            var repeatT = "true";
-            
+            var repeatS = 'true';
+            var repeatT = 'true';
+
             var textureIndex = generatedMaterialValues[textureName].index;
             var samplerName = gltf.textures[textureIndex].sampler;
 
