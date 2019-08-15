@@ -1725,10 +1725,10 @@ define([
         return false;
     };
 
-    Cesium3DTileset.prototype.deriveGeometricErrorFromParent = function(parent, xQuadCoord, yQuadCoord, xTiles, yTiles) {
+    Cesium3DTileset.prototype.deriveGeometricErrorFromParent = function(parent, x, y, xTiles, yTiles) {
         // TODO: is this correct?
         var denom = (xTiles * yTiles) === 1 ? 1 : 2;
-        var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailable(xQuadCoord, yQuadCoord, parent.key.z + 1);
+        var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailable(x, y, parent.key.z + 1);
         return anyChildrenAvailable ? parent.geometricError / denom : 0;
     };
 
@@ -1820,6 +1820,7 @@ define([
         var startY = ranges.startY;
         var endY = ranges.endY;
         if (!hasParent) {
+            var tile = rootTile;
             // Go to startZ and grab the tiles there (hopefully there's 1 or 2)
             // and push those children
             z = startZ;
@@ -1835,15 +1836,15 @@ define([
                     xOffset = x - startX;
                     yOffset = y - startY;
                     tileInfo = {
-                        boundingVolume: deriveImplicitBoundsFromParent(rootTile, xOffset, yOffset, xTiles, yTiles),
-                        geometricError: this.deriveGeometricErrorFromParent(rootTile, xOffset, yOffset, xTiles, yTiles),
+                        boundingVolume: deriveImplicitBoundsFromParent(tile, xOffset, yOffset, xTiles, yTiles),
+                        geometricError: this.deriveGeometricErrorFromParent(tile, x, y, xTiles, yTiles),
                         content: {uri: uri},
                         key: new Cartesian3(x,y,z),
                         refine: this._tilingScheme.refine
                     };
 
-                    childTile = new Cesium3DTile(this, resource, tileInfo, rootTile);
-                    rootTile.children.push(childTile);
+                    childTile = new Cesium3DTile(this, resource, tileInfo, tile);
+                    tile.children.push(childTile);
                     childTile._depth =  childTile._depth + 1;
                     stack.push(childTile);
                 }
@@ -1852,6 +1853,8 @@ define([
             stack.push(rootTile);
         }
 
+        xTiles = 2;
+        yTiles = 2;
         while (stack.length > 0) {
             tile = stack.pop();
             ++statistics.numberOfTilesTotal;
@@ -1864,8 +1867,6 @@ define([
             var childStartKey = tile.childStartKey;
             z = childStartKey.z;
             startX = childStartKey.x;
-            xTiles = 2;
-            yTiles = 2;
             endX = startX + xTiles - 1;
             startY = childStartKey.y;
             endY = startY + yTiles - 1;
@@ -1881,7 +1882,7 @@ define([
                         yOffset = y - startY;
                         tileInfo = {
                             boundingVolume: deriveImplicitBoundsFromParent(tile, xOffset, yOffset, xTiles, yTiles),
-                            geometricError: this.deriveGeometricErrorFromParent(tile, xOffset, yOffset, xTiles, yTiles),
+                            geometricError: this.deriveGeometricErrorFromParent(tile, x, y, xTiles, yTiles),
                             content: {uri: uri},
                             key: new Cartesian3(x,y,z),
                             refine: this._tilingScheme.refine
