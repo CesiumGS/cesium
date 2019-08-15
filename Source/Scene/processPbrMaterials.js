@@ -90,20 +90,17 @@ define([
     function addTextureCoordinates(gltf, textureName, generatedMaterialValues, defaultTexCoord, result) {
         var texCoord;
         if (defined(generatedMaterialValues[textureName + 'Offset'])) {
+            var repeatS = "true";
+            var repeatT = "true";
+            
             var textureIndex = generatedMaterialValues[textureName].index;
-            var samplerSelector = gltf.textures[textureIndex].sampler;
-            var sampler;
-            if (!defined(samplerSelector) || !defined(gltf.samplers)) {
-                sampler = {
-                    wrapS: WebGLConstants.REPEAT,
-                    wrapT: WebGLConstants.REPEAT
-                };
-            } else {
-                sampler = gltf.samplers[samplerSelector];
-            }
+            var samplerName = gltf.textures[textureIndex].sampler;
 
-            var repeatS = sampler.wrapS === WebGLConstants.REPEAT ? 'true' : 'false';
-            var repeatT = sampler.wrapT === WebGLConstants.REPEAT ? 'true' : 'false';
+            if (defined(samplerName) && defined(gltf.samplers)) {
+                var sampler = gltf.samplers[samplerName];
+                repeatS = sampler.wrapS === WebGLConstants.REPEAT ? 'true' : 'false';
+                repeatT = sampler.wrapT === WebGLConstants.REPEAT ? 'true' : 'false';
+            }
 
             texCoord = textureName + 'Coord';
             result.fragmentShaderMain += '    vec2 ' + texCoord + ' = computeTexCoord(' + defaultTexCoord + ', ' + textureName + 'Offset, ' + textureName + 'Rotation, ' + textureName + 'Scale, ' + repeatS + ', ' + repeatT + ');\n';
