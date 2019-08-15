@@ -1,4 +1,5 @@
 define([
+        './ImageryProvider',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -12,6 +13,7 @@ define([
         '../Core/TileProviderError',
         '../ThirdParty/when'
     ], function(
+        ImageryProvider,
         Credit,
         defaultValue,
         defined,
@@ -109,7 +111,10 @@ define([
         }
 
         function doRequest() {
-            resource.fetchImage().then(success).otherwise(failure);
+            ImageryProvider
+                .loadImage(null, resource)
+                .then(success)
+                .otherwise(failure);
         }
 
         doRequest();
