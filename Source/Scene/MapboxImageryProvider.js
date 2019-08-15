@@ -61,7 +61,7 @@ define([
         //>>includeEnd('debug');
 
         var resource = Resource.createIfNeeded(defaultValue(options.url, 'https://{s}.tiles.mapbox.com/v4/'));
-        
+
         var accessToken = MapboxApi.getAccessToken(options.accessToken);
         this._mapId = mapId;
         this._accessToken = accessToken;
