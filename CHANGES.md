@@ -8,6 +8,7 @@ Change Log
 
 ##### Fixes :wrench:
 Disabled HDR by default to improve visual quality in most standard use cases. Set `viewer.scene.highDynamicRange = true` to re-enable it. [#7966](https://github.com/AnalyticalGraphicsInc/cesium/issues/7966)
+* Fixed glTF models with missing sampler to load with default properties. [#7916](https://github.com/AnalyticalGraphicsInc/cesium/issues/7916)
 
 ### 1.60 - 2019-08-01
 

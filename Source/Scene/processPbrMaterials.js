@@ -91,7 +91,16 @@ define([
         var texCoord;
         if (defined(generatedMaterialValues[textureName + 'Offset'])) {
             var textureIndex = generatedMaterialValues[textureName].index;
-            var sampler = gltf.samplers[gltf.textures[textureIndex].sampler];
+            var samplerSelector = gltf.textures[textureIndex].sampler;
+            var sampler;
+            if (!defined(samplerSelector) || !defined(gltf.samplers)) {
+                sampler = {
+                    wrapS: WebGLConstants.REPEAT,
+                    wrapT: WebGLConstants.REPEAT
+                };
+            } else {
+                sampler = gltf.samplers[samplerSelector]
+            }
 
             var repeatS = sampler.wrapS === WebGLConstants.REPEAT ? 'true' : 'false';
             var repeatT = sampler.wrapT === WebGLConstants.REPEAT ? 'true' : 'false';
