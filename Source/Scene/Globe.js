@@ -114,9 +114,9 @@ define([
          * values will provide better performance but lower visual quality.
          *
          * @type {Number}
-         * @default 2 * window.devicePixelRatio
+         * @default 2
          */
-        this.maximumScreenSpaceError = 2 * window.devicePixelRatio;
+        this.maximumScreenSpaceError = 2;
 
         /**
          * The size of the terrain tile cache, expressed as a number of tiles.  Any additional
