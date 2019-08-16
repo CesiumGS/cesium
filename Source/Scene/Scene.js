@@ -644,6 +644,16 @@ define([
         this.cameraEventWaitTime = 500.0;
 
         /**
+         * The factor at which all Screen Space Error is scaled. This accounts for a difference in screen
+         * density to decouple SSE from effective resolution.
+         * 
+         * @type {Number}
+         * @default 1.0
+         * @private
+         */
+        this.screenSpaceErrorPixelRatio = 1.0;
+
+        /**
          * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
          * performance improvements by rendering less geometry and dispatching less terrain requests.
          * @type {Fog}
@@ -1804,6 +1814,8 @@ define([
         } else {
             frameState.maximumScreenSpaceError = 2;
         }
+
+        frameState.screenSpaceErrorPixelRatio = scene.screenSpaceErrorPixelRatio;
 
         clearPasses(frameState.passes);
 

@@ -99,10 +99,8 @@ define([
         var canvas = widget._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        var resolutionScale = widget._resolutionScale;
-        if (!widget._supportsImageRenderingPixelated) {
-            resolutionScale *= defaultValue(window.devicePixelRatio, 1.0);
-        }
+        var devicePixelRatio = window.devicePixelRatio;
+        var resolutionScale = widget._resolutionScale * devicePixelRatio;
 
         widget._canvasWidth = width;
         widget._canvasHeight = height;
@@ -114,6 +112,8 @@ define([
         canvas.height = height;
 
         widget._canRender = width !== 0 && height !== 0;
+        widget._lastDevicePixelRatio = devicePixelRatio;
+        widget._scene.resolutionScaledScreenSpaceError = resolutionScale;
     }
 
     function configureCameraFrustum(widget) {
@@ -240,6 +240,7 @@ define([
         this._canvas = canvas;
         this._canvasWidth = 0;
         this._canvasHeight = 0;
+        this._lastDevicePixelRatio = 0;
         this._creditViewport = creditViewport;
         this._creditContainer = creditContainer;
         this._innerCreditContainer = innerCreditContainer;
@@ -562,8 +563,8 @@ define([
                     throw new DeveloperError('resolutionScale must be greater than 0.');
                 }
                 //>>includeEnd('debug');
+                this._forceResize = this._resolutionScale !== value;
                 this._resolutionScale = value;
-                this._forceResize = true;
             }
         }
     });
@@ -672,7 +673,7 @@ define([
         var canvas = this._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height) {
+        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height && this._lastDevicePixelRatio === window.devicePixelRatio) {
             return;
         }
         this._forceResize = false;

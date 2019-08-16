@@ -156,6 +156,14 @@ define([
          */
         this.maximumScreenSpaceError = undefined;
 
+        /** The factor at which all Screen Space Error is scaled. This factor accounts for a difference in screen
+         * density with resolution scaling to decouple SSE from effective resolution.  
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        this.screenSpaceErrorPixelRatio = 1.0;
+
         this.passes = {
             /**
              * <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
