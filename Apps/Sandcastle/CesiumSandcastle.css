@@ -138,7 +138,7 @@ html, body {
     height: 100%;
     transition-property: transform;
     transition-duration: 0.5s;
-    transform-origin: 200px 150px;
+    transform-origin: 200px 152px;  /* These numbers should be divisible by 4 because of scaling in .makeThumbnail */
 }
 
 .makeThumbnail {

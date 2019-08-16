@@ -312,8 +312,7 @@ define([
      */
     PostProcessStageTextureCache.prototype.clear = function(context) {
         var framebuffers = this._framebuffers;
-        var length = 0;
-        for (var i = 0; i < length; ++i) {
+        for (var i = 0; i < framebuffers.length; ++i) {
             framebuffers[i].clear.execute(context);
         }
     };

@@ -813,9 +813,9 @@ define([
                     var resource = isResource ? uniformValue : Resource.createIfNeeded(uniformValue);
 
                     var promise;
-                    if (ktxRegex.test(uniformValue)) {
+                    if (ktxRegex.test(resource.url)) {
                         promise = loadKTX(resource);
-                    } else if (crnRegex.test(uniformValue)) {
+                    } else if (crnRegex.test(resource.url)) {
                         promise = loadCRN(resource);
                     } else {
                         promise = resource.fetchImage();

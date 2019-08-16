@@ -1,7 +1,6 @@
 define([
         '../Core/BingMapsApi',
         '../Core/buildModuleUrl',
-        '../Core/Cartesian2',
         '../Core/Check',
         '../Core/Credit',
         '../Core/defaultValue',
@@ -17,12 +16,11 @@ define([
         '../Core/WebMercatorTilingScheme',
         '../ThirdParty/when',
         './BingMapsStyle',
-        './DiscardMissingTileImagePolicy',
+        './DiscardEmptyTileImagePolicy',
         './ImageryProvider'
     ], function(
         BingMapsApi,
         buildModuleUrl,
-        Cartesian2,
         Check,
         Credit,
         defaultValue,
@@ -38,7 +36,7 @@ define([
         WebMercatorTilingScheme,
         when,
         BingMapsStyle,
-        DiscardMissingTileImagePolicy,
+        DiscardEmptyTilePolicy,
         ImageryProvider) {
     'use strict';
 
@@ -53,7 +51,7 @@ define([
      * @param {String} [options.key] The Bing Maps key for your application, which can be
      *        created at {@link https://www.bingmapsportal.com/}.
      *        If this parameter is not provided, {@link BingMapsApi.defaultKey} is used, which is undefined by default.
-     * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http:' or 'https:'.
+     * @param {String} [options.tileProtocol] The protocol to use when loading tiles, e.g. 'http' or 'https'.
      *        By default, tiles are loaded using the same protocol as the page.
      * @param {BingMapsStyle} [options.mapStyle=BingMapsStyle.AERIAL] The type of Bing Maps imagery to load.
      * @param {String} [options.culture=''] The culture to use when requesting Bing Maps imagery. Not
@@ -61,15 +59,9 @@ define([
      *        for information on the supported cultures.
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If not specified, the WGS84 ellipsoid is used.
      * @param {TileDiscardPolicy} [options.tileDiscardPolicy] The policy that determines if a tile
-     *        is invalid and should be discarded.  If this value is not specified, a default
-     *        {@link DiscardMissingTileImagePolicy} is used which requests
-     *        tile 0,0 at the maximum tile level and checks pixels (0,0), (120,140), (130,160),
-     *        (200,50), and (200,200).  If all of these pixels are transparent, the discard check is
-     *        disabled and no tiles are discarded.  If any of them have a non-transparent color, any
-     *        tile that has the same values in these pixel locations is discarded.  The end result of
-     *        these defaults should be correct tile discarding for a standard Bing Maps server.  To ensure
-     *        that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this
-     *        parameter.
+     *        is invalid and should be discarded.  By default, a {@link DiscardEmptyTileImagePolicy}
+     *        will be used, with the expectation that the Bing Maps server will send a zero-length response for missing tiles.
+     *        To ensure that no tiles are discarded, construct and pass a {@link NeverTileDiscardPolicy} for this parameter.
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
@@ -106,7 +98,12 @@ define([
         this._tileProtocol = options.tileProtocol;
         this._mapStyle = defaultValue(options.mapStyle, BingMapsStyle.AERIAL);
         this._culture = defaultValue(options.culture, '');
+
         this._tileDiscardPolicy = options.tileDiscardPolicy;
+        if (!defined(this._tileDiscardPolicy)) {
+            this._tileDiscardPolicy = new DiscardEmptyTilePolicy();
+        }
+
         this._proxy = options.proxy;
         this._credit = new Credit('<a href="http://www.bing.com"><img src="' + BingMapsImageryProvider.logoUrl + '" title="Bing Imagery"/></a>');
 
@@ -137,11 +134,26 @@ define([
         this._ready = false;
         this._readyPromise = when.defer();
 
+        var tileProtocol = this._tileProtocol;
+
+        // For backward compatibility reasons, the tileProtocol may end with
+        // a `:`. Remove it.
+        if (defined(tileProtocol)) {
+            if (tileProtocol.length > 0 && tileProtocol[tileProtocol.length - 1] === ':') {
+                tileProtocol = tileProtocol.substr(0, tileProtocol.length - 1);
+            }
+        } else {
+            // use http if the document's protocol is http, otherwise use https
+            var documentProtocol = document.location.protocol;
+            tileProtocol = documentProtocol === 'http:' ? 'http' : 'https';
+        }
+
         var metadataResource = this._resource.getDerivedResource({
             url:'REST/v1/Imagery/Metadata/' + this._mapStyle,
             queryParameters: {
                 incl: 'ImageryProviders',
-                key: this._key
+                key: this._key,
+                uriScheme: tileProtocol
             }
         });
         var that = this;
@@ -160,24 +172,6 @@ define([
             that._imageUrlSubdomains = resource.imageUrlSubdomains;
             that._imageUrlTemplate = resource.imageUrl;
 
-            var tileProtocol = that._tileProtocol;
-            if (!defined(tileProtocol)) {
-                // use the document's protocol, unless it's not http or https
-                var documentProtocol = document.location.protocol;
-                tileProtocol = /^http/.test(documentProtocol) ? documentProtocol : 'http:';
-            }
-
-            that._imageUrlTemplate = that._imageUrlTemplate.replace(/^http:/, tileProtocol);
-
-            // Install the default tile discard policy if none has been supplied.
-            if (!defined(that._tileDiscardPolicy)) {
-                that._tileDiscardPolicy = new DiscardMissingTileImagePolicy({
-                    missingImageUrl : buildImageResource(that, 0, 0, that._maximumLevel).url,
-                    pixelsToCheck : [new Cartesian2(0, 0), new Cartesian2(120, 140), new Cartesian2(130, 160), new Cartesian2(200, 50), new Cartesian2(200, 200)],
-                    disableCheckIfAllPixelsAreTransparent : true
-                });
-            }
-
             var attributionList = that._attributionList = resource.imageryProviders;
             if (!attributionList) {
                 attributionList = that._attributionList = [];
@@ -186,8 +180,14 @@ define([
             for (var attributionIndex = 0, attributionLength = attributionList.length; attributionIndex < attributionLength; ++attributionIndex) {
                 var attribution = attributionList[attributionIndex];
 
-                attribution.credit = new Credit(attribution.attribution);
+                if (attribution.credit instanceof Credit) {
+                    // If attribution.credit has already been created
+                    // then we are using a cached value, which means
+                    // none of the remaining processing needs to be done.
+                    break;
+                }
 
+                attribution.credit = new Credit(attribution.attribution);
                 var coverageAreas = attribution.coverageAreas;
 
                 for (var areaIndex = 0, areaLength = attribution.coverageAreas.length; areaIndex < areaLength; ++areaIndex) {
@@ -212,12 +212,19 @@ define([
             that._readyPromise.reject(new RuntimeError(message));
         }
 
+        var cacheKey = metadataResource.url;
         function requestMetadata() {
-            var metadata = metadataResource.fetchJsonp('jsonp');
-            when(metadata, metadataSuccess, metadataFailure);
+            var promise = metadataResource.fetchJsonp('jsonp');
+            BingMapsImageryProvider._metadataCache[cacheKey] = promise;
+            promise.then(metadataSuccess).otherwise(metadataFailure);
         }
 
-        requestMetadata();
+        var promise = BingMapsImageryProvider._metadataCache[cacheKey];
+        if (defined(promise)) {
+            promise.then(metadataSuccess).otherwise(metadataFailure);
+        } else {
+            requestMetadata();
+        }
     }
 
     defineProperties(BingMapsImageryProvider.prototype, {
@@ -533,7 +540,21 @@ define([
         }
         //>>includeEnd('debug');
 
-        return ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
+        var promise = ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
+
+        if (defined(promise)) {
+            return promise.otherwise(function(error) {
+                // One cause of an error here is that the image we tried to load was zero-length.
+                // This isn't actually a problem, since it indicates that there is no tile.
+                // So, in that case we return the EMPTY_IMAGE sentinel value for later discarding.
+                if (defined(error.blob) && error.blob.size === 0) {
+                    return DiscardEmptyTilePolicy.EMPTY_IMAGE;
+                }
+                return when.reject(error);
+            });
+        }
+
+        return undefined;
     };
 
     /**
@@ -654,6 +675,11 @@ define([
                 quadkey: BingMapsImageryProvider.tileXYToQuadKey(x, y, level),
                 subdomain: subdomains[subdomainIndex],
                 culture: imageryProvider._culture
+            },
+            queryParameters: {
+                // this parameter tells the Bing servers to send a zero-length response
+                // instead of a placeholder image for missing tiles.
+                n: 'z'
             }
         });
     }
@@ -689,6 +715,9 @@ define([
 
         return result;
     }
+
+    // Exposed for testing
+    BingMapsImageryProvider._metadataCache = {};
 
     return BingMapsImageryProvider;
 });

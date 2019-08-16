@@ -353,41 +353,42 @@ define([
         return result;
     }
 
+    function tangentDirection(target, origin, up, result) {
+        result = direction(target, origin, result);
+
+        // orthogonalize
+        result = Cartesian3.cross(result, up, result);
+        result = Cartesian3.normalize(result, result);
+        result = Cartesian3.cross(up, result, result);
+        return result;
+    }
+
     var toPreviousScratch = new Cartesian3();
     var toNextScratch = new Cartesian3();
     var forwardScratch = new Cartesian3();
-    var coplanarNormalScratch = new Cartesian3();
-    var coplanarPlaneScratch = new Plane(Cartesian3.UNIT_X, 0.0);
     var vertexUpScratch = new Cartesian3();
     var cosine90 = 0.0;
+    var cosine180 = -1.0;
     function computeVertexMiterNormal(previousBottom, vertexBottom, vertexTop, nextBottom, result) {
         var up = direction(vertexTop, vertexBottom, vertexUpScratch);
-        var toPrevious = direction(previousBottom, vertexBottom, toPreviousScratch);
-        var toNext = direction(nextBottom, vertexBottom, toNextScratch);
 
-        // Check if points are coplanar in a right-side-pointing plane that contains "up."
-        // This is roughly equivalent to the points being colinear in cartographic space.
-        var coplanarNormal = Cartesian3.cross(up, toPrevious, coplanarNormalScratch);
-        coplanarNormal = Cartesian3.normalize(coplanarNormal, coplanarNormal);
-        var coplanarPlane = Plane.fromPointNormal(vertexBottom, coplanarNormal, coplanarPlaneScratch);
-        var nextBottomDistance = Plane.getPointDistance(coplanarPlane, nextBottom);
-        if (CesiumMath.equalsEpsilon(nextBottomDistance, 0.0, CesiumMath.EPSILON7)) {
-            // If the points are coplanar, point the normal in the direction of the plane
-            Cartesian3.clone(coplanarNormal, result);
-            return result;
+        // Compute vectors pointing towards neighboring points but tangent to this point on the ellipsoid
+        var toPrevious = tangentDirection(previousBottom, vertexBottom, up, toPreviousScratch);
+        var toNext = tangentDirection(nextBottom, vertexBottom, up, toNextScratch);
+
+        // Check if tangents are almost opposite - if so, no need to miter.
+        if (CesiumMath.equalsEpsilon(Cartesian3.dot(toPrevious, toNext), cosine180, CesiumMath.EPSILON5)) {
+             result = Cartesian3.cross(up, toPrevious, result);
+             result = Cartesian3.normalize(result, result);
+             return result;
         }
 
-        // Average directions to previous and to next
+        // Average directions to previous and to next in the plane of Up
         result = Cartesian3.add(toNext, toPrevious, result);
         result = Cartesian3.normalize(result, result);
 
-        // Rotate this direction to be orthogonal to up
-        var forward = Cartesian3.cross(up, result, forwardScratch);
-        Cartesian3.normalize(forward, forward);
-        Cartesian3.cross(forward, up, result);
-        Cartesian3.normalize(result, result);
-
         // Flip the normal if it isn't pointing roughly bound right (aka if forward is pointing more "backwards")
+        var forward = Cartesian3.cross(up, result, forwardScratch);
         if (Cartesian3.dot(toNext, forward) < cosine90) {
             result = Cartesian3.negate(result, result);
         }
@@ -1012,7 +1013,7 @@ define([
 
                 var texcoordNormalization = texcoordNormalization3DY * topBottomSide;
                 if (texcoordNormalization === 0.0 && topBottomSide < 0.0) {
-                    texcoordNormalization = Number.POSITIVE_INFINITY;
+                    texcoordNormalization = 9.0; // some value greater than 1.0
                 }
                 rightNormalAndTextureCoordinateNormalizationY[wIndex] = texcoordNormalization;
 
@@ -1037,7 +1038,7 @@ define([
 
                     texcoordNormalization = texcoordNormalization2DY * topBottomSide;
                     if (texcoordNormalization === 0.0 && topBottomSide < 0.0) {
-                        texcoordNormalization = Number.POSITIVE_INFINITY;
+                        texcoordNormalization = 9.0; // some value greater than 1.0
                     }
                     texcoordNormalization2D[vec2Index + 1] = texcoordNormalization;
                 }

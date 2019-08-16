@@ -1,11 +1,15 @@
 define([
         '../ThirdParty/when',
+        './BoundingSphere',
+        './Cartesian3',
         './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError',
         './GeographicProjection',
+        './HeightmapEncoding',
         './HeightmapTessellator',
+        './OrientedBoundingBox',
         './Math',
         './Rectangle',
         './TaskProcessor',
@@ -14,12 +18,16 @@ define([
         './TerrainProvider'
     ], function(
         when,
+        BoundingSphere,
+        Cartesian3,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
         GeographicProjection,
+        HeightmapEncoding,
         HeightmapTessellator,
+        OrientedBoundingBox,
         CesiumMath,
         Rectangle,
         TaskProcessor,
@@ -83,6 +91,7 @@ define([
      *                 than this value after encoding with the `heightScale` and `heightOffset` are clamped to this value.  For example, if the height
      *                 buffer is a `Uint16Array`, this value should be `256 * 256 - 1` or 65535 because a `Uint16Array` cannot store numbers larger
      *                 than 65535.  If this parameter is not specified, no maximum value is enforced.
+     * @param {HeightmapEncoding} [options.encoding=HeightmapEncoding.NONE] The encoding that is used on the buffer.
      * @param {Boolean} [options.createdByUpsampling=false] True if this instance was created by upsampling another instance;
      *                  otherwise, false.
      *
@@ -120,6 +129,7 @@ define([
         this._width = options.width;
         this._height = options.height;
         this._childTileMask = defaultValue(options.childTileMask, 15);
+        this._encoding = defaultValue(options.encoding, HeightmapEncoding.NONE);
 
         var defaultStructure = HeightmapTessellator.DEFAULT_STRUCTURE;
         var structure = options.structure;
@@ -139,7 +149,7 @@ define([
         this._waterMask = options.waterMask;
 
         this._skirtHeight = undefined;
-        this._bufferType = this._buffer.constructor;
+        this._bufferType = (this._encoding === HeightmapEncoding.LERC) ? Float32Array : this._buffer.constructor;
         this._mesh = undefined;
     }
 
@@ -232,7 +242,8 @@ define([
             ellipsoid : ellipsoid,
             skirtHeight : this._skirtHeight,
             isGeographic : tilingScheme.projection instanceof GeographicProjection,
-            exaggeration : exaggeration
+            exaggeration : exaggeration,
+            encoding : this._encoding
         });
 
         if (!defined(verticesPromise)) {
@@ -242,16 +253,18 @@ define([
 
         var that = this;
         return when(verticesPromise, function(result) {
+            // Clone complex result objects because the transfer from the web worker
+            // has stripped them down to JSON-style objects.
             that._mesh = new TerrainMesh(
                     center,
                     new Float32Array(result.vertices),
                     TerrainProvider.getRegularGridIndices(result.gridWidth, result.gridHeight),
                     result.minimumHeight,
                     result.maximumHeight,
-                    result.boundingSphere3D,
-                    result.occludeePointInScaledSpace,
+                    BoundingSphere.clone(result.boundingSphere3D),
+                    Cartesian3.clone(result.occludeePointInScaledSpace),
                     result.numberOfAttributes,
-                    result.orientedBoundingBox,
+                    OrientedBoundingBox.clone(result.orientedBoundingBox),
                     TerrainEncoding.clone(result.encoding),
                     exaggeration,
                     result.westIndicesSouthToNorth,
@@ -324,6 +337,8 @@ define([
             arrayHeight += 2;
         }
 
+        // No need to clone here (as we do in the async version) because the result
+        // is not coming from a web worker.
         return new TerrainMesh(
             center,
             result.vertices,
@@ -334,7 +349,7 @@ define([
             result.occludeePointInScaledSpace,
             result.encoding.getStride(),
             result.orientedBoundingBox,
-            TerrainEncoding.clone(result.encoding),
+            result.encoding,
             exaggeration,
             result.westIndicesSouthToNorth,
             result.southIndicesEastToWest,

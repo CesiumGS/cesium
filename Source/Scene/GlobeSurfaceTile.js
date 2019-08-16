@@ -6,6 +6,7 @@ define([
         '../Core/defineProperties',
         '../Core/IndexDatatype',
         '../Core/IntersectionTests',
+        '../Core/OrientedBoundingBox',
         '../Core/PixelFormat',
         '../Core/Request',
         '../Core/RequestState',
@@ -34,6 +35,7 @@ define([
         defineProperties,
         IndexDatatype,
         IntersectionTests,
+        OrientedBoundingBox,
         PixelFormat,
         Request,
         RequestState,
@@ -348,7 +350,18 @@ define([
     };
 
     function prepareNewTile(tile, terrainProvider, imageryLayerCollection) {
-        if (terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level) === false) {
+        var available = terrainProvider.getTileDataAvailable(tile.x, tile.y, tile.level);
+
+        if (!defined(available) && defined(tile.parent)) {
+            // Provider doesn't know if this tile is available. Does the parent tile know?
+            var parent = tile.parent;
+            var parentSurfaceTile = parent.data;
+            if (defined(parentSurfaceTile) && defined(parentSurfaceTile.terrainData)) {
+                available = parentSurfaceTile.terrainData.isChildAvailable(parent.x, parent.y, tile.x, tile.y);
+            }
+        }
+
+        if (available === false) {
             // This tile is not available, so mark it failed so we start upsampling right away.
             tile.data.terrainState = TerrainState.FAILED;
         }
@@ -511,6 +524,8 @@ define([
 
         when(meshPromise, function(mesh) {
             surfaceTile.mesh = mesh;
+            surfaceTile.orientedBoundingBox = OrientedBoundingBox.clone(mesh.orientedBoundingBox, surfaceTile.orientedBoundingBox);
+            surfaceTile.occludeePointInScaledSpace = Cartesian3.clone(mesh.occludeePointInScaledSpace, surfaceTile.occludeePointInScaledSpace);
             surfaceTile.terrainState = TerrainState.TRANSFORMED;
         }, function() {
             surfaceTile.terrainState = TerrainState.FAILED;

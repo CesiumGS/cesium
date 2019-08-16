@@ -516,6 +516,23 @@ defineSuite([
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
     });
 
+    it('calls destroy on all updaterSets', function() {
+        var entityCollection = new EntityCollection();
+        var visualizer = new GeometryVisualizer(scene, entityCollection, scene.primitives, scene.groundPrimitives);
+
+        var destroySpy = jasmine.createSpy('destroy');
+        visualizer._updaterSets.set('test', {
+            destroy: destroySpy
+        });
+
+        expect(visualizer._updaterSets.values.length).toBe(1);
+
+        visualizer.destroy();
+
+        expect(destroySpy).toHaveBeenCalled();
+        expect(visualizer._updaterSets.values.length).toBe(0);
+    });
+
     it('Computes dynamic geometry bounding sphere.', function() {
         var entityCollection = new EntityCollection();
         var visualizer = new GeometryVisualizer(scene, entityCollection, scene.primitives, scene.groundPrimitives);

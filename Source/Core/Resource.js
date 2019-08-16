@@ -8,10 +8,8 @@ define([
         './defaultValue',
         './defined',
         './defineProperties',
-        './deprecationWarning',
         './DeveloperError',
         './freezeObject',
-        './FeatureDetection',
         './getAbsoluteUri',
         './getBaseUri',
         './getExtensionFromUri',
@@ -37,10 +35,8 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         DeveloperError,
         freezeObject,
-        FeatureDetection,
         getAbsoluteUri,
         getBaseUri,
         getExtensionFromUri,
@@ -404,7 +400,8 @@ define([
         })
             .then(function(blob) {
                 return createImageBitmap(blob, {
-                    imageOrientation: 'flipY'
+                    imageOrientation: 'flipY',
+                    premultiplyAlpha: 'none'
                 });
             })
             .then(function(imageBitmap) {
@@ -869,12 +866,6 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     Resource.prototype.fetchImage = function (options) {
-        if (typeof options === 'boolean') {
-            deprecationWarning('fetchImage-parameter-change', 'fetchImage now takes an options object in CesiumJS 1.57. Use resource.fetchImage({ preferBlob: true }) instead of resource.fetchImage(true).');
-            options = {
-                preferBlob : options
-            };
-        }
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var preferImageBitmap = defaultValue(options.preferImageBitmap, false);
         var preferBlob = defaultValue(options.preferBlob, false);
@@ -916,7 +907,10 @@ define([
                 }
                 generatedBlob = blob;
                 if (useImageBitmap) {
-                    return Resource._Implementations.createImageBitmapFromBlob(blob, flipY);
+                    return Resource.createImageBitmapFromBlob(blob, {
+                        flipY: flipY,
+                        premultiplyAlpha: false
+                    });
                 }
                 var blobUrl = window.URL.createObjectURL(blob);
                 generatedBlobResource = new Resource({
@@ -933,9 +927,11 @@ define([
                 if (!defined(image)) {
                     return;
                 }
-                // This is because the blob object is needed for DiscardMissingTileImagePolicy
-                // See https://github.com/AnalyticalGraphicsInc/cesium/issues/1353
+
+                // The blob object may be needed for use by a TileDiscardPolicy,
+                // so attach it to the image.
                 image.blob = generatedBlob;
+
                 if (useImageBitmap) {
                     return image;
                 }
@@ -947,6 +943,12 @@ define([
                 if (defined(generatedBlobResource)) {
                     window.URL.revokeObjectURL(generatedBlobResource.url);
                 }
+
+                // If the blob load succeeded but the image decode failed, attach the blob
+                // to the error object for use by a TileDiscardPolicy.
+                // In particular, BingMapsImageryProvider uses this to detect the
+                // zero-length response that is returned when a tile is not available.
+                error.blob = generatedBlob;
 
                 return when.reject(error);
             });
@@ -979,7 +981,6 @@ define([
             }
 
             var deferred = when.defer();
-
             Resource._Implementations.createImage(url, crossOrigin, deferred, flipY, preferImageBitmap);
 
             return deferred.promise;
@@ -1867,28 +1868,35 @@ define([
 
                 return Resource.fetchBlob({
                     url: url
-                });
-            })
-            .then(function(blob) {
-                if (!defined(blob)) {
-                    return;
-                }
+                })
+                .then(function(blob) {
+                    if (!defined(blob)) {
+                        deferred.reject(new RuntimeError('Successfully retrieved ' + url + ' but it contained no content.'));
+                        return;
+                    }
 
-                return Resource._Implementations.createImageBitmapFromBlob(blob, flipY);
-            })
-            .then(function(imageBitmap) {
-                if (!defined(imageBitmap)) {
-                    return;
-                }
-
-                deferred.resolve(imageBitmap);
+                    return Resource.createImageBitmapFromBlob(blob, {
+                        flipY: flipY,
+                        premultiplyAlpha: false
+                    });
+                }).then(deferred.resolve);
             })
             .otherwise(deferred.reject);
     };
 
-    Resource._Implementations.createImageBitmapFromBlob = function(blob, flipY) {
+    /**
+     * Wrapper for createImageBitmap
+     *
+     * @private
+     */
+    Resource.createImageBitmapFromBlob = function(blob, options) {
+        Check.defined('options', options);
+        Check.typeOf.bool('options.flipY', options.flipY);
+        Check.typeOf.bool('options.premultiplyAlpha', options.premultiplyAlpha);
+
         return createImageBitmap(blob, {
-            imageOrientation: flipY ? 'flipY' : 'none'
+            imageOrientation: options.flipY ? 'flipY' : 'none',
+            premultiplyAlpha: options.premultiplyAlpha ? 'premultiply' : 'none'
         });
     };
 

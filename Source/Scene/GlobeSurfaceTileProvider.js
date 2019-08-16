@@ -605,6 +605,10 @@ define([
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = surfaceTile.orientedBoundingBox;
 
+        if (!defined(boundingVolume) && defined(surfaceTile.renderedMesh)) {
+            boundingVolume = surfaceTile.renderedMesh.boundingSphere3D;
+        }
+
         // Check if the tile is outside the limit area in cartographic space
         surfaceTile.clippedByBoundaries = false;
         var clippedCartographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, this.cartographicLimitRectangle);
@@ -624,6 +628,10 @@ define([
             if (frameState.mode === SceneMode.MORPHING && defined(surfaceTile.renderedMesh)) {
                 boundingVolume = BoundingSphere.union(surfaceTile.renderedMesh.boundingSphere3D, boundingVolume, boundingVolume);
             }
+        }
+
+        if (!defined(boundingVolume)) {
+            return Intersect.INTERSECTING;
         }
 
         var clippingPlanes = this._clippingPlanes;
@@ -775,7 +783,7 @@ define([
 
     /**
      * Determines the priority for loading this tile. Lower priority values load sooner.
-     * @param {QuatreeTile} tile The tile.
+     * @param {QuadtreeTile} tile The tile.
      * @param {FrameState} frameState The frame state.
      * @returns {Number} The load priority value.
      */
@@ -898,14 +906,18 @@ define([
         } else if (surfaceTile.boundingVolumeSourceTile !== heightSource) {
             // Heights are from a new source tile, so update the bounding volume.
             surfaceTile.boundingVolumeSourceTile = heightSource;
-            surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-                tile.rectangle,
-                tileBoundingRegion.minimumHeight,
-                tileBoundingRegion.maximumHeight,
-                tile.tilingScheme.ellipsoid,
-                surfaceTile.orientedBoundingBox);
 
-            surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
+            var rectangle = tile.rectangle;
+            if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+                surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+                    tile.rectangle,
+                    tileBoundingRegion.minimumHeight,
+                    tileBoundingRegion.maximumHeight,
+                    tile.tilingScheme.ellipsoid,
+                    surfaceTile.orientedBoundingBox);
+
+                surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
+            }
         }
 
         var min = tileBoundingRegion.minimumHeight;
@@ -1604,6 +1616,13 @@ define([
             --maxTextures;
         }
         if (showOceanWaves) {
+            --maxTextures;
+        }
+
+        if (defined(frameState.shadowState) && frameState.shadowState.shadowsEnabled) {
+            --maxTextures;
+        }
+        if (defined(tileProvider.clippingPlanes) && tileProvider.clippingPlanes.enabled) {
             --maxTextures;
         }
 

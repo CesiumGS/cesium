@@ -78,6 +78,27 @@ defineSuite([
     });
 
     //////////////////////////////////////////////////////////////////////
+    it('normalize 0 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(0, -10, 10)).toEqual(0.5);
+    });
+
+    it('normalize 10 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(10, -10, 10)).toEqual(1.0);
+    });
+
+    it('normalize -10 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(-10, -10, 10)).toEqual(0.0);
+    });
+
+    it('normalize -10.0001 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(-10.0001, -10, 10)).toEqual(0.0);
+    });
+
+    it('normalize 10.00001 with max 10 min -10', function() {
+        expect(CesiumMath.normalize(10.00001, -10, 10)).toEqual(1.0);
+    });
+
+    //////////////////////////////////////////////////////////////////////
 
     it('cosh', function() {
         expect(CesiumMath.cosh(0.0)).toEqual(1.0);
@@ -362,8 +383,26 @@ defineSuite([
         var factorials = [1, 1, 2, 6, 24, 120, 720, 5040, 40320, 362880, 3628800, 39916800, 479001600, 6227020800, 87178291200, 1307674368000, 20922789888000, 355687428096000, 6402373705728000,
                           121645100408832000, 2432902008176640000, 51090942171709440000, 1124000727777607680000, 25852016738884976640000, 620448401733239439360000];
 
-        for ( var i = 0; i < factorials.length; i++) {
-            expect(CesiumMath.factorial(i)).toEqual(factorials[i]);
+        var length = factorials.length;
+        var i;
+        var indices = [];
+
+        // Populate indices array
+        for (i = 0; i < length; i++) {
+            indices.push(i);
+        }
+
+        // Randomize the indices array
+        for (i = 0; i < length; i++) {
+            var tmp = indices[i];
+            var randomIndex = Math.floor(Math.random() * length);
+            indices[i] = indices[randomIndex];
+            indices[randomIndex] = tmp;
+        }
+
+        for (i = 0; i < length; i++) {
+            var index = indices[i];
+            expect(CesiumMath.factorial(index)).toEqual(factorials[index]);
         }
     });
 

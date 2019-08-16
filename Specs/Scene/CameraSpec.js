@@ -75,6 +75,7 @@ defineSuite([
             maximumZoomDistance: 5906376272000.0  // distance from the Sun to Pluto in meters.
         };
         this.camera = undefined;
+        this.preloadFlightCamera = undefined;
         this.context = {
             drawingBufferWidth : 1024,
             drawingBufferHeight : 768
@@ -99,6 +100,8 @@ defineSuite([
         camera.minimumZoomDistance = 0.0;
 
         scene.camera = camera;
+        scene.preloadFlightCamera = Camera.clone(camera);
+        camera._scene = scene;
         scene.mapMode2D = MapMode2D.INFINITE_2D;
     });
 
@@ -3021,11 +3024,11 @@ defineSuite([
     });
 
     it('switches projections', function() {
-        expect(camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(PerspectiveFrustum);
         camera.switchToOrthographicFrustum();
-        expect(camera.frustum instanceof OrthographicFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicFrustum);
         camera.switchToPerspectiveFrustum();
-        expect(camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(PerspectiveFrustum);
     });
 
     it('does not switch projection in 2D', function() {
@@ -3045,11 +3048,11 @@ defineSuite([
         frustum.far = 60.0 * maxRadii;
         camera.frustum = frustum;
 
-        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicOffCenterFrustum);
         camera.switchToOrthographicFrustum();
-        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicOffCenterFrustum);
         camera.switchToPerspectiveFrustum();
-        expect(camera.frustum instanceof OrthographicOffCenterFrustum).toEqual(true);
+        expect(camera.frustum).toBeInstanceOf(OrthographicOffCenterFrustum);
     });
 
     it('normalizes WC members', function() {
@@ -3058,5 +3061,21 @@ defineSuite([
         expect(Cartesian3.magnitude(camera.directionWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
         expect(Cartesian3.magnitude(camera.rightWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
         expect(Cartesian3.magnitude(camera.upWC)).toEqualEpsilon(1.0, CesiumMath.EPSILON15);
+    });
+
+    it('get camera deltas', function() {
+        camera._updateCameraChanged();
+        expect(camera.positionWCDeltaMagnitude).toEqual(0);
+        expect(camera.positionWCDeltaMagnitudeLastFrame).toEqual(0);
+
+        camera.moveUp(moveAmount);
+
+        camera._updateCameraChanged();
+        expect(camera.positionWCDeltaMagnitude).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
+        expect(camera.positionWCDeltaMagnitudeLastFrame).toEqual(0);
+
+        camera._updateCameraChanged();
+        expect(camera.positionWCDeltaMagnitude).toEqual(0);
+        expect(camera.positionWCDeltaMagnitudeLastFrame).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
     });
 });

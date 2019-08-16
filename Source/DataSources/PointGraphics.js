@@ -21,39 +21,39 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the point.
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the point.
      * @param {Property} [options.pixelSize=1] A numeric Property specifying the size in pixels.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the point.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=0] A numeric Property specifying the the outline width in pixels.
-     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the point.
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to scale the point based on distance.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
-     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this point will be displayed.
      * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
      */
     function PointGraphics(options) {
-        this._color = undefined;
-        this._colorSubscription = undefined;
+        this._definitionChanged = new Event();
+        this._show = undefined;
+        this._showSubscription = undefined;
         this._pixelSize = undefined;
         this._pixelSizeSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
+        this._color = undefined;
+        this._colorSubscription = undefined;
         this._outlineColor = undefined;
         this._outlineColorSubscription = undefined;
         this._outlineWidth = undefined;
         this._outlineWidthSubscription = undefined;
-        this._show = undefined;
-        this._showSubscription = undefined;
         this._scaleByDistance = undefined;
         this._scaleByDistanceSubscription = undefined;
         this._translucencyByDistance = undefined;
         this._translucencyByDistanceSubscription = undefined;
-        this._heightReference = undefined;
-        this._heightReferenceSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubscription = undefined;
         this._disableDepthTestDistance = undefined;
         this._disableDepthTestDistanceSubscription = undefined;
-        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -73,12 +73,12 @@ define([
         },
 
         /**
-         * Gets or sets the Property specifying the {@link Color} of the point.
+         * Gets or sets the boolean Property specifying the visibility of the point.
          * @memberof PointGraphics.prototype
          * @type {Property}
-         * @default Color.WHITE
+         * @default true
          */
-        color : createPropertyDescriptor('color'),
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the numeric Property specifying the size in pixels.
@@ -87,6 +87,22 @@ define([
          * @default 1
          */
         pixelSize : createPropertyDescriptor('pixelSize'),
+
+        /**
+         * Gets or sets the Property specifying the {@link HeightReference}.
+         * @memberof PointGraphics.prototype
+         * @type {Property}
+         * @default HeightReference.NONE
+         */
+        heightReference : createPropertyDescriptor('heightReference'),
+
+        /**
+         * Gets or sets the Property specifying the {@link Color} of the point.
+         * @memberof PointGraphics.prototype
+         * @type {Property}
+         * @default Color.WHITE
+         */
+        color : createPropertyDescriptor('color'),
 
         /**
          * Gets or sets the Property specifying the {@link Color} of the outline.
@@ -103,14 +119,6 @@ define([
          * @default 0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth'),
-
-        /**
-         * Gets or sets the boolean Property specifying the visibility of the point.
-         * @memberof PointGraphics.prototype
-         * @type {Property}
-         * @default true
-         */
-        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the {@link NearFarScalar} Property used to scale the point based on distance.
@@ -130,14 +138,6 @@ define([
          * @type {Property}
          */
         translucencyByDistance : createPropertyDescriptor('translucencyByDistance'),
-
-        /**
-         * Gets or sets the Property specifying the {@link HeightReference}.
-         * @memberof PointGraphics.prototype
-         * @type {Property}
-         * @default HeightReference.NONE
-         */
-        heightReference : createPropertyDescriptor('heightReference'),
 
         /**
          * Gets or sets the {@link DistanceDisplayCondition} Property specifying at what distance from the camera that this point will be displayed.
@@ -165,14 +165,14 @@ define([
         if (!defined(result)) {
             return new PointGraphics(this);
         }
-        result.color = this.color;
+        result.show = this.show;
         result.pixelSize = this.pixelSize;
+        result.heightReference = this.heightReference;
+        result.color = this.color;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
-        result.show = this.show;
         result.scaleByDistance = this.scaleByDistance;
         result.translucencyByDistance = this._translucencyByDistance;
-        result.heightReference = this.heightReference;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         result.disableDepthTestDistance = this.disableDepthTestDistance;
         return result;
@@ -191,14 +191,14 @@ define([
         }
         //>>includeEnd('debug');
 
-        this.color = defaultValue(this.color, source.color);
+        this.show = defaultValue(this.show, source.show);
         this.pixelSize = defaultValue(this.pixelSize, source.pixelSize);
+        this.heightReference = defaultValue(this.heightReference, source.heightReference);
+        this.color = defaultValue(this.color, source.color);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-        this.show = defaultValue(this.show, source.show);
         this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);
         this.translucencyByDistance = defaultValue(this._translucencyByDistance, source.translucencyByDistance);
-        this.heightReference = defaultValue(this.heightReference, source.heightReference);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
         this.disableDepthTestDistance = defaultValue(this.disableDepthTestDistance, source.disableDepthTestDistance);
     };
