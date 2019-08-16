@@ -183,10 +183,8 @@ defineSuite([
         expect(s).toRender([0, 0, 0, 255]);
         // Dummy Stage
         var bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
-        s.postProcessStages.add(new PostProcessStageComposite({
-            stages : [new PostProcessStage({
-                fragmentShader : 'void main() { gl_FragColor = vec4(vec3(' + (bgColor / 255) + '), 1.0); }'
-            })]
+        s.postProcessStages.add(new PostProcessStage({
+            fragmentShader : 'void main() { gl_FragColor = vec4(vec3(' + (bgColor / 255) + '), 1.0); }'
         }));
 
         //Stage we expect to not run
