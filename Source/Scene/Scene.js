@@ -3355,11 +3355,14 @@ define([
          * Passes update. Add any passes here
          *
          */
-        tryAndCatchError(this, updateMostDetailedRayPicks);
-        tryAndCatchError(this, updatePreloadPass);
-        tryAndCatchError(this, updatePreloadFlightPass);
-        if (!shouldRender) {
-            tryAndCatchError(this, updateRequestRenderModeDeferCheckPass);
+        if (this.primitives.show)
+        {
+            tryAndCatchError(this, updateMostDetailedRayPicks);
+            tryAndCatchError(this, updatePreloadPass);
+            tryAndCatchError(this, updatePreloadFlightPass);
+            if (!shouldRender) {
+                tryAndCatchError(this, updateRequestRenderModeDeferCheckPass);
+            }
         }
 
         this._postUpdate.raiseEvent(this, time);
