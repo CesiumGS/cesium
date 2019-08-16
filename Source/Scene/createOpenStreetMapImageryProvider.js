@@ -1,5 +1,4 @@
 define([
-        '../Core/appendForwardSlash',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/DeveloperError',
@@ -8,7 +7,6 @@ define([
         '../Core/WebMercatorTilingScheme',
         './UrlTemplateImageryProvider'
     ], function(
-        appendForwardSlash,
         Credit,
         defaultValue,
         DeveloperError,
@@ -61,10 +59,9 @@ define([
     function createOpenStreetMapImageryProvider(options) {
         options = defaultValue(options, {});
 
-        var url = defaultValue(options.url, 'https://a.tile.openstreetmap.org/');
-        url = appendForwardSlash(url);
-        url += '{z}/{x}/{y}.' + defaultValue(options.fileExtension, 'png');
-        var resource = Resource.createIfNeeded(url);
+        var resource = Resource.createIfNeeded(defaultValue(options.url, 'https://a.tile.openstreetmap.org/'));
+        resource.appendForwardSlash();
+        resource.url += '{z}/{x}/{y}.' + defaultValue(options.fileExtension, 'png');
 
         var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
