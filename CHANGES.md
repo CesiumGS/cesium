@@ -7,7 +7,8 @@ Change Log
 * Added optional `index` parameter to `PrimitiveCollection.add`. [#8041](https://github.com/AnalyticalGraphicsInc/cesium/pull/8041)
 
 ##### Fixes :wrench:
-* Disabled HDR by default to improve visual quality in most standard use cases. Set `viewer.scene.highDynamicRange = true` to re-enable. [#7966](https://github.com/AnalyticalGraphicsInc/cesium/issues/7966)
+* Fixed a bug that causes hidden point primitives to still appear on some operating systems. [#8043](https://github.com/AnalyticalGraphicsInc/cesium/issues/8043)
+* Disabled HDR by default to improve visual quality in most standard use cases. Set `viewer.scene.highDynamicRange = true` to re-enable it. [#7966](https://github.com/AnalyticalGraphicsInc/cesium/issues/7966)
 * Fixed issue where KTX or CRN files would not be properly identified. [#7979](https://github.com/AnalyticalGraphicsInc/cesium/issues/7979) 
 
 ### 1.60 - 2019-08-01
