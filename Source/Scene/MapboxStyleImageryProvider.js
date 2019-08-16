@@ -62,13 +62,7 @@ function MapboxStyleImageryProvider(options) {
     }
     //>>includeEnd('debug');
 
-    var url = options.url;
-    if (!defined(url)) {
-        url = 'https://api.mapbox.com/styles/v1/';
-    }
-    this._url = url;
-
-    var resource = Resource.createIfNeeded(url);
+    var resource = Resource.createIfNeeded(defaultValue(options.url, 'https://api.mapbox.com/styles/v1/'));
 
     var accessToken = MapboxApi.getAccessToken(options.accessToken);
     this._styleId = styleId;
@@ -125,7 +119,7 @@ defineProperties(MapboxStyleImageryProvider.prototype, {
      */
     url : {
         get : function() {
-            return this._url;
+            return this._imageryProvider.url;
         }
     },
 

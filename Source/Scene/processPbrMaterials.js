@@ -90,14 +90,8 @@ define([
     function addTextureCoordinates(gltf, textureName, generatedMaterialValues, defaultTexCoord, result) {
         var texCoord;
         if (defined(generatedMaterialValues[textureName + 'Offset'])) {
-            var textureIndex = generatedMaterialValues[textureName].index;
-            var sampler = gltf.samplers[gltf.textures[textureIndex].sampler];
-
-            var repeatS = sampler.wrapS === WebGLConstants.REPEAT ? 'true' : 'false';
-            var repeatT = sampler.wrapT === WebGLConstants.REPEAT ? 'true' : 'false';
-
             texCoord = textureName + 'Coord';
-            result.fragmentShaderMain += '    vec2 ' + texCoord + ' = computeTexCoord(' + defaultTexCoord + ', ' + textureName + 'Offset, ' + textureName + 'Rotation, ' + textureName + 'Scale, ' + repeatS + ', ' + repeatT + ');\n';
+            result.fragmentShaderMain += '    vec2 ' + texCoord + ' = computeTexCoord(' + defaultTexCoord + ', ' + textureName + 'Offset, ' + textureName + 'Rotation, ' + textureName + 'Scale);\n';
         } else {
             texCoord = defaultTexCoord;
         }
@@ -551,7 +545,7 @@ define([
             '}\n\n';
 
         fragmentShader +=
-            'vec2 computeTexCoord(vec2 texCoords, vec2 offset, float rotation, vec2 scale, bool repeatS, bool repeatT) \n' +
+            'vec2 computeTexCoord(vec2 texCoords, vec2 offset, float rotation, vec2 scale) \n' +
             '{\n' +
             '    rotation = -rotation; \n' +
             '    mat3 transform = mat3(\n' +
@@ -559,8 +553,6 @@ define([
             '       -sin(rotation) * scale.y, cos(rotation) * scale.y, 0.0, \n' +
             '        offset.x, offset.y, 1.0); \n' +
             '    vec2 transformedTexCoords = (transform * vec3(fract(texCoords), 1.0)).xy; \n' +
-            '    transformedTexCoords.x = repeatS ? fract(transformedTexCoords.x) : clamp(transformedTexCoords.x, 0.0, 1.0); \n' +
-            '    transformedTexCoords.y = repeatT ? fract(transformedTexCoords.y) : clamp(transformedTexCoords.y, 0.0, 1.0); \n' +
             '    return transformedTexCoords; \n' +
             '}\n\n';
 
