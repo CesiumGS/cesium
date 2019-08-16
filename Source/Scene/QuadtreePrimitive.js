@@ -997,7 +997,7 @@ define([
             error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
         }
 
-        return error;
+        return error * frameState.screenSpaceErrorPixelRatio;
     }
 
     function screenSpaceError2D(primitive, frameState, tile) {
@@ -1019,7 +1019,7 @@ define([
             error = error - CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
         }
 
-        return error;
+        return error * frameState.screenSpaceErrorPixelRatio;
     }
 
     function addTileToRenderList(primitive, tile) {

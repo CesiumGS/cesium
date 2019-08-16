@@ -731,6 +731,9 @@ define([
                 error -= dynamicError;
             }
         }
+        
+        error /= frameState.screenSpaceErrorPixelRatio;
+
         return error;
     };
 

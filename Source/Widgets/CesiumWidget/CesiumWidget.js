@@ -113,7 +113,7 @@ define([
 
         widget._canRender = width !== 0 && height !== 0;
         widget._lastDevicePixelRatio = devicePixelRatio;
-        widget._scene.resolutionScaledScreenSpaceError = resolutionScale;
+        widget._scene.screenSpaceErrorPixelRatio = resolutionScale;
     }
 
     function configureCameraFrustum(widget) {
@@ -251,8 +251,6 @@ define([
         this._forceResize = false;
         this._clock = defined(options.clock) ? options.clock : new Clock();
 
-        configureCanvasSize(this);
-
         try {
             var scene = new Scene({
                 canvas : canvas,
@@ -272,6 +270,7 @@ define([
 
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
+            configureCanvasSize(this);
             configureCameraFrustum(this);
 
             var ellipsoid = defaultValue(scene.mapProjection.ellipsoid, Ellipsoid.WGS84);
