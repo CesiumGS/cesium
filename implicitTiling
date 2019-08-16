@@ -1,9 +1,17 @@
-availability?  giant string of bits (only care about the runs of 0's, fill in rough parts with empty tiles to reduce need for a ton of ranges down in the leaves
+spheres idea
+https://github.com/AnalyticalGraphicsInc/agi-cesium/issues/714
+
+socom issue
+https://github.com/AnalyticalGraphicsInc/agi-cesium-services/issues/65
+
+implicit tiling
+https://github.com/AnalyticalGraphicsInc/agi-swayze/issues/1420
+
 root transform.
 asset
 gerror for root and gerrors are derived from that (knowing that its quad oct bin)
+bounding volume (should just be height for map based trees), bounds derived for children from there
 quadtree: give me tile at level z node x,y
-tileset.json abailbiilty  points a requet that
 
 tileset of tilesets, i.e. external tilesets (fetching json vs b3dm) cmpt wrapper? no extesions, just magic checks.
 mix implicit and custom(tileset.json as it is today)
@@ -34,11 +42,54 @@ if "root"exists then its traditional if "tilingScheme" exists then it's implicit
   * availability: layers.json, double single head implied from this
   * geometric error of root, others derived from this (see calculation in terrain to 3dtiles converter)
   * content boundingbox is in the glb's minmax of positions so actual geom error could be the diag of this box?
-  [ ] Should provide a hint to amount of heads it is based on, though you could figure it out give the boundingRegion and first availability
-layer.json has an available field that is a 2d array of ranges the first array holds arrays for each level
+  [x] Should provide a hint to amount of heads it is based on, though you could figure it out give the boundingRegion and first availability
 
-[ ] Make a new tileset traversal class to handle implicit tiling
+  [ ] be able to consume non single head inputs (just versions of the layer.json with upper levels removed)
+  might need to construct to to a single tile to avoid accumulating error??? otherwise contentless root will take the the bound
+  then depending
+* all tilesets  with same splits is powerful (merging/diffing)
+    NOTE: the below is the same as stopping arbitrarily at any level when tiling
+    the below would be like having a root 0 (its layer.json 0 would have the availability of all the tiles there)
+    at any level of the 2d map implicit grid. the root grid lower left is then able to live anywhere, though this is probably a drawback
+    since you then loose the reference fixed grid that cdb ensures(any x,y,z and headedness knowledge gives you the long lat bounds)
+
+
+
+        something to consider:
+        Single vs double is trivial to support (both in the terrain to 3dtiles converter and the first pass impl) so it might be really beneficially to take it a step further and have a field in `tilingScheme` called `headCount: {x,y,z}` where x y z would be your root level head resolution (how many heads in each dir). For example a single head would be 1,1,1, double would be 2,1,1
+        The reason for extending it to support arbitary amount of heads is that:
+        1. implementation-wise, they are just controlling the exponent power of two split calculations at the end of the day so its not really a source a head-ache.
+        2. it helps the fixed grid system map onto awkward or non-homogenous data like a 3d pointcloud where density isnt so even (sparse but dense). It helps it get a head start on subdivision and load balancing the tree. 
+
+  [ ] try a local tileset (splits don't ref a 2d map lat long)  with a tileset transform (pointclouds?)
+
  * Just build a tree from the tile availablity and the root tile bound then traverse as normal
+ * Each level has a fixed gError
+ * if lat long based maybe don't provide a geom error (just assume its the same as global terrain and do sse that same way with that same function (see terrain to 3dtiles converter))
+ * camera height off ellisoid probably tells you min level
+ * and then some progressive ring distances away tell you level switches
+ * those ring distaces would be like traveling back up, in fact you could precalc these elevation min z changes for a given maxSSE
+ * and the delta between the elevation min z changes tell you the progressive ring distances.
+ * I want a function that given a camera, culling volume, and tileset, get a list of z,x,y coords I need to request
+ * consult availability to trim this list then assign priorities
+ * so that the z/x/y is only reserved for tiles could have an externalAvailibility.json that tells you ranges of
+ * layer.jsons in that are named z/x/ylayer.json that tell you the availablity for that tile and below
+ * TODO: how to make this not insane in terms of when you hit level 10 and then suddelny need to request a bunch of jsons?
+ * i.e. how to stagger?
+
+
+
+
+
+
+
+
+
+
+
+
+
+
  * What does terrain do? does it just build a tree from the layer.json?
  * FILES OF NOTE:
         Scene/Globe.js // has members like terrainProvider, imageryLayerCollection, maxsse, quadtreeprim, ellipsoid
@@ -52,173 +103,6 @@ layer.json has an available field that is a 2d array of ranges the first array h
         Core/TilingScheme.js // The interface of *TilingScheme.js files
         Core/TerrainProvider.js // The interface of *TerrainProvider.js files
  * Will probably be heavily inspired by CesiumTerrainProvider.js
- * Each level has a fixed gError
- * if lat long based maybe don't provide a geom error (just assume its the same as global terrain and do sse that same way with that same function (see terrain to 3dtiles converter))
- * camera height off ellisoid probably tells you min level
- * and then some progressive ring distances away tell you level switches
- * those ring distaces would be like traveling back up, in fact you could precalc these elevation min z changes for a given maxSSE
- * and the delta between the elevation min z changes tell you the progressive ring distances.
- * I want a function that given a camera, culling volume, and tileset, get a list of z,x,y coords I need to request
- * consult availability to trim this list then assign priorities
-
- * so that the z/x/y is only reserved for tiles could have an externalAvailibility.json that tells you ranges of
- * layer.jsons in that are named z/x/ylayer.json that tell you the availablity for that tile and below
- * TODO: how to make this not insane in terms of hitt level 10 and then suddelny needing to request a bunch of jsons?
- * i.e. how to stagger?
-
-NYC-all root and first child
-rsc: (1.952908968275784e-10, -3189342.379591365, 0)
-rsr: 9553783.977822298
-robc: (1.952908968275784e-10, -3189342.379591365, 0)
-robha: (6378684.75918273, 0, 1.952908968275784e-10)
-        (3.905817936551568e-10, 0, -3189342.379591365)
-        (0, 6357300.073427909, 0)
-rge: 563.8721715009725
-c0sc: (1.952908968275784e-10, -3189342.379591365, 0)
-c0sr: 9553783.977822298
-c0obc: (1.952908968275784e-10, -3189342.379591365, 0)
-c0obha: (6378684.75918273, 0, 1.952908968275784e-10)
-        (3.905817936551568e-10, 0, -3189342.379591365)
-        (0, 6357300.073427909, 0)
-c0ge: 563.8721715009725
-ERROR NYC-9: c0c0 center is wrong sign on x and z
-c0c0sc: (-2393046.300993696, -2393046.300993697, -3373586.191374643)
-c0c0sr: 6568552.836985369
-c0c0obc: (-2393046.300993696, -2393046.300993697, -3373586.191374643)
-c0c0obha: (3189342.379591365, -2251425.3100569984, -794734.7099335275)
-        (-3189342.3795913635, -2251425.3100569993, -794734.709933528)
-        (0, 3183996.208152659, -1123924.6052766426)
-c0c0ge: 281.93608575048626
-c0c1sc: (2393046.3009936963, -2393046.3009936945, -3373586.1913746414)
-c0c1sr: 6568552.836985373
-c0c1obc: (2393046.3009936963, -2393046.3009936945, -3373586.1913746414)
-ERROR NYC-9: wrong signs on some of the half axes (the y on x and y axes should be flipped, the z on z axis should be flipped)
-c0c1obha: (3189342.379591368, 2251425.3100569984, 794734.7099335281)
-        (3189342.379591363, -2251425.310057002, -794734.7099335296)
-        (0, 3183996.2081526616, -1123924.6052766438)
-c0c1ge: 281.93608575048626
-
-NYC-all copied NYC-9 bounds for root bounds
-rsc: (1336358.291381222, -4661634.6721119005, 4129423.4476662027)
-rsr: 24576.389681959794
-robc: (1336358.291381222, -4661634.6721119005, 4129423.4476662027)
-robha: (14339.790959816113, -3502.6083558573473, 63.49360566699067)
-        (4110.810883672715, 12218.190779972256, -221.48550695092757)
-        (0, 14826.530478022294, 197.5206146184414)
-rge: 563.8721715009725
-c0sc: (1336358.291381222, -4661634.6721119005, 4129423.4476662027)
-c0sr: 24576.389681959794
-c0obc: (1336358.291381222, -4661634.6721119005, 4129423.4476662027)
-c0obha: (14339.790959816113, -3502.6083558573473, 63.49360566699067)
-        (4110.810883672715, 12218.190779972256, -221.48550695092757)
-        (0, 14826.530478022294, 197.5206146184414)
-c0ge: 563.8721715009725
-c0c0sc: (1330950.2096997583, -4669799.382409065, 4122015.6641518762)
-c0c0sr: 12289.006034475266
-c0c0obc: (1330950.2096997583, -4669799.382409065, 4122015.6641518762)
-c0c0obha: (7173.0484348402115, -1738.4578648809932, 59.5402919176763)
-    (2044.406951292195, 6099.58915412531, -208.9042973954243)
-    (0, 7421.494000468171, 185.64168822584523)
-c0c0ge: 281.93608575048626
-c0c1sc: (1345270.6885915804, -4665694.107746912, 4122015.664151877)
-c0c1sr: 12289.00603447516
-c0c1obc: (1345270.6885915804, -4665694.107746912, 4122015.664151877)
-c0c1obha: (7166.742524976004, -1757.1629591639103, 60.18092106173164)
-        (2066.4039323805646, 6094.226934733409, -208.7206472107626)
-        (0, 7421.494000468, 185.6416882258452)
-c0c1ge: 281.93608575048626
-
-(kn prints are the leaves)
-boudning boxes are flipped (at least) north south
-
-NYC-10 (pretty much matches NYC-all)
-k0_sc: (1341742.4035102495, -4653457.2404353665, 4136809.764666716)
-k0_sr: 12276.16775388522
-k0_obc: (1341742.4035102495, -4653457.2404353665, 4136809.764666716)
-k0_obha: (7147.946102466746, -1763.4913081796785, 49.091001686635096)
-        (2060.9843151343107, 6116.175038535142, -170.25837198052827)
-        (0, 7402.120647027748, 152.37546284064567)
-k0_ge: 0
-k1_sc: (1327467.8224858104, -4657581.006738451, 4136835.927205513)
-k1_sr: 12277.445933688105
-k1_obc: (1327467.8224858104, -4657581.006738451, 4136835.927205513)
-k1_obha: (7154.33868972913, -1744.744117183397, 59.381563705856564)
-        (2039.0744440172937, 6121.645228729378, -208.3473803145863)
-        (0, 7402.22785253294, 186.29990970814418)
-k1_ge: 0
-
-NYC-9 (matches NYC-all)
-k0_sc: (1336358.291381222, -4661634.6721119005, 4129423.4476662027)
-k0_sr: 24576.389681959794
-k0_obc: (1336358.291381222, -4661634.6721119005, 4129423.4476662027)
-k0_obha: (14339.790959816113, -3502.6083558573473, 63.49360566699067)
-        (4110.810883672715, 12218.190779972256, -221.48550695092757)
-        (0, 14826.530478022294, 197.5206146184414)
-k0_ge: 0
-
-NYC-10
-rsc: (1336358.291381222, -4661634.6721119005, 4129423.4476662027)
-rsr: 24576.389681959794
-robc: (1336358.291381222, -4661634.6721119005, 4129423.4476662027)
-robha: (14339.790959816113, -3502.6083558573473, 63.49360566699067)
-        (4110.810883672715, 12218.190779972256, -221.48550695092757)
-        (0, 14826.530478022294, 197.5206146184414)
-rge: 563.8721715009725
-c0sc: (1336358.291381222, -4661634.6721119005, 4129423.4476662027)
-c0sr: 24576.389681959794
-c0obc: (1336358.291381222, -4661634.6721119005, 4129423.4476662027)
-c0obha: (14339.790959816113, -3502.6083558573473, 63.49360566699067)
-        (4110.810883672715, 12218.190779972256, -221.48550695092757)
-        (0, 14826.530478022294, 197.5206146184414)
-c0ge: 563.8721715009725
-c0c0sc: (1341742.4035102495, -4653457.2404353665, 4136809.764666716)
-c0c0sr: 12276.16775388522
-c0c0obc: (1341742.4035102495, -4653457.2404353665, 4136809.764666716)
-c0c0obha: (7147.946102466746, -1763.4913081796785, 49.091001686635096)
-        (2060.9843151343107, 6116.175038535142, -170.25837198052827)
-        (0, 7402.120647027748, 152.37546284064567)
-c0c0ge: 0
-c0c1sc: (1327467.8224858104, -4657581.006738451, 4136835.927205513)
-c0c1sr: 12277.445933688105
-c0c1obc: (1327467.8224858104, -4657581.006738451, 4136835.927205513)
-c0c1obha: (7154.33868972913, -1744.744117183397, 59.381563705856564)
-        (2039.0744440172937, 6121.645228729378, -208.3473803145863)
-        (0, 7402.22785253294, 186.29990970814418)
-c0c1ge: 0
-
-NYC-9
-rsc: (1.952908968275784e-10, -3189342.379591365, 0)
-rsr: 9553783.977822298
-robc: (1.952908968275784e-10, -3189342.379591365, 0)
-robha: (6378684.75918273, 0, 1.952908968275784e-10)
-        (3.905817936551568e-10, 0, -3189342.379591365)
-        (0, 6357300.073427909, 0)
-rge: 563.8721715009725
-c0sc: (1.952908968275784e-10, -3189342.379591365, 0)
-c0sr: 9553783.977822298
-c0obc: (1.952908968275784e-10, -3189342.379591365, 0)
-c0obha: (6378684.75918273, 0, 1.952908968275784e-10)
-        (3.905817936551568e-10, 0, -3189342.379591365)
-        (0, 6357300.073427909, 0)
-c0ge: 563.8721715009725
-c0c0sc: (2393046.3009936963, -2393046.3009936945, 3373586.1913746414)
-c0c0sr: 6568552.836985373
-c0c0obc: (2393046.3009936963, -2393046.3009936945, 3373586.1913746414)
-c0c0obha: (3189342.379591368, -2251425.3100569984, 794734.7099335281)
-        (3189342.379591363, 2251425.310057002, -794734.7099335296)
-        (0, 3183996.2081526616, 1123924.6052766438)
-c0c0ge: 563.8721715009725
-"boundingVolume": {
-    "region": [
-        -1.29187544264487,
-        0.7103573144863446,
-        -1.290377336611101,
-        0.711586701329357,
-        -11.89207010413975,
-        547.7591827297583
-    ]
-},
-"uri": "9/301/140.b3dm"
 
 /////////////USEFUL CODE////////////////////////
 
