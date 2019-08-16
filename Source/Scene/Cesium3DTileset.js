@@ -1669,13 +1669,14 @@ define([
         var xMid, yMid;
         if (parentBounds instanceof TileBoundingRegion) {
             var rect = parentBounds.rectangle;
-            xMid = xTiles === 1 ? rect.east : (rect.east + rect.west) / xTiles;
-            yMid = yTiles === 1 ? rect.north : (rect.north + rect.south) / yTiles;
 
+            xMid = xTiles === 1 ? rect.east : (rect.east + rect.west) / xTiles;
             var west = xQuadCoord === 0 ? rect.west : xMid;
-            var south = yQuadCoord === 0 ? rect.south : yMid;
             var east = xQuadCoord === 0 ? xMid : rect.east;
-            var north = yQuadCoord === 0 ? yMid : rect.north;
+
+            yMid = yTiles === 1 ? rect.south : (rect.north + rect.south) / yTiles;
+            var south = yQuadCoord === 0 ?  yMid : rect.south;
+            var north = yQuadCoord === 0 ? rect.north : yMid;
 
             return { region: [
                 west,
