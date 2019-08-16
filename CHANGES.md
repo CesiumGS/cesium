@@ -5,6 +5,7 @@ Change Log
 
 ##### Additions :tada:
 * Added optional `index` parameter to `PrimitiveCollection.add`. [#8041](https://github.com/AnalyticalGraphicsInc/cesium/pull/8041)
+* Updated to render at the browser max resolution. Set `viewer.resolutionScale = 1.0 / window.devicePixelRatio` to render at lower pixel density. [#8082](https://github.com/AnalyticalGraphicsInc/cesium/issues/8082)  
 
 ##### Fixes :wrench:
 * Fixed a crash when a glTF model used `KHR_texture_transform` without a sampler defined. [#7916](https://github.com/AnalyticalGraphicsInc/cesium/issues/7916)
@@ -12,6 +13,7 @@ Change Log
 * Disabled HDR by default to improve visual quality in most standard use cases. Set `viewer.scene.highDynamicRange = true` to re-enable. [#7966](https://github.com/AnalyticalGraphicsInc/cesium/issues/7966)
 * Fixed a bug that causes hidden point primitives to still appear on some operating systems. [#8043](https://github.com/AnalyticalGraphicsInc/cesium/issues/8043)
 * Fixed issue where KTX or CRN files would not be properly identified. [#7979](https://github.com/AnalyticalGraphicsInc/cesium/issues/7979) 
+* Fixed loading Cesium 3DTiles at different resolutions. [#8082](https://github.com/AnalyticalGraphicsInc/cesium/issues/8082)
 
 ### 1.60 - 2019-08-01
 
