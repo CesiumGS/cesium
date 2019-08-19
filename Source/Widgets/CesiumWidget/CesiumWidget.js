@@ -203,7 +203,7 @@ define([
 
         container = getElement(container);
 
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //Configure the widget DOM elements
         var element = document.createElement('div');

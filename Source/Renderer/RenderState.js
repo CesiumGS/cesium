@@ -89,20 +89,20 @@ define([
      * @private
      */
     function RenderState(renderState) {
-        var rs = defaultValue(renderState, {});
-        var cull = defaultValue(rs.cull, {});
-        var polygonOffset = defaultValue(rs.polygonOffset, {});
-        var scissorTest = defaultValue(rs.scissorTest, {});
-        var scissorTestRectangle = defaultValue(scissorTest.rectangle, {});
-        var depthRange = defaultValue(rs.depthRange, {});
-        var depthTest = defaultValue(rs.depthTest, {});
-        var colorMask = defaultValue(rs.colorMask, {});
-        var blending = defaultValue(rs.blending, {});
-        var blendingColor = defaultValue(blending.color, {});
-        var stencilTest = defaultValue(rs.stencilTest, {});
-        var stencilTestFrontOperation = defaultValue(stencilTest.frontOperation, {});
-        var stencilTestBackOperation = defaultValue(stencilTest.backOperation, {});
-        var sampleCoverage = defaultValue(rs.sampleCoverage, {});
+        var rs = defaultValue(renderState, defaultValue.EMPTY_OBJECT);
+        var cull = defaultValue(rs.cull, defaultValue.EMPTY_OBJECT);
+        var polygonOffset = defaultValue(rs.polygonOffset, defaultValue.EMPTY_OBJECT);
+        var scissorTest = defaultValue(rs.scissorTest, defaultValue.EMPTY_OBJECT);
+        var scissorTestRectangle = defaultValue(scissorTest.rectangle, defaultValue.EMPTY_OBJECT);
+        var depthRange = defaultValue(rs.depthRange, defaultValue.EMPTY_OBJECT);
+        var depthTest = defaultValue(rs.depthTest, defaultValue.EMPTY_OBJECT);
+        var colorMask = defaultValue(rs.colorMask, defaultValue.EMPTY_OBJECT);
+        var blending = defaultValue(rs.blending, defaultValue.EMPTY_OBJECT);
+        var blendingColor = defaultValue(blending.color, defaultValue.EMPTY_OBJECT);
+        var stencilTest = defaultValue(rs.stencilTest, defaultValue.EMPTY_OBJECT);
+        var stencilTestFrontOperation = defaultValue(stencilTest.frontOperation, defaultValue.EMPTY_OBJECT);
+        var stencilTestBackOperation = defaultValue(stencilTest.backOperation, defaultValue.EMPTY_OBJECT);
+        var sampleCoverage = defaultValue(rs.sampleCoverage, defaultValue.EMPTY_OBJECT);
         var viewport = rs.viewport;
 
         this.frontFace = defaultValue(rs.frontFace, WindingOrder.COUNTER_CLOCKWISE);

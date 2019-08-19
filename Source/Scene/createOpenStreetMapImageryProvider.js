@@ -57,7 +57,7 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function createOpenStreetMapImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         var resource = Resource.createIfNeeded(defaultValue(options.url, 'https://a.tile.openstreetmap.org/'));
         resource.appendForwardSlash();

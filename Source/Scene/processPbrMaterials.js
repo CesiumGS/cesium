@@ -24,7 +24,7 @@ define([
      * @private
      */
     function processPbrMaterials(gltf, options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         // No need to create new techniques if they already exist,
         // the shader should handle these values
