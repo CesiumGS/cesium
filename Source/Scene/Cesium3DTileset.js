@@ -926,7 +926,7 @@ define([
                 }
 
                 var regex = /tileset\.json/;
-                var layerUrl = that._url.replace(regex, 'layer.json');
+                var layerUrl = that._url.replace(regex, 'layer10.json');
                 var layerResource = Resource.createIfNeeded(layerUrl);
                 return Cesium3DTileset.loadJson(layerResource);
             })
@@ -1662,36 +1662,67 @@ define([
         }
     }
 
-    function deriveImplicitBoundsFromParent(parent, xCoord, yCoord, xTiles, yTiles) {
+    Cesium3DTileset.prototype.deriveImplicitBounds = function(tile, x, y, z) {
         // xCoord, yCoord should be in range 0-1
         // cut the bounds in half in xy starting from min xy
-        var parentBounds = parent.boundingVolume;
-        var xMid, yMid;
-        if (parentBounds instanceof TileBoundingRegion) {
-            var rect = parentBounds.rectangle;
-            var span = rect.east - rect.west;
-            var west = rect.west + ((xCoord / xTiles) * span);
-            var east = rect.west + (((xCoord + 1) / xTiles) * span);
+        // var parentBounds = parent.boundingVolume;
+        // if (parentBounds instanceof TileBoundingRegion) {
+        //     var rect = parentBounds.rectangle;
+        //     var span = rect.east - rect.west;
+        //     var west = rect.west + ((xCoord / xTiles) * span);
+        //     var east = rect.west + (((xCoord + 1) / xTiles) * span);
+        //
+        //     span = rect.north - rect.south;
+        //     var north = rect.north - ((yCoord / yTiles) * span);
+        //     var south = rect.north - (((yCoord + 1) / yTiles) * span);
+        //
+        //     return { region: [
+        //         west,
+        //         south,
+        //         east,
+        //         north,
+        //         parentBounds.minimumHeight,
+        //         parentBounds.maximumHeight
+        //     ]};
+        // } else if (parentBounds instanceof TileOrientedBoundingBox) {
+        //
+        // } else {
+        //     // doh
+        // }
 
-            span = rect.north - rect.south;
-            var north = rect.north - ((yCoord / yTiles) * span);
-            var south = rect.north - (((yCoord + 1) / yTiles) * span);
+        var headCount = this._tilingScheme.headCount;
+        var rootXCount = headCount[0];
+        var rootYCount = headCount[1];
+        var xTiles = rootXCount * (1 << z);
+        var yTiles = rootYCount * (1 << z);
+
+        var bounds = tile.boundingVolume;
+        var TWO_PI = Math.PI * 2;
+        var PI_OVER_TWO = Math.PI / 2;
+
+        if (bounds instanceof TileBoundingRegion) {
+            var west = ((x / xTiles) * TWO_PI) - Math.PI;
+            var east = (((x + 1) / xTiles) * TWO_PI) - Math.PI;
+
+            // XY origin starts in upper left of the 2D map so north south calc is slightly different
+            var north = ((y / yTiles) * -Math.PI) + PI_OVER_TWO;
+            var south = (((y + 1) / yTiles) * -Math.PI) + PI_OVER_TWO;
 
             return { region: [
                 west,
                 south,
                 east,
                 north,
-                parentBounds.minimumHeight,
-                parentBounds.maximumHeight
+                bounds.minimumHeight,
+                bounds.maximumHeight
             ]};
-        } else if (parentBounds instanceof TileOrientedBoundingBox) {
+        } else if (bounds instanceof TileOrientedBoundingBox) {
 
         } else {
             // doh
         }
 
-        return parentBounds;
+        return bounds;
     }
 
     Cesium3DTileset.prototype.anyChildrenAvailable = function(parentX, parentY, parentZ) {
@@ -1859,12 +1890,13 @@ define([
                     if (!this.isTileAvailable(x,y,z)) {
                         continue;
                     }
+                    ++statistics.numberOfTilesTotal;
 
                     uri = z + '/' + x + '/' + y;
-                    xOffset = x - startX;
-                    yOffset = y - startY;
+                    // xOffset = x - startX;
+                    // yOffset = y - startY;
                     tileInfo = {
-                        boundingVolume: deriveImplicitBoundsFromParent(tile, xOffset, yOffset, xTiles, yTiles),
+                        boundingVolume: this.deriveImplicitBounds(tile, x, y, z),
                         geometricError: this.deriveGeometricErrorFromParent(tile, x, y, xTiles, yTiles),
                         content: {uri: uri},
                         key: new Cartesian3(x,y,z),
@@ -1906,10 +1938,10 @@ define([
                         }
 
                         uri = z + '/' + x + '/' + y;
-                        xOffset = x - startX;
-                        yOffset = y - startY;
+                        // xOffset = x - startX;
+                        // yOffset = y - startY;
                         tileInfo = {
-                            boundingVolume: deriveImplicitBoundsFromParent(tile, xOffset, yOffset, xTiles, yTiles),
+                            boundingVolume: this.deriveImplicitBounds(tile, x, y, z),
                             geometricError: this.deriveGeometricErrorFromParent(tile, x, y, xTiles, yTiles),
                             content: {uri: uri},
                             key: new Cartesian3(x,y,z),
