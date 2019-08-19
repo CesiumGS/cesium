@@ -5,7 +5,7 @@ Change Log
 
 ##### Additions :tada:
 * Added optional `index` parameter to `PrimitiveCollection.add`. [#8041](https://github.com/AnalyticalGraphicsInc/cesium/pull/8041)
-* Updated to render at the browser max resolution. Set `viewer.resolutionScale = 1.0 / window.devicePixelRatio` to render at lower pixel density. [#8082](https://github.com/AnalyticalGraphicsInc/cesium/issues/8082)  
+* Cesium now renders at native device resolution by default instead of CSS pixel resolution, to go back to the old behavior, `viewer.resolutionScale = 1.0 / window.devicePixelRatio`. [#8082](https://github.com/AnalyticalGraphicsInc/cesium/issues/8082)  
 
 ##### Fixes :wrench:
 * Fixed a crash when a glTF model used `KHR_texture_transform` without a sampler defined. [#7916](https://github.com/AnalyticalGraphicsInc/cesium/issues/7916)
