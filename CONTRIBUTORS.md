@@ -134,6 +134,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Sean Lilley](https://github.com/lilleyse)
    * [Matthew Amato](https://github.com/mramato)
    * [Brandon Barker](https://github.com/ProjectBarks)
+   * [Peter Gagliardi](https://github.com/ptrgags)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 * [Victor Berchet](https://github.com/vicb)
