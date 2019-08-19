@@ -2235,7 +2235,7 @@ defineSuite([
             };
             expect(renderOptions).toRenderAndCall(function(rgba) {
                 sourceRed = rgba[0];
-                sourceGreen = rgba[1]
+                sourceGreen = rgba[1];
             });
 
             expect(renderOptions).toRenderAndCall(function(rgba) {
@@ -2318,8 +2318,6 @@ defineSuite([
             expect(renderOptions).toRenderAndCall(function(rgba) {
                 mixRed = rgba[0];
                 mixGreen = rgba[1];
-                console.log(rgba);
-                debugger;
                 expect(rgba[0]).toBeGreaterThan(replaceRed);
                 expect(rgba[0]).toBeLessThan(sourceRed);
                 expect(rgba[1]).toBeGreaterThan(sourceGreen);
