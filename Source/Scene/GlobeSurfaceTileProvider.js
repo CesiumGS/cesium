@@ -20,6 +20,7 @@ define([
         '../Core/Intersect',
         '../Core/Math',
         '../Core/Matrix4',
+        '../Core/oneTimeWarning',
         '../Core/OrientedBoundingBox',
         '../Core/OrthographicFrustum',
         '../Core/PrimitiveType',
@@ -73,6 +74,7 @@ define([
         Intersect,
         CesiumMath,
         Matrix4,
+        oneTimeWarning,
         OrientedBoundingBox,
         OrthographicFrustum,
         PrimitiveType,
@@ -423,6 +425,10 @@ define([
         // update clipping planes
         var clippingPlanes = this._clippingPlanes;
         if (defined(clippingPlanes) && clippingPlanes.enabled) {
+            if (frameState.mode !== SceneMode.SCENE3D) {
+                oneTimeWarning('clipping3DOnly', 'Clipping planes are only supported in the 3D View. clippingPlanes will be ignored');
+            }
+
             clippingPlanes.update(frameState);
         }
         this._usedDrawCommands = 0;
@@ -635,7 +641,7 @@ define([
         }
 
         var clippingPlanes = this._clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes.enabled) {
+        if (defined(clippingPlanes) && clippingPlanes.enabled && frameState.mode === SceneMode.SCENE3D) {
             var planeIntersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
             tile.isClipped = (planeIntersection !== Intersect.INSIDE);
             if (planeIntersection === Intersect.OUTSIDE) {
@@ -1926,7 +1932,7 @@ define([
 
             // update clipping planes
             var clippingPlanes = tileProvider._clippingPlanes;
-            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped;
+            var clippingPlanesEnabled = defined(clippingPlanes) && clippingPlanes.enabled && tile.isClipped && frameState.mode === SceneMode.SCENE3D;
             if (clippingPlanesEnabled) {
                 uniformMapProperties.clippingPlanesEdgeColor = Color.clone(clippingPlanes.edgeColor, uniformMapProperties.clippingPlanesEdgeColor);
                 uniformMapProperties.clippingPlanesEdgeWidth = clippingPlanes.edgeWidth;
