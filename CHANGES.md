@@ -13,7 +13,6 @@ Change Log
 * Disabled HDR by default to improve visual quality in most standard use cases. Set `viewer.scene.highDynamicRange = true` to re-enable. [#7966](https://github.com/AnalyticalGraphicsInc/cesium/issues/7966)
 * Fixed a bug that causes hidden point primitives to still appear on some operating systems. [#8043](https://github.com/AnalyticalGraphicsInc/cesium/issues/8043)
 * Fixed issue where KTX or CRN files would not be properly identified. [#7979](https://github.com/AnalyticalGraphicsInc/cesium/issues/7979) 
-* Fixed loading Cesium 3DTiles at different resolutions. [#8082](https://github.com/AnalyticalGraphicsInc/cesium/issues/8082)
 
 ### 1.60 - 2019-08-01
 
