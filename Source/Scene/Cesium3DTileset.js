@@ -926,7 +926,7 @@ define([
                 }
 
                 var regex = /tileset\.json/;
-                var layerUrl = that._url.replace(regex, 'layer10.json');
+                var layerUrl = that._url.replace(regex, 'layer.json');
                 var layerResource = Resource.createIfNeeded(layerUrl);
                 return Cesium3DTileset.loadJson(layerResource);
             })
@@ -949,62 +949,10 @@ define([
                     // that._root = new Cesium3DTile(that, resource, rootInfo, undefined);
                     that._root = that.updateTilesetFromLayerJson(resource, layerJson);
                     var r = that._root;
-                    // console.log("rsc: " + r._boundingVolume._boundingSphere.center);
-                    // console.log("rsr: " + r._boundingVolume._boundingSphere.radius);
-                    // console.log("robc: " + r._boundingVolume._orientedBoundingBox.center);
-                    // console.log("robha: " + r._boundingVolume._orientedBoundingBox.halfAxes);
-                    // console.log("rge: " + r.geometricError);
-
-                    // var c0 = r.children[0];
-                    // if (defined(c0)) {
-                    //     console.log("c0sc: " + c0._boundingVolume._boundingSphere.center);
-                    //     console.log("c0sr: " + c0._boundingVolume._boundingSphere.radius);
-                    //     console.log("c0obc: " + c0._boundingVolume._orientedBoundingBox.center);
-                    //     console.log("c0obha: " + c0._boundingVolume._orientedBoundingBox.halfAxes);
-                    //     console.log("c0ge: " + c0.geometricError);
-                    //
-                    //     var c0c0 = c0.children[0];
-                    //     if (defined(c0c0)) {
-                    //         console.log("c0c0sc: " + c0c0._boundingVolume._boundingSphere.center);
-                    //         console.log("c0c0sr: " + c0c0._boundingVolume._boundingSphere.radius);
-                    //         console.log("c0c0obc: " + c0c0._boundingVolume._orientedBoundingBox.center);
-                    //         console.log("c0c0obha: " + c0c0._boundingVolume._orientedBoundingBox.halfAxes);
-                    //         console.log("c0c0ge: " + c0c0.geometricError);
-                    //         if (defined(c0c0)) {
-                    //             var c0c1 = c0.children[1];
-                    //             console.log("c0c1sc: " + c0c1._boundingVolume._boundingSphere.center);
-                    //             console.log("c0c1sr: " + c0c1._boundingVolume._boundingSphere.radius);
-                    //             console.log("c0c1obc: " + c0c1._boundingVolume._orientedBoundingBox.center);
-                    //             console.log("c0c1obha: " + c0c1._boundingVolume._orientedBoundingBox.halfAxes);
-                    //             console.log("c0c1ge: " + c0c1.geometricError);
-                    //         }
-                    //     }
-                    // }
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
                     var stack = [];
                     stack.push(that._root);
-                    // var k = 0;
-                    // while (stack.length > 0) {
-                    //     var tile = stack.pop();
-                    //     var children = tile.children;
-                    //     if (defined(children)) {
-                    //         var length = children.length;
-                    //         for (var i = 0; i < length; ++i) {
-                    //             var childTile = children[i];
-                    //             if (childTile.geometricError === 0) {
-                    //                 console.log("k" + k + "_sc: " + childTile._boundingVolume._boundingSphere.center);
-                    //                 console.log("k" + k + "_sr: " + childTile._boundingVolume._boundingSphere.radius);
-                    //                 console.log("k" + k + "_obc: " + childTile._boundingVolume._orientedBoundingBox.center);
-                    //                 console.log("k" + k + "_obha: " + childTile._boundingVolume._orientedBoundingBox.halfAxes);
-                    //                 console.log("k" + k + "_ge: " + childTile.geometricError);
-                    //                 k++;
-                    //             } else {
-                    //                 stack.push(childTile);
-                    //             }
-                    //         }
-                    //     }
-                    // }
                 }
 
                 // Save the original, untransformed bounding volume position so we can apply
@@ -1663,33 +1611,6 @@ define([
     }
 
     Cesium3DTileset.prototype.deriveImplicitBounds = function(tile, x, y, z) {
-        // xCoord, yCoord should be in range 0-1
-        // cut the bounds in half in xy starting from min xy
-        // var parentBounds = parent.boundingVolume;
-        // if (parentBounds instanceof TileBoundingRegion) {
-        //     var rect = parentBounds.rectangle;
-        //     var span = rect.east - rect.west;
-        //     var west = rect.west + ((xCoord / xTiles) * span);
-        //     var east = rect.west + (((xCoord + 1) / xTiles) * span);
-        //
-        //     span = rect.north - rect.south;
-        //     var north = rect.north - ((yCoord / yTiles) * span);
-        //     var south = rect.north - (((yCoord + 1) / yTiles) * span);
-        //
-        //     return { region: [
-        //         west,
-        //         south,
-        //         east,
-        //         north,
-        //         parentBounds.minimumHeight,
-        //         parentBounds.maximumHeight
-        //     ]};
-        // } else if (parentBounds instanceof TileOrientedBoundingBox) {
-        //
-        // } else {
-        //     // doh
-        // }
-
         var headCount = this._tilingScheme.headCount;
         var rootXCount = headCount[0];
         var rootYCount = headCount[1];
@@ -1748,6 +1669,7 @@ define([
     };
 
     Cesium3DTileset.prototype.deriveGeometricErrorFromParent = function(parent, x, y, xTiles, yTiles) {
+        // TODO: fix this
         var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailable(x, y, parent.key.z + 1);
         return anyChildrenAvailable ? (parent.geometricError / Math.sqrt(xTiles * yTiles)) : 0;
     };
@@ -1870,7 +1792,7 @@ define([
             startZ++;
         }
         var range = this.getRangeForLevel(startZ);
-        var xOffset, yOffset, xTiles, yTiles;
+        var xTiles, yTiles;
         // TODO: merge with loop version but wait till the other todo's are ironed out
 
         // main layer.json, construct child tiles of contentless root
@@ -1893,8 +1815,6 @@ define([
                     ++statistics.numberOfTilesTotal;
 
                     uri = z + '/' + x + '/' + y;
-                    // xOffset = x - startX;
-                    // yOffset = y - startY;
                     tileInfo = {
                         boundingVolume: this.deriveImplicitBounds(tile, x, y, z),
                         geometricError: this.deriveGeometricErrorFromParent(tile, x, y, xTiles, yTiles),
@@ -1918,7 +1838,6 @@ define([
         while (stack.length > 0) {
             tile = stack.pop();
             ++statistics.numberOfTilesTotal;
-           // this._allTilesAdditive = this._allTilesAdditive && (tile.refine === Cesium3DTileRefine.ADD);
 
             // get the tile's chilrens' xyz range
             // loop over that like we did above
@@ -1938,8 +1857,6 @@ define([
                         }
 
                         uri = z + '/' + x + '/' + y;
-                        // xOffset = x - startX;
-                        // yOffset = y - startY;
                         tileInfo = {
                             boundingVolume: this.deriveImplicitBounds(tile, x, y, z),
                             geometricError: this.deriveGeometricErrorFromParent(tile, x, y, xTiles, yTiles),
