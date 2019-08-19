@@ -95,12 +95,21 @@ define([
         requestAnimationFrame(render);
     }
 
+    function configureSceneResolution(widget) {
+        var devicePixelRatio = window.devicePixelRatio;
+        var resolutionScale = widget._resolutionScale * devicePixelRatio;
+        if (defined(widget._scene)) {
+            widget._scene.screenSpaceErrorPixelRatio = resolutionScale;
+        }
+
+        return resolutionScale;
+    }
+
     function configureCanvasSize(widget) {
         var canvas = widget._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        var devicePixelRatio = window.devicePixelRatio;
-        var resolutionScale = widget._resolutionScale * devicePixelRatio;
+        var resolutionScale = configureSceneResolution(widget);
 
         widget._canvasWidth = width;
         widget._canvasHeight = height;
@@ -113,7 +122,6 @@ define([
 
         widget._canRender = width !== 0 && height !== 0;
         widget._lastDevicePixelRatio = devicePixelRatio;
-        widget._scene.screenSpaceErrorPixelRatio = resolutionScale;
     }
 
     function configureCameraFrustum(widget) {
@@ -251,6 +259,8 @@ define([
         this._forceResize = false;
         this._clock = defined(options.clock) ? options.clock : new Clock();
 
+        configureCanvasSize(this);
+
         try {
             var scene = new Scene({
                 canvas : canvas,
@@ -270,7 +280,7 @@ define([
 
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
-            configureCanvasSize(this);
+            configureSceneResolution(this);
             configureCameraFrustum(this);
 
             var ellipsoid = defaultValue(scene.mapProjection.ellipsoid, Ellipsoid.WGS84);
@@ -562,7 +572,7 @@ define([
                     throw new DeveloperError('resolutionScale must be greater than 0.');
                 }
                 //>>includeEnd('debug');
-                this._forceResize = this._resolutionScale !== value;
+                this._forceResize = true;
                 this._resolutionScale = value;
             }
         }

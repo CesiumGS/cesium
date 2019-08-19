@@ -994,10 +994,10 @@ define([
         var error = (maxGeometricError * height) / (distance * sseDenominator);
 
         if (frameState.fog.enabled) {
-            error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
+            error -= CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
         }
 
-        return error / frameState.screenSpaceErrorPixelRatio;
+        return error /= frameState.screenSpaceErrorPixelRatio;
     }
 
     function screenSpaceError2D(primitive, frameState, tile) {
@@ -1016,10 +1016,12 @@ define([
         var error = maxGeometricError / pixelSize;
 
         if (frameState.fog.enabled && frameState.mode !== SceneMode.SCENE2D) {
-            error = error - CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
+            error -= CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
         }
 
-        return error / frameState.screenSpaceErrorPixelRatio;
+        error /= frameState.screenSpaceErrorPixelRatio;
+
+        return error;
     }
 
     function addTileToRenderList(primitive, tile) {
