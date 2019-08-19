@@ -1662,21 +1662,20 @@ define([
         }
     }
 
-    function deriveImplicitBoundsFromParent(parent, xQuadCoord, yQuadCoord, xTiles, yTiles) {
-        // xQuadCoord, yQuadCoord should be in range 0-1
+    function deriveImplicitBoundsFromParent(parent, xCoord, yCoord, xTiles, yTiles) {
+        // xCoord, yCoord should be in range 0-1
         // cut the bounds in half in xy starting from min xy
         var parentBounds = parent.boundingVolume;
         var xMid, yMid;
         if (parentBounds instanceof TileBoundingRegion) {
             var rect = parentBounds.rectangle;
+            var span = rect.east - rect.west;
+            var west = rect.west + ((xCoord / xTiles) * span);
+            var east = rect.west + (((xCoord + 1) / xTiles) * span);
 
-            xMid = xTiles === 1 ? rect.east : (rect.east + rect.west) / xTiles;
-            var west = xQuadCoord === 0 ? rect.west : xMid;
-            var east = xQuadCoord === 0 ? xMid : rect.east;
-
-            yMid = yTiles === 1 ? rect.south : (rect.north + rect.south) / yTiles;
-            var south = yQuadCoord === 0 ?  yMid : rect.south;
-            var north = yQuadCoord === 0 ? rect.north : yMid;
+            span = rect.north - rect.south;
+            var north = rect.north - ((yCoord / yTiles) * span);
+            var south = rect.north - (((yCoord + 1) / yTiles) * span);
 
             return { region: [
                 west,
@@ -1718,10 +1717,8 @@ define([
     };
 
     Cesium3DTileset.prototype.deriveGeometricErrorFromParent = function(parent, x, y, xTiles, yTiles) {
-        // TODO: is this correct?
-        var denom = (xTiles * yTiles) === 1 ? 1 : 2;
         var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailable(x, y, parent.key.z + 1);
-        return anyChildrenAvailable ? parent.geometricError / denom : 0;
+        return anyChildrenAvailable ? (parent.geometricError / Math.sqrt(xTiles * yTiles)) : 0;
     };
 
     /**
@@ -1744,6 +1741,45 @@ define([
         }
 
         return false;
+    };
+
+    /**
+     * Gets a loop range in x y z that needs to be checked for the given level
+     *
+     * @private
+     */
+    Cesium3DTileset.prototype.getRangeForLevel = function(level) {
+        var ranges = this._available[level];
+        var minX = Number.MAX_VALUE;
+        var minY = Number.MAX_VALUE;
+        var maxX = 0;
+        var maxY = 0;
+
+        var oct = defined(ranges.startZ);
+
+        var minZ = oct ? Number.MAX_VALUE : 0;
+        var maxZ = 0;
+
+        for (var range of ranges) {
+            minX = Math.min(minX, range.startX);
+            minY = Math.min(minY, range.startY);
+            maxX = Math.max(maxX, range.endX);
+            maxY = Math.max(maxY, range.endY);
+
+            if (oct) {
+                minZ = Math.min(minZ, range.startZ);
+                maxZ = Math.max(maxZ, range.endZ);
+            }
+        }
+
+        return {
+            startX: minX,
+            startY: minY,
+            startZ: minZ,
+            endX: maxX,
+            endY: maxY,
+            endZ: maxZ
+        };
     };
 
     /**
@@ -1802,15 +1838,15 @@ define([
         while (available[startZ].length === 0 && startZ < length) {
             startZ++;
         }
-        var ranges = available[startZ][0];
+        var range = this.getRangeForLevel(startZ);
         var xOffset, yOffset, xTiles, yTiles;
         // TODO: merge with loop version but wait till the other todo's are ironed out
 
         // main layer.json, construct child tiles of contentless root
-        var startX = ranges.startX;
-        var endX = ranges.endX;
-        var startY = ranges.startY;
-        var endY = ranges.endY;
+        var startX = range.startX;
+        var endX = range.endX;
+        var startY = range.startY;
+        var endY = range.endY;
         if (!hasParent) {
             var tile = rootTile;
             // Go to startZ and grab the tiles there (hopefully there's 1 or 2)
