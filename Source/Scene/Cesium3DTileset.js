@@ -949,62 +949,62 @@ define([
                     // that._root = new Cesium3DTile(that, resource, rootInfo, undefined);
                     that._root = that.updateTilesetFromLayerJson(resource, layerJson);
                     var r = that._root;
-                    console.log("rsc: " + r._boundingVolume._boundingSphere.center);
-                    console.log("rsr: " + r._boundingVolume._boundingSphere.radius);
-                    console.log("robc: " + r._boundingVolume._orientedBoundingBox.center);
-                    console.log("robha: " + r._boundingVolume._orientedBoundingBox.halfAxes);
-                    console.log("rge: " + r.geometricError);
+                    // console.log("rsc: " + r._boundingVolume._boundingSphere.center);
+                    // console.log("rsr: " + r._boundingVolume._boundingSphere.radius);
+                    // console.log("robc: " + r._boundingVolume._orientedBoundingBox.center);
+                    // console.log("robha: " + r._boundingVolume._orientedBoundingBox.halfAxes);
+                    // console.log("rge: " + r.geometricError);
 
-                    var c0 = r.children[0];
-                    if (defined(c0)) {
-                        console.log("c0sc: " + c0._boundingVolume._boundingSphere.center);
-                        console.log("c0sr: " + c0._boundingVolume._boundingSphere.radius);
-                        console.log("c0obc: " + c0._boundingVolume._orientedBoundingBox.center);
-                        console.log("c0obha: " + c0._boundingVolume._orientedBoundingBox.halfAxes);
-                        console.log("c0ge: " + c0.geometricError);
-
-                        var c0c0 = c0.children[0];
-                        if (defined(c0c0)) {
-                            console.log("c0c0sc: " + c0c0._boundingVolume._boundingSphere.center);
-                            console.log("c0c0sr: " + c0c0._boundingVolume._boundingSphere.radius);
-                            console.log("c0c0obc: " + c0c0._boundingVolume._orientedBoundingBox.center);
-                            console.log("c0c0obha: " + c0c0._boundingVolume._orientedBoundingBox.halfAxes);
-                            console.log("c0c0ge: " + c0c0.geometricError);
-                            if (defined(c0c0)) {
-                                var c0c1 = c0.children[1];
-                                console.log("c0c1sc: " + c0c1._boundingVolume._boundingSphere.center);
-                                console.log("c0c1sr: " + c0c1._boundingVolume._boundingSphere.radius);
-                                console.log("c0c1obc: " + c0c1._boundingVolume._orientedBoundingBox.center);
-                                console.log("c0c1obha: " + c0c1._boundingVolume._orientedBoundingBox.halfAxes);
-                                console.log("c0c1ge: " + c0c1.geometricError);
-                            }
-                        }
-                    }
+                    // var c0 = r.children[0];
+                    // if (defined(c0)) {
+                    //     console.log("c0sc: " + c0._boundingVolume._boundingSphere.center);
+                    //     console.log("c0sr: " + c0._boundingVolume._boundingSphere.radius);
+                    //     console.log("c0obc: " + c0._boundingVolume._orientedBoundingBox.center);
+                    //     console.log("c0obha: " + c0._boundingVolume._orientedBoundingBox.halfAxes);
+                    //     console.log("c0ge: " + c0.geometricError);
+                    //
+                    //     var c0c0 = c0.children[0];
+                    //     if (defined(c0c0)) {
+                    //         console.log("c0c0sc: " + c0c0._boundingVolume._boundingSphere.center);
+                    //         console.log("c0c0sr: " + c0c0._boundingVolume._boundingSphere.radius);
+                    //         console.log("c0c0obc: " + c0c0._boundingVolume._orientedBoundingBox.center);
+                    //         console.log("c0c0obha: " + c0c0._boundingVolume._orientedBoundingBox.halfAxes);
+                    //         console.log("c0c0ge: " + c0c0.geometricError);
+                    //         if (defined(c0c0)) {
+                    //             var c0c1 = c0.children[1];
+                    //             console.log("c0c1sc: " + c0c1._boundingVolume._boundingSphere.center);
+                    //             console.log("c0c1sr: " + c0c1._boundingVolume._boundingSphere.radius);
+                    //             console.log("c0c1obc: " + c0c1._boundingVolume._orientedBoundingBox.center);
+                    //             console.log("c0c1obha: " + c0c1._boundingVolume._orientedBoundingBox.halfAxes);
+                    //             console.log("c0c1ge: " + c0c1.geometricError);
+                    //         }
+                    //     }
+                    // }
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
                     var stack = [];
                     stack.push(that._root);
-                    var k = 0;
-                    while (stack.length > 0) {
-                        var tile = stack.pop();
-                        var children = tile.children;
-                        if (defined(children)) {
-                            var length = children.length;
-                            for (var i = 0; i < length; ++i) {
-                                var childTile = children[i];
-                                if (childTile.geometricError === 0) {
-                                    console.log("k" + k + "_sc: " + childTile._boundingVolume._boundingSphere.center);
-                                    console.log("k" + k + "_sr: " + childTile._boundingVolume._boundingSphere.radius);
-                                    console.log("k" + k + "_obc: " + childTile._boundingVolume._orientedBoundingBox.center);
-                                    console.log("k" + k + "_obha: " + childTile._boundingVolume._orientedBoundingBox.halfAxes);
-                                    console.log("k" + k + "_ge: " + childTile.geometricError);
-                                    k++;
-                                } else {
-                                    stack.push(childTile);
-                                }
-                            }
-                        }
-                    }
+                    // var k = 0;
+                    // while (stack.length > 0) {
+                    //     var tile = stack.pop();
+                    //     var children = tile.children;
+                    //     if (defined(children)) {
+                    //         var length = children.length;
+                    //         for (var i = 0; i < length; ++i) {
+                    //             var childTile = children[i];
+                    //             if (childTile.geometricError === 0) {
+                    //                 console.log("k" + k + "_sc: " + childTile._boundingVolume._boundingSphere.center);
+                    //                 console.log("k" + k + "_sr: " + childTile._boundingVolume._boundingSphere.radius);
+                    //                 console.log("k" + k + "_obc: " + childTile._boundingVolume._orientedBoundingBox.center);
+                    //                 console.log("k" + k + "_obha: " + childTile._boundingVolume._orientedBoundingBox.halfAxes);
+                    //                 console.log("k" + k + "_ge: " + childTile.geometricError);
+                    //                 k++;
+                    //             } else {
+                    //                 stack.push(childTile);
+                    //             }
+                    //         }
+                    //     }
+                    // }
                 }
 
                 // Save the original, untransformed bounding volume position so we can apply
@@ -1816,8 +1816,8 @@ define([
             // Go to startZ and grab the tiles there (hopefully there's 1 or 2)
             // and push those children
             z = startZ;
-            xTiles = endX-startX+1;
-            yTiles = endY-startY+1;
+            xTiles = endX - startX + 1;
+            yTiles = endY - startY + 1;
             for (y = startY; y <= endY; ++y) {
                 for (x = startX; x <= endX; ++x) {
                     if (!this.isTileAvailable(x,y,z)) {

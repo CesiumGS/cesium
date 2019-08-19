@@ -44,10 +44,14 @@ if "root"exists then its traditional if "tilingScheme" exists then it's implicit
   * content boundingbox is in the glb's minmax of positions so actual geom error could be the diag of this box?
   [x] Should provide a hint to amount of heads it is based on, though you could figure it out give the boundingRegion and first availability
 
-  [ ] be able to consume non single head inputs (just versions of the layer.json with upper levels removed)
-  might need to construct to to a single tile to avoid accumulating error??? otherwise contentless root will take the the bound
+  [ ] Be able to consume non single head inputs (just versions of the layer.json with upper levels removed)
+        headCount: x,y,z // so we can correlate two georef tilesets with different rootHeadCounts
+  [ ] try a local tileset (splits don't ref a 2d map lat long)  with a tileset transform (pointclouds?)
+   this is where the headCount might be useful
+
+  might need to construct to to a single tile to avoid accumulating error(n*spacing)??? otherwise contentless root will take the the bound
   if it is a root with a bunch of nodes determine the spacing on that level and the bounds of each. otherwise just subdivide from parent
-* all tilesets  with same splits is powerful (merging/diffing)
+* All tilesets  with same splits is powerful (merging/diffing/always have context to other tilesets)
     NOTE: the below is the same as stopping arbitrarily at any level when tiling
     the below would be like having a root 0 (its layer.json 0 would have the availability of all the tiles there)
     at any level of the 2d map implicit grid. the root grid lower left is then able to live anywhere, though this is probably a drawback
@@ -57,10 +61,7 @@ if "root"exists then its traditional if "tilingScheme" exists then it's implicit
         Single vs double is trivial to support (both in the terrain to 3dtiles converter and the first pass impl) so it might be really beneficially to take it a step further and have a field in `tilingScheme` called `headCount: {x,y,z}` where x y z would be your root level head resolution (how many heads in each dir). For example a single head would be 1,1,1, double would be 2,1,1
         The reason for extending it to support arbitary amount of heads is that:
         1. implementation-wise, they are just controlling the exponent power of two split calculations at the end of the day so its not really a source a head-ache.
-        2. it helps the fixed grid system map onto awkward or non-homogenous data like a 3d pointcloud where density isnt so even (sparse but dense). It helps it get a head start on subdivision and load balancing the tree. 
-
-  [ ] try a local tileset (splits don't ref a 2d map lat long)  with a tileset transform (pointclouds?)
-   this is where the headCount might be useful
+        2. it helps the fixed grid system map onto awkward or non-homogenous data like a 3d pointcloud where density isnt so even (sparse but dense). It helps it get a head start on subdivision and load balancing the tree.
 
  * Just build a tree from the tile availablity and the root tile bound then traverse as normal
  * Each level has a fixed gError
