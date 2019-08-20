@@ -1864,7 +1864,7 @@ define([
         var endY = ranges.endY;
         var startZ = ranges.startZ;
         var endZ = ranges.endZ;
-        // var tilesetRoot = defined(this._root) ? this._root : rootTile
+        var tilesetRoot = defined(this._root) ? this._root : rootTile
         if (!hasParent) {
             tile = rootTile;
             // Go to startLevel and grab the tiles there (hopefully there's 1 or 2)
@@ -1884,7 +1884,7 @@ define([
                         // TODO: the zyx key isnt consitant (though probably more desirable)
                         uri = isOct ? level + '/' + z + '/'+ y + '/' + x : level + '/' + x + '/' + y;
                         tileInfo = {
-                            boundingVolume: this.deriveImplicitBounds(tile, x, y, z, level),
+                            boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
                             geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
                             content: {uri: uri},
                             key: new Cartesian4(x, y, z, level),
@@ -1932,7 +1932,7 @@ define([
                             // TODO: the zyx key isnt consitant (though probably more desirable)
                             uri = isOct ? level + '/' + z + '/'+ y + '/' + x : level + '/' + x + '/' + y;
                             tileInfo = {
-                                boundingVolume: this.deriveImplicitBounds(tile, x, y, z, level),
+                                boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
                                 geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
                                 content: {uri: uri},
                                 key: new Cartesian4(x, y, z, level),
