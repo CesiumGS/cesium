@@ -693,6 +693,7 @@ define([
     // Create the czm_getMaterial method body using source or components.
     function createMethodDefinition(material) {
         var components = material._template.components;
+        var isMultiMaterial = material._template.materials.length > 0;
         var source = material._template.source;
         if (defined(source)) {
             material.shaderSource += source + '\n';
@@ -703,7 +704,13 @@ define([
                 for ( var component in components) {
                     if (components.hasOwnProperty(component)) {
                         if (component === 'diffuse' || component === 'emission') {
-                            material.shaderSource += 'material.' + component + ' = ' + components[component] + '; \n';
+                            material.shaderSource += 'material.' + component + ' = ';
+                            if (isMultiMaterial) {
+                                material.shaderSource += components[component];
+                            } else {
+                                material.shaderSource += 'czm_gammaCorrect(' + components[component]  + ')';
+                            }
+                            material.shaderSource += '; \n';
                         } else if (component === 'alpha') {
                             material.shaderSource += 'material.alpha = ' + components.alpha + '; \n';
                         } else {
