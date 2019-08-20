@@ -46,9 +46,18 @@ if "root"exists then its traditional if "tilingScheme" exists then it's implicit
   [x] Be able to consume non single head inputs (just versions of the layer.json with upper levels removed)
         headCount: x,y,z // so we can correlate two georef tilesets with different rootHeadCounts
         have a situation where teh bounds are loose fitting, need to know the spacing on the level give the headcount
-  [ ] external tileset or local tileset
+
   [ ] Try a local tileset (splits don't ref a 2d map lat long)  with a tileset transform (pointclouds?)
-   this is where the headCount might be useful
+    pointclouds .pnts files are a morton index(xyz bits interleved) where 0 0 0 is bottom lower left. looking down at the grid
+    x is to the right y is up and z points at face
+    * octree folder structure is level/z/x/y to make it easy to strip out quad tree layers or make it easier to octree-ize something
+    * might be best if dimensions are all in reverse order (ex: level/z/y/x, level/y/x, level/x)
+      so that as you insert dims the structure changes the least, makes it easy to correlate tree structures that are of different dimensions (oct vs quad)
+    * "bi" trees might make sense to support (strips of road for self-driving scenarios)
+
+  [ ] external tileset
+        Don't pollute the uri z/x/y namespace they should be reserved for tiles (extensionless)
+        layerExternal.json is the availability of the z/x/yLayer.json (which provides availability for that node and down)
 
   might need to construct to to a single tile to avoid accumulating error(n*spacing)??? otherwise contentless root will take the the bound
   if it is a root with a bunch of nodes determine the spacing on that level and the bounds of each. otherwise just subdivide from parent
