@@ -1615,7 +1615,7 @@ define([
     }
 
 
-    Cesium3DTileset.prototype.deriveImplicitBounds = function(tile, x, y, z, level) {
+    Cesium3DTileset.prototype.deriveImplicitBounds = function(rootTile, x, y, z, level) {
         var headCount = this._tilingScheme.headCount;
         var rootXCount = headCount[0];
         var rootYCount = headCount[1];
@@ -1626,7 +1626,7 @@ define([
         var isOct = this._tilingScheme.type === 'oct';
         var zTiles = isOct ? rootZCount * (1 << level) : 1;
 
-        var bounds = tile.boundingVolume;
+        var bounds = rootTile.boundingVolume;
 
         if (bounds instanceof TileBoundingRegion) {
             var TWO_PI = Math.PI * 2;
@@ -1652,54 +1652,67 @@ define([
                 maximumHeight
             ]};
         } else if (bounds instanceof TileOrientedBoundingBox) {
+            // x is to the right y is up and z points at face
+            // 0 0 0 is lower left bottom
 
-            // // Very likely local space but to play it safe just do the explicit calculation.
-            // var center = bounds.center;
-            // var halfAxes = bounds.halfAxes;
-            // // Downstream from future can't do static scratch var
-            // var boxCenter = new Cartesian3();
-            // var halfX = new Cartesian3();
-            // var halfY = new Cartesian3();
-            // var halfZ = new Cartesian3();
-            //
-            // if (halfAxes[[0][1] === 0 &&
-            //     halfAxes[[0][2] === 0 &&
-            //     halfAxes[[1][0] === 0 &&
-            //     halfAxes[[1][2] === 0 &&
-            //     halfAxes[[2][1] === 0 &&
-            //     halfAxes[[2][2] === 0) {
-            //     // For now just assume the tile is the root (will likely want untransformed) and split it
-            //
-            //
-            // } else {
-            //     var halfAxesX = new Cartesian3();
-            //     var halfAxesY = new Cartesian3();
-            //     var halfAxesZ = new Cartesian3();
-            // }
-            //
-            // return { box: [
-            //     boxCenter[0],
-            //     boxCenter[1],
-            //     boxCenter[2],
-            //
-            //     halfX[0],
-            //     halfX[1],
-            //     halfX[2],
-            //
-            //     halfY[0],
-            //     halfY[1],
-            //     halfY[2],
-            //
-            //     halfZ[0],
-            //     halfZ[1],
-            //     halfZ[2]
-            // ]};
+            // Very likely local space but to play it safe just do the explicit calculation.
+            var center = bounds._orientedBoundingBox.center;
+            var halfAxes = bounds._orientedBoundingBox.halfAxes;
+            // Downstream from future can't do static scratch var
+            var boxCenter = new Cartesian3();
+            var halfX = new Cartesian3();
+            var halfY = new Cartesian3();
+            var halfZ = new Cartesian3();
+
+            if (halfAxes[1] === 0 &&
+                halfAxes[2] === 0 &&
+                halfAxes[3] === 0 &&
+                halfAxes[5] === 0 &&
+                halfAxes[6] === 0 &&
+                halfAxes[7] === 0) {
+                // (want untransformed local for precision) and split it
+
+                var minX = center.x - halfAxes[0];
+                var minY = center.y - halfAxes[4];
+                var minZ = center.z - halfAxes[8];
+
+                halfX.x = halfAxes[0] / xTiles;
+                halfY.y = halfAxes[4] / yTiles;
+                halfZ.z = halfAxes[8] / zTiles;
+
+                boxCenter.x = halfX.x * (2 * x + 1) + minX;
+                boxCenter.y = halfY.y * (2 * y + 1) + minY;
+                boxCenter.z = halfZ.z * (2 * z + 1) + minZ;
+            } else {
+                var halfAxesX = new Cartesian3();
+                var halfAxesY = new Cartesian3();
+                var halfAxesZ = new Cartesian3();
+            }
+
+            return { box: [
+                boxCenter.x,
+                boxCenter.y,
+                boxCenter.z,
+
+                halfX.x,
+                halfX.y,
+                halfX.z,
+
+                halfY.x,
+                halfY.y,
+                halfY.z,
+
+                halfZ.x,
+                halfZ.y,
+                halfZ.z
+            ]};
+
         } else {
             // doh
         }
 
         return bounds;
-    }
+    };
 
     Cesium3DTileset.prototype.anyChildrenAvailable = function(parentX, parentY, parentZ, parentLevel) {
         var isOct = this._tilingScheme.type === 'oct';
