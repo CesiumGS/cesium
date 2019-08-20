@@ -18,6 +18,7 @@ define([
         '../Core/JulianDate',
         '../Core/ManagedArray',
         '../Core/Math',
+        '../Core/Matrix3',
         '../Core/Matrix4',
         '../Core/Resource',
         '../Core/RuntimeError',
@@ -70,6 +71,7 @@ define([
         JulianDate,
         ManagedArray,
         CesiumMath,
+        Matrix3,
         Matrix4,
         Resource,
         RuntimeError,
@@ -1612,6 +1614,7 @@ define([
         }
     }
 
+
     Cesium3DTileset.prototype.deriveImplicitBounds = function(tile, x, y, z, level) {
         var headCount = this._tilingScheme.headCount;
         var rootXCount = headCount[0];
@@ -1650,6 +1653,47 @@ define([
             ]};
         } else if (bounds instanceof TileOrientedBoundingBox) {
 
+            // // Very likely local space but to play it safe just do the explicit calculation.
+            // var center = bounds.center;
+            // var halfAxes = bounds.halfAxes;
+            // // Downstream from future can't do static scratch var
+            // var boxCenter = new Cartesian3();
+            // var halfX = new Cartesian3();
+            // var halfY = new Cartesian3();
+            // var halfZ = new Cartesian3();
+            //
+            // if (halfAxes[[0][1] === 0 &&
+            //     halfAxes[[0][2] === 0 &&
+            //     halfAxes[[1][0] === 0 &&
+            //     halfAxes[[1][2] === 0 &&
+            //     halfAxes[[2][1] === 0 &&
+            //     halfAxes[[2][2] === 0) {
+            //     // For now just assume the tile is the root (will likely want untransformed) and split it
+            //
+            //
+            // } else {
+            //     var halfAxesX = new Cartesian3();
+            //     var halfAxesY = new Cartesian3();
+            //     var halfAxesZ = new Cartesian3();
+            // }
+            //
+            // return { box: [
+            //     boxCenter[0],
+            //     boxCenter[1],
+            //     boxCenter[2],
+            //
+            //     halfX[0],
+            //     halfX[1],
+            //     halfX[2],
+            //
+            //     halfY[0],
+            //     halfY[1],
+            //     halfY[2],
+            //
+            //     halfZ[0],
+            //     halfZ[1],
+            //     halfZ[2]
+            // ]};
         } else {
             // doh
         }
@@ -1820,8 +1864,9 @@ define([
         var endY = ranges.endY;
         var startZ = ranges.startZ;
         var endZ = ranges.endZ;
+        // var tilesetRoot = defined(this._root) ? this._root : rootTile
         if (!hasParent) {
-            var tile = rootTile;
+            tile = rootTile;
             // Go to startLevel and grab the tiles there (hopefully there's 1 or 2)
             // and push those children
             level = startLevel;
