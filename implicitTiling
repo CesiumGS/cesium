@@ -53,7 +53,7 @@ if "root"exists then its traditional if "tilingScheme" exists then it's implicit
     * octree folder structure is level/z/x/y to make it easy to strip out quad tree layers or make it easier to octree-ize something
     * might be best if dimensions are all in reverse order (ex: level/z/y/x, level/y/x, level/x)
       so that as you insert dims the structure changes the least, makes it easy to correlate tree structures that are of different dimensions (oct vs quad)
-    * "bi" trees might make sense to support (strips of road for self-driving scenarios)
+    * "bi" trees could be easily  supported
 
   [ ] external tileset
         Don't pollute the uri z/x/y namespace they should be reserved for tiles (extensionless)

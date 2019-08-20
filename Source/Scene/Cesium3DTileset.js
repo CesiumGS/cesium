@@ -1624,12 +1624,11 @@ define([
         var zTiles = isOct ? rootZCount * (1 << level) : 1;
 
         var bounds = tile.boundingVolume;
-        var TWO_PI = Math.PI * 2;
-        var PI_OVER_TWO = Math.PI / 2;
-
-        var heightRange = bounds.maximumHeight - bounds.minimumHeight;
 
         if (bounds instanceof TileBoundingRegion) {
+            var TWO_PI = Math.PI * 2;
+            var PI_OVER_TWO = Math.PI / 2;
+
             var west = ((x / xTiles) * TWO_PI) - Math.PI;
             var east = (((x + 1) / xTiles) * TWO_PI) - Math.PI;
 
@@ -1637,6 +1636,7 @@ define([
             var north = ((y / yTiles) * -Math.PI) + PI_OVER_TWO;
             var south = (((y + 1) / yTiles) * -Math.PI) + PI_OVER_TWO;
 
+            var heightRange = bounds.maximumHeight - bounds.minimumHeight;
             var minimumHeight = ((z / zTiles) * heightRange) + bounds.minimumHeight;
             var maximumHeight = (((z + 1) / zTiles) * heightRange) + bounds.minimumHeight;
 
@@ -1836,7 +1836,8 @@ define([
                         }
                         ++statistics.numberOfTilesTotal;
 
-                        uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+                        // TODO: the zyx key isnt consitant (though probably more desirable)
+                        uri = isOct ? level + '/' + z + '/'+ y + '/' + x : level + '/' + x + '/' + y;
                         tileInfo = {
                             boundingVolume: this.deriveImplicitBounds(tile, x, y, z, level),
                             geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
@@ -1883,7 +1884,8 @@ define([
                                 continue;
                             }
 
-                            uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+                            // TODO: the zyx key isnt consitant (though probably more desirable)
+                            uri = isOct ? level + '/' + z + '/'+ y + '/' + x : level + '/' + x + '/' + y;
                             tileInfo = {
                                 boundingVolume: this.deriveImplicitBounds(tile, x, y, z, level),
                                 geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
