@@ -106,13 +106,13 @@ define([
             var item = items[i];
             var entity = item.entity;
             var billboardGraphics = entity._billboard;
-            var textureValue;
+            var textureValue = item.textureValue;
             var billboard = item.billboard;
             var show = entity.isShowing && entity.isAvailable(time) && Property.getValueOrDefault(billboardGraphics._show, time, true);
             var position;
             if (show) {
                 position = Property.getValueOrUndefined(entity._position, time, positionScratch);
-                textureValue = Property.getValueOrUndefined(billboardGraphics._image, time);
+                textureValue = Property.getValueWithUnknownResult(billboardGraphics._image, time, item.textureValue);
                 show = defined(position) && defined(textureValue);
             }
 

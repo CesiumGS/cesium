@@ -118,6 +118,16 @@ define([
     /**
      * @private
      */
+    Property.getValueWithUnknownResult = function(property, time, result) {
+        if (!defined(result) || result.clone === undefined) {
+            result = undefined;
+        }
+        return Property.getValueOrUndefined(property, time, result);
+    };
+
+    /**
+     * @private
+     */
     Property.getValueOrDefault = function(property, time, valueDefault, result) {
         return defined(property) ? defaultValue(property.getValue(time, result), valueDefault) : valueDefault;
     };
