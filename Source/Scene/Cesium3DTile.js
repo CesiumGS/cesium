@@ -1,6 +1,7 @@
 define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
         '../Core/CullingVolume',
@@ -40,6 +41,7 @@ define([
     ], function(
         BoundingSphere,
         Cartesian3,
+        Cartesian4,
         Color,
         ColorGeometryInstanceAttribute,
         CullingVolume,
@@ -192,20 +194,22 @@ define([
         this.parent = parent;
 
         /**
-         * This tiles x,y,z key for the tileset._tilingScheme, if it has one
+         * This tiles x,y,z,w key for the tileset._tilingScheme, if it has one.
+         * w is tree level
          *
-         * @type {Cartesian3}
+         * @type {Cartesian4}
          * @readonly
          */
         this.key = header.key;
-        this.childStartKey = new Cartesian3();
+        this.childStartKey = new Cartesian4();
         if (defined(this.key)) {
             // var isOct = this._tileset._tilingScheme.type === 'oct';
             var childStartKey = this.childStartKey;
             var key = this.key;
             childStartKey.x = key.x * 2;
             childStartKey.y = key.y * 2;
-            childStartKey.z = key.z + 1;
+            childStartKey.z = key.z * 2;
+            childStartKey.w = key.w + 1;
         }
 
         var content;

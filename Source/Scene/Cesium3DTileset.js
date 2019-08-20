@@ -2,6 +2,7 @@ define([
         '../Core/ApproximateTerrainHeights',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
+        '../Core/Cartesian4',
         '../Core/Cartographic',
         '../Core/Check',
         '../Core/Credit',
@@ -53,6 +54,7 @@ define([
         ApproximateTerrainHeights,
         Cartesian2,
         Cartesian3,
+        Cartesian4,
         Cartographic,
         Check,
         Credit,
@@ -1646,20 +1648,20 @@ define([
         return bounds;
     }
 
-    Cesium3DTileset.prototype.anyChildrenAvailable = function(parentX, parentY, parentZ) {
+    Cesium3DTileset.prototype.anyChildrenAvailable = function(parentX, parentY, parentLevel) {
         var startX = parentX * 2;
         var startY = parentY * 2;
         var endX = startX + 1;
         var endY = startY + 1;
 
-        var z = parentZ + 1;
-        if (z > (this._available.length - 1)) {
+        var level = parentLevel + 1;
+        if (level > (this._available.length - 1)) {
             return false ;
         }
 
         for (var x = startX; x <= endX; ++x) {
             for (var y = startY; y <= endY; ++y) {
-                if (this.isTileAvailable(x,y,z)) {
+                if (this.isTileAvailable(x, y, level)) {
                     return true;
                 }
             }
@@ -1670,7 +1672,7 @@ define([
 
     Cesium3DTileset.prototype.deriveGeometricErrorFromParent = function(parent, x, y, xTiles, yTiles) {
         // TODO: fix this
-        var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailable(x, y, parent.key.z + 1);
+        var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailable(x, y, parent.key.w + 1);
         return anyChildrenAvailable ? (parent.geometricError / Math.sqrt(xTiles * yTiles)) : 0;
     };
 
@@ -1679,14 +1681,14 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.isTileAvailable = function(x, y, z) {
+    Cesium3DTileset.prototype.isTileAvailable = function(x, y, level) {
         var available = this._available;
-        if (z > available.length - 1) {
+        if (level > available.length - 1) {
             return false;
         }
 
         // Unless these are sorted, you must search all ranges on the level
-        var ranges = available[z];
+        var ranges = available[level];
         for (var range of ranges) {
             if (x >= range.startX && x <=range.endX && y >= range.startY && y <= range.endY) {
                 return true;
@@ -1708,9 +1710,9 @@ define([
         var maxX = 0;
         var maxY = 0;
 
-        var oct = defined(ranges.startZ);
+        var isOct = defined(ranges.startZ) && this._tilingScheme.type === 'oct';
 
-        var minZ = oct ? Number.MAX_VALUE : 0;
+        var minZ = isOct ? Number.MAX_VALUE : 0;
         var maxZ = 0;
 
         for (var range of ranges) {
@@ -1719,7 +1721,7 @@ define([
             maxX = Math.max(maxX, range.endX);
             maxY = Math.max(maxY, range.endY);
 
-            if (oct) {
+            if (isOct) {
                 minZ = Math.min(minZ, range.startZ);
                 maxZ = Math.max(maxZ, range.endZ);
             }
@@ -1756,7 +1758,7 @@ define([
         // Maybe don't worry about the external tileset case quite yet
         // var boundingVolume = hasParent ? deriveImplicitBoundsFromParent(parentTile) : this._tilingScheme.boundingVolume;
         // var geometricError = hasParent ? parentTile._geometricError / 2 : this._geometricError;
-        // var content = // TODO: put the { uri : "0/0/0" } or whatever the z/x/y is for the tile unless its the contentless root
+        // var content = // TODO: put the { uri : "0/0/0" } or whatever the level/x/y is for the tile unless its the contentless root
         // TODO: for quad/oct lat/long spllitting, I think you must construct empty tiles all the way up to the
         // lvl 0 root(s) or until you get to a single tile. In either case still
         // generate a contentless root above that
@@ -1780,46 +1782,46 @@ define([
 
         var stack = [];
 
-        var isOct = this._tilingScheme.type === 'oct';
 
-        var x,y,z;
+        var x, y, level;
         var tile, childTile;
         var uri, tileInfo;
-        var startZ = 0;
+        var startLevel = 0;
         var available = this._available;
         var length =  available.length;
-        while (available[startZ].length === 0 && startZ < length) {
-            startZ++;
+        while (available[startLevel].length === 0 && startLevel < length) {
+            startLevel++;
         }
-        var range = this.getRangeForLevel(startZ);
-        var xTiles, yTiles;
+        var ranges = this.getRangeForLevel(startLevel);
+        var isOct = defined(ranges.startZ) && this._tilingScheme.type === 'oct';
+        var xTiles, yTiles, zTiles;
         // TODO: merge with loop version but wait till the other todo's are ironed out
 
         // main layer.json, construct child tiles of contentless root
-        var startX = range.startX;
-        var endX = range.endX;
-        var startY = range.startY;
-        var endY = range.endY;
+        var startX = ranges.startX;
+        var endX = ranges.endX;
+        var startY = ranges.startY;
+        var endY = ranges.endY;
         if (!hasParent) {
             var tile = rootTile;
-            // Go to startZ and grab the tiles there (hopefully there's 1 or 2)
+            // Go to startLevel and grab the tiles there (hopefully there's 1 or 2)
             // and push those children
-            z = startZ;
+            level = startLevel;
             xTiles = endX - startX + 1;
             yTiles = endY - startY + 1;
             for (y = startY; y <= endY; ++y) {
                 for (x = startX; x <= endX; ++x) {
-                    if (!this.isTileAvailable(x,y,z)) {
+                    if (!this.isTileAvailable(x,y,level)) {
                         continue;
                     }
                     ++statistics.numberOfTilesTotal;
 
-                    uri = z + '/' + x + '/' + y;
+                    uri = level + '/' + x + '/' + y;
                     tileInfo = {
-                        boundingVolume: this.deriveImplicitBounds(tile, x, y, z),
+                        boundingVolume: this.deriveImplicitBounds(tile, x, y, level),
                         geometricError: this.deriveGeometricErrorFromParent(tile, x, y, xTiles, yTiles),
                         content: {uri: uri},
-                        key: new Cartesian3(x,y,z),
+                        key: new Cartesian4(x,y,0,level),
                         refine: this._tilingScheme.refine
                     };
 
@@ -1841,27 +1843,27 @@ define([
 
             // get the tile's chilrens' xyz range
             // loop over that like we did above
-            // Go to z and grab the tiles there (hopefully there's 1 or 2)
+            // Go to level and grab the tiles there (hopefully there's 1 or 2)
             // and push those children
             var childStartKey = tile.childStartKey;
-            z = childStartKey.z;
+            level = childStartKey.w;
             startX = childStartKey.x;
             endX = startX + xTiles - 1;
             startY = childStartKey.y;
             endY = startY + yTiles - 1;
-            if (z < this._available.length) {
+            if (level < this._available.length) {
                 for (y = startY; y <= endY; ++y) {
                     for (x = startX; x <= endX; ++x) {
-                        if (!this.isTileAvailable(x,y,z)) {
+                        if (!this.isTileAvailable(x,y,level)) {
                             continue;
                         }
 
-                        uri = z + '/' + x + '/' + y;
+                        uri = level + '/' + x + '/' + y;
                         tileInfo = {
-                            boundingVolume: this.deriveImplicitBounds(tile, x, y, z),
+                            boundingVolume: this.deriveImplicitBounds(tile, x, y, level),
                             geometricError: this.deriveGeometricErrorFromParent(tile, x, y, xTiles, yTiles),
                             content: {uri: uri},
-                            key: new Cartesian3(x,y,z),
+                            key: new Cartesian4(x,y,0,level),
                             refine: this._tilingScheme.refine
                         };
 
