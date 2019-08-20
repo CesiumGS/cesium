@@ -1612,16 +1612,22 @@ define([
         }
     }
 
-    Cesium3DTileset.prototype.deriveImplicitBounds = function(tile, x, y, z) {
+    Cesium3DTileset.prototype.deriveImplicitBounds = function(tile, x, y, z, level) {
         var headCount = this._tilingScheme.headCount;
         var rootXCount = headCount[0];
         var rootYCount = headCount[1];
-        var xTiles = rootXCount * (1 << z);
-        var yTiles = rootYCount * (1 << z);
+        var rootZCount = headCount[2];
+        var xTiles = rootXCount * (1 << level);
+        var yTiles = rootYCount * (1 << level);
+
+        var isOct = this._tilingScheme.type === 'oct';
+        var zTiles = isOct ? rootZCount * (1 << level) : 1;
 
         var bounds = tile.boundingVolume;
         var TWO_PI = Math.PI * 2;
         var PI_OVER_TWO = Math.PI / 2;
+
+        var heightRange = bounds.maximumHeight - bounds.minimumHeight;
 
         if (bounds instanceof TileBoundingRegion) {
             var west = ((x / xTiles) * TWO_PI) - Math.PI;
@@ -1631,13 +1637,16 @@ define([
             var north = ((y / yTiles) * -Math.PI) + PI_OVER_TWO;
             var south = (((y + 1) / yTiles) * -Math.PI) + PI_OVER_TWO;
 
+            var minimumHeight = ((z / zTiles) * heightRange) + bounds.minimumHeight;
+            var maximumHeight = (((z + 1) / zTiles) * heightRange) + bounds.minimumHeight;
+
             return { region: [
                 west,
                 south,
                 east,
                 north,
-                bounds.minimumHeight,
-                bounds.maximumHeight
+                minimumHeight,
+                maximumHeight
             ]};
         } else if (bounds instanceof TileOrientedBoundingBox) {
 
@@ -1648,21 +1657,26 @@ define([
         return bounds;
     }
 
-    Cesium3DTileset.prototype.anyChildrenAvailable = function(parentX, parentY, parentLevel) {
+    Cesium3DTileset.prototype.anyChildrenAvailable = function(parentX, parentY, parentZ, parentLevel) {
+        var isOct = this._tilingScheme.type === 'oct';
         var startX = parentX * 2;
         var startY = parentY * 2;
+        var startZ = isOct ? parentZ * 2 : 0;
         var endX = startX + 1;
         var endY = startY + 1;
+        var endZ = isOct ? startZ + 1 : 0;
 
         var level = parentLevel + 1;
         if (level > (this._available.length - 1)) {
             return false ;
         }
 
-        for (var x = startX; x <= endX; ++x) {
-            for (var y = startY; y <= endY; ++y) {
-                if (this.isTileAvailable(x, y, level)) {
-                    return true;
+        for (var z = startZ; z <= endZ; ++z) {
+            for (var x = startX; x <= endX; ++x) {
+                for (var y = startY; y <= endY; ++y) {
+                    if (this.isTileAvailable(x, y, z, level)) {
+                        return true;
+                    }
                 }
             }
         }
@@ -1670,9 +1684,9 @@ define([
         return false;
     };
 
-    Cesium3DTileset.prototype.deriveGeometricErrorFromParent = function(parent, x, y, xTiles, yTiles) {
+    Cesium3DTileset.prototype.deriveGeometricErrorFromParent = function(parent, x, y, z, xTiles, yTiles) {
         // TODO: fix this
-        var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailable(x, y, parent.key.w + 1);
+        var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailable(x, y, z, parent.key.w + 1);
         return anyChildrenAvailable ? (parent.geometricError / Math.sqrt(xTiles * yTiles)) : 0;
     };
 
@@ -1681,7 +1695,8 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.isTileAvailable = function(x, y, level) {
+    Cesium3DTileset.prototype.isTileAvailable = function(x, y, z, level) {
+        var isOct = this._tilingScheme.type === 'oct';
         var available = this._available;
         if (level > available.length - 1) {
             return false;
@@ -1690,7 +1705,8 @@ define([
         // Unless these are sorted, you must search all ranges on the level
         var ranges = available[level];
         for (var range of ranges) {
-            if (x >= range.startX && x <=range.endX && y >= range.startY && y <= range.endY) {
+            var containsZ = isOct ? (z >= range.startZ && z <=range.endZ) : true;
+            if (containsZ && x >= range.startX && x <=range.endX && y >= range.startY && y <= range.endY) {
                 return true;
             }
         }
@@ -1710,7 +1726,7 @@ define([
         var maxX = 0;
         var maxY = 0;
 
-        var isOct = defined(ranges.startZ) && this._tilingScheme.type === 'oct';
+        var isOct = this._tilingScheme.type === 'oct';
 
         var minZ = isOct ? Number.MAX_VALUE : 0;
         var maxZ = 0;
@@ -1783,7 +1799,7 @@ define([
         var stack = [];
 
 
-        var x, y, level;
+        var x, y, z, level;
         var tile, childTile;
         var uri, tileInfo;
         var startLevel = 0;
@@ -1793,7 +1809,7 @@ define([
             startLevel++;
         }
         var ranges = this.getRangeForLevel(startLevel);
-        var isOct = defined(ranges.startZ) && this._tilingScheme.type === 'oct';
+        var isOct = this._tilingScheme.type === 'oct';
         var xTiles, yTiles, zTiles;
         // TODO: merge with loop version but wait till the other todo's are ironed out
 
@@ -1802,6 +1818,8 @@ define([
         var endX = ranges.endX;
         var startY = ranges.startY;
         var endY = ranges.endY;
+        var startZ = ranges.startZ;
+        var endZ = ranges.endZ;
         if (!hasParent) {
             var tile = rootTile;
             // Go to startLevel and grab the tiles there (hopefully there's 1 or 2)
@@ -1809,26 +1827,29 @@ define([
             level = startLevel;
             xTiles = endX - startX + 1;
             yTiles = endY - startY + 1;
-            for (y = startY; y <= endY; ++y) {
-                for (x = startX; x <= endX; ++x) {
-                    if (!this.isTileAvailable(x,y,level)) {
-                        continue;
+            zTiles = endZ - startZ + 1;
+            for (z = startZ; z <= endZ; ++z) {
+                for (y = startY; y <= endY; ++y) {
+                    for (x = startX; x <= endX; ++x) {
+                        if (!this.isTileAvailable(x, y, z, level)) {
+                            continue;
+                        }
+                        ++statistics.numberOfTilesTotal;
+
+                        uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+                        tileInfo = {
+                            boundingVolume: this.deriveImplicitBounds(tile, x, y, z, level),
+                            geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
+                            content: {uri: uri},
+                            key: new Cartesian4(x, y, z, level),
+                            refine: this._tilingScheme.refine
+                        };
+
+                        childTile = new Cesium3DTile(this, resource, tileInfo, tile);
+                        tile.children.push(childTile);
+                        childTile._depth =  childTile._depth + 1;
+                        stack.push(childTile);
                     }
-                    ++statistics.numberOfTilesTotal;
-
-                    uri = level + '/' + x + '/' + y;
-                    tileInfo = {
-                        boundingVolume: this.deriveImplicitBounds(tile, x, y, level),
-                        geometricError: this.deriveGeometricErrorFromParent(tile, x, y, xTiles, yTiles),
-                        content: {uri: uri},
-                        key: new Cartesian4(x,y,0,level),
-                        refine: this._tilingScheme.refine
-                    };
-
-                    childTile = new Cesium3DTile(this, resource, tileInfo, tile);
-                    tile.children.push(childTile);
-                    childTile._depth =  childTile._depth + 1;
-                    stack.push(childTile);
                 }
             }
         } else {
@@ -1837,6 +1858,7 @@ define([
 
         xTiles = 2;
         yTiles = 2;
+        zTiles = isOct ? 2 : 1;
         while (stack.length > 0) {
             tile = stack.pop();
             ++statistics.numberOfTilesTotal;
@@ -1848,29 +1870,33 @@ define([
             var childStartKey = tile.childStartKey;
             level = childStartKey.w;
             startX = childStartKey.x;
-            endX = startX + xTiles - 1;
             startY = childStartKey.y;
+            startZ = childStartKey.z;
+            endX = startX + xTiles - 1;
             endY = startY + yTiles - 1;
+            endZ = startZ + zTiles - 1;
             if (level < this._available.length) {
-                for (y = startY; y <= endY; ++y) {
-                    for (x = startX; x <= endX; ++x) {
-                        if (!this.isTileAvailable(x,y,level)) {
-                            continue;
+                for (z = startZ; z <= endZ; ++z) {
+                    for (y = startY; y <= endY; ++y) {
+                        for (x = startX; x <= endX; ++x) {
+                            if (!this.isTileAvailable(x, y, z, level)) {
+                                continue;
+                            }
+
+                            uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+                            tileInfo = {
+                                boundingVolume: this.deriveImplicitBounds(tile, x, y, z, level),
+                                geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
+                                content: {uri: uri},
+                                key: new Cartesian4(x, y, z, level),
+                                refine: this._tilingScheme.refine
+                            };
+
+                            childTile = new Cesium3DTile(this, resource, tileInfo, tile);
+                            tile.children.push(childTile);
+                            childTile._depth =  tile._depth + 1;
+                            stack.push(childTile);
                         }
-
-                        uri = level + '/' + x + '/' + y;
-                        tileInfo = {
-                            boundingVolume: this.deriveImplicitBounds(tile, x, y, level),
-                            geometricError: this.deriveGeometricErrorFromParent(tile, x, y, xTiles, yTiles),
-                            content: {uri: uri},
-                            key: new Cartesian4(x,y,0,level),
-                            refine: this._tilingScheme.refine
-                        };
-
-                        childTile = new Cesium3DTile(this, resource, tileInfo, tile);
-                        tile.children.push(childTile);
-                        childTile._depth =  tile._depth + 1;
-                        stack.push(childTile);
                     }
                 }
             }
