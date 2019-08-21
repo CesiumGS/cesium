@@ -1615,19 +1615,105 @@ define([
     }
 
     Cesium3DTileset.prototype.deriveImplicitBounds = function(rootTile, x, y, z, level) {
-        var headCount = this._tilingScheme.headCount;
+        var tilingScheme = this._tilingScheme;
+        var headCount = tilingScheme.headCount;
         var rootXCount = headCount[0];
         var rootYCount = headCount[1];
         var rootZCount = headCount[2];
         var xTiles = rootXCount * (1 << level);
         var yTiles = rootYCount * (1 << level);
 
-        var isOct = this._tilingScheme.type === 'oct';
+        var isOct = tilingScheme.type === 'oct';
         var zTiles = isOct ? rootZCount * (1 << level) : 1;
 
-        var bounds = rootTile.boundingVolume;
+        // // Probably best to take the tilingScheme bounds and derive from that
+        // var bounds = rootTile.boundingVolume;
+        // if (bounds instanceof TileBoundingRegion) {
+        //     var TWO_PI = Math.PI * 2;
+        //     var PI_OVER_TWO = Math.PI / 2;
+        //
+        //     var west = ((x / xTiles) * TWO_PI) - Math.PI;
+        //     var east = (((x + 1) / xTiles) * TWO_PI) - Math.PI;
+        //
+        //     // XY origin starts in upper left of the 2D map so north south calc is slightly different
+        //     var north = ((y / yTiles) * -Math.PI) + PI_OVER_TWO;
+        //     var south = (((y + 1) / yTiles) * -Math.PI) + PI_OVER_TWO;
+        //
+        //     var heightRange = bounds.maximumHeight - bounds.minimumHeight;
+        //     var minimumHeight = ((z / zTiles) * heightRange) + bounds.minimumHeight;
+        //     var maximumHeight = (((z + 1) / zTiles) * heightRange) + bounds.minimumHeight;
+        //
+        //     return { region: [
+        //         west,
+        //         south,
+        //         east,
+        //         north,
+        //         minimumHeight,
+        //         maximumHeight
+        //     ]};
+        // } else if (bounds instanceof TileOrientedBoundingBox) {
+        //     // x is to the right y is up and z points at face
+        //     // 0 0 0 is lower left bottom
+        //
+        //     // Very likely local space but to play it safe just do the explicit calculation.
+        //     var center = bounds._orientedBoundingBox.center;
+        //     var halfAxes = bounds._orientedBoundingBox.halfAxes;
+        //     // Downstream from future can't do static scratch var
+        //     var boxCenter = new Cartesian3();
+        //     var halfX = new Cartesian3();
+        //     var halfY = new Cartesian3();
+        //     var halfZ = new Cartesian3();
+        //
+        //     if (halfAxes[1] === 0 &&
+        //         halfAxes[2] === 0 &&
+        //         halfAxes[3] === 0 &&
+        //         halfAxes[5] === 0 &&
+        //         halfAxes[6] === 0 &&
+        //         halfAxes[7] === 0) {
+        //         // (want untransformed local for precision) and split it
+        //
+        //         var minX = center.x - halfAxes[0];
+        //         var minY = center.y - halfAxes[4];
+        //         var minZ = center.z - halfAxes[8];
+        //
+        //         halfX.x = halfAxes[0] / xTiles;
+        //         halfY.y = halfAxes[4] / yTiles;
+        //         halfZ.z = halfAxes[8] / zTiles;
+        //
+        //         boxCenter.x = halfX.x * (2 * x + 1) + minX;
+        //         boxCenter.y = halfY.y * (2 * y + 1) + minY;
+        //         boxCenter.z = halfZ.z * (2 * z + 1) + minZ;
+        //     } else {
+        //         var halfAxesX = new Cartesian3();
+        //         var halfAxesY = new Cartesian3();
+        //         var halfAxesZ = new Cartesian3();
+        //     }
+        //
+        //     return { box: [
+        //         boxCenter.x,
+        //         boxCenter.y,
+        //         boxCenter.z,
+        //
+        //         halfX.x,
+        //         halfX.y,
+        //         halfX.z,
+        //
+        //         halfY.x,
+        //         halfY.y,
+        //         halfY.z,
+        //
+        //         halfZ.x,
+        //         halfZ.y,
+        //         halfZ.z
+        //     ]};
+        //
+        // } else {
+        //     console.log('no implementation for this bounding box type at the moment');
+        // }
 
-        if (bounds instanceof TileBoundingRegion) {
+        // Probably best to take the tilingScheme bounds and derive from that
+        var bounds = tilingScheme.boundingVolume;
+        if (defined(bounds.region)) {
             var TWO_PI = Math.PI * 2;
             var PI_OVER_TWO = Math.PI / 2;
 
@@ -1638,9 +1724,11 @@ define([
             var north = ((y / yTiles) * -Math.PI) + PI_OVER_TWO;
             var south = (((y + 1) / yTiles) * -Math.PI) + PI_OVER_TWO;
 
-            var heightRange = bounds.maximumHeight - bounds.minimumHeight;
-            var minimumHeight = ((z / zTiles) * heightRange) + bounds.minimumHeight;
-            var maximumHeight = (((z + 1) / zTiles) * heightRange) + bounds.minimumHeight;
+            var boundsMinimumHeight = bounds.region[4];
+            var boundsMaximumHeight = bounds.region[5];
+            var heightRange = boundsMaximumHeight - boundsMinimumHeight;
+            var minimumHeight = ((z / zTiles) * heightRange) + boundsMinimumHeight;
+            var maximumHeight = (((z + 1) / zTiles) * heightRange) + boundsMinimumHeight;
 
             return { region: [
                 west,
@@ -1650,13 +1738,13 @@ define([
                 minimumHeight,
                 maximumHeight
             ]};
-        } else if (bounds instanceof TileOrientedBoundingBox) {
+        } else if (defined(bounds.box)) {
             // x is to the right y is up and z points at face
             // 0 0 0 is lower left bottom
 
             // Very likely local space but to play it safe just do the explicit calculation.
-            var center = bounds._orientedBoundingBox.center;
-            var halfAxes = bounds._orientedBoundingBox.halfAxes;
+            var center = bounds.box.slice(0,3);
+            var halfAxes = bounds.box.slice(3,12);
             // Downstream from future can't do static scratch var
             var boxCenter = new Cartesian3();
             var halfX = new Cartesian3();
@@ -1671,9 +1759,9 @@ define([
                 halfAxes[7] === 0) {
                 // (want untransformed local for precision) and split it
 
-                var minX = center.x - halfAxes[0];
-                var minY = center.y - halfAxes[4];
-                var minZ = center.z - halfAxes[8];
+                var minX = center[0] - halfAxes[0];
+                var minY = center[1] - halfAxes[4];
+                var minZ = center[2] - halfAxes[8];
 
                 halfX.x = halfAxes[0] / xTiles;
                 halfY.y = halfAxes[4] / yTiles;
@@ -1848,7 +1936,6 @@ define([
             refine: tilingScheme.refine,
             transform: tilingScheme.transform
         };
-
 
         var rootTile = new Cesium3DTile(this, resource, rootInfo, parentTile);
 
