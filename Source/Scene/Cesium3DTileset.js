@@ -1895,7 +1895,7 @@ define([
                         ++statistics.numberOfTilesTotal;
 
                         // TODO: the zyx key isnt consitant (though probably more desirable)
-                        uri = isOct ? level + '/' + z + '/'+ y + '/' + x : level + '/' + x + '/' + y;
+                        uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
                         tileInfo = {
                             boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
                             geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
@@ -1943,7 +1943,7 @@ define([
                             }
 
                             // TODO: the zyx key isnt consitant (though probably more desirable)
-                            uri = isOct ? level + '/' + z + '/'+ y + '/' + x : level + '/' + x + '/' + y;
+                            uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
                             tileInfo = {
                                 boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
                                 geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
