@@ -1614,7 +1614,6 @@ define([
         }
     }
 
-
     Cesium3DTileset.prototype.deriveImplicitBounds = function(rootTile, x, y, z, level) {
         var headCount = this._tilingScheme.headCount;
         var rootXCount = headCount[0];
@@ -1837,12 +1836,19 @@ define([
         // generate a contentless root above that
         // on heads specified
         // TODO: if has parent need to properly create this
+        var tilingScheme = this._tilingScheme;
+        if (defined(tilingScheme.boundingVolume.region) && defined(tilingScheme.transform)) {
+            tilingScheme.transform = Matrix4.clone(Matrix4.IDENTITY);
+        }
+
         var rootInfo = {
-            boundingVolume: this._tilingScheme.boundingVolume,
+            boundingVolume: tilingScheme.boundingVolume,
             geometricError: this._geometricError,
             content: undefined,
-            refine: this._tilingScheme.refine
+            refine: tilingScheme.refine,
+            transform: tilingScheme.transform
         };
+
 
         var rootTile = new Cesium3DTile(this, resource, rootInfo, parentTile);
 
@@ -1866,7 +1872,7 @@ define([
             startLevel++;
         }
         var ranges = this.getRangeForLevel(startLevel);
-        var isOct = this._tilingScheme.type === 'oct';
+        var isOct = tilingScheme.type === 'oct';
         var xTiles, yTiles, zTiles;
         // TODO: merge with loop version but wait till the other todo's are ironed out
 
@@ -1901,7 +1907,7 @@ define([
                             geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
                             content: {uri: uri},
                             key: new Cartesian4(x, y, z, level),
-                            refine: this._tilingScheme.refine
+                            refine: tilingScheme.refine
                         };
 
                         childTile = new Cesium3DTile(this, resource, tileInfo, tile);
@@ -1949,7 +1955,7 @@ define([
                                 geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
                                 content: {uri: uri},
                                 key: new Cartesian4(x, y, z, level),
-                                refine: this._tilingScheme.refine
+                                refine: tilingScheme.refine
                             };
 
                             childTile = new Cesium3DTile(this, resource, tileInfo, tile);
