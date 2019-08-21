@@ -1708,7 +1708,7 @@ define([
             ]};
 
         } else {
-            // doh
+            console.log('no implementation for this bounding box type at the moment');
         }
 
         return bounds;
