@@ -691,9 +691,12 @@ define([
     }
 
     function isMaterialFused(shaderComponent, material) {
-        for ( var subMaterialId in material._template.materials) {
-            if (shaderComponent.indexOf(subMaterialId) > -1) {
-                return true;
+        var materials = material._template.materials;
+        for (var subMaterialId in materials) {
+            if (materials.hasOwnProperty(subMaterialId)) {
+                if (shaderComponent.indexOf(subMaterialId) > -1) {
+                    return true;
+                }
             }
         }
 
@@ -717,7 +720,6 @@ define([
                             var isFusion = isMultiMaterial && isMaterialFused(components[component], material);
                             var componentSource = isFusion ? components[component] : 'czm_gammaCorrect(' + components[component]  + ')';
                             material.shaderSource += 'material.' + component + ' = ' + componentSource + '; \n';
-                            material.shaderSource += '; \n';
                         } else if (component === 'alpha') {
                             material.shaderSource += 'material.alpha = ' + components.alpha + '; \n';
                         } else {
