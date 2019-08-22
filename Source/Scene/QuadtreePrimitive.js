@@ -997,7 +997,9 @@ define([
             error -= CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
         }
 
-        return error /= frameState.screenSpaceErrorPixelRatio;
+        error /= frameState.screenSpaceErrorPixelRatio;
+
+        return error;
     }
 
     function screenSpaceError2D(primitive, frameState, tile) {
