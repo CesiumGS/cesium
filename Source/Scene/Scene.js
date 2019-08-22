@@ -1593,7 +1593,7 @@ define([
 
         /**
          * Ratio between a pixel and a density-independent pixel. Provides a standard unity of
-         * measure for real pixel measurements appropriate to a particular device. 
+         * measure for real pixel measurements appropriate to a particular device.
          *
          * @memberof Scene.prototype
          * @type {Number}
@@ -1608,7 +1608,6 @@ define([
                 this._frameState.pixelRatio = value;
             }
         },
-
 
         /**
          * @private

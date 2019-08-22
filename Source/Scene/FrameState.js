@@ -158,7 +158,7 @@ define([
 
         /**
          * Ratio between a pixel and a density-independent pixel. Provides a standard unity of
-         * measure for real pixel measurements appropriate to a particular device. 
+         * measure for real pixel measurements appropriate to a particular device.
          *
          * @type {Number}
          * @default 1.0
