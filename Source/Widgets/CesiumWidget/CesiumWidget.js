@@ -99,7 +99,7 @@ define([
         var devicePixelRatio = window.devicePixelRatio;
         var resolutionScale = widget._resolutionScale * devicePixelRatio;
         if (defined(widget._scene)) {
-            widget._scene.screenSpaceErrorPixelRatio = resolutionScale;
+            widget._scene.pixelRatio = resolutionScale;
         }
 
         return resolutionScale;

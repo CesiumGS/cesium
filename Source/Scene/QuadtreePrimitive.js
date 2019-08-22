@@ -997,7 +997,7 @@ define([
             error -= CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
         }
 
-        error /= frameState.screenSpaceErrorPixelRatio;
+        error /= frameState.pixelRatio;
 
         return error;
     }
@@ -1021,7 +1021,7 @@ define([
             error -= CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
         }
 
-        error /= frameState.screenSpaceErrorPixelRatio;
+        error /= frameState.pixelRatio;
 
         return error;
     }

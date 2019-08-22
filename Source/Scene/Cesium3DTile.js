@@ -732,7 +732,7 @@ define([
             }
         }
 
-        error /= frameState.screenSpaceErrorPixelRatio;
+        error /= frameState.pixelRatio;
 
         return error;
     };

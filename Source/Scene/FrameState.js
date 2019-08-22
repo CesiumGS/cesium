@@ -157,13 +157,13 @@ define([
         this.maximumScreenSpaceError = undefined;
 
         /**
-         * The factor at which all Screen Space Error is scaled. This accounts for a difference in screen
-         * density to decouple SSE from effective resolution.
+         * Ratio between a pixel and a density-independent pixel. Provides a standard unity of
+         * measure for real pixel measurements appropriate to a particular device. 
          *
          * @type {Number}
          * @default 1.0
          */
-        this.screenSpaceErrorPixelRatio = 1.0;
+        this.pixelRatio = 1.0;
 
         this.passes = {
             /**

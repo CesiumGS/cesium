@@ -644,14 +644,14 @@ define([
         this.cameraEventWaitTime = 500.0;
 
         /**
-         * The factor at which all Screen Space Error is scaled. This accounts for a difference in screen
-         * density to decouple SSE from effective resolution.
+         * Ratio between a pixel and a density-independent pixel. Provides a standard unity of
+         * measure for real pixel measurements appropriate to a particular device. 
          *
          * @type {Number}
          * @default 1.0
          * @private
          */
-        this.screenSpaceErrorPixelRatio = 1.0;
+        this.pixelRatio = 1.0;
 
         /**
          * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
@@ -1815,7 +1815,7 @@ define([
             frameState.maximumScreenSpaceError = 2;
         }
 
-        frameState.screenSpaceErrorPixelRatio = scene.screenSpaceErrorPixelRatio;
+        frameState.pixelRatio = scene.pixelRatio;
 
         clearPasses(frameState.passes);
 
