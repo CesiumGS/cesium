@@ -690,6 +690,19 @@ define([
         checkForValidProperties(uniforms, materialNames, duplicateNameError, false);
     }
 
+    function isMaterialFused(shaderComponent, material) {
+        var materials = material._template.materials;
+        for (var subMaterialId in materials) {
+            if (materials.hasOwnProperty(subMaterialId)) {
+                if (shaderComponent.indexOf(subMaterialId) > -1) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     // Create the czm_getMaterial method body using source or components.
     function createMethodDefinition(material) {
         var components = material._template.components;
@@ -700,12 +713,15 @@ define([
             material.shaderSource += 'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n';
             material.shaderSource += 'czm_material material = czm_getDefaultMaterial(materialInput);\n';
             if (defined(components)) {
+                var isMultiMaterial = Object.keys(material._template.materials).length > 0;
                 for ( var component in components) {
                     if (components.hasOwnProperty(component)) {
                         if (component === 'diffuse' || component === 'emission') {
-                            material.shaderSource += 'material.' + component + ' = czm_gammaCorrect(' + components[component] + '); \n';
+                            var isFusion = isMultiMaterial && isMaterialFused(components[component], material);
+                            var componentSource = isFusion ? components[component] : 'czm_gammaCorrect(' + components[component]  + ')';
+                            material.shaderSource += 'material.' + component + ' = ' + componentSource + '; \n';
                         } else if (component === 'alpha') {
-                            material.shaderSource += 'material.alpha = czm_gammaCorrect(vec4(vec3(0.0), ' + components.alpha + ')).a; \n';
+                            material.shaderSource += 'material.alpha = ' + components.alpha + '; \n';
                         } else {
                             material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
                         }
