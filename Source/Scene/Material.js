@@ -691,9 +691,8 @@ define([
     }
 
     function isMaterialFused(shaderComponent, material) {
-        var matchCount = 0;
         for ( var subMaterialId in material._template.materials) {
-            if (shaderComponent.indexOf(subMaterialId) > -1 && ++matchCount === 1) {
+            if (shaderComponent.indexOf(subMaterialId) > -1) {
                 return true;
             }
         }
