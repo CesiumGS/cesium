@@ -121,7 +121,7 @@ define([
         canvas.height = height;
 
         widget._canRender = width !== 0 && height !== 0;
-        widget._lastDevicePixelRatio = devicePixelRatio;
+        widget._lastDevicePixelRatio = window.devicePixelRatio;
     }
 
     function configureCameraFrustum(widget) {
@@ -572,8 +572,8 @@ define([
                     throw new DeveloperError('resolutionScale must be greater than 0.');
                 }
                 //>>includeEnd('debug');
-                this._forceResize = true;
                 this._resolutionScale = value;
+                this._forceResize = true;
             }
         }
     });

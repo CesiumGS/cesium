@@ -644,16 +644,6 @@ define([
         this.cameraEventWaitTime = 500.0;
 
         /**
-         * Ratio between a pixel and a density-independent pixel. Provides a standard unity of
-         * measure for real pixel measurements appropriate to a particular device. 
-         *
-         * @type {Number}
-         * @default 1.0
-         * @private
-         */
-        this.pixelRatio = 1.0;
-
-        /**
          * Blends the atmosphere to geometry far from the camera for horizon views. Allows for additional
          * performance improvements by rendering less geometry and dispatching less terrain requests.
          * @type {Fog}
@@ -1602,6 +1592,25 @@ define([
         },
 
         /**
+         * Ratio between a pixel and a density-independent pixel. Provides a standard unity of
+         * measure for real pixel measurements appropriate to a particular device. 
+         *
+         * @memberof Scene.prototype
+         * @type {Number}
+         * @default 1.0
+         * @private
+         */
+        pixelRatio: {
+            get: function() {
+                return this._frameState.pixelRatio;
+            },
+            set: function(value) {
+                this._frameState.pixelRatio = value;
+            }
+        },
+
+
+        /**
          * @private
          */
         opaqueFrustumNearOffset : {
@@ -1814,8 +1823,6 @@ define([
         } else {
             frameState.maximumScreenSpaceError = 2;
         }
-
-        frameState.pixelRatio = scene.pixelRatio;
 
         clearPasses(frameState.passes);
 
