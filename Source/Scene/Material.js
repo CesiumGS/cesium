@@ -693,7 +693,7 @@ define([
     function isMaterialFused(shaderComponent, material) {
         var matchCount = 0;
         for ( var subMaterialId in material._template.materials) {
-            if (shaderComponent.indexOf(subMaterialId) > -1 && ++matchCount === 2) {
+            if (shaderComponent.indexOf(subMaterialId) > -1 && ++matchCount === 1) {
                 return true;
             }
         }
@@ -711,7 +711,7 @@ define([
             material.shaderSource += 'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n';
             material.shaderSource += 'czm_material material = czm_getDefaultMaterial(materialInput);\n';
             if (defined(components)) {
-                var isMultiMaterial = Object.keys(material._template.materials).length > 1;
+                var isMultiMaterial = Object.keys(material._template.materials).length > 0;
                 for ( var component in components) {
                     if (components.hasOwnProperty(component)) {
                         if (component === 'diffuse' || component === 'emission') {
