@@ -84,7 +84,7 @@ defineSuite([
                 commandList: [],
                 cullingVolume: jasmine.createSpyObj('CullingVolume', ['computeVisibility']),
                 afterRender: [],
-                screenSpaceErrorPixelRatio: 1.0
+                pixelRatio: 1.0
             };
 
             frameState.cullingVolume.computeVisibility.and.returnValue(Intersect.INTERSECTING);
