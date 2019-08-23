@@ -5,6 +5,7 @@ Change Log
 
 ##### Additions :tada:
 * Added optional `index` parameter to `PrimitiveCollection.add`. [#8041](https://github.com/AnalyticalGraphicsInc/cesium/pull/8041)
+* Cesium now renders at native device resolution by default instead of CSS pixel resolution, to go back to the old behavior, `viewer.resolutionScale = 1.0 / window.devicePixelRatio`. [#8082](https://github.com/AnalyticalGraphicsInc/cesium/issues/8082)  
 
 ##### Fixes :wrench:
 * Disable FXAA by default. To renable, `scene.postProcessStages.fxaa.enabled = true` [#7875](https://github.com/AnalyticalGraphicsInc/cesium/issues/7875)

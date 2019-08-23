@@ -2228,12 +2228,14 @@ defineSuite([
 
             // Check that the feature is red
             var sourceRed;
+            var sourceGreen;
             var renderOptions = {
                 scene : scene,
                 time : new JulianDate(2457522.154792)
             };
             expect(renderOptions).toRenderAndCall(function(rgba) {
                 sourceRed = rgba[0];
+                sourceGreen = rgba[1];
             });
 
             expect(renderOptions).toRenderAndCall(function(rgba) {
@@ -2318,7 +2320,7 @@ defineSuite([
                 mixGreen = rgba[1];
                 expect(rgba[0]).toBeGreaterThan(replaceRed);
                 expect(rgba[0]).toBeLessThan(sourceRed);
-                expect(rgba[1]).toBeGreaterThan(50);
+                expect(rgba[1]).toBeGreaterThan(sourceGreen);
                 expect(rgba[1]).toBeLessThan(replaceGreen);
                 expect(rgba[2]).toBeLessThan(25);
                 expect(rgba[3]).toEqual(255);

@@ -15,6 +15,9 @@
 (function() {
     'use strict';
 
+    // set this for uniform test resolution across devices
+    window.devicePixelRatio = 1;
+
     function getQueryParameter(name) {
         var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
         return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
