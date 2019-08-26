@@ -137,7 +137,6 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Peter Gagliardi](https://github.com/ptrgags)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
-* [jony89](https://github.com/jony89)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
 * [Ravi Agrawal](https://github.com/macoda)
@@ -226,3 +225,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Hai Zhou](https://github.com/verybigzhouhai)
 * [Pascal Poulain](https://github.com/ppoulainpro)
 * [Abu Darda](https://github.com/abuDarda97)
+* [jony89](https://github.com/jony89)
