@@ -196,8 +196,8 @@ define([
     /**
      * Gets a data source by name from the collection.
      *
-     * @param {String} name the name to retrieve.
-     * @returns {DataSource[]} The data source at collection with the provided name.
+     * @param {String} name The name to retrieve.
+     * @returns {DataSource[]} A list of all data sources matching the provided name.
      */
     DataSourceCollection.prototype.getByName = function(name) {
         //>>includeStart('debug', pragmas.debug);
