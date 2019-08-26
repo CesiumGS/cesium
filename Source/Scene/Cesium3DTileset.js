@@ -1498,6 +1498,8 @@ define([
          * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
          * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
          *
+         * @memberof Cesium3DTileset.prototype
+         *
          * @type {Cartesian2}
          * @default Cartesian2(1.0, 1.0)
          */
@@ -1727,15 +1729,6 @@ define([
         cancelOutOfViewRequests(this, frameState);
         raiseLoadProgressEvent(this, frameState);
         this._cache.unloadTiles(this, unloadTile);
-
-        var statistics = this._statisticsPerPass[Cesium3DTilePass.RENDER];
-        var credits = this._credits;
-        if (defined(credits) && statistics.selected !== 0) {
-            var length = credits.length;
-            for (var i = 0; i < length; ++i) {
-                frameState.creditDisplay.addCredit(credits[i]);
-            }
-        }
     };
 
     /**
@@ -2254,6 +2247,16 @@ define([
         // Update pass statistics
         Cesium3DTilesetStatistics.clone(statistics, passStatistics);
 
+        if (isRender) {
+            var credits = tileset._credits;
+            if (defined(credits) && statistics.selected !== 0) {
+                var length = credits.length;
+                for (var i = 0; i < length; ++i) {
+                    frameState.creditDisplay.addCredit(credits[i]);
+                }
+            }
+        }
+
         return ready;
     }
 
@@ -2276,7 +2279,7 @@ define([
         var pass = tilesetPassState.pass;
         if ((pass === Cesium3DTilePass.PRELOAD && (!this.preloadWhenHidden || this.show)) ||
             (pass === Cesium3DTilePass.PRELOAD_FLIGHT && (!this.preloadFlightDestinations || (!this.show && !this.preloadWhenHidden))) ||
-            (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK && !this.cullRequestsWhileMoving && this.foveatedTimeDelay <= 0)) {
+            (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK && ((!this.cullRequestsWhileMoving && this.foveatedTimeDelay <= 0) || !this.show))) {
             return;
         }
 

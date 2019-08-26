@@ -83,7 +83,8 @@ defineSuite([
                 mode: SceneMode.SCENE3D,
                 commandList: [],
                 cullingVolume: jasmine.createSpyObj('CullingVolume', ['computeVisibility']),
-                afterRender: []
+                afterRender: [],
+                pixelRatio: 1.0
             };
 
             frameState.cullingVolume.computeVisibility.and.returnValue(Intersect.INTERSECTING);

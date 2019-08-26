@@ -24,16 +24,16 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the volume.
      * @param {Property} [options.positions] A Property specifying the array of {@link Cartesian3} positions which define the line strip.
      * @param {Property} [options.shape] A Property specifying the array of {@link Cartesian2} positions which define the shape to be extruded.
      * @param {Property} [options.cornerType=CornerType.ROUNDED] A {@link CornerType} Property specifying the style of the corners.
-     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the volume.
+     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the volume is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the volume.
      * @param {Property} [options.outline=false] A boolean Property specifying whether the volume is outlined.
      * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the {@link Color} of the outline.
      * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the width of the outline.
-     * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
      * @param {Property} [options.shadows=ShadowMode.DISABLED] An enum Property specifying whether the volume casts or receives shadows from each light source.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this volume will be displayed.
      *
@@ -41,20 +41,21 @@ define([
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
      */
     function PolylineVolumeGraphics(options) {
+        this._definitionChanged = new Event();
         this._show = undefined;
         this._showSubscription = undefined;
-        this._material = undefined;
-        this._materialSubscription = undefined;
         this._positions = undefined;
         this._positionsSubscription = undefined;
         this._shape = undefined;
         this._shapeSubscription = undefined;
-        this._granularity = undefined;
-        this._granularitySubscription = undefined;
         this._cornerType = undefined;
         this._cornerTypeSubscription = undefined;
+        this._granularity = undefined;
+        this._granularitySubscription = undefined;
         this._fill = undefined;
         this._fillSubscription = undefined;
+        this._material = undefined;
+        this._materialSubscription = undefined;
         this._outline = undefined;
         this._outlineSubscription = undefined;
         this._outlineColor = undefined;
@@ -65,7 +66,6 @@ define([
         this._shadowsSubscription = undefined;
         this._distanceDisplayCondition = undefined;
         this._distanceDisplayConditionSubsription = undefined;
-        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -93,14 +93,6 @@ define([
         show : createPropertyDescriptor('show'),
 
         /**
-         * Gets or sets the Property specifying the material used to fill the volume.
-         * @memberof PolylineVolumeGraphics.prototype
-         * @type {MaterialProperty}
-         * @default Color.WHITE
-         */
-        material : createMaterialPropertyDescriptor('material'),
-
-        /**
          * Gets or sets the Property specifying the array of {@link Cartesian3} positions which define the line strip.
          * @memberof PolylineVolumeGraphics.prototype
          * @type {Property}
@@ -113,6 +105,14 @@ define([
          * @type {Property}
          */
         shape : createPropertyDescriptor('shape'),
+
+        /**
+         * Gets or sets the {@link CornerType} Property specifying the style of the corners.
+         * @memberof PolylineVolumeGraphics.prototype
+         * @type {Property}
+         * @default CornerType.ROUNDED
+         */
+        cornerType : createPropertyDescriptor('cornerType'),
 
         /**
          * Gets or sets the numeric Property specifying the angular distance between points on the volume.
@@ -129,6 +129,14 @@ define([
          * @default true
          */
         fill : createPropertyDescriptor('fill'),
+
+        /**
+         * Gets or sets the Property specifying the material used to fill the volume.
+         * @memberof PolylineVolumeGraphics.prototype
+         * @type {MaterialProperty}
+         * @default Color.WHITE
+         */
+        material : createMaterialPropertyDescriptor('material'),
 
         /**
          * Gets or sets the Property specifying whether the volume is outlined.
@@ -153,14 +161,6 @@ define([
          * @default 1.0
          */
         outlineWidth : createPropertyDescriptor('outlineWidth'),
-
-        /**
-         * Gets or sets the {@link CornerType} Property specifying the style of the corners.
-         * @memberof PolylineVolumeGraphics.prototype
-         * @type {Property}
-         * @default CornerType.ROUNDED
-         */
-        cornerType : createPropertyDescriptor('cornerType'),
 
         /**
          * Get or sets the enum Property specifying whether the volume
@@ -190,15 +190,15 @@ define([
             return new PolylineVolumeGraphics(this);
         }
         result.show = this.show;
-        result.material = this.material;
         result.positions = this.positions;
         result.shape = this.shape;
+        result.cornerType = this.cornerType;
         result.granularity = this.granularity;
         result.fill = this.fill;
+        result.material = this.material;
         result.outline = this.outline;
         result.outlineColor = this.outlineColor;
         result.outlineWidth = this.outlineWidth;
-        result.cornerType = this.cornerType;
         result.shadows = this.shadows;
         result.distanceDisplayCondition = this.distanceDisplayCondition;
         return result;
@@ -218,15 +218,15 @@ define([
         //>>includeEnd('debug');
 
         this.show = defaultValue(this.show, source.show);
-        this.material = defaultValue(this.material, source.material);
         this.positions = defaultValue(this.positions, source.positions);
         this.shape = defaultValue(this.shape, source.shape);
+        this.cornerType = defaultValue(this.cornerType, source.cornerType);
         this.granularity = defaultValue(this.granularity, source.granularity);
         this.fill = defaultValue(this.fill, source.fill);
+        this.material = defaultValue(this.material, source.material);
         this.outline = defaultValue(this.outline, source.outline);
         this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
         this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
-        this.cornerType = defaultValue(this.cornerType, source.cornerType);
         this.shadows = defaultValue(this.shadows, source.shadows);
         this.distanceDisplayCondition = defaultValue(this.distanceDisplayCondition, source.distanceDisplayCondition);
     };

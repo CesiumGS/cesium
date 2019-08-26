@@ -199,6 +199,13 @@ define([
     CesiumMath.SIXTY_FOUR_KILOBYTES = 64 * 1024;
 
     /**
+     * 4 * 1024 * 1024 * 1024
+     * @type {Number}
+     * @constant
+     */
+    CesiumMath.FOUR_GIGABYTES = 4 * 1024 * 1024 * 1024;
+
+    /**
      * Returns the sign of the value; 1 if the value is positive, -1 if the value is
      * negative, or 0 if the value is 0.
      *
@@ -725,7 +732,9 @@ define([
         if (n >= length) {
             var sum = factorials[length - 1];
             for (var i = length; i <= n; i++) {
-                factorials.push(sum * i);
+                var next = sum * i;
+                factorials.push(next);
+                sum = next;
             }
         }
         return factorials[n];

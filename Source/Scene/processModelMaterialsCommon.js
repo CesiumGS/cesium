@@ -24,7 +24,7 @@ define([
      * @private
      */
     function processModelMaterialsCommon(gltf, options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         if (!defined(gltf)) {
             return;

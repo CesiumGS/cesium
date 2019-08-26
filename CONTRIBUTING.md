@@ -50,14 +50,14 @@ We love pull requests.  We strive to promptly review them, provide feedback, and
 
 ## Contributor License Agreement (CLA)
 
-Before we can merge a pull request, we require a signed Contributor License Agreement.  There is a CLA for:
+Before we can review a pull request, we require a signed Contributor License Agreement.  There is a CLA for:
 
-* [individuals](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt) and
-* [corporations](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt).
+* [individuals](https://docs.google.com/forms/d/e/1FAIpQLScU-yvQdcdjCFHkNXwdNeEXx5Qhu45QXuWX_uF5qiLGFSEwlA/viewform) and
+* [corporations](https://docs.google.com/forms/d/e/1FAIpQLSeYEaWlBl1tQEiegfHMuqnH9VxyfgXGyIw13C2sN7Fj3J3GVA/viewform).
 
 This only needs to be completed once, and enables contributions to all of the projects under the [Analytical Graphics Inc](https://github.com/AnalyticalGraphicsInc) organization, including CesiumJS.  The CLA ensures you retain copyright to your contributions, and provides us the right to use, modify, and redistribute your contributions using the [Apache 2.0 License](LICENSE.md).
 
-Please email a completed CLA with all fields filled in to [cla@agi.com](mailto:cla@agi.com).  Related questions are also welcome.
+If you have any questions, feel free to reach out to [hello@cesium.com](mailto:hello@cesium)!
 
 ## Pull Request Guidelines
 

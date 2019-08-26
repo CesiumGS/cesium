@@ -95,6 +95,9 @@ handler.setInputAction(function(event) {
             floatingPoint = createPoint(earthPosition);
             activeShapePoints.push(earthPosition);
             var dynamicPositions = new Cesium.CallbackProperty(function () {
+                if (drawingMode === 'polygon') {
+                    return new Cesium.PolygonHierarchy(activeShapePoints);
+                }
                 return activeShapePoints;
             }, false);
             activeShape = drawShape(dynamicPositions);

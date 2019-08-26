@@ -1,6 +1,6 @@
 See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to CesiumJS.  The following people have contributed to CesiumJS, under the following agreements:
 
-## [Corporate CLA](Documentation/Contributors/CLAs/corporate-cla-agi-v1.0.txt)
+## [Corporate CLA](Documentation/Contributors/CLAs/corporate-contributor-license-agreement-v1.0.pdf)
 
 * [Analytical Graphics, Inc.](http://www.agi.com/)
    * [Patrick Cozzi](https://github.com/pjcozzi)
@@ -122,8 +122,21 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Daniel Cooper](https://github.com/moodragon46)
 * [GeoFS](https://www.geo-fs.com)
    * [Xavier Tassin](https://github.com/xtassin/)
+* [Esri](https://www.esri.com)
+   * [Tamrat Belayneh](https://github.com/Tamrat-B/)
+   * [Chris Andrews](https://github.com/chri7928/)
+* [Cesium GS, Inc.](https://cesium.com/)
+   * [Tom Fili](https://github.com/tfili)
+   * [Sarah Chow](https://github.com/slchow)
+   * [Omar Shehata](https://github.com/OmarShehata)
+   * [Hannah Pinkos](https://github.com/hpinkos)
+   * [Kangning Li](https://github.com/likangning93)
+   * [Sean Lilley](https://github.com/lilleyse)
+   * [Matthew Amato](https://github.com/mramato)
+   * [Brandon Barker](https://github.com/ProjectBarks)
+   * [Peter Gagliardi](https://github.com/ptrgags)
 
-## [Individual CLA](Documentation/Contributors/CLAs/individual-cla-agi-v1.0.txt)
+## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 * [jony89](https://github.com/jony89)
 * [Victor Berchet](https://github.com/vicb)
 * [Caleb Morse](https://github.com/cmorse)
@@ -209,3 +222,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Alexander Popiak](https://github.com/apopiak)
 * [Trubie Turner](https://github.com/flexei)
 * [Merijn Wijngaard](https://github.com/mwijngaard)
+* [Dennis Adams](https://github.com/dennisadams)
+* [Hai Zhou](https://github.com/verybigzhouhai)
+* [Pascal Poulain](https://github.com/ppoulainpro)
+* [Abu Darda](https://github.com/abuDarda97)
