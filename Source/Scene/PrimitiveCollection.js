@@ -99,7 +99,7 @@ define([
     /**
      * Adds a primitive to the collection.
      *
-     * @param {Primitive} primitive The primitive to add.
+     * @param {Object} primitive The primitive to add.
      * @param {Number} [index] the index to add the layer at.  If omitted, the primitive will
      *                         added at the bottom  of all existing primitives.
      * @returns {Object} The primitive added to the collection.
