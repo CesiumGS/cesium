@@ -204,6 +204,7 @@ define([
         this.childStartKey = new Cartesian4();
         if (defined(this.key)) {
             // var isOct = this._tileset._tilingScheme.type === 'oct';
+            // TODO: does this actually need to be saved off as a member?
             var childStartKey = this.childStartKey;
             var key = this.key;
             childStartKey.x = key.x * 2;
