@@ -12,6 +12,7 @@ var request = require('request');
 
 var globby = require('globby');
 var gulpTap = require('gulp-tap');
+var open = require('open');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
 var mkdirp = require('mkdirp');
@@ -254,19 +255,6 @@ function generateDocumentation() {
     });
 }
 gulp.task('generateDocumentation', generateDocumentation);
-
-gulp.task('instrumentForCoverage', gulp.series('build', function(done) {
-    var jscoveragePath = path.join('Tools', 'jscoverage-0.5.1', 'jscoverage.exe');
-    var cmdLine = jscoveragePath + ' Source Instrumented --no-instrument=./ThirdParty';
-    child_process.exec(cmdLine, function(error, stdout, stderr) {
-        if (error) {
-            console.log(stderr);
-            return done(error);
-        }
-        console.log(stdout);
-        done();
-    });
-}));
 
 gulp.task('release', gulp.series('generateStubs', combine, minifyRelease, generateDocumentation));
 
@@ -662,6 +650,35 @@ function setStatus(state, targetUrl, description, context) {
          }
      });
 }
+
+function coverage(done) {
+    var karma = new Karma.Server({
+        configFile: karmaConfigFile,
+        preprocessors: {
+            'Source/Core/**/*.js': ['coverage'],
+            'Source/DataSources/**/*.js': ['coverage'],
+            'Source/Renderer/**/*.js': ['coverage'],
+            'Source/Scene/**/*.js': ['coverage'],
+            'Source/Shaders/**/*.js': ['coverage'],
+            'Source/Widgets/**/*.js': ['coverage'],
+            'Source/Workers/**/*.js': ['coverage']
+        },
+        reporters: ['spec', 'coverage'],
+        coverageReporter: {
+            dir: 'Build/Coverage',
+            includeAllSources: true
+        }
+    }, function() {
+        var dirs = fs.readdirSync('Build/Coverage');
+        dirs.forEach(function(dir) {
+            open('Build/Coverage/' + dir + '/index.html');
+        });
+        return done();
+    });
+    karma.start();
+}
+
+gulp.task('coverage', gulp.series('build', coverage));
 
 gulp.task('test', function(done) {
     var argv = yargs.argv;

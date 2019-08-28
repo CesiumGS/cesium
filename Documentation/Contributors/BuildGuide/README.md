@@ -103,9 +103,9 @@ Here's the full set of scripts and what they do.
       * `release` - A full release build that creates a shippable product, including building apps and generating documentation.
       * `makeZipFile` - Builds a zip file containing all release files.  This includes the source tree (suitable for use from an AMD-aware application), plus the combined and minified Cesium.js files, the generated documentation, the test suite, and the example applications (in both built and source form).
    * **Utility scripts** -- code coverage, static code analysis, and other utilities
-      * `instrumentForCoverage` - Runs [JSCoverage](http://siliconforks.com/jscoverage/) on the source tree to allow running tests with coverage information.  Use the link in index.html.  Currently Windows only.
+      * `coverage` - Runs coverage and opens the default browser with the results.
       * `eslint` - Runs [ESLint](http://eslint.org/), a static code analysis tool, on the entire source tree.
-      * `eslint-watch` - A never-ending task that watches your file system for changes to Cesium and runs ESLint on any changed source files.  
+      * `eslint-watch` - A never-ending task that watches your file system for changes to Cesium and runs ESLint on any changed source files.
       * `clean` - Removes all generated build artifacts.
       * `cloc` - Runs [CLOC](https://github.com/AlDanial/cloc) to count the lines of code on the Source and Specs directories.  This requires [Perl](http://www.perl.org/) to execute.
       * `sortRequires` - Alphabetically sorts the list of required modules in every `js` file.  It also makes sure that the top of every source file uses the same formatting.
