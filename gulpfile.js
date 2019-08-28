@@ -620,11 +620,13 @@ gulp.task('deploy-status', function() {
     var deployUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/';
     var zipUrl = deployUrl + 'Cesium-' + packageJson.version + '.zip';
     var npmUrl = deployUrl + 'cesium-' + packageJson.version + '.tgz';
+    var coverageUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/Build/Coverage/index.html';
 
     return Promise.join(
         setStatus(status, deployUrl, message, 'deployment'),
         setStatus(status, zipUrl, message, 'zip file'),
-        setStatus(status, npmUrl, message, 'npm package')
+        setStatus(status, npmUrl, message, 'npm package'),
+        setStatus(status, coverageUrl, message, 'coverage results')
     );
 });
 
@@ -651,9 +653,26 @@ function setStatus(state, targetUrl, description, context) {
      });
 }
 
-function coverage(done) {
+gulp.task('coverage', function(done) {
+    var argv = yargs.argv;
+    var webglStub = argv.webglStub ? argv.webglStub : false;
+    var suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
+    var failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
+
+    var browsers = ['Chrome'];
+    if (argv.browsers) {
+        browsers = argv.browsers.split(',');
+    }
+
     var karma = new Karma.Server({
         configFile: karmaConfigFile,
+        browsers: browsers,
+        specReporter: {
+            suppressErrorSummary: false,
+            suppressFailed: false,
+            suppressPassed: suppressPassed,
+            suppressSkipped: true
+        },
         preprocessors: {
             'Source/Core/**/*.js': ['coverage'],
             'Source/DataSources/**/*.js': ['coverage'],
@@ -666,19 +685,30 @@ function coverage(done) {
         reporters: ['spec', 'coverage'],
         coverageReporter: {
             dir: 'Build/Coverage',
+            // Single browser just put in Build/Coverage directly
+            // So we have a well-known url for travis and index.html
+            subdir: browsers.length === 1 ? '.' : undefined,
             includeAllSources: true
+        },
+        client: {
+            captureConsole: verbose,
+            args: [undefined, undefined, undefined, webglStub, undefined]
         }
-    }, function() {
-        var dirs = fs.readdirSync('Build/Coverage');
-        dirs.forEach(function(dir) {
-            open('Build/Coverage/' + dir + '/index.html');
-        });
-        return done();
+    }, function(e) {
+        if (!process.env.TRAVIS) {
+            if (browsers.length === 1) {
+                open('Build/Coverage/index.html');
+            } else {
+                var dirs = fs.readdirSync('Build/Coverage');
+                dirs.forEach(function(dir) {
+                    open('Build/Coverage/' + dir + '/index.html');
+                });
+            }
+        }
+        return done(failTaskOnError ? e : undefined);
     });
     karma.start();
-}
-
-gulp.task('coverage', gulp.series('build', coverage));
+});
 
 gulp.task('test', function(done) {
     var argv = yargs.argv;
