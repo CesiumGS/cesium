@@ -67,7 +67,6 @@ var buildFiles = ['Specs/**/*.js',
 
 var filesToClean = ['Source/Cesium.js',
                     'Build',
-                    'Instrumented',
                     'Source/Shaders/**/*.js',
                     'Source/ThirdParty/Shaders/*.js',
                     'Specs/SpecList.js',
@@ -659,6 +658,7 @@ gulp.task('coverage', function(done) {
     var suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
     var failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
 
+    var folders = [];
     var browsers = ['Chrome'];
     if (argv.browsers) {
         browsers = argv.browsers.split(',');
@@ -685,9 +685,10 @@ gulp.task('coverage', function(done) {
         reporters: ['spec', 'coverage'],
         coverageReporter: {
             dir: 'Build/Coverage',
-            // Single browser just put in Build/Coverage directly
-            // So we have a well-known url for travis and index.html
-            subdir: browsers.length === 1 ? '.' : undefined,
+            subdir: function(browserName) {
+                folders.push(browserName);
+                return browserName;
+            },
             includeAllSources: true
         },
         client: {
@@ -695,15 +696,17 @@ gulp.task('coverage', function(done) {
             args: [undefined, undefined, undefined, webglStub, undefined]
         }
     }, function(e) {
+        var html = '<!doctype html><html><body><ul>';
+        folders.forEach(function(folder) {
+            html += '<li><a href="' + encodeURIComponent(folder) + '/index.html">' + folder + '</a></li>';
+        });
+        html += '</ul></body></html>';
+        fs.writeFileSync('Build/Coverage/index.html', html);
+
         if (!process.env.TRAVIS) {
-            if (browsers.length === 1) {
-                open('Build/Coverage/index.html');
-            } else {
-                var dirs = fs.readdirSync('Build/Coverage');
-                dirs.forEach(function(dir) {
-                    open('Build/Coverage/' + dir + '/index.html');
-                });
-            }
+            folders.forEach(function(dir) {
+                open('Build/Coverage/' + dir + '/index.html');
+            });
         }
         return done(failTaskOnError ? e : undefined);
     });
