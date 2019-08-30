@@ -16,9 +16,8 @@ script:
   - npm --silent run eslint
 
   - npm --silent run build
-  - npm --silent run test -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
+  - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
-  - npm --silent run clean
   - travis_wait 20 npm --silent run makeZipFile -- --concurrency 1
   - npm pack &> /dev/null
 
