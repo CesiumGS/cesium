@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Batched3DModel3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
@@ -24,7 +24,9 @@ defineSuite([
         Model,
         Cesium3DTilesTester,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Batched3DModel3DTileContent', function() {
 
     var scene;
     var centerLongitude = -1.31968;
@@ -379,3 +381,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

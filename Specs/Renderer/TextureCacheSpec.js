@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Renderer/TextureCache',
         'Renderer/Texture',
         'Specs/createContext'
@@ -7,6 +7,8 @@ defineSuite([
         Texture,
         createContext) {
         'use strict';
+
+describe('Renderer/TextureCache', function() {
 
     var context;
 
@@ -124,3 +126,4 @@ defineSuite([
         expect(cache.isDestroyed()).toEqual(false);
     });
 }, 'WebGL');
+});

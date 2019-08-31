@@ -192,7 +192,7 @@ It is also possible for Karma to run all tests against each browser installed on
 
 #### Run a Single Test or Suite
 
-Sometimes it is useful to run a single test or suite for easier debugging purposes.  To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak.  Likewise, to run an entire suite, use `fdefineSuite` instead of `defineSuite`.
+Sometimes it is useful to run a single test or suite for easier debugging purposes.  To do this simply change the `it` function call for the desired test to `fit`, the `f` stands for `focused` in Jasmine speak.  Likewise, to run an entire suite, use `fdescribe` instead of `describe`.
 
 ## Testing Previous Versions of CesiumJS
 
@@ -233,22 +233,24 @@ Tests are written in JavaScript using Jasmine.  It is important to realize that 
 Here is a stripped down version of the tests:
 
 ```javascript
-defineSuite([
+define([
         'Core/Cartesian3'
     ], function(
         Cartesian3) {
     'use strict';
 
-    it('construct with default values', function() {
-        var cartesian = new Cartesian3();
-        expect(cartesian.x).toEqual(0.0);
-        expect(cartesian.y).toEqual(0.0);
-        expect(cartesian.z).toEqual(0.0);
+    describe('Cartesian3', function(){
+        it('construct with default values', function() {
+            var cartesian = new Cartesian3();
+            expect(cartesian.x).toEqual(0.0);
+            expect(cartesian.y).toEqual(0.0);
+            expect(cartesian.z).toEqual(0.0);
+        });
     });
 });
 ```
 
-`defineSuite` identifies this file as a test suite and include modules the same way `define` is used in engine code.  The modules are listed in alphabetical order as usual _except_ that the module being tested is listed first.
+`describe` identifies this file as a test suite and we include modules the same way `define` is used in engine code.
 
 Using Jasmine, each test is defined by calling `it` and passing a string that describes the test and a function that is the test.
 
@@ -692,10 +694,10 @@ This test is more cohesive and easier to debug than if it were written using a _
 
 ### Categories
 
-As mentioned above, some tests are in the `'WebGL'` category.  To  assign a category to a suite, pass the category to `defineSuite`.
+As mentioned above, some tests are in the `'WebGL'` category.  To  assign a category to a suite, pass the category to `describe`.
 
 ```javascript
-defineSuite([
+define([
         'Scene/DebugModelMatrixPrimitive',
         'Specs/createScene'
     ], function(
@@ -703,6 +705,7 @@ defineSuite([
         createScene) {
     'use strict';
 
+describe('Scene/DebugModelMatrixPrimitive', function(){
     var scene;
 
     beforeAll(function() {
@@ -716,9 +719,10 @@ defineSuite([
     // ...
 
 }, 'WebGL');
+});
 ```
 
-`defineSuite` is a custom CesiumJS function that wraps Jasmine define calls and provides the category capability.
+CesiumJS uses a customized `describe` function that wraps Jasmine describe calls and provides the category capability.
 
 ## Manual Testing
 
@@ -756,7 +760,7 @@ You can run or debug the tests by using the first two buttons.  The third button
 
 ![](webstorm-test-runner.png)
 
-This runner has lots of options, such as only showing failing tests or automatically re-running the tests on a test interval (great for development when combined with `fdefineSuite`!).  You can hover over each of the buttons to see what they do.
+This runner has lots of options, such as only showing failing tests or automatically re-running the tests on a test interval (great for development when combined with `fdescribe`!).  You can hover over each of the buttons to see what they do.
 
 To make jumping between the source and spec files easier download the  [Cesium WebStorm plugin](https://github.com/AnalyticalGraphicsInc/cesium-webstorm-plugin).
 

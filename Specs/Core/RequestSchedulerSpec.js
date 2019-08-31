@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/RequestScheduler',
         'Core/Request',
         'Core/RequestState',
@@ -8,7 +8,9 @@ defineSuite([
         Request,
         RequestState,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/RequestScheduler', function() {
 
     var originalMaximumRequests;
     var originalMaximumRequestsPerServer;
@@ -886,4 +888,5 @@ defineSuite([
         }));
         expect(promise).toBeUndefined();
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/ClockViewModel',
         'Core/Clock',
         'Core/ClockRange',
@@ -10,7 +10,9 @@ defineSuite([
         ClockRange,
         ClockStep,
         JulianDate) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/ClockViewModel', function() {
 
     it('default constructor creates a clock', function() {
         var clockViewModel = new ClockViewModel();
@@ -86,4 +88,5 @@ defineSuite([
         expect(clockViewModel.clockRange).toEqual(clock.clockRange);
         expect(clockViewModel.shouldAnimate).toEqual(clock.shouldAnimate);
     });
+});
 });

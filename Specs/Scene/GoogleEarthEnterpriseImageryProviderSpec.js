@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/GoogleEarthEnterpriseImageryProvider',
         'Core/decodeGoogleEarthEnterpriseData',
         'Core/DefaultProxy',
@@ -38,7 +38,9 @@ defineSuite([
         pollToPromise,
         Uri,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -307,4 +309,5 @@ defineSuite([
             });
         });
     });
+});
 });

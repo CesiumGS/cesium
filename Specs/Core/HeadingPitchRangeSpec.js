@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/HeadingPitchRange'
     ], function(
         HeadingPitchRange) {
-    'use strict';
+        'use strict';
+
+describe('Core/HeadingPitchRange', function() {
 
     it('construct with default values', function() {
         var hpr = new HeadingPitchRange();
@@ -33,4 +35,5 @@ defineSuite([
         expect(hpr).toBe(returnedResult);
     });
 
+});
 });

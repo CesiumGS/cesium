@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/writeTextToCanvas',
         'Core/Color'
     ], function(
         writeTextToCanvas,
         Color) {
-    'use strict';
+        'use strict';
+
+describe('Core/writeTextToCanvas', function() {
 
     it('returns undefined when text is blank', function() {
         var canvas = writeTextToCanvas('');
@@ -133,4 +135,5 @@ defineSuite([
         expect(canvas2.width).toEqual(canvas1.width+4);
         expect(canvas2.height).toEqual(canvas1.height+4);
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ClassificationModel',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -52,7 +52,9 @@ defineSuite([
         addDefaults,
         parseGlb,
         updateVersion) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ClassificationModel', function() {
 
     var scene;
     var modelMatrix;
@@ -325,3 +327,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/GeometryAttribute',
         'Core/ComponentDatatype'
     ], function(
         GeometryAttribute,
         ComponentDatatype) {
-    'use strict';
+        'use strict';
+
+describe('Core/GeometryAttribute', function() {
 
     it('constructor', function() {
         var color = new GeometryAttribute({
@@ -77,4 +79,5 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+});
 });

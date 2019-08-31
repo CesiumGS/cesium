@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Widgets/NavigationHelpButton/NavigationHelpButtonViewModel'
     ], function(
         NavigationHelpButtonViewModel) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/NavigationHelpButton/NavigationHelpButtonViewModel', function() {
 
     it('Can construct', function() {
         var viewModel = new NavigationHelpButtonViewModel();
@@ -19,4 +21,5 @@ defineSuite([
         viewModel.command();
         expect(viewModel.showInstructions).toBe(false);
     });
+});
 });

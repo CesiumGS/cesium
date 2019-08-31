@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'ThirdParty/knockout'
     ], function(
         knockout) {
-    'use strict';
+        'use strict';
+
+describe('ThirdParty/knockout', function() {
 
     it('check binding with constants', function() {
         var div = document.createElement('div');
@@ -85,4 +87,5 @@ cesiumSvgPath: svgPath');
         knockout.cleanNode(div);
         document.body.removeChild(div);
     });
+});
 });

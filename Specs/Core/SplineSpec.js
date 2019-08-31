@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Spline',
         'Core/Cartesian3',
         'Core/HermiteSpline'
@@ -6,7 +6,9 @@ defineSuite([
         Spline,
         Cartesian3,
         HermiteSpline) {
-    'use strict';
+        'use strict';
+
+describe('Core/Spline', function() {
 
     it('contructor throws', function() {
         expect(function() {
@@ -99,4 +101,5 @@ defineSuite([
         // jump far back
         expect(spline.findTimeInterval(times[0], times.length - 1)).toEqual(0);
     });
+});
 });

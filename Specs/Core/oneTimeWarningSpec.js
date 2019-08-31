@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/oneTimeWarning'
     ], function(
         oneTimeWarning) {
-    'use strict';
+        'use strict';
+
+describe('Core/oneTimeWarning', function() {
 
     it('logs a warning', function() {
         spyOn(console, 'warn');
@@ -21,4 +23,5 @@ defineSuite([
             oneTimeWarning();
         }).toThrowDeveloperError();
     });
+});
 });

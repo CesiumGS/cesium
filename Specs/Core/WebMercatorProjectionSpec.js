@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/WebMercatorProjection',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -12,7 +12,9 @@ defineSuite([
         Cartographic,
         Ellipsoid,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/WebMercatorProjection', function() {
 
     it('construct0', function() {
         var projection = new WebMercatorProjection();
@@ -155,4 +157,5 @@ defineSuite([
             return projection.unproject();
         }).toThrowDeveloperError();
     });
+});
 });

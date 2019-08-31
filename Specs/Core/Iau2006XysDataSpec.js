@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Iau2006XysData',
         'Core/buildModuleUrl',
         'Core/defined',
@@ -10,7 +10,9 @@ defineSuite([
         defined,
         Iau2006XysSample,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Core/Iau2006XysData', function() {
 
     var xys;
 
@@ -65,4 +67,5 @@ defineSuite([
             return defined(xys.computeXysRadians(2442398, 1234.56));
         });
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/PolylineGeometryUpdater',
         'Core/ApproximateTerrainHeights',
         'Core/ArcType',
@@ -66,7 +66,9 @@ defineSuite([
         createDynamicProperty,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineGeometryUpdater', function() {
 
     var scene;
     beforeAll(function(){
@@ -871,3 +873,4 @@ defineSuite([
         updater.destroy();
     });
 }, 'WebGL');
+});

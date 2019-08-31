@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/PostProcessStageCollection',
         'Core/Color',
         'Scene/PostProcessStage',
@@ -12,7 +12,9 @@ defineSuite([
         Tonemapper,
         createScene,
         ViewportPrimitive) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PostProcessStageCollection', function() {
 
     var scene;
 
@@ -357,3 +359,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

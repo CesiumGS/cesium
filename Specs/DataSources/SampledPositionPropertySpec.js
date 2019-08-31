@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/SampledPositionProperty',
         'Core/Cartesian3',
         'Core/ExtrapolationType',
@@ -18,7 +18,9 @@ defineSuite([
         ReferenceFrame,
         TimeInterval,
         PositionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/SampledPositionProperty', function() {
 
     it('constructor sets expected defaults', function() {
         var property = new SampledPositionProperty();
@@ -418,4 +420,5 @@ defineSuite([
         property.backwardExtrapolationDuration = 1.0;
         expect(listener).not.toHaveBeenCalled();
     });
+});
 });

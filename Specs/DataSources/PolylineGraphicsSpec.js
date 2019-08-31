@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/PolylineGraphics',
         'Core/ArcType',
         'Core/Color',
@@ -19,8 +19,10 @@ defineSuite([
         ClassificationType,
         ShadowMode,
         testDefinitionChanged,
-    testMaterialDefinitionChanged) {
-    'use strict';
+        testMaterialDefinitionChanged) {
+        'use strict';
+
+describe('DataSources/PolylineGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -206,4 +208,5 @@ defineSuite([
         testDefinitionChanged(property, 'arcType', ArcType.GEODESIC, ArcType.RHUMB);
         testDefinitionChanged(property, 'zIndex', 20, 5);
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Model',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -74,7 +74,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Model', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
@@ -3541,3 +3543,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

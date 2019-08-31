@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/PostProcessStageLibrary',
         'Core/Cartesian3',
         'Core/defined',
@@ -7,14 +7,14 @@ defineSuite([
         'Core/HeadingPitchRoll',
         'Core/Matrix4',
         'Core/Transforms',
-        'Scene/Model',
         'Renderer/Pass',
         'Renderer/RenderState',
-        'ThirdParty/when',
+        'Scene/Model',
         'Specs/createCanvas',
         'Specs/createScene',
         'Specs/pollToPromise',
-        'Specs/ViewportPrimitive'
+        'Specs/ViewportPrimitive',
+        'ThirdParty/when'
     ], function(
         PostProcessStageLibrary,
         Cartesian3,
@@ -24,15 +24,17 @@ defineSuite([
         HeadingPitchRoll,
         Matrix4,
         Transforms,
-        Model,
         Pass,
         RenderState,
-        when,
+        Model,
         createCanvas,
         createScene,
         pollToPromise,
-        ViewportPrimitive) {
-    'use strict';
+        ViewportPrimitive,
+        when) {
+        'use strict';
+
+describe('Scene/PostProcessStageLibrary', function() {
 
     var scene;
 
@@ -510,3 +512,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/arrayRemoveDuplicates',
         'Core/Cartesian3',
         'Core/Math',
@@ -8,7 +8,9 @@ defineSuite([
         Cartesian3,
         CesiumMath,
         Spherical) {
-    'use strict';
+        'use strict';
+
+describe('Core/arrayRemoveDuplicates', function() {
 
     it('removeDuplicates returns positions if none removed', function() {
         var positions = [Cartesian3.ZERO];
@@ -164,4 +166,5 @@ defineSuite([
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
+});
 });

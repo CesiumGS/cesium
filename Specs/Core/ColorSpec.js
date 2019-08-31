@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Color',
         'Core/Cartesian4',
         'Core/Math',
@@ -8,7 +8,9 @@ defineSuite([
         Cartesian4,
         CesiumMath,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/Color', function() {
 
     it('Constructing without arguments produces expected defaults', function() {
         var v = new Color();
@@ -749,4 +751,5 @@ defineSuite([
     });
 
     createPackableSpecs(Color, new Color(0.1, 0.2, 0.3, 0.4), [0.1, 0.2, 0.3, 0.4]);
+});
 });

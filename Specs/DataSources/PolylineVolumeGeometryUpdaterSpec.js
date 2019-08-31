@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/PolylineVolumeGeometryUpdater',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -32,7 +32,9 @@ defineSuite([
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineVolumeGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -210,3 +212,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(PolylineVolumeGeometryUpdater, 'polylineVolume', createDynamicPolylineVolume, getScene);
 }, 'WebGL');
+});

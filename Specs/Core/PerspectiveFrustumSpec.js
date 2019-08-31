@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/PerspectiveFrustum',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -14,7 +14,9 @@ defineSuite([
         CesiumMath,
         Matrix4,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/PerspectiveFrustum', function() {
 
     var frustum, planes;
 
@@ -234,4 +236,5 @@ defineSuite([
         xOffset : 5.0,
         yOffset : 6.0
     }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+});
 });

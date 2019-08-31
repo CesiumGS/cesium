@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Renderer/VertexArray',
         'Core/ComponentDatatype',
         'Core/PrimitiveType',
@@ -16,7 +16,9 @@ defineSuite([
         DrawCommand,
         ShaderProgram,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/VertexArray', function() {
 
     var context;
 
@@ -837,3 +839,4 @@ defineSuite([
         }
     });
 }, 'WebGL');
+});

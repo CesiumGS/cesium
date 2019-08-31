@@ -1,16 +1,18 @@
-defineSuite([
+define([
         'Core/TaskProcessor',
-        'require',
         'Core/FeatureDetection',
-        'ThirdParty/when',
-        'Specs/absolutize'
+        'require',
+        'Specs/absolutize',
+        'ThirdParty/when'
     ], function(
         TaskProcessor,
-        require,
         FeatureDetection,
-        when,
-        absolutize) {
-    'use strict';
+        require,
+        absolutize,
+        when) {
+        'use strict';
+
+describe('Core/TaskProcessor', function() {
 
     var taskProcessor;
 
@@ -217,4 +219,5 @@ defineSuite([
             });
         }).toThrowRuntimeError();
     });
+});
 });

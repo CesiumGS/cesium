@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/IauOrientationAxes',
         'Core/Iau2000Orientation',
         'Core/JulianDate',
@@ -12,7 +12,9 @@ defineSuite([
         CesiumMath,
         Matrix3,
         TimeStandard) {
-    'use strict';
+        'use strict';
+
+describe('Core/IauOrientationAxes', function() {
 
     it('compute ICRF to Moon Fixed', function() {
         var date = new JulianDate(2451545.0, -32.184, TimeStandard.TAI);
@@ -32,4 +34,5 @@ defineSuite([
         var mtx = axes.evaluate(date);
         expect(mtx).toEqualEpsilon(expectedMatrix, CesiumMath.EPSILON13);
     });
+});
 });

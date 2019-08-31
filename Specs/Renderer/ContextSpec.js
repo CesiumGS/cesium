@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Renderer/Context',
         'Core/Color',
         'Core/IndexDatatype',
@@ -14,7 +14,9 @@ defineSuite([
         BufferUsage,
         ContextLimits,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Context', function() {
 
     var context;
 
@@ -314,3 +316,4 @@ defineSuite([
         c.destroyForSpecs();
     });
 }, 'WebGL');
+});

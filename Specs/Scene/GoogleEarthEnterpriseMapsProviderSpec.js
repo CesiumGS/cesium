@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/GoogleEarthEnterpriseMapsProvider',
         'Core/DefaultProxy',
         'Core/GeographicTilingScheme',
@@ -24,7 +24,9 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GoogleEarthEnterpriseMapsProvider', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {
@@ -507,4 +509,5 @@ defineSuite([
             expect(errorEventRaised).toEqual(true);
         });
     });
+});
 });

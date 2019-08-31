@@ -1,26 +1,28 @@
-defineSuite([
+define([
         'Scene/Cesium3DTilesetHeatmap',
-        'Scene/Cesium3DTile',
-        'Scene/Cesium3DTileset',
         'Core/clone',
         'Core/Color',
         'Core/JulianDate',
         'Core/Math',
         'Core/Matrix4',
+        'Scene/Cesium3DTile',
         'Scene/Cesium3DTileContentState',
+        'Scene/Cesium3DTileset',
         'Specs/createScene'
     ], function(
         Cesium3DTilesetHeatmap,
-        Cesium3DTile,
-        Cesium3DTileset,
         clone,
         Color,
         JulianDate,
         CesiumMath,
         Matrix4,
+        Cesium3DTile,
         Cesium3DTileContentState,
+        Cesium3DTileset,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Cesium3DTilesetHeatmap', function() {
 
     var tileWithBoundingSphere = {
         geometricError : 1,
@@ -123,4 +125,5 @@ defineSuite([
         var expectedColor = Color.BLACK;
         verifyColor(tile._debugColor, expectedColor);
     });
+});
 });

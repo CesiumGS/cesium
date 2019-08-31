@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/HermiteSpline',
         'Core/Cartesian3',
         'Core/Math'
@@ -6,7 +6,9 @@ defineSuite([
         HermiteSpline,
         Cartesian3,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/HermiteSpline', function() {
 
     var points;
     var times;
@@ -377,4 +379,5 @@ defineSuite([
         var t = (times[0] + times[1]) * 0.5;
         expect(hs.evaluate(t)).toEqual(Cartesian3.lerp(points[0], points[1], t, new Cartesian3()));
     });
+});
 });

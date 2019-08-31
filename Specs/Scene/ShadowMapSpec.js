@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ShadowMap',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
@@ -62,7 +62,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ShadowMap', function() {
 
     var scene;
     var sunShadowMap;
@@ -1198,3 +1200,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

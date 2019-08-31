@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/LabelCollection',
         'Core/BoundingRectangle',
         'Core/BoundingSphere',
@@ -38,7 +38,9 @@ defineSuite([
         VerticalOrigin,
         createGlobe,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/LabelCollection', function() {
 
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
 
@@ -2406,3 +2408,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

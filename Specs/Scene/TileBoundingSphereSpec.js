@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/TileBoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -14,7 +14,9 @@ defineSuite([
         CesiumMath,
         Plane,
         createFrameState) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TileBoundingSphere', function() {
 
     var tileBoundingSphere = new TileBoundingSphere(new Cartesian3(0.0, 0.0, 0.0), 1.0);
     var frameState = createFrameState();
@@ -69,4 +71,5 @@ defineSuite([
         expect(tileBoundingSphere.intersectPlane(plane)).toEqual(Intersect.INTERSECTING);
     });
 
+});
 });

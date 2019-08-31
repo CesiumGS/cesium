@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/MaterialAppearance',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
@@ -22,7 +22,9 @@ defineSuite([
         Material,
         Primitive,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/MaterialAppearance', function() {
 
     var scene;
     var primitive;
@@ -125,3 +127,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/mergeSort',
         'Core/BoundingSphere',
         'Core/Cartesian3'
@@ -6,7 +6,9 @@ defineSuite([
         mergeSort,
         BoundingSphere,
         Cartesian3) {
-    'use strict';
+        'use strict';
+
+describe('Core/mergeSort', function() {
 
     it('sorts', function() {
         var array = [0, 9, 1, 8, 2, 7, 3, 6, 4, 5];
@@ -56,4 +58,5 @@ defineSuite([
             mergeSort([0, 1, 2], undefined);
         }).toThrowDeveloperError();
     });
+});
 });

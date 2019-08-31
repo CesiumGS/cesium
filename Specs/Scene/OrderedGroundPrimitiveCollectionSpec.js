@@ -1,10 +1,12 @@
-defineSuite([
-    'Scene/OrderedGroundPrimitiveCollection',
-    'Core/destroyObject'
-], function(
-    OrderedGroundPrimitiveCollection,
-    destroyObject) {
-    'use strict';
+define([
+        'Scene/OrderedGroundPrimitiveCollection',
+        'Core/destroyObject'
+    ], function(
+        OrderedGroundPrimitiveCollection,
+        destroyObject) {
+        'use strict';
+
+describe('Scene/OrderedGroundPrimitiveCollection', function() {
 
     var updateCallOrder;
 
@@ -266,4 +268,5 @@ defineSuite([
         collection.destroy();
         expect(collection.isDestroyed()).toBe(true);
     });
+});
 });

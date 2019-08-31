@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/createOpenStreetMapImageryProvider',
         'Core/DefaultProxy',
         'Core/Math',
@@ -24,7 +24,9 @@ defineSuite([
         ImageryState,
         UrlTemplateImageryProvider,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/createOpenStreetMapImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -273,4 +275,5 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
+});
 });

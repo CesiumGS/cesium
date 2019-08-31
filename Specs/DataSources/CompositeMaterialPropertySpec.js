@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/CompositeMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
@@ -14,7 +14,9 @@ defineSuite([
         TimeIntervalCollection,
         ColorMaterialProperty,
         GridMaterialProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CompositeMaterialProperty', function() {
 
     it('default constructor has expected values', function() {
         var property = new CompositeMaterialProperty();
@@ -184,4 +186,5 @@ defineSuite([
             property.getType(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

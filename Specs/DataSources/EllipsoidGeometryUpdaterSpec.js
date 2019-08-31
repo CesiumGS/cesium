@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/EllipsoidGeometryUpdater',
         'Core/Cartesian3',
         'Core/Color',
@@ -44,7 +44,9 @@ defineSuite([
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/EllipsoidGeometryUpdater', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -391,3 +393,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(EllipsoidGeometryUpdater, 'ellipsoid', createDynamicEllipsoid, getScene);
 }, 'WebGL');
+});

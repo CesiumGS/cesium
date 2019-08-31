@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/GeoJsonDataSource',
         'Core/Cartesian3',
         'Core/Color',
@@ -24,7 +24,9 @@ defineSuite([
         EntityCollection,
         HeightReference,
         when) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/GeoJsonDataSource', function() {
 
     var defaultMarkerSize;
     var defaultSymbol;
@@ -1259,4 +1261,5 @@ defineSuite([
             expect(dataSource.isLoading).toBe(false);
         });
     });
+});
 });

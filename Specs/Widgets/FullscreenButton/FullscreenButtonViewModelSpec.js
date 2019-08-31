@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Widgets/FullscreenButton/FullscreenButtonViewModel',
         'Core/Fullscreen'
     ], function(
         FullscreenButtonViewModel,
         Fullscreen) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/FullscreenButton/FullscreenButtonViewModel', function() {
 
     it('constructor sets default values', function() {
         var viewModel = new FullscreenButtonViewModel();
@@ -53,4 +55,5 @@ defineSuite([
             viewModel.fullscreenElement = {};
         }).toThrowDeveloperError();
     });
+});
 });

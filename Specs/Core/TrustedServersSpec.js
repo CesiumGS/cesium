@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/TrustedServers'
     ], function(
         TrustedServers) {
-    'use strict';
+        'use strict';
+
+describe('Core/TrustedServers', function() {
 
     afterEach(function() {
         TrustedServers.clear();
@@ -76,4 +78,5 @@ defineSuite([
         TrustedServers.add('cesiumjs.org', 80);
         expect(TrustedServers.contains('http://cesiumjs.org/index.html')).toBe(true);
     });
+});
 });

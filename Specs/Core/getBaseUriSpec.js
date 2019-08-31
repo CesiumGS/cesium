@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/getBaseUri'
     ], function(
         getBaseUri) {
-    'use strict';
+        'use strict';
+
+describe('Core/getBaseUri', function() {
 
     it('works as expected', function() {
         var result = getBaseUri('http://www.mysite.com/awesome?makeitawesome=true');
@@ -25,4 +27,5 @@ defineSuite([
             getBaseUri(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

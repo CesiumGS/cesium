@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ConditionsExpression',
         'Core/Cartesian4',
         'Core/Color'
@@ -6,7 +6,9 @@ defineSuite([
         ConditionsExpression,
         Cartesian4,
         Color) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ConditionsExpression', function() {
 
     function MockFeature(value) {
         this._value = value;
@@ -117,4 +119,5 @@ defineSuite([
         var shaderFunction = expression.getShaderFunction('getColor', '', {}, 'vec4');
         expect(shaderFunction).toBeUndefined();
     });
+});
 });

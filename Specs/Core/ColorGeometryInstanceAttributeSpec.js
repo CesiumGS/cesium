@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/ColorGeometryInstanceAttribute',
         'Core/Color',
         'Core/ComponentDatatype'
@@ -6,7 +6,9 @@ defineSuite([
         ColorGeometryInstanceAttribute,
         Color,
         ComponentDatatype) {
-    'use strict';
+        'use strict';
+
+describe('Core/ColorGeometryInstanceAttribute', function() {
 
     it('constructor', function() {
         var attribute = new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 0.5);
@@ -67,4 +69,5 @@ defineSuite([
         expect(ColorGeometryInstanceAttribute.equals(color, undefined)).toEqual(false);
         expect(ColorGeometryInstanceAttribute.equals(undefined, color)).toEqual(false);
     });
+});
 });

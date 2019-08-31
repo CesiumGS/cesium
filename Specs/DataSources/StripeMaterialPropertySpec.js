@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/StripeMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
@@ -16,7 +16,9 @@ defineSuite([
         StripeOrientation,
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/StripeMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new StripeMaterialProperty();
@@ -193,4 +195,5 @@ defineSuite([
         testDefinitionChanged(property, 'offset', 2, 5);
         testDefinitionChanged(property, 'repeat', 3, 4);
     });
+});
 });

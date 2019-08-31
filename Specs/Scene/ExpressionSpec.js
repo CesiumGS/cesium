@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Expression',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -14,7 +14,9 @@ defineSuite([
         Color,
         CesiumMath,
         ExpressionNodeType) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Expression', function() {
 
     function MockFeature() {
         this._properties = {};
@@ -3666,4 +3668,5 @@ defineSuite([
             return expression.getShaderExpression('', {});
         }).toThrowRuntimeError();
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/CameraFlightPath',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -14,7 +14,9 @@ defineSuite([
         OrthographicOffCenterFrustum,
         SceneMode,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/CameraFlightPath', function() {
 
     var scene;
 
@@ -597,3 +599,4 @@ defineSuite([
         }
     });
 }, 'WebGL');
+});

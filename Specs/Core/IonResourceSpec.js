@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/IonResource',
         'Core/Ion',
         'Core/RequestErrorEvent',
@@ -12,7 +12,9 @@ defineSuite([
         Resource,
         RuntimeError,
         when) {
-'use strict';
+        'use strict';
+
+describe('Core/IonResource', function() {
 
     var assetId = 123890213;
     var endpoint = {
@@ -340,4 +342,5 @@ defineSuite([
             });
         });
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/KmlTourFlyTo',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
@@ -16,7 +16,9 @@ defineSuite([
         KmlCamera,
         KmlLookAt,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/KmlTourFlyTo', function() {
 
     it('generates camera options for KmlLookAt', function() {
         var position = Cartesian3.fromDegrees(40.0, 30.0, 1000);
@@ -134,4 +136,5 @@ defineSuite([
         });
     });
 
+});
 });

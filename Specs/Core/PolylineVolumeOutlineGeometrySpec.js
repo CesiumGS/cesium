@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/PolylineVolumeOutlineGeometry',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -12,7 +12,9 @@ defineSuite([
         CornerType,
         Ellipsoid,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/PolylineVolumeOutlineGeometry', function() {
 
     var shape;
 
@@ -154,4 +156,5 @@ defineSuite([
     });
     var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 3.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 2.0, 0.1];
     createPackableSpecs(PolylineVolumeOutlineGeometry, volume, packedInstance);
+});
 });

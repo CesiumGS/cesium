@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/KmlDataSource',
         'Core/ArcType',
         'Core/BoundingRectangle',
@@ -76,7 +76,9 @@ defineSuite([
         createCamera,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/KmlDataSource', function() {
 
     var parser = new DOMParser();
 
@@ -4542,4 +4544,5 @@ defineSuite([
             expect(dataSource.entities.values[2].polygon.material.color.getValue()).not.toEqual(dataSource.entities.values[3].polygon.material.color.getValue());
         });
     });
+});
 });

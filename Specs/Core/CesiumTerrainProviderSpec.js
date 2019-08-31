@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/CesiumTerrainProvider',
         'Core/DefaultProxy',
         'Core/Ellipsoid',
@@ -30,7 +30,9 @@ defineSuite([
         TerrainProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/CesiumTerrainProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -867,4 +869,5 @@ defineSuite([
             });
         });
     });
+});
 });

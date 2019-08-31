@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/WebMapServiceImageryProvider',
         'Core/Cartographic',
         'Core/Clock',
@@ -50,7 +50,9 @@ defineSuite([
         ImageryState,
         pollToPromise,
         Uri) {
-    'use strict';
+        'use strict';
+
+describe('Scene/WebMapServiceImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -1409,4 +1411,5 @@ defineSuite([
             });
 
         });
+});
 });

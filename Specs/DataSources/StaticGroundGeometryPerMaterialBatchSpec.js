@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/StaticGroundGeometryPerMaterialBatch',
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian2',
@@ -56,7 +56,9 @@ defineSuite([
         PolylineMaterialAppearance,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/StaticGroundGeometryPerMaterialBatch', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -469,4 +471,5 @@ defineSuite([
                 batch.removeAllPrimitives();
             });
     });
+});
 });

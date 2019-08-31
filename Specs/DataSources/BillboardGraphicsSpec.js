@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/BillboardGraphics',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -20,7 +20,9 @@ defineSuite([
         HeightReference,
         HorizontalOrigin,
         VerticalOrigin) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/BillboardGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -275,4 +277,5 @@ defineSuite([
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

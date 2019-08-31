@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/createTileMapServiceImageryProvider',
         'Core/Cartesian2',
         'Core/Cartographic',
@@ -38,7 +38,9 @@ defineSuite([
         UrlTemplateImageryProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/createTileMapServiceImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -765,4 +767,5 @@ defineSuite([
             expect(errorRaised).toBe(true);
         });
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/computeFlyToLocationForRectangle',
         'Core/EllipsoidTerrainProvider',
         'Core/Rectangle',
@@ -14,7 +14,9 @@ defineSuite([
         SceneMode,
         createScene,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/computeFlyToLocationForRectangle', function() {
 
     var scene;
 
@@ -146,4 +148,5 @@ defineSuite([
                 expect(computeFlyToLocationForRectangle._sampleTerrainMostDetailed).not.toHaveBeenCalled();
             });
     });
+});
 });

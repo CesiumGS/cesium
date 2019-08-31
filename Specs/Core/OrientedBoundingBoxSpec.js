@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/OrientedBoundingBox',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -26,7 +26,9 @@ defineSuite([
         Quaternion,
         Rectangle,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/OrientedBoundingBox', function() {
 
     var positions = [
         new Cartesian3(2.0, 0.0, 0.0),
@@ -770,4 +772,5 @@ defineSuite([
     });
 
     createPackableSpecs(OrientedBoundingBox, new OrientedBoundingBox(new Cartesian3(1.0, 2.0, 3.0), Matrix3.IDENTITY), [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]);
+});
 });

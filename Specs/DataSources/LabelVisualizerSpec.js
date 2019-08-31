@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/LabelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -38,7 +38,9 @@ defineSuite([
         VerticalOrigin,
         createGlobe,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/LabelVisualizer', function() {
 
     var scene;
     var entityCluster;
@@ -358,3 +360,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

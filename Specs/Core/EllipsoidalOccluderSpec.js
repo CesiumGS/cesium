@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/EllipsoidalOccluder',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -16,7 +16,9 @@ defineSuite([
         CesiumMath,
         Ray,
         Rectangle) {
-    'use strict';
+        'use strict';
+
+describe('Core/EllipsoidalOccluder', function() {
 
     it('uses ellipsoid', function() {
         var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
@@ -294,4 +296,5 @@ defineSuite([
             expect(foundOneNearZero).toBe(true);
         });
     });
+});
 });

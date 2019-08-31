@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Matrix4',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -14,7 +14,9 @@ defineSuite([
         Matrix3,
         Quaternion,
         TranslationRotationScale) {
-    'use strict';
+        'use strict';
+
+describe('Core/Matrix4', function() {
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix4();
@@ -1787,4 +1789,5 @@ defineSuite([
             expect(intArray[index]).toEqual(index + 1);
         }
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel',
         'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
@@ -12,7 +12,9 @@ defineSuite([
         Globe,
         createScene,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel', function() {
 
     // Parent tile with content and four child tiles with content
     var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/tileset.json';
@@ -314,3 +316,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/CompositeProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
@@ -12,7 +12,9 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         ConstantProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CompositeProperty', function() {
 
     it('default constructor has expected values', function() {
         var property = new CompositeProperty();
@@ -171,4 +173,5 @@ defineSuite([
             property.getValue(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

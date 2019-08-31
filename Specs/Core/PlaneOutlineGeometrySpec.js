@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/PlaneOutlineGeometry',
         'Core/Cartesian3',
         'Specs/createPackableSpecs'
@@ -6,7 +6,9 @@ defineSuite([
         PlaneOutlineGeometry,
         Cartesian3,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/PlaneOutlineGeometry', function() {
 
     it('constructor creates positions', function() {
         var m = PlaneOutlineGeometry.createGeometry(new PlaneOutlineGeometry());
@@ -16,4 +18,5 @@ defineSuite([
     });
 
     createPackableSpecs(PlaneOutlineGeometry, new PlaneOutlineGeometry(), []);
+});
 });

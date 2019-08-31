@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/sampleTerrainMostDetailed',
         'Core/Cartographic',
         'Core/CesiumTerrainProvider',
@@ -8,7 +8,9 @@ defineSuite([
         Cartographic,
         CesiumTerrainProvider,
         createWorldTerrain) {
-    'use strict';
+        'use strict';
+
+describe('Core/sampleTerrainMostDetailed', function() {
 
     var worldTerrain = createWorldTerrain();
 
@@ -81,4 +83,5 @@ defineSuite([
         });
     });
 
+});
 });

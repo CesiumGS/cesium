@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/ComponentDatatype',
         'Core/Geometry',
         'Core/GeometryAttribute',
@@ -24,7 +24,9 @@ defineSuite([
         ShaderProgram,
         VertexArray,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Core/ComponentDatatype', function() {
 
     var context;
     var va;
@@ -675,3 +677,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/buildModuleUrl',
         'Core/Resource',
         'ThirdParty/Uri'
@@ -6,7 +6,9 @@ defineSuite([
         buildModuleUrl,
         Resource,
         Uri) {
-    'use strict';
+        'use strict';
+
+describe('Core/buildModuleUrl', function() {
 
     it('produces an absolute URL for a module', function() {
         var url = buildModuleUrl('Workers/transferTypedArrayTest.js');
@@ -58,4 +60,5 @@ defineSuite([
         window.CESIUM_BASE_URL = oldCESIUM_BASE_URL;
         buildModuleUrl._clearBaseResource();
     });
+});
 });

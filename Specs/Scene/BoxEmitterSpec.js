@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/BoxEmitter',
         'Core/Cartesian3',
         'Scene/Particle'
@@ -6,7 +6,9 @@ defineSuite([
         BoxEmitter,
         Cartesian3,
         Particle) {
-    'use strict';
+        'use strict';
+
+describe('Scene/BoxEmitter', function() {
 
     var emitter;
 
@@ -68,4 +70,5 @@ defineSuite([
             expect(particle.velocity).toEqual(Cartesian3.normalize(particle.position, new Cartesian3()));
         }
     });
+});
 });

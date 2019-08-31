@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Renderer/ComputeCommand',
         'Core/BoundingRectangle',
         'Core/PixelFormat',
@@ -22,7 +22,9 @@ defineSuite([
         Material,
         ViewportQuad,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/ComputeCommand', function() {
 
     var scene;
     var context;
@@ -161,3 +163,4 @@ defineSuite([
         expect(scene).notToRender([0, 0, 0, 255]);
     });
 }, 'WebGL');
+});

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Moon',
         'Core/BoundingSphere',
         'Core/Color',
@@ -18,7 +18,9 @@ defineSuite([
         Simon1994PlanetaryPositions,
         Transforms,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Moon', function() {
 
     var scene;
     var backgroundColor = [255, 0, 0, 255];
@@ -85,3 +87,4 @@ defineSuite([
         expect(moon.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

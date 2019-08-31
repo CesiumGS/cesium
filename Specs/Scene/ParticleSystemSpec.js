@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ParticleSystem',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -18,7 +18,9 @@ defineSuite([
         CircleEmitter,
         ParticleBurst,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ParticleSystem', function() {
 
     var scene;
     var greenImage;
@@ -354,4 +356,5 @@ defineSuite([
         p.destroy();
         expect(p.isDestroyed()).toEqual(true);
     });
+});
 });

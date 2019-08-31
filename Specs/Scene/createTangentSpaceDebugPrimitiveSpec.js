@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/createTangentSpaceDebugPrimitive',
         'Core/Cartesian3',
         'Core/EllipsoidGeometry',
@@ -12,7 +12,9 @@ defineSuite([
         Matrix4,
         PrimitiveType,
         VertexFormat) {
-    'use strict';
+        'use strict';
+
+describe('Scene/createTangentSpaceDebugPrimitive', function() {
 
     it('computes all attributes', function() {
         var geometry = new EllipsoidGeometry({
@@ -56,4 +58,5 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+});
 });

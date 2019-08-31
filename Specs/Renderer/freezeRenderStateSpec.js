@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Renderer/freezeRenderState'
     ], function(
         freezeRenderState) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/freezeRenderState', function() {
 
     it('works as expected', function() {
         var fresh = {
@@ -20,4 +22,5 @@ defineSuite([
         expect(Object.isFrozen(frozen.c)).toBe(true);
         expect(Object.isFrozen(frozen._applyFunctions)).toBe(false);
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ViewportQuad',
         'Core/BoundingRectangle',
         'Core/Color',
@@ -16,7 +16,9 @@ defineSuite([
         Material,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ViewportQuad', function() {
 
     var scene;
     var viewportQuad;
@@ -117,3 +119,4 @@ defineSuite([
         expect(vq.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

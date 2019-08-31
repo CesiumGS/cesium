@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Particle',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -8,7 +8,9 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Color) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Particle', function() {
 
     it('default constructor', function() {
         var p = new Particle();
@@ -96,4 +98,5 @@ defineSuite([
         expect(p.mass).toEqual(expectedMass);
         expect(p.update(dt)).toEqual(false);
     });
+});
 });

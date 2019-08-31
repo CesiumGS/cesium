@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/GoogleEarthEnterpriseMetadata',
         'Core/decodeGoogleEarthEnterpriseData',
         'Core/DefaultProxy',
@@ -18,7 +18,9 @@ defineSuite([
         Request,
         Resource,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/GoogleEarthEnterpriseMetadata', function() {
 
     it('tileXYToQuadKey', function() {
         expect(GoogleEarthEnterpriseMetadata.tileXYToQuadKey(1, 0, 0)).toEqual('2');
@@ -244,4 +246,5 @@ defineSuite([
             expect(e.message).toContain(url);
         });
     });
+});
 });

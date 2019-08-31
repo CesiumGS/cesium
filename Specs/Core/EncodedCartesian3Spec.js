@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/EncodedCartesian3',
         'Core/Cartesian3'
     ], function(
         EncodedCartesian3,
         Cartesian3) {
-    'use strict';
+        'use strict';
+
+describe('Core/EncodedCartesian3', function() {
 
     it('construct with default values', function() {
         var encoded = new EncodedCartesian3();
@@ -103,4 +105,5 @@ defineSuite([
           EncodedCartesian3.writeElements(new Cartesian3(), new Float32Array(6), -1);
       }).toThrowDeveloperError();
   });
+});
 });

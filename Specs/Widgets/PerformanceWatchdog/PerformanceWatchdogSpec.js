@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Widgets/PerformanceWatchdog/PerformanceWatchdog',
         'Specs/createScene'
     ], function(
         PerformanceWatchdog,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/PerformanceWatchdog/PerformanceWatchdog', function() {
 
     var scene;
     beforeAll(function() {
@@ -72,3 +74,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

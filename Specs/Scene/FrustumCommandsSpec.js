@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Renderer/Pass',
         'Scene/FrustumCommands'
     ], function(
         Pass,
         FrustumCommands) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Pass', function() {
 
     it('constructs without arguments', function() {
         var frustum = new FrustumCommands();
@@ -27,4 +29,5 @@ defineSuite([
         expect(frustum.indices).toBeDefined();
         expect(frustum.indices.length).toEqual(Pass.NUMBER_OF_PASSES);
     });
+});
 });

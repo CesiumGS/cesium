@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Transforms',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -32,7 +32,9 @@ defineSuite([
         Quaternion,
         Resource,
         TimeInterval) {
-    'use strict';
+        'use strict';
+
+describe('Core/Transforms', function() {
 
     var negativeX = new Cartesian4(-1, 0, 0, 0);
     var negativeY = new Cartesian4(0, -1, 0, 0);
@@ -1227,4 +1229,5 @@ defineSuite([
             Transforms.wgs84To2DModelMatrix(new GeographicProjection(), Cartesian3.UNIT_X, undefined);
         }).toThrowDeveloperError();
     });
+});
 });

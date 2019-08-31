@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Material',
         'Core/Cartesian3',
         'Core/Color',
@@ -30,7 +30,9 @@ defineSuite([
         Primitive,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Material', function() {
 
     var scene;
 
@@ -855,3 +857,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ClippingPlane',
         'Core/Cartesian3',
         'Core/Math',
@@ -12,7 +12,9 @@ defineSuite([
         Matrix3,
         Matrix4,
         Plane) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ClippingPlane', function() {
 
     it('constructs', function() {
         var normal = Cartesian3.UNIT_X;
@@ -94,4 +96,5 @@ defineSuite([
         expect(transformedPlane.normal.y).toEqual(clippingPlane.normal.y);
         expect(transformedPlane.normal.z).toEqual(-clippingPlane.normal.z);
     });
+});
 });

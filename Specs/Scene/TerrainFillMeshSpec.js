@@ -1,5 +1,7 @@
-defineSuite([
+define([
         'Scene/TerrainFillMesh',
+        '../MockTerrainProvider',
+        '../TerrainTileProcessor',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/GeographicProjection',
@@ -12,11 +14,11 @@ defineSuite([
         'Scene/QuadtreePrimitive',
         'Scene/SceneMode',
         'Scene/TileBoundingRegion',
-        'Scene/TileSelectionResult',
-        '../MockTerrainProvider',
-        '../TerrainTileProcessor'
+        'Scene/TileSelectionResult'
     ], function(
         TerrainFillMesh,
+        MockTerrainProvider,
+        TerrainTileProcessor,
         Cartesian2,
         Cartesian3,
         GeographicProjection,
@@ -29,10 +31,10 @@ defineSuite([
         QuadtreePrimitive,
         SceneMode,
         TileBoundingRegion,
-        TileSelectionResult,
-        MockTerrainProvider,
-        TerrainTileProcessor) {
-    'use strict';
+        TileSelectionResult) {
+        'use strict';
+
+describe('Scene/TerrainFillMesh', function() {
 
     var processor;
     var scene;
@@ -963,4 +965,5 @@ defineSuite([
     function expectVertexCount(fill, count) {
         expect(fill.mesh.vertices.length).toBe(count * fill.mesh.encoding.getStride());
     }
+});
 });

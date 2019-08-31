@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/GeographicProjection',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -10,7 +10,9 @@ defineSuite([
         Cartographic,
         Ellipsoid,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/GeographicProjection', function() {
 
     it('construct0', function() {
         var projection = new GeographicProjection();
@@ -80,4 +82,5 @@ defineSuite([
             return projection.unproject();
         }).toThrowDeveloperError();
     });
+});
 });
