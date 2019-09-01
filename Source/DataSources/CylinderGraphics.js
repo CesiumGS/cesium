@@ -28,7 +28,7 @@ define([
      * @param {Property} [options.length] A numeric Property specifying the length of the cylinder.
      * @param {Property} [options.topRadius] A numeric Property specifying the radius of the top of the cylinder.
      * @param {Property} [options.bottomRadius] A numeric Property specifying the radius of the bottom of the cylinder.
-     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the cylinder is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the cylinder.
      * @param {Property} [options.outline=false] A boolean Property specifying whether the cylinder is outlined.
