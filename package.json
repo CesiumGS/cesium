@@ -29,6 +29,7 @@
     "url": "https://github.com/AnalyticalGraphicsInc/cesium/issues",
     "email": "cesium-dev@googlegroups.com"
   },
+  "types": "index.d.ts",
   "dependencies": {
     "requirejs": "^2.3.2"
   },
