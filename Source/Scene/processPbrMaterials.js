@@ -535,10 +535,20 @@ define([
             '}\n\n';
 
         fragmentShader +=
+            'vec3 applyTonemapping(vec3 linearIn) \n' +
+            '{\n' +
+            '#ifndef HDR \n' +
+            '    return czm_acesTonemapping(linearIn);\n' +
+            '#else \n' +
+            '    return linearIn;\n' +
+            '#endif \n' +
+            '}\n\n';
+
+        fragmentShader +=
             'vec3 LINEARtoSRGB(vec3 linearIn) \n' +
             '{\n' +
             '#ifndef HDR \n' +
-            '    return pow(czm_acesTonemapping(linearIn), vec3(1.0/2.2));\n' +
+            '    return pow(linearIn, vec3(1.0/2.2));\n' +
             '#else \n' +
             '    return linearIn;\n' +
             '#endif \n' +
@@ -845,8 +855,12 @@ define([
             }
         }
 
-        // Final color
+        if (!isUnlit) {
+            fragmentShader += '    color = applyTonemapping(color);\n';
+        }
+
         fragmentShader += '    color = LINEARtoSRGB(color);\n';
+
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {
                 fragmentShader += '    if (baseColorWithAlpha.a < u_alphaCutoff) {\n';
