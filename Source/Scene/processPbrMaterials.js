@@ -846,7 +846,10 @@ define([
         }
 
         // Final color
-        fragmentShader += '    color = LINEARtoSRGB(color);\n';
+        if (!isUnlit) {
+            fragmentShader += '    color = LINEARtoSRGB(color);\n';
+        }
+
         if (defined(alphaMode)) {
             if (alphaMode === 'MASK') {
                 fragmentShader += '    if (baseColorWithAlpha.a < u_alphaCutoff) {\n';
