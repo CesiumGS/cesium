@@ -226,3 +226,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Pascal Poulain](https://github.com/ppoulainpro)
 * [Abu Darda](https://github.com/abuDarda97)
 * [jony89](https://github.com/jony89)
+* [Chris Wingler](https://github.com/chriswingler)
