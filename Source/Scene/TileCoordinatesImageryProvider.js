@@ -259,8 +259,6 @@ define([
 
         var label = 'L' + level + 'X' + x + 'Y' + y;
         context.font = 'bold 25px Arial';
-        context.textAlign = 'center';
-        context.fillStyle = 'black';
         context.fillText(label, 127, 127);
         context.fillStyle = cssColor;
         context.fillText(label, 124, 124);
