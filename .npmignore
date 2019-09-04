@@ -14,6 +14,16 @@
 /Build
 /Documentation
 /Instrumented
+/Build/Coverage
+/Build/minifyShaders.state
+/Build/Stubs
+/Build/Documentation
+/Cesium-*.zip
+/Documentation
+/favicon.ico
+/gulpfile.js
+/index.html
+/index.release.html
 /launches
 /server.js
 /Source/copyrightHeader.js

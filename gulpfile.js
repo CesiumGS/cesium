@@ -12,6 +12,7 @@ var request = require('request');
 
 var globby = require('globby');
 var gulpTap = require('gulp-tap');
+var open = require('open');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
 var mkdirp = require('mkdirp');
@@ -66,7 +67,6 @@ var buildFiles = ['Specs/**/*.js',
 
 var filesToClean = ['Source/Cesium.js',
                     'Build',
-                    'Instrumented',
                     'Source/Shaders/**/*.js',
                     'Source/ThirdParty/Shaders/*.js',
                     'Specs/SpecList.js',
@@ -254,19 +254,6 @@ function generateDocumentation() {
     });
 }
 gulp.task('generateDocumentation', generateDocumentation);
-
-gulp.task('instrumentForCoverage', gulp.series('build', function(done) {
-    var jscoveragePath = path.join('Tools', 'jscoverage-0.5.1', 'jscoverage.exe');
-    var cmdLine = jscoveragePath + ' Source Instrumented --no-instrument=./ThirdParty';
-    child_process.exec(cmdLine, function(error, stdout, stderr) {
-        if (error) {
-            console.log(stderr);
-            return done(error);
-        }
-        console.log(stdout);
-        done();
-    });
-}));
 
 gulp.task('release', gulp.series('generateStubs', combine, minifyRelease, generateDocumentation));
 
@@ -632,11 +619,13 @@ gulp.task('deploy-status', function() {
     var deployUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/';
     var zipUrl = deployUrl + 'Cesium-' + packageJson.version + '.zip';
     var npmUrl = deployUrl + 'cesium-' + packageJson.version + '.tgz';
+    var coverageUrl = travisDeployUrl + process.env.TRAVIS_BRANCH + '/Build/Coverage/index.html';
 
     return Promise.join(
         setStatus(status, deployUrl, message, 'deployment'),
         setStatus(status, zipUrl, message, 'zip file'),
-        setStatus(status, npmUrl, message, 'npm package')
+        setStatus(status, npmUrl, message, 'npm package'),
+        setStatus(status, coverageUrl, message, 'coverage results')
     );
 });
 
@@ -662,6 +651,67 @@ function setStatus(state, targetUrl, description, context) {
          }
      });
 }
+
+gulp.task('coverage', function(done) {
+    var argv = yargs.argv;
+    var webglStub = argv.webglStub ? argv.webglStub : false;
+    var suppressPassed = argv.suppressPassed ? argv.suppressPassed : false;
+    var failTaskOnError = argv.failTaskOnError ? argv.failTaskOnError : false;
+
+    var folders = [];
+    var browsers = ['Chrome'];
+    if (argv.browsers) {
+        browsers = argv.browsers.split(',');
+    }
+
+    var karma = new Karma.Server({
+        configFile: karmaConfigFile,
+        browsers: browsers,
+        specReporter: {
+            suppressErrorSummary: false,
+            suppressFailed: false,
+            suppressPassed: suppressPassed,
+            suppressSkipped: true
+        },
+        preprocessors: {
+            'Source/Core/**/*.js': ['coverage'],
+            'Source/DataSources/**/*.js': ['coverage'],
+            'Source/Renderer/**/*.js': ['coverage'],
+            'Source/Scene/**/*.js': ['coverage'],
+            'Source/Shaders/**/*.js': ['coverage'],
+            'Source/Widgets/**/*.js': ['coverage'],
+            'Source/Workers/**/*.js': ['coverage']
+        },
+        reporters: ['spec', 'coverage'],
+        coverageReporter: {
+            dir: 'Build/Coverage',
+            subdir: function(browserName) {
+                folders.push(browserName);
+                return browserName;
+            },
+            includeAllSources: true
+        },
+        client: {
+            captureConsole: verbose,
+            args: [undefined, undefined, undefined, webglStub, undefined]
+        }
+    }, function(e) {
+        var html = '<!doctype html><html><body><ul>';
+        folders.forEach(function(folder) {
+            html += '<li><a href="' + encodeURIComponent(folder) + '/index.html">' + folder + '</a></li>';
+        });
+        html += '</ul></body></html>';
+        fs.writeFileSync('Build/Coverage/index.html', html);
+
+        if (!process.env.TRAVIS) {
+            folders.forEach(function(dir) {
+                open('Build/Coverage/' + dir + '/index.html');
+            });
+        }
+        return done(failTaskOnError ? e : undefined);
+    });
+    karma.start();
+});
 
 gulp.task('test', function(done) {
     var argv = yargs.argv;

@@ -40,7 +40,7 @@ define([
      *        direction, resulting in a square projection.
      */
     function WebMercatorTilingScheme(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._numberOfLevelZeroTilesX = defaultValue(options.numberOfLevelZeroTilesX, 1);

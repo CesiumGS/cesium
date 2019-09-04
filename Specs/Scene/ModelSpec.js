@@ -1026,7 +1026,7 @@ defineSuite([
                 scene : scene,
                 time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
             }).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([193, 17, 16, 255], 5); // Red
+                expect(rgba).toEqualEpsilon([174, 6, 5, 255], 5); // Red
             });
 
             primitives.remove(m);

@@ -193,6 +193,24 @@ define([
         return this._dataSources[index];
     };
 
+    /**
+     * Gets a data source by name from the collection.
+     *
+     * @param {String} name The name to retrieve.
+     * @returns {DataSource[]} A list of all data sources matching the provided name.
+     */
+    DataSourceCollection.prototype.getByName = function(name) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(name)) {
+            throw new DeveloperError('name is required.');
+        }
+        //>>includeEnd('debug');
+
+        return this._dataSources.filter(function(dataSource) {
+            return dataSource.name === name;
+        });
+    };
+
     function getIndex(dataSources, dataSource) {
         //>>includeStart('debug', pragmas.debug);
         if (!defined(dataSource)) {

@@ -1,4 +1,5 @@
 define([
+        './ImageryProvider',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -12,6 +13,7 @@ define([
         '../Core/TileProviderError',
         '../ThirdParty/when'
     ], function(
+        ImageryProvider,
         Credit,
         defaultValue,
         defined,
@@ -49,7 +51,7 @@ define([
      * @see UrlTemplateImageryProvider
      */
     function SingleTileImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -109,7 +111,10 @@ define([
         }
 
         function doRequest() {
-            resource.fetchImage().then(success).otherwise(failure);
+            ImageryProvider
+                .loadImage(null, resource)
+                .then(success)
+                .otherwise(failure);
         }
 
         doRequest();

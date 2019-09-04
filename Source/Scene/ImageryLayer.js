@@ -164,7 +164,7 @@ define([
     function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
 
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
          * The alpha blending value of this layer, with 0.0 representing fully transparent and
