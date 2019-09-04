@@ -7,7 +7,7 @@ define([
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
-        '../Shaders/PostProcessStages/AcesTonemapping',
+        '../Shaders/PostProcessStages/AcesTonemappingStage',
         '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
         '../Shaders/PostProcessStages/AmbientOcclusionModulate',
         '../Shaders/PostProcessStages/BlackAndWhite',

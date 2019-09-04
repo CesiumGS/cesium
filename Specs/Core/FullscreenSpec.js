@@ -37,10 +37,20 @@ defineSuite([
     });
 
     it('can request fullscreen', function() {
-        // we can get away with this because the request is async, allowing us to
-        // exit before it actually happens
-        Fullscreen.requestFullscreen(document.body);
-        Fullscreen.exitFullscreen();
+        if (Fullscreen.supportsFullscreen()) {
+            spyOn(document.body, Fullscreen._names.requestFullscreen);
+            spyOn(document, Fullscreen._names.exitFullscreen);
+
+            Fullscreen.requestFullscreen(document.body);
+            expect(document.body[Fullscreen._names.requestFullscreen]).toHaveBeenCalled();
+
+            Fullscreen.exitFullscreen();
+            expect(document[Fullscreen._names.exitFullscreen]).toHaveBeenCalled();
+        } else {
+            // These are no-ops if supportsFullscreen is false.
+            Fullscreen.requestFullscreen(document.body);
+            Fullscreen.exitFullscreen();
+        }
     });
 
     if (!FeatureDetection.isInternetExplorer()) {
