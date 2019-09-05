@@ -1,5 +1,6 @@
 defineSuite([
         'Scene/MapboxStyleImageryProvider',
+        'Core/MapboxApi',
         'Core/Math',
         'Core/Rectangle',
         'Core/RequestScheduler',
@@ -12,6 +13,7 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         MapboxStyleImageryProvider,
+        MapboxApi,
         CesiumMath,
         Rectangle,
         RequestScheduler,
@@ -135,7 +137,7 @@ defineSuite([
             styleId: 'test-id'
         });
 
-        expect(provider.url).toEqual('made/up/mapbox/server/');
+        expect(provider.url).toEqual('made/up/mapbox/server/mapbox/test-id/tiles/512/{z}/{x}/{y}?access_token=' + MapboxApi.getAccessToken());
 
         return pollToPromise(function() {
             return provider.ready;

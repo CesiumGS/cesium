@@ -13,7 +13,6 @@
     },
     "search.exclude": {
         "Build": true,
-        "Instrumented": true,
         "node_modules": true,
         "Source/Shaders/**/*.js": true
     },

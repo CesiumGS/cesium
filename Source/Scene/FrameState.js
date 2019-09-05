@@ -156,6 +156,15 @@ define([
          */
         this.maximumScreenSpaceError = undefined;
 
+        /**
+         * Ratio between a pixel and a density-independent pixel. Provides a standard unity of
+         * measure for real pixel measurements appropriate to a particular device.
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        this.pixelRatio = 1.0;
+
         this.passes = {
             /**
              * <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
