@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/SceneModePicker/SceneModePicker',
         'Core/FeatureDetection',
         'Specs/createScene',
@@ -8,7 +8,9 @@ defineSuite([
         FeatureDetection,
         createScene,
         DomEventSimulator) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/SceneModePicker/SceneModePicker', function() {
 
     var scene;
 
@@ -81,3 +83,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

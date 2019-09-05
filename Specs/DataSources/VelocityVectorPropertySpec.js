@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/VelocityVectorProperty',
         'Core/Cartesian3',
         'Core/Event',
@@ -18,7 +18,9 @@ defineSuite([
         CallbackProperty,
         ConstantPositionProperty,
         SampledPositionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/VelocityVectorProperty', function() {
 
     var time = JulianDate.now();
 
@@ -234,4 +236,5 @@ defineSuite([
             property.getValue();
         }).toThrowDeveloperError();
     });
+});
 });

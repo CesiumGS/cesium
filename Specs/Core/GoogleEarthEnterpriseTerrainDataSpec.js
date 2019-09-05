@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/GoogleEarthEnterpriseTerrainData',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -20,7 +20,9 @@ defineSuite([
         TerrainData,
         TerrainMesh,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/GoogleEarthEnterpriseTerrainData', function() {
 
     var sizeOfUint8 = Uint8Array.BYTES_PER_ELEMENT;
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
@@ -496,4 +498,5 @@ defineSuite([
             /*eslint-enable no-unused-vars*/
         }).toThrowDeveloperError();
     });
+});
 });

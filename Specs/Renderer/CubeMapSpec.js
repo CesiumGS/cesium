@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Renderer/CubeMap',
         'Core/Cartesian3',
         'Core/Color',
@@ -32,7 +32,9 @@ defineSuite([
         TextureWrap,
         createContext,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/CubeMap', function() {
 
     var context;
     var cubeMap;
@@ -1363,3 +1365,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

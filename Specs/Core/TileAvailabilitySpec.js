@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/TileAvailability',
         'Core/Cartographic',
         'Core/GeographicTilingScheme',
@@ -10,7 +10,9 @@ defineSuite([
         GeographicTilingScheme,
         Rectangle,
         WebMercatorTilingScheme) {
-    'use strict';
+        'use strict';
+
+describe('Core/TileAvailability', function() {
 
     var webMercator = new WebMercatorTilingScheme();
     var geographic = new GeographicTilingScheme();
@@ -124,4 +126,5 @@ defineSuite([
             expect(availability.computeMaximumLevelAtPosition(new Cartographic(-Math.PI / 2.0, 0.0))).toBe(1);
         });
     });
+});
 });

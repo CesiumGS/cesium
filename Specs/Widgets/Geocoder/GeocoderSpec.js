@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/Geocoder/Geocoder',
         'Core/Cartesian3',
         'Specs/createScene',
@@ -8,7 +8,9 @@ defineSuite([
         Cartesian3,
         createScene,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/Geocoder/Geocoder', function() {
 
     var scene;
 
@@ -82,3 +84,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

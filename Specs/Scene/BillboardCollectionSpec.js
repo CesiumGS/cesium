@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/BillboardCollection',
         'Core/BoundingRectangle',
         'Core/BoundingSphere',
@@ -50,7 +50,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/BillboardCollection', function() {
 
     var scene;
     var context;
@@ -1965,3 +1967,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

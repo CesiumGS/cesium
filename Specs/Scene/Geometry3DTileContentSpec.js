@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Geometry3DTileContent',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -50,7 +50,9 @@ defineSuite([
         StencilConstants,
         Cesium3DTilesTester,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Geometry3DTileContent', function() {
 
     var tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
 
@@ -615,3 +617,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,11 +1,11 @@
-defineSuite([
+define([
         'Scene/Cesium3DTileset',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
-        'Core/defined',
         'Core/CullingVolume',
+        'Core/defined',
         'Core/getAbsoluteUri',
         'Core/getStringFromTypedArray',
         'Core/HeadingPitchRange',
@@ -42,8 +42,8 @@ defineSuite([
         Cartesian3,
         Cartographic,
         Color,
-        defined,
         CullingVolume,
+        defined,
         getAbsoluteUri,
         getStringFromTypedArray,
         HeadingPitchRange,
@@ -74,7 +74,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Cesium3DTileset', function() {
 
     // It's not easily possible to mock the most detailed pick functions
     // so don't run those tests when using the WebGL stub
@@ -3714,3 +3716,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

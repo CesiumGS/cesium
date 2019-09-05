@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Vector3DTilePoints',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -40,7 +40,9 @@ defineSuite([
         VerticalOrigin,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Vector3DTilePoints', function() {
 
     var scene;
     var rectangle;
@@ -450,3 +452,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

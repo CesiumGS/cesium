@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/EllipseGeometryUpdater',
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
@@ -36,7 +36,9 @@ defineSuite([
         createGeometryUpdaterGroundGeometrySpecs,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/EllipseGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -333,3 +335,4 @@ defineSuite([
 
     createGeometryUpdaterGroundGeometrySpecs(EllipseGeometryUpdater, 'ellipse', createBasicEllipseWithoutHeight, createDynamicEllipseWithoutHeight, getScene);
 }, 'WebGL');
+});

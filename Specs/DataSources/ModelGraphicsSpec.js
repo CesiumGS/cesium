@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/ModelGraphics',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -28,7 +28,9 @@ defineSuite([
         ColorBlendMode,
         HeightReference,
         ShadowMode) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/ModelGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -350,4 +352,5 @@ defineSuite([
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

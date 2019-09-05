@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/PrimitiveCollection',
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
@@ -26,7 +26,9 @@ defineSuite([
         Primitive,
         VerticalOrigin,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PrimitiveCollection', function() {
 
     var scene;
     var context;
@@ -624,3 +626,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

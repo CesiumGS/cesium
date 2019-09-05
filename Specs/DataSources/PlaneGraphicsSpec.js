@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/PlaneGraphics',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -22,7 +22,9 @@ defineSuite([
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PlaneGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -176,4 +178,5 @@ defineSuite([
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
+});
 });

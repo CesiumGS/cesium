@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/IonImageryProvider',
         'Core/Credit',
         'Core/defaultValue',
@@ -34,7 +34,9 @@ defineSuite([
         WebMapServiceImageryProvider,
         WebMapTileServiceImageryProvider,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/IonImageryProvider', function() {
 
     function createTestProvider(endpointData) {
         endpointData = defaultValue(endpointData, {
@@ -290,4 +292,5 @@ defineSuite([
     it('createImageryProvider works with WMTS', function() {
         return testExternalImagery('WMTS', { url: 'http://test.invalid', layer: '', style: '', tileMatrixSetID: 1 }, WebMapTileServiceImageryProvider);
     });
+});
 });

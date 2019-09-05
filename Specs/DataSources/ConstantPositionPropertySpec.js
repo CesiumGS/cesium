@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/ConstantPositionProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
@@ -10,7 +10,9 @@ defineSuite([
         JulianDate,
         ReferenceFrame,
         PositionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/ConstantPositionProperty', function() {
 
     var time = JulianDate.now();
 
@@ -129,4 +131,5 @@ defineSuite([
             property.getValueInReferenceFrame(time, undefined);
         }).toThrowDeveloperError();
     });
+});
 });

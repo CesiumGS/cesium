@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/WallGeometryUpdater',
         'Core/Cartesian3',
         'Core/Color',
@@ -36,7 +36,9 @@ defineSuite([
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/WallGeometryUpdater', function() {
 
     var time;
     var time2;
@@ -224,3 +226,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(WallGeometryUpdater, 'wall', createDynamicWall, getScene);
 }, 'WebGL');
+});

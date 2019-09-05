@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/CorridorGeometry',
         'Core/arrayFill',
         'Core/Cartesian3',
@@ -20,7 +20,9 @@ defineSuite([
         Rectangle,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/CorridorGeometry', function() {
 
     it('throws without positions', function() {
         expect(function() {
@@ -434,4 +436,5 @@ defineSuite([
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, 0.0, -1);
     createPackableSpecs(CorridorGeometry, corridor, packedInstance);
+});
 });

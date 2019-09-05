@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/PolygonPipeline',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -12,7 +12,9 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         WindingOrder) {
-    'use strict';
+        'use strict';
+
+describe('Core/PolygonPipeline', function() {
 
     beforeEach(function() {
         CesiumMath.setRandomNumberSeed(0.0);
@@ -281,4 +283,5 @@ defineSuite([
         expect(subdivision.attributes.position.values.length).toEqual(180); // 60 vertices
         expect(subdivision.indices.length).toEqual(252); // 84 triangles
     });
+});
 });

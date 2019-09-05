@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/StaticGroundPolylinePerMaterialBatch',
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
@@ -14,9 +14,9 @@ defineSuite([
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
-        'DataSources/PolylineOutlineMaterialProperty',
         'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
+        'DataSources/PolylineOutlineMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/ClassificationType',
         'Scene/GroundPolylinePrimitive',
@@ -38,15 +38,17 @@ defineSuite([
         ColorMaterialProperty,
         ConstantProperty,
         Entity,
-        PolylineOutlineMaterialProperty,
         PolylineGeometryUpdater,
         PolylineGraphics,
+        PolylineOutlineMaterialProperty,
         TimeIntervalCollectionProperty,
         ClassificationType,
         GroundPolylinePrimitive,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/StaticGroundPolylinePerMaterialBatch', function() {
 
     var time = JulianDate.now();
     var batch;
@@ -568,4 +570,5 @@ defineSuite([
                 batch.removeAllPrimitives();
             });
     });
+});
 });

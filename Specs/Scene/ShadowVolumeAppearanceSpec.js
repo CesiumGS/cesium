@@ -1,34 +1,36 @@
-defineSuite([
-    'Scene/ShadowVolumeAppearance',
-    'Core/Cartesian3',
-    'Core/Cartographic',
-    'Core/Math',
-    'Core/ComponentDatatype',
-    'Core/Ellipsoid',
-    'Core/EncodedCartesian3',
-    'Core/Matrix4',
-    'Core/WebMercatorProjection',
-    'Core/Rectangle',
-    'Core/Transforms',
-    'Scene/Material',
-    'Scene/MaterialAppearance',
-    'Scene/PerInstanceColorAppearance'
-], function(
-    ShadowVolumeAppearance,
-    Cartesian3,
-    Cartographic,
-    CesiumMath,
-    ComponentDatatype,
-    Ellipsoid,
-    EncodedCartesian3,
-    Matrix4,
-    WebMercatorProjection,
-    Rectangle,
-    Transforms,
-    Material,
-    MaterialAppearance,
-    PerInstanceColorAppearance) {
-'use strict';
+define([
+        'Scene/ShadowVolumeAppearance',
+        'Core/Cartesian3',
+        'Core/Cartographic',
+        'Core/ComponentDatatype',
+        'Core/Ellipsoid',
+        'Core/EncodedCartesian3',
+        'Core/Math',
+        'Core/Matrix4',
+        'Core/Rectangle',
+        'Core/Transforms',
+        'Core/WebMercatorProjection',
+        'Scene/Material',
+        'Scene/MaterialAppearance',
+        'Scene/PerInstanceColorAppearance'
+    ], function(
+        ShadowVolumeAppearance,
+        Cartesian3,
+        Cartographic,
+        ComponentDatatype,
+        Ellipsoid,
+        EncodedCartesian3,
+        CesiumMath,
+        Matrix4,
+        Rectangle,
+        Transforms,
+        WebMercatorProjection,
+        Material,
+        MaterialAppearance,
+        PerInstanceColorAppearance) {
+        'use strict';
+
+describe('Scene/ShadowVolumeAppearance', function() {
 
     // using ShadowVolumeAppearanceVS directly fails on Travis with the --release test
     var testVs =
@@ -440,4 +442,5 @@ defineSuite([
         expect(defines.indexOf('FLAT')).not.toEqual(-1);
         expect(defines.length).toEqual(3);
     });
+});
 });

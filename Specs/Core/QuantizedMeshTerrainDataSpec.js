@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/QuantizedMeshTerrainData',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -16,7 +16,9 @@ defineSuite([
         TerrainData,
         TerrainMesh,
         when) {
-     'use strict';
+        'use strict';
+
+describe('Core/QuantizedMeshTerrainData', function() {
 
      it('conforms to TerrainData interface', function() {
          expect(QuantizedMeshTerrainData).toConformToInterface(TerrainData);
@@ -806,4 +808,5 @@ defineSuite([
              expect(data.isChildAvailable(10, 20, 21, 41)).toBe(false);
          });
      });
+});
 });

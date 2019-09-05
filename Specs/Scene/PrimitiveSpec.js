@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Primitive',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
@@ -66,7 +66,9 @@ defineSuite([
         createFrameState,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Primitive', function() {
 
     var scene;
     var context;
@@ -1328,3 +1330,4 @@ defineSuite([
         expect(primitive.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

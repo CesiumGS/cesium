@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Sun',
         'Core/BoundingSphere',
         'Core/Color',
@@ -12,7 +12,9 @@ defineSuite([
         CesiumMath,
         SceneMode,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Sun', function() {
 
     var scene;
     var backgroundColor = [255, 0, 0, 255];
@@ -115,3 +117,4 @@ defineSuite([
         expect(sun.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

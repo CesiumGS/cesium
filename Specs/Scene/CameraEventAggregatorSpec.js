@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/CameraEventAggregator',
         'Core/Cartesian2',
         'Core/combine',
@@ -16,7 +16,9 @@ defineSuite([
         CameraEventType,
         createCanvas,
         DomEventSimulator) {
-    'use strict';
+        'use strict';
+
+describe('Scene/CameraEventAggregator', function() {
 
     var usePointerEvents;
     var canvas;
@@ -309,4 +311,5 @@ defineSuite([
         handler.destroy();
         expect(handler.isDestroyed()).toEqual(true);
     });
+});
 });

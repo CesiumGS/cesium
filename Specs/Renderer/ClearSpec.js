@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/BoundingRectangle',
         'Core/Color',
         'Renderer/ClearCommand',
@@ -14,7 +14,9 @@ defineSuite([
         RenderState,
         Texture,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Core/BoundingRectangle', function() {
 
     var context;
 
@@ -132,3 +134,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

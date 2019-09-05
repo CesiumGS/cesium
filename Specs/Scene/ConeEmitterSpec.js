@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ConeEmitter',
         'Core/Cartesian3',
         'Core/Math',
@@ -8,7 +8,9 @@ defineSuite([
         Cartesian3,
         CesiumMath,
         Particle) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ConeEmitter', function() {
 
     it('default constructor', function() {
         var emitter = new ConeEmitter();
@@ -46,4 +48,5 @@ defineSuite([
             expect(Math.acos(particle.velocity.z)).toBeLessThanOrEqualTo(emitter.angle);
         }
     });
+});
 });

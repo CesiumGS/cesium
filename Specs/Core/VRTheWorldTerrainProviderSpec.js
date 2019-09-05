@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/VRTheWorldTerrainProvider',
         'Core/DefaultProxy',
         'Core/GeographicTilingScheme',
@@ -22,7 +22,9 @@ defineSuite([
         TerrainProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/VRTheWorldTerrainProvider', function() {
 
     var imageUrl = 'Data/Images/Red16x16.png';
 
@@ -297,4 +299,5 @@ defineSuite([
             });
         });
     });
+});
 });

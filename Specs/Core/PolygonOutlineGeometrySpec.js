@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/PolygonOutlineGeometry',
         'Core/ArcType',
         'Core/arrayFill',
@@ -18,7 +18,9 @@ defineSuite([
         GeometryOffsetAttribute,
         CesiumMath,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/PolygonOutlineGeometry', function() {
 
     it('throws without hierarchy', function() {
         expect(function() {
@@ -611,4 +613,5 @@ defineSuite([
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 1.0, ArcType.GEODESIC, -1, 44);
     createPackableSpecs(PolygonOutlineGeometry, polygon, packedInstance);
+});
 });

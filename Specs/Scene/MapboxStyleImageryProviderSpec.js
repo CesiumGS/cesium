@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/MapboxStyleImageryProvider',
         'Core/MapboxApi',
         'Core/Math',
@@ -24,7 +24,9 @@ defineSuite([
         ImageryProvider,
         ImageryState,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/MapboxStyleImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -357,4 +359,5 @@ defineSuite([
             return provider.requestImage(0, 0, 0);
         });
     });
+});
 });

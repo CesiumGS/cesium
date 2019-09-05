@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Renderer/Texture',
         'Core/Cartesian2',
         'Core/Color',
@@ -32,7 +32,9 @@ defineSuite([
         TextureWrap,
         createContext,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Texture', function() {
 
     var context;
     var greenImage;
@@ -1466,3 +1468,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

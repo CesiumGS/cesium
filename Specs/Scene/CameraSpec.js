@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Camera',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -46,7 +46,9 @@ defineSuite([
         MapMode2D,
         SceneMode,
         TweenCollection) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Camera', function() {
 
     var scene;
     var camera;
@@ -3078,4 +3080,5 @@ defineSuite([
         expect(camera.positionWCDeltaMagnitude).toEqual(0);
         expect(camera.positionWCDeltaMagnitudeLastFrame).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
     });
+});
 });

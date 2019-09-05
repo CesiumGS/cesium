@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/GeometryUpdater',
         'DataSources/Entity',
         'Scene/PrimitiveCollection',
@@ -8,7 +8,9 @@ defineSuite([
         Entity,
         PrimitiveCollection,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/GeometryUpdater', function() {
 
     var scene;
 
@@ -120,4 +122,5 @@ defineSuite([
             return updater.createDynamicUpdater(new PrimitiveCollection(), undefined);
         }).toThrowDeveloperError();
     });
+});
 });

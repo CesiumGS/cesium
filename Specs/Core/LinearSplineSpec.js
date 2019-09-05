@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/LinearSpline',
         'Core/Cartesian3'
     ], function(
         LinearSpline,
         Cartesian3) {
-    'use strict';
+        'use strict';
+
+describe('Core/LinearSpline', function() {
 
     var points;
     var times;
@@ -88,4 +90,5 @@ defineSuite([
         expect(point).toBe(result);
         expect(result).toEqual(points[0]);
     });
+});
 });

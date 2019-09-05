@@ -1,11 +1,11 @@
-defineSuite([
+define([
         'Core/RectangleOutlineGeometry',
         'Core/arrayFill',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
         'Core/GeographicProjection',
+        'Core/GeometryOffsetAttribute',
         'Core/Math',
         'Core/Matrix2',
         'Core/Rectangle',
@@ -16,13 +16,15 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         Ellipsoid,
-        GeometryOffsetAttribute,
         GeographicProjection,
+        GeometryOffsetAttribute,
         CesiumMath,
         Matrix2,
         Rectangle,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/RectangleOutlineGeometry', function() {
 
     it('computes positions', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
@@ -297,4 +299,5 @@ defineSuite([
     packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 9, -1];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'at height');
 
+});
 });

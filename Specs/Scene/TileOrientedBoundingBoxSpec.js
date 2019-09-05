@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/TileOrientedBoundingBox',
         'Core/Cartesian3',
         'Core/Color',
@@ -16,7 +16,9 @@ defineSuite([
         Matrix3,
         Plane,
         createFrameState) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TileOrientedBoundingBox', function() {
 
     var center = new Cartesian3(0.0, 0.0, 0.0);
     var halfAxes = Matrix3.fromScale(new Cartesian3(0.5, 0.5, 0.5), new Matrix3());
@@ -105,4 +107,5 @@ defineSuite([
         expect(tileBoundingVolume.intersectPlane(plane)).toEqual(Intersect.OUTSIDE);
     });
 
+});
 });

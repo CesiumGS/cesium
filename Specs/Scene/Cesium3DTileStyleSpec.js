@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Cesium3DTileStyle',
         'Core/Cartesian2',
         'Core/Cartesian4',
@@ -14,7 +14,9 @@ defineSuite([
         Resource,
         ConditionsExpression,
         Expression) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Cesium3DTileStyle', function() {
 
     function MockFeature() {
         this._properties = {};
@@ -3866,4 +3868,5 @@ defineSuite([
         expect(showFunction).toBeUndefined();
         expect(pointSizeFunction).toBeUndefined();
     });
+});
 });

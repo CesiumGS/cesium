@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Widgets/VRButton/VRButton',
         'Specs/createScene'
     ], function(
         VRButton,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/VRButton/VRButton', function() {
 
     var scene;
 
@@ -60,4 +62,5 @@ defineSuite([
             return new VRButton(document.body, undefined);
         }).toThrowDeveloperError();
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/DataSourceDisplay',
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
@@ -9,9 +9,9 @@ defineSuite([
         'DataSources/Entity',
         'Scene/GroundPolylinePrimitive',
         'Scene/GroundPrimitive',
-        'ThirdParty/when',
         'Specs/createScene',
-        'Specs/MockDataSource'
+        'Specs/MockDataSource',
+        'ThirdParty/when'
     ], function(
         DataSourceDisplay,
         ApproximateTerrainHeights,
@@ -23,10 +23,12 @@ defineSuite([
         Entity,
         GroundPolylinePrimitive,
         GroundPrimitive,
-        when,
         createScene,
-        MockDataSource) {
-    'use strict';
+        MockDataSource,
+        when) {
+        'use strict';
+
+describe('DataSources/DataSourceDisplay', function() {
 
     var dataSourceCollection;
     var scene;
@@ -551,3 +553,4 @@ defineSuite([
         expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(true);
     });
 }, 'WebGL');
+});

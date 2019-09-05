@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/Animation/Animation',
         'Core/defined',
         'Specs/pollToPromise',
@@ -10,7 +10,9 @@ defineSuite([
         pollToPromise,
         AnimationViewModel,
         ClockViewModel) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/Animation/Animation', function() {
 
     var container;
     var animation;
@@ -52,4 +54,5 @@ defineSuite([
         var animationViewModel = new AnimationViewModel(clockViewModel);
         animation = new Animation(container, animationViewModel);
     });
+});
 });

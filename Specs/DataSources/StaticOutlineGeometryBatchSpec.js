@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/StaticOutlineGeometryBatch',
         'Core/Cartesian3',
         'Core/Color',
@@ -30,7 +30,9 @@ defineSuite([
         ShadowMode,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/StaticOutlineGeometryBatch', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -360,4 +362,5 @@ defineSuite([
                 batch.removeAllPrimitives();
             });
     });
+});
 });

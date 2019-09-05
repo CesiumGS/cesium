@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Matrix3',
         'Core/Cartesian3',
         'Core/HeadingPitchRoll',
@@ -10,7 +10,9 @@ defineSuite([
         HeadingPitchRoll,
         CesiumMath,
         Quaternion) {
-    'use strict';
+        'use strict';
+
+describe('Core/Matrix3', function() {
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix3();
@@ -1194,4 +1196,5 @@ defineSuite([
             expect(intArray[index]).toEqual(index + 1);
         }
     });
+});
 });

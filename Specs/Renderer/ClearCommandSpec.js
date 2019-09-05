@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Renderer/ClearCommand',
         'Core/Color'
     ], function(
         ClearCommand,
         Color) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/ClearCommand', function() {
 
     it('constructs with defaults', function() {
         var c = new ClearCommand();
@@ -39,4 +41,5 @@ defineSuite([
         expect(ClearCommand.ALL.renderState).toBeUndefined();
         expect(ClearCommand.ALL.framebuffer).toBeUndefined();
     });
+});
 });

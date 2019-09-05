@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Plane',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -12,7 +12,9 @@ defineSuite([
         CesiumMath,
         Matrix3,
         Matrix4) {
-    'use strict';
+        'use strict';
+
+describe('Core/Plane', function() {
 
     it('constructs', function() {
         var normal = Cartesian3.UNIT_X;
@@ -250,4 +252,5 @@ defineSuite([
             return Plane.transform(plane, undefined);
         }).toThrowDeveloperError();
     });
+});
 });

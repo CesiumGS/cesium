@@ -1,9 +1,9 @@
-defineSuite([
+define([
         'Scene/GroundPolylinePrimitive',
         'Core/ApproximateTerrainHeights',
+        'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
-        'Core/Cartesian3',
         'Core/destroyObject',
         'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/Ellipsoid',
@@ -22,9 +22,9 @@ defineSuite([
     ], function(
         GroundPolylinePrimitive,
         ApproximateTerrainHeights,
+        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
-        Cartesian3,
         destroyObject,
         DistanceDisplayConditionGeometryInstanceAttribute,
         Ellipsoid,
@@ -40,7 +40,9 @@ defineSuite([
         Primitive,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GroundPolylinePrimitive', function() {
 
     var scene;
     var context;
@@ -959,3 +961,4 @@ defineSuite([
         ApproximateTerrainHeights._terrainHeights = terrainHeights;
     });
 }, 'WebGL');
+});

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/SelectionIndicator/SelectionIndicatorViewModel',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -8,7 +8,9 @@ defineSuite([
         Cartesian2,
         Cartesian3,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/SelectionIndicator/SelectionIndicatorViewModel', function() {
 
     var scene;
     var selectionIndicatorElement = document.createElement('div');
@@ -97,3 +99,4 @@ defineSuite([
         document.body.removeChild(container);
     });
 }, 'WebGL');
+});

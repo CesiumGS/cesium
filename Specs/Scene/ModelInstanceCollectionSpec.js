@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ModelInstanceCollection',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -32,7 +32,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ModelInstanceCollection', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
@@ -690,3 +692,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

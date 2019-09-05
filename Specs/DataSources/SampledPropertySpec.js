@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/SampledProperty',
         'Core/Cartesian3',
         'Core/defined',
@@ -22,7 +22,9 @@ defineSuite([
         CesiumMath,
         Quaternion,
         TimeInterval) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/SampledProperty', function() {
 
     it('constructor sets expected defaults', function() {
         var property = new SampledProperty(Cartesian3);
@@ -933,4 +935,5 @@ defineSuite([
         property.backwardExtrapolationDuration = 1.0;
         expect(listener).not.toHaveBeenCalled();
     });
+});
 });

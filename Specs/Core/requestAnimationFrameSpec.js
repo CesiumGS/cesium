@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/requestAnimationFrame',
         'Core/cancelAnimationFrame',
         'ThirdParty/when'
@@ -6,7 +6,9 @@ defineSuite([
         requestAnimationFrame,
         cancelAnimationFrame,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/requestAnimationFrame', function() {
 
     it('calls the callback', function() {
         var deferred = when.defer();
@@ -56,4 +58,5 @@ defineSuite([
 
         return deferred.promise;
     });
+});
 });

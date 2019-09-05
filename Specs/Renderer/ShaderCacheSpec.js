@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Renderer/ShaderCache',
         'Specs/createContext'
     ], function(
         ShaderCache,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/ShaderCache', function() {
 
     var context;
 
@@ -293,3 +295,4 @@ defineSuite([
         expect(cache.isDestroyed()).toEqual(false);
     });
 }, 'WebGL');
+});

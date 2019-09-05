@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/CesiumWidget/CesiumWidget',
         'Core/Clock',
         'Core/defaultValue',
@@ -30,7 +30,9 @@ defineSuite([
         DomEventSimulator,
         getWebGLStub,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/CesiumWidget/CesiumWidget', function() {
 
     var container;
     var widget;
@@ -365,3 +367,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

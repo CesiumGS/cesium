@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/CzmlDataSource',
         'Core/ArcType',
         'Core/BoundingRectangle',
@@ -94,7 +94,9 @@ defineSuite([
         ShadowMode,
         VerticalOrigin,
         when) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CzmlDataSource', function() {
 
     function makeDocument(packet) {
         var documentPacket = {
@@ -7928,4 +7930,5 @@ defineSuite([
             expect(e.properties.custom_wsenDegrees.getValue(documentStopDate)).toEqual(Rectangle.fromDegrees(37, 16, 25, 23));
         });
     });
+});
 });

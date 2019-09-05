@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Renderer/loadCubeMap',
         'Core/Cartesian3',
         'Core/PrimitiveType',
@@ -18,7 +18,9 @@ defineSuite([
         ShaderProgram,
         VertexArray,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/loadCubeMap', function() {
 
     var context;
 
@@ -289,3 +291,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

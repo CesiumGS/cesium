@@ -1,16 +1,18 @@
-defineSuite([
-    'Core/CoplanarPolygonOutlineGeometry',
-    'Core/Cartesian3',
-    'Core/Ellipsoid',
-    'Core/Math',
-    'Specs/createPackableSpecs'
-], function(
-    CoplanarPolygonOutlineGeometry,
-    Cartesian3,
-    Ellipsoid,
-    CesiumMath,
-    createPackableSpecs) {
-    'use strict';
+define([
+        'Core/CoplanarPolygonOutlineGeometry',
+        'Core/Cartesian3',
+        'Core/Ellipsoid',
+        'Core/Math',
+        'Specs/createPackableSpecs'
+    ], function(
+        CoplanarPolygonOutlineGeometry,
+        Cartesian3,
+        Ellipsoid,
+        CesiumMath,
+        createPackableSpecs) {
+        'use strict';
+
+describe('Core/CoplanarPolygonOutlineGeometry', function() {
 
     it('throws with no hierarchy', function() {
         expect(function() {
@@ -123,4 +125,5 @@ defineSuite([
     packedInstance.push(34);
 
     createPackableSpecs(CoplanarPolygonOutlineGeometry, polygon, packedInstance);
+});
 });

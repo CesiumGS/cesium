@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -44,7 +44,9 @@ defineSuite([
         StencilConstants,
         Cesium3DTilesTester,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Core/Cartesian3', function() {
 
     var scene;
     var modelMatrix;
@@ -229,3 +231,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

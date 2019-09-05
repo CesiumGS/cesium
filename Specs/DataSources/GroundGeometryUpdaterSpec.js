@@ -1,22 +1,24 @@
-defineSuite([
-    'DataSources/GroundGeometryUpdater',
-    'Core/ApproximateTerrainHeights',
-    'Core/Event',
-    'Core/GeometryOffsetAttribute',
-    'Core/JulianDate',
-    'Core/Rectangle',
-    'Scene/HeightReference',
-    'DataSources/ConstantProperty'
-], function(
-    GroundGeometryUpdater,
-    ApproximateTerrainHeights,
-    Event,
-    GeometryOffsetAttribute,
-    JulianDate,
-    Rectangle,
-    HeightReference,
-    ConstantProperty) {
-    'use strict';
+define([
+        'DataSources/GroundGeometryUpdater',
+        'Core/ApproximateTerrainHeights',
+        'Core/Event',
+        'Core/GeometryOffsetAttribute',
+        'Core/JulianDate',
+        'Core/Rectangle',
+        'DataSources/ConstantProperty',
+        'Scene/HeightReference'
+    ], function(
+        GroundGeometryUpdater,
+        ApproximateTerrainHeights,
+        Event,
+        GeometryOffsetAttribute,
+        JulianDate,
+        Rectangle,
+        ConstantProperty,
+        HeightReference) {
+        'use strict';
+
+describe('DataSources/GroundGeometryUpdater', function() {
 
     beforeAll(function() {
         return ApproximateTerrainHeights.initialize();
@@ -146,4 +148,5 @@ defineSuite([
         expect(groundGeometryUpdater._terrainOffsetProperty).toBeUndefined();
         expect(groundGeometryUpdater.isDestroyed()).toBe(true);
     });
+});
 });

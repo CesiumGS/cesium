@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/ImageMaterialProperty',
         'Core/Cartesian2',
         'Core/Color',
@@ -14,7 +14,9 @@ defineSuite([
         TimeInterval,
         ConstantProperty,
         TimeIntervalCollectionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/ImageMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new ImageMaterialProperty();
@@ -172,4 +174,5 @@ defineSuite([
         }));
         expect(property.isConstant).toBe(false);
     });
+});
 });

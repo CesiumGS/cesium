@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/TranslationRotationScale',
         'Core/Cartesian3',
         'Core/Quaternion'
@@ -6,7 +6,9 @@ defineSuite([
         TranslationRotationScale,
         Cartesian3,
         Quaternion) {
-    'use strict';
+        'use strict';
+
+describe('Core/TranslationRotationScale', function() {
 
     it('sets correct values when constructed with no arguments', function() {
         var transformation = new TranslationRotationScale();
@@ -51,4 +53,5 @@ defineSuite([
         right.rotation = Quaternion.ZERO;
         expect(left.equals(right)).toEqual(false);
     });
+});
 });

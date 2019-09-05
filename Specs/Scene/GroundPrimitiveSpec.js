@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/GroundPrimitive',
         'Core/ApproximateTerrainHeights',
         'Core/arraySlice',
@@ -54,7 +54,9 @@ defineSuite([
         createCanvas,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GroundPrimitive', function() {
 
     var scene;
     var context;
@@ -1387,3 +1389,4 @@ defineSuite([
         ApproximateTerrainHeights._terrainHeights = terrainHeights;
     });
 }, 'WebGL');
+});

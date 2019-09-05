@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/GridImageryProvider',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
@@ -14,7 +14,9 @@ defineSuite([
         ImageryProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GridImageryProvider', function() {
 
     it('conforms to ImageryProvider interface', function() {
         expect(GridImageryProvider).toConformToInterface(ImageryProvider);
@@ -97,4 +99,5 @@ defineSuite([
             expect(provider.tileHeight).toEqual(456);
         });
     });
+});
 });

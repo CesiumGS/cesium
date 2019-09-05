@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/GeographicTilingScheme',
         'Core/Cartesian2',
         'Core/Cartographic',
@@ -14,7 +14,9 @@ defineSuite([
         CesiumMath,
         Rectangle,
         TilingScheme) {
-    'use strict';
+        'use strict';
+
+describe('Core/GeographicTilingScheme', function() {
 
     it('conforms to TilingScheme interface.', function() {
         expect(GeographicTilingScheme).toConformToInterface(TilingScheme);
@@ -177,4 +179,5 @@ defineSuite([
             expect(resultParameter).toEqual(new Cartesian2(3, 0));
         });
     });
+});
 });

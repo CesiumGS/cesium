@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/LabelGraphics',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -20,7 +20,9 @@ defineSuite([
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/LabelGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -245,4 +247,5 @@ defineSuite([
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

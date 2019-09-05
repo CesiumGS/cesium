@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Renderer/Sampler',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
@@ -8,7 +8,9 @@ defineSuite([
         TextureMinificationFilter,
         TextureWrap,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Sampler', function() {
 
     var context;
 
@@ -70,3 +72,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

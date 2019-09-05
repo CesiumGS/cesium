@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/DeviceOrientationCameraController',
         'Core/Cartesian3',
         'Core/Math',
@@ -12,7 +12,9 @@ defineSuite([
         createCamera,
         createCanvas,
         DomEventSimulator) {
-    'use strict';
+        'use strict';
+
+describe('Scene/DeviceOrientationCameraController', function() {
 
     var scene;
     var canvas;
@@ -107,4 +109,5 @@ defineSuite([
         controller.destroy();
         expect(controller.isDestroyed()).toEqual(true);
     });
+});
 });

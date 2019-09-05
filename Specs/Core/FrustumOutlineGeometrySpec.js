@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/FrustumOutlineGeometry',
         'Core/Cartesian3',
         'Core/Math',
@@ -14,7 +14,9 @@ defineSuite([
         Quaternion,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/FrustumOutlineGeometry', function() {
 
     it('constructor throws without options', function() {
         expect(function() {
@@ -84,4 +86,5 @@ defineSuite([
         orientation : Quaternion.IDENTITY,
         vertexFormat : VertexFormat.POSITION_ONLY
     }), [0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0]);
+});
 });

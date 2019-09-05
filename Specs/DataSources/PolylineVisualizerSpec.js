@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/PolylineVisualizer',
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
@@ -48,7 +48,9 @@ defineSuite([
         createDynamicProperty,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineVisualizer', function() {
 
     var time = JulianDate.now();
 
@@ -767,3 +769,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

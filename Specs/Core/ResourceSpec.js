@@ -1,7 +1,7 @@
-defineSuite([
+define([
         'Core/Resource',
-        'Core/defaultValue',
         'Core/DefaultProxy',
+        'Core/defaultValue',
         'Core/queryToObject',
         'Core/Request',
         'Core/RequestErrorEvent',
@@ -12,8 +12,8 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         Resource,
-        defaultValue,
         DefaultProxy,
+        defaultValue,
         queryToObject,
         Request,
         RequestErrorEvent,
@@ -22,7 +22,9 @@ defineSuite([
         createCanvas,
         Uri,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/Resource', function() {
 
     var dataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2Nk+M/wHwAEBgIA5agATwAAAABJRU5ErkJggg==';
     var supportsImageBitmapOptions;
@@ -2340,4 +2342,5 @@ defineSuite([
         });
     });
 
+});
 });

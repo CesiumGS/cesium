@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/Tipsify'
     ], function(
         Tipsify) {
-    'use strict';
+        'use strict';
+
+describe('Core/Tipsify', function() {
 
     it('can calculate the ACMR', function() {
         //Hexagon formed from 6 triangles, 7 vertices
@@ -111,4 +113,5 @@ defineSuite([
                                                                           maximumIndex : 28,
                                                                           cacheSize: 6}));
     });
+});
 });

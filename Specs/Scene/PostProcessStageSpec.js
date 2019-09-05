@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/PostProcessStage',
         'Core/BoundingRectangle',
         'Core/Cartesian3',
@@ -30,7 +30,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PostProcessStage', function() {
 
     var scene;
 
@@ -293,3 +295,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

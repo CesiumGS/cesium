@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/BingMapsImageryProvider',
         'Core/appendForwardSlash',
         'Core/defined',
@@ -32,7 +32,9 @@ defineSuite([
         pollToPromise,
         Uri,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/BingMapsImageryProvider', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {
@@ -586,4 +588,5 @@ defineSuite([
             });
         });
     });
+});
 });

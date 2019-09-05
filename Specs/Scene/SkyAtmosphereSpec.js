@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/SkyAtmosphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
@@ -12,7 +12,9 @@ defineSuite([
         CesiumMath,
         SceneMode,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/SkyAtmosphere', function() {
 
     var scene;
 
@@ -159,3 +161,4 @@ defineSuite([
         expect(s.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

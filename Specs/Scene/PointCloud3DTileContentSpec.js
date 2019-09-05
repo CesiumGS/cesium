@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/PointCloud3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
@@ -46,7 +46,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PointCloud3DTileContent', function() {
 
     var scene;
     var centerLongitude = -1.31968;
@@ -1032,3 +1034,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

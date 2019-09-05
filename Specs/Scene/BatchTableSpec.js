@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/BatchTable',
         'Core/Cartesian4',
         'Core/ComponentDatatype',
@@ -14,7 +14,9 @@ defineSuite([
         PixelDatatype,
         Texture,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/BatchTable', function() {
 
     var unsignedByteAttributes = [{
         functionName : 'batchTable_getShow',
@@ -282,3 +284,4 @@ defineSuite([
         expect(batchTable.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

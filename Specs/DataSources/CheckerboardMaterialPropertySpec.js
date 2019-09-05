@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/CheckerboardMaterialProperty',
         'Core/Cartesian2',
         'Core/Color',
@@ -16,7 +16,9 @@ defineSuite([
         ConstantProperty,
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CheckerboardMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new CheckerboardMaterialProperty();
@@ -145,4 +147,5 @@ defineSuite([
         testDefinitionChanged(property, 'oddColor', Color.RED, Color.BLUE);
         testDefinitionChanged(property, 'repeat', new Cartesian2(5, 5), new Cartesian2(7, 7));
     });
+});
 });

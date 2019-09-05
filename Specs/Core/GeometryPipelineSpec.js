@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/GeometryPipeline',
         'Core/arraySlice',
         'Core/AttributeCompression',
@@ -44,7 +44,9 @@ defineSuite([
         PrimitiveType,
         Tipsify,
         VertexFormat) {
-    'use strict';
+        'use strict';
+
+describe('Core/GeometryPipeline', function() {
 
     it('converts triangles to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({
@@ -3036,4 +3038,5 @@ defineSuite([
             return GeometryPipeline.splitLongitude();
         }).toThrowDeveloperError();
     });
+});
 });

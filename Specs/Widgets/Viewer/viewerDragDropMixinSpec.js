@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/Viewer/viewerDragDropMixin',
         'Core/defined',
         'Core/TimeInterval',
@@ -12,7 +12,9 @@ defineSuite([
         createViewer,
         DomEventSimulator,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/Viewer/viewerDragDropMixin', function() {
 
     var container;
     var viewer;
@@ -460,3 +462,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

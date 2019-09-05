@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/DebugModelMatrixPrimitive',
         'Core/Cartesian3',
         'Core/Matrix4',
@@ -8,7 +8,9 @@ defineSuite([
         Cartesian3,
         Matrix4,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/DebugModelMatrixPrimitive', function() {
 
     var scene;
 
@@ -88,3 +90,4 @@ defineSuite([
         expect(p.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

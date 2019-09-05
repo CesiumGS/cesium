@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/GroundPolylineGeometry',
         'Core/ApproximateTerrainHeights',
         'Core/ArcType',
@@ -22,7 +22,9 @@ defineSuite([
         CesiumMath,
         WebMercatorProjection,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/GroundPolylineGeometry', function() {
 
     beforeAll(function() {
         return ApproximateTerrainHeights.initialize();
@@ -652,4 +654,5 @@ defineSuite([
     packedInstance.push(0.0); // scene3DModeOnly = false
 
     createPackableSpecs(GroundPolylineGeometry, polyline, packedInstance);
+});
 });

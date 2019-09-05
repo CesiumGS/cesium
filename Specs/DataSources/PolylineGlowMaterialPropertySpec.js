@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/PolylineGlowMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
@@ -14,7 +14,9 @@ defineSuite([
         ConstantProperty,
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineGlowMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new PolylineGlowMaterialProperty();
@@ -158,4 +160,5 @@ defineSuite([
         testDefinitionChanged(property, 'glowPower', 0.25, 0.54);
         testDefinitionChanged(property, 'taperPower', 1.0, 0.44);
     });
+});
 });

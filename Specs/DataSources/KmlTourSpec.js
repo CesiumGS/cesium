@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/KmlTour',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
@@ -16,7 +16,9 @@ defineSuite([
         KmlTourFlyTo,
         KmlTourWait,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/KmlTour', function() {
 
     function getLookAt() {
         var position = Cartesian3.fromDegrees(40.0, 30.0, 1000);
@@ -151,4 +153,5 @@ defineSuite([
             expect(mockViewer.scene.camera.flyToBoundingSphere.calls.count()).toEqual(0);
         }, 5);
     });
+});
 });

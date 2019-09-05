@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/SingleTileImageryProvider',
         'Core/DefaultProxy',
         'Core/Ellipsoid',
@@ -24,7 +24,9 @@ defineSuite([
         ImageryState,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/SingleTileImageryProvider', function() {
 
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
@@ -222,4 +224,5 @@ defineSuite([
             });
         });
     });
+});
 });
