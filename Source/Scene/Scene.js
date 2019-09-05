@@ -2682,23 +2682,49 @@ define([
         savedCamera.frustum = camera.frustum;
 
         var near = camera.frustum.near;
+        var far = camera.frustum.far;
         var fo = near * defaultValue(scene.focalLength, 5.0);
         var eyeSeparation = defaultValue(scene.eyeSeparation, fo / 30.0);
         var eyeTranslation = Cartesian3.multiplyByScalar(savedCamera.right, eyeSeparation * 0.5, scratchEyeTranslation);
 
-        camera.frustum.aspectRatio = viewport.width / viewport.height;
+        var aspectRatio = camera.frustum.aspectRatio = viewport.width / viewport.height;
+        var widthdiv2 = near * Math.tan(camera.frustum.fov / 2);
 
         var offset = 0.5 * eyeSeparation * near / fo;
 
         Cartesian3.add(savedCamera.position, eyeTranslation, camera.position);
-        camera.frustum.xOffset = offset;
+
+        var left = - aspectRatio * widthdiv2 - offset;
+        var right = aspectRatio * widthdiv2 - offset;
+        var top = widthdiv2;
+        var bottom = - widthdiv2;
+        camera.frustum = new PerspectiveOffCenterFrustum({
+            left: left,
+            right: right,
+            top: top,
+            bottom: bottom,
+            near: near,
+            far: far
+        });
 
         executeCommands(scene, passState);
 
         viewport.x = viewport.width;
 
         Cartesian3.subtract(savedCamera.position, eyeTranslation, camera.position);
-        camera.frustum.xOffset = -offset;
+
+        left = - aspectRatio * widthdiv2 + offset;
+        right = aspectRatio * widthdiv2 + offset;
+        top = widthdiv2;
+        bottom = - widthdiv2;
+        camera.frustum = new PerspectiveOffCenterFrustum({
+            left: left,
+            right: right,
+            top: top,
+            bottom: bottom,
+            near: near,
+            far: far
+        });
 
         executeCommands(scene, passState);
 
