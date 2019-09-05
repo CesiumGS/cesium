@@ -258,10 +258,11 @@ define([
         context.strokeRect(1, 1, 255, 255);
 
         context.font = 'bold 25px Arial';
+        context.textAlign = 'center';
         context.fillStyle = cssColor;
-        context.fillText('L: ' + level, 100, 86);
-        context.fillText('X: ' + x, 100, 136);
-        context.fillText('Y: ' + y, 100, 186);
+        context.fillText('L: ' + level, 124, 86);
+        context.fillText('X: ' + x, 124, 136);
+        context.fillText('Y: ' + y, 124, 186);
 
         return canvas;
     };
