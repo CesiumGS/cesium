@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.62 - 2019-10-??
+
+##### Fixes :wrench:
+* Primitve: fixed relative-to-center check, `depthFailAppearance` resource freeing and docs.
+
 ### 1.61 - 2019-09-03
 
 ##### Additions :tada:
