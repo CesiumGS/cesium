@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/EntityCollection',
         'Core/Iso8601',
         'Core/JulianDate',
@@ -12,7 +12,9 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         Entity) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/EntityCollection', function() {
 
     function CollectionListener() {
         this.timesCalled = 0;
@@ -469,4 +471,5 @@ defineSuite([
             entityCollection.getOrCreateEntity(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

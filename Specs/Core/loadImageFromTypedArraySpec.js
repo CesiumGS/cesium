@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/loadImageFromTypedArray',
         'Core/Resource',
         'ThirdParty/when'
@@ -6,7 +6,9 @@ defineSuite([
         loadImageFromTypedArray,
         Resource,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/loadImageFromTypedArray', function() {
 
     var supportsImageBitmapOptions;
 
@@ -117,4 +119,5 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
+});
 });

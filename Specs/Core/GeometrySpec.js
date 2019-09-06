@@ -1,26 +1,28 @@
-defineSuite([
+define([
         'Core/Geometry',
         'Core/BoundingSphere',
         'Core/Cartesian3',
-        'Core/Math',
         'Core/ComponentDatatype',
         'Core/Ellipsoid',
         'Core/GeometryAttribute',
         'Core/GeometryType',
+        'Core/Math',
         'Core/PrimitiveType',
         'Core/Rectangle'
     ], function(
         Geometry,
         BoundingSphere,
         Cartesian3,
-        CesiumMath,
         ComponentDatatype,
         Ellipsoid,
         GeometryAttribute,
         GeometryType,
+        CesiumMath,
         PrimitiveType,
         Rectangle) {
-    'use strict';
+        'use strict';
+
+describe('Core/Geometry', function() {
 
     it('constructor', function() {
         var attributes = {
@@ -152,4 +154,5 @@ defineSuite([
         expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
         expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
     });
+});
 });

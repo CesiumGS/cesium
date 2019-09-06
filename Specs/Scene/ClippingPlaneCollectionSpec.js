@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ClippingPlaneCollection',
         'Core/AttributeCompression',
         'Core/BoundingSphere',
@@ -36,7 +36,9 @@ defineSuite([
         TextureWrap,
         ClippingPlane,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ClippingPlaneCollection', function() {
 
     var clippingPlanes;
     var planes = [
@@ -776,4 +778,5 @@ defineSuite([
         clippingPlanes.destroy();
         scene.destroyForSpecs();
     });
+});
 });

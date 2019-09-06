@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Vector3DTilePolygons',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -50,7 +50,9 @@ defineSuite([
         createContext,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Vector3DTilePolygons', function() {
 
     createPolygonSpecs({});
     var c = createContext({ requestWebgl2 : true });
@@ -632,3 +634,4 @@ defineSuite([
     }
 
 }, 'WebGL');
+});

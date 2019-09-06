@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/PolygonGraphics',
         'Core/ArcType',
         'Core/Cartesian3',
@@ -24,7 +24,9 @@ defineSuite([
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolygonGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -302,4 +304,5 @@ defineSuite([
         expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
         expect(hierarchy.positions).toEqual(positions);
     });
+});
 });

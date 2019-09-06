@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/BillboardVisualizer',
         'Core/BoundingRectangle',
         'Core/BoundingSphere',
@@ -42,7 +42,9 @@ defineSuite([
         createGlobe,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/BillboardVisualizer', function() {
 
     var scene;
     var entityCluster;
@@ -416,3 +418,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

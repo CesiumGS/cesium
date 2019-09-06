@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/CylinderGeometry',
         'Core/arrayFill',
         'Core/GeometryOffsetAttribute',
@@ -10,7 +10,9 @@ defineSuite([
         GeometryOffsetAttribute,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/CylinderGeometry', function() {
 
     it('constructor throws with no length', function() {
         expect(function() {
@@ -180,4 +182,5 @@ defineSuite([
     });
     var packedInstance = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 3.0, -1.0];
     createPackableSpecs(CylinderGeometry, cylinder, packedInstance);
+});
 });

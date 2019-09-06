@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/pointInsideTriangle',
         'Core/Cartesian2'
     ], function(
         pointInsideTriangle,
         Cartesian2) {
-    'use strict';
+        'use strict';
+
+describe('Core/pointInsideTriangle', function() {
 
     it('pointInsideTriangle has point inside', function() {
         expect(pointInsideTriangle(new Cartesian2(0.25, 0.25), Cartesian2.ZERO, new Cartesian2(1.0, 0.0), new Cartesian2(0.0, 1.0))).toEqual(true);
@@ -53,4 +55,5 @@ defineSuite([
             pointInsideTriangle(new Cartesian2(), new Cartesian2(), new Cartesian2());
         }).toThrowDeveloperError();
     });
+});
 });

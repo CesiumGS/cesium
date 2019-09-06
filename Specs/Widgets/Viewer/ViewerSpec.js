@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/CartographicGeocoderService',
@@ -88,7 +88,9 @@ defineSuite([
         SceneModePicker,
         SelectionIndicator,
         Timeline) {
-    'use strict';
+        'use strict';
+
+describe('Core/BoundingSphere', function() {
 
     var testProvider = {
         isReady : function() {
@@ -1637,3 +1639,4 @@ defineSuite([
         expect(postMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
     });
 }, 'WebGL');
+});

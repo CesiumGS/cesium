@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ClassificationPrimitive',
         'Core/BoxGeometry',
         'Core/Cartesian3',
@@ -48,7 +48,9 @@ defineSuite([
         StencilConstants,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ClassificationPrimitive', function() {
 
     var scene;
 
@@ -1194,3 +1196,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

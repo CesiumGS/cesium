@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/PolylineCollection',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -24,7 +24,9 @@ defineSuite([
         Material,
         SceneMode,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PolylineCollection', function() {
 
     var scene;
     var polylines;
@@ -1659,3 +1661,4 @@ defineSuite([
         expect(polylines.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

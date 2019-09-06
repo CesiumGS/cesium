@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/PolylineGeometry',
         'Core/ArcType',
         'Core/Cartesian3',
@@ -14,7 +14,9 @@ defineSuite([
         Ellipsoid,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/PolylineGeometry', function() {
 
     it('constructor throws with no positions', function() {
         expect(function() {
@@ -206,4 +208,5 @@ defineSuite([
     });
     packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 2, 11];
     createPackableSpecs(PolylineGeometry, line, packedInstance, 'rhumb line');
+});
 });

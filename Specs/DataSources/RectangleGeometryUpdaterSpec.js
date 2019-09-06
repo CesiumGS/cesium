@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/RectangleGeometryUpdater',
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
@@ -36,7 +36,9 @@ defineSuite([
         createGeometryUpdaterGroundGeometrySpecs,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/RectangleGeometryUpdater', function() {
 
     var time;
     var scene;
@@ -254,3 +256,4 @@ defineSuite([
 
     createGeometryUpdaterGroundGeometrySpecs(RectangleGeometryUpdater, 'rectangle', createBasicRectangleWithoutHeight, createDynamicRectangleWithoutHeight, getScene);
 }, 'WebGL');
+});

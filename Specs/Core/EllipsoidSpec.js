@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Ellipsoid',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -10,7 +10,9 @@ defineSuite([
         Cartographic,
         CesiumMath,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/Ellipsoid', function() {
 
     var radii = new Cartesian3(1.0, 2.0, 3.0);
     var radiiSquared = Cartesian3.multiplyComponents(radii, radii, new Cartesian3());
@@ -543,4 +545,5 @@ defineSuite([
     });
 
     createPackableSpecs(Ellipsoid, Ellipsoid.WGS84, [Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z]);
+});
 });

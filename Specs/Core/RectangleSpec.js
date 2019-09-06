@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Rectangle',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -12,7 +12,9 @@ defineSuite([
         Ellipsoid,
         CesiumMath,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/Rectangle', function() {
 
     var west = -0.9;
     var south = 0.5;
@@ -876,4 +878,5 @@ defineSuite([
     var rectangle = new Rectangle(west, south, east, north);
     var packedInstance = [west, south, east, north];
     createPackableSpecs(Rectangle, rectangle, packedInstance);
+});
 });

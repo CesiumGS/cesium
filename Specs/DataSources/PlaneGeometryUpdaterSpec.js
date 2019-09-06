@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/PlaneGeometryUpdater',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -30,7 +30,9 @@ defineSuite([
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PlaneGeometryUpdater', function() {
 
     var scene;
 
@@ -124,3 +126,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(PlaneGeometryUpdater, 'plane', createDynamicPlane, getScene);
 }, 'WebGL');
+});

@@ -1,9 +1,9 @@
-defineSuite([
+define([
         'DataSources/StaticGroundGeometryColorBatch',
-        'Core/defaultValue',
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defaultValue',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Math',
@@ -20,10 +20,10 @@ defineSuite([
         'Specs/pollToPromise'
     ], function(
         StaticGroundGeometryColorBatch,
-        defaultValue,
         ApproximateTerrainHeights,
         Cartesian3,
         Color,
+        defaultValue,
         DistanceDisplayCondition,
         JulianDate,
         CesiumMath,
@@ -38,7 +38,9 @@ defineSuite([
         GroundPrimitive,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/StaticGroundGeometryColorBatch', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -355,4 +357,5 @@ defineSuite([
                 batch.removeAllPrimitives();
             });
     });
+});
 });

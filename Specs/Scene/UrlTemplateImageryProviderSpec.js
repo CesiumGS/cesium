@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/UrlTemplateImageryProvider',
         'Core/DefaultProxy',
         'Core/Ellipsoid',
@@ -34,7 +34,9 @@ defineSuite([
         ImageryState,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/UrlTemplateImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -806,4 +808,5 @@ defineSuite([
             return provider.pickFeatures();
         }).toThrowDeveloperError();
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/FrameRateMonitor',
         'Core/defined',
         'Core/getTimestamp',
@@ -8,7 +8,9 @@ defineSuite([
         defined,
         getTimestamp,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/FrameRateMonitor', function() {
 
     var scene;
     beforeAll(function() {
@@ -258,3 +260,4 @@ defineSuite([
         expect(nominalListener).toHaveBeenCalled();
     });
 }, 'WebGL');
+});

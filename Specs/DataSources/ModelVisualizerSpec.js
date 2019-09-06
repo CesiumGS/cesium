@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/ModelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -48,7 +48,9 @@ defineSuite([
         Globe,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/ModelVisualizer', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxArticulationsUrl = './Data/Models/Box-Articulations/Box-Articulations.gltf';
@@ -400,3 +402,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/PostProcessStageComposite',
         'Core/Color',
         'Core/defined',
@@ -14,7 +14,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PostProcessStageComposite', function() {
 
     var scene;
 
@@ -226,3 +228,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

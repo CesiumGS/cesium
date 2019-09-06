@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/IntersectionTests',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -14,7 +14,9 @@ defineSuite([
         CesiumMath,
         Plane,
         Ray) {
-    'use strict';
+        'use strict';
+
+describe('Core/IntersectionTests', function() {
 
     it('rayPlane intersects', function() {
         var ray = new Ray(new Cartesian3(2.0, 0.0, 0.0), new Cartesian3(-1.0, 0.0, 0.0));
@@ -871,4 +873,5 @@ defineSuite([
             return IntersectionTests.trianglePlaneIntersection(p, p, p);
         }).toThrowDeveloperError();
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/EllipsoidOutlineGeometry',
         'Core/arrayFill',
         'Core/Cartesian3',
@@ -10,7 +10,9 @@ defineSuite([
         Cartesian3,
         GeometryOffsetAttribute,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/EllipsoidOutlineGeometry', function() {
 
     it('constructor throws if stackPartitions less than 1', function() {
         expect(function() {
@@ -136,4 +138,5 @@ defineSuite([
     });
     var packedInstance = [1.0, 2.0, 3.0, 3.0, 3.0, 3.0, -1.0];
     createPackableSpecs(EllipsoidOutlineGeometry, ellipsoidgeometry, packedInstance);
+});
 });

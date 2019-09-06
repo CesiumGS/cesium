@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/ComponentDatatype',
         'Core/DistanceDisplayCondition'
@@ -6,7 +6,9 @@ defineSuite([
         DistanceDisplayConditionGeometryInstanceAttribute,
         ComponentDatatype,
         DistanceDisplayCondition) {
-    'use strict';
+        'use strict';
+
+describe('Core/DistanceDisplayConditionGeometryInstanceAttribute', function() {
 
     it('constructor', function() {
         var attribute = new DistanceDisplayConditionGeometryInstanceAttribute(10.0, 100.0);
@@ -67,4 +69,5 @@ defineSuite([
             DistanceDisplayConditionGeometryInstanceAttribute.toValue();
         }).toThrowDeveloperError();
     });
+});
 });

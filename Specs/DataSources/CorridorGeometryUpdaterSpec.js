@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/CorridorGeometryUpdater',
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
@@ -44,7 +44,9 @@ defineSuite([
         createGeometryUpdaterGroundGeometrySpecs,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CorridorGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -299,3 +301,4 @@ defineSuite([
 
     createGeometryUpdaterGroundGeometrySpecs(CorridorGeometryUpdater, 'corridor', createBasicCorridorWithoutHeight, createDynamicCorridorWithoutHeight, getScene);
 }, 'WebGL');
+});

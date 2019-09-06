@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/DebugAppearance',
         'Core/ComponentDatatype',
         'Core/defaultValue',
@@ -22,7 +22,9 @@ defineSuite([
         Appearance,
         Primitive,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/DebugAppearance', function() {
 
     var scene;
     var primitive;
@@ -366,3 +368,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/RectangleGeometry',
         'Core/arrayFill',
         'Core/Cartesian2',
@@ -24,7 +24,9 @@ defineSuite([
         Rectangle,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/RectangleGeometry', function() {
 
     it('computes positions', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
@@ -538,4 +540,5 @@ defineSuite([
     });
     var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1];
     createPackableSpecs(RectangleGeometry, rectangle, packedInstance);
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Renderer/DrawCommand',
         'Core/PrimitiveType',
         'Renderer/Pass'
@@ -6,7 +6,9 @@ defineSuite([
         DrawCommand,
         PrimitiveType,
         Pass) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/DrawCommand', function() {
 
     it('constructs', function() {
         var c = new DrawCommand();
@@ -210,4 +212,5 @@ defineSuite([
     it('shallow clone returns undefined', function() {
         expect(DrawCommand.shallowClone()).toBeUndefined();
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/EntityView',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -16,7 +16,9 @@ defineSuite([
         ConstantPositionProperty,
         Entity,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/EntityView', function() {
 
     var scene;
     var defaultOffset = EntityView.defaultOffset3D;
@@ -111,3 +113,4 @@ defineSuite([
         view.update(JulianDate.now());
     });
 }, 'WebGL');
+});

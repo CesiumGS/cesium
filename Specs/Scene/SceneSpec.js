@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Scene',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -88,7 +88,9 @@ defineSuite([
         createScene,
         pollToPromise,
         render) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Scene', function() {
 
     var scene;
     var simpleShaderProgram;
@@ -1769,3 +1771,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

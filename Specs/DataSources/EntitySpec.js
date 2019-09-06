@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/Entity',
         'Core/Cartesian3',
         'Core/JulianDate',
@@ -54,7 +54,9 @@ defineSuite([
         PolylineVolumeGraphics,
         RectangleGraphics,
         WallGraphics) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/Entity', function() {
 
     it('constructor sets expected properties.', function() {
         var entity = new Entity();
@@ -501,4 +503,5 @@ defineSuite([
         expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', true, false]);
         expect(entity.isShowing).toBe(true);
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/TridiagonalSystemSolver',
         'Core/Cartesian3',
         'Core/Math'
@@ -6,7 +6,9 @@ defineSuite([
         TridiagonalSystemSolver,
         Cartesian3,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/TridiagonalSystemSolver', function() {
 
    it('solve throws exception without lower diagonal', function() {
         expect(function() {
@@ -107,4 +109,5 @@ defineSuite([
         expect(actual[7]).toEqualEpsilon(expected[7], CesiumMath.EPSILON4);
         expect(actual[8]).toEqualEpsilon(expected[8], CesiumMath.EPSILON4);
     });
+});
 });

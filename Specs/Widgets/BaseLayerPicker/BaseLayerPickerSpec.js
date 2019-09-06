@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/BaseLayerPicker/BaseLayerPicker',
         'Core/EllipsoidTerrainProvider',
         'Core/FeatureDetection',
@@ -10,7 +10,9 @@ defineSuite([
         FeatureDetection,
         ImageryLayerCollection,
         DomEventSimulator) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/BaseLayerPicker/BaseLayerPicker', function() {
 
     function MockGlobe(){
         this.imageryLayers = new ImageryLayerCollection();
@@ -86,4 +88,5 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/WebMapTileServiceImageryProvider',
         'Core/Clock',
         'Core/ClockStep',
@@ -42,7 +42,9 @@ defineSuite([
         ImageryState,
         pollToPromise,
         Uri) {
-    'use strict';
+        'use strict';
+
+describe('Scene/WebMapTileServiceImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -683,4 +685,5 @@ defineSuite([
                 expect(lastUrl).toEqual(uri.toString());
             });
     });
+});
 });

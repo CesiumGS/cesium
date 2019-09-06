@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/CullingVolume',
         'Core/AxisAlignedBoundingBox',
         'Core/BoundingSphere',
@@ -12,7 +12,9 @@ defineSuite([
         Cartesian3,
         Intersect,
         PerspectiveFrustum) {
-    'use strict';
+        'use strict';
+
+describe('Core/CullingVolume', function() {
 
     var cullingVolume;
 
@@ -402,4 +404,5 @@ defineSuite([
             });
         });
     });
+});
 });

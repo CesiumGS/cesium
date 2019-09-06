@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/QuadraticRealPolynomial',
         'Core/Math'
     ], function(
         QuadraticRealPolynomial,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/QuadraticRealPolynomial', function() {
 
     it('discriminant throws without a', function() {
         expect(function() {
@@ -116,4 +118,5 @@ defineSuite([
         expect(roots[0]).toEqual(0.0);
         expect(roots[1]).toEqual(3.0);
     });
+});
 });

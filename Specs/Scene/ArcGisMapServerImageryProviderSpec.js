@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ArcGisMapServerImageryProvider',
         'Core/appendForwardSlash',
         'Core/Cartesian2',
@@ -48,7 +48,9 @@ defineSuite([
         ImageryState,
         pollToPromise,
         Uri) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ArcGisMapServerImageryProvider', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {
@@ -987,4 +989,5 @@ defineSuite([
             });
         });
     });
+});
 });

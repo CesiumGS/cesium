@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Spherical',
         'Core/Cartesian3',
         'Core/Math'
@@ -6,7 +6,9 @@ defineSuite([
         Spherical,
         Cartesian3,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/Spherical', function() {
 
     //Mock object to make sure methods take non-sphericals.
     function NotSpherical(clock, cone, magnitude) {
@@ -108,4 +110,5 @@ defineSuite([
         var v = new Spherical(1, 2, 3);
         expect(v.toString()).toEqual('(1, 2, 3)');
     });
+});
 });

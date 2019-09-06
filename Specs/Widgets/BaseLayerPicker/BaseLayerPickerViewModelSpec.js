@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         'Core/EllipsoidTerrainProvider',
         'Scene/ImageryLayerCollection',
@@ -8,7 +8,9 @@ defineSuite([
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
         ProviderViewModel) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/BaseLayerPicker/BaseLayerPickerViewModel', function() {
 
     function MockGlobe() {
         this.imageryLayers = new ImageryLayerCollection();
@@ -282,4 +284,5 @@ defineSuite([
             return new BaseLayerPickerViewModel({});
         }).toThrowDeveloperError();
     });
+});
 });

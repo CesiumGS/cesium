@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/CesiumInspector/CesiumInspectorViewModel',
         'Core/defined',
         'Core/GeometryInstance',
@@ -26,7 +26,9 @@ defineSuite([
         Primitive,
         QuadtreeTile,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/CesiumInspector/CesiumInspectorViewModel', function() {
 
     var scene;
     var performanceContainer;
@@ -242,3 +244,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

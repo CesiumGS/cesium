@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/EllipsoidGraphics',
         'Core/Cartesian3',
         'Core/Color',
@@ -18,7 +18,9 @@ defineSuite([
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/EllipsoidGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -192,4 +194,5 @@ defineSuite([
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
+});
 });

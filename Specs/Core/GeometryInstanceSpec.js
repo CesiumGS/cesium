@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/GeometryInstance',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -18,7 +18,9 @@ defineSuite([
         GeometryInstanceAttribute,
         Matrix4,
         PrimitiveType) {
-    'use strict';
+        'use strict';
+
+describe('Core/GeometryInstance', function() {
 
     it('constructor', function() {
         var geometry = new Geometry({
@@ -65,4 +67,5 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+});
 });

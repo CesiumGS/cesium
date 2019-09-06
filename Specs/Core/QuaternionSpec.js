@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Quaternion',
         'Core/Cartesian3',
         'Core/HeadingPitchRoll',
@@ -12,7 +12,9 @@ defineSuite([
         CesiumMath,
         Matrix3,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/Quaternion', function() {
 
     it('construct with default values', function() {
         var quaternion = new Quaternion();
@@ -1015,4 +1017,5 @@ defineSuite([
     var q = new Quaternion(1, 2, 3, 4);
     Quaternion.normalize(q, q);
     createPackableSpecs(Quaternion, q, [q.x, q.y, q.z, q.w]);
+});
 });

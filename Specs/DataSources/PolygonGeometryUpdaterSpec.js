@@ -1,18 +1,18 @@
-defineSuite([
+define([
         'DataSources/PolygonGeometryUpdater',
         'Core/ApproximateTerrainHeights',
         'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/CoplanarPolygonGeometry',
+        'Core/CoplanarPolygonOutlineGeometry',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
         'Core/Math',
-        'Core/CoplanarPolygonGeometry',
-        'Core/CoplanarPolygonOutlineGeometry',
         'Core/PolygonGeometry',
-        'Core/PolygonOutlineGeometry',
         'Core/PolygonHierarchy',
+        'Core/PolygonOutlineGeometry',
         'Core/TimeIntervalCollection',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
@@ -34,15 +34,15 @@ defineSuite([
         ArcType,
         Cartesian3,
         Color,
+        CoplanarPolygonGeometry,
+        CoplanarPolygonOutlineGeometry,
         Ellipsoid,
         GeometryOffsetAttribute,
         JulianDate,
         CesiumMath,
-        CoplanarPolygonGeometry,
-        CoplanarPolygonOutlineGeometry,
         PolygonGeometry,
-        PolygonOutlineGeometry,
         PolygonHierarchy,
+        PolygonOutlineGeometry,
         TimeIntervalCollection,
         ConstantProperty,
         Entity,
@@ -58,7 +58,9 @@ defineSuite([
         createGeometryUpdaterGroundGeometrySpecs,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolygonGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -454,3 +456,4 @@ defineSuite([
 
     createGeometryUpdaterGroundGeometrySpecs(PolygonGeometryUpdater, 'polygon', createBasicPolygonWithoutHeight, createDynamicPolygonWithoutHeight, getScene);
 }, 'WebGL');
+});

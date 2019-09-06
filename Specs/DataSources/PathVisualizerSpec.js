@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/PathVisualizer',
         'Core/Cartesian3',
         'Core/Color',
@@ -42,7 +42,9 @@ defineSuite([
         TimeIntervalCollectionPositionProperty,
         SceneMode,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PathVisualizer', function() {
 
     var scene;
     var visualizer;
@@ -663,3 +665,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/SimplePolylineGeometry',
         'Core/ArcType',
         'Core/BoundingSphere',
@@ -18,7 +18,9 @@ defineSuite([
         CesiumMath,
         PrimitiveType,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/SimplePolylineGeometry', function() {
 
     it('constructor throws with no positions', function() {
         expect(function() {
@@ -210,4 +212,5 @@ defineSuite([
     });
     packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 0, 0, 11];
     createPackableSpecs(SimplePolylineGeometry, line, packedInstance, 'straight line');
+});
 });

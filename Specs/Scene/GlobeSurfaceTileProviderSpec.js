@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -60,7 +60,9 @@ defineSuite([
         WebMapServiceImageryProvider,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GlobeSurfaceTileProvider', function() {
 
     var scene;
 
@@ -1066,3 +1068,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

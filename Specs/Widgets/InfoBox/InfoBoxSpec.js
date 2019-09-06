@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/InfoBox/InfoBox',
         'Core/defined',
         'Specs/pollToPromise'
@@ -6,7 +6,9 @@ defineSuite([
         InfoBox,
         defined,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/InfoBox/InfoBox', function() {
 
     var testContainer;
     var infoBox;
@@ -74,4 +76,5 @@ defineSuite([
             return new InfoBox('foo');
         }).toThrowDeveloperError();
     });
+});
 });

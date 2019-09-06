@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ScreenSpaceCameraController',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -42,7 +42,9 @@ defineSuite([
         createCamera,
         createCanvas,
         DomEventSimulator) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ScreenSpaceCameraController', function() {
 
     var usePointerEvents;
     var scene;
@@ -1209,4 +1211,5 @@ defineSuite([
         controller.destroy();
         expect(controller.isDestroyed()).toEqual(true);
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Renderer/Framebuffer',
         'Core/Color',
         'Core/PixelFormat',
@@ -38,7 +38,9 @@ defineSuite([
         Texture,
         VertexArray,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Framebuffer', function() {
 
     var context;
     var sp;
@@ -973,3 +975,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/SceneModePicker/SceneModePickerViewModel',
         'Core/Ellipsoid',
         'Scene/Globe',
@@ -10,7 +10,9 @@ defineSuite([
         Globe,
         SceneMode,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/SceneModePicker/SceneModePickerViewModel', function() {
 
     var scene;
     var ellipsoid = Ellipsoid.WGS84;
@@ -106,3 +108,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

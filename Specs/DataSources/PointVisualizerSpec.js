@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/PointVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -40,7 +40,9 @@ defineSuite([
         HeightReference,
         PointPrimitiveCollection,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PointVisualizer', function() {
 
     var scene;
     var entityCluster;
@@ -395,3 +397,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

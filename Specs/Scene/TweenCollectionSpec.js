@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/TweenCollection',
         'Core/Color',
         'Core/EasingFunction'
@@ -6,7 +6,9 @@ defineSuite([
         TweenCollection,
         Color,
         EasingFunction) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TweenCollection', function() {
 
     it('add() adds a tween', function() {
         var startObject = {
@@ -413,3 +415,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

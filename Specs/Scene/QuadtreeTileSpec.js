@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/QuadtreeTile',
         'Core/GeographicTilingScheme',
         'Core/Math',
@@ -10,7 +10,9 @@ defineSuite([
         CesiumMath,
         Rectangle,
         WebMercatorTilingScheme) {
-    'use strict';
+        'use strict';
+
+describe('Scene/QuadtreeTile', function() {
 
     it('throws without a options', function() {
         expect(function() {
@@ -366,4 +368,5 @@ defineSuite([
             expect(northwest.rectangle.south).toBeGreaterThan(southwest.rectangle.south);
         });
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/BoxGeometryUpdater',
         'Core/Cartesian3',
         'Core/Color',
@@ -32,7 +32,9 @@ defineSuite([
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/BoxGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -186,3 +188,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(BoxGeometryUpdater, 'box', createDynamicBox, getScene);
 }, 'WebGL');
+});

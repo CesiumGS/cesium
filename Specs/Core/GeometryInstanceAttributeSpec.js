@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/GeometryInstanceAttribute',
         'Core/ComponentDatatype'
     ], function(
         GeometryInstanceAttribute,
         ComponentDatatype) {
-    'use strict';
+        'use strict';
+
+describe('Core/GeometryInstanceAttribute', function() {
 
     it('constructor', function() {
         var color = new GeometryInstanceAttribute({
@@ -57,4 +59,5 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+});
 });

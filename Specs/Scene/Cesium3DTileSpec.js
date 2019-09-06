@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Cesium3DTile',
         'Core/Cartesian3',
         'Core/clone',
@@ -28,7 +28,9 @@ defineSuite([
         TileBoundingRegion,
         TileOrientedBoundingBox,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Cesium3DTile', function() {
 
     var tileWithBoundingSphere = {
         geometricError : 1,
@@ -401,3 +403,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

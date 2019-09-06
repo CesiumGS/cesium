@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/TileCoordinatesImageryProvider',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
@@ -14,7 +14,9 @@ defineSuite([
         ImageryProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TileCoordinatesImageryProvider', function() {
 
     it('conforms to ImageryProvider interface', function() {
         expect(TileCoordinatesImageryProvider).toConformToInterface(ImageryProvider);
@@ -97,4 +99,5 @@ defineSuite([
             expect(provider.tileHeight).toEqual(456);
         });
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/Vector3DTilePolylines',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -26,7 +26,9 @@ defineSuite([
         ColorBlendMode,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Vector3DTilePolylines', function() {
 
     var scene;
     var rectangle;
@@ -244,3 +246,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

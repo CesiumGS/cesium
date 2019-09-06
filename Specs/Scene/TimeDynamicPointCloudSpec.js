@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/TimeDynamicPointCloud',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -52,7 +52,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TimeDynamicPointCloud', function() {
 
     var scene;
 
@@ -789,3 +791,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

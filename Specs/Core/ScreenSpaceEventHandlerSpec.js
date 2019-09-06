@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/ScreenSpaceEventHandler',
         'Core/Cartesian2',
         'Core/clone',
@@ -18,7 +18,9 @@ defineSuite([
         KeyboardEventModifier,
         ScreenSpaceEventType,
         DomEventSimulator) {
-    'use strict';
+        'use strict';
+
+describe('Core/ScreenSpaceEventHandler', function() {
 
     var usePointerEvents;
     var element;
@@ -1370,4 +1372,5 @@ defineSuite([
 
         expect(element.removeEventListener.calls.count()).toEqual(element.addEventListener.calls.count());
     });
+});
 });

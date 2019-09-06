@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/CompositeEntityCollection',
         'Core/Iso8601',
         'Core/JulianDate',
@@ -22,7 +22,9 @@ defineSuite([
         ConstantProperty,
         Entity,
         EntityCollection) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CompositeEntityCollection', function() {
 
     function CollectionListener() {
         this.timesCalled = 0;
@@ -898,4 +900,5 @@ defineSuite([
             composite.getById(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

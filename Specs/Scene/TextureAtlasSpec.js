@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/TextureAtlas',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
@@ -18,7 +18,9 @@ defineSuite([
         Resource,
         createScene,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TextureAtlas', function() {
 
     var scene;
     var atlas;
@@ -908,3 +910,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

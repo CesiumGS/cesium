@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Scene/TileImagery',
         'Scene/ImageryState'
     ], function(
         TileImagery,
         ImageryState) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TileImagery', function() {
 
     it('does not use ancestor ready imagery that needs to be reprojected', function() {
         var imageryLayer = {
@@ -62,4 +64,5 @@ defineSuite([
         expect(tileImagery.readyImagery).toBe(grandparentImagery);
         expect(parentImagery.processStateMachineCalls).toBe(1);
     });
+});
 });

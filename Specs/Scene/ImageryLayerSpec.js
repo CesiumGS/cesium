@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ImageryLayer',
         'Core/EllipsoidTerrainProvider',
         'Core/Rectangle',
@@ -44,7 +44,9 @@ defineSuite([
         WebMapServiceImageryProvider,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ImageryLayer', function() {
 
     var scene;
     var computeEngine;
@@ -715,3 +717,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

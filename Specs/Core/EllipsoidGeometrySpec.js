@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/EllipsoidGeometry',
         'Core/arrayFill',
         'Core/Cartesian3',
@@ -14,7 +14,9 @@ defineSuite([
         CesiumMath,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/EllipsoidGeometry', function() {
 
     it('constructor rounds floating-point slicePartitions', function() {
         var m = new EllipsoidGeometry({
@@ -171,4 +173,5 @@ defineSuite([
     });
     var packedInstance = [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, -1.0];
     createPackableSpecs(EllipsoidGeometry, ellipsoidgeometry, packedInstance);
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/PerspectiveOffCenterFrustum',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -12,7 +12,9 @@ defineSuite([
         Cartesian4,
         CesiumMath,
         Matrix4) {
-    'use strict';
+        'use strict';
+
+describe('Core/PerspectiveOffCenterFrustum', function() {
 
     var frustum, planes;
 
@@ -246,4 +248,5 @@ defineSuite([
         expect(frustum2).toBe(result);
         expect(frustum).toEqual(frustum2);
     });
+});
 });

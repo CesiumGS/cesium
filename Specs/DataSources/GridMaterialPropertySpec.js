@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/GridMaterialProperty',
         'Core/Cartesian2',
         'Core/Color',
@@ -16,7 +16,9 @@ defineSuite([
         ConstantProperty,
         SampledProperty,
         TimeIntervalCollectionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/GridMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new GridMaterialProperty();
@@ -282,4 +284,5 @@ defineSuite([
         property.lineOffset.addSample(JulianDate.now(), 1);
         expect(property.isConstant).toBe(false);
     });
+});
 });

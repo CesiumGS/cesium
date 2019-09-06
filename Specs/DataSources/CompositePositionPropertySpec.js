@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/CompositePositionProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
@@ -16,7 +16,9 @@ defineSuite([
         TimeIntervalCollection,
         ConstantPositionProperty,
         PositionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CompositePositionProperty', function() {
 
     it('default constructor has expected values', function() {
         var property = new CompositePositionProperty();
@@ -301,4 +303,5 @@ defineSuite([
         interval1.data.setValue(new Cartesian3());
         expect(listener.calls.count()).toBe(2);
     });
+});
 });

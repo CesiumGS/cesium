@@ -1,44 +1,46 @@
-defineSuite([
-    'DataSources/StaticGeometryColorBatch',
-    'Core/Cartesian3',
-    'Core/Color',
-    'Core/DistanceDisplayCondition',
-    'Core/JulianDate',
-    'Core/Math',
-    'Core/TimeInterval',
-    'Core/TimeIntervalCollection',
-    'DataSources/CallbackProperty',
-    'DataSources/ColorMaterialProperty',
-    'DataSources/EllipseGeometryUpdater',
-    'DataSources/Entity',
-    'DataSources/PolylineGeometryUpdater',
-    'DataSources/TimeIntervalCollectionProperty',
-    'Scene/PerInstanceColorAppearance',
-    'Scene/PolylineColorAppearance',
-    'Scene/ShadowMode',
-    'Specs/createScene',
-    'Specs/pollToPromise'
-], function(
-    StaticGeometryColorBatch,
-    Cartesian3,
-    Color,
-    DistanceDisplayCondition,
-    JulianDate,
-    CesiumMath,
-    TimeInterval,
-    TimeIntervalCollection,
-    CallbackProperty,
-    ColorMaterialProperty,
-    EllipseGeometryUpdater,
-    Entity,
-    PolylineGeometryUpdater,
-    TimeIntervalCollectionProperty,
-    PerInstanceColorAppearance,
-    PolylineColorAppearance,
-    ShadowMode,
-    createScene,
-    pollToPromise) {
-    'use strict';
+define([
+        'DataSources/StaticGeometryColorBatch',
+        'Core/Cartesian3',
+        'Core/Color',
+        'Core/DistanceDisplayCondition',
+        'Core/JulianDate',
+        'Core/Math',
+        'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
+        'DataSources/CallbackProperty',
+        'DataSources/ColorMaterialProperty',
+        'DataSources/EllipseGeometryUpdater',
+        'DataSources/Entity',
+        'DataSources/PolylineGeometryUpdater',
+        'DataSources/TimeIntervalCollectionProperty',
+        'Scene/PerInstanceColorAppearance',
+        'Scene/PolylineColorAppearance',
+        'Scene/ShadowMode',
+        'Specs/createScene',
+        'Specs/pollToPromise'
+    ], function(
+        StaticGeometryColorBatch,
+        Cartesian3,
+        Color,
+        DistanceDisplayCondition,
+        JulianDate,
+        CesiumMath,
+        TimeInterval,
+        TimeIntervalCollection,
+        CallbackProperty,
+        ColorMaterialProperty,
+        EllipseGeometryUpdater,
+        Entity,
+        PolylineGeometryUpdater,
+        TimeIntervalCollectionProperty,
+        PerInstanceColorAppearance,
+        PolylineColorAppearance,
+        ShadowMode,
+        createScene,
+        pollToPromise) {
+        'use strict';
+
+describe('DataSources/StaticGeometryColorBatch', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -446,4 +448,5 @@ defineSuite([
                 batch.removeAllPrimitives();
             });
     });
+});
 });

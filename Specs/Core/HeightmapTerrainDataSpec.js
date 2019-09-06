@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/HeightmapTerrainData',
         'Core/GeographicTilingScheme',
         'Core/HeightmapEncoding',
@@ -8,7 +8,9 @@ defineSuite([
         GeographicTilingScheme,
         HeightmapEncoding,
         TerrainData) {
-     'use strict';
+        'use strict';
+
+describe('Core/HeightmapTerrainData', function() {
 
      it('conforms to TerrainData interface', function() {
          expect(HeightmapTerrainData).toConformToInterface(TerrainData);
@@ -326,4 +328,5 @@ defineSuite([
              }).toThrowDeveloperError();
          });
      });
+});
 });

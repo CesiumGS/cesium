@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/CatmullRomSpline',
         'Core/Cartesian3',
         'Core/HermiteSpline',
@@ -8,7 +8,9 @@ defineSuite([
         Cartesian3,
         HermiteSpline,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/CatmullRomSpline', function() {
 
     var points;
     var times;
@@ -170,4 +172,5 @@ defineSuite([
         expect(actual).toBe(result);
         expect(actual).toEqual(Cartesian3.lerp(points[0], points[1], t, new Cartesian3()));
     });
+});
 });

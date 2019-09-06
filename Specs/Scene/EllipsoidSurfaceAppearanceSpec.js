@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/EllipsoidSurfaceAppearance',
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryInstance',
@@ -18,7 +18,9 @@ defineSuite([
         Material,
         Primitive,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/EllipsoidSurfaceAppearance', function() {
 
     var scene;
     var rectangle;
@@ -83,3 +85,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

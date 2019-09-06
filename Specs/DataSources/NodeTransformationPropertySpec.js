@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/NodeTransformationProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
@@ -16,7 +16,9 @@ defineSuite([
         ConstantProperty,
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/NodeTransformationProperty', function() {
 
     it('default constructor sets expected values', function() {
         var property = new NodeTransformationProperty();
@@ -147,4 +149,5 @@ defineSuite([
         testDefinitionChanged(property, 'translation', new Quaternion(0.5, 0.5, 0.5, 0.5), Quaternion.ZERO);
         testDefinitionChanged(property, 'scale', Cartesian3.UNIT_X, Cartesian3.ZERO);
     });
+});
 });

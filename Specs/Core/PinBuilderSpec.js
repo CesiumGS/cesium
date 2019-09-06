@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/PinBuilder',
         'Core/buildModuleUrl',
         'Core/Color',
@@ -8,7 +8,9 @@ defineSuite([
         buildModuleUrl,
         Color,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/PinBuilder', function() {
 
     function getPinColor(canvas) {
         var context2D = canvas.getContext('2d');
@@ -139,4 +141,5 @@ defineSuite([
             builder.fromMakiIconId('hospital', Color.RED, undefined);
         }).toThrowDeveloperError();
     });
+});
 });

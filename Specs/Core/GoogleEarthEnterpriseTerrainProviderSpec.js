@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/GoogleEarthEnterpriseTerrainProvider',
         'Core/DefaultProxy',
         'Core/defaultValue',
@@ -30,7 +30,9 @@ defineSuite([
         TerrainProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/GoogleEarthEnterpriseTerrainProvider', function() {
 
     function installMockGetQuadTreePacket() {
         spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
@@ -364,4 +366,5 @@ defineSuite([
             });
         });
     });
+});
 });

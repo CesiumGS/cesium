@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/EllipseOutlineGeometry',
         'Core/arrayFill',
         'Core/Cartesian3',
@@ -12,7 +12,9 @@ defineSuite([
         Ellipsoid,
         GeometryOffsetAttribute,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/EllipseOutlineGeometry', function() {
 
     it('throws without a center', function() {
         expect(function() {
@@ -230,4 +232,5 @@ defineSuite([
     });
     packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 3, 2, 6, 5, 1, 5, 4, -1];
     createPackableSpecs(EllipseOutlineGeometry, packableInstance, packedInstance, 'at height');
+});
 });

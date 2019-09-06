@@ -226,4 +226,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Pascal Poulain](https://github.com/ppoulainpro)
 * [Abu Darda](https://github.com/abuDarda97)
 * [jony89](https://github.com/jony89)
+* [TJKoury] (https://github.com/tjkoury)
 * [SorryNotSorryBasileus](https://github.com/SorryNotSorryBasileus)

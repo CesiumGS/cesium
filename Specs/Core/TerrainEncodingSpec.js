@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/TerrainEncoding',
         'Core/AttributeCompression',
         'Core/AxisAlignedBoundingBox',
@@ -16,7 +16,9 @@ defineSuite([
         Matrix4,
         TerrainQuantization,
         Transforms) {
-    'use strict';
+        'use strict';
+
+describe('Core/TerrainEncoding', function() {
 
     var center;
     var maximum;
@@ -341,4 +343,5 @@ defineSuite([
         expect(cloned.matrix).toEqual(encoding.matrix);
         expect(cloned.hasVertexNormals).toEqual(encoding.hasVertexNormals);
     });
+});
 });

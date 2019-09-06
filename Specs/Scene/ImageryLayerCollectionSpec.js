@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Scene/ImageryLayerCollection',
         'Core/Cartesian3',
         'Core/Ellipsoid',
@@ -34,7 +34,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ImageryLayerCollection', function() {
 
     var fakeProvider = {
             isReady : function() { return false; }
@@ -567,3 +569,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

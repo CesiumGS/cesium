@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/WebMercatorTilingScheme',
         'Core/Cartesian2',
         'Core/Cartographic',
@@ -16,7 +16,9 @@ defineSuite([
         Rectangle,
         TilingScheme,
         WebMercatorProjection) {
-    'use strict';
+        'use strict';
+
+describe('Core/WebMercatorTilingScheme', function() {
 
     var tilingScheme;
     beforeEach(function() {
@@ -274,4 +276,5 @@ defineSuite([
             expect(resultParameter).toEqual(new Cartesian2(1, 0));
         });
     });
+});
 });

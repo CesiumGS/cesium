@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/QuaternionSpline',
         'Core/Cartesian3',
         'Core/Math',
@@ -8,7 +8,9 @@ defineSuite([
         Cartesian3,
         CesiumMath,
         Quaternion) {
-    'use strict';
+        'use strict';
+
+describe('Core/QuaternionSpline', function() {
 
     var points;
     var times;
@@ -127,4 +129,5 @@ defineSuite([
         expect(actual).toBe(result);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
+});
 });

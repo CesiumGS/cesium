@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/TimeIntervalCollectionPositionProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
@@ -14,7 +14,9 @@ defineSuite([
         TimeInterval,
         TimeIntervalCollection,
         PositionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/TimeIntervalCollectionPositionProperty', function() {
 
     it('default constructor has expected values', function() {
         var property = new TimeIntervalCollectionPositionProperty();
@@ -233,4 +235,5 @@ defineSuite([
         property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
     });
+});
 });

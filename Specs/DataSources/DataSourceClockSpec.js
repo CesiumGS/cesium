@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/DataSourceClock',
         'Core/ClockRange',
         'Core/ClockStep',
@@ -8,7 +8,9 @@ defineSuite([
         ClockRange,
         ClockStep,
         JulianDate) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/DataSourceClock', function() {
 
     it('merge assigns unassigned properties', function() {
         var source = new DataSourceClock();
@@ -118,4 +120,5 @@ defineSuite([
           expect(clock.clockStep).toEqual(ClockStep.SYSTEM_CLOCK_MULTIPLIER);
           expect(clock.multiplier).toEqual(1.0);
     });
+});
 });

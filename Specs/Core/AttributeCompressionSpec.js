@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/AttributeCompression',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -12,7 +12,9 @@ defineSuite([
         Cartesian4,
         defined,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/AttributeCompression', function() {
 
     var negativeUnitZ = new Cartesian3(0.0, 0.0, -1.0);
     it('oct decode(0, 0)', function() {
@@ -741,4 +743,5 @@ defineSuite([
             AttributeCompression.zigZagDeltaDecode(new Uint16Array(10), new Uint16Array(10), new Uint16Array(11));
         }).toThrowDeveloperError();
     });
+});
 });

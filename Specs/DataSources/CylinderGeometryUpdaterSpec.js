@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/CylinderGeometryUpdater',
         'Core/Cartesian3',
         'Core/Color',
@@ -38,7 +38,9 @@ defineSuite([
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CylinderGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -293,3 +295,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(CylinderGeometryUpdater, 'cylinder', createDynamicCylinder, getScene);
 }, 'WebGL');
+});

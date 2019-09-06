@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'DataSources/CallbackProperty',
         'Core/JulianDate'
     ], function(
         CallbackProperty,
         JulianDate) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CallbackProperty', function() {
 
     var time = JulianDate.now();
 
@@ -73,4 +75,5 @@ defineSuite([
         }, true);
         expect(left.equals(right)).toEqual(false);
     });
+});
 });

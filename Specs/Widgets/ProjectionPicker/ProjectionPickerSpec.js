@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Widgets/ProjectionPicker/ProjectionPicker',
         'Core/FeatureDetection',
         'Specs/createScene',
@@ -8,7 +8,9 @@ defineSuite([
         FeatureDetection,
         createScene,
         DomEventSimulator) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/ProjectionPicker/ProjectionPicker', function() {
 
     var scene;
 
@@ -125,3 +127,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

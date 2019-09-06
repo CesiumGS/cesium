@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Renderer/RenderState',
         'Core/WebGLConstants',
         'Core/WindingOrder',
@@ -10,7 +10,9 @@ defineSuite([
         WindingOrder,
         ContextLimits,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/RenderState', function() {
 
     var context;
 
@@ -834,3 +836,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

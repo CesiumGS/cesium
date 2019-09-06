@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/VelocityOrientationProperty',
         'Core/Cartesian3',
         'Core/Ellipsoid',
@@ -20,7 +20,9 @@ defineSuite([
         Transforms,
         CallbackProperty,
         SampledPositionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/VelocityOrientationProperty', function() {
 
     var time = JulianDate.now();
 
@@ -201,4 +203,5 @@ defineSuite([
             property.getValue();
         }).toThrowDeveloperError();
     });
+});
 });
