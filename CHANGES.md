@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.62 - 2019-10-??
+
+##### Fixes :wrench:
+* Documentation improvements: DataSource API, Primitive API: fixes typos, bad documentation, bad examples. [#8045](https://github.com/AnalyticalGraphicsInc/cesium/pull/8045)
+
 ### 1.61 - 2019-09-03
 
 ##### Additions :tada:
