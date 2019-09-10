@@ -989,6 +989,7 @@ define([
                 }
 
                 var regex = /tileset\.json/;
+                that._isOct = that._tilingScheme.type === 'oct';
                 var rootSubtreeUrls = that.getRootSubtreeUrls();
                 //  TODO: support processing all root subtrees at the start
                 var subtreeUrl = that._url.replace(regex, rootSubtreeUrls[0]);
@@ -1014,8 +1015,6 @@ define([
                         content: undefined,
                         refine: tilingScheme.refine,
                     };
-
-                    that._isOct = tilingScheme.type === 'oct';
 
                     // that._root = that.updateTilesetFromLayerJson(resource, subtreeArrayBuffer);
                     that._root = that.updateTilesetFromSubtree(resource, subtreeArrayBuffer, rootKey);
@@ -1902,8 +1901,9 @@ define([
         var subtreeLevels = this._tilingScheme.subtreeLevels;
         var subtreeLevels0Indexed = subtreeLevels -  1;
         var subtreeRootLevel = Math.floor(level / subtreeLevels0Indexed);
-        var onLastLevel = ((level % subtreeLevels) === 0) && (level !== 0);
+        var onLastLevel = (level % subtreeLevels0Indexed) === 0 && (level !== 0) && (subtreeRootLevel !== 0);
         subtreeRootLevel -= onLastLevel ? 1 : 0; // Because there is overlap between subtree roots and their parents last level, take the previous subtree when on the overlap level
+        subtreeRootLevel = Math.max(subtreeRootLevel, this._tilingScheme.roots[0][0]);
         var subtreeLevel = level - subtreeRootLevel;
         // var subtreeRootKey = {
         //     d: subtreeRootLevel,
@@ -2036,17 +2036,21 @@ define([
         // The dim for each direction on this level in teh subtree
         var subteeLevelDim = (1 << levelDiff);
         // Once we have max index, use to get to min index
-        var toMinIndex = subteeLevelDim - 1;
-        var maxX = (subtreeRootX << levelDiff);
-        var maxY = (subtreeRootY << levelDiff);
-        var minX = maxX - toMinIndex;
-        var minY = maxY - toMinIndex;
+        // var toMinIndex = subteeLevelDim - 1;
+        // var maxX = (subtreeRootX << levelDiff);
+        // var maxY = (subtreeRootY << levelDiff);
+        // var minX = maxX - toMinIndex;
+        // var minY = maxY - toMinIndex;
+        // var maxZ = (subtreeRootZ << levelDiff);
+        // var minZ = isOct ? (maxZ - toMinIndex) : 0;
 
-
-        // var minZ = isOct ? Number.MAX_VALUE : 0;
-        // var maxZ = 0;
-        var maxZ = (subtreeRootZ << levelDiff);
-        var minZ = isOct ? (maxZ - toMinIndex) : 0;
+        var toMaxIndex = subteeLevelDim - 1;
+        var minX = (subtreeRootX << levelDiff);
+        var minY = (subtreeRootY << levelDiff);
+        var minZ = (subtreeRootZ << levelDiff);
+        var maxX = minX + toMaxIndex;
+        var maxY = minY + toMaxIndex;
+        var maxZ = isOct ? (minZ + toMaxIndex) : 0;
 
         return {
             startX: minX,
@@ -2203,6 +2207,7 @@ define([
         var startZ = ranges.startZ;
         var endZ = ranges.endZ;
         var tilesetRoot = defined(this._root) ? this._root : rootTile
+        var foundRoot = false;
 
         // Not sure what the points of this is again (over the else which just pushes the rootTile)
         if (!hasParent) {
@@ -2215,29 +2220,44 @@ define([
             // for example available check just takes the subtree array (get it if you don't have it, don't do inner loop map lookup)
             // and  indices, then go find the bit or byte
             // or have two versions where one is subtree based and another is tree based
-            for (z = startZ; z <= endZ; ++z) {
-                for (y = startY; y <= endY; ++y) {
-                    for (x = startX; x <= endX; ++x) {
-                        if (!this.isTileAvailableTreeIndex(x, y, z, level)) {
-                            continue;
+            while (!foundRoot) {
+                for (z = startZ; z <= endZ; ++z) {
+                    for (y = startY; y <= endY; ++y) {
+                        for (x = startX; x <= endX; ++x) {
+                            if (!this.isTileAvailableTreeIndex(x, y, z, level)) {
+                                continue;
+                            }
+                            foundRoot =  true;
+                            ++statistics.numberOfTilesTotal;
+
+                            // TODO: the zyx key isnt consitant (though probably more desirable)
+                            uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+                            tileInfo = {
+                                boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
+                                geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
+                                content: {uri: uri},
+                                key: new Cartesian4(x, y, z, level),
+                                refine: tilingScheme.refine
+                            };
+
+                            childTile = new Cesium3DTile(this, resource, tileInfo, tile);
+                            tile.children.push(childTile);
+                            childTile._depth =  childTile._depth + 1;
+                            stack.push(childTile);
                         }
-                        ++statistics.numberOfTilesTotal;
-
-                        // TODO: the zyx key isnt consitant (though probably more desirable)
-                        uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
-                        tileInfo = {
-                            boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
-                            geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
-                            content: {uri: uri},
-                            key: new Cartesian4(x, y, z, level),
-                            refine: tilingScheme.refine
-                        };
-
-                        childTile = new Cesium3DTile(this, resource, tileInfo, tile);
-                        tile.children.push(childTile);
-                        childTile._depth =  childTile._depth + 1;
-                        stack.push(childTile);
                     }
+                }
+
+                //update loop bounds and level if haven't found yet
+                if (!foundRoot) {
+                    level = level + 1;
+                    ranges = this.getTreeRangeForLevel(subtreeRootKey, level);
+                    startX = ranges.startX;
+                    endX = ranges.endX;
+                    startY = ranges.startY;
+                    endY = ranges.endY;
+                    startZ = ranges.startZ;
+                    endZ = ranges.endZ;
                 }
             }
         } else {

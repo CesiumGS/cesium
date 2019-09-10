@@ -1,2 +1,5 @@
 unpack the compressed bit array into u8 array? i.e. 0x1 or 0x0 at each index?
 Probably since the conversion would be in an inner loop
+
+the start x and y is the right shift 
+
