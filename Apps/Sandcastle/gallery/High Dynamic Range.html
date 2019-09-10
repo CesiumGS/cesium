@@ -30,13 +30,13 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    terrainProvider: Cesium.createWorldTerrain(),
+    terrainProvider : Cesium.createWorldTerrain(),
     shadows : true,
 });
 
 viewer.scene.camera.setView({
-    destination: new Cesium.Cartesian3(-1915097.7863741855, -4783356.851539908, 3748887.43462683),
-    orientation: new Cesium.HeadingPitchRoll(6.166004548388564, -0.043242401760068994, 0.002179961955988574),
+    destination : new Cesium.Cartesian3(-1915097.7863741855, -4783356.851539908, 3748887.43462683),
+    orientation : new Cesium.HeadingPitchRoll(6.166004548388564, -0.043242401760068994, 0.002179961955988574),
     endTransform : Cesium.Matrix4.IDENTITY
 });
 
@@ -61,7 +61,7 @@ var entity = viewer.entities.add({
     orientation : orientation,
     model : {
         uri : url,
-        scale: scale,
+        scale : scale,
     }
 });
 //Sandcastle_End
