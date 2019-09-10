@@ -275,8 +275,8 @@ define([
                     }
 
                     distances = boundingVolume.computePlaneDistances(position, direction, distances);
-                    near = Math.min(near, distances.start);
-                    far = Math.max(far, distances.stop);
+                    near = isNaN(distances.start) ? near : Math.min(near, distances.start);
+                    far = isNaN(distances.stop) ? far : Math.max(far, distances.stop);
 
                     // Compute a tight near and far plane for commands that receive shadows. This helps compute
                     // good splits for cascaded shadow maps. Ignore commands that exceed the maximum distance.
