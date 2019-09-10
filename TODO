@@ -1,0 +1,2 @@
+should available key be the d/x/y/z array or the d/x/y/z string?
+unpack the compressed bit array into u8 array? i.e. 0x1 or 0x0 at each index?
