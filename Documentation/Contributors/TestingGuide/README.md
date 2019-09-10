@@ -14,7 +14,7 @@ All new code should have 100% code coverage and should pass all tests.  Always r
    * [Run Only WebGL Tests](#run-only-webgl-tests)
    * [Run Only Non-WebGL Tests](#run-only-non-webgl-tests)
    * [Run All Tests against Combined File (Run All Tests against Combined File with Debug Code Removed)]()
-   * [Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
+   * [Run All Tests with Coverage](#run-all-tests-against-combined-file-run-all-tests-against-combined-file-with-debug-code-removed)
    * [Running Tests on the Command Line with Karma](#running-tests-on-the-command-line-with-karma)
 * [Testing Previous Versions of CesiumJS](#testing-previous-versions-of-cesium)
 * [`testfailure` Label for Issues](#testfailure-label-for-issues)
@@ -108,25 +108,25 @@ The **Run All Tests against Combined File with Debug Code Removed** is the same 
 
 See the [Build Guide](https://github.com/AnalyticalGraphicsInc/cesium/blob/master/Documentation/Contributors/BuildGuide/README.md#build-scripts) for all the CesiumJS build options.
 
-### Run All Tests with Code Coverage (Build 'instrumentForCoverage' First)
+## Run Coverage
 
-[JSCoverage](http://siliconforks.com/jscoverage/) is used for code coverage.  It is especially important to have outstanding code coverage since JavaScript doesn't have a compiler and linker to catch early errors.
+We use [istanbul](https://istanbul.js.org/) via [karma-coverage](https://github.com/karma-runner/karma-coverage) to generate code coverage reports. It is especially important to have outstanding code coverage since JavaScript doesn't have a compiler and linker to catch early errors.
 
-To run code coverage, first create a build of CesiumJS that is instrumented for coverage by running `npm run instrumentForCoverage`.  Currently, this is Windows only.
+To generate a coverage report, run: `npm run coverage`. This will place a report inside of the `Build/Coverage/<browser>` folder and open your default browser with the result.
 
-Then use this test option to run the tests with code coverage.  Click on the `Summary` tab to see the total code coverage and coverage for each individual source file.
+You'll see a source tree that matches Cesium's own code layout. Each directory shows aggregated results for all files it contains.
 
 ![](4.jpg)
 
-Click on a file to see line-by-line coverage for just that file.  For example, here is `AssociativeArray`:
+Click on a directory to see results for each file in that directory.  Click on a specific file to see line-by-line coverage for just that file.  For example, here is `Core/AssociativeArray`:
 
 ![](5.jpg)
 
-In the left margin, green indicates a line that was executed, and red indicates a line that was not.  Many lines, such as comments and semicolons, are not colored since they are not executable.
+In the left margin, green indicates how many times a line was executed. Many lines, such as comments and semicolons, are not colored since they are not executable.
 
 For the `contains` function above
    * `AssociativeArray.prototype.contains = function(key) {` is executed once when CesiumJS is loaded to assign the `contains` function to the `AssociativeArray`'s prototype.
-   * The `if` statement and return statement are executed 3,425 times.
+   * The `if` statement and return statement are executed 8,022 times.
    * The `throw` statement is not executed, which indicates that test coverage should be improved here.  We strive to test _all_ error conditions.
 
 When writing tests, do not confuse 100% code coverage with 100% tested.  For example, it is possible to have 100% code coverage without having any expectations.  Also consider the following code:

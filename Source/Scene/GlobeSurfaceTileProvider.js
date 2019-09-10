@@ -630,8 +630,12 @@ define([
             }
         }
 
+        if (!defined(boundingVolume)) {
+            return Intersect.INTERSECTING;
+        }
+
         var clippingPlanes = this._clippingPlanes;
-        if (defined(clippingPlanes) && clippingPlanes.enabled && defined(boundingVolume)) {
+        if (defined(clippingPlanes) && clippingPlanes.enabled) {
             var planeIntersection = clippingPlanes.computeIntersectionWithBoundingVolume(boundingVolume);
             tile.isClipped = (planeIntersection !== Intersect.INSIDE);
             if (planeIntersection === Intersect.OUTSIDE) {
@@ -639,12 +643,9 @@ define([
             }
         }
 
-        var intersection = Intersect.INTERSECTING;
-        if (defined(boundingVolume)) {
-            intersection = cullingVolume.computeVisibility(boundingVolume);
-            if (intersection === Intersect.OUTSIDE) {
-                return Visibility.NONE;
-            }
+        var intersection = cullingVolume.computeVisibility(boundingVolume);
+        if (intersection === Intersect.OUTSIDE) {
+            return Visibility.NONE;
         }
 
         var ortho3D = frameState.mode === SceneMode.SCENE3D && frameState.camera.frustum instanceof OrthographicFrustum;
@@ -1615,6 +1616,13 @@ define([
             --maxTextures;
         }
         if (showOceanWaves) {
+            --maxTextures;
+        }
+
+        if (defined(frameState.shadowState) && frameState.shadowState.shadowsEnabled) {
+            --maxTextures;
+        }
+        if (defined(tileProvider.clippingPlanes) && tileProvider.clippingPlanes.enabled) {
             --maxTextures;
         }
 

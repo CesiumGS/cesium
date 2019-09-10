@@ -38,7 +38,7 @@ define([
      * the tile tree.
      */
     function GeographicTilingScheme(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._rectangle = defaultValue(options.rectangle, Rectangle.MAX_VALUE);
