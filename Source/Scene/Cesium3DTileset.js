@@ -2096,6 +2096,7 @@ define([
 
         // Re-extract subtrees key from resource
         var subtree = new Uint8Array(subtreeArrayBuffer);
+        this._packedSubtrees = subtree[1] > 1;
         console.log('subtree Uint8Array length: ' + subtree.length);
         console.log('subtree key: ' + key);
 
