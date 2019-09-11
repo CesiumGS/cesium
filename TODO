@@ -2,10 +2,13 @@ unpack the compressed bit array into u8 array? i.e. 0x1 or 0x0 at each index?
 Probably since the unpacking would be in an inner loop
 
 make the branch then..
-[ ] make an implicit traversal class where we'll incrementally convert to the bresenham vision
+[ ] make implicit traversal/tileset/tile classes where we'll incrementally convert to the bresenham vision
     different branches will be different checkpoints
 [ ] build the arrays on load as well ... and toroidial subtree viewer?
 [ ] look at the sse calculation and see if theres a good way to pre-calc the sse spheres and sphere deltas
 [ ] try to traverse the subtree arrays in tree style (is this a waste of time?)
+    children are just subtree array indices and the subtree link?
+    tiles store the link to their subtree and their subtree index?
+
 [ ] incrementally move components to array style
 [ ] try to go full bresenham
