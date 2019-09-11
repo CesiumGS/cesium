@@ -1,13 +1,13 @@
 define([
         '../Core/Check',
-        '../Core/freezeObject',
-        './Cesium3DTilesetMostDetailedTraversal',
-        './Cesium3DTilesetTraversal'
+        '../Core/freezeObject'
+        // './Cesium3DTilesetMostDetailedTraversal',
+        // './Cesium3DTilesetTraversal'
     ], function(
         Check,
-        freezeObject,
-        Cesium3DTilesetMostDetailedTraversal,
-        Cesium3DTilesetTraversal) {
+        freezeObject) {
+        // Cesium3DTilesetMostDetailedTraversal,
+        // Cesium3DTilesetTraversal) {
     'use strict';
 
     /**
@@ -27,59 +27,65 @@ define([
         NUMBER_OF_PASSES : 8
     };
 
+    var Traversal = {
+        DEFAULT : 0,
+        MOST_DETAILED : 1,
+        NUMBER_OF_TRAVERSALS : 2
+    };
+
     var passOptions = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
 
     passOptions[Cesium3DTilePass.RENDER] = freezeObject({
-        traversal : Cesium3DTilesetTraversal,
+        traversal : Traversal.DEFAULT,
         isRender : true,
         requestTiles : true,
         ignoreCommands : false
     });
 
     passOptions[Cesium3DTilePass.PICK] = freezeObject({
-        traversal : Cesium3DTilesetTraversal,
+        traversal : Traversal.DEFAULT,
         isRender : false,
         requestTiles : false,
         ignoreCommands : false
     });
 
     passOptions[Cesium3DTilePass.SHADOW] = freezeObject({
-        traversal : Cesium3DTilesetTraversal,
+        traversal : Traversal.DEFAULT,
         isRender : false,
         requestTiles : true,
         ignoreCommands : false
     });
 
     passOptions[Cesium3DTilePass.PRELOAD] = freezeObject({
-        traversal : Cesium3DTilesetTraversal,
+        traversal : Traversal.DEFAULT,
         isRender : false,
         requestTiles : true,
         ignoreCommands : true
     });
 
     passOptions[Cesium3DTilePass.PRELOAD_FLIGHT] = freezeObject({
-        traversal : Cesium3DTilesetTraversal,
+        traversal : Traversal.DEFAULT,
         isRender : false,
         requestTiles : true,
         ignoreCommands : true
     });
 
     passOptions[Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK] = freezeObject({
-        traversal : Cesium3DTilesetTraversal,
+        traversal : Traversal.DEFAULT,
         isRender : false,
         requestTiles : true,
         ignoreCommands : true
     });
 
     passOptions[Cesium3DTilePass.MOST_DETAILED_PRELOAD] = freezeObject({
-        traversal : Cesium3DTilesetMostDetailedTraversal,
+        traversal : Traversal.MOST_DETAILED,
         isRender : false,
         requestTiles : true,
         ignoreCommands : true
     });
 
     passOptions[Cesium3DTilePass.MOST_DETAILED_PICK] = freezeObject({
-        traversal : Cesium3DTilesetMostDetailedTraversal,
+        traversal : Traversal.MOST_DETAILED,
         isRender : false,
         requestTiles : false,
         ignoreCommands : false

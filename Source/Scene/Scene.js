@@ -56,6 +56,7 @@ define([
         './Cesium3DTilePass',
         './Cesium3DTilePassState',
         './Cesium3DTileset',
+        './Cesium3DTilesetImplicit',
         './CreditDisplay',
         './DebugCameraPrimitive',
         './DepthPlane',
@@ -141,6 +142,7 @@ define([
         Cesium3DTilePass,
         Cesium3DTilePassState,
         Cesium3DTileset,
+        Cesium3DTilesetImplicit,
         CreditDisplay,
         DebugCameraPrimitive,
         DepthPlane,
@@ -3975,7 +3977,7 @@ define([
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
             if (primitive.show) {
-                if ((primitive instanceof Cesium3DTileset)) {
+                if ((primitive instanceof Cesium3DTileset) || (primitive instanceof Cesium3DTilesetImplicit)) {
                     if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
                         tilesets.push(primitive);
                     }

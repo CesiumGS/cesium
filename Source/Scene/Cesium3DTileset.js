@@ -312,6 +312,11 @@ define([
         this._minimumPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, reverseScreenSpaceError: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTilePropertyName);
 
+        this._traversals = [
+            Cesium3DTilesetTraversal,
+            Cesium3DTilesetMostDetailedTraversal
+        ];
+
         /**
          * Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
          *
@@ -3187,7 +3192,8 @@ define([
         // Update any tracked min max values
         resetMinimumMaximum(tileset);
 
-        var ready = passOptions.traversal.selectTiles(tileset, frameState);
+        var traversal = tileset._traversals[passOptions.traversal];
+        var ready = traversal.selectTiles(tileset, frameState);
 
         if (passOptions.requestTiles) {
             requestTiles(tileset);

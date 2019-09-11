@@ -28,7 +28,7 @@ define([
         '../Renderer/RenderState',
         '../ThirdParty/when',
         './Axis',
-        './Cesium3DTile',
+        './Cesium3DTileImplicit',
         './Cesium3DTileColorBlendMode',
         './Cesium3DTileContentState',
         './Cesium3DTileOptimizations',
@@ -39,7 +39,7 @@ define([
         './Cesium3DTilesetHeatmap',
         './Cesium3DTilesetMostDetailedTraversal',
         './Cesium3DTilesetStatistics',
-        './Cesium3DTilesetTraversal',
+        './Cesium3DTilesetTraversalImplicit',
         './Cesium3DTileStyleEngine',
         './ClippingPlaneCollection',
         './LabelCollection',
@@ -81,7 +81,7 @@ define([
         RenderState,
         when,
         Axis,
-        Cesium3DTile,
+        Cesium3DTileImplicit,
         Cesium3DTileColorBlendMode,
         Cesium3DTileContentState,
         Cesium3DTileOptimizations,
@@ -92,7 +92,7 @@ define([
         Cesium3DTilesetHeatmap,
         Cesium3DTilesetMostDetailedTraversal,
         Cesium3DTilesetStatistics,
-        Cesium3DTilesetTraversal,
+        Cesium3DTilesetTraversalImplicit,
         Cesium3DTileStyleEngine,
         ClippingPlaneCollection,
         LabelCollection,
@@ -110,7 +110,7 @@ define([
      * A {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles tileset},
      * used for streaming massive heterogeneous 3D geospatial datasets.
      *
-     * @alias Cesium3DTileset
+     * @alias Cesium3DTilesetImplicit
      * @constructor
      *
      * @param {Object} options Object with the following properties:
@@ -131,11 +131,11 @@ define([
      * @param {Number} [options.dynamicScreenSpaceErrorFactor=4.0] A factor used to increase the computed dynamic screen space error.
      * @param {Number} [options.dynamicScreenSpaceErrorHeightFalloff=0.25] A ratio of the tileset's height at which the density starts to falloff.
      * @param {Number} [options.progressiveResolutionHeightFraction=0.3] Optimization option. If between (0.0, 0.5], tiles at or above the screen space error for the reduced screen resolution of <code>progressiveResolutionHeightFraction*screenHeight</code> will be prioritized first. This can help get a quick layer of tiles down while full resolution tiles continue to load.
-     * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the {@link Cesium3DTileset#foveatedConeSize} are loaded.
-     * @param {Number} [options.foveatedConeSize=0.1] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and their screen space error. This is controlled by {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, disabling the effect.
-     * @param {Number} [options.foveatedMinimumScreenSpaceErrorRelaxation=0.0] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationCallback}.
-     * @param {Cesium3DTileset~foveatedInterpolationCallback} [options.foveatedInterpolationCallback=Math.lerp] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}
-     * @param {Number} [options.foveatedTimeDelay=0.2] Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. This time delay prevents requesting tiles around the edges of the screen when the camera is moving. Setting this to 0.0 will immediately request all tiles in any given view.
+     * @param {Boolean} [options.foveatedScreenSpaceError=true] Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the screen space error for tiles around the edge of the screen. Screen space error returns to normal once all the tiles in the center of the screen as determined by the {@link Cesium3DTilesetImplicit#foveatedConeSize} are loaded.
+     * @param {Number} [options.foveatedConeSize=0.1] Optimization option. Used when {@link Cesium3DTilesetImplicit#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred. Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and their screen space error. This is controlled by {@link Cesium3DTilesetImplicit#foveatedInterpolationCallback} and {@link Cesium3DTilesetImplicit#foveatedMinimumScreenSpaceErrorRelaxation}. Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, disabling the effect.
+     * @param {Number} [options.foveatedMinimumScreenSpaceErrorRelaxation=0.0] Optimization option. Used when {@link Cesium3DTilesetImplicit#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone. The screen space error will be raised starting with tileset value up to {@link Cesium3DTilesetImplicit#maximumScreenSpaceError} based on the provided {@link Cesium3DTilesetImplicit#foveatedInterpolationCallback}.
+     * @param {Cesium3DTilesetImplicit~foveatedInterpolationCallback} [options.foveatedInterpolationCallback=Math.lerp] Optimization option. Used when {@link Cesium3DTilesetImplicit#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTilesetImplicit#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTilesetImplicit#maximumScreenSpaceError}
+     * @param {Number} [options.foveatedTimeDelay=0.2] Optimization option. Used when {@link Cesium3DTilesetImplicit#foveatedScreenSpaceError} is true to control how long in seconds to wait after the camera stops moving before deferred tiles start loading in. This time delay prevents requesting tiles around the edges of the screen when the camera is moving. Setting this to 0.0 will immediately request all tiles in any given view.
      * @param {Boolean} [options.skipLevelOfDetail=true] Optimization option. Determines if level of detail skipping should be applied during the traversal.
      * @param {Number} [options.baseScreenSpaceError=1024] When <code>skipLevelOfDetail</code> is <code>true</code>, the screen space error that must be reached before skipping levels of detail.
      * @param {Number} [options.skipScreenSpaceErrorFactor=16] When <code>skipLevelOfDetail</code> is <code>true</code>, a multiplier defining the minimum screen space error to skip. Used in conjunction with <code>skipLevels</code> to determine which tiles to load.
@@ -143,7 +143,7 @@ define([
      * @param {Boolean} [options.immediatelyLoadDesiredLevelOfDetail=false] When <code>skipLevelOfDetail</code> is <code>true</code>, only tiles that meet the maximum screen space error will ever be downloaded. Skipping factors are ignored and just the desired tiles are loaded.
      * @param {Boolean} [options.loadSiblings=false] When <code>skipLevelOfDetail</code> is <code>true</code>, determines whether siblings of visible tiles are always downloaded during traversal.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
-     * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTileset#classificationType} for details about restrictions and limitations.
+     * @param {ClassificationType} [options.classificationType] Determines whether terrain, 3D Tiles or both will be classified by this tileset. See {@link Cesium3DTilesetImplicit#classificationType} for details about restrictions and limitations.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The ellipsoid determining the size and shape of the globe.
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
@@ -166,13 +166,13 @@ define([
      * @exception {DeveloperError} The tileset must be 3D Tiles version 0.0 or 1.0.
      *
      * @example
-     * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+     * var tileset = scene.primitives.add(new Cesium.Cesium3DTilesetImplicit({
      *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
      * }));
      *
      * @example
      * // Common setting for the skipLevelOfDetail optimization
-     * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+     * var tileset = scene.primitives.add(new Cesium.Cesium3DTilesetImplicit({
      *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
      *      skipLevelOfDetail : true,
      *      baseScreenSpaceError : 1024,
@@ -185,7 +185,7 @@ define([
      *
      * @example
      * // Common settings for the dynamicScreenSpaceError optimization
-     * var tileset = scene.primitives.add(new Cesium.Cesium3DTileset({
+     * var tileset = scene.primitives.add(new Cesium.Cesium3DTilesetImplicit({
      *      url : 'http://localhost:8002/tilesets/Seattle/tileset.json',
      *      dynamicScreenSpaceError : true,
      *      dynamicScreenSpaceErrorDensity : 0.00278,
@@ -250,7 +250,7 @@ define([
     ];
 
 
-    function Cesium3DTileset(options) {
+    function Cesium3DTilesetImplicit(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
@@ -311,6 +311,11 @@ define([
         this._maximumPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE, reverseScreenSpaceError: -Number.MAX_VALUE };
         this._minimumPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, reverseScreenSpaceError: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTilePropertyName);
+
+        this._traversals = [
+            Cesium3DTilesetTraversal,
+            Cesium3DTilesetMostDetailedTraversal
+        ];
 
         /**
          * Optimization option. Don't request tiles that will likely be unused when they come back because of the camera's movement.
@@ -391,7 +396,7 @@ define([
         /**
          * Optimization option. Prioritize loading tiles in the center of the screen by temporarily raising the
          * screen space error for tiles around the edge of the screen. Screen space error returns to normal once all
-         * the tiles in the center of the screen as determined by the {@link Cesium3DTileset#foveatedConeSize} are loaded.
+         * the tiles in the center of the screen as determined by the {@link Cesium3DTilesetImplicit#foveatedConeSize} are loaded.
          *
          * @type {Boolean}
          * @default true
@@ -403,12 +408,12 @@ define([
         /**
          * Gets a function that will update the foveated screen space error for a tile.
          *
-         * @type {Cesium3DTileset~foveatedInterpolationCallback} A callback to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}.
+         * @type {Cesium3DTilesetImplicit~foveatedInterpolationCallback} A callback to control how much to raise the screen space error for tiles outside the foveated cone, interpolating between {@link Cesium3DTilesetImplicit#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTilesetImplicit#maximumScreenSpaceError}.
          */
         this.foveatedInterpolationCallback = defaultValue(options.foveatedInterpolationCallback, CesiumMath.lerp);
 
         /**
-         * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control
+         * Optimization option. Used when {@link Cesium3DTilesetImplicit#foveatedScreenSpaceError} is true to control
          * how long in seconds to wait after the camera stops moving before deferred tiles start loading in.
          * This time delay prevents requesting tiles around the edges of the screen when the camera is moving.
          * Setting this to 0.0 will immediately request all tiles in any given view.
@@ -494,7 +499,7 @@ define([
         this.colorBlendMode = Cesium3DTileColorBlendMode.HIGHLIGHT;
 
         /**
-         * Defines the value used to linearly interpolate between the source color and feature color when the {@link Cesium3DTileset#colorBlendMode} is <code>MIX</code>.
+         * Defines the value used to linearly interpolate between the source color and feature color when the {@link Cesium3DTilesetImplicit#colorBlendMode} is <code>MIX</code>.
          * A value of 0.0 results in the source color while a value of 1.0 results in the feature color, with any value in-between
          * resulting in a mix of the source color and feature color.
          *
@@ -553,7 +558,7 @@ define([
          *     console.log('All tiles are loaded');
          * });
          *
-         * @see Cesium3DTileset#tilesLoaded
+         * @see Cesium3DTilesetImplicit#tilesLoaded
          */
         this.allTilesLoaded = new Event();
 
@@ -572,14 +577,14 @@ define([
          *     console.log('Initial tiles are loaded');
          * });
          *
-         * @see Cesium3DTileset#allTilesLoaded
+         * @see Cesium3DTilesetImplicit#allTilesLoaded
          */
         this.initialTilesLoaded = new Event();
 
         /**
          * The event fired to indicate that a tile's content was loaded.
          * <p>
-         * The loaded {@link Cesium3DTile} is passed to the event listener.
+         * The loaded {@link Cesium3DTileImplicit} is passed to the event listener.
          * </p>
          * <p>
          * This event is fired during the tileset traversal while the frame is being rendered
@@ -600,7 +605,7 @@ define([
         /**
          * The event fired to indicate that a tile's content was unloaded.
          * <p>
-         * The unloaded {@link Cesium3DTile} is passed to the event listener.
+         * The unloaded {@link Cesium3DTileImplicit} is passed to the event listener.
          * </p>
          * <p>
          * This event is fired immediately before the tile's content is unloaded while the frame is being
@@ -616,8 +621,8 @@ define([
          *     console.log('A tile was unloaded from the cache.');
          * });
          *
-         * @see Cesium3DTileset#maximumMemoryUsage
-         * @see Cesium3DTileset#trimLoadedTiles
+         * @see Cesium3DTilesetImplicit#maximumMemoryUsage
+         * @see Cesium3DTilesetImplicit#trimLoadedTiles
          */
         this.tileUnload = new Event();
 
@@ -648,7 +653,7 @@ define([
          * This event fires once for each visible tile in a frame.  This can be used to manually
          * style a tileset.
          * <p>
-         * The visible {@link Cesium3DTile} is passed to the event listener.
+         * The visible {@link Cesium3DTileImplicit} is passed to the event listener.
          * </p>
          * <p>
          * This event is fired during the tileset traversal while the frame is being rendered
@@ -700,7 +705,7 @@ define([
         /**
          * The screen space error that must be reached before skipping levels of detail.
          * <p>
-         * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.
+         * Only used when {@link Cesium3DTilesetImplicit#skipLevelOfDetail} is <code>true</code>.
          * </p>
          *
          * @type {Number}
@@ -713,7 +718,7 @@ define([
          * For example, if a tile has screen space error of 100, no tiles will be loaded unless they
          * are leaves or have a screen space error <code><= 100 / skipScreenSpaceErrorFactor</code>.
          * <p>
-         * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.
+         * Only used when {@link Cesium3DTilesetImplicit#skipLevelOfDetail} is <code>true</code>.
          * </p>
          *
          * @type {Number}
@@ -725,7 +730,7 @@ define([
          * Constant defining the minimum number of levels to skip when loading tiles. When it is 0, no levels are skipped.
          * For example, if a tile is level 1, no tiles will be loaded unless they are at level greater than 2.
          * <p>
-         * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.
+         * Only used when {@link Cesium3DTilesetImplicit#skipLevelOfDetail} is <code>true</code>.
          * </p>
          *
          * @type {Number}
@@ -737,7 +742,7 @@ define([
          * When true, only tiles that meet the maximum screen space error will ever be downloaded.
          * Skipping factors are ignored and just the desired tiles are loaded.
          * <p>
-         * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.
+         * Only used when {@link Cesium3DTilesetImplicit#skipLevelOfDetail} is <code>true</code>.
          * </p>
          *
          * @type {Boolean}
@@ -749,7 +754,7 @@ define([
          * Determines whether siblings of visible tiles are always downloaded during traversal.
          * This may be useful for ensuring that tiles are already available when the viewer turns left/right.
          * <p>
-         * Only used when {@link Cesium3DTileset#skipLevelOfDetail} is <code>true</code>.
+         * Only used when {@link Cesium3DTilesetImplicit#skipLevelOfDetail} is <code>true</code>.
          * </p>
          *
          * @type {Boolean}
@@ -777,7 +782,7 @@ define([
 
         /**
          * The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
-         * This is used when {@link Cesium3DTileset#specularEnvironmentMaps} and {@link Cesium3DTileset#sphericalHarmonicCoefficients} are not defined.
+         * This is used when {@link Cesium3DTilesetImplicit#specularEnvironmentMaps} and {@link Cesium3DTilesetImplicit#sphericalHarmonicCoefficients} are not defined.
          *
          * @type Number
          *
@@ -796,7 +801,7 @@ define([
          *
          * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
          * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
-         * supplied to {@link Cesium3DTileset#specularEnvironmentMaps}.
+         * supplied to {@link Cesium3DTilesetImplicit#specularEnvironmentMaps}.
          *
          * @type {Cartesian3[]}
          * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
@@ -809,7 +814,7 @@ define([
          *
          * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {String}
-         * @see Cesium3DTileset#sphericalHarmonicCoefficients
+         * @see Cesium3DTilesetImplicit#sphericalHarmonicCoefficients
          */
         this.specularEnvironmentMaps = options.specularEnvironmentMaps;
 
@@ -956,7 +961,7 @@ define([
                 that._url = resource.url;
                 that._basePath = basePath;
 
-                return Cesium3DTileset.loadJson(resource);
+                return Cesium3DTilesetImplicit.loadJson(resource);
             })
             .then(function(result) {
                 tilesetJson = result;
@@ -994,9 +999,9 @@ define([
                 //  TODO: support processing all root subtrees at the start
                 var subtreeUrl = that._url.replace(regex, rootSubtreeUrls[0]);
                 // var subtreeResource = Resource.createIfNeeded(subtreeUrl);
-                // return Cesium3DTileset.loadJson(subtreeResource);
+                // return Cesium3DTilesetImplicit.loadJson(subtreeResource);
                 rootKey = that._tilingScheme.roots[0];
-                return Cesium3DTileset.loadArrayBuffer(subtreeUrl);
+                return Cesium3DTilesetImplicit.loadArrayBuffer(subtreeUrl);
             })
             .then(function(result) {
                 var subtreeArrayBuffer = result;
@@ -1045,7 +1050,7 @@ define([
             });
     }
 
-    defineProperties(Cesium3DTileset.prototype, {
+    defineProperties(Cesium3DTilesetImplicit.prototype, {
         /**
          * Gets the tileset's asset object property, which contains metadata about the tileset.
          * <p>
@@ -1053,18 +1058,18 @@ define([
          * in the 3D Tiles spec for the full set of properties.
          * </p>
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Object}
          * @readonly
          *
-         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.
          */
         asset : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this.ready) {
-                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -1074,7 +1079,7 @@ define([
         /**
          * The {@link ClippingPlaneCollection} used to selectively disable rendering the tileset.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {ClippingPlaneCollection}
          */
@@ -1094,12 +1099,12 @@ define([
          * in the 3D Tiles spec for the full set of properties.
          * </p>
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Object}
          * @readonly
          *
-         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.
          *
          * @example
          * console.log('Maximum building height: ' + tileset.properties.height.maximum);
@@ -1112,7 +1117,7 @@ define([
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this.ready) {
-                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -1122,9 +1127,9 @@ define([
 
         /**
          * When <code>true</code>, the tileset's root tile is loaded and the tileset is ready to render.
-         * This is set to <code>true</code> right before {@link Cesium3DTileset#readyPromise} is resolved.
+         * This is set to <code>true</code> right before {@link Cesium3DTilesetImplicit#readyPromise} is resolved.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -1143,9 +1148,9 @@ define([
          * This promise is resolved at the end of the frame before the first frame the tileset is rendered in.
          * </p>
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
-         * @type {Promise.<Cesium3DTileset>}
+         * @type {Promise.<Cesium3DTilesetImplicit>}
          * @readonly
          *
          * @example
@@ -1169,14 +1174,14 @@ define([
          * When <code>true</code>, all tiles that meet the screen space error this frame are loaded. The tileset is
          * completely loaded for this view.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Boolean}
          * @readonly
          *
          * @default false
          *
-         * @see Cesium3DTileset#allTilesLoaded
+         * @see Cesium3DTilesetImplicit#allTilesLoaded
          */
         tilesLoaded : {
             get : function() {
@@ -1187,7 +1192,7 @@ define([
         /**
          * The url to a tileset JSON file.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {String}
          * @readonly
@@ -1201,7 +1206,7 @@ define([
         /**
          * The base path that non-absolute paths in tileset JSON file are relative to.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {String}
          * @readonly
@@ -1209,7 +1214,7 @@ define([
          */
         basePath : {
             get : function() {
-                deprecationWarning('Cesium3DTileset.basePath', 'Cesium3DTileset.basePath has been deprecated. All tiles are relative to the url of the tileset JSON file that contains them. Use the url property instead.');
+                deprecationWarning('Cesium3DTilesetImplicit.basePath', 'Cesium3DTilesetImplicit.basePath has been deprecated. All tiles are relative to the url of the tileset JSON file that contains them. Use the url property instead.');
                 return this._basePath;
             }
         },
@@ -1223,13 +1228,13 @@ define([
          * appearance of the tileset to its default when no style was applied.
          * </p>
          * <p>
-         * The style is applied to a tile before the {@link Cesium3DTileset#tileVisible}
+         * The style is applied to a tile before the {@link Cesium3DTilesetImplicit#tileVisible}
          * event is raised, so code in <code>tileVisible</code> can manually set a feature's
          * properties (e.g. color and show) after the style is applied. When
          * a new style is assigned any manually set properties are overwritten.
          * </p>
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Cesium3DTileStyle}
          *
@@ -1274,7 +1279,7 @@ define([
          * Higher values provide better performance but lower visual quality.
          * </p>
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Number}
          * @default 16
@@ -1306,20 +1311,20 @@ define([
          * </p>
          * <p>
          * If tiles sized more than <code>maximumMemoryUsage</code> are needed
-         * to meet the desired screen space error, determined by {@link Cesium3DTileset#maximumScreenSpaceError},
+         * to meet the desired screen space error, determined by {@link Cesium3DTilesetImplicit#maximumScreenSpaceError},
          * for the current view, then the memory usage of the tiles loaded will exceed
          * <code>maximumMemoryUsage</code>.  For example, if the maximum is 256 MB, but
          * 300 MB of tiles are needed to meet the screen space error, then 300 MB of tiles may be loaded.  When
          * these tiles go out of view, they will be unloaded.
          * </p>
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Number}
          * @default 512
          *
          * @exception {DeveloperError} <code>maximumMemoryUsage</code> must be greater than or equal to zero.
-         * @see Cesium3DTileset#totalMemoryUsageInBytes
+         * @see Cesium3DTilesetImplicit#totalMemoryUsageInBytes
          */
         maximumMemoryUsage : {
             get : function() {
@@ -1337,18 +1342,18 @@ define([
         /**
          * The root tile.
          *
-         * @memberOf Cesium3DTileset.prototype
+         * @memberOf Cesium3DTilesetImplicit.prototype
          *
-         * @type {Cesium3DTile}
+         * @type {Cesium3DTileImplicit}
          * @readonly
          *
-         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.
          */
         root : {
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this.ready) {
-                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -1359,15 +1364,15 @@ define([
         /**
          * The tileset's bounding sphere.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {BoundingSphere}
          * @readonly
          *
-         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.
          *
          * @example
-         * var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTileset({
+         * var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTilesetImplicit({
          *     url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
          * }));
          *
@@ -1380,7 +1385,7 @@ define([
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this.ready) {
-                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -1392,7 +1397,7 @@ define([
         /**
          * A 4x4 transformation matrix that transforms the entire tileset.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Matrix4}
          * @default Matrix4.IDENTITY
@@ -1419,7 +1424,7 @@ define([
         /**
          * Returns the time, in milliseconds, since the tileset was loaded and first updated.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Number}
          * @readonly
@@ -1435,12 +1440,12 @@ define([
          * geometry, texture, and batch table textures of loaded tiles. For point clouds, this value also
          * includes per-point metadata.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Number}
          * @readonly
          *
-         * @see Cesium3DTileset#maximumMemoryUsage
+         * @see Cesium3DTilesetImplicit#maximumMemoryUsage
          */
         totalMemoryUsageInBytes : {
             get : function() {
@@ -1504,7 +1509,7 @@ define([
          * </ul>
          * </p>
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {ClassificationType}
          * @default undefined
@@ -1521,7 +1526,7 @@ define([
         /**
          * Gets an ellipsoid describing the shape of the globe.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Ellipsoid}
          * @readonly
@@ -1533,11 +1538,11 @@ define([
         },
 
         /**
-         * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred.
-         * Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and {@link Cesium3DTileset#foveatedInterpolationCallback} and {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation}.
+         * Optimization option. Used when {@link Cesium3DTilesetImplicit#foveatedScreenSpaceError} is true to control the cone size that determines which tiles are deferred.
+         * Tiles that are inside this cone are loaded immediately. Tiles outside the cone are potentially deferred based on how far outside the cone they are and {@link Cesium3DTilesetImplicit#foveatedInterpolationCallback} and {@link Cesium3DTilesetImplicit#foveatedMinimumScreenSpaceErrorRelaxation}.
          * Setting this to 0.0 means the cone will be the line formed by the camera position and its view direction. Setting this to 1.0 means the cone encompasses the entire field of view of the camera, essentially disabling the effect.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Number}
          * @default 0.3
@@ -1557,10 +1562,10 @@ define([
         },
 
         /**
-         * Optimization option. Used when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone.
-         * The screen space error will be raised starting with this value up to {@link Cesium3DTileset#maximumScreenSpaceError} based on the provided {@link Cesium3DTileset#foveatedInterpolationCallback}.
+         * Optimization option. Used when {@link Cesium3DTilesetImplicit#foveatedScreenSpaceError} is true to control the starting screen space error relaxation for tiles outside the foveated cone.
+         * The screen space error will be raised starting with this value up to {@link Cesium3DTilesetImplicit#maximumScreenSpaceError} based on the provided {@link Cesium3DTilesetImplicit#foveatedInterpolationCallback}.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Number}
          * @default 0.0
@@ -1583,9 +1588,9 @@ define([
          * Returns the <code>extras</code> property at the top-level of the tileset JSON, which contains application specific metadata.
          * Returns <code>undefined</code> if <code>extras</code> does not exist.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
-         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.
          *
          * @type {*}
          * @readonly
@@ -1596,7 +1601,7 @@ define([
             get : function() {
                 //>>includeStart('debug', pragmas.debug);
                 if (!this.ready) {
-                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTileset.readyPromise or wait for Cesium3DTileset.ready to be true.');
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.');
                 }
                 //>>includeEnd('debug');
 
@@ -1608,7 +1613,7 @@ define([
          * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
          * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
          *
-         * @memberof Cesium3DTileset.prototype
+         * @memberof Cesium3DTilesetImplicit.prototype
          *
          * @type {Cartesian2}
          * @default Cartesian2(1.0, 1.0)
@@ -1636,7 +1641,7 @@ define([
      * @param {Resource|String} tilesetUrl The url of the json file to be fetched
      * @returns {Promise.<Object>} A promise that resolves with the fetched json data
      */
-    Cesium3DTileset.loadJson = function(tilesetUrl) {
+    Cesium3DTilesetImplicit.loadJson = function(tilesetUrl) {
         var resource = Resource.createIfNeeded(tilesetUrl);
         return resource.fetchJson();
     };
@@ -1647,7 +1652,7 @@ define([
      * @param {Resource|String} tilesetUrl The url of the json file to be fetched
      * @returns {Promise.<Object>} A promise that resolves with the fetched json data
      */
-    Cesium3DTileset.loadArrayBuffer = function(tilesetUrl) {
+    Cesium3DTilesetImplicit.loadArrayBuffer = function(tilesetUrl) {
         var resource = Resource.createIfNeeded(tilesetUrl);
         return resource.fetchArrayBuffer();
     };
@@ -1656,7 +1661,7 @@ define([
     /**
      * Returns an array of the root subtree urls
      */
-    Cesium3DTileset.prototype.getRootSubtreeUrls = function() {
+    Cesium3DTilesetImplicit.prototype.getRootSubtreeUrls = function() {
         var tilingScheme =  this._tilingScheme;
         var isOct = this._isOct;
         var rootKeys = tilingScheme.roots;
@@ -1678,10 +1683,10 @@ define([
 
 
     /**
-     * Marks the tileset's {@link Cesium3DTileset#style} as dirty, which forces all
+     * Marks the tileset's {@link Cesium3DTilesetImplicit#style} as dirty, which forces all
      * features to re-evaluate the style in the next frame each is visible.
      */
-    Cesium3DTileset.prototype.makeStyleDirty = function() {
+    Cesium3DTilesetImplicit.prototype.makeStyleDirty = function() {
         this._styleEngine.makeDirty();
     };
 
@@ -1689,7 +1694,7 @@ define([
     /**
      * update _available
      */
-    Cesium3DTileset.prototype.updateAvailable = function(available) {
+    Cesium3DTilesetImplicit.prototype.updateAvailable = function(available) {
         // If we don't have one yet just assign and return
         if (!defined(this._available)) {
             this._available = available;
@@ -1717,7 +1722,7 @@ define([
         }
     }
 
-    Cesium3DTileset.prototype.deriveImplicitBounds = function(rootTile, x, y, z, level) {
+    Cesium3DTilesetImplicit.prototype.deriveImplicitBounds = function(rootTile, x, y, z, level) {
         var tilingScheme = this._tilingScheme;
         var headCount = tilingScheme.headCount;
         var rootXCount = headCount[0];
@@ -1818,7 +1823,7 @@ define([
         return bounds;
     };
 
-    Cesium3DTileset.prototype.anyChildrenAvailable = function(parentX, parentY, parentZ, parentLevel) {
+    Cesium3DTilesetImplicit.prototype.anyChildrenAvailable = function(parentX, parentY, parentZ, parentLevel) {
         var isOct = this._isOct;
         var startX = parentX * 2;
         var startY = parentY * 2;
@@ -1845,7 +1850,7 @@ define([
         return false;
     };
 
-    Cesium3DTileset.prototype.anyChildrenAvailableSubtree = function(parentX, parentY, parentZ, parentLevel) {
+    Cesium3DTilesetImplicit.prototype.anyChildrenAvailableSubtree = function(parentX, parentY, parentZ, parentLevel) {
         var isOct = this._isOct;
         var startX = parentX * 2;
         var startY = parentY * 2;
@@ -1872,14 +1877,14 @@ define([
         return false;
     };
 
-    Cesium3DTileset.prototype.deriveGeometricErrorFromParent = function(parent, x, y, z, xTiles, yTiles) {
+    Cesium3DTilesetImplicit.prototype.deriveGeometricErrorFromParent = function(parent, x, y, z, xTiles, yTiles) {
         // TODO: fix this
         // var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailable(x, y, z, parent.key.w + 1);
         var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailableSubtree(x, y, z, parent.key.w + 1); // parent key depth + 1 is this tiles depth, we want to see if this tile has any children for seting gError to 0
         return anyChildrenAvailable ? (parent.geometricError / Math.sqrt(xTiles * yTiles)) : 0;
     };
 
-    Cesium3DTileset.prototype.getSubtreeRootKey = function(x, y, z, level) {
+    Cesium3DTilesetImplicit.prototype.getSubtreeRootKey = function(x, y, z, level) {
         // Given the xyz level find the nearest subtree root key
         var subtreeLevels = this._tilingScheme.subtreeLevels;
         var subtreeLevels0Indexed = subtreeLevels -  1;
@@ -1896,7 +1901,7 @@ define([
         return subtreeRootKey;
     };
 
-    Cesium3DTileset.prototype.getSubtreeRootAndTileKey = function(x, y, z, level) {
+    Cesium3DTilesetImplicit.prototype.getSubtreeRootAndTileKey = function(x, y, z, level) {
         // Given the xyz level find the nearest subtree root key
         var subtreeLevels = this._tilingScheme.subtreeLevels;
         var subtreeLevels0Indexed = subtreeLevels -  1;
@@ -1948,7 +1953,7 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.isTileAvailableTreeIndex = function(x, y, z, level) {
+    Cesium3DTilesetImplicit.prototype.isTileAvailableTreeIndex = function(x, y, z, level) {
         var isOct = this._isOct;
         var available = this._available;
         var result = this.getSubtreeRootAndTileKey(x, y, z, level);
@@ -1993,7 +1998,7 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.isTileAvailable = function(x, y, z, level) {
+    Cesium3DTilesetImplicit.prototype.isTileAvailable = function(x, y, z, level) {
         var isOct = this._isOct;
         var available = this._available;
         if (level > available.length - 1) {
@@ -2017,7 +2022,7 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.getTreeRangeForLevel = function(key, level) {
+    Cesium3DTilesetImplicit.prototype.getTreeRangeForLevel = function(key, level) {
         var subtreeLevelInTree = key[0];
         var levelDiff = level - subtreeLevelInTree;
         if (levelDiff < 0) {
@@ -2068,7 +2073,7 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.getRangeForLevel = function(level) {
+    Cesium3DTilesetImplicit.prototype.getRangeForLevel = function(level) {
         var ranges = this._available[level];
         var minX = Number.MAX_VALUE;
         var minY = Number.MAX_VALUE;
@@ -2108,7 +2113,7 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.updateTilesetFromSubtree = function(resource, subtreeArrayBuffer, subtreeRootKey, parentTile) {
+    Cesium3DTilesetImplicit.prototype.updateTilesetFromSubtree = function(resource, subtreeArrayBuffer, subtreeRootKey, parentTile) {
         if (!defined(subtreeArrayBuffer) || subtreeArrayBuffer.byteLength === 0) {
             throw new RuntimeError('Subtree ArrayBuffer must exist an not be empty.');
         }
@@ -2167,7 +2172,7 @@ define([
             transform: tilingScheme.transform
         };
 
-        var rootTile = new Cesium3DTile(this, resource, rootInfo, parentTile);
+        var rootTile = new Cesium3DTileImplicit(this, resource, rootInfo, parentTile);
 
         // If there is a parentTile, add the root of the currently loading tileset
         // to parentTile's children, and update its _depth.
@@ -2240,7 +2245,7 @@ define([
                                 refine: tilingScheme.refine
                             };
 
-                            childTile = new Cesium3DTile(this, resource, tileInfo, tile);
+                            childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
                             tile.children.push(childTile);
                             childTile._depth =  childTile._depth + 1;
                             stack.push(childTile);
@@ -2309,7 +2314,7 @@ define([
                             refine: tilingScheme.refine
                         };
 
-                        childTile = new Cesium3DTile(this, resource, tileInfo, tile);
+                        childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
                         tile.children.push(childTile);
                         childTile._depth =  tile._depth + 1;
                         stack.push(childTile);
@@ -2331,7 +2336,7 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.updateTilesetFromLayerJson = function(resource, layerJson, parentTile) {
+    Cesium3DTilesetImplicit.prototype.updateTilesetFromLayerJson = function(resource, layerJson, parentTile) {
         var available = layerJson.available;
         if (!defined(available)) {
             throw new RuntimeError('Layer json must have an available property.');
@@ -2365,7 +2370,7 @@ define([
             transform: tilingScheme.transform
         };
 
-        var rootTile = new Cesium3DTile(this, resource, rootInfo, parentTile);
+        var rootTile = new Cesium3DTileImplicit(this, resource, rootInfo, parentTile);
 
         // If there is a parentTile, add the root of the currently loading tileset
         // to parentTile's children, and update its _depth.
@@ -2425,7 +2430,7 @@ define([
                             refine: tilingScheme.refine
                         };
 
-                        childTile = new Cesium3DTile(this, resource, tileInfo, tile);
+                        childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
                         tile.children.push(childTile);
                         childTile._depth =  childTile._depth + 1;
                         stack.push(childTile);
@@ -2473,7 +2478,7 @@ define([
                                 refine: tilingScheme.refine
                             };
 
-                            childTile = new Cesium3DTile(this, resource, tileInfo, tile);
+                            childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
                             tile.children.push(childTile);
                             childTile._depth =  tile._depth + 1;
                             stack.push(childTile);
@@ -2495,7 +2500,7 @@ define([
      *
      * @private
      */
-    Cesium3DTileset.prototype.loadTileset = function(resource, tilesetJson, parentTile) {
+    Cesium3DTilesetImplicit.prototype.loadTileset = function(resource, tilesetJson, parentTile) {
         var asset = tilesetJson.asset;
         if (!defined(asset)) {
             throw new RuntimeError('Tileset must have an asset property.');
@@ -2517,7 +2522,7 @@ define([
 
         // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
         // Get the basePath relative to the external tileset.
-        var rootTile = new Cesium3DTile(this, resource, tilesetJson.root, parentTile);
+        var rootTile = new Cesium3DTileImplicit(this, resource, tilesetJson.root, parentTile);
 
         // If there is a parentTile, add the root of the currently loading tileset
         // to parentTile's children, and update its _depth.
@@ -2538,7 +2543,7 @@ define([
                 var length = children.length;
                 for (var i = 0; i < length; ++i) {
                     var childHeader = children[i];
-                    var childTile = new Cesium3DTile(this, resource, childHeader, tile);
+                    var childTile = new Cesium3DTileImplicit(this, resource, childHeader, tile);
                     tile.children.push(childTile);
                     childTile._depth = tile._depth + 1;
                     stack.push(childTile);
@@ -2672,7 +2677,7 @@ define([
      * Perform any pass invariant tasks here. Called after the render pass.
      * @private
      */
-    Cesium3DTileset.prototype.postPassesUpdate = function(frameState) {
+    Cesium3DTilesetImplicit.prototype.postPassesUpdate = function(frameState) {
         if (!this.ready) {
             return;
         }
@@ -2686,7 +2691,7 @@ define([
      * Perform any pass invariant tasks here. Called before any passes are executed.
      * @private
      */
-    Cesium3DTileset.prototype.prePassesUpdate = function(frameState) {
+    Cesium3DTilesetImplicit.prototype.prePassesUpdate = function(frameState) {
         if (!this.ready) {
             return;
         }
@@ -2726,7 +2731,7 @@ define([
             // NOTE: This is framerate dependant so make sure the threshold check is small
             var outOfView = (frameState.frameNumber - tile._touchedFrame) >= 1;
             if (tile._contentState !== Cesium3DTileContentState.LOADING) {
-                // No longer fetching from host, don't need to track it anymore. Gets marked as LOADING in Cesium3DTile::requestContent().
+                // No longer fetching from host, don't need to track it anymore. Gets marked as LOADING in Cesium3DTileImplicit::requestContent().
                 ++removeCount;
                 continue;
             } else if (outOfView) {
@@ -3013,7 +3018,7 @@ define([
              * 1. Render just the backfaces of unresolved tiles in order to lay down z
              * 2. Render all frontfaces wherever tile._selectionDepth > stencilBuffer.
              *    Replace stencilBuffer with tile._selectionDepth, when passing the z test.
-             *    Because children are always drawn before ancestors {@link Cesium3DTilesetTraversal#traverseAndSelect},
+             *    Because children are always drawn before ancestors {@link Cesium3DTilesetTraversalImplicit#traverseAndSelect},
              *    this effectively draws children first and does not draw ancestors if a descendant has already
              *    been drawn at that pixel.
              *    Step 1 prevents child tiles from appearing on top when they are truly behind ancestor content.
@@ -3104,13 +3109,13 @@ define([
     /**
      * Unloads all tiles that weren't selected the previous frame.  This can be used to
      * explicitly manage the tile cache and reduce the total number of tiles loaded below
-     * {@link Cesium3DTileset#maximumMemoryUsage}.
+     * {@link Cesium3DTilesetImplicit#maximumMemoryUsage}.
      * <p>
      * Tile unloads occur at the next frame to keep all the WebGL delete calls
      * within the render loop.
      * </p>
      */
-    Cesium3DTileset.prototype.trimLoadedTiles = function() {
+    Cesium3DTilesetImplicit.prototype.trimLoadedTiles = function() {
         this._cache.trim();
     };
 
@@ -3187,7 +3192,8 @@ define([
         // Update any tracked min max values
         resetMinimumMaximum(tileset);
 
-        var ready = passOptions.traversal.selectTiles(tileset, frameState);
+        var traversal = tileset._traversals[passOptions.traversal];
+        var ready = traversal.selectTiles(tileset, frameState);
 
         if (passOptions.requestTiles) {
             requestTiles(tileset);
@@ -3214,14 +3220,14 @@ define([
     /**
      * @private
      */
-    Cesium3DTileset.prototype.update = function(frameState) {
+    Cesium3DTilesetImplicit.prototype.update = function(frameState) {
         this.updateForPass(frameState, frameState.tilesetPassState);
     };
 
     /**
      * @private
      */
-    Cesium3DTileset.prototype.updateForPass = function(frameState, tilesetPassState) {
+    Cesium3DTilesetImplicit.prototype.updateForPass = function(frameState, tilesetPassState) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('frameState', frameState);
         Check.typeOf.object('tilesetPassState', tilesetPassState);
@@ -3272,7 +3278,7 @@ define([
      *
      * @returns {Boolean} <code>true</code> if the tileset JSON file lists the extension in extensionsUsed; otherwise, <code>false</code>.
      */
-    Cesium3DTileset.prototype.hasExtension = function(extensionName) {
+    Cesium3DTilesetImplicit.prototype.hasExtension = function(extensionName) {
         if (!defined(this._extensionsUsed)) {
             return false;
         }
@@ -3288,9 +3294,9 @@ define([
      *
      * @returns {Boolean} <code>true</code> if this object was destroyed; otherwise, <code>false</code>.
      *
-     * @see Cesium3DTileset#destroy
+     * @see Cesium3DTilesetImplicit#destroy
      */
-    Cesium3DTileset.prototype.isDestroyed = function() {
+    Cesium3DTilesetImplicit.prototype.isDestroyed = function() {
         return false;
     };
 
@@ -3307,9 +3313,9 @@ define([
      * @example
      * tileset = tileset && tileset.destroy();
      *
-     * @see Cesium3DTileset#isDestroyed
+     * @see Cesium3DTilesetImplicit#isDestroyed
      */
-    Cesium3DTileset.prototype.destroy = function() {
+    Cesium3DTilesetImplicit.prototype.destroy = function() {
         this._tileDebugLabels = this._tileDebugLabels && this._tileDebugLabels.destroy();
         this._clippingPlanes = this._clippingPlanes && this._clippingPlanes.destroy();
 
@@ -3335,10 +3341,10 @@ define([
     };
 
     /**
-     * Optimization option. Used as a callback when {@link Cesium3DTileset#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone,
-     * interpolating between {@link Cesium3DTileset#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTileset#maximumScreenSpaceError}.
+     * Optimization option. Used as a callback when {@link Cesium3DTilesetImplicit#foveatedScreenSpaceError} is true to control how much to raise the screen space error for tiles outside the foveated cone,
+     * interpolating between {@link Cesium3DTilesetImplicit#foveatedMinimumScreenSpaceErrorRelaxation} and {@link Cesium3DTilesetImplicit#maximumScreenSpaceError}.
      *
-     * @callback Cesium3DTileset~foveatedInterpolationCallback
+     * @callback Cesium3DTilesetImplicit~foveatedInterpolationCallback
      * @default Math.lerp
      *
      * @param {Number} p The start value to interpolate.
@@ -3347,5 +3353,5 @@ define([
      * @returns {Number} The interpolated value.
      */
 
-    return Cesium3DTileset;
+    return Cesium3DTilesetImplicit;
 });
