@@ -31,7 +31,7 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
     terrainProvider : Cesium.createWorldTerrain(),
-    shadows : true,
+    shadows : true
 });
 
 viewer.scene.camera.setView({
@@ -61,7 +61,7 @@ var entity = viewer.entities.add({
     orientation : orientation,
     model : {
         uri : url,
-        scale : scale,
+        scale : scale
     }
 });
 //Sandcastle_End
