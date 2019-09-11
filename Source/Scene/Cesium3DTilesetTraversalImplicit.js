@@ -19,7 +19,7 @@ define([
     /**
      * @private
      */
-    function Cesium3DTilesetTraversal() {
+    function Cesium3DTilesetTraversalImplicit() {
     }
 
     function isVisible(tile) {
@@ -50,7 +50,7 @@ define([
 
     var descendantSelectionDepth = 2;
 
-    Cesium3DTilesetTraversal.selectTiles = function(tileset, frameState) {
+    Cesium3DTilesetTraversalImplicit.selectTiles = function(tileset, frameState) {
         tileset._requestedTiles.length = 0;
 
         if (tileset.debugFreezeFrame) {
@@ -665,5 +665,5 @@ define([
         }
     }
 
-    return Cesium3DTilesetTraversal;
+    return Cesium3DTilesetTraversalImplicit;
 });

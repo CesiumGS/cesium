@@ -81,16 +81,16 @@ define([
     'use strict';
 
     /**
-     * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
+     * A tile in a {@link Cesium3DTilesetImplicit}.  When a tile is first created, its content is not loaded;
      * the content is loaded on-demand when needed based on the view.
      * <p>
-     * Do not construct this directly, instead access tiles through {@link Cesium3DTileset#tileVisible}.
+     * Do not construct this directly, instead access tiles through {@link Cesium3DTilesetImplicit#tileVisible}.
      * </p>
      *
-     * @alias Cesium3DTile
+     * @alias Cesium3DTileImplicit
      * @constructor
      */
-    function Cesium3DTile(tileset, baseResource, header, parent) {
+    function Cesium3DTileImplicit(tileset, baseResource, header, parent) {
         this._tileset = tileset;
         this._header = header;
         var contentHeader = header.content;
@@ -147,13 +147,13 @@ define([
 
         if (!defined(this.geometricError)) {
             this.geometricError = defined(parent) ? parent.geometricError : tileset._geometricError;
-            Cesium3DTile._deprecationWarning('geometricErrorUndefined', 'Required property geometricError is undefined for this tile. Using parent\'s geometric error instead.');
+            Cesium3DTileImplicit._deprecationWarning('geometricErrorUndefined', 'Required property geometricError is undefined for this tile. Using parent\'s geometric error instead.');
         }
 
         var refine;
         if (defined(header.refine)) {
             if (header.refine === 'replace' || header.refine === 'add') {
-                Cesium3DTile._deprecationWarning('lowercase-refine', 'This tile uses a lowercase refine "' + header.refine + '". Instead use "' + header.refine.toUpperCase() + '".');
+                Cesium3DTileImplicit._deprecationWarning('lowercase-refine', 'This tile uses a lowercase refine "' + header.refine + '". Instead use "' + header.refine.toUpperCase() + '".');
             }
             refine = (header.refine.toUpperCase() === 'REPLACE') ? Cesium3DTileRefine.REPLACE : Cesium3DTileRefine.ADD;
         } else if (defined(parent)) {
@@ -175,7 +175,7 @@ define([
         /**
          * Gets the tile's children.
          *
-         * @type {Cesium3DTile[]}
+         * @type {Cesium3DTileImplicit[]}
          * @readonly
          */
         this.children = [];
@@ -188,7 +188,7 @@ define([
          * the tile (with its content pointing to an external tileset JSON file) as if the two tilesets were merged.
          * </p>
          *
-         * @type {Cesium3DTile}
+         * @type {Cesium3DTileImplicit}
          * @readonly
          */
         this.parent = parent;
@@ -224,7 +224,7 @@ define([
         if (defined(contentHeader)) {
             var contentHeaderUri = contentHeader.uri;
             if (defined(contentHeader.url)) {
-                Cesium3DTile._deprecationWarning('contentUrl', 'This tileset JSON uses the "content.url" property which has been deprecated. Use "content.uri" instead.');
+                Cesium3DTileImplicit._deprecationWarning('contentUrl', 'This tileset JSON uses the "content.url" property which has been deprecated. Use "content.uri" instead.');
                 contentHeaderUri = contentHeader.url;
             }
             hasEmptyContent = false;
@@ -395,15 +395,15 @@ define([
     }
 
     // This can be overridden for testing purposes
-    Cesium3DTile._deprecationWarning = deprecationWarning;
+    Cesium3DTileImplicit._deprecationWarning = deprecationWarning;
 
-    defineProperties(Cesium3DTile.prototype, {
+    defineProperties(Cesium3DTileImplicit.prototype, {
         /**
          * The tileset containing this tile.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
-         * @type {Cesium3DTileset}
+         * @type {Cesium3DTilesetImplicit}
          * @readonly
          */
         tileset : {
@@ -416,7 +416,7 @@ define([
          * The tile's content.  This represents the actual tile's payload,
          * not the content's metadata in the tileset JSON file.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
          * @type {Cesium3DTileContent}
          * @readonly
@@ -430,7 +430,7 @@ define([
         /**
          * Get the tile's bounding volume.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
          * @type {TileBoundingVolume}
          * @readonly
@@ -447,7 +447,7 @@ define([
          * tile's bounding volume when the content's bounding volume is
          * <code>undefined</code>.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
          * @type {TileBoundingVolume}
          * @readonly
@@ -462,7 +462,7 @@ define([
         /**
          * Get the bounding sphere derived from the tile's bounding volume.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
          * @type {BoundingSphere}
          * @readonly
@@ -477,7 +477,7 @@ define([
          * Returns the <code>extras</code> property in the tileset JSON for this tile, which contains application specific metadata.
          * Returns <code>undefined</code> if <code>extras</code> does not exist.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
          * @type {*}
          * @readonly
@@ -492,7 +492,7 @@ define([
         /**
          * Gets or sets the tile's highlight color.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
          * @type {Color}
          *
@@ -518,7 +518,7 @@ define([
          * content is ready or if it has expired content that renders while new content loads; otherwise,
          * <code>false</code>.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -535,7 +535,7 @@ define([
          * Determines if the tile's content is ready. This is automatically <code>true</code> for
          * tile's with empty content.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -552,7 +552,7 @@ define([
          * Determines if the tile's content has not be requested. <code>true</code> if tile's
          * content has not be requested; otherwise, <code>false</code>.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -569,7 +569,7 @@ define([
          * Determines if the tile's content is expired. <code>true</code> if tile's
          * content is expired; otherwise, <code>false</code>.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -586,7 +586,7 @@ define([
          * Determines if the tile's content failed to load.  <code>true</code> if the tile's
          * content failed to load; otherwise, <code>false</code>.
          *
-         * @memberof Cesium3DTile.prototype
+         * @memberof Cesium3DTileImplicit.prototype
          *
          * @type {Boolean}
          * @readonly
@@ -720,7 +720,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.getScreenSpaceError = function(frameState, useParentGeometricError, progressiveResolutionHeightFraction) {
+    Cesium3DTileImplicit.prototype.getScreenSpaceError = function(frameState, useParentGeometricError, progressiveResolutionHeightFraction) {
         var tileset = this._tileset;
         var heightFraction = defaultValue(progressiveResolutionHeightFraction, 1.0);
         var parentGeometricError = defined(this.parent) ? this.parent.geometricError : tileset._geometricError;
@@ -786,7 +786,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.updateVisibility = function(frameState) {
+    Cesium3DTileImplicit.prototype.updateVisibility = function(frameState) {
         var parent = this.parent;
         var tileset = this._tileset;
         var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
@@ -809,7 +809,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.updateExpiration = function() {
+    Cesium3DTileImplicit.prototype.updateExpiration = function() {
         if (defined(this.expireDate) && this.contentReady && !this.hasEmptyContent) {
             var now = JulianDate.now(scratchJulianDate);
             if (JulianDate.lessThan(this.expireDate, now)) {
@@ -856,7 +856,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.requestContent = function() {
+    Cesium3DTileImplicit.prototype.requestContent = function() {
         var that = this;
         var tileset = this._tileset;
 
@@ -961,7 +961,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.unloadContent = function() {
+    Cesium3DTileImplicit.prototype.unloadContent = function() {
         if (this.hasEmptyContent || this.hasTilesetContent) {
             return;
         }
@@ -1012,7 +1012,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.visibility = function(frameState, parentVisibilityPlaneMask) {
+    Cesium3DTileImplicit.prototype.visibility = function(frameState, parentVisibilityPlaneMask) {
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = getBoundingVolume(this, frameState);
 
@@ -1038,7 +1038,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.contentVisibility = function(frameState) {
+    Cesium3DTileImplicit.prototype.contentVisibility = function(frameState) {
         // Assumes the tile's bounding volume intersects the culling volume already, so
         // just return Intersect.INSIDE if there is no content bounding volume.
         if (!defined(this._contentBoundingVolume)) {
@@ -1077,7 +1077,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.distanceToTile = function(frameState) {
+    Cesium3DTileImplicit.prototype.distanceToTile = function(frameState) {
         var boundingVolume = getBoundingVolume(this, frameState);
         return boundingVolume.distanceToCamera(frameState);
     };
@@ -1092,7 +1092,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.distanceToTileCenter = function(frameState) {
+    Cesium3DTileImplicit.prototype.distanceToTileCenter = function(frameState) {
         var tileBoundingVolume = getBoundingVolume(this, frameState);
         var boundingVolume = tileBoundingVolume.boundingVolume; // Gets the underlying OrientedBoundingBox or BoundingSphere
         var toCenter = Cartesian3.subtract(boundingVolume.center, frameState.camera.positionWC, scratchToTileCenter);
@@ -1107,7 +1107,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.insideViewerRequestVolume = function(frameState) {
+    Cesium3DTileImplicit.prototype.insideViewerRequestVolume = function(frameState) {
         var viewerRequestVolume = this._viewerRequestVolume;
         return !defined(viewerRequestVolume) || (viewerRequestVolume.distanceToCamera(frameState) === 0.0);
     };
@@ -1207,7 +1207,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.createBoundingVolume = function(boundingVolumeHeader, transform, result) {
+    Cesium3DTileImplicit.prototype.createBoundingVolume = function(boundingVolumeHeader, transform, result) {
         if (!defined(boundingVolumeHeader)) {
             throw new RuntimeError('boundingVolume must be defined');
         }
@@ -1228,7 +1228,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.updateTransform = function(parentTransform) {
+    Cesium3DTileImplicit.prototype.updateTransform = function(parentTransform) {
         parentTransform = defaultValue(parentTransform, Matrix4.IDENTITY);
         var computedTransform = Matrix4.multiply(parentTransform, this.transform, scratchTransform);
         var transformChanged = !Matrix4.equals(computedTransform, this.computedTransform);
@@ -1365,7 +1365,7 @@ define([
      *
      * @private
      */
-    Cesium3DTile.prototype.update = function(tileset, frameState) {
+    Cesium3DTileImplicit.prototype.update = function(tileset, frameState) {
         var initCommandLength = frameState.commandList.length;
         updateClippingPlanes(this, tileset);
         applyDebugSettings(this, tileset, frameState);
@@ -1380,12 +1380,12 @@ define([
     /**
      * Processes the tile's content, e.g., create WebGL resources, to move from the PROCESSING to READY state.
      *
-     * @param {Cesium3DTileset} tileset The tileset containing this tile.
+     * @param {Cesium3DTilesetImplicit} tileset The tileset containing this tile.
      * @param {FrameState} frameState The frame state.
      *
      * @private
      */
-    Cesium3DTile.prototype.process = function(tileset, frameState) {
+    Cesium3DTileImplicit.prototype.process = function(tileset, frameState) {
         var savedCommandList = frameState.commandList;
         frameState.commandList = scratchCommandList;
 
@@ -1409,7 +1409,7 @@ define([
      * Sets the priority of the tile based on distance and depth
      * @private
      */
-    Cesium3DTile.prototype.updatePriority = function() {
+    Cesium3DTileImplicit.prototype.updatePriority = function() {
         var tileset = this.tileset;
         var preferLeaves = tileset.preferLeaves;
         var minimumPriority = tileset._minimumPriority;
@@ -1470,14 +1470,14 @@ define([
     /**
      * @private
      */
-    Cesium3DTile.prototype.isDestroyed = function() {
+    Cesium3DTileImplicit.prototype.isDestroyed = function() {
         return false;
     };
 
     /**
      * @private
      */
-    Cesium3DTile.prototype.destroy = function() {
+    Cesium3DTileImplicit.prototype.destroy = function() {
         // For the interval between new content being requested and downloaded, expiredContent === content, so don't destroy twice
         this._content = this._content && this._content.destroy();
         this._expiredContent = this._expiredContent && !this._expiredContent.isDestroyed() && this._expiredContent.destroy();
@@ -1487,5 +1487,5 @@ define([
         return destroyObject(this);
     };
 
-    return Cesium3DTile;
+    return Cesium3DTileImplicit;
 });
