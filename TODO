@@ -9,6 +9,5 @@ make the branch then..
 [ ] try to traverse the subtree arrays in tree style (is this a waste of time?)
     children are just subtree array indices and the subtree link?
     tiles store the link to their subtree and their subtree index?
-
 [ ] incrementally move components to array style
 [ ] try to go full bresenham
