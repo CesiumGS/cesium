@@ -313,7 +313,7 @@ define([
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTilePropertyName);
 
         this._traversals = [
-            Cesium3DTilesetTraversal,
+            Cesium3DTilesetTraversalImplicit,
             Cesium3DTilesetMostDetailedTraversal
         ];
 

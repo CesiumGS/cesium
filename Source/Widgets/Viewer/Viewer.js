@@ -23,6 +23,7 @@ define([
         '../../DataSources/EntityView',
         '../../DataSources/Property',
         '../../Scene/Cesium3DTileset',
+        '../../Scene/Cesium3DTilesetImplicit',
         '../../Scene/computeFlyToLocationForRectangle',
         '../../Scene/ImageryLayer',
         '../../Scene/SceneMode',
@@ -73,6 +74,7 @@ define([
         EntityView,
         Property,
         Cesium3DTileset,
+        Cesium3DTilesetImplicit,
         computeFlyToLocationForRectangle,
         ImageryLayer,
         SceneMode,
@@ -1827,7 +1829,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             }
 
             //If the zoom target is a Cesium3DTileset
-            if (zoomTarget instanceof Cesium3DTileset) {
+            if (zoomTarget instanceof Cesium3DTileset || zoomTarget instanceof Cesium3DTilesetImplicit) {
                 that._zoomTarget = zoomTarget;
                 return;
             }
@@ -1914,7 +1916,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var boundingSphere;
 
         // If zoomTarget was Cesium3DTileset
-        if (target instanceof Cesium3DTileset) {
+        if (target instanceof Cesium3DTileset || target instanceof Cesium3DTilesetImplicit) {
             return target.readyPromise.then(function() {
                 var boundingSphere = target.boundingSphere;
                 // If offset was originally undefined then give it base value instead of empty object
