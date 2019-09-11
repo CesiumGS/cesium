@@ -28,13 +28,13 @@
 <table><tbody>
     <tr>
         <td>Use Browser Recommended Resolution</td>
-        <td><input type="checkbox" data-bind="checked: useDevicePixelResolution"></td>
+        <td><input type="checkbox" data-bind="checked: useBrowserRecommendedResolution"></td>
     </tr>
     <tr>
-        <td data-bind="style: { color: useDevicePixelResolution ? 'gray' : ''}">Custom Resolution Scale</td>
+        <td data-bind="style: { color: useBrowserRecommendedResolution ? 'gray' : ''}">Custom Resolution Scale</td>
         <td>
-            <input type="range" min="0.1" max="2.0" step="0.1" data-bind="value: customResolutionScale, enable: !useDevicePixelResolution, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: customResolutionScale, enable: !useDevicePixelResolution">
+            <input type="range" min="0.1" max="2.0" step="0.1" data-bind="value: customResolutionScale, enable: !useBrowserRecommendedResolution, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: customResolutionScale, enable: !useBrowserRecommendedResolution">
         </td>
     </tr>
 </tbody></table>
@@ -46,7 +46,7 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var viewModel = {
-    useDevicePixelResolution : false,
+    useBrowserRecommendedResolution : false,
     customResolutionScale : 0.25
 };
 
@@ -60,7 +60,7 @@ for (var name in viewModel) {
 }
 
 function update() {
-    if (viewModel.useDevicePixelResolution) {
+    if (viewModel.useBrowserRecommendedResolution) {
         viewer.resolutionScale = 1.0 / window.devicePixelRatio;
     } else {
         var resolutionScale = Number(viewModel.customResolutionScale);
