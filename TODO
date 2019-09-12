@@ -1,6 +1,5 @@
-unpack the compressed bit array into u8 array? i.e. 0x1 or 0x0 at each index?
+Unpack the compressed bit array into u8 array? i.e. 0x1 or 0x0 at each index?
 Probably since the unpacking would be in an inner loop
-
 
 [ ] Try to traverse the subtree arrays in tree style (is this a waste of time?)
     Tiles store:
@@ -10,9 +9,10 @@ Probably since the unpacking would be in an inner loop
     of the subtree
     *** only real reason to do the above is if 0 sse is really important and can't get rid of it
 
-    treeKey, subtreeKey, subtreeIndex, subtreeRootKey, subtree ref
+    subtree ref / chilren subtree ref
+    treeKey, subtreeKey, subtreeIndex, subtreeRootKey
     children treeKeys, subtreeKeys, subtreeIndices
-    children subtreeRootKey, and chilren subtree ref
+    children subtreeRootKey
 
 [ ] toroidial subtree viewer? it's camera relative, right?
 [ ] look at the sse calculation and see if theres a good way to pre-calc the sse spheres and sphere deltas

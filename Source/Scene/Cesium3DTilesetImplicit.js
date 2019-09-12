@@ -1918,7 +1918,7 @@ define([
         return subtreeRootKey;
     };
 
-    Cesium3DTilesetImplicit.prototype.getSubtreeRootAndTileKey = function(x, y, z, level) {
+    Cesium3DTilesetImplicit.prototype.getSubtreeInfoFromTreeIndex = function(x, y, z, level) {
         // Given the xyz level find the nearest subtree root key
         var subtreeLevels = this._tilingScheme.subtreeLevels;
         var subtreeLevels0Indexed = subtreeLevels -  1;
@@ -1944,9 +1944,22 @@ define([
             ((z - shiftZ))
         ];
 
+        var subtreeLevel = subtreeTileKey[0];
+        var dimOnLevel = (1 << subtreeLevel);
+        var dimOnLevelSqrd = dimOnLevel * dimOnLevel;
+
+        var arraySizes = this._unpackedArraySizes;
+
+        // Update the bit that corresponds to this rel subtree key (d, x, y, z)
+        var indexOffsetToFirstByteOnLevel = arraySizes[subtreeLevel];
+        // Treating the level as a linear array, what is the tiles index on this subtree level
+        var tileIndexOnLevel = subtreeTileKey[3] * dimOnLevelSqrd + subtreeTileKey[2] * dimOnLevel + subtreeTileKey[1];
+        var index = indexOffsetToFirstByteOnLevel + tileIndexOnLevel;
+
         return {
-            subtreeRootKey: subtreeRootKey,
-            subtreeTileKey: subtreeTileKey
+            subtreeRootKey : subtreeRootKey,
+            subtreeTileKey : subtreeTileKey,
+            subtreeTileIndex : index
         };
     };
 
@@ -1958,28 +1971,8 @@ define([
     Cesium3DTilesetImplicit.prototype.isTileAvailableTreeIndex = function(x, y, z, level) {
         var isOct = this._isOct;
         var available = this._available;
-        var keys = this.getSubtreeRootAndTileKey(x, y, z, level);
-        var subtreeRootKey = keys.subtreeRootKey;
-        var subtreeTileKey = keys.subtreeTileKey;
-        // var subtreeLevel = subtreeTileKey.d;
-        var subtreeLevel = subtreeTileKey[0];
-        var dimOnLevel = (1 << subtreeLevel);
-        var dimOnLevelSqrd = dimOnLevel * dimOnLevel;
+        var result = this.getSubtreeInfoFromTreeIndex(x, y, z, level);
 
-        var key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
-        var subtree = available.get(key);
-
-        // var arraySizes = this._arraySizes;
-        var arraySizes = this._unpackedArraySizes;
-
-        // Update the bit that corresponds to this rel subtree key (d, x, y, z)
-        var indexOffsetToFirstByteOnLevel = arraySizes[subtreeLevel];
-        // Treating the level as a linear array, what is the tiles index on this subtree level
-        // var tileIndexOnLevel = subtreeTileKey.z * dimOnLevelSqrd + subtreeTileKey.y * dimOnLevel + subtreeTileKey.x;
-        var tileIndexOnLevel = subtreeTileKey[3] * dimOnLevelSqrd + subtreeTileKey[2] * dimOnLevel + subtreeTileKey[1];
-
-        var isAvailable = false;
-        // var packed = this._packedSubtrees;
         // if(packed) {
         //     // Which byte is holding this tile's bit
         //     var indexOffsetToByteOnLevel = tileIndexOnLevel >> 3;
@@ -1989,16 +1982,18 @@ define([
         //     var bitMask = (1 << bitInByte);
         //     isAvailable = (subtree[index] & bitMask) === bitMask;
         // } else {
-            var index = indexOffsetToFirstByteOnLevel + tileIndexOnLevel;
-            isAvailable = subtree[index] === 0x1;
+            var subtreeRootKey = result.subtreeRootKey;
+            var key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
+            var subtree = available.get(key);
+            var index = result.subtreeTileIndex;
+            var isAvailable = subtree[index] === 0x1;
         // }
-
 
         return {
             isAvailable: isAvailable,
-            subtreeRootKey : subtreeRootKey,
-            subtreeTileKey : subtreeTileKey,
-            subtreeTileIndex : index
+            subtreeRootKey: subtreeRootKey,
+            subtreeTileKey: result.subtreeTileKey,
+            subtreeTileIndex: index
         };
     };
 
@@ -2238,6 +2233,7 @@ define([
             transform: tilingScheme.transform
         };
 
+        // var rootTile = hasParent ? parentTile : new Cesium3DTileImplicit(this, resource, rootInfo, parentTile);
         var rootTile = new Cesium3DTileImplicit(this, resource, rootInfo, parentTile);
 
         // If there is a parentTile, add the root of the currently loading tileset
@@ -2274,7 +2270,7 @@ define([
             tilesArray.push(undefined);
         }
 
-        // Not sure what the points of this is again (over the else which just pushes the rootTile)
+        // For finding all heads in the root or finding the start tile in a subtree (if the tileset root doesn't start at the root of the subtree)
         if (!hasParent) {
             tile = rootTile;
             xTiles = endX - startX + 1;
@@ -2300,7 +2296,10 @@ define([
                             boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
                             geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
                             content: {uri: uri},
-                            key: new Cartesian4(x, y, z, level),
+                            treeKey: new Cartesian4(x, y, z, level),
+                            subtreeKey: result.subtreeTileKey,
+                            subtreeIndex: result.subtreeTileIndex,
+                            subtreeRootKey: result.subtreeRootKey,
                             refine: tilingScheme.refine
                         };
 
@@ -2334,6 +2333,7 @@ define([
             // Go to level and grab the tiles there (hopefully there's 1 or 2)
             // and push those children
             var childStartKey = tile.childStartKey;
+            // var childStartKey = tile.childTreeKeys[0];
             level = childStartKey.w;
             startX = childStartKey.x;
             startY = childStartKey.y;
@@ -2362,7 +2362,10 @@ define([
                             boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
                             geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
                             content: {uri: uri},
-                            key: new Cartesian4(x, y, z, level),
+                            treeKey: new Cartesian4(x, y, z, level),
+                            subtreeKey: result.subtreeTileKey,
+                            subtreeIndex: result.subtreeTileIndex,
+                            subtreeRootKey: result.subtreeRootKey,
                             refine: tilingScheme.refine
                         };
 
