@@ -2394,164 +2394,164 @@ define([
      *
      * @private
      */
-    Cesium3DTilesetImplicit.prototype.updateTilesetFromLayerJson = function(resource, layerJson, parentTile) {
-        var available = layerJson.available;
-        if (!defined(available)) {
-            throw new RuntimeError('Layer json must have an available property.');
-        }
-
-        var statistics = this._statistics;
-
-        this.updateAvailable(available);
-
-        var hasParent = defined(parentTile);
-
-        // Maybe don't worry about the external tileset case quite yet
-        // var boundingVolume = hasParent ? deriveImplicitBoundsFromParent(parentTile) : this._tilingScheme.boundingVolume;
-        // var geometricError = hasParent ? parentTile._geometricError / 2 : this._geometricError;
-        // var content = // TODO: put the { uri : "0/0/0" } or whatever the level/x/y is for the tile unless its the contentless root
-        // TODO: for quad/oct lat/long spllitting, I think you must construct empty tiles all the way up to the
-        // lvl 0 root(s) or until you get to a single tile. In either case still
-        // generate a contentless root above that
-        // on heads specified
-        // TODO: if has parent need to properly create this
-        var tilingScheme = this._tilingScheme;
-        if (defined(tilingScheme.boundingVolume.region) && defined(tilingScheme.transform)) {
-            tilingScheme.transform = Matrix4.clone(Matrix4.IDENTITY);
-        }
-
-        var rootInfo = {
-            boundingVolume: tilingScheme.boundingVolume,
-            geometricError: this._geometricError,
-            content: undefined,
-            refine: tilingScheme.refine,
-            transform: tilingScheme.transform
-        };
-
-        var rootTile = new Cesium3DTileImplicit(this, resource, rootInfo, parentTile);
-
-        // If there is a parentTile, add the root of the currently loading tileset
-        // to parentTile's children, and update its _depth.
-        if (hasParent) {
-            parentTile.children.push(rootTile);
-            rootTile._depth = parentTile._depth + 1;
-        }
-
-        var stack = [];
-
-
-        var x, y, z, level;
-        var tile, childTile;
-        var uri, tileInfo;
-        var startLevel = 0;
-        var available = this._available;
-        var length =  available.length;
-        while (available[startLevel].length === 0 && startLevel < length) {
-            startLevel++;
-        }
-        var ranges = this.getRangeForLevel(startLevel);
-        var isOct = this._isOct;
-        var xTiles, yTiles, zTiles;
-        // TODO: merge with loop version but wait till the other todo's are ironed out
-
-        // main layer.json, construct child tiles of contentless root
-        var startX = ranges.startX;
-        var endX = ranges.endX;
-        var startY = ranges.startY;
-        var endY = ranges.endY;
-        var startZ = ranges.startZ;
-        var endZ = ranges.endZ;
-        var tilesetRoot = defined(this._root) ? this._root : rootTile
-        if (!hasParent) {
-            tile = rootTile;
-            // Go to startLevel and grab the tiles there (hopefully there's 1 or 2)
-            // and push those children
-            level = startLevel;
-            xTiles = endX - startX + 1;
-            yTiles = endY - startY + 1;
-            zTiles = endZ - startZ + 1;
-            for (z = startZ; z <= endZ; ++z) {
-                for (y = startY; y <= endY; ++y) {
-                    for (x = startX; x <= endX; ++x) {
-                        if (!this.isTileAvailable(x, y, z, level)) {
-                            continue;
-                        }
-                        ++statistics.numberOfTilesTotal;
-
-                        // TODO: the zyx key isnt consitant (though probably more desirable)
-                        uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
-                        tileInfo = {
-                            boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
-                            geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
-                            content: {uri: uri},
-                            key: new Cartesian4(x, y, z, level),
-                            refine: tilingScheme.refine
-                        };
-
-                        childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
-                        tile.children.push(childTile);
-                        childTile._depth =  childTile._depth + 1;
-                        stack.push(childTile);
-                    }
-                }
-            }
-        } else {
-            stack.push(rootTile);
-        }
-
-        xTiles = 2;
-        yTiles = 2;
-        zTiles = isOct ? 2 : 1;
-        while (stack.length > 0) {
-            tile = stack.pop();
-            ++statistics.numberOfTilesTotal;
-
-            // get the tile's chilrens' xyz range
-            // loop over that like we did above
-            // Go to level and grab the tiles there (hopefully there's 1 or 2)
-            // and push those children
-            var childStartKey = tile.childStartKey;
-            level = childStartKey.w;
-            startX = childStartKey.x;
-            startY = childStartKey.y;
-            startZ = childStartKey.z;
-            endX = startX + xTiles - 1;
-            endY = startY + yTiles - 1;
-            endZ = startZ + zTiles - 1;
-            if (level < this._available.length) {
-                for (z = startZ; z <= endZ; ++z) {
-                    for (y = startY; y <= endY; ++y) {
-                        for (x = startX; x <= endX; ++x) {
-                            if (!this.isTileAvailable(x, y, z, level)) {
-                                continue;
-                            }
-
-                            // TODO: the zyx key isnt consitant (though probably more desirable)
-                            uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
-                            tileInfo = {
-                                boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
-                                geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
-                                content: {uri: uri},
-                                key: new Cartesian4(x, y, z, level),
-                                refine: tilingScheme.refine
-                            };
-
-                            childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
-                            tile.children.push(childTile);
-                            childTile._depth =  tile._depth + 1;
-                            stack.push(childTile);
-                        }
-                    }
-                }
-            }
-
-            if (this._cullWithChildrenBounds) {
-                Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
-            }
-        }
-
-        return rootTile;
-    };
+    // Cesium3DTilesetImplicit.prototype.updateTilesetFromLayerJson = function(resource, layerJson, parentTile) {
+    //     var available = layerJson.available;
+    //     if (!defined(available)) {
+    //         throw new RuntimeError('Layer json must have an available property.');
+    //     }
+    //
+    //     var statistics = this._statistics;
+    //
+    //     this.updateAvailable(available);
+    //
+    //     var hasParent = defined(parentTile);
+    //
+    //     // Maybe don't worry about the external tileset case quite yet
+    //     // var boundingVolume = hasParent ? deriveImplicitBoundsFromParent(parentTile) : this._tilingScheme.boundingVolume;
+    //     // var geometricError = hasParent ? parentTile._geometricError / 2 : this._geometricError;
+    //     // var content = // TODO: put the { uri : "0/0/0" } or whatever the level/x/y is for the tile unless its the contentless root
+    //     // TODO: for quad/oct lat/long spllitting, I think you must construct empty tiles all the way up to the
+    //     // lvl 0 root(s) or until you get to a single tile. In either case still
+    //     // generate a contentless root above that
+    //     // on heads specified
+    //     // TODO: if has parent need to properly create this
+    //     var tilingScheme = this._tilingScheme;
+    //     if (defined(tilingScheme.boundingVolume.region) && defined(tilingScheme.transform)) {
+    //         tilingScheme.transform = Matrix4.clone(Matrix4.IDENTITY);
+    //     }
+    //
+    //     var rootInfo = {
+    //         boundingVolume: tilingScheme.boundingVolume,
+    //         geometricError: this._geometricError,
+    //         content: undefined,
+    //         refine: tilingScheme.refine,
+    //         transform: tilingScheme.transform
+    //     };
+    //
+    //     var rootTile = new Cesium3DTileImplicit(this, resource, rootInfo, parentTile);
+    //
+    //     // If there is a parentTile, add the root of the currently loading tileset
+    //     // to parentTile's children, and update its _depth.
+    //     if (hasParent) {
+    //         parentTile.children.push(rootTile);
+    //         rootTile._depth = parentTile._depth + 1;
+    //     }
+    //
+    //     var stack = [];
+    //
+    //
+    //     var x, y, z, level;
+    //     var tile, childTile;
+    //     var uri, tileInfo;
+    //     var startLevel = 0;
+    //     var available = this._available;
+    //     var length =  available.length;
+    //     while (available[startLevel].length === 0 && startLevel < length) {
+    //         startLevel++;
+    //     }
+    //     var ranges = this.getRangeForLevel(startLevel);
+    //     var isOct = this._isOct;
+    //     var xTiles, yTiles, zTiles;
+    //     // TODO: merge with loop version but wait till the other todo's are ironed out
+    //
+    //     // main layer.json, construct child tiles of contentless root
+    //     var startX = ranges.startX;
+    //     var endX = ranges.endX;
+    //     var startY = ranges.startY;
+    //     var endY = ranges.endY;
+    //     var startZ = ranges.startZ;
+    //     var endZ = ranges.endZ;
+    //     var tilesetRoot = defined(this._root) ? this._root : rootTile
+    //     if (!hasParent) {
+    //         tile = rootTile;
+    //         // Go to startLevel and grab the tiles there (hopefully there's 1 or 2)
+    //         // and push those children
+    //         level = startLevel;
+    //         xTiles = endX - startX + 1;
+    //         yTiles = endY - startY + 1;
+    //         zTiles = endZ - startZ + 1;
+    //         for (z = startZ; z <= endZ; ++z) {
+    //             for (y = startY; y <= endY; ++y) {
+    //                 for (x = startX; x <= endX; ++x) {
+    //                     if (!this.isTileAvailable(x, y, z, level)) {
+    //                         continue;
+    //                     }
+    //                     ++statistics.numberOfTilesTotal;
+    //
+    //                     // TODO: the zyx key isnt consitant (though probably more desirable)
+    //                     uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+    //                     tileInfo = {
+    //                         boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
+    //                         geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
+    //                         content: {uri: uri},
+    //                         key: new Cartesian4(x, y, z, level),
+    //                         refine: tilingScheme.refine
+    //                     };
+    //
+    //                     childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
+    //                     tile.children.push(childTile);
+    //                     childTile._depth =  childTile._depth + 1;
+    //                     stack.push(childTile);
+    //                 }
+    //             }
+    //         }
+    //     } else {
+    //         stack.push(rootTile);
+    //     }
+    //
+    //     xTiles = 2;
+    //     yTiles = 2;
+    //     zTiles = isOct ? 2 : 1;
+    //     while (stack.length > 0) {
+    //         tile = stack.pop();
+    //         ++statistics.numberOfTilesTotal;
+    //
+    //         // get the tile's chilrens' xyz range
+    //         // loop over that like we did above
+    //         // Go to level and grab the tiles there (hopefully there's 1 or 2)
+    //         // and push those children
+    //         var childStartKey = tile.childStartKey;
+    //         level = childStartKey.w;
+    //         startX = childStartKey.x;
+    //         startY = childStartKey.y;
+    //         startZ = childStartKey.z;
+    //         endX = startX + xTiles - 1;
+    //         endY = startY + yTiles - 1;
+    //         endZ = startZ + zTiles - 1;
+    //         if (level < this._available.length) {
+    //             for (z = startZ; z <= endZ; ++z) {
+    //                 for (y = startY; y <= endY; ++y) {
+    //                     for (x = startX; x <= endX; ++x) {
+    //                         if (!this.isTileAvailable(x, y, z, level)) {
+    //                             continue;
+    //                         }
+    //
+    //                         // TODO: the zyx key isnt consitant (though probably more desirable)
+    //                         uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+    //                         tileInfo = {
+    //                             boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
+    //                             geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
+    //                             content: {uri: uri},
+    //                             key: new Cartesian4(x, y, z, level),
+    //                             refine: tilingScheme.refine
+    //                         };
+    //
+    //                         childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
+    //                         tile.children.push(childTile);
+    //                         childTile._depth =  tile._depth + 1;
+    //                         stack.push(childTile);
+    //                     }
+    //                 }
+    //             }
+    //         }
+    //
+    //         if (this._cullWithChildrenBounds) {
+    //             Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
+    //         }
+    //     }
+    //
+    //     return rootTile;
+    // };
 
     /**
      * Loads the main tileset JSON file or a tileset JSON file referenced from a tile.
