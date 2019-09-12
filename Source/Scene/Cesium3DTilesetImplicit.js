@@ -1935,14 +1935,14 @@ define([
         var shiftX = (subtreeRootKey[1] << subtreeLevel);
         var shiftY = (subtreeRootKey[2] << subtreeLevel);
         var shiftZ = (subtreeRootKey[3] << subtreeLevel);
-        var subtreeTileKey = [
+        var subtreeKey = [
             subtreeLevel,
             ((x - shiftX)),
             ((y - shiftY)),
             ((z - shiftZ))
         ];
 
-        var subtreeLevel = subtreeTileKey[0];
+        var subtreeLevel = subtreeKey[0];
         var dimOnLevel = (1 << subtreeLevel);
         var dimOnLevelSqrd = dimOnLevel * dimOnLevel;
 
@@ -1951,13 +1951,13 @@ define([
         // Update the bit that corresponds to this rel subtree key (d, x, y, z)
         var indexOffsetToFirstByteOnLevel = arraySizes[subtreeLevel];
         // Treating the level as a linear array, what is the tiles index on this subtree level
-        var tileIndexOnLevel = subtreeTileKey[3] * dimOnLevelSqrd + subtreeTileKey[2] * dimOnLevel + subtreeTileKey[1];
+        var tileIndexOnLevel = subtreeKey[3] * dimOnLevelSqrd + subtreeKey[2] * dimOnLevel + subtreeKey[1];
         var index = indexOffsetToFirstByteOnLevel + tileIndexOnLevel;
 
         return {
             subtreeRootKey : subtreeRootKey,
-            subtreeTileKey : subtreeTileKey,
-            subtreeTileIndex : index
+            subtreeKey : subtreeKey,
+            subtreeIndex : index
         };
     };
 
@@ -1983,15 +1983,15 @@ define([
             var subtreeRootKey = result.subtreeRootKey;
             var key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
             var subtree = available.get(key);
-            var index = result.subtreeTileIndex;
+            var index = result.subtreeIndex;
             var isAvailable = subtree[index] === 0x1;
         // }
 
         return {
             isAvailable: isAvailable,
             subtreeRootKey: subtreeRootKey,
-            subtreeTileKey: result.subtreeTileKey,
-            subtreeTileIndex: index
+            subtreeKey: result.subtreeKey,
+            subtreeIndex: index
         };
     };
 
@@ -2295,8 +2295,8 @@ define([
                             geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
                             content: {uri: uri},
                             treeKey: new Cartesian4(x, y, z, level),
-                            subtreeKey: result.subtreeTileKey,
-                            subtreeIndex: result.subtreeTileIndex,
+                            subtreeKey: result.subtreeKey,
+                            subtreeIndex: result.subtreeIndex,
                             subtreeRootKey: result.subtreeRootKey,
                             refine: tilingScheme.refine
                         };
@@ -2307,8 +2307,8 @@ define([
                         stack.push(childTile);
 
                         // Update the tilesArray array
-                        var subtreeTileIndex = result.subtreeTileIndex;
-                        tilesArray[subtreeTileIndex]  = childTile;
+                        var subtreeIndex = result.subtreeIndex;
+                        tilesArray[subtreeIndex]  = childTile;
                     }
                 }
             }

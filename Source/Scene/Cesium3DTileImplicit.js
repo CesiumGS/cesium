@@ -210,14 +210,8 @@ define([
         this.childSubtreeKeys = [];
         this.childSubtreeRootKeys = [];
         this.childSubtreeIndices = [];
-        this.childStartKey = new Cartesian4();
         if (defined(this.treeKey)) {
-            var childStartKey = this.childStartKey;
             var treeKey = this.treeKey;
-            childStartKey.x = treeKey.x * 2;
-            childStartKey.y = treeKey.y * 2;
-            childStartKey.z = treeKey.z * 2;
-            childStartKey.w = treeKey.w + 1;
 
             var startX = treeKey.x * 2;
             var startY = treeKey.y * 2;
@@ -241,21 +235,16 @@ define([
 
                         result = tileset.getSubtreeInfoFromTreeIndex(cx,cy,cz,cd);
 
-                        val = result.subtreeTileKey;
+                        val = result.subtreeKey;
                         this.childSubtreeKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
 
                         val = result.subtreeRootKey;
                         this.childSubtreeRootKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
 
-                        this.childSubtreeIndices.push(result.subtreeTileIndex);
+                        this.childSubtreeIndices.push(result.subtreeIndex);
                     }
                 }
             }
-
-            // if (childStartKey !== this.childTreeKeys[0]) {
-            //     console.log('no match');
-            // }
-
         }
 
         var content;

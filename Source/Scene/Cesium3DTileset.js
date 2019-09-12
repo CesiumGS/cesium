@@ -1919,7 +1919,7 @@ define([
         // var shiftX = (subtreeRootKey.x << subtreeLevel);
         // var shiftY = (subtreeRootKey.y << subtreeLevel);
         // var shiftZ = (subtreeRootKey.z << subtreeLevel);
-        // var subtreeTileKey = {
+        // var subtreeKey = {
         //     d: subtreeLevel,
         //     x: ((x - shiftX)),
         //     y: ((y - shiftY)),
@@ -1935,7 +1935,7 @@ define([
         var shiftX = (subtreeRootKey[1] << subtreeLevel);
         var shiftY = (subtreeRootKey[2] << subtreeLevel);
         var shiftZ = (subtreeRootKey[3] << subtreeLevel);
-        var subtreeTileKey = [
+        var subtreeKey = [
             subtreeLevel,
             ((x - shiftX)),
             ((y - shiftY)),
@@ -1944,7 +1944,7 @@ define([
 
         return {
             subtreeRootKey: subtreeRootKey,
-            subtreeTileKey: subtreeTileKey
+            subtreeKey: subtreeKey
         };
     };
 
@@ -1958,9 +1958,9 @@ define([
         var available = this._available;
         var result = this.getSubtreeRootAndTileKey(x, y, z, level);
         var subtreeRootKey = result.subtreeRootKey;
-        var subtreeTileKey = result.subtreeTileKey;
-        // var subtreeLevel = subtreeTileKey.d;
-        var subtreeLevel = subtreeTileKey[0];
+        var subtreeKey = result.subtreeKey;
+        // var subtreeLevel = subtreeKey.d;
+        var subtreeLevel = subtreeKey[0];
         var dimOnLevel = (1 << subtreeLevel);
         var dimOnLevelSqrd = dimOnLevel * dimOnLevel;
 
@@ -1972,8 +1972,8 @@ define([
         // Update the bit that corresponds to this rel subtree key (d, x, y, z)
         var indexOffsetToFirstByteOnLevel = arraySizes[subtreeLevel];
         // Treating the level as a linear array, what is the tiles index on this subtree level
-        // var tileIndexOnLevel = subtreeTileKey.z * dimOnLevelSqrd + subtreeTileKey.y * dimOnLevel + subtreeTileKey.x;
-        var tileIndexOnLevel = subtreeTileKey[3] * dimOnLevelSqrd + subtreeTileKey[2] * dimOnLevel + subtreeTileKey[1];
+        // var tileIndexOnLevel = subtreeKey.z * dimOnLevelSqrd + subtreeKey.y * dimOnLevel + subtreeKey.x;
+        var tileIndexOnLevel = subtreeKey[3] * dimOnLevelSqrd + subtreeKey[2] * dimOnLevel + subtreeKey[1];
 
         var packed = this._packedSubtrees;
         var exists = false;
