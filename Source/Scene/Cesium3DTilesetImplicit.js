@@ -1894,7 +1894,7 @@ define([
         return false;
     };
 
-    Cesium3DTilesetImplicit.prototype.deriveGeometricErrorFromParent = function(parent, x, y, z, xTiles, yTiles) {
+    Cesium3DTilesetImplicit.prototype.derivedImplicitGeometricError = function(parent, x, y, z, xTiles, yTiles) {
         var anyChildrenAvailable = !defined(parent.treeKey) ? true : this.anyChildrenAvailableSubtree(x, y, z, parent.treeKey.w + 1); // parent key depth + 1 is this tiles depth, we want to see if this tile has any children for seting gError to 0
         return anyChildrenAvailable ? (parent.geometricError / Math.sqrt(xTiles * yTiles)) : 0;
     };
@@ -2292,7 +2292,7 @@ define([
                         uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
                         tileInfo = {
                             boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
-                            geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
+                            geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
                             content: {uri: uri},
                             treeKey: new Cartesian4(x, y, z, level),
                             subtreeKey: result.subtreeTileKey,
@@ -2322,61 +2322,55 @@ define([
         zTiles = isOct ? 2 : 1;
         var subtreeLevels0Indexed = this._tilingScheme.subtreeLevels - 1;
         var subtreeRootLevel = subtreeRootKey[0];
+        var treeKeys, subtreeKeys, subtreeRootKeys, subtreeIndices;
+        var treeKey, subtreeKey, subtreeRootKey, subtreeIndex;
         while (stack.length > 0) {
             tile = stack.pop();
             ++statistics.numberOfTilesTotal;
-
-            // get the tile's chilrens' xyz range
-            // loop over that like we did above
-            // Go to level and grab the tiles there (hopefully there's 1 or 2)
-            // and push those children
-            // var childStartKey = tile.childStartKey;
-            var childStartKey = tile.childTreeKeys[0];
-            level = childStartKey.w;
-            startX = childStartKey.x;
-            startY = childStartKey.y;
-            startZ = childStartKey.z;
-            endX = startX + xTiles - 1;
-            endY = startY + yTiles - 1;
-            endZ = startZ + zTiles - 1;
-
 
             if (level < subtreeRootLevel || level > (subtreeRootLevel + subtreeLevels0Indexed)) {
                 console.log('cannot build tile at level ' + level + ' for subtree at level ' + subtreeRootLevel);
                 continue;
             }
 
-            for (z = startZ; z <= endZ; ++z) {
-                for (y = startY; y <= endY; ++y) {
-                    for (x = startX; x <= endX; ++x) {
-                        result = this.isTileAvailableTreeIndex(x, y, z, level);
-                        if (!result.isAvailable) {
-                            continue;
-                        }
+            treeKeys = tile.childTreeKeys;
+            subtreeKeys = tile.childSubtreeKeys;
+            subtreeRootKeys = tile.childSubtreeRootKeys;
+            subtreeIndices = tile.childSubtreeIndices;
 
-                        // TODO: the zyx key isnt consitant (though probably more desirable)
-                        uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
-                        tileInfo = {
-                            boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
-                            geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
-                            content: {uri: uri},
-                            treeKey: new Cartesian4(x, y, z, level),
-                            subtreeKey: result.subtreeTileKey,
-                            subtreeIndex: result.subtreeTileIndex,
-                            subtreeRootKey: result.subtreeRootKey,
-                            refine: tilingScheme.refine
-                        };
+            var childTreeKeysLength = tile.childTreeKeys.length;
+            for (i = 0; i < childTreeKeysLength; i++) {
+                treeKey = treeKeys[i];
+                subtreeKey = subtreeKeys[i];
+                subtreeRootKey = subtreeRootKeys[i];
+                subtreeIndex = subtreeIndices[i];
 
-                        childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
-                        tile.children.push(childTile);
-                        childTile._depth =  tile._depth + 1;
-                        stack.push(childTile);
+                x = treeKey.x;
+                y = treeKey.y;
+                z = treeKey.z;
+                level =  treeKey.w;
 
-                        // Update the tilesArray
-                        var subtreeTileIndex = result.subtreeTileIndex;
-                        tilesArray[subtreeTileIndex]  = childTile;
-                    }
+                if (subtree[subtreeIndex] !== 1) {
+                    continue;
                 }
+
+                // TODO: the zyx key isnt consitant (though probably more desirable)
+                uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+                tileInfo = {
+                    boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
+                    geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
+                    content: {uri: uri},
+                    treeKey: treeKey,
+                    subtreeKey: subtreeKey,
+                    subtreeIndex: subtreeIndex,
+                    subtreeRootKey: subtreeRootKey,
+                    refine: tilingScheme.refine
+                };
+                childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
+                tile.children.push(childTile);
+                childTile._depth =  tile._depth + 1;
+                stack.push(childTile);
+                tilesArray[subtreeIndex]  = childTile;
             }
 
             if (this._cullWithChildrenBounds) {
@@ -2488,7 +2482,7 @@ define([
                         uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
                         tileInfo = {
                             boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
-                            geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
+                            geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
                             content: {uri: uri},
                             key: new Cartesian4(x, y, z, level),
                             refine: tilingScheme.refine
@@ -2536,7 +2530,7 @@ define([
                             uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
                             tileInfo = {
                                 boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
-                                geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
+                                geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
                                 content: {uri: uri},
                                 key: new Cartesian4(x, y, z, level),
                                 refine: tilingScheme.refine

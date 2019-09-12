@@ -208,8 +208,8 @@ define([
         // TODO: replace with childTreeKeys (also add childSubtreeKeys, childSubtreeIndices, childSubtreeRootKeys)
         this.childTreeKeys = [];
         this.childSubtreeKeys = [];
-        this.childSubtreeIndices = [];
         this.childSubtreeRootKeys = [];
+        this.childSubtreeIndices = [];
         this.childStartKey = new Cartesian4();
         if (defined(this.treeKey)) {
             var childStartKey = this.childStartKey;
@@ -247,8 +247,7 @@ define([
                         val = result.subtreeRootKey;
                         this.childSubtreeRootKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
 
-                        val = result.subtreeTileIndex;
-                        this.childSubtreeIndices.push(new Cartesian4(val[1], val[2], val[3], val[0]));
+                        this.childSubtreeIndices.push(result.subtreeTileIndex);
                     }
                 }
             }
