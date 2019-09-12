@@ -1,10 +1,19 @@
 unpack the compressed bit array into u8 array? i.e. 0x1 or 0x0 at each index?
 Probably since the unpacking would be in an inner loop
 
-[ ] build the arrays on load as well ... and toroidial subtree viewer? it's camera relative, right?
+
+[ ] Try to traverse the subtree arrays in tree style (is this a waste of time?)
+    Tiles store:
+    NOTE: Not sure about storing subtree refs (don't store for now)
+    *** should last row of availability just indicate if it has a child in those spots (to know if 0 sse or not)
+    and also indicate the external availability as normal but last row can't init tiles like the rest
+    of the subtree
+
+    treeKey, subtreeKey, subtreeIndex, subtreeRootKey, subtree ref
+    children treeKeys, subtreeKeys, subtreeIndices
+    children subtreeRootKey, and chilren subtree ref
+
+[ ] toroidial subtree viewer? it's camera relative, right?
 [ ] look at the sse calculation and see if theres a good way to pre-calc the sse spheres and sphere deltas
-[ ] try to traverse the subtree arrays in tree style (is this a waste of time?)
-    children are just subtree array indices and the subtree link?
-    tiles store the link to their subtree and their subtree index?
 [ ] incrementally move components to array style
 [ ] try to go full bresenham
