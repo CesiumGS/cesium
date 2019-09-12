@@ -261,10 +261,22 @@ define([
         this._basePath = undefined;
         this._root = undefined;
         this._tilingScheme = undefined;
-        this._available = new Map(); // Holds the subtrees. Key is the subtree's root [d.x,y,z] in the tree and value is the Uint8Array subtree
-        this._arraySizes = undefined;
+
+        // TODO: Cache/Manager class that has some or all of these values as
+        // well as any subtree precomputation (array sizes, sse sphere radii, etc)
+        this._available = new Map(); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
+        this._tiles = new Map(); // Holds the subtree tiles, Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is an Array of tiles (undefined spots are unavailable)
+        // this._subtreeViewer = new ImplicitSubtreeViewer(this); // TODO: Make class with the toroidial multi dimensional array to make iteration easier, needs to update small portions every frame
+        // I think there are two portions? ancestor portion 1d array and the normal portion which is a 3d array (fixed sizes on each level?) toroidial array?
+        // what happens when sse changes? re-init the fixed size arrays? prevent going below some value in tileset (during the set)?
+        //
+        this._packedArraySizes = undefined;
+        this._unpackedArraySizes = undefined;
+        this._packedSize = 0;
+        this._unpackedSize = 0;
         this._isOct = true;
-        this._packedSubtrees = true;
+        this._packedSubtrees = false;
+
         this._availabilityFolder = 'availability/'; // Pick something easier to spell, maybe a/
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
@@ -994,7 +1006,14 @@ define([
                 }
 
                 var regex = /tileset\.json/;
-                that._isOct = that._tilingScheme.type === 'oct';
+                var isOct = that._tilingScheme.type === 'oct';
+                that._isOct = isOct;
+                that._packedArraySizes = isOct ? subtreesPackedUint8ArraySizesOct : subtreesPackedUint8ArraySizesQuad;
+                that._unpackedArraySizes = isOct ? subtreesUint8ArraySizesOct : subtreesUint8ArraySizesQuad;
+                var subtreeLevels = that._tilingScheme.subtreeLevels;
+                that._unpackedSize = that._unpackedArraySizes[subtreeLevels];
+                that._packedSize = that._packedArraySizes[subtreeLevels];
+
                 var rootSubtreeUrls = that.getRootSubtreeUrls();
                 //  TODO: support processing all root subtrees at the start
                 var subtreeUrl = that._url.replace(regex, rootSubtreeUrls[0]);
@@ -1021,13 +1040,9 @@ define([
                         refine: tilingScheme.refine,
                     };
 
-                    // that._root = that.updateTilesetFromLayerJson(resource, subtreeArrayBuffer);
                     that._root = that.updateTilesetFromSubtree(resource, subtreeArrayBuffer, rootKey);
-                    var r = that._root;
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
-                    var stack = [];
-                    stack.push(that._root);
                 }
 
                 // Save the original, untransformed bounding volume position so we can apply
@@ -1910,21 +1925,6 @@ define([
         subtreeRootLevel -= onLastLevel ? 1 : 0; // Because there is overlap between subtree roots and their parents last level, take the previous subtree when on the overlap level
         subtreeRootLevel = Math.max(subtreeRootLevel, this._tilingScheme.roots[0][0]);
         var subtreeLevel = level - subtreeRootLevel;
-        // var subtreeRootKey = {
-        //     d: subtreeRootLevel,
-        //     x: x >> subtreeLevel,
-        //     y: y >> subtreeLevel,
-        //     z: z >> subtreeLevel,
-        // };
-        // var shiftX = (subtreeRootKey.x << subtreeLevel);
-        // var shiftY = (subtreeRootKey.y << subtreeLevel);
-        // var shiftZ = (subtreeRootKey.z << subtreeLevel);
-        // var subtreeTileKey = {
-        //     d: subtreeLevel,
-        //     x: ((x - shiftX)),
-        //     y: ((y - shiftY)),
-        //     z: ((z - shiftZ)),
-        // };
 
         var subtreeRootKey = [
             subtreeRootLevel,
@@ -1964,10 +1964,11 @@ define([
         var dimOnLevel = (1 << subtreeLevel);
         var dimOnLevelSqrd = dimOnLevel * dimOnLevel;
 
-        const key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
+        var key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
         var subtree = available.get(key);
 
-        var arraySizes = this._arraySizes;
+        // var arraySizes = this._arraySizes;
+        var arraySizes = this._unpackedArraySizes;
 
         // Update the bit that corresponds to this rel subtree key (d, x, y, z)
         var indexOffsetToFirstByteOnLevel = arraySizes[subtreeLevel];
@@ -1975,20 +1976,20 @@ define([
         // var tileIndexOnLevel = subtreeTileKey.z * dimOnLevelSqrd + subtreeTileKey.y * dimOnLevel + subtreeTileKey.x;
         var tileIndexOnLevel = subtreeTileKey[3] * dimOnLevelSqrd + subtreeTileKey[2] * dimOnLevel + subtreeTileKey[1];
 
-        var packed = this._packedSubtrees;
         var exists = false;
-        if(packed) {
-            // Which byte is holding this tile's bit
-            var indexOffsetToByteOnLevel = tileIndexOnLevel >> 3;
-            // which bit in the byte is holding this tile's availability
-            var bitInByte = tileIndexOnLevel & 0b111; // modulo 8
-            var index = indexOffsetToFirstByteOnLevel + indexOffsetToByteOnLevel;
-            var bitMask = (1 << bitInByte);
-            exists = (subtree[index] & bitMask) === bitMask;
-        } else {
+        // var packed = this._packedSubtrees;
+        // if(packed) {
+        //     // Which byte is holding this tile's bit
+        //     var indexOffsetToByteOnLevel = tileIndexOnLevel >> 3;
+        //     // which bit in the byte is holding this tile's availability
+        //     var bitInByte = tileIndexOnLevel & 0b111; // modulo 8
+        //     var index = indexOffsetToFirstByteOnLevel + indexOffsetToByteOnLevel;
+        //     var bitMask = (1 << bitInByte);
+        //     exists = (subtree[index] & bitMask) === bitMask;
+        // } else {
             var index = indexOffsetToFirstByteOnLevel + tileIndexOnLevel;
             exists = subtree[index] === 0x1;
-        }
+        // }
 
         return exists;
     };
@@ -2107,6 +2108,66 @@ define([
         };
     };
 
+    Cesium3DTilesetImplicit.prototype.findSubtreeLevelStart = function(subtree) {
+        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        var isOct = this._isOct;
+        var unpackedSize = this._unpackedSize;
+        var unpackedArraySizes = this._unpackedArraySizes;
+
+        var i;
+        var availableIdx = 0;
+
+        var firstIndex = 0;
+        for (i = 0; i < unpackedSize; i++) {
+            if (subtree[i] === 1) {
+                firstIndex = i;
+                break;
+            }
+        }
+
+        for (i = 0; i < subtreeLevels; i++) {
+            if (firstIndex < unpackedArraySizes[i+1]) {
+                return i;
+            }
+        }
+
+        return 0;
+    }
+
+    /**
+     * Updates the _available and _tiles maps from the subtreeArrayBuffer payload
+     *
+     * @private
+     */
+    Cesium3DTilesetImplicit.prototype.updateAvailableMap = function(subtreeArrayBuffer, keyString, keyArray) {
+        var payload = new Uint8Array(subtreeArrayBuffer);
+        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        var isOct = this._isOct;
+        var packedSize = this._packedSize;
+        var unpackedSize = this._unpackedSize;
+        var available = new Uint8Array(unpackedSize);
+
+        var startIdx = isOct ? 1 : 2;
+        var endIdx = packedSize - 1;
+        var i, j;
+        var availableIdx = 0;
+        available[availableIdx++] = payload[0];
+        if (!isOct) {
+            for (i = 0; i < 4; i++) {
+                available[availableIdx++] = (payload[1] >> i) & 1;
+            }
+        }
+
+        // iterate through payload update the arrays and then assign to the maps
+        for(i = startIdx; i <= endIdx; i++) {
+            for (j = 0; j < 8; j++) {
+                available[availableIdx++] = (payload[i] >> j) & 1;
+            }
+        }
+
+        this._available.set(keyString, available);
+    }
+
     /**
      * Updates the _available arrays as well as updates the metadata view of
      * the tileset tree given a layerJson
@@ -2114,9 +2175,13 @@ define([
      * @private
      */
     Cesium3DTilesetImplicit.prototype.updateTilesetFromSubtree = function(resource, subtreeArrayBuffer, subtreeRootKey, parentTile) {
-        if (!defined(subtreeArrayBuffer) || subtreeArrayBuffer.byteLength === 0) {
-            throw new RuntimeError('Subtree ArrayBuffer must exist an not be empty.');
+        if (!defined(subtreeArrayBuffer)) {
+            throw new RuntimeError('DEBUG: Subtree ArrayBuffer is undefined.');
         }
+        if (subtreeArrayBuffer.byteLength === 0) {
+            throw new RuntimeError('DBUG: Subtree ArrayBuffer is empty?');
+        }
+
         console.log('ArrayBuffer length: ' + subtreeArrayBuffer.byteLength);
 
         var isOct = this._isOct;
@@ -2125,26 +2190,19 @@ define([
             subtreeRootKey.push(0);
         }
 
-        const key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
-
-        // Re-extract subtrees key from resource
-        var subtree = new Uint8Array(subtreeArrayBuffer);
-        var packed = subtree[1] > 1;
-        this._packedSubtrees = packed;
-        this._arraySizes = isOct ?
-        (packed ? subtreesPackedUint8ArraySizesOct : subtreesUint8ArraySizesOct) :
-        (packed ? subtreesPackedUint8ArraySizesQuad : subtreesUint8ArraySizesQuad);
-        console.log('subtree Uint8Array length: ' + subtree.length);
-        console.log('subtree key: ' + key);
+        var key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
 
         var available = this._available;
-        // available[key] = subtree;
         if (available.has(key)) {
-            throw new RuntimeError('Subtree already exists?');
+            throw new RuntimeError('DEBUG: Subtree already exists?');
         }
-        available.set(key, subtree);
-        var stored = available.get(key);
-        console.log('stored subtree array length: ' + stored.length);
+
+        // create an unpacked uint8array and an array and populate with 1/0;
+        this.updateAvailableMap(subtreeArrayBuffer, key, subtreeRootKey);
+
+        var subtree = this._available.get(key);
+        console.log('subtree Uint8Array unpacked length: ' + subtree.length);
+        console.log('subtree key: ' + key);
 
         var statistics = this._statistics;
         var hasParent = defined(parentTile);
@@ -2186,20 +2244,9 @@ define([
         var x, y, z;
         var tile, childTile;
         var uri, tileInfo;
-        var level = subtreeRootKey[0];
-        // var startLevel = subtreeRootKey[0];
-        // var length =  available.length;
-        // while (available[startLevel].length === 0 && startLevel < length) {
-        //     startLevel++;
-        // }
-        // var ranges = this.getRangeForLevel(startLevel);
+        var level = subtreeRootKey[0] + this.findSubtreeLevelStart(subtree);
+        console.log('first level: ' + level);
 
-        // Object.keys(available).forEach(function(subtreeRootKey) {
-        //     var depth = subtreeRootKey[0];
-        //     if (startLevel > depth) {
-        //         startLevel = depth;
-        //     }
-        // });
         var ranges = this.getTreeRangeForLevel(subtreeRootKey, level);
         var xTiles, yTiles, zTiles;
         // TODO: merge with loop version but wait till the other todo's are ironed out
@@ -2212,7 +2259,6 @@ define([
         var startZ = ranges.startZ;
         var endZ = ranges.endZ;
         var tilesetRoot = defined(this._root) ? this._root : rootTile
-        var foundRoot = false;
 
         // Not sure what the points of this is again (over the else which just pushes the rootTile)
         if (!hasParent) {
@@ -2225,44 +2271,29 @@ define([
             // for example available check just takes the subtree array (get it if you don't have it, don't do inner loop map lookup)
             // and  indices, then go find the bit or byte
             // or have two versions where one is subtree based and another is tree based
-            while (!foundRoot) {
-                for (z = startZ; z <= endZ; ++z) {
-                    for (y = startY; y <= endY; ++y) {
-                        for (x = startX; x <= endX; ++x) {
-                            if (!this.isTileAvailableTreeIndex(x, y, z, level)) {
-                                continue;
-                            }
-                            foundRoot =  true;
-                            ++statistics.numberOfTilesTotal;
-
-                            // TODO: the zyx key isnt consitant (though probably more desirable)
-                            uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
-                            tileInfo = {
-                                boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
-                                geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
-                                content: {uri: uri},
-                                key: new Cartesian4(x, y, z, level),
-                                refine: tilingScheme.refine
-                            };
-
-                            childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
-                            tile.children.push(childTile);
-                            childTile._depth =  childTile._depth + 1;
-                            stack.push(childTile);
+            for (z = startZ; z <= endZ; ++z) {
+                for (y = startY; y <= endY; ++y) {
+                    for (x = startX; x <= endX; ++x) {
+                        if (!this.isTileAvailableTreeIndex(x, y, z, level)) {
+                            continue;
                         }
-                    }
-                }
+                        ++statistics.numberOfTilesTotal;
 
-                //update loop bounds and level if haven't found yet
-                if (!foundRoot) {
-                    level = level + 1;
-                    ranges = this.getTreeRangeForLevel(subtreeRootKey, level);
-                    startX = ranges.startX;
-                    endX = ranges.endX;
-                    startY = ranges.startY;
-                    endY = ranges.endY;
-                    startZ = ranges.startZ;
-                    endZ = ranges.endZ;
+                        // TODO: the zyx key isnt consitant (though probably more desirable)
+                        uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+                        tileInfo = {
+                            boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
+                            geometricError: this.deriveGeometricErrorFromParent(tile, x, y, z, xTiles, yTiles),
+                            content: {uri: uri},
+                            key: new Cartesian4(x, y, z, level),
+                            refine: tilingScheme.refine
+                        };
+
+                        childTile = new Cesium3DTileImplicit(this, resource, tileInfo, tile);
+                        tile.children.push(childTile);
+                        childTile._depth =  childTile._depth + 1;
+                        stack.push(childTile);
+                    }
                 }
             }
         } else {
