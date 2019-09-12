@@ -298,7 +298,7 @@ define([
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
      * @param {Cartesian2} [options.imageBasedLightingFactor=Cartesian2(1.0, 1.0)] Scales diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
      * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade the model.
-     * @param {Number} [options.luminanceAtZenith=0.5] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+     * @param {Number} [options.luminanceAtZenith=0.1] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
      *
@@ -683,7 +683,7 @@ define([
         this._lightColor = Cartesian3.clone(options.lightColor);
 
         this._luminanceAtZenith = undefined;
-        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.5);
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.1);
 
         this._sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
         this._specularEnvironmentMaps = options.specularEnvironmentMaps;
@@ -1178,7 +1178,7 @@ define([
          *
          * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {Number}
-         * @default 0.5
+         * @default 0.1
          */
         luminanceAtZenith : {
             get : function() {
