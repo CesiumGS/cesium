@@ -17,6 +17,7 @@ Change Log
 * Fix negative altitude altitude handling in `GoogleEarthEnterpriseTerrainProvider`. [#8109](https://github.com/AnalyticalGraphicsInc/cesium/pull/8109)
 * Fixed issue where KTX or CRN files would not be properly identified. [#7979](https://github.com/AnalyticalGraphicsInc/cesium/issues/7979)
 * Fixed multiple globe materials making the globe darker. [#7726](https://github.com/AnalyticalGraphicsInc/cesium/issues/7726)
+* Fixed atmosphere brightness when High Dynamic Range is disabled. [#8149](https://github.com/AnalyticalGraphicsInc/cesium/issues/8149)
 
 ### 1.60 - 2019-08-01
 
