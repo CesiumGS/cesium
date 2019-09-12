@@ -1895,9 +1895,7 @@ define([
     };
 
     Cesium3DTilesetImplicit.prototype.deriveGeometricErrorFromParent = function(parent, x, y, z, xTiles, yTiles) {
-        // TODO: fix this
-        // var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailable(x, y, z, parent.key.w + 1);
-        var anyChildrenAvailable = !defined(parent.key) ? true : this.anyChildrenAvailableSubtree(x, y, z, parent.key.w + 1); // parent key depth + 1 is this tiles depth, we want to see if this tile has any children for seting gError to 0
+        var anyChildrenAvailable = !defined(parent.treeKey) ? true : this.anyChildrenAvailableSubtree(x, y, z, parent.treeKey.w + 1); // parent key depth + 1 is this tiles depth, we want to see if this tile has any children for seting gError to 0
         return anyChildrenAvailable ? (parent.geometricError / Math.sqrt(xTiles * yTiles)) : 0;
     };
 
@@ -2332,8 +2330,8 @@ define([
             // loop over that like we did above
             // Go to level and grab the tiles there (hopefully there's 1 or 2)
             // and push those children
-            var childStartKey = tile.childStartKey;
-            // var childStartKey = tile.childTreeKeys[0];
+            // var childStartKey = tile.childStartKey;
+            var childStartKey = tile.childTreeKeys[0];
             level = childStartKey.w;
             startX = childStartKey.x;
             startY = childStartKey.y;

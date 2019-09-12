@@ -206,10 +206,10 @@ define([
         this.subtreeRootKey = header.subtreeIndex;
 
         // TODO: replace with childTreeKeys (also add childSubtreeKeys, childSubtreeIndices, childSubtreeRootKeys)
-        // this.childTreeKeys = [];
-        // this.childSubtreeKeys = [];
-        // this.childSubtreeIndices = [];
-        // this.childSubtreeRootKeys = [];
+        this.childTreeKeys = [];
+        this.childSubtreeKeys = [];
+        this.childSubtreeIndices = [];
+        this.childSubtreeRootKeys = [];
         this.childStartKey = new Cartesian4();
         if (defined(this.treeKey)) {
             var childStartKey = this.childStartKey;
@@ -219,39 +219,42 @@ define([
             childStartKey.z = treeKey.z * 2;
             childStartKey.w = treeKey.w + 1;
 
-            // var startX = treeKey.x * 2;
-            // var startY = treeKey.y * 2;
-            // var startZ = treeKey.z * 2;
-            // var zEnd = this.tileset._isOct ? 2 : 1;
-            // var x,y,z;
-            // var cx,cy,cz;
-            // var cd = treeKey.w + 1;
-            //
-            // var result = {};
-            // var val;
-            // // TODO: get a function that just finds the derived info from tree index
-            // var getSubtreeInfoFromTreeIndex = this.tileset.getSubtreeInfoFromTreeIndex;
-            // for (z = 0; z < zEnd; z++) {
-            //     for (y = 0; y< 2; y++) {
-            //         for (x = 0; x < 2; x++) {
-            //             cx = startX + x;
-            //             cy = startY + y;
-            //             cz = startZ + z;
-            //
-            //             this.childTreeKeys.push(new Cartesian4(cx, cy, cz, cd));
-            //
-            //             result = getSubtreeInfoFromTreeIndex(cx,cy,cz,cd);
-            //
-            //             val = result.subtreeKey;
-            //             this.childSubtreeKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
-            //
-            //             val = result.subtreeRootKey;
-            //             this.childSubtreeRootKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
-            //
-            //             val = result.subtreeIndices;
-            //             this.childSubtreeIndices.push(new Cartesian4(val[1], val[2], val[3], val[0]));
-            //         }
-            //     }
+            var startX = treeKey.x * 2;
+            var startY = treeKey.y * 2;
+            var startZ = treeKey.z * 2;
+            var zEnd = tileset._isOct ? 2 : 1;
+            var x,y,z;
+            var cx,cy,cz;
+            var cd = treeKey.w + 1;
+
+            var result = {};
+            var val;
+            // TODO: get a function that just finds the derived info from tree index
+            for (z = 0; z < zEnd; z++) {
+                for (y = 0; y< 2; y++) {
+                    for (x = 0; x < 2; x++) {
+                        cx = startX + x;
+                        cy = startY + y;
+                        cz = startZ + z;
+
+                        this.childTreeKeys.push(new Cartesian4(cx, cy, cz, cd));
+
+                        result = tileset.getSubtreeInfoFromTreeIndex(cx,cy,cz,cd);
+
+                        val = result.subtreeTileKey;
+                        this.childSubtreeKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
+
+                        val = result.subtreeRootKey;
+                        this.childSubtreeRootKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
+
+                        val = result.subtreeTileIndex;
+                        this.childSubtreeIndices.push(new Cartesian4(val[1], val[2], val[3], val[0]));
+                    }
+                }
+            }
+
+            // if (childStartKey !== this.childTreeKeys[0]) {
+            //     console.log('no match');
             // }
 
         }
