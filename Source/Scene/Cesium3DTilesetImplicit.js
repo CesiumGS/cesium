@@ -1879,10 +1879,12 @@ define([
         //     return false ;
         // }
 
+        var result;
         for (var z = startZ; z <= endZ; ++z) {
             for (var x = startX; x <= endX; ++x) {
                 for (var y = startY; y <= endY; ++y) {
-                    if (this.isTileAvailableTreeIndex(x, y, z, level)) {
+                    result = this.isTileAvailableTreeIndex(x, y, z, level);
+                    if (result.isAvailable) {
                         return true;
                     }
                 }
@@ -1956,9 +1958,9 @@ define([
     Cesium3DTilesetImplicit.prototype.isTileAvailableTreeIndex = function(x, y, z, level) {
         var isOct = this._isOct;
         var available = this._available;
-        var result = this.getSubtreeRootAndTileKey(x, y, z, level);
-        var subtreeRootKey = result.subtreeRootKey;
-        var subtreeTileKey = result.subtreeTileKey;
+        var keys = this.getSubtreeRootAndTileKey(x, y, z, level);
+        var subtreeRootKey = keys.subtreeRootKey;
+        var subtreeTileKey = keys.subtreeTileKey;
         // var subtreeLevel = subtreeTileKey.d;
         var subtreeLevel = subtreeTileKey[0];
         var dimOnLevel = (1 << subtreeLevel);
@@ -1976,7 +1978,7 @@ define([
         // var tileIndexOnLevel = subtreeTileKey.z * dimOnLevelSqrd + subtreeTileKey.y * dimOnLevel + subtreeTileKey.x;
         var tileIndexOnLevel = subtreeTileKey[3] * dimOnLevelSqrd + subtreeTileKey[2] * dimOnLevel + subtreeTileKey[1];
 
-        var exists = false;
+        var isAvailable = false;
         // var packed = this._packedSubtrees;
         // if(packed) {
         //     // Which byte is holding this tile's bit
@@ -1985,13 +1987,19 @@ define([
         //     var bitInByte = tileIndexOnLevel & 0b111; // modulo 8
         //     var index = indexOffsetToFirstByteOnLevel + indexOffsetToByteOnLevel;
         //     var bitMask = (1 << bitInByte);
-        //     exists = (subtree[index] & bitMask) === bitMask;
+        //     isAvailable = (subtree[index] & bitMask) === bitMask;
         // } else {
             var index = indexOffsetToFirstByteOnLevel + tileIndexOnLevel;
-            exists = subtree[index] === 0x1;
+            isAvailable = subtree[index] === 0x1;
         // }
 
-        return exists;
+
+        return {
+            isAvailable: isAvailable,
+            subtreeRootKey : subtreeRootKey,
+            subtreeTileKey : subtreeTileKey,
+            subtreeTileIndex : index
+        };
     };
 
     /**
@@ -2241,7 +2249,7 @@ define([
 
         var stack = [];
 
-        var x, y, z;
+        var x, y, z, i;
         var tile, childTile;
         var uri, tileInfo;
         var level = subtreeRootKey[0] + this.findSubtreeLevelStart(subtree);
@@ -2260,6 +2268,12 @@ define([
         var endZ = ranges.endZ;
         var tilesetRoot = defined(this._root) ? this._root : rootTile
 
+        var result;
+        var tilesArray = [];
+        for (i = 0; i < this._unpackedSize; i++) {
+            tilesArray.push(undefined);
+        }
+
         // Not sure what the points of this is again (over the else which just pushes the rootTile)
         if (!hasParent) {
             tile = rootTile;
@@ -2274,7 +2288,8 @@ define([
             for (z = startZ; z <= endZ; ++z) {
                 for (y = startY; y <= endY; ++y) {
                     for (x = startX; x <= endX; ++x) {
-                        if (!this.isTileAvailableTreeIndex(x, y, z, level)) {
+                        result = this.isTileAvailableTreeIndex(x, y, z, level)
+                        if (!result.isAvailable) {
                             continue;
                         }
                         ++statistics.numberOfTilesTotal;
@@ -2293,11 +2308,16 @@ define([
                         tile.children.push(childTile);
                         childTile._depth =  childTile._depth + 1;
                         stack.push(childTile);
+
+                        // Update the tilesArray array
+                        var subtreeTileIndex = result.subtreeTileIndex;
+                        tilesArray[subtreeTileIndex]  = childTile;
                     }
                 }
             }
         } else {
             stack.push(rootTile);
+            tilesArray[0] = rootTile;
         }
 
         xTiles = 2;
@@ -2331,7 +2351,8 @@ define([
             for (z = startZ; z <= endZ; ++z) {
                 for (y = startY; y <= endY; ++y) {
                     for (x = startX; x <= endX; ++x) {
-                        if (!this.isTileAvailableTreeIndex(x, y, z, level)) {
+                        result = this.isTileAvailableTreeIndex(x, y, z, level);
+                        if (!result.isAvailable) {
                             continue;
                         }
 
@@ -2349,6 +2370,10 @@ define([
                         tile.children.push(childTile);
                         childTile._depth =  tile._depth + 1;
                         stack.push(childTile);
+
+                        // Update the tilesArray
+                        var subtreeTileIndex = result.subtreeTileIndex;
+                        tilesArray[subtreeTileIndex]  = childTile;
                     }
                 }
             }
@@ -2357,6 +2382,13 @@ define([
                 Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
             }
         }
+
+        var tiles = this._tiles;
+        if (tiles.has(key)) {
+            throw new RuntimeError('DEBUG: Subtree already exists?');
+        }
+
+        tiles.set(key, tilesArray)
 
         return rootTile;
     };
