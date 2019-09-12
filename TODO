@@ -8,6 +8,7 @@ Probably since the unpacking would be in an inner loop
     *** should last row of availability just indicate if it has a child in those spots (to know if 0 sse or not)
     and also indicate the external availability as normal but last row can't init tiles like the rest
     of the subtree
+    *** only real reason to do the above is if 0 sse is really important and can't get rid of it
 
     treeKey, subtreeKey, subtreeIndex, subtreeRootKey, subtree ref
     children treeKeys, subtreeKeys, subtreeIndices
