@@ -2598,9 +2598,6 @@ define([
 
                 childTile = tilesArray[childSubtreeIndex];
                 childTile.parent = tile;
-                // TODO: I guess for implict the tileset holds the transform?
-                // otherwise need to update the tiles transorm after teh parent has been assigned in this way
-                // make a setParent function
                 tile.children.push(childTile);
             }
 

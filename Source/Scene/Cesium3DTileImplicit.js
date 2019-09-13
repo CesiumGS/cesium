@@ -747,6 +747,35 @@ define([
         return (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
     }
 
+    // /**
+    //  * Setup transforms when doing deferred tile linking during subtree init
+    //  *
+    //  * @private
+    //  */
+    // Cesium3DTileImplicit.prototype.setParent = function(parent) {
+    //     if (!defined(parent)) {
+    //         return;
+    //     }
+    //
+    //     this.parent = parent;
+    //     var tileTransform = this.transform;
+    //     var parentTransform = defined(parent) ? parent.computedTransform : this.tileset.modelMatrix;
+    //     var computedTransform = Matrix4.multiply(parentTransform, tileTransform, new Matrix4());
+    //
+    //     var parentInitialTransform = defined(parent) ? parent._initialTransform : Matrix4.IDENTITY;
+    //     this._initialTransform = Matrix4.multiply(parentInitialTransform, tileTransform, new Matrix4());
+    //
+    //     this.computedTransform = computedTransform;
+    //
+    //     this._boundingVolume = this.createBoundingVolume(this._boundingVolume, computedTransform);
+    //     this._boundingVolume2D = undefined;
+    //
+    //     this._contentBoundingVolume = this.createBoundingVolume(this._boundingVolume, computedTransform);;
+    //
+    //     this._viewerRequestVolume = this.createBoundingVolume(this._viewerRequestVolume, computedTransform);;
+    //
+    // };
+
     var scratchJulianDate = new JulianDate();
 
     /**
