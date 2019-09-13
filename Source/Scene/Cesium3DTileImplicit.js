@@ -233,7 +233,7 @@ define([
 
                         this.childTreeKeys.push(new Cartesian4(cx, cy, cz, cd));
 
-                        result = tileset.getSubtreeInfoFromTreeIndex(cx,cy,cz,cd);
+                        result = tileset.getSubtreeInfoFromTreeKey(cx,cy,cz,cd);
 
                         val = result.subtreeKey;
                         this.childSubtreeKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));

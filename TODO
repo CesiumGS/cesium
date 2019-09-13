@@ -15,6 +15,10 @@ Probably since the unpacking would be in an inner loop
     children subtreeRootKey
 
 [ ] toroidial subtree viewer? it's camera relative, right?
+[ ] cone tracing?
 [ ] look at the sse calculation and see if theres a good way to pre-calc the sse spheres and sphere deltas
 [ ] incrementally move components to array style
 [ ] try to go full bresenham
+
+[ ] 4 para patent brainstorm write ups for traversal(cone trace?), ray trace,
+    give me highest lods in this bounds, and whatever else
