@@ -1,18 +1,14 @@
-Unpack the compressed bit array into u8 array? i.e. 0x1 or 0x0 at each index?
-Probably since the unpacking would be in an inner loop
+*** should last row of availability just indicate if it has a child in those spots (to know if 0 sse or not)
+and also indicate the external availability as normal but last row can't init tiles like the rest
+of the subtree
+*** only real reason to do the above is if 0 sse is really important and can't get rid of it
+
+[ ] get old method squared away with cartesian4's everywhere, starting from subtreeRootKey that's passed in
 
 [ ] Try to traverse the subtree arrays in tree style (is this a waste of time?)
-    Tiles store:
-    NOTE: Not sure about storing subtree refs (don't store for now)
-    *** should last row of availability just indicate if it has a child in those spots (to know if 0 sse or not)
-    and also indicate the external availability as normal but last row can't init tiles like the rest
-    of the subtree
-    *** only real reason to do the above is if 0 sse is really important and can't get rid of it
 
+    NOTE: Not sure about storing subtree refs (don't store for now)
     subtree ref / chilren subtree ref
-    treeKey, subtreeKey, subtreeIndex, subtreeRootKey
-    children treeKeys, subtreeKeys, subtreeIndices
-    children subtreeRootKey
 
 [ ] toroidial subtree viewer? it's camera relative, right?
 [ ] cone tracing?

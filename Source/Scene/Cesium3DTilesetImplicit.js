@@ -1020,6 +1020,10 @@ define([
                 // var subtreeResource = Resource.createIfNeeded(subtreeUrl);
                 // return Cesium3DTilesetImplicit.loadJson(subtreeResource);
                 rootKey = that._tilingScheme.roots[0];
+                if (!isOct) {
+                    rootKey.push(0);
+                }
+                rootKey = new Cartesian4(rootKey[1], rootKey[2], rootKey[3], rootKey[0]);
                 return Cesium3DTilesetImplicit.loadArrayBuffer(subtreeUrl);
             })
             .then(function(result) {
@@ -1039,6 +1043,7 @@ define([
                         content: undefined,
                         refine: tilingScheme.refine,
                     };
+
 
                     that._root = that.updateTilesetFromSubtree2(resource, subtreeArrayBuffer, rootKey);
                 } else {
@@ -2182,7 +2187,7 @@ define([
      *
      * @private
      */
-    Cesium3DTilesetImplicit.prototype.updateAvailableMap = function(subtreeArrayBuffer, keyString, keyArray) {
+    Cesium3DTilesetImplicit.prototype.updateAvailableMap = function(subtreeArrayBuffer, keyString) {
         var payload = new Uint8Array(subtreeArrayBuffer);
         var subtreeLevels = this._tilingScheme.subtreeLevels;
         var isOct = this._isOct;
@@ -2241,7 +2246,7 @@ define([
         }
 
         // create an unpacked uint8array and an array and populate with 1/0;
-        this.updateAvailableMap(subtreeArrayBuffer, key, subtreeRootKey);
+        this.updateAvailableMap(subtreeArrayBuffer, key);
 
         var subtree = this._available.get(key);
         console.log('subtree Uint8Array unpacked length: ' + subtree.length);
@@ -2451,11 +2456,7 @@ define([
 
         var isOct = this._isOct;
 
-        if (!isOct) {
-            subtreeRootKey.push(0);
-        }
-
-        var key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
+        var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
 
         var available = this._available;
         if (available.has(key)) {
@@ -2463,7 +2464,7 @@ define([
         }
 
         // create an unpacked uint8array and an array and populate with 1/0;
-        this.updateAvailableMap(subtreeArrayBuffer, key, subtreeRootKey);
+        this.updateAvailableMap(subtreeArrayBuffer, key);
 
         var subtree = this._available.get(key);
         console.log('subtree Uint8Array unpacked length: ' + subtree.length);
@@ -2505,7 +2506,7 @@ define([
             parentTile.children.push(rootTile);
             rootTile._depth = parentTile._depth + 1;
         } else {
-            this._startLevel = subtreeRootKey[0] + subtreeLevelStart;
+            this._startLevel = subtreeRootKey.w + subtreeLevelStart;
         }
 
         var level = this._startLevel;
@@ -2532,11 +2533,10 @@ define([
         // For finding all heads in the root or finding the start tile in a subtree (if the tileset root doesn't start at the root of the subtree)
 
         var subtreeLevels0Indexed = this._tilingScheme.subtreeLevels - 1;
-        var subtreeRootLevel = subtreeRootKey[0];
+        var subtreeRootLevel = subtreeRootKey.w;
         var treeKey, subtreeKey, subtreeIndex, result;
         var x, y, z, i, uri, tileInfo, tile, childTile;
         var tilesetStartLevel = this._startLevel;
-        var subtreeRootKey = new Cartesian4(subtreeRootKey[1], subtreeRootKey[2], subtreeRootKey[3], subtreeRootKey[0]);
         // This loop is just to create the tiles in the right spots in the _tiles array
         for (subtreeIndex = 0; subtreeIndex < unpackedSize; subtreeIndex++) {
             if (subtree[subtreeIndex] === 0) {
