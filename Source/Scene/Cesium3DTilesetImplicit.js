@@ -982,7 +982,7 @@ define([
                 that._asset = asset;
                 that._tilingScheme = tilesetJson.tilingScheme;
                 that._properties = tilesetJson.properties;
-                that._geometricError = tilesetJson.geometricError;
+                that._geometricError = tilesetJson.geometricError * 2;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
@@ -1037,12 +1037,12 @@ define([
                     that._allTilesAdditive = tilingScheme.refine === Cesium3DTileRefine.ADD;
                     // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
                     // Get the basePath relative to the external tileset.
-                    var rootInfo = {
-                        boundingVolume: tilingScheme.boundingVolume,
-                        geometricError: that._geometricError,
-                        content: undefined,
-                        refine: tilingScheme.refine,
-                    };
+                    // var rootInfo = {
+                    //     boundingVolume: tilingScheme.boundingVolume,
+                    //     geometricError: that._geometricError,
+                    //     content: undefined,
+                    //     refine: tilingScheme.refine,
+                    // };
 
                     that._root = that.updateTilesetFromSubtree2(resource, subtreeArrayBuffer, rootKey);
                 } else {
@@ -2317,7 +2317,7 @@ define([
         var endY = ranges.endY;
         var startZ = ranges.startZ;
         var endZ = ranges.endZ;
-        var tilesetRoot = defined(this._root) ? this._root : rootTile
+        var tilesetRoot = defined(this._root) ? this._root : rootTile;
 
         var result;
         var tilesArray = [];
@@ -2351,6 +2351,7 @@ define([
                         tileInfo = {
                             boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
                             geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
+                            // geometricError: rootTile.geometricError,
                             content: {uri: uri},
                             treeKey: new Cartesian4(x, y, z, level),
                             subtreeKey: result.subtreeKey,
@@ -2442,6 +2443,7 @@ define([
         }
 
         tiles.set(key, tilesArray)
+        console.log(rootTile);
 
         return rootTile;
     };
@@ -2546,6 +2548,7 @@ define([
         var treeKey, subtreeKey, subtreeIndex, result;
         var x, y, z, i, uri, tileInfo, tile, childTile;
         var tilesetStartLevel = this._startLevel;
+        var contentRootGeometricError = this._geometricError * 0.5;
         // This loop is just to create the tiles in the right spots in the _tiles array
         for (subtreeIndex = 0; subtreeIndex < unpackedSize; subtreeIndex++) {
             if (subtree[subtreeIndex] === 0) {
@@ -2565,7 +2568,8 @@ define([
             tileInfo = {
                 boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
                 // geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
-                geometricError: tilesetRoot.geometricError / (1 << (level - tilesetStartLevel)),
+                // geometricError: tilesetRoot.geometricError / (1 << (level - tilesetStartLevel)),
+                geometricError: contentRootGeometricError / (1 << (level - tilesetStartLevel)),
                 content: {uri: uri},
                 treeKey: treeKey,
                 subtreeKey: result.subtreeKey,
@@ -2621,11 +2625,11 @@ define([
             throw new RuntimeError('DEBUG: Subtree already exists?');
         }
 
-        console.log('rootTile: ');
+        // console.log('rootTile: ');
         console.log(rootTile);
-        console.log();
-        console.log('tile0: ');
-        console.log(tilesArray[0]);
+        // console.log();
+        // console.log('tile0: ');
+        // console.log(tilesArray[0]);
 
         tiles.set(key, tilesArray)
 
