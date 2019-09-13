@@ -236,10 +236,12 @@ define([
                         result = tileset.getSubtreeInfoFromTreeKey(cx,cy,cz,cd);
 
                         val = result.subtreeKey;
-                        this.childSubtreeKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
+                        // this.childSubtreeKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
+                        this.childSubtreeKeys.push(result.subtreeKey);
 
                         val = result.subtreeRootKey;
-                        this.childSubtreeRootKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
+                        // this.childSubtreeRootKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
+                        this.childSubtreeRootKeys.push(result.subtreeRootKey);
 
                         this.childSubtreeIndices.push(result.subtreeIndex);
                     }

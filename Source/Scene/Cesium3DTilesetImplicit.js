@@ -1044,7 +1044,6 @@ define([
                         refine: tilingScheme.refine,
                     };
 
-
                     that._root = that.updateTilesetFromSubtree2(resource, subtreeArrayBuffer, rootKey);
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
@@ -1973,23 +1972,34 @@ define([
         subtreeRootLevel = Math.max(subtreeRootLevel, this._tilingScheme.roots[0][0]);
         var subtreeLevel = level - subtreeRootLevel;
 
-        var subtreeRootKey = [
-            subtreeRootLevel,
+        // var subtreeRootKey = [
+        //     subtreeRootLevel,
+        //     x >> subtreeLevel,
+        //     y >> subtreeLevel,
+        //     z >> subtreeLevel
+        // ];
+        var subtreeRootKey = new Cartesian4(
             x >> subtreeLevel,
             y >> subtreeLevel,
-            z >> subtreeLevel
-        ];
-        var shiftX = (subtreeRootKey[1] << subtreeLevel);
-        var shiftY = (subtreeRootKey[2] << subtreeLevel);
-        var shiftZ = (subtreeRootKey[3] << subtreeLevel);
-        var subtreeKey = [
-            subtreeLevel,
+            z >> subtreeLevel,
+            subtreeRootLevel
+        );
+        var shiftX = (subtreeRootKey.x << subtreeLevel);
+        var shiftY = (subtreeRootKey.y << subtreeLevel);
+        var shiftZ = (subtreeRootKey.z << subtreeLevel);
+        // var subtreeKey = [
+        //     subtreeLevel,
+        //     ((x - shiftX)),
+        //     ((y - shiftY)),
+        //     ((z - shiftZ))
+        // ];
+        var subtreeKey = new Cartesian4(
             ((x - shiftX)),
             ((y - shiftY)),
-            ((z - shiftZ))
-        ];
+            ((z - shiftZ)),
+            subtreeLevel
+        );
 
-        var subtreeLevel = subtreeKey[0];
         var dimOnLevel = (1 << subtreeLevel);
         var dimOnLevelSqrd = dimOnLevel * dimOnLevel;
 
@@ -1998,7 +2008,7 @@ define([
         // Update the bit that corresponds to this rel subtree key (d, x, y, z)
         var indexOffsetToFirstByteOnLevel = arraySizes[subtreeLevel];
         // Treating the level as a linear array, what is the tiles index on this subtree level
-        var tileIndexOnLevel = subtreeKey[3] * dimOnLevelSqrd + subtreeKey[2] * dimOnLevel + subtreeKey[1];
+        var tileIndexOnLevel = subtreeKey.z * dimOnLevelSqrd + subtreeKey.y * dimOnLevel + subtreeKey.x;
         var index = indexOffsetToFirstByteOnLevel + tileIndexOnLevel;
 
         return {
@@ -2028,7 +2038,7 @@ define([
         //     isAvailable = (subtree[index] & bitMask) === bitMask;
         // } else {
             var subtreeRootKey = result.subtreeRootKey;
-            var key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
+            var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
             var subtree = available.get(key);
             var index = result.subtreeIndex;
             var isAvailable = subtree[index] === 0x1;
@@ -2072,7 +2082,7 @@ define([
      * @private
      */
     Cesium3DTilesetImplicit.prototype.getTreeRangeForLevel = function(key, level) {
-        var subtreeLevelInTree = key[0];
+        var subtreeLevelInTree = key.w;
         var levelDiff = level - subtreeLevelInTree;
         if (levelDiff < 0) {
             throw new RuntimeError('Cannot query a tree range for a level of above the subtree');
@@ -2083,9 +2093,9 @@ define([
 
         var isOct = this._isOct;
 
-        var subtreeRootX = key[1];
-        var subtreeRootY = key[2];
-        var subtreeRootZ = isOct ? key[3] : 0;
+        var subtreeRootX = key.x;
+        var subtreeRootY = key.y;
+        var subtreeRootZ = isOct ? key.z : 0;
 
         // The dim for each direction on this level in teh subtree
         var subteeLevelDim = (1 << levelDiff);
@@ -2234,11 +2244,7 @@ define([
 
         var isOct = this._isOct;
 
-        if (!isOct) {
-            subtreeRootKey.push(0);
-        }
-
-        var key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
+        var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
 
         var available = this._available;
         if (available.has(key)) {
@@ -2280,21 +2286,24 @@ define([
 
         // var rootTile = hasParent ? parentTile : new Cesium3DTileImplicit(this, resource, rootInfo, parentTile);
         var rootTile = new Cesium3DTileImplicit(this, resource, rootInfo, parentTile);
+        var subtreeLevelStart = this.findSubtreeLevelStart(subtree);
 
         // If there is a parentTile, add the root of the currently loading tileset
         // to parentTile's children, and update its _depth.
         if (hasParent) {
             parentTile.children.push(rootTile);
             rootTile._depth = parentTile._depth + 1;
+        } else {
+            this._startLevel = subtreeRootKey.w + subtreeLevelStart;
         }
+
 
         var stack = [];
 
         var x, y, z, i;
         var tile, childTile;
         var uri, tileInfo;
-        var subtreeLevelStart = this.findSubtreeLevelStart(subtree);
-        var level = subtreeRootKey[0] + subtreeLevelStart;
+        var level = subtreeRootKey.w + subtreeLevelStart;
         console.log('first level: ' + level);
 
         var ranges = this.getTreeRangeForLevel(subtreeRootKey, level);
@@ -2370,7 +2379,7 @@ define([
         yTiles = 2;
         zTiles = isOct ? 2 : 1;
         var subtreeLevels0Indexed = this._tilingScheme.subtreeLevels - 1;
-        var subtreeRootLevel = subtreeRootKey[0];
+        var subtreeRootLevel = subtreeRootKey.w;
         var treeKeys, subtreeKeys, subtreeRootKeys, subtreeIndices;
         var treeKey, subtreeKey, subtreeRootKey, subtreeIndex;
         while (stack.length > 0) {
