@@ -1968,18 +1968,13 @@ define([
         // Given the xyz level find the nearest subtree root key
         var subtreeLevels = this._tilingScheme.subtreeLevels;
         var subtreeLevels0Indexed = subtreeLevels -  1;
-        var subtreeRootLevel = Math.floor(level / subtreeLevels0Indexed);
+        var subtreesDownTree = Math.floor(level / subtreeLevels0Indexed);
+        var subtreeRootLevel = subtreesDownTree * subtreeLevels0Indexed;
         var onLastLevel = (level % subtreeLevels0Indexed) === 0 && (level !== 0) && (subtreeRootLevel !== 0);
         subtreeRootLevel -= onLastLevel ? 1 : 0; // Because there is overlap between subtree roots and their parents last level, take the previous subtree when on the overlap level
         subtreeRootLevel = Math.max(subtreeRootLevel, this._tilingScheme.roots[0][0]);
         var subtreeLevel = level - subtreeRootLevel;
 
-        // var subtreeRootKey = [
-        //     subtreeRootLevel,
-        //     x >> subtreeLevel,
-        //     y >> subtreeLevel,
-        //     z >> subtreeLevel
-        // ];
         var subtreeRootKey = new Cartesian4(
             x >> subtreeLevel,
             y >> subtreeLevel,
@@ -1989,12 +1984,6 @@ define([
         var shiftX = (subtreeRootKey.x << subtreeLevel);
         var shiftY = (subtreeRootKey.y << subtreeLevel);
         var shiftZ = (subtreeRootKey.z << subtreeLevel);
-        // var subtreeKey = [
-        //     subtreeLevel,
-        //     ((x - shiftX)),
-        //     ((y - shiftY)),
-        //     ((z - shiftZ))
-        // ];
         var subtreeKey = new Cartesian4(
             ((x - shiftX)),
             ((y - shiftY)),
@@ -2610,6 +2599,11 @@ define([
             }
 
             tile = tilesArray[subtreeIndex];
+
+            if (tile.childSubtreeRootKeys[0].w !== subtreeRootKey.w) {
+                // These children belong to a different subtree
+                continue;
+            }
 
             childSubtreeIndices = tile.childSubtreeIndices;
             for (i = 0; i < childrenLength; i++) {
