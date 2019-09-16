@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### next
+
+##### Fixes :wrench:
+* Fixed issue where `RequestScheduler` double-counted image requests made via `createImageBitmap`. [#8162](https://github.com/AnalyticalGraphicsInc/cesium/issues/8162)
+
 ### 1.61 - 2019-09-03
 
 ##### Additions :tada:
