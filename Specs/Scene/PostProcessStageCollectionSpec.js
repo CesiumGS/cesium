@@ -1,14 +1,12 @@
 define([
-        'Scene/PostProcessStageCollection',
-        'Core/Color',
         'Scene/PostProcessStage',
+        'Scene/PostProcessStageCollection',
         'Scene/Tonemapper',
         'Specs/createScene',
         'Specs/ViewportPrimitive'
     ], function(
-        PostProcessStageCollection,
-        Color,
         PostProcessStage,
+        PostProcessStageCollection,
         Tonemapper,
         createScene,
         ViewportPrimitive) {

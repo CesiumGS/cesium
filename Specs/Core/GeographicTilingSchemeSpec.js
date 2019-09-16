@@ -1,16 +1,16 @@
 define([
-        'Core/GeographicTilingScheme',
         'Core/Cartesian2',
         'Core/Cartographic',
         'Core/GeographicProjection',
+        'Core/GeographicTilingScheme',
         'Core/Math',
         'Core/Rectangle',
         'Core/TilingScheme'
     ], function(
-        GeographicTilingScheme,
         Cartesian2,
         Cartographic,
         GeographicProjection,
+        GeographicTilingScheme,
         CesiumMath,
         Rectangle,
         TilingScheme) {

@@ -1,11 +1,11 @@
 define([
-        'Core/Spline',
         'Core/Cartesian3',
-        'Core/HermiteSpline'
+        'Core/HermiteSpline',
+        'Core/Spline'
     ], function(
-        Spline,
         Cartesian3,
-        HermiteSpline) {
+        HermiteSpline,
+        Spline) {
         'use strict';
 
 describe('Core/Spline', function() {

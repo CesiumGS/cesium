@@ -1,17 +1,17 @@
 define([
-        'Core/Occluder',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Core/Occluder',
         'Core/Rectangle',
         'Core/Visibility'
     ], function(
-        Occluder,
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        Occluder,
         Rectangle,
         Visibility) {
         'use strict';

@@ -1,14 +1,14 @@
 define([
-        'DataSources/ConstantPositionProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/ReferenceFrame',
+        'DataSources/ConstantPositionProperty',
         'DataSources/PositionProperty'
     ], function(
-        ConstantPositionProperty,
         Cartesian3,
         JulianDate,
         ReferenceFrame,
+        ConstantPositionProperty,
         PositionProperty) {
         'use strict';
 

@@ -1,21 +1,21 @@
 define([
-        'DataSources/PolylineGraphics',
         'Core/ArcType',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/PolylineGraphics',
         'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        PolylineGraphics,
         ArcType,
         Color,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        PolylineGraphics,
         ClassificationType,
         ShadowMode,
         testDefinitionChanged,

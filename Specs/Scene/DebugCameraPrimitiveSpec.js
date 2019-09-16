@@ -1,14 +1,14 @@
 define([
-        'Scene/DebugCameraPrimitive',
         'Core/Cartesian3',
         'Core/Color',
         'Scene/Camera',
+        'Scene/DebugCameraPrimitive',
         'Specs/createScene'
     ], function(
-        DebugCameraPrimitive,
         Cartesian3,
         Color,
         Camera,
+        DebugCameraPrimitive,
         createScene) {
         'use strict';
 

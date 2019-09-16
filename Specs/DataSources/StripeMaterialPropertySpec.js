@@ -1,18 +1,18 @@
 define([
-        'DataSources/StripeMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/StripeMaterialProperty',
         'DataSources/StripeOrientation',
         'DataSources/TimeIntervalCollectionProperty',
         'Specs/testDefinitionChanged'
     ], function(
-        StripeMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
+        StripeMaterialProperty,
         StripeOrientation,
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {

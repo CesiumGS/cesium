@@ -1,10 +1,10 @@
 define([
-        'Widgets/BaseLayerPicker/ProviderViewModel',
         'ThirdParty/knockout',
+        'Widgets/BaseLayerPicker/ProviderViewModel',
         'Widgets/createCommand'
     ], function(
-        ProviderViewModel,
         knockout,
+        ProviderViewModel,
         createCommand) {
         'use strict';
 

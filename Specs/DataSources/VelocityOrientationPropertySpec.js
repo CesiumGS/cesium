@@ -1,5 +1,4 @@
 define([
-        'DataSources/VelocityOrientationProperty',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Event',
@@ -8,9 +7,9 @@ define([
         'Core/Quaternion',
         'Core/Transforms',
         'DataSources/CallbackProperty',
-        'DataSources/SampledPositionProperty'
+        'DataSources/SampledPositionProperty',
+        'DataSources/VelocityOrientationProperty'
     ], function(
-        VelocityOrientationProperty,
         Cartesian3,
         Ellipsoid,
         Event,
@@ -19,7 +18,8 @@ define([
         Quaternion,
         Transforms,
         CallbackProperty,
-        SampledPositionProperty) {
+        SampledPositionProperty,
+        VelocityOrientationProperty) {
         'use strict';
 
 describe('DataSources/VelocityOrientationProperty', function() {

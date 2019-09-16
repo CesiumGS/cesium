@@ -1,9 +1,9 @@
 define([
-        'Core/EncodedCartesian3',
-        'Core/Cartesian3'
+        'Core/Cartesian3',
+        'Core/EncodedCartesian3'
     ], function(
-        EncodedCartesian3,
-        Cartesian3) {
+        Cartesian3,
+        EncodedCartesian3) {
         'use strict';
 
 describe('Core/EncodedCartesian3', function() {

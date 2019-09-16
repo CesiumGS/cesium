@@ -1,5 +1,4 @@
 define([
-        'DataSources/ModelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -17,6 +16,7 @@ define([
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
+        'DataSources/ModelVisualizer',
         'DataSources/NodeTransformationProperty',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
@@ -24,7 +24,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        ModelVisualizer,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -42,6 +41,7 @@ define([
         ConstantProperty,
         EntityCollection,
         ModelGraphics,
+        ModelVisualizer,
         NodeTransformationProperty,
         ClippingPlane,
         ClippingPlaneCollection,

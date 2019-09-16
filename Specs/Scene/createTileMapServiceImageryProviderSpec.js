@@ -1,8 +1,6 @@
 define([
-        'Scene/createTileMapServiceImageryProvider',
         'Core/Cartesian2',
         'Core/Cartographic',
-        'Core/DefaultProxy',
         'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
@@ -12,6 +10,7 @@ define([
         'Core/Resource',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
+        'Scene/createTileMapServiceImageryProvider',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryState',
@@ -19,10 +18,8 @@ define([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        createTileMapServiceImageryProvider,
         Cartesian2,
         Cartographic,
-        DefaultProxy,
         GeographicProjection,
         GeographicTilingScheme,
         getAbsoluteUri,
@@ -32,6 +29,7 @@ define([
         Resource,
         WebMercatorProjection,
         WebMercatorTilingScheme,
+        createTileMapServiceImageryProvider,
         Imagery,
         ImageryLayer,
         ImageryState,

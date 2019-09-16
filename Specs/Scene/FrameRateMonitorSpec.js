@@ -1,12 +1,12 @@
 define([
-        'Scene/FrameRateMonitor',
         'Core/defined',
         'Core/getTimestamp',
+        'Scene/FrameRateMonitor',
         'Specs/createScene'
     ], function(
-        FrameRateMonitor,
         defined,
         getTimestamp,
+        FrameRateMonitor,
         createScene) {
         'use strict';
 

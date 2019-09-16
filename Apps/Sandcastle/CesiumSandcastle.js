@@ -28,11 +28,11 @@ require({
         location: '../Apps/Sandcastle/ThirdParty'
     }]
 }, [
+        'CodeMirror/lib/codemirror',
         'dijit/Dialog',
         'dijit/form/Button',
         'dijit/form/Form',
         'dijit/form/Textarea',
-        'CodeMirror/lib/codemirror',
         'dijit/layout/ContentPane',
         'dijit/popup',
         'dijit/registry',
@@ -75,11 +75,11 @@ require({
         'dijit/ToolbarSeparator',
         'dojo/domReady!'
     ], function(
+        CodeMirror,
         Dialog,
         Button,
         Form,
         TextArea,
-        CodeMirror,
         ContentPane,
         popup,
         registry,

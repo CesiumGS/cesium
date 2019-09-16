@@ -1,17 +1,17 @@
 define([
-        'Core/Matrix4',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Math',
         'Core/Matrix3',
+        'Core/Matrix4',
         'Core/Quaternion',
         'Core/TranslationRotationScale'
     ], function(
-        Matrix4,
         Cartesian3,
         Cartesian4,
         CesiumMath,
         Matrix3,
+        Matrix4,
         Quaternion,
         TranslationRotationScale) {
         'use strict';

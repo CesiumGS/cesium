@@ -1,14 +1,14 @@
 define([
-        'Core/Matrix3',
         'Core/Cartesian3',
         'Core/HeadingPitchRoll',
         'Core/Math',
+        'Core/Matrix3',
         'Core/Quaternion'
     ], function(
-        Matrix3,
         Cartesian3,
         HeadingPitchRoll,
         CesiumMath,
+        Matrix3,
         Quaternion) {
         'use strict';
 

@@ -1,14 +1,14 @@
 define([
-        'Renderer/RenderState',
         'Core/WebGLConstants',
         'Core/WindingOrder',
         'Renderer/ContextLimits',
+        'Renderer/RenderState',
         'Specs/createContext'
     ], function(
-        RenderState,
         WebGLConstants,
         WindingOrder,
         ContextLimits,
+        RenderState,
         createContext) {
         'use strict';
 

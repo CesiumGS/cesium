@@ -1,13 +1,9 @@
 define([
         'Core/OpenCageGeocoderService',
-        'Core/Cartesian3',
-        'Core/GeocodeType',
         'Core/Resource',
         'ThirdParty/when'
     ], function(
         OpenCageGeocoderService,
-        Cartesian3,
-        GeocodeType,
         Resource,
         when) {
         'use strict';

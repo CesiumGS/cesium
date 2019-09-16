@@ -1,11 +1,11 @@
 define([
-        'Core/EarthOrientationParameters',
         'Core/defined',
+        'Core/EarthOrientationParameters',
         'Core/JulianDate',
         'Core/TimeStandard'
     ], function(
-        EarthOrientationParameters,
         defined,
+        EarthOrientationParameters,
         JulianDate,
         TimeStandard) {
         'use strict';

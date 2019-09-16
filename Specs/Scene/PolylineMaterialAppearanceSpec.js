@@ -1,21 +1,21 @@
 define([
-        'Scene/PolylineMaterialAppearance',
         'Core/ArcType',
         'Core/Cartesian3',
         'Core/GeometryInstance',
         'Core/PolylineGeometry',
         'Scene/Appearance',
         'Scene/Material',
+        'Scene/PolylineMaterialAppearance',
         'Scene/Primitive',
         'Specs/createScene'
     ], function(
-        PolylineMaterialAppearance,
         ArcType,
         Cartesian3,
         GeometryInstance,
         PolylineGeometry,
         Appearance,
         Material,
+        PolylineMaterialAppearance,
         Primitive,
         createScene) {
         'use strict';

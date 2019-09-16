@@ -1,10 +1,10 @@
 define([
-        'Renderer/TextureCache',
         'Renderer/Texture',
+        'Renderer/TextureCache',
         'Specs/createContext'
     ], function(
-        TextureCache,
         Texture,
+        TextureCache,
         createContext) {
         'use strict';
 

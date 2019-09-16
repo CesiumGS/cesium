@@ -1,17 +1,17 @@
 define([
-        'Widgets/Viewer/viewerDragDropMixin',
         'Core/defined',
         'Core/TimeInterval',
         'Specs/createViewer',
         'Specs/DomEventSimulator',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'Widgets/Viewer/viewerDragDropMixin'
     ], function(
-        viewerDragDropMixin,
         defined,
         TimeInterval,
         createViewer,
         DomEventSimulator,
-        pollToPromise) {
+        pollToPromise,
+        viewerDragDropMixin) {
         'use strict';
 
 describe('Widgets/Viewer/viewerDragDropMixin', function() {

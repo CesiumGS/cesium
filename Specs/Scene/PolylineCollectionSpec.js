@@ -1,5 +1,4 @@
 define([
-        'Scene/PolylineCollection',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -9,10 +8,10 @@ define([
         'Core/Matrix4',
         'Scene/Camera',
         'Scene/Material',
+        'Scene/PolylineCollection',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
-        PolylineCollection,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -22,6 +21,7 @@ define([
         Matrix4,
         Camera,
         Material,
+        PolylineCollection,
         SceneMode,
         createScene) {
         'use strict';

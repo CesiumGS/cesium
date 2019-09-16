@@ -1,5 +1,4 @@
 define([
-        'Core/GeometryPipeline',
         'Core/arraySlice',
         'Core/AttributeCompression',
         'Core/BoundingSphere',
@@ -14,6 +13,7 @@ define([
         'Core/Geometry',
         'Core/GeometryAttribute',
         'Core/GeometryInstance',
+        'Core/GeometryPipeline',
         'Core/GeometryType',
         'Core/Math',
         'Core/Matrix4',
@@ -22,7 +22,6 @@ define([
         'Core/Tipsify',
         'Core/VertexFormat'
     ], function(
-        GeometryPipeline,
         arraySlice,
         AttributeCompression,
         BoundingSphere,
@@ -37,6 +36,7 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryInstance,
+        GeometryPipeline,
         GeometryType,
         CesiumMath,
         Matrix4,

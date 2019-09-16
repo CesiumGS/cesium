@@ -1,5 +1,4 @@
 define([
-        'Scene/ShadowMap',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian3',
@@ -26,12 +25,12 @@ define([
         'Scene/Model',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
+        'Scene/ShadowMap',
         'Scene/ShadowMode',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        ShadowMap,
         BoundingSphere,
         BoxGeometry,
         Cartesian3,
@@ -58,6 +57,7 @@ define([
         Model,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowMap,
         ShadowMode,
         createScene,
         pollToPromise,

@@ -1,9 +1,9 @@
 define([
-        'Widgets/FullscreenButton/FullscreenButtonViewModel',
-        'Core/Fullscreen'
+        'Core/Fullscreen',
+        'Widgets/FullscreenButton/FullscreenButtonViewModel'
     ], function(
-        FullscreenButtonViewModel,
-        Fullscreen) {
+        Fullscreen,
+        FullscreenButtonViewModel) {
         'use strict';
 
 describe('Widgets/FullscreenButton/FullscreenButtonViewModel', function() {

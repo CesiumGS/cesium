@@ -1,18 +1,18 @@
 define([
-        'DataSources/CompositeMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DataSources/ColorMaterialProperty',
+        'DataSources/CompositeMaterialProperty',
         'DataSources/GridMaterialProperty'
     ], function(
-        CompositeMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
         ColorMaterialProperty,
+        CompositeMaterialProperty,
         GridMaterialProperty) {
         'use strict';
 

@@ -1,19 +1,19 @@
 define([
-        'Scene/ViewportQuad',
         'Core/BoundingRectangle',
         'Core/Color',
         'Core/Resource',
         'Renderer/Texture',
         'Scene/Material',
+        'Scene/ViewportQuad',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        ViewportQuad,
         BoundingRectangle,
         Color,
         Resource,
         Texture,
         Material,
+        ViewportQuad,
         createScene,
         pollToPromise) {
         'use strict';

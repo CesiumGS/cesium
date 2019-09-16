@@ -1,5 +1,4 @@
 define([
-        'Scene/PrimitiveCollection',
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
         'Core/defined',
@@ -10,10 +9,10 @@ define([
         'Scene/LabelCollection',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
+        'Scene/PrimitiveCollection',
         'Scene/VerticalOrigin',
         'Specs/createScene'
     ], function(
-        PrimitiveCollection,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
@@ -24,6 +23,7 @@ define([
         LabelCollection,
         PerInstanceColorAppearance,
         Primitive,
+        PrimitiveCollection,
         VerticalOrigin,
         createScene) {
         'use strict';

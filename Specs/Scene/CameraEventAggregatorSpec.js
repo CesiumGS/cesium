@@ -1,18 +1,18 @@
 define([
-        'Scene/CameraEventAggregator',
         'Core/Cartesian2',
         'Core/combine',
         'Core/FeatureDetection',
         'Core/KeyboardEventModifier',
+        'Scene/CameraEventAggregator',
         'Scene/CameraEventType',
         'Specs/createCanvas',
         'Specs/DomEventSimulator'
     ], function(
-        CameraEventAggregator,
         Cartesian2,
         combine,
         FeatureDetection,
         KeyboardEventModifier,
+        CameraEventAggregator,
         CameraEventType,
         createCanvas,
         DomEventSimulator) {

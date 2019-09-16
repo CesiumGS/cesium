@@ -1,16 +1,16 @@
 define([
-        'Scene/GridImageryProvider',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/WebMercatorTilingScheme',
+        'Scene/GridImageryProvider',
         'Scene/ImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        GridImageryProvider,
         Ellipsoid,
         GeographicTilingScheme,
         WebMercatorTilingScheme,
+        GridImageryProvider,
         ImageryProvider,
         pollToPromise,
         when) {

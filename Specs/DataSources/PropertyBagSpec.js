@@ -1,12 +1,12 @@
 define([
-        'DataSources/PropertyBag',
         'Core/JulianDate',
         'DataSources/ConstantProperty',
+        'DataSources/PropertyBag',
         'DataSources/SampledProperty'
     ], function(
-        PropertyBag,
         JulianDate,
         ConstantProperty,
+        PropertyBag,
         SampledProperty) {
         'use strict';
 

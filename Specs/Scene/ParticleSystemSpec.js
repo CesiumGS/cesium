@@ -1,5 +1,4 @@
 define([
-        'Scene/ParticleSystem',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
@@ -7,9 +6,9 @@ define([
         'Core/Resource',
         'Scene/CircleEmitter',
         'Scene/ParticleBurst',
+        'Scene/ParticleSystem',
         'Specs/createScene'
     ], function(
-        ParticleSystem,
         Cartesian2,
         Cartesian3,
         Color,
@@ -17,6 +16,7 @@ define([
         Resource,
         CircleEmitter,
         ParticleBurst,
+        ParticleSystem,
         createScene) {
         'use strict';
 

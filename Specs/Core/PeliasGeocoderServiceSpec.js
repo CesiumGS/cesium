@@ -1,13 +1,13 @@
 define([
-        'Core/PeliasGeocoderService',
         'Core/Cartesian3',
         'Core/GeocodeType',
+        'Core/PeliasGeocoderService',
         'Core/Resource',
         'ThirdParty/when'
     ], function(
-        PeliasGeocoderService,
         Cartesian3,
         GeocodeType,
+        PeliasGeocoderService,
         Resource,
         when) {
         'use strict';

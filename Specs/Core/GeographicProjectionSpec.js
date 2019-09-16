@@ -1,14 +1,14 @@
 define([
-        'Core/GeographicProjection',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
+        'Core/GeographicProjection',
         'Core/Math'
     ], function(
-        GeographicProjection,
         Cartesian3,
         Cartographic,
         Ellipsoid,
+        GeographicProjection,
         CesiumMath) {
         'use strict';
 

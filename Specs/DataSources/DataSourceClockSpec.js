@@ -1,13 +1,13 @@
 define([
-        'DataSources/DataSourceClock',
         'Core/ClockRange',
         'Core/ClockStep',
-        'Core/JulianDate'
+        'Core/JulianDate',
+        'DataSources/DataSourceClock'
     ], function(
-        DataSourceClock,
         ClockRange,
         ClockStep,
-        JulianDate) {
+        JulianDate,
+        DataSourceClock) {
         'use strict';
 
 describe('DataSources/DataSourceClock', function() {

@@ -1,5 +1,4 @@
 define([
-        'Scene/ModelInstanceCollection',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/defaultValue',
@@ -11,12 +10,12 @@ define([
         'Core/Resource',
         'Core/Transforms',
         'Scene/Model',
+        'Scene/ModelInstanceCollection',
         'Scene/ShadowMode',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        ModelInstanceCollection,
         BoundingSphere,
         Cartesian3,
         defaultValue,
@@ -28,6 +27,7 @@ define([
         Resource,
         Transforms,
         Model,
+        ModelInstanceCollection,
         ShadowMode,
         createScene,
         pollToPromise,

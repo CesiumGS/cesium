@@ -1,5 +1,4 @@
 define([
-        'Scene/Cesium3DTileset',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -28,6 +27,7 @@ define([
         'Scene/Cesium3DTilePass',
         'Scene/Cesium3DTilePassState',
         'Scene/Cesium3DTileRefine',
+        'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
@@ -37,7 +37,6 @@ define([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        Cesium3DTileset,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -66,6 +65,7 @@ define([
         Cesium3DTilePass,
         Cesium3DTilePassState,
         Cesium3DTileRefine,
+        Cesium3DTileset,
         Cesium3DTileStyle,
         ClippingPlane,
         ClippingPlaneCollection,

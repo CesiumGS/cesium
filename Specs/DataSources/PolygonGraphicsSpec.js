@@ -1,5 +1,4 @@
 define([
-        'DataSources/PolygonGraphics',
         'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
@@ -7,12 +6,12 @@ define([
         'Core/PolygonHierarchy',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/PolygonGraphics',
         'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        PolygonGraphics,
         ArcType,
         Cartesian3,
         Color,
@@ -20,6 +19,7 @@ define([
         PolygonHierarchy,
         ColorMaterialProperty,
         ConstantProperty,
+        PolygonGraphics,
         ClassificationType,
         ShadowMode,
         testDefinitionChanged,

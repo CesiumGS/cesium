@@ -1,11 +1,11 @@
 define([
-        'Widgets/Viewer/viewerPerformanceWatchdogMixin',
         'Specs/createViewer',
-        'Widgets/PerformanceWatchdog/PerformanceWatchdog'
+        'Widgets/PerformanceWatchdog/PerformanceWatchdog',
+        'Widgets/Viewer/viewerPerformanceWatchdogMixin'
     ], function(
-        viewerPerformanceWatchdogMixin,
         createViewer,
-        PerformanceWatchdog) {
+        PerformanceWatchdog,
+        viewerPerformanceWatchdogMixin) {
         'use strict';
 
 describe('Widgets/Viewer/viewerPerformanceWatchdogMixin', function() {

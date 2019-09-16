@@ -1,18 +1,18 @@
 define([
-        'DataSources/CheckerboardMaterialProperty',
         'Core/Cartesian2',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
+        'DataSources/CheckerboardMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Specs/testDefinitionChanged'
     ], function(
-        CheckerboardMaterialProperty,
         Cartesian2,
         Color,
         JulianDate,
         TimeInterval,
+        CheckerboardMaterialProperty,
         ConstantProperty,
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {

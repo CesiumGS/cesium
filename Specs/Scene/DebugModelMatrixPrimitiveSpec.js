@@ -1,12 +1,12 @@
 define([
-        'Scene/DebugModelMatrixPrimitive',
         'Core/Cartesian3',
         'Core/Matrix4',
+        'Scene/DebugModelMatrixPrimitive',
         'Specs/createScene'
     ], function(
-        DebugModelMatrixPrimitive,
         Cartesian3,
         Matrix4,
+        DebugModelMatrixPrimitive,
         createScene) {
         'use strict';
 

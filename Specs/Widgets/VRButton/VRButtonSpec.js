@@ -1,9 +1,9 @@
 define([
-        'Widgets/VRButton/VRButton',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/VRButton/VRButton'
     ], function(
-        VRButton,
-        createScene) {
+        createScene,
+        VRButton) {
         'use strict';
 
 describe('Widgets/VRButton/VRButton', function() {

@@ -1,5 +1,4 @@
 define([
-        'DataSources/PointVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -15,12 +14,12 @@ define([
         'DataSources/EntityCluster',
         'DataSources/EntityCollection',
         'DataSources/PointGraphics',
+        'DataSources/PointVisualizer',
         'Scene/BillboardCollection',
         'Scene/HeightReference',
         'Scene/PointPrimitiveCollection',
         'Specs/createScene'
     ], function(
-        PointVisualizer,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -36,6 +35,7 @@ define([
         EntityCluster,
         EntityCollection,
         PointGraphics,
+        PointVisualizer,
         BillboardCollection,
         HeightReference,
         PointPrimitiveCollection,
