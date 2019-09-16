@@ -5,6 +5,7 @@ define([
         './Instanced3DModel3DTileContent',
         './PointCloud3DTileContent',
         './Tileset3DTileContent',
+        './Tileset3DSubtreeContent',
         './Vector3DTileContent'
     ], function(
         Batched3DModel3DTileContent,
@@ -13,6 +14,7 @@ define([
         Instanced3DModel3DTileContent,
         PointCloud3DTileContent,
         Tileset3DTileContent,
+        Tileset3DSubtreeContent,
         Vector3DTileContent) {
     'use strict';
 
@@ -37,6 +39,9 @@ define([
         },
         json : function(tileset, tile, resource, arrayBuffer, byteOffset) {
             return new Tileset3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset);
+        },
+        subt : function(tileset, tile, resource, arrayBuffer, byteOffset) {
+            return new Tileset3DSubtreeContent(tileset, tile, resource, arrayBuffer, byteOffset);
         },
         geom : function(tileset, tile, resource, arrayBuffer, byteOffset) {
             return new Geometry3DTileContent(tileset, tile, resource, arrayBuffer, byteOffset);

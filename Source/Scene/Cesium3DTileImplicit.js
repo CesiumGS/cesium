@@ -203,7 +203,7 @@ define([
         this.treeKey = header.treeKey;
         this.subtreeKey = header.subtreeKey;
         this.subtreeIndex = header.subtreeIndex;
-        this.subtreeRootKey = header.subtreeIndex;
+        this.subtreeRootKey = header.subtreeRootKey;
 
         // TODO: replace with childTreeKeys (also add childSubtreeKeys, childSubtreeIndices, childSubtreeRootKeys)
         this.childTreeKeys = [];
@@ -222,7 +222,6 @@ define([
             var cd = treeKey.w + 1;
 
             var result = {};
-            var val;
             // TODO: get a function that just finds the derived info from tree index
             for (z = 0; z < zEnd; z++) {
                 for (y = 0; y< 2; y++) {
@@ -235,14 +234,8 @@ define([
 
                         result = tileset.getSubtreeInfoFromTreeKey(cx,cy,cz,cd);
 
-                        val = result.subtreeKey;
-                        // this.childSubtreeKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
                         this.childSubtreeKeys.push(result.subtreeKey);
-
-                        val = result.subtreeRootKey;
-                        // this.childSubtreeRootKeys.push(new Cartesian4(val[1], val[2], val[3], val[0]));
                         this.childSubtreeRootKeys.push(result.subtreeRootKey);
-
                         this.childSubtreeIndices.push(result.subtreeIndex);
                     }
                 }
@@ -258,6 +251,11 @@ define([
         var contentResource;
         var serverKey;
 
+        var contentSubtree;
+        var contentSubtreeState;
+        var contentSubtreeResource;
+        var serverKeySubtree;
+
         baseResource = Resource.createIfNeeded(baseResource);
 
         if (defined(contentHeader)) {
@@ -272,6 +270,19 @@ define([
                 url : contentHeaderUri
             });
             serverKey = RequestScheduler.getServerKey(contentResource.getUrlComponent());
+
+            var contentHeaderUriSubtree = contentHeader.uriSubtree;
+            if (defined(contentHeader.urlSubtree)) {
+                Cesium3DTileImplicit._deprecationWarning('contentUrl', 'This tileset JSON uses the "content.url" property which has been deprecated. Use "content.uri" instead.');
+                contentHeaderUriSubtree = contentHeader.url;
+            }
+            if (defined(contentHeaderUriSubtree)) {
+                contentSubtreeState = Cesium3DTileContentState.UNLOADED;
+                contentSubtreeResource = baseResource.getDerivedResource({
+                    url : contentHeaderUriSubtree
+                });
+                serverKeySubtree = RequestScheduler.getServerKey(contentSubtreeResource.getUrlComponent());
+            }
         } else {
             content = new Empty3DTileContent(tileset, this);
             hasEmptyContent = true;
@@ -284,8 +295,15 @@ define([
         this._contentReadyToProcessPromise = undefined;
         this._contentReadyPromise = undefined;
         this._expiredContent = undefined;
-
         this._serverKey = serverKey;
+
+        this._contentSubtree = undefined;
+        this._contentSubtreeResource = contentSubtreeResource;
+        this._contentSubtreeState = contentSubtreeState;
+        this._serverKeySubtree = serverKeySubtree;
+        this._requestSubtree = undefined;
+        this._contentSubtreeReadyToProcessPromise = undefined;
+        this._contentSubtreeReadyPromise = undefined;
 
         /**
          * When <code>true</code>, the tile has no content.
@@ -917,6 +935,117 @@ define([
         };
     }
 
+    // TODO: Do I need to duplicate this for the subtree?
+    /**
+     * Requests the tile's subtree content.
+     * <p>
+     * The request may not be made if the Cesium Request Scheduler can't prioritize it.
+     * </p>
+     *
+     * @private
+     */
+    Cesium3DTileImplicit.prototype.requestSubtreeContent = function() {
+        var that = this;
+        var tileset = this._tileset;
+
+        if (!defined(this._contentSubtreeResource)) {
+            return false;
+        }
+
+        var resource = this._contentSubtreeResource.clone();
+        var expired = this.contentExpiredSubtree;
+        if (expired) {
+            // Append a query parameter of the tile expiration date to prevent caching
+            resource.setQueryParameters({
+                expired: this.expireDate.toString()
+            });
+        }
+
+        var request = new Request({
+            throttle : true,
+            throttleByServer : true,
+            type : RequestType.TILES3D,
+            priorityFunction : createPriorityFunction(this),
+            serverKey : this._serverKeySubtree
+        });
+
+        this._requestSubtree = request;
+        resource.request = request;
+
+        var promise = resource.fetchArrayBuffer();
+
+        if (!defined(promise)) {
+            return false;
+        }
+
+        var contentState = this._contentSubtreeState;
+        this._contentSubtreeState = Cesium3DTileContentState.LOADING;
+        this._contentSubtreeReadyToProcessPromise = when.defer();
+        this._contentSubtreeReadyPromise = when.defer();
+
+        if (expired) {
+            this.expireDate = undefined;
+        }
+
+        var contentFailedFunction = getContentFailedFunction(this);
+        // It has rx'd the arraybuffer, need to figure out what kind of payload it is from the magic
+        // then transform the content correctly, in the subtree case content is the arrayBuffer
+        promise.then(function(arrayBuffer) {
+            if (that.isDestroyed()) {
+                // Tile is unloaded before the content finishes loading
+                contentFailedFunction();
+                return;
+            }
+            // var uint8Array = new Uint8Array(arrayBuffer);
+            // var magic = getMagic(uint8Array);
+            // var contentFactory = Cesium3DTileContentFactory[magic];
+            // var content;
+
+            // // Vector and Geometry tile rendering do not support the skip LOD optimization.
+            // tileset._disableSkipLevelOfDetail = tileset._disableSkipLevelOfDetail || magic === 'vctr' || magic === 'geom';
+            //
+            // if (defined(contentFactory)) {
+            //     content = contentFactory(tileset, that, that._contentResource, arrayBuffer, 0);
+            // } else {
+            //     // The content may be json instead
+                var content = Cesium3DTileContentFactory.subt(tileset, that, that._contentResourceSubtree, arrayBuffer, 0);
+                that.hasTilesetContent = true;
+            // }
+
+            that._contentSubtree = content;
+            that._contentSubtreeState = Cesium3DTileContentState.PROCESSING;
+            that._contentSubtreeReadyToProcessPromise.resolve(content);
+
+            return content.readyPromise.then(function(content) {
+                if (that.isDestroyed()) {
+                    // Tile is unloaded before the content finishes processing
+                    contentFailedFunction();
+                    return;
+                }
+                // updateExpireDate(that);
+
+                // Refresh style for expired content
+                // that._selectedFrame = 0;
+                // that.lastStyleTime = 0.0;
+
+                // JulianDate.now(that._loadTimestamp);
+                that._contentSubtreeState = Cesium3DTileContentState.READY;
+                that._contentSubtreeReadyPromise.resolve(content);
+            });
+        }).otherwise(function(error) {
+            if (request.state === RequestState.CANCELLED) {
+                // Cancelled due to low priority - try again later.
+                that._contentSubtreeState = contentState;
+                --tileset.statistics.numberOfPendingRequests;
+                ++tileset.statistics.numberOfAttemptedRequests;
+                return;
+            }
+            contentFailedFunction(error);
+        });
+
+        return true;
+    };
+
     /**
      * Requests the tile's content.
      * <p>
@@ -969,6 +1098,8 @@ define([
         }
 
         var contentFailedFunction = getContentFailedFunction(this);
+        // It has rx'd the arraybuffer, need to figure out what kind of payload it is from the magic
+        // then transform the content correctly, in the subtree case content is the arrayBuffer
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
                 // Tile is unloaded before the content finishes loading

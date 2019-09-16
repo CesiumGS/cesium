@@ -11,8 +11,27 @@ of the subtree
    and make subtree requests higher priority (add a digit)
    so a tile can have a _request and a _requestSubtree
 
-[ ] Try to traverse the subtree arrays in tree style (is this a waste of time?)
+   Make a new Tileset3DTileContent class (put subtree in the name) and updte cesium3dtilecontentfactory
+   Call the bin thing instead of the json factory in Cesium3DTileImplicit.prototype.requestContent
+   But how to I fetch both the tile and the external subtree?
+   Since the processing for external tileset tiles is empty function, could just call both request functions
+   the other request function might not require all the machinery.
+   maybe for now I just need to duplicate the code path for the external subtree stuff (members and functions)
 
+   // Get rid of ones you don't really need
+   _serverKeySubtree
+   _contentResourceSubtree
+   contentExpiredSubtree // not included
+   _requestSubtree
+   _contentSubtreeState
+   _contentSubtreeState
+   _contentSubtreeReadyToProcessPromise
+   _contentSubtreeReadyPromise
+
+
+childSubtreeIndices childSubtreeKeys looks wrong for leaf tiles
+
+[ ] Try to traverse the subtree arrays in tree style (is this a waste of time?)
     NOTE: Not sure about storing subtree refs (don't store for now)
     subtree ref / chilren subtree ref
 

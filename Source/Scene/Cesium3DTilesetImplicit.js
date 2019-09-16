@@ -1930,7 +1930,7 @@ define([
         var indexOffsetToFirstByteOnLevel = 0;
 
         var subtreeLevels = this._tilingScheme.subtreeLevels;
-        for (i = 0; i < subtreeLevels; i++) {
+        for (i = 0; i <= subtreeLevels; i++) {
             if (subtreeIndex < arraySizes[i]) {
                 subtreeLevel = Math.max(i - 1, 0);
                 indexOffsetToFirstByteOnLevel = arraySizes[subtreeLevel];
@@ -2547,10 +2547,13 @@ define([
         // children if not hasParent and on subtree level start
         // For finding all heads in the root or finding the start tile in a subtree (if the tileset root doesn't start at the root of the subtree)
 
+        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        var subtreeLevels0Indexed = subtreeLevels -  1;
         var treeKey, subtreeIndex, result;
-        var x, y, z, uri, tileInfo, tile;
+        var x, y, z, uri, uriSubtree, tileInfo, tile;
         var tilesetStartLevel = this._startLevel;
         var contentRootGeometricError = this._geometricErrorContentRoot;
+        var lastSubtreeLevelStartIndex = this._unpackedArraySizes[subtreeLevels0Indexed];
         // This loop is just to create the tiles in the right spots in the _tiles array
         for (subtreeIndex = 0; subtreeIndex < unpackedSize; subtreeIndex++) {
             if (subtree[subtreeIndex] === 0) {
@@ -2567,23 +2570,26 @@ define([
             z = treeKey.z;
 
             uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+            uriSubtree = subtreeIndex >= lastSubtreeLevelStartIndex ? this._availabilityFolder + '/' + uri : undefined;
             tileInfo = {
                 boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
                 // geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
                 // geometricError: tilesetRoot.geometricError / (1 << (level - tilesetStartLevel)),
                 geometricError: contentRootGeometricError / (1 << (level - tilesetStartLevel)),
-                content: {uri: uri},
+                content: {
+                    uri: uri,
+                    uriSubtree: uriSubtree
+                },
                 treeKey: treeKey,
                 subtreeKey: result.subtreeKey,
                 subtreeIndex: subtreeIndex,
                 subtreeRootKey: subtreeRootKey,
-                refine: tilingScheme.refine
+                refine: tilingScheme.refine,
             };
 
             tile = new Cesium3DTileImplicit(this, resource, tileInfo, undefined);
             tile._depth = level;
             tilesArray[subtreeIndex] = tile;
-
             // Update the tilesArray array
             if (level === tilesetStartLevel) {
                 tilesetRoot.children.push(tile);
@@ -2957,6 +2963,7 @@ define([
         var statistics = tileset._statistics;
         var expired = tile.contentExpired;
         var requested = tile.requestContent();
+        // var requstedSubtree = tile.requestSubtreeContent();
 
         if (!requested) {
             ++statistics.numberOfAttemptedRequests;
