@@ -28,9 +28,6 @@ of the subtree
    _contentSubtreeReadyToProcessPromise
    _contentSubtreeReadyPromise
 
-
-childSubtreeIndices childSubtreeKeys looks wrong for leaf tiles
-
 [ ] Try to traverse the subtree arrays in tree style (is this a waste of time?)
     NOTE: Not sure about storing subtree refs (don't store for now)
     subtree ref / chilren subtree ref
