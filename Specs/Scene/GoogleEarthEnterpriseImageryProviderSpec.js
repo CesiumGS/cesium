@@ -92,7 +92,8 @@ describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
     }
 
     function installFakeImageRequest(expectedUrl, proxy) {
-        Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
+        Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
+            var url = request.url;
             if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // load blob url normally
                 Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
