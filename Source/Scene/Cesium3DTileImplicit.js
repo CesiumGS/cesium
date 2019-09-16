@@ -249,6 +249,9 @@ define([
             }
         }
 
+        // Need to add a subtree url if it's a leaf in an existing subtree.
+        // If the request fails then it doesn't have actually have one and set the subtree url back to undefined) and has external tileset to false
+
         var content;
         var hasEmptyContent;
         var contentState;
@@ -428,6 +431,7 @@ define([
         this._colorDirty = false;
 
         this._request = undefined;
+        this._requestSubtree = undefined;
     }
 
     // This can be overridden for testing purposes
