@@ -256,7 +256,8 @@ define([
         var contentSubtreeResource;
         var serverKeySubtree;
 
-        baseResource = Resource.createIfNeeded(baseResource);
+        // baseResource = Resource.createIfNeeded(baseResource);
+        var tilesetResource = this._tileset._resource;
 
         if (defined(contentHeader)) {
             var contentHeaderUri = contentHeader.uri;
@@ -266,7 +267,7 @@ define([
             }
             hasEmptyContent = false;
             contentState = Cesium3DTileContentState.UNLOADED;
-            contentResource = baseResource.getDerivedResource({
+            contentResource = tilesetResource.getDerivedResource({
                 url : contentHeaderUri
             });
             serverKey = RequestScheduler.getServerKey(contentResource.getUrlComponent());
@@ -278,7 +279,7 @@ define([
             }
             if (defined(contentHeaderUriSubtree)) {
                 contentSubtreeState = Cesium3DTileContentState.UNLOADED;
-                contentSubtreeResource = baseResource.getDerivedResource({
+                contentSubtreeResource = tilesetResource.getDerivedResource({
                     url : contentHeaderUriSubtree
                 });
                 serverKeySubtree = RequestScheduler.getServerKey(contentSubtreeResource.getUrlComponent());
@@ -988,12 +989,20 @@ define([
         }
 
         var contentFailedFunction = getContentFailedFunction(this);
+
         // It has rx'd the arraybuffer, need to figure out what kind of payload it is from the magic
         // then transform the content correctly, in the subtree case content is the arrayBuffer
         promise.then(function(arrayBuffer) {
             if (that.isDestroyed()) {
                 // Tile is unloaded before the content finishes loading
                 contentFailedFunction();
+                return;
+            }
+
+            if (!defined(arrayBuffer) || arrayBuffer.byteLength === 0) {
+                that._contentSubtreeResource = undefined;
+                that._contentSubtreeState = undefined;
+                that._serverKeySubtree = undefined;
                 return;
             }
             // var uint8Array = new Uint8Array(arrayBuffer);
@@ -1008,7 +1017,7 @@ define([
             //     content = contentFactory(tileset, that, that._contentResource, arrayBuffer, 0);
             // } else {
             //     // The content may be json instead
-                var content = Cesium3DTileContentFactory.subt(tileset, that, that._contentResourceSubtree, arrayBuffer, 0);
+                var content = Cesium3DTileContentFactory.subt(tileset, that, that._contentSubtreeResource, arrayBuffer, 0);
                 that.hasTilesetContent = true;
             // }
 

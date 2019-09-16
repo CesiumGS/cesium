@@ -28,6 +28,7 @@ of the subtree
    _contentSubtreeReadyToProcessPromise
    _contentSubtreeReadyPromise
 
+    [ ] tile's of external subtrees are getting their urls appended remove teh base url thing maybe
 [ ] Try to traverse the subtree arrays in tree style (is this a waste of time?)
     NOTE: Not sure about storing subtree refs (don't store for now)
     subtree ref / chilren subtree ref
