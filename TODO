@@ -12,7 +12,7 @@ of the subtree
    so a tile can have a _request and a _requestSubtree
 
    Make a new Tileset3DTileContent class (put subtree in the name) and updte cesium3dtilecontentfactory
-   Call the bin thing instead of the json factory in Cesium3DTileImplicit.prototype.requestContent
+   Call the subt thing instead of the json factory in Cesium3DTileImplicit.prototype.requestContent
    But how to I fetch both the tile and the external subtree?
    Since the processing for external tileset tiles is empty function, could just call both request functions
    the other request function might not require all the machinery.

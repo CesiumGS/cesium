@@ -2957,6 +2957,7 @@ define([
         var statistics = tileset._statistics;
         var expired = tile.contentExpired;
         var requested = tile.requestContent();
+        // TODO: uncommenting this fails fetching the second level for the pointcloud example (probably because assumptions about parent and rootTile / whatever)
         // var requstedSubtree = tile.requestSubtreeContent();
 
         if (!requested) {
