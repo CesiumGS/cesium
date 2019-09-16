@@ -1,5 +1,4 @@
 define([
-        'Scene/Material',
         'Core/Cartesian3',
         'Core/Color',
         'Core/defaultValue',
@@ -9,13 +8,13 @@ define([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/Resource',
+        'Scene/Material',
         'Scene/MaterialAppearance',
         'Scene/PolylineCollection',
         'Scene/Primitive',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        Material,
         Cartesian3,
         Color,
         defaultValue,
@@ -25,6 +24,7 @@ define([
         Rectangle,
         RectangleGeometry,
         Resource,
+        Material,
         MaterialAppearance,
         PolylineCollection,
         Primitive,

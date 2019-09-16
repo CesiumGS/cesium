@@ -1,15 +1,15 @@
 define([
-        'Widgets/ProjectionPicker/ProjectionPickerViewModel',
         'Core/OrthographicFrustum',
         'Core/PerspectiveFrustum',
         'Scene/SceneMode',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/ProjectionPicker/ProjectionPickerViewModel'
     ], function(
-        ProjectionPickerViewModel,
         OrthographicFrustum,
         PerspectiveFrustum,
         SceneMode,
-        createScene) {
+        createScene,
+        ProjectionPickerViewModel) {
         'use strict';
 
 describe('Widgets/ProjectionPicker/ProjectionPickerViewModel', function() {

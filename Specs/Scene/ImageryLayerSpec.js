@@ -1,5 +1,4 @@
 define([
-        'Scene/ImageryLayer',
         'Core/EllipsoidTerrainProvider',
         'Core/Rectangle',
         'Core/RequestScheduler',
@@ -12,6 +11,7 @@ define([
         'Scene/createTileMapServiceImageryProvider',
         'Scene/GlobeSurfaceTile',
         'Scene/Imagery',
+        'Scene/ImageryLayer',
         'Scene/ImageryLayerCollection',
         'Scene/ImageryState',
         'Scene/NeverTileDiscardPolicy',
@@ -22,7 +22,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        ImageryLayer,
         EllipsoidTerrainProvider,
         Rectangle,
         RequestScheduler,
@@ -35,6 +34,7 @@ define([
         createTileMapServiceImageryProvider,
         GlobeSurfaceTile,
         Imagery,
+        ImageryLayer,
         ImageryLayerCollection,
         ImageryState,
         NeverTileDiscardPolicy,

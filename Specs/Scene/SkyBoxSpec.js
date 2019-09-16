@@ -1,12 +1,12 @@
 define([
-        'Scene/SkyBox',
         'Core/Resource',
         'Scene/SceneMode',
+        'Scene/SkyBox',
         'Specs/createScene'
     ], function(
-        SkyBox,
         Resource,
         SceneMode,
+        SkyBox,
         createScene) {
         'use strict';
 

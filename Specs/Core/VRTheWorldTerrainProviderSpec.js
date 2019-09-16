@@ -1,5 +1,4 @@
 define([
-        'Core/VRTheWorldTerrainProvider',
         'Core/DefaultProxy',
         'Core/GeographicTilingScheme',
         'Core/HeightmapTerrainData',
@@ -8,10 +7,10 @@ define([
         'Core/RequestScheduler',
         'Core/Resource',
         'Core/TerrainProvider',
+        'Core/VRTheWorldTerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        VRTheWorldTerrainProvider,
         DefaultProxy,
         GeographicTilingScheme,
         HeightmapTerrainData,
@@ -20,6 +19,7 @@ define([
         RequestScheduler,
         Resource,
         TerrainProvider,
+        VRTheWorldTerrainProvider,
         pollToPromise,
         when) {
         'use strict';

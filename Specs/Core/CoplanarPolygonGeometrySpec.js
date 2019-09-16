@@ -1,13 +1,13 @@
 define([
-        'Core/CoplanarPolygonGeometry',
         'Core/Cartesian3',
+        'Core/CoplanarPolygonGeometry',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        CoplanarPolygonGeometry,
         Cartesian3,
+        CoplanarPolygonGeometry,
         Ellipsoid,
         CesiumMath,
         VertexFormat,

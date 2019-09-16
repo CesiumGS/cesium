@@ -1,10 +1,10 @@
 define([
-        'Core/HermiteSpline',
         'Core/Cartesian3',
+        'Core/HermiteSpline',
         'Core/Math'
     ], function(
-        HermiteSpline,
         Cartesian3,
+        HermiteSpline,
         CesiumMath) {
         'use strict';
 

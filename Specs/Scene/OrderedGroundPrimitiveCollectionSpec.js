@@ -1,9 +1,9 @@
 define([
-        'Scene/OrderedGroundPrimitiveCollection',
-        'Core/destroyObject'
+        'Core/destroyObject',
+        'Scene/OrderedGroundPrimitiveCollection'
     ], function(
-        OrderedGroundPrimitiveCollection,
-        destroyObject) {
+        destroyObject,
+        OrderedGroundPrimitiveCollection) {
         'use strict';
 
 describe('Scene/OrderedGroundPrimitiveCollection', function() {

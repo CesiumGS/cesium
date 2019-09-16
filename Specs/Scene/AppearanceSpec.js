@@ -1,11 +1,11 @@
 define([
-        'Scene/Appearance',
         'Core/WebGLConstants',
+        'Scene/Appearance',
         'Scene/BlendingState',
         'Scene/Material'
     ], function(
-        Appearance,
         WebGLConstants,
+        Appearance,
         BlendingState,
         Material) {
         'use strict';

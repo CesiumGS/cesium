@@ -1,13 +1,13 @@
 define([
-        'Widgets/SceneModePicker/SceneModePicker',
         'Core/FeatureDetection',
         'Specs/createScene',
-        'Specs/DomEventSimulator'
+        'Specs/DomEventSimulator',
+        'Widgets/SceneModePicker/SceneModePicker'
     ], function(
-        SceneModePicker,
         FeatureDetection,
         createScene,
-        DomEventSimulator) {
+        DomEventSimulator,
+        SceneModePicker) {
         'use strict';
 
 describe('Widgets/SceneModePicker/SceneModePicker', function() {

@@ -1,11 +1,11 @@
 define([
-        'Renderer/Buffer',
         'Core/IndexDatatype',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Specs/createContext'
     ], function(
-        Buffer,
         IndexDatatype,
+        Buffer,
         BufferUsage,
         createContext) {
         'use strict';

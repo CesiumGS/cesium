@@ -1,21 +1,21 @@
 define([
-        'Scene/TextureAtlas',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/createGuid',
         'Core/Math',
         'Core/PixelFormat',
         'Core/Resource',
+        'Scene/TextureAtlas',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
-        TextureAtlas,
         BoundingRectangle,
         Cartesian2,
         createGuid,
         CesiumMath,
         PixelFormat,
         Resource,
+        TextureAtlas,
         createScene,
         when) {
         'use strict';

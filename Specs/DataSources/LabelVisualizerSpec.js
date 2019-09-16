@@ -1,5 +1,4 @@
 define([
-        'DataSources/LabelVisualizer',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -13,13 +12,13 @@ define([
         'DataSources/EntityCluster',
         'DataSources/EntityCollection',
         'DataSources/LabelGraphics',
+        'DataSources/LabelVisualizer',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
         'Specs/createGlobe',
         'Specs/createScene'
     ], function(
-        LabelVisualizer,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -33,6 +32,7 @@ define([
         EntityCluster,
         EntityCollection,
         LabelGraphics,
+        LabelVisualizer,
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,

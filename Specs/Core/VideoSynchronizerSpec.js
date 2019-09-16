@@ -1,18 +1,18 @@
 define([
-        'Core/VideoSynchronizer',
         'Core/Clock',
         'Core/FeatureDetection',
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/Math',
+        'Core/VideoSynchronizer',
         'Specs/pollToPromise'
     ], function(
-        VideoSynchronizer,
         Clock,
         FeatureDetection,
         Iso8601,
         JulianDate,
         CesiumMath,
+        VideoSynchronizer,
         pollToPromise) {
         'use strict';
 

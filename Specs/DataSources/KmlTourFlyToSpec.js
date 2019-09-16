@@ -1,20 +1,20 @@
 define([
-        'DataSources/KmlTourFlyTo',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
         'DataSources/KmlCamera',
         'DataSources/KmlLookAt',
+        'DataSources/KmlTourFlyTo',
         'Specs/pollToPromise'
     ], function(
-        KmlTourFlyTo,
         Cartesian3,
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
         KmlCamera,
         KmlLookAt,
+        KmlTourFlyTo,
         pollToPromise) {
         'use strict';
 

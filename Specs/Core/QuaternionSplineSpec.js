@@ -1,13 +1,13 @@
 define([
-        'Core/QuaternionSpline',
         'Core/Cartesian3',
         'Core/Math',
-        'Core/Quaternion'
+        'Core/Quaternion',
+        'Core/QuaternionSpline'
     ], function(
-        QuaternionSpline,
         Cartesian3,
         CesiumMath,
-        Quaternion) {
+        Quaternion,
+        QuaternionSpline) {
         'use strict';
 
 describe('Core/QuaternionSpline', function() {

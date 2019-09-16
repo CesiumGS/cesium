@@ -1,11 +1,11 @@
 define([
-        'Core/TridiagonalSystemSolver',
         'Core/Cartesian3',
-        'Core/Math'
+        'Core/Math',
+        'Core/TridiagonalSystemSolver'
     ], function(
-        TridiagonalSystemSolver,
         Cartesian3,
-        CesiumMath) {
+        CesiumMath,
+        TridiagonalSystemSolver) {
         'use strict';
 
 describe('Core/TridiagonalSystemSolver', function() {

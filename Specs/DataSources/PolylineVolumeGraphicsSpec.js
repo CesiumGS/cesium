@@ -1,20 +1,20 @@
 define([
-        'DataSources/PolylineVolumeGraphics',
         'Core/Color',
         'Core/CornerType',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/PolylineVolumeGraphics',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        PolylineVolumeGraphics,
         Color,
         CornerType,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        PolylineVolumeGraphics,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {

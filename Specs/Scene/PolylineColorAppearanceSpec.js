@@ -1,5 +1,4 @@
 define([
-        'Scene/PolylineColorAppearance',
         'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
@@ -7,10 +6,10 @@ define([
         'Core/GeometryInstance',
         'Core/PolylineGeometry',
         'Scene/Appearance',
+        'Scene/PolylineColorAppearance',
         'Scene/Primitive',
         'Specs/createScene'
     ], function(
-        PolylineColorAppearance,
         ArcType,
         Cartesian3,
         Color,
@@ -18,6 +17,7 @@ define([
         GeometryInstance,
         PolylineGeometry,
         Appearance,
+        PolylineColorAppearance,
         Primitive,
         createScene) {
         'use strict';

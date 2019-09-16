@@ -1,11 +1,11 @@
 define([
-        'DataSources/DataSourceDisplay',
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Iso8601',
         'DataSources/BoundingSphereState',
         'DataSources/DataSourceCollection',
+        'DataSources/DataSourceDisplay',
         'DataSources/Entity',
         'Scene/GroundPolylinePrimitive',
         'Scene/GroundPrimitive',
@@ -13,13 +13,13 @@ define([
         'Specs/MockDataSource',
         'ThirdParty/when'
     ], function(
-        DataSourceDisplay,
         ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
         Iso8601,
         BoundingSphereState,
         DataSourceCollection,
+        DataSourceDisplay,
         Entity,
         GroundPolylinePrimitive,
         GroundPrimitive,

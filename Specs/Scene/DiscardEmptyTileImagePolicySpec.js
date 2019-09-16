@@ -1,11 +1,11 @@
 define([
-        'Scene/DiscardEmptyTileImagePolicy',
         'Core/Resource',
+        'Scene/DiscardEmptyTileImagePolicy',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        DiscardEmptyTileImagePolicy,
         Resource,
+        DiscardEmptyTileImagePolicy,
         pollToPromise,
         when) {
         'use strict';

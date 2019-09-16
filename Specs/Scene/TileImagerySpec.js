@@ -1,9 +1,9 @@
 define([
-        'Scene/TileImagery',
-        'Scene/ImageryState'
+        'Scene/ImageryState',
+        'Scene/TileImagery'
     ], function(
-        TileImagery,
-        ImageryState) {
+        ImageryState,
+        TileImagery) {
         'use strict';
 
 describe('Scene/TileImagery', function() {

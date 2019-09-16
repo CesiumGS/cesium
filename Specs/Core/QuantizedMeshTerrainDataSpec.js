@@ -1,18 +1,18 @@
 define([
-        'Core/QuantizedMeshTerrainData',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/GeographicTilingScheme',
         'Core/Math',
+        'Core/QuantizedMeshTerrainData',
         'Core/TerrainData',
         'Core/TerrainMesh',
         'ThirdParty/when'
     ], function(
-        QuantizedMeshTerrainData,
         BoundingSphere,
         Cartesian3,
         GeographicTilingScheme,
         CesiumMath,
+        QuantizedMeshTerrainData,
         TerrainData,
         TerrainMesh,
         when) {

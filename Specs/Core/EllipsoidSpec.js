@@ -1,13 +1,13 @@
 define([
-        'Core/Ellipsoid',
         'Core/Cartesian3',
         'Core/Cartographic',
+        'Core/Ellipsoid',
         'Core/Math',
         'Specs/createPackableSpecs'
     ], function(
-        Ellipsoid,
         Cartesian3,
         Cartographic,
+        Ellipsoid,
         CesiumMath,
         createPackableSpecs) {
         'use strict';

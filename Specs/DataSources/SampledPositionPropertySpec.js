@@ -1,5 +1,4 @@
 define([
-        'DataSources/SampledPositionProperty',
         'Core/Cartesian3',
         'Core/ExtrapolationType',
         'Core/JulianDate',
@@ -7,9 +6,9 @@ define([
         'Core/LinearApproximation',
         'Core/ReferenceFrame',
         'Core/TimeInterval',
-        'DataSources/PositionProperty'
+        'DataSources/PositionProperty',
+        'DataSources/SampledPositionProperty'
     ], function(
-        SampledPositionProperty,
         Cartesian3,
         ExtrapolationType,
         JulianDate,
@@ -17,7 +16,8 @@ define([
         LinearApproximation,
         ReferenceFrame,
         TimeInterval,
-        PositionProperty) {
+        PositionProperty,
+        SampledPositionProperty) {
         'use strict';
 
 describe('DataSources/SampledPositionProperty', function() {

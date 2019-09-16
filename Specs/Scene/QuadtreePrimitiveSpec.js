@@ -1,5 +1,4 @@
 define([
-        'Scene/QuadtreePrimitive',
         '../MockTerrainProvider',
         '../TerrainTileProcessor',
         'Core/Cartesian3',
@@ -16,13 +15,13 @@ define([
         'Scene/Camera',
         'Scene/GlobeSurfaceTileProvider',
         'Scene/ImageryLayerCollection',
+        'Scene/QuadtreePrimitive',
         'Scene/QuadtreeTileLoadState',
         'Scene/SceneMode',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        QuadtreePrimitive,
         MockTerrainProvider,
         TerrainTileProcessor,
         Cartesian3,
@@ -39,6 +38,7 @@ define([
         Camera,
         GlobeSurfaceTileProvider,
         ImageryLayerCollection,
+        QuadtreePrimitive,
         QuadtreeTileLoadState,
         SceneMode,
         createScene,

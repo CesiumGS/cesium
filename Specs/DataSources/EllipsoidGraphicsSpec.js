@@ -1,20 +1,20 @@
 define([
-        'DataSources/EllipsoidGraphics',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/EllipsoidGraphics',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        EllipsoidGraphics,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        EllipsoidGraphics,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {

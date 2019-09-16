@@ -1,5 +1,4 @@
 define([
-        'Core/RectangleOutlineGeometry',
         'Core/arrayFill',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -9,9 +8,9 @@ define([
         'Core/Math',
         'Core/Matrix2',
         'Core/Rectangle',
+        'Core/RectangleOutlineGeometry',
         'Specs/createPackableSpecs'
     ], function(
-        RectangleOutlineGeometry,
         arrayFill,
         Cartesian2,
         Cartesian3,
@@ -21,6 +20,7 @@ define([
         CesiumMath,
         Matrix2,
         Rectangle,
+        RectangleOutlineGeometry,
         createPackableSpecs) {
         'use strict';
 

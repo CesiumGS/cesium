@@ -1,12 +1,12 @@
 define([
-        'Core/TaskProcessor',
         'Core/FeatureDetection',
+        'Core/TaskProcessor',
         'require',
         'Specs/absolutize',
         'ThirdParty/when'
     ], function(
-        TaskProcessor,
         FeatureDetection,
+        TaskProcessor,
         require,
         absolutize,
         when) {

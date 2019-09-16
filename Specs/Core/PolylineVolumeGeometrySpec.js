@@ -1,17 +1,17 @@
 define([
-        'Core/PolylineVolumeGeometry',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/CornerType',
         'Core/Ellipsoid',
+        'Core/PolylineVolumeGeometry',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        PolylineVolumeGeometry,
         Cartesian2,
         Cartesian3,
         CornerType,
         Ellipsoid,
+        PolylineVolumeGeometry,
         VertexFormat,
         createPackableSpecs) {
         'use strict';

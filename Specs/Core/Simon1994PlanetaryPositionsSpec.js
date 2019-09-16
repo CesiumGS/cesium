@@ -1,17 +1,17 @@
 define([
-        'Core/Simon1994PlanetaryPositions',
         'Core/defined',
         'Core/JulianDate',
         'Core/Math',
         'Core/Matrix3',
+        'Core/Simon1994PlanetaryPositions',
         'Core/TimeStandard',
         'Core/Transforms'
     ], function(
-        PlanetaryPositions,
         defined,
         JulianDate,
         CesiumMath,
         Matrix3,
+        PlanetaryPositions,
         TimeStandard,
         Transforms) {
         'use strict';

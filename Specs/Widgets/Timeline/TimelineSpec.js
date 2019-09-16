@@ -1,9 +1,9 @@
 define([
-        'Widgets/Timeline/Timeline',
-        'Core/Clock'
+        'Core/Clock',
+        'Widgets/Timeline/Timeline'
     ], function(
-        Timeline,
-        Clock) {
+        Clock,
+        Timeline) {
         'use strict';
 
 describe('Widgets/Timeline/Timeline', function() {

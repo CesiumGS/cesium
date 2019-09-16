@@ -1,13 +1,13 @@
 define([
-        'Core/Iau2006XysData',
         'Core/buildModuleUrl',
         'Core/defined',
+        'Core/Iau2006XysData',
         'Core/Iau2006XysSample',
         'Specs/pollToPromise'
     ], function(
-        Iau2006XysData,
         buildModuleUrl,
         defined,
+        Iau2006XysData,
         Iau2006XysSample,
         pollToPromise) {
         'use strict';

@@ -1,17 +1,17 @@
 define([
-        'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel',
         'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/Globe',
         'Specs/createScene',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel'
     ], function(
-        Cesium3DTilesInspectorViewModel,
         Cesium3DTileset,
         Cesium3DTileStyle,
         Globe,
         createScene,
-        when) {
+        when,
+        Cesium3DTilesInspectorViewModel) {
         'use strict';
 
 describe('Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel', function() {

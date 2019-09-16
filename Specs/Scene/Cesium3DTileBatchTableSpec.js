@@ -1,5 +1,4 @@
 define([
-        'Scene/Cesium3DTileBatchTable',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -10,11 +9,11 @@ define([
         'Core/Matrix4',
         'Renderer/ContextLimits',
         'Scene/Batched3DModel3DTileContent',
+        'Scene/Cesium3DTileBatchTable',
         'Scene/Cesium3DTileStyle',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Cesium3DTileBatchTable,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -25,6 +24,7 @@ define([
         Matrix4,
         ContextLimits,
         Batched3DModel3DTileContent,
+        Cesium3DTileBatchTable,
         Cesium3DTileStyle,
         Cesium3DTilesTester,
         createScene) {

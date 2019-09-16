@@ -1,12 +1,12 @@
 define([
-        'Scene/CreditDisplay',
         'Core/Credit',
         'Core/defined',
+        'Scene/CreditDisplay',
         'Specs/absolutize'
     ], function(
-        CreditDisplay,
         Credit,
         defined,
+        CreditDisplay,
         absolutize) {
         'use strict';
 

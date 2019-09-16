@@ -1,9 +1,9 @@
 define([
-        'Widgets/PerformanceWatchdog/PerformanceWatchdog',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/PerformanceWatchdog/PerformanceWatchdog'
     ], function(
-        PerformanceWatchdog,
-        createScene) {
+        createScene,
+        PerformanceWatchdog) {
         'use strict';
 
 describe('Widgets/PerformanceWatchdog/PerformanceWatchdog', function() {

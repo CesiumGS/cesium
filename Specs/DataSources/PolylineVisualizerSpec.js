@@ -1,5 +1,4 @@
 define([
-        'DataSources/PolylineVisualizer',
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -16,6 +15,7 @@ define([
         'DataSources/EntityCollection',
         'DataSources/PolylineArrowMaterialProperty',
         'DataSources/PolylineGraphics',
+        'DataSources/PolylineVisualizer',
         'Scene/ClassificationType',
         'Scene/PolylineColorAppearance',
         'Scene/PolylineMaterialAppearance',
@@ -24,7 +24,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        PolylineVisualizer,
         ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
@@ -41,6 +40,7 @@ define([
         EntityCollection,
         PolylineArrowMaterialProperty,
         PolylineGraphics,
+        PolylineVisualizer,
         ClassificationType,
         PolylineColorAppearance,
         PolylineMaterialAppearance,

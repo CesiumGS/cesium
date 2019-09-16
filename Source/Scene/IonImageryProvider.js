@@ -1,6 +1,5 @@
 define([
         '../Core/Check',
-        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -20,7 +19,6 @@ define([
         './WebMapTileServiceImageryProvider'
     ], function(
         Check,
-        Credit,
         defaultValue,
         defined,
         defineProperties,

@@ -1,5 +1,4 @@
 define([
-        'DataSources/PolylineGeometryUpdater',
         'Core/ApproximateTerrainHeights',
         'Core/ArcType',
         'Core/BoundingSphere',
@@ -21,6 +20,7 @@ define([
         'DataSources/ConstantProperty',
         'DataSources/Entity',
         'DataSources/GridMaterialProperty',
+        'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
         'DataSources/PropertyArray',
         'DataSources/SampledPositionProperty',
@@ -33,7 +33,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        PolylineGeometryUpdater,
         ApproximateTerrainHeights,
         ArcType,
         BoundingSphere,
@@ -55,6 +54,7 @@ define([
         ConstantProperty,
         Entity,
         GridMaterialProperty,
+        PolylineGeometryUpdater,
         PolylineGraphics,
         PropertyArray,
         SampledPositionProperty,

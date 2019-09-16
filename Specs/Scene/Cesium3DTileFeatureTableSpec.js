@@ -1,9 +1,9 @@
 define([
-        'Scene/Cesium3DTileFeatureTable',
-        'Core/ComponentDatatype'
+        'Core/ComponentDatatype',
+        'Scene/Cesium3DTileFeatureTable'
     ], function(
-        Cesium3DTileFeatureTable,
-        ComponentDatatype) {
+        ComponentDatatype,
+        Cesium3DTileFeatureTable) {
         'use strict';
 
 describe('Scene/Cesium3DTileFeatureTable', function() {

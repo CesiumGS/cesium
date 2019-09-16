@@ -1,17 +1,17 @@
 define([
-        'Scene/CameraFlightPath',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Math',
         'Core/OrthographicOffCenterFrustum',
+        'Scene/CameraFlightPath',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
-        CameraFlightPath,
         Cartesian3,
         Cartographic,
         CesiumMath,
         OrthographicOffCenterFrustum,
+        CameraFlightPath,
         SceneMode,
         createScene) {
         'use strict';

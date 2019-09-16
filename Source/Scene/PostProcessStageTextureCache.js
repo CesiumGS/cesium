@@ -1,16 +1,16 @@
 define([
         '../Core/Color',
         '../Core/defined',
-        '../Core/Math',
         '../Core/destroyObject',
+        '../Core/Math',
         '../Renderer/ClearCommand',
         '../Renderer/Framebuffer',
         '../Renderer/Texture'
     ], function(
         Color,
         defined,
-        CesiumMath,
         destroyObject,
+        CesiumMath,
         ClearCommand,
         Framebuffer,
         Texture) {

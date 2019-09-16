@@ -1,9 +1,9 @@
 define([
-        'Scene/Cesium3DTilePassState',
-        'Scene/Cesium3DTilePass'
+        'Scene/Cesium3DTilePass',
+        'Scene/Cesium3DTilePassState'
     ], function(
-        Cesium3DTilePassState,
-        Cesium3DTilePass) {
+        Cesium3DTilePass,
+        Cesium3DTilePassState) {
         'use strict';
 
 describe('Scene/Cesium3DTilePassState', function() {

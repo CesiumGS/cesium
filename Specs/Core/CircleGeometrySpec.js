@@ -1,13 +1,13 @@
 define([
-        'Core/CircleGeometry',
         'Core/Cartesian3',
+        'Core/CircleGeometry',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        CircleGeometry,
         Cartesian3,
+        CircleGeometry,
         Ellipsoid,
         CesiumMath,
         VertexFormat,

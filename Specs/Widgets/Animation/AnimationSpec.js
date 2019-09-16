@@ -1,13 +1,13 @@
 define([
-        'Widgets/Animation/Animation',
         'Core/defined',
         'Specs/pollToPromise',
+        'Widgets/Animation/Animation',
         'Widgets/Animation/AnimationViewModel',
         'Widgets/ClockViewModel'
     ], function(
-        Animation,
         defined,
         pollToPromise,
+        Animation,
         AnimationViewModel,
         ClockViewModel) {
         'use strict';

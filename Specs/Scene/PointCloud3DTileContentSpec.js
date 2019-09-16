@@ -1,5 +1,4 @@
 define([
-        'Scene/PointCloud3DTileContent',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ComponentDatatype',
@@ -7,7 +6,6 @@ define([
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
-        'Core/Matrix4',
         'Core/PerspectiveFrustum',
         'Core/Transforms',
         'Renderer/Pass',
@@ -23,7 +21,6 @@ define([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        PointCloud3DTileContent,
         Cartesian3,
         Color,
         ComponentDatatype,
@@ -31,7 +28,6 @@ define([
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
-        Matrix4,
         PerspectiveFrustum,
         Transforms,
         Pass,

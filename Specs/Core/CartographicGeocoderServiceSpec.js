@@ -1,9 +1,9 @@
 define([
-        'Core/CartographicGeocoderService',
-        'Core/Cartesian3'
+        'Core/Cartesian3',
+        'Core/CartographicGeocoderService'
     ], function(
-        CartographicGeocoderService,
-        Cartesian3) {
+        Cartesian3,
+        CartographicGeocoderService) {
         'use strict';
 
 describe('Core/CartographicGeocoderService', function() {

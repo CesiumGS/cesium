@@ -1,13 +1,13 @@
 define([
-        'Core/EllipsoidTangentPlane',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Ellipsoid'
+        'Core/Ellipsoid',
+        'Core/EllipsoidTangentPlane'
     ], function(
-        EllipsoidTangentPlane,
         Cartesian2,
         Cartesian3,
-        Ellipsoid) {
+        Ellipsoid,
+        EllipsoidTangentPlane) {
         'use strict';
 
 describe('Core/EllipsoidTangentPlane', function() {

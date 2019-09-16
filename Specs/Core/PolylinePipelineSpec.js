@@ -1,14 +1,14 @@
 define([
-        'Core/PolylinePipeline',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Core/PolylinePipeline',
         'Core/Transforms'
     ], function(
-        PolylinePipeline,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        PolylinePipeline,
         Transforms) {
         'use strict';
 

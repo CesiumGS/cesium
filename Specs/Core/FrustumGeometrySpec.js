@@ -1,14 +1,14 @@
 define([
-        'Core/FrustumGeometry',
         'Core/Cartesian3',
+        'Core/FrustumGeometry',
         'Core/Math',
         'Core/PerspectiveFrustum',
         'Core/Quaternion',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        FrustumGeometry,
         Cartesian3,
+        FrustumGeometry,
         CesiumMath,
         PerspectiveFrustum,
         Quaternion,
