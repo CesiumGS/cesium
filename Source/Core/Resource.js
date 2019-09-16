@@ -1865,8 +1865,8 @@ define([
                     loadImageElement(url, crossOrigin, deferred);
                     return;
                 }
-                var responseType = "blob";
-                var method = "GET";
+                var responseType = 'blob';
+                var method = 'GET';
                 var xhrDeferred = when.defer();
                 var xhr = Resource._Implementations.loadWithXhr(
                     url,
