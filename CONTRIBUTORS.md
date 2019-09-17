@@ -135,6 +135,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Matthew Amato](https://github.com/mramato)
    * [Brandon Barker](https://github.com/ProjectBarks)
    * [Peter Gagliardi](https://github.com/ptrgags)
+* [WatchKeeper International](https://www.watchkeeperintl.com)
+   * [Daniel Whatmuff](https://github.com/danielwhatmuff)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 * [Victor Berchet](https://github.com/vicb)
