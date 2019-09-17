@@ -328,6 +328,7 @@ define([
                     tileImageryCollection.splice(i, 1);
                     imageryLayer._createTileImagerySkeletons(tile, terrainProvider, i);
                     --i;
+                    --loadableCount;
                     len = tileImageryCollection.length;
                     continue;
                 } else {
