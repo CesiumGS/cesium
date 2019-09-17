@@ -305,15 +305,17 @@ define([
         var surfaceTile = tile.data;
         var isUpsampledOnly = tile.upsampledFromParent;
         var isDoneLoading = true;
+        var isAnyTileLoaded = false;
 
         // Transition imagery states
         var tileImageryCollection = surfaceTile.imagery;
-        var isAnyTileLoaded = tileImageryCollection.length === 0;
+        var loadableCount = tileImageryCollection.length;
         var i, len;
         for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
             if (!defined(tileImagery.loadingImagery)) {
                 isUpsampledOnly = false;
+                --loadableCount;
                 continue;
             }
 
@@ -346,7 +348,7 @@ define([
         tile.upsampledFromParent = isUpsampledOnly;
 
         // Allow rendering if any available layers are loaded
-        tile.renderable = tile.renderable && isAnyTileLoaded;
+        tile.renderable = tile.renderable && (isAnyTileLoaded || loadableCount === 0);
 
         return isDoneLoading;
     };
