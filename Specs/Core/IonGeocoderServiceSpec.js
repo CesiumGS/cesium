@@ -1,17 +1,13 @@
 define([
-        'Core/IonGeocoderService',
         'Core/GeocodeType',
         'Core/Ion',
-        'Core/Rectangle',
-        'Core/Resource',
+        'Core/IonGeocoderService',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
-        IonGeocoderService,
         GeocodeType,
         Ion,
-        Rectangle,
-        Resource,
+        IonGeocoderService,
         createScene,
         when) {
         'use strict';

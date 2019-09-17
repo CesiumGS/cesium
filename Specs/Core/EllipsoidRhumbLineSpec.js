@@ -1,14 +1,14 @@
 define([
-        'Core/EllipsoidRhumbLine',
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/EllipsoidGeodesic',
+        'Core/EllipsoidRhumbLine',
         'Core/Math'
     ], function(
-        EllipsoidRhumbLine,
         Cartographic,
         Ellipsoid,
         EllipsoidGeodesic,
+        EllipsoidRhumbLine,
         CesiumMath) {
         'use strict';
 

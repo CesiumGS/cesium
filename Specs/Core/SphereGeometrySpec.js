@@ -1,13 +1,13 @@
 define([
-        'Core/SphereGeometry',
         'Core/Cartesian3',
         'Core/Math',
+        'Core/SphereGeometry',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        SphereGeometry,
         Cartesian3,
         CesiumMath,
+        SphereGeometry,
         VertexFormat,
         createPackableSpecs) {
         'use strict';

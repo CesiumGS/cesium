@@ -1,13 +1,13 @@
 define([
-        'DataSources/Rotation',
         'Core/JulianDate',
         'Core/Math',
+        'DataSources/Rotation',
         'DataSources/SampledProperty',
         'Specs/createPackableSpecs'
     ], function(
-        Rotation,
         JulianDate,
         CesiumMath,
+        Rotation,
         SampledProperty,
         createPackableSpecs) {
         'use strict';

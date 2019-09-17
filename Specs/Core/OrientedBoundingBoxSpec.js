@@ -1,5 +1,4 @@
 define([
-        'Core/OrientedBoundingBox',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -8,12 +7,12 @@ define([
         'Core/Math',
         'Core/Matrix3',
         'Core/Occluder',
+        'Core/OrientedBoundingBox',
         'Core/Plane',
         'Core/Quaternion',
         'Core/Rectangle',
         'Specs/createPackableSpecs'
     ], function(
-        OrientedBoundingBox,
         BoundingSphere,
         Cartesian3,
         Cartesian4,
@@ -22,6 +21,7 @@ define([
         CesiumMath,
         Matrix3,
         Occluder,
+        OrientedBoundingBox,
         Plane,
         Quaternion,
         Rectangle,

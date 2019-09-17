@@ -1,5 +1,4 @@
 define([
-        'Scene/TileBoundingRegion',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -11,9 +10,9 @@ define([
         'Core/Plane',
         'Core/Rectangle',
         'Scene/SceneMode',
+        'Scene/TileBoundingRegion',
         'Specs/createFrameState'
     ], function(
-        TileBoundingRegion,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -25,6 +24,7 @@ define([
         Plane,
         Rectangle,
         SceneMode,
+        TileBoundingRegion,
         createFrameState) {
         'use strict';
 

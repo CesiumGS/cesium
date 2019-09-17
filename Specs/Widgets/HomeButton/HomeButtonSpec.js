@@ -1,9 +1,9 @@
 define([
-        'Widgets/HomeButton/HomeButton',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/HomeButton/HomeButton'
     ], function(
-        HomeButton,
-        createScene) {
+        createScene,
+        HomeButton) {
         'use strict';
 
 describe('Widgets/HomeButton/HomeButton', function() {

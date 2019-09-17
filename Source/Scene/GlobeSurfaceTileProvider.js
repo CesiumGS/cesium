@@ -37,20 +37,20 @@ define([
         '../Renderer/RenderState',
         '../Renderer/VertexArray',
         './BlendingState',
-        './ImageryState',
-        './TileBoundingRegion',
-        './TileSelectionResult',
         './ClippingPlaneCollection',
         './DepthFunction',
         './GlobeSurfaceTile',
         './ImageryLayer',
+        './ImageryState',
         './PerInstanceColorAppearance',
         './Primitive',
         './QuadtreeTileLoadState',
         './SceneMode',
         './ShadowMode',
         './TerrainFillMesh',
-        './TerrainState'
+        './TerrainState',
+        './TileBoundingRegion',
+        './TileSelectionResult'
     ], function(
         BoundingSphere,
         BoxOutlineGeometry,
@@ -90,20 +90,20 @@ define([
         RenderState,
         VertexArray,
         BlendingState,
-        ImageryState,
-        TileBoundingRegion,
-        TileSelectionResult,
         ClippingPlaneCollection,
         DepthFunction,
         GlobeSurfaceTile,
         ImageryLayer,
+        ImageryState,
         PerInstanceColorAppearance,
         Primitive,
         QuadtreeTileLoadState,
         SceneMode,
         ShadowMode,
         TerrainFillMesh,
-        TerrainState) {
+        TerrainState,
+        TileBoundingRegion,
+        TileSelectionResult) {
     'use strict';
 
     /**

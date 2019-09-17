@@ -1,13 +1,13 @@
 define([
-        'Core/IauOrientationAxes',
         'Core/Iau2000Orientation',
+        'Core/IauOrientationAxes',
         'Core/JulianDate',
         'Core/Math',
         'Core/Matrix3',
         'Core/TimeStandard'
     ], function(
-        IauOrientationAxes,
         Iau2000Orientation,
+        IauOrientationAxes,
         JulianDate,
         CesiumMath,
         Matrix3,

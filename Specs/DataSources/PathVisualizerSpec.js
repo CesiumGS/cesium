@@ -1,5 +1,4 @@
 define([
-        'DataSources/PathVisualizer',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
@@ -12,6 +11,7 @@ define([
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/PathGraphics',
+        'DataSources/PathVisualizer',
         'DataSources/PolylineGlowMaterialProperty',
         'DataSources/PolylineOutlineMaterialProperty',
         'DataSources/ReferenceProperty',
@@ -21,7 +21,6 @@ define([
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
-        PathVisualizer,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
@@ -34,6 +33,7 @@ define([
         ConstantProperty,
         EntityCollection,
         PathGraphics,
+        PathVisualizer,
         PolylineGlowMaterialProperty,
         PolylineOutlineMaterialProperty,
         ReferenceProperty,

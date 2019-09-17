@@ -1,5 +1,4 @@
 define([
-        'Scene/ShadowVolumeAppearance',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/ComponentDatatype',
@@ -12,9 +11,9 @@ define([
         'Core/WebMercatorProjection',
         'Scene/Material',
         'Scene/MaterialAppearance',
-        'Scene/PerInstanceColorAppearance'
+        'Scene/PerInstanceColorAppearance',
+        'Scene/ShadowVolumeAppearance'
     ], function(
-        ShadowVolumeAppearance,
         Cartesian3,
         Cartographic,
         ComponentDatatype,
@@ -27,7 +26,8 @@ define([
         WebMercatorProjection,
         Material,
         MaterialAppearance,
-        PerInstanceColorAppearance) {
+        PerInstanceColorAppearance,
+        ShadowVolumeAppearance) {
         'use strict';
 
 describe('Scene/ShadowVolumeAppearance', function() {

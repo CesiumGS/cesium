@@ -1,11 +1,10 @@
 define([
-        'Core/GoogleEarthEnterpriseTerrainProvider',
-        'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/GoogleEarthEnterpriseMetadata',
         'Core/GoogleEarthEnterpriseTerrainData',
+        'Core/GoogleEarthEnterpriseTerrainProvider',
         'Core/GoogleEarthEnterpriseTileInformation',
         'Core/Math',
         'Core/Request',
@@ -15,13 +14,12 @@ define([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        GoogleEarthEnterpriseTerrainProvider,
-        DefaultProxy,
         defaultValue,
         Ellipsoid,
         GeographicTilingScheme,
         GoogleEarthEnterpriseMetadata,
         GoogleEarthEnterpriseTerrainData,
+        GoogleEarthEnterpriseTerrainProvider,
         GoogleEarthEnterpriseTileInformation,
         CesiumMath,
         Request,

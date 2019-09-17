@@ -1,13 +1,13 @@
 define([
-        'Core/EllipsoidOutlineGeometry',
         'Core/arrayFill',
         'Core/Cartesian3',
+        'Core/EllipsoidOutlineGeometry',
         'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
-        EllipsoidOutlineGeometry,
         arrayFill,
         Cartesian3,
+        EllipsoidOutlineGeometry,
         GeometryOffsetAttribute,
         createPackableSpecs) {
         'use strict';

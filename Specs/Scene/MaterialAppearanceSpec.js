@@ -1,5 +1,4 @@
 define([
-        'Scene/MaterialAppearance',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
@@ -8,10 +7,10 @@ define([
         'Core/RectangleGeometry',
         'Scene/Appearance',
         'Scene/Material',
+        'Scene/MaterialAppearance',
         'Scene/Primitive',
         'Specs/createScene'
     ], function(
-        MaterialAppearance,
         Color,
         ColorGeometryInstanceAttribute,
         defaultValue,
@@ -20,6 +19,7 @@ define([
         RectangleGeometry,
         Appearance,
         Material,
+        MaterialAppearance,
         Primitive,
         createScene) {
         'use strict';

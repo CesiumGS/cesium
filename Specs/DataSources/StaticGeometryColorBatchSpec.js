@@ -1,5 +1,4 @@
 define([
-        'DataSources/StaticGeometryColorBatch',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
@@ -12,6 +11,7 @@ define([
         'DataSources/EllipseGeometryUpdater',
         'DataSources/Entity',
         'DataSources/PolylineGeometryUpdater',
+        'DataSources/StaticGeometryColorBatch',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PerInstanceColorAppearance',
         'Scene/PolylineColorAppearance',
@@ -19,7 +19,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        StaticGeometryColorBatch,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
@@ -32,6 +31,7 @@ define([
         EllipseGeometryUpdater,
         Entity,
         PolylineGeometryUpdater,
+        StaticGeometryColorBatch,
         TimeIntervalCollectionProperty,
         PerInstanceColorAppearance,
         PolylineColorAppearance,

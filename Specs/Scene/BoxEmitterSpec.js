@@ -1,10 +1,10 @@
 define([
-        'Scene/BoxEmitter',
         'Core/Cartesian3',
+        'Scene/BoxEmitter',
         'Scene/Particle'
     ], function(
-        BoxEmitter,
         Cartesian3,
+        BoxEmitter,
         Particle) {
         'use strict';
 

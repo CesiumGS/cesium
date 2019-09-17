@@ -1,13 +1,13 @@
 define([
-        'Scene/DiscardMissingTileImagePolicy',
         'Core/Cartesian2',
         'Core/Resource',
+        'Scene/DiscardMissingTileImagePolicy',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        DiscardMissingTileImagePolicy,
         Cartesian2,
         Resource,
+        DiscardMissingTileImagePolicy,
         pollToPromise,
         when) {
         'use strict';

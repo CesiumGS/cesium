@@ -1,5 +1,4 @@
 define([
-        'Scene/Model',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -32,12 +31,12 @@ define([
         'Scene/ColorBlendMode',
         'Scene/DracoLoader',
         'Scene/HeightReference',
+        'Scene/Model',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        Model,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -70,6 +69,7 @@ define([
         ColorBlendMode,
         DracoLoader,
         HeightReference,
+        Model,
         ModelAnimationLoop,
         createScene,
         pollToPromise,

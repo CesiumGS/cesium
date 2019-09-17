@@ -1,5 +1,4 @@
 define([
-        'DataSources/PolygonGeometryUpdater',
         'Core/ApproximateTerrainHeights',
         'Core/ArcType',
         'Core/Cartesian3',
@@ -7,7 +6,6 @@ define([
         'Core/CoplanarPolygonGeometry',
         'Core/CoplanarPolygonOutlineGeometry',
         'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
         'Core/Math',
         'Core/PolygonGeometry',
@@ -16,6 +14,7 @@ define([
         'Core/TimeIntervalCollection',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
+        'DataSources/PolygonGeometryUpdater',
         'DataSources/PolygonGraphics',
         'DataSources/PropertyArray',
         'DataSources/SampledPositionProperty',
@@ -29,7 +28,6 @@ define([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        PolygonGeometryUpdater,
         ApproximateTerrainHeights,
         ArcType,
         Cartesian3,
@@ -37,7 +35,6 @@ define([
         CoplanarPolygonGeometry,
         CoplanarPolygonOutlineGeometry,
         Ellipsoid,
-        GeometryOffsetAttribute,
         JulianDate,
         CesiumMath,
         PolygonGeometry,
@@ -46,6 +43,7 @@ define([
         TimeIntervalCollection,
         ConstantProperty,
         Entity,
+        PolygonGeometryUpdater,
         PolygonGraphics,
         PropertyArray,
         SampledPositionProperty,

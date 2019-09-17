@@ -1,5 +1,4 @@
 define([
-        'Scene/SceneTransforms',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
@@ -8,9 +7,9 @@ define([
         'Core/Rectangle',
         'Scene/Camera',
         'Scene/SceneMode',
+        'Scene/SceneTransforms',
         'Specs/createScene'
     ], function(
-        SceneTransforms,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
@@ -19,6 +18,7 @@ define([
         Rectangle,
         Camera,
         SceneMode,
+        SceneTransforms,
         createScene) {
         'use strict';
 

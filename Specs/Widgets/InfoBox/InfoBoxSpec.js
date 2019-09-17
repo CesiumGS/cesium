@@ -1,11 +1,11 @@
 define([
-        'Widgets/InfoBox/InfoBox',
         'Core/defined',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'Widgets/InfoBox/InfoBox'
     ], function(
-        InfoBox,
         defined,
-        pollToPromise) {
+        pollToPromise,
+        InfoBox) {
         'use strict';
 
 describe('Widgets/InfoBox/InfoBox', function() {

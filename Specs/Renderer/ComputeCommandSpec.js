@@ -1,9 +1,9 @@
 define([
-        'Renderer/ComputeCommand',
         'Core/BoundingRectangle',
         'Core/PixelFormat',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
+        'Renderer/ComputeCommand',
         'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/VertexArray',
@@ -11,11 +11,11 @@ define([
         'Scene/ViewportQuad',
         'Specs/createScene'
     ], function(
-        ComputeCommand,
         BoundingRectangle,
         PixelFormat,
         Buffer,
         BufferUsage,
+        ComputeCommand,
         ShaderProgram,
         Texture,
         VertexArray,

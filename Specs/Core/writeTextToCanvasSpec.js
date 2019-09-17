@@ -1,9 +1,9 @@
 define([
-        'Core/writeTextToCanvas',
-        'Core/Color'
+        'Core/Color',
+        'Core/writeTextToCanvas'
     ], function(
-        writeTextToCanvas,
-        Color) {
+        Color,
+        writeTextToCanvas) {
         'use strict';
 
 describe('Core/writeTextToCanvas', function() {

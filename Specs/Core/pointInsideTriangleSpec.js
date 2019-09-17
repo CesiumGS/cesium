@@ -1,9 +1,9 @@
 define([
-        'Core/pointInsideTriangle',
-        'Core/Cartesian2'
+        'Core/Cartesian2',
+        'Core/pointInsideTriangle'
     ], function(
-        pointInsideTriangle,
-        Cartesian2) {
+        Cartesian2,
+        pointInsideTriangle) {
         'use strict';
 
 describe('Core/pointInsideTriangle', function() {

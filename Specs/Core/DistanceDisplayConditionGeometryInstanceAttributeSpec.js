@@ -1,11 +1,11 @@
 define([
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/ComponentDatatype',
-        'Core/DistanceDisplayCondition'
+        'Core/DistanceDisplayCondition',
+        'Core/DistanceDisplayConditionGeometryInstanceAttribute'
     ], function(
-        DistanceDisplayConditionGeometryInstanceAttribute,
         ComponentDatatype,
-        DistanceDisplayCondition) {
+        DistanceDisplayCondition,
+        DistanceDisplayConditionGeometryInstanceAttribute) {
         'use strict';
 
 describe('Core/DistanceDisplayConditionGeometryInstanceAttribute', function() {

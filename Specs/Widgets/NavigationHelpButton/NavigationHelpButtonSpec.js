@@ -1,11 +1,11 @@
 define([
-        'Widgets/NavigationHelpButton/NavigationHelpButton',
         'Core/FeatureDetection',
-        'Specs/DomEventSimulator'
+        'Specs/DomEventSimulator',
+        'Widgets/NavigationHelpButton/NavigationHelpButton'
     ], function(
-        NavigationHelpButton,
         FeatureDetection,
-        DomEventSimulator) {
+        DomEventSimulator,
+        NavigationHelpButton) {
         'use strict';
 
 describe('Widgets/NavigationHelpButton/NavigationHelpButton', function() {

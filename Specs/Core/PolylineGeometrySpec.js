@@ -1,17 +1,17 @@
 define([
-        'Core/PolylineGeometry',
         'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
+        'Core/PolylineGeometry',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        PolylineGeometry,
         ArcType,
         Cartesian3,
         Color,
         Ellipsoid,
+        PolylineGeometry,
         VertexFormat,
         createPackableSpecs) {
         'use strict';

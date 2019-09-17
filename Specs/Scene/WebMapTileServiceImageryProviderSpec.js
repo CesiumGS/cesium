@@ -1,9 +1,7 @@
 define([
-        'Scene/WebMapTileServiceImageryProvider',
         'Core/Clock',
         'Core/ClockStep',
         'Core/Credit',
-        'Core/DefaultProxy',
         'Core/GeographicTilingScheme',
         'Core/JulianDate',
         'Core/objectToQuery',
@@ -18,14 +16,13 @@ define([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/WebMapTileServiceImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/Uri'
     ], function(
-        WebMapTileServiceImageryProvider,
         Clock,
         ClockStep,
         Credit,
-        DefaultProxy,
         GeographicTilingScheme,
         JulianDate,
         objectToQuery,
@@ -40,6 +37,7 @@ define([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
+        WebMapTileServiceImageryProvider,
         pollToPromise,
         Uri) {
         'use strict';

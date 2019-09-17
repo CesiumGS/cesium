@@ -1,14 +1,14 @@
 define([
-        'Core/WallOutlineGeometry',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Core/WallOutlineGeometry',
         'Specs/createPackableSpecs'
     ], function(
-        WallOutlineGeometry,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        WallOutlineGeometry,
         createPackableSpecs) {
         'use strict';
 

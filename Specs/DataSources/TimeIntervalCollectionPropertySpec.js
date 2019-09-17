@@ -1,15 +1,15 @@
 define([
-        'DataSources/TimeIntervalCollectionProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/TimeInterval',
-        'Core/TimeIntervalCollection'
+        'Core/TimeIntervalCollection',
+        'DataSources/TimeIntervalCollectionProperty'
     ], function(
-        TimeIntervalCollectionProperty,
         Cartesian3,
         JulianDate,
         TimeInterval,
-        TimeIntervalCollection) {
+        TimeIntervalCollection,
+        TimeIntervalCollectionProperty) {
         'use strict';
 
 describe('DataSources/TimeIntervalCollectionProperty', function() {

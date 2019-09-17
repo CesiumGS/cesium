@@ -1,14 +1,14 @@
 define([
-        'DataSources/createMaterialPropertyDescriptor',
         'Core/Color',
         'Core/Event',
         'DataSources/ColorMaterialProperty',
+        'DataSources/createMaterialPropertyDescriptor',
         'DataSources/ImageMaterialProperty'
     ], function(
-        createMaterialPropertyDescriptor,
         Color,
         Event,
         ColorMaterialProperty,
+        createMaterialPropertyDescriptor,
         ImageMaterialProperty) {
         'use strict';
 

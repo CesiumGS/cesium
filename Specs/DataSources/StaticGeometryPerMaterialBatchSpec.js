@@ -1,5 +1,4 @@
 define([
-        'DataSources/StaticGeometryPerMaterialBatch',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
@@ -20,6 +19,7 @@ define([
         'DataSources/PolylineArrowMaterialProperty',
         'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
+        'DataSources/StaticGeometryPerMaterialBatch',
         'DataSources/StripeMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/MaterialAppearance',
@@ -29,7 +29,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        StaticGeometryPerMaterialBatch,
         Cartesian2,
         Cartesian3,
         Color,
@@ -50,6 +49,7 @@ define([
         PolylineArrowMaterialProperty,
         PolylineGeometryUpdater,
         PolylineGraphics,
+        StaticGeometryPerMaterialBatch,
         StripeMaterialProperty,
         TimeIntervalCollectionProperty,
         MaterialAppearance,

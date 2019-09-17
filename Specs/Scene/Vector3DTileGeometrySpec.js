@@ -1,5 +1,4 @@
 define([
-        'Scene/Vector3DTileGeometry',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -20,11 +19,11 @@ define([
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Scene/StencilConstants',
+        'Scene/Vector3DTileGeometry',
         'Specs/createContext',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        Vector3DTileGeometry,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -45,6 +44,7 @@ define([
         PerInstanceColorAppearance,
         Primitive,
         StencilConstants,
+        Vector3DTileGeometry,
         createContext,
         createScene,
         pollToPromise) {

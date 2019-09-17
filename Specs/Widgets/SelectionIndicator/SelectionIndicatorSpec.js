@@ -1,9 +1,9 @@
 define([
-        'Widgets/SelectionIndicator/SelectionIndicator',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/SelectionIndicator/SelectionIndicator'
     ], function(
-        SelectionIndicator,
-        createScene) {
+        createScene,
+        SelectionIndicator) {
         'use strict';
 
 describe('Widgets/SelectionIndicator/SelectionIndicator', function() {

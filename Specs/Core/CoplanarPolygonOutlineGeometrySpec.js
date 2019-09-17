@@ -1,14 +1,10 @@
 define([
-        'Core/CoplanarPolygonOutlineGeometry',
         'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
+        'Core/CoplanarPolygonOutlineGeometry',
         'Specs/createPackableSpecs'
     ], function(
-        CoplanarPolygonOutlineGeometry,
         Cartesian3,
-        Ellipsoid,
-        CesiumMath,
+        CoplanarPolygonOutlineGeometry,
         createPackableSpecs) {
         'use strict';
 

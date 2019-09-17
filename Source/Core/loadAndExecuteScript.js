@@ -1,7 +1,7 @@
 define([
-    '../ThirdParty/when'
-], function(
-    when) {
+        '../ThirdParty/when'
+    ], function(
+        when) {
         'use strict';
 
     /**

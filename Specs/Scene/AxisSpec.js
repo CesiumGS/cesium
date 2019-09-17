@@ -1,13 +1,13 @@
 define([
-        'Scene/Axis',
         'Core/Cartesian4',
         'Core/Math',
-        'Core/Matrix4'
+        'Core/Matrix4',
+        'Scene/Axis'
     ], function(
-        Axis,
         Cartesian4,
         CesiumMath,
-        Matrix4) {
+        Matrix4,
+        Axis) {
         'use strict';
 
 describe('Scene/Axis', function() {

@@ -1,5 +1,4 @@
 define([
-        'DataSources/StaticGroundPolylinePerMaterialBatch',
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -17,13 +16,13 @@ define([
         'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
         'DataSources/PolylineOutlineMaterialProperty',
+        'DataSources/StaticGroundPolylinePerMaterialBatch',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/ClassificationType',
         'Scene/GroundPolylinePrimitive',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        StaticGroundPolylinePerMaterialBatch,
         ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
@@ -41,6 +40,7 @@ define([
         PolylineGeometryUpdater,
         PolylineGraphics,
         PolylineOutlineMaterialProperty,
+        StaticGroundPolylinePerMaterialBatch,
         TimeIntervalCollectionProperty,
         ClassificationType,
         GroundPolylinePrimitive,

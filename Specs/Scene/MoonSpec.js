@@ -1,5 +1,4 @@
 define([
-        'Scene/Moon',
         'Core/BoundingSphere',
         'Core/Color',
         'Core/defined',
@@ -7,9 +6,9 @@ define([
         'Core/Matrix3',
         'Core/Simon1994PlanetaryPositions',
         'Core/Transforms',
+        'Scene/Moon',
         'Specs/createScene'
     ], function(
-        Moon,
         BoundingSphere,
         Color,
         defined,
@@ -17,6 +16,7 @@ define([
         Matrix3,
         Simon1994PlanetaryPositions,
         Transforms,
+        Moon,
         createScene) {
         'use strict';
 

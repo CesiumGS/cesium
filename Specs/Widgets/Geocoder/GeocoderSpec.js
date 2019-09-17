@@ -1,13 +1,9 @@
 define([
-        'Widgets/Geocoder/Geocoder',
-        'Core/Cartesian3',
         'Specs/createScene',
-        'ThirdParty/when'
+        'Widgets/Geocoder/Geocoder'
     ], function(
-        Geocoder,
-        Cartesian3,
         createScene,
-        when) {
+        Geocoder) {
         'use strict';
 
 describe('Widgets/Geocoder/Geocoder', function() {

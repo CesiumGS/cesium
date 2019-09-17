@@ -1,5 +1,4 @@
 define([
-        'Scene/GroundPrimitive',
         'Core/ApproximateTerrainHeights',
         'Core/arraySlice',
         'Core/Color',
@@ -18,6 +17,7 @@ define([
         'Renderer/RenderState',
         'Scene/ClassificationType',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/GroundPrimitive',
         'Scene/InvertClassification',
         'Scene/Material',
         'Scene/PerInstanceColorAppearance',
@@ -27,7 +27,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        GroundPrimitive,
         ApproximateTerrainHeights,
         arraySlice,
         Color,
@@ -46,6 +45,7 @@ define([
         RenderState,
         ClassificationType,
         EllipsoidSurfaceAppearance,
+        GroundPrimitive,
         InvertClassification,
         Material,
         PerInstanceColorAppearance,

@@ -1,17 +1,17 @@
 define([
-        'Scene/TileCoordinatesImageryProvider',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/WebMercatorTilingScheme',
         'Scene/ImageryProvider',
+        'Scene/TileCoordinatesImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        TileCoordinatesImageryProvider,
         Ellipsoid,
         GeographicTilingScheme,
         WebMercatorTilingScheme,
         ImageryProvider,
+        TileCoordinatesImageryProvider,
         pollToPromise,
         when) {
         'use strict';

@@ -1,24 +1,18 @@
 define([
-        'Scene/Cesium3DTilesetHeatmap',
-        'Core/clone',
         'Core/Color',
         'Core/JulianDate',
-        'Core/Math',
         'Core/Matrix4',
         'Scene/Cesium3DTile',
         'Scene/Cesium3DTileContentState',
-        'Scene/Cesium3DTileset',
+        'Scene/Cesium3DTilesetHeatmap',
         'Specs/createScene'
     ], function(
-        Cesium3DTilesetHeatmap,
-        clone,
         Color,
         JulianDate,
-        CesiumMath,
         Matrix4,
         Cesium3DTile,
         Cesium3DTileContentState,
-        Cesium3DTileset,
+        Cesium3DTilesetHeatmap,
         createScene) {
         'use strict';
 

@@ -1,5 +1,4 @@
 define([
-        'Scene/PointPrimitiveCollection',
         'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -11,9 +10,9 @@ define([
         'Core/Rectangle',
         'Scene/BlendOption',
         'Scene/PointPrimitive',
+        'Scene/PointPrimitiveCollection',
         'Specs/createScene'
     ], function(
-        PointPrimitiveCollection,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -25,6 +24,7 @@ define([
         Rectangle,
         BlendOption,
         PointPrimitive,
+        PointPrimitiveCollection,
         createScene) {
         'use strict';
 

@@ -1,10 +1,10 @@
 define([
-        'Scene/CircleEmitter',
         'Core/Cartesian3',
+        'Scene/CircleEmitter',
         'Scene/Particle'
     ], function(
-        CircleEmitter,
         Cartesian3,
+        CircleEmitter,
         Particle) {
         'use strict';
 

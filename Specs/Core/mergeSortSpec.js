@@ -1,11 +1,11 @@
 define([
-        'Core/mergeSort',
         'Core/BoundingSphere',
-        'Core/Cartesian3'
+        'Core/Cartesian3',
+        'Core/mergeSort'
     ], function(
-        mergeSort,
         BoundingSphere,
-        Cartesian3) {
+        Cartesian3,
+        mergeSort) {
         'use strict';
 
 describe('Core/mergeSort', function() {

@@ -1,5 +1,4 @@
 define([
-        'Scene/GlobeSurfaceTileProvider',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
@@ -19,6 +18,7 @@ define([
         'Scene/Fog',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
+        'Scene/GlobeSurfaceTileProvider',
         'Scene/ImageryLayerCollection',
         'Scene/ImagerySplitDirection',
         'Scene/Model',
@@ -30,7 +30,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        GlobeSurfaceTileProvider,
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
@@ -50,6 +49,7 @@ define([
         Fog,
         Globe,
         GlobeSurfaceShaderSet,
+        GlobeSurfaceTileProvider,
         ImageryLayerCollection,
         ImagerySplitDirection,
         Model,

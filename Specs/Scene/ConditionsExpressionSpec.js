@@ -1,11 +1,11 @@
 define([
-        'Scene/ConditionsExpression',
         'Core/Cartesian4',
-        'Core/Color'
+        'Core/Color',
+        'Scene/ConditionsExpression'
     ], function(
-        ConditionsExpression,
         Cartesian4,
-        Color) {
+        Color,
+        ConditionsExpression) {
         'use strict';
 
 describe('Scene/ConditionsExpression', function() {

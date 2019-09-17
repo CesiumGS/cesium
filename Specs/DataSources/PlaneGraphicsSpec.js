@@ -1,5 +1,4 @@
 define([
-        'DataSources/PlaneGraphics',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
@@ -7,11 +6,11 @@ define([
         'Core/Plane',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/PlaneGraphics',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        PlaneGraphics,
         Cartesian2,
         Cartesian3,
         Color,
@@ -19,6 +18,7 @@ define([
         Plane,
         ColorMaterialProperty,
         ConstantProperty,
+        PlaneGraphics,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {

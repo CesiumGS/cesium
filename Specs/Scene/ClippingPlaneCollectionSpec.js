@@ -1,5 +1,4 @@
 define([
-        'Scene/ClippingPlaneCollection',
         'Core/AttributeCompression',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -12,13 +11,12 @@ define([
         'Core/PixelFormat',
         'Core/Plane',
         'Renderer/PixelDatatype',
-        'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
         'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Specs/createScene'
     ], function(
-        ClippingPlaneCollection,
         AttributeCompression,
         BoundingSphere,
         Cartesian2,
@@ -31,10 +29,10 @@ define([
         PixelFormat,
         Plane,
         PixelDatatype,
-        TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
         ClippingPlane,
+        ClippingPlaneCollection,
         createScene) {
         'use strict';
 

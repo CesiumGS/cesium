@@ -1,11 +1,11 @@
 define([
-        'DataSources/CustomDataSource',
         'Core/Event',
+        'DataSources/CustomDataSource',
         'DataSources/DataSourceClock',
         'DataSources/EntityCollection'
     ], function(
-        CustomDataSource,
         Event,
+        CustomDataSource,
         DataSourceClock,
         EntityCollection) {
         'use strict';

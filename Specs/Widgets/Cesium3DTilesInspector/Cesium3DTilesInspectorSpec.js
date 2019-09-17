@@ -1,15 +1,15 @@
 define([
-        'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector',
         'Core/Ellipsoid',
         'Scene/Cesium3DTileset',
         'Scene/Globe',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector'
     ], function(
-        Cesium3DTilesInspector,
         Ellipsoid,
         Cesium3DTileset,
         Globe,
-        createScene) {
+        createScene,
+        Cesium3DTilesInspector) {
         'use strict';
 
 describe('Widgets/Cesium3DTilesInspector/Cesium3DTilesInspector', function() {

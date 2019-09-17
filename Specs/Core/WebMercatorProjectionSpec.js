@@ -1,17 +1,17 @@
 define([
-        'Core/WebMercatorProjection',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
-        'Core/Math'
+        'Core/Math',
+        'Core/WebMercatorProjection'
     ], function(
-        WebMercatorProjection,
         Cartesian2,
         Cartesian3,
         Cartographic,
         Ellipsoid,
-        CesiumMath) {
+        CesiumMath,
+        WebMercatorProjection) {
         'use strict';
 
 describe('Core/WebMercatorProjection', function() {
