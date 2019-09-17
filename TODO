@@ -6,29 +6,21 @@ of the subtree
 
 
 [ ] External tilesets
-   wheres the best spot for external tilesets? it would have to be the leaf tile and not its children
-   for uniqueness / single request going out. in fact when you request leaf tiles, also request the subtree
+   leaf tile holds a subtree resource, makes a request for the subtree when the tile request goes out as well
+   THIS IS ASYNC AND WILL BE BAD WHEN DOING JUST ARRAYS SINCE YOU NEED TO MUTEX ALL ACCESS TO THE MAP
+   WITH TREES BEFORE YOU DON"T SINCE EDITING THE TREE IS OK
+
    and make subtree requests higher priority (add a digit)
    so a tile can have a _request and a _requestSubtree
 
-   Make a new Tileset3DTileContent class (put subtree in the name) and updte cesium3dtilecontentfactory
-   Call the subt thing instead of the json factory in Cesium3DTileImplicit.prototype.requestContent
-   But how to I fetch both the tile and the external subtree?
-   Since the processing for external tileset tiles is empty function, could just call both request functions
-   the other request function might not require all the machinery.
-   maybe for now I just need to duplicate the code path for the external subtree stuff (members and functions)
+   [ ] The subtree might need 2 bits per tile (at least on the last level) to signal an external subtree
+   request is needed, otherwise you'll get a bunch of 404 noise in the console
+   could specify a maxDepth in the tileset.json but this would force draging out parts of the tree
+   all the way down when they don't need to
 
-   // Get rid of ones you don't really need
-   _serverKeySubtree
-   _contentResourceSubtree
-   contentExpiredSubtree // not included
-   _requestSubtree
-   _contentSubtreeState
-   _contentSubtreeState
-   _contentSubtreeReadyToProcessPromise
-   _contentSubtreeReadyPromise
+   [] Get rid of subtree member vars in tile that aren't really needed
 
-    [ ] tile's of external subtrees are getting their urls appended remove teh base url thing maybe
+
 [ ] Try to traverse the subtree arrays in tree style (is this a waste of time?)
     NOTE: Not sure about storing subtree refs (don't store for now)
     subtree ref / chilren subtree ref

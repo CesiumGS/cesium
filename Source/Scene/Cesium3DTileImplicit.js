@@ -930,6 +930,16 @@ define([
         };
     }
 
+    function getContentSubtreeFailedFunction(tile) {
+        return function(error) {
+            tile._contentSubtreeState = Cesium3DTileContentState.FAILED;
+            tile._contentSubtreeReadyPromise.reject(error);
+            tile._contentSubtreeReadyToProcessPromise.reject(error);
+            tile._contentSubtreeResource = undefined;
+            tile._serverKeySubtree = undefined;
+        };
+    }
+
     function createPriorityFunction(tile) {
         return function() {
             return tile._priority;
@@ -954,13 +964,6 @@ define([
         }
 
         var resource = this._contentSubtreeResource.clone();
-        var expired = this.contentExpiredSubtree;
-        if (expired) {
-            // Append a query parameter of the tile expiration date to prevent caching
-            resource.setQueryParameters({
-                expired: this.expireDate.toString()
-            });
-        }
 
         var request = new Request({
             throttle : true,
@@ -984,11 +987,7 @@ define([
         this._contentSubtreeReadyToProcessPromise = when.defer();
         this._contentSubtreeReadyPromise = when.defer();
 
-        if (expired) {
-            this.expireDate = undefined;
-        }
-
-        var contentFailedFunction = getContentFailedFunction(this);
+        var contentFailedFunction = getContentSubtreeFailedFunction(this);
 
         // It has rx'd the arraybuffer, need to figure out what kind of payload it is from the magic
         // then transform the content correctly, in the subtree case content is the arrayBuffer
@@ -1005,21 +1004,9 @@ define([
                 that._serverKeySubtree = undefined;
                 return;
             }
-            // var uint8Array = new Uint8Array(arrayBuffer);
-            // var magic = getMagic(uint8Array);
-            // var contentFactory = Cesium3DTileContentFactory[magic];
-            // var content;
 
-            // // Vector and Geometry tile rendering do not support the skip LOD optimization.
-            // tileset._disableSkipLevelOfDetail = tileset._disableSkipLevelOfDetail || magic === 'vctr' || magic === 'geom';
-            //
-            // if (defined(contentFactory)) {
-            //     content = contentFactory(tileset, that, that._contentResource, arrayBuffer, 0);
-            // } else {
-            //     // The content may be json instead
-                var content = Cesium3DTileContentFactory.subt(tileset, that, that._contentSubtreeResource, arrayBuffer, 0);
-                that.hasTilesetContent = true;
-            // }
+            var content = Cesium3DTileContentFactory.subt(tileset, that, that._contentSubtreeResource, arrayBuffer, 0);
+            // that.hasTilesetContent = true;
 
             that._contentSubtree = content;
             that._contentSubtreeState = Cesium3DTileContentState.PROCESSING;
@@ -1547,6 +1534,10 @@ define([
             // New content is ready, destroy expired content
             tile._expiredContent.destroy();
             tile._expiredContent = undefined;
+        }
+
+        if (!defined(content)) {
+            console.log('no content: ' + tile._contentResource._url)
         }
 
         content.update(tileset, frameState);
