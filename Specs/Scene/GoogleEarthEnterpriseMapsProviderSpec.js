@@ -1,30 +1,30 @@
-defineSuite([
-        'Scene/GoogleEarthEnterpriseMapsProvider',
-        'Core/DefaultProxy',
+define([
         'Core/GeographicTilingScheme',
         'Core/Rectangle',
         'Core/RequestScheduler',
         'Core/Resource',
         'Core/WebMercatorTilingScheme',
+        'Scene/GoogleEarthEnterpriseMapsProvider',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
         'Specs/pollToPromise'
     ], function(
-        GoogleEarthEnterpriseMapsProvider,
-        DefaultProxy,
         GeographicTilingScheme,
         Rectangle,
         RequestScheduler,
         Resource,
         WebMercatorTilingScheme,
+        GoogleEarthEnterpriseMapsProvider,
         Imagery,
         ImageryLayer,
         ImageryProvider,
         ImageryState,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GoogleEarthEnterpriseMapsProvider', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {
@@ -507,4 +507,5 @@ defineSuite([
             expect(errorEventRaised).toEqual(true);
         });
     });
+});
 });

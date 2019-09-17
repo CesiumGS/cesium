@@ -17,10 +17,10 @@ define([
         '../Scene/HeightReference',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
-        './heightReferenceOnEntityPropertyChanged',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
+        './heightReferenceOnEntityPropertyChanged',
         './Property'
     ], function(
         Cartesian3,
@@ -41,10 +41,10 @@ define([
         HeightReference,
         MaterialAppearance,
         PerInstanceColorAppearance,
-        heightReferenceOnEntityPropertyChanged,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
+        heightReferenceOnEntityPropertyChanged,
         Property) {
     'use strict';
 

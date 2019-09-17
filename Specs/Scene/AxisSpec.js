@@ -1,14 +1,16 @@
-defineSuite([
-        'Scene/Axis',
+define([
         'Core/Cartesian4',
         'Core/Math',
-        'Core/Matrix4'
+        'Core/Matrix4',
+        'Scene/Axis'
     ], function(
-        Axis,
         Cartesian4,
         CesiumMath,
-        Matrix4) {
-    'use strict';
+        Matrix4,
+        Axis) {
+        'use strict';
+
+describe('Scene/Axis', function() {
 
     function convertUpAxis(upAxis, transformation, expected) {
         var transformed = Matrix4.multiplyByVector(transformation, upAxis, new Cartesian4());
@@ -39,4 +41,5 @@ defineSuite([
     it('Convert x-up to z-up', function() {
         convertUpAxis(Cartesian4.UNIT_X, Axis.X_UP_TO_Z_UP, Cartesian4.UNIT_Z);
     });
+});
 });

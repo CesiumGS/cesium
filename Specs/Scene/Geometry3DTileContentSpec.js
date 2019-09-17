@@ -1,21 +1,14 @@
-defineSuite([
-        'Scene/Geometry3DTileContent',
-        'Core/BoundingSphere',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
-        'Core/combine',
         'Core/destroyObject',
         'Core/Ellipsoid',
         'Core/GeometryInstance',
-        'Core/Math',
-        'Core/Matrix4',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Core/Transforms',
         'Renderer/Pass',
         'Renderer/RenderState',
-        'Scene/Cesium3DTileBatchTable',
         'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/ClassificationType',
@@ -25,23 +18,16 @@ defineSuite([
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Geometry3DTileContent,
-        BoundingSphere,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
-        combine,
         destroyObject,
         Ellipsoid,
         GeometryInstance,
-        CesiumMath,
-        Matrix4,
         Rectangle,
         RectangleGeometry,
-        Transforms,
         Pass,
         RenderState,
-        Cesium3DTileBatchTable,
         Cesium3DTileset,
         Cesium3DTileStyle,
         ClassificationType,
@@ -50,7 +36,9 @@ defineSuite([
         StencilConstants,
         Cesium3DTilesTester,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Geometry3DTileContent', function() {
 
     var tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
 
@@ -615,3 +603,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

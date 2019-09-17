@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/HeadingPitchRoll',
         'Core/Math',
         'Core/Quaternion'
@@ -6,7 +6,10 @@ defineSuite([
         HeadingPitchRoll,
         CesiumMath,
         Quaternion) {
-    'use strict';
+        'use strict';
+
+describe('Core/HeadingPitchRoll', function() {
+
     /*global it,expect*/
 
     var deg2rad = CesiumMath.RADIANS_PER_DEGREE;
@@ -180,4 +183,5 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+});
 });

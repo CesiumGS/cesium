@@ -1,30 +1,32 @@
-defineSuite([
-    'Core/ArcGISTiledElevationTerrainProvider',
-    'Core/DefaultProxy',
-    'Core/GeographicTilingScheme',
-    'Core/HeightmapTerrainData',
-    'Core/Math',
-    'Core/Request',
-    'Core/RequestScheduler',
-    'Core/Resource',
-    'Core/RuntimeError',
-    'Core/TerrainProvider',
-    'Core/WebMercatorTilingScheme',
-    'Specs/pollToPromise'
-], function(
-    ArcGISTiledElevationTerrainProvider,
-    DefaultProxy,
-    GeographicTilingScheme,
-    HeightmapTerrainData,
-    CesiumMath,
-    Request,
-    RequestScheduler,
-    Resource,
-    RuntimeError,
-    TerrainProvider,
-    WebMercatorTilingScheme,
-    pollToPromise) {
-'use strict';
+define([
+        'Core/ArcGISTiledElevationTerrainProvider',
+        'Core/DefaultProxy',
+        'Core/GeographicTilingScheme',
+        'Core/HeightmapTerrainData',
+        'Core/Math',
+        'Core/Request',
+        'Core/RequestScheduler',
+        'Core/Resource',
+        'Core/RuntimeError',
+        'Core/TerrainProvider',
+        'Core/WebMercatorTilingScheme',
+        'Specs/pollToPromise'
+    ], function(
+        ArcGISTiledElevationTerrainProvider,
+        DefaultProxy,
+        GeographicTilingScheme,
+        HeightmapTerrainData,
+        CesiumMath,
+        Request,
+        RequestScheduler,
+        Resource,
+        RuntimeError,
+        TerrainProvider,
+        WebMercatorTilingScheme,
+        pollToPromise) {
+        'use strict';
+
+describe('Core/ArcGISTiledElevationTerrainProvider', function() {
 
 var lercTileUrl = 'Data/Images/Red16x16.png';
 var availability;
@@ -474,5 +476,6 @@ describe('requestTileGeometry', function() {
             }
         });
     });
+});
 });
 });

@@ -1,23 +1,23 @@
 define([
-    './Check',
-    './Credit',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './Ion',
-    './PeliasGeocoderService',
-    './Rectangle',
-    './Resource'
-], function (
-    Check,
-    Credit,
-    defaultValue,
-    defined,
-    defineProperties,
-    Ion,
-    PeliasGeocoderService,
-    Rectangle,
-    Resource) {
+        './Check',
+        './Credit',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './Ion',
+        './PeliasGeocoderService',
+        './Rectangle',
+        './Resource'
+    ], function(
+        Check,
+        Credit,
+        defaultValue,
+        defined,
+        defineProperties,
+        Ion,
+        PeliasGeocoderService,
+        Rectangle,
+        Resource) {
     'use strict';
 
     /**

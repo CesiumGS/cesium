@@ -135,6 +135,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Matthew Amato](https://github.com/mramato)
    * [Brandon Barker](https://github.com/ProjectBarks)
    * [Peter Gagliardi](https://github.com/ptrgags)
+   * [Ian Lilley](https://github.com/IanLilleyT)
 * [WatchKeeper International](https://www.watchkeeperintl.com)
    * [Daniel Whatmuff](https://github.com/danielwhatmuff)
 
@@ -228,3 +229,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Pascal Poulain](https://github.com/ppoulainpro)
 * [Abu Darda](https://github.com/abuDarda97)
 * [jony89](https://github.com/jony89)
+* [TJKoury](https://github.com/tjkoury)
+

@@ -1,30 +1,30 @@
-defineSuite([
-        'Scene/createOpenStreetMapImageryProvider',
-        'Core/DefaultProxy',
+define([
         'Core/Math',
         'Core/Rectangle',
         'Core/RequestScheduler',
         'Core/Resource',
         'Core/WebMercatorTilingScheme',
+        'Scene/createOpenStreetMapImageryProvider',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryState',
         'Scene/UrlTemplateImageryProvider',
         'Specs/pollToPromise'
     ], function(
-        createOpenStreetMapImageryProvider,
-        DefaultProxy,
         CesiumMath,
         Rectangle,
         RequestScheduler,
         Resource,
         WebMercatorTilingScheme,
+        createOpenStreetMapImageryProvider,
         Imagery,
         ImageryLayer,
         ImageryState,
         UrlTemplateImageryProvider,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/createOpenStreetMapImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -273,4 +273,5 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
+});
 });

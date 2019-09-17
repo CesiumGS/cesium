@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/PostProcessStage',
+define([
         'Core/BoundingRectangle',
         'Core/Cartesian3',
         'Core/Color',
@@ -10,12 +9,12 @@ defineSuite([
         'Core/Transforms',
         'Renderer/PixelDatatype',
         'Scene/Model',
+        'Scene/PostProcessStage',
         'Scene/PostProcessStageSampleMode',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        PostProcessStage,
         BoundingRectangle,
         Cartesian3,
         Color,
@@ -26,11 +25,14 @@ defineSuite([
         Transforms,
         PixelDatatype,
         Model,
+        PostProcessStage,
         PostProcessStageSampleMode,
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PostProcessStage', function() {
 
     var scene;
 
@@ -293,3 +295,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

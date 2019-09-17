@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/getStringFromTypedArray'
     ], function(
         getStringFromTypedArray) {
-    'use strict';
+        'use strict';
+
+describe('Core/getStringFromTypedArray', function() {
 
     function verifyString() {
         var arr = new Uint8Array([67, 101, 115, 105, 117, 109]);
@@ -92,4 +94,5 @@ defineSuite([
         var arr = new Uint8Array([240, 144, 138, 129]);
         expect(getStringFromTypedArray(arr)).toEqual('𐊁');
     });
+});
 });

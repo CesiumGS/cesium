@@ -1,18 +1,20 @@
-defineSuite([
-        'Core/WebMercatorProjection',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
-        'Core/Math'
+        'Core/Math',
+        'Core/WebMercatorProjection'
     ], function(
-        WebMercatorProjection,
         Cartesian2,
         Cartesian3,
         Cartographic,
         Ellipsoid,
-        CesiumMath) {
-    'use strict';
+        CesiumMath,
+        WebMercatorProjection) {
+        'use strict';
+
+describe('Core/WebMercatorProjection', function() {
 
     it('construct0', function() {
         var projection = new WebMercatorProjection();
@@ -155,4 +157,5 @@ defineSuite([
             return projection.unproject();
         }).toThrowDeveloperError();
     });
+});
 });
