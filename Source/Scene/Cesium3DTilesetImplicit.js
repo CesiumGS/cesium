@@ -2317,13 +2317,17 @@ define([
         // children if not hasParent and on subtree level start
         // For finding all heads in the root or finding the start tile in a subtree (if the tileset root doesn't start at the root of the subtree)
 
-        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        var subtreeLevels = tilingScheme.subtreeLevels;
         var subtreeLevels0Indexed = subtreeLevels -  1;
-        var treeKey, subtreeIndex, result;
+        var treeKey, subtreeKey, subtreeIndex, result, hasSubtree, onLastSubtreeLevel, levelDiff, gerrorDenom;
         var x, y, z, uri, uriSubtree, tileInfo, tile;
         var tilesetStartLevel = this._startLevel;
+        var twoBitModeHasExtSub = true;
+        var tilesetLastLevel = tilingScheme.lastLevel;
+        var oneBitMode = defined(tilesetLastLevel);
         var contentRootGeometricError = this._geometricErrorContentRoot;
         var lastSubtreeLevelStartIndex = this._unpackedArraySizes[subtreeLevels0Indexed];
+        var base = isOct ? 2 : 2;
         // This loop is just to create the tiles in the right spots in the _tiles array
         for (subtreeIndex = 0; subtreeIndex < unpackedSize; subtreeIndex++) {
             if (subtree[subtreeIndex] === 0) {
@@ -2345,18 +2349,24 @@ define([
             z = treeKey.z;
 
             uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
-            uriSubtree = subtreeIndex >= lastSubtreeLevelStartIndex ? this._availabilityFolder + uri : undefined;
+
+            subtreeKey = result.subtreeKey;
+            onLastSubtreeLevel = subtreeKey.w === subtreeLevels0Indexed;
+            hasSubtree = onLastSubtreeLevel && ((oneBitMode && level !== tilesetLastLevel) || (!oneBitMode && twoBitModeHasExtSub));
+            uriSubtree = hasSubtree ? this._availabilityFolder + uri : undefined;
+            levelDiff = level - tilesetStartLevel;
+            gerrorDenom = isOct ? Math.pow(base, levelDiff) : Math.pow(base, levelDiff);
             tileInfo = {
                 boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
                 // geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
                 // geometricError: tilesetRoot.geometricError / (1 << (level - tilesetStartLevel)),
-                geometricError: contentRootGeometricError / (1 << (level - tilesetStartLevel)),
+                geometricError: contentRootGeometricError / gerrorDenom,
                 content: {
                     uri: uri,
                     uriSubtree: uriSubtree
                 },
                 treeKey: treeKey,
-                subtreeKey: result.subtreeKey,
+                subtreeKey: subtreeKey,
                 subtreeIndex: subtreeIndex,
                 subtreeRootKey: subtreeRootKey,
                 refine: tilingScheme.refine,
