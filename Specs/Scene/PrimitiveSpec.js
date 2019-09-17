@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Primitive',
+define([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian3',
@@ -26,6 +25,7 @@ defineSuite([
         'Scene/Camera',
         'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
+        'Scene/Primitive',
         'Scene/SceneMode',
         'Specs/BadGeometry',
         'Specs/createContext',
@@ -33,7 +33,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        Primitive,
         BoundingSphere,
         BoxGeometry,
         Cartesian3,
@@ -60,13 +59,16 @@ defineSuite([
         Camera,
         MaterialAppearance,
         PerInstanceColorAppearance,
+        Primitive,
         SceneMode,
         BadGeometry,
         createContext,
         createFrameState,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Primitive', function() {
 
     var scene;
     var context;
@@ -1328,3 +1330,4 @@ defineSuite([
         expect(primitive.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

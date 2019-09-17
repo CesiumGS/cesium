@@ -21,12 +21,12 @@ define([
         '../Renderer/TextureMinificationFilter',
         '../Renderer/TextureWrap',
         '../Renderer/VertexArray',
+        '../ThirdParty/when',
         './ImageryState',
         './QuadtreeTileLoadState',
         './SceneMode',
         './TerrainState',
-        './TileBoundingRegion',
-        '../ThirdParty/when'
+        './TileBoundingRegion'
     ], function(
         BoundingSphere,
         Cartesian3,
@@ -50,12 +50,12 @@ define([
         TextureMinificationFilter,
         TextureWrap,
         VertexArray,
+        when,
         ImageryState,
         QuadtreeTileLoadState,
         SceneMode,
         TerrainState,
-        TileBoundingRegion,
-        when) {
+        TileBoundingRegion) {
     'use strict';
 
     /**

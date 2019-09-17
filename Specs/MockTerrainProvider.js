@@ -1,21 +1,21 @@
 define([
-    'Core/defined',
-    'Core/GeographicTilingScheme',
-    'Core/HeightmapTerrainData',
-    'Core/RuntimeError',
-    'Core/TerrainProvider',
-    'ThirdParty/when',
-    './createTileKey',
-    './runLater'
-], function(
-    defined,
-    GeographicTilingScheme,
-    HeightmapTerrainData,
-    RuntimeError,
-    TerrainProvider,
-    when,
-    createTileKey,
-    runLater) {
+        './createTileKey',
+        './runLater',
+        'Core/defined',
+        'Core/GeographicTilingScheme',
+        'Core/HeightmapTerrainData',
+        'Core/RuntimeError',
+        'Core/TerrainProvider',
+        'ThirdParty/when'
+    ], function(
+        createTileKey,
+        runLater,
+        defined,
+        GeographicTilingScheme,
+        HeightmapTerrainData,
+        RuntimeError,
+        TerrainProvider,
+        when) {
     'use strict';
 
     function MockTerrainProvider() {

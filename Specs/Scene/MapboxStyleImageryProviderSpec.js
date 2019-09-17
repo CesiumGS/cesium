@@ -1,5 +1,5 @@
-defineSuite([
-        'Scene/MapboxStyleImageryProvider',
+define([
+        'Core/MapboxApi',
         'Core/Math',
         'Core/Rectangle',
         'Core/RequestScheduler',
@@ -9,9 +9,10 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/MapboxStyleImageryProvider',
         'Specs/pollToPromise'
     ], function(
-        MapboxStyleImageryProvider,
+        MapboxApi,
         CesiumMath,
         Rectangle,
         RequestScheduler,
@@ -21,8 +22,11 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
+        MapboxStyleImageryProvider,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/MapboxStyleImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -135,7 +139,7 @@ defineSuite([
             styleId: 'test-id'
         });
 
-        expect(provider.url).toEqual('made/up/mapbox/server/');
+        expect(provider.url).toEqual('made/up/mapbox/server/mapbox/test-id/tiles/512/{z}/{x}/{y}?access_token=' + MapboxApi.getAccessToken());
 
         return pollToPromise(function() {
             return provider.ready;
@@ -355,4 +359,5 @@ defineSuite([
             return provider.requestImage(0, 0, 0);
         });
     });
+});
 });

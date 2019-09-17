@@ -1,10 +1,12 @@
-defineSuite([
-        'Core/TimeInterval',
-        'Core/JulianDate'
+define([
+        'Core/JulianDate',
+        'Core/TimeInterval'
     ], function(
-        TimeInterval,
-        JulianDate) {
-    'use strict';
+        JulianDate,
+        TimeInterval) {
+        'use strict';
+
+describe('Core/TimeInterval', function() {
 
     function returnTrue() {
         return true;
@@ -468,4 +470,5 @@ defineSuite([
             TimeInterval.contains(timeInterval, undefined);
         }).toThrowDeveloperError();
     });
+});
 });

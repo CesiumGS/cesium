@@ -1,14 +1,16 @@
-defineSuite([
-        'Core/RequestScheduler',
+define([
         'Core/Request',
+        'Core/RequestScheduler',
         'Core/RequestState',
         'ThirdParty/when'
     ], function(
-        RequestScheduler,
         Request,
+        RequestScheduler,
         RequestState,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/RequestScheduler', function() {
 
     var originalMaximumRequests;
     var originalMaximumRequestsPerServer;
@@ -886,4 +888,5 @@ defineSuite([
         }));
         expect(promise).toBeUndefined();
     });
+});
 });

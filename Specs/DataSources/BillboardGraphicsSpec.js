@@ -1,26 +1,28 @@
-defineSuite([
-        'DataSources/BillboardGraphics',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/NearFarScalar',
+        'DataSources/BillboardGraphics',
         'DataSources/ConstantProperty',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/VerticalOrigin'
     ], function(
-        BillboardGraphics,
         Cartesian2,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
         NearFarScalar,
+        BillboardGraphics,
         ConstantProperty,
         HeightReference,
         HorizontalOrigin,
         VerticalOrigin) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/BillboardGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -275,4 +277,5 @@ defineSuite([
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

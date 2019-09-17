@@ -1,12 +1,14 @@
-defineSuite([
-        'DataSources/ConstantProperty',
+define([
         'Core/Cartesian3',
-        'Core/JulianDate'
+        'Core/JulianDate',
+        'DataSources/ConstantProperty'
     ], function(
-        ConstantProperty,
         Cartesian3,
-        JulianDate) {
-    'use strict';
+        JulianDate,
+        ConstantProperty) {
+        'use strict';
+
+describe('DataSources/ConstantProperty', function() {
 
     var time = JulianDate.now();
 
@@ -110,4 +112,5 @@ defineSuite([
         right = new ConstantProperty(2);
         expect(left.equals(right)).toEqual(false);
     });
+});
 });

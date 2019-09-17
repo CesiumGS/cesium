@@ -1,14 +1,16 @@
-defineSuite([
-        'Core/sampleTerrain',
+define([
         'Core/Cartographic',
         'Core/CesiumTerrainProvider',
-        'Core/createWorldTerrain'
+        'Core/createWorldTerrain',
+        'Core/sampleTerrain'
     ], function(
-        sampleTerrain,
         Cartographic,
         CesiumTerrainProvider,
-        createWorldTerrain) {
-    'use strict';
+        createWorldTerrain,
+        sampleTerrain) {
+        'use strict';
+
+describe('Core/sampleTerrain', function() {
 
     var worldTerrain = createWorldTerrain();
 
@@ -99,4 +101,5 @@ defineSuite([
             expect(positions[0].height).toBeDefined();
         });
     });
+});
 });

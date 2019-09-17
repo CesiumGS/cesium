@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/DeveloperError'
     ], function(
         DeveloperError) {
-    'use strict';
+        'use strict';
+
+describe('Core/DeveloperError', function() {
 
     var name = 'DeveloperError';
     var testMessage = 'Testing';
@@ -30,4 +32,5 @@ defineSuite([
         expect(str).toContain(name + ': ' + testMessage);
         expect(str).toContain('Core/DeveloperErrorSpec.js');
     });
+});
 });

@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Material',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/defaultValue',
@@ -9,13 +8,13 @@ defineSuite([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/Resource',
+        'Scene/Material',
         'Scene/MaterialAppearance',
         'Scene/PolylineCollection',
         'Scene/Primitive',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        Material,
         Cartesian3,
         Color,
         defaultValue,
@@ -25,12 +24,15 @@ defineSuite([
         Rectangle,
         RectangleGeometry,
         Resource,
+        Material,
         MaterialAppearance,
         PolylineCollection,
         Primitive,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Material', function() {
 
     var scene;
 
@@ -855,3 +857,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

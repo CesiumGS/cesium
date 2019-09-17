@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Cesium3DTileBatchTable',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -10,11 +9,11 @@ defineSuite([
         'Core/Matrix4',
         'Renderer/ContextLimits',
         'Scene/Batched3DModel3DTileContent',
+        'Scene/Cesium3DTileBatchTable',
         'Scene/Cesium3DTileStyle',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Cesium3DTileBatchTable,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -25,10 +24,13 @@ defineSuite([
         Matrix4,
         ContextLimits,
         Batched3DModel3DTileContent,
+        Cesium3DTileBatchTable,
         Cesium3DTileStyle,
         Cesium3DTilesTester,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Cesium3DTileBatchTable', function() {
 
     var scene;
     var centerLongitude = -1.31968;
@@ -1120,3 +1122,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

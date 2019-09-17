@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/PointCloud3DTileContent',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ComponentDatatype',
@@ -7,7 +6,6 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
-        'Core/Matrix4',
         'Core/PerspectiveFrustum',
         'Core/Transforms',
         'Renderer/Pass',
@@ -23,7 +21,6 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        PointCloud3DTileContent,
         Cartesian3,
         Color,
         ComponentDatatype,
@@ -31,7 +28,6 @@ defineSuite([
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
-        Matrix4,
         PerspectiveFrustum,
         Transforms,
         Pass,
@@ -46,7 +42,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PointCloud3DTileContent', function() {
 
     var scene;
     var centerLongitude = -1.31968;
@@ -1032,3 +1030,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

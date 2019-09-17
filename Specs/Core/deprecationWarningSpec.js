@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/deprecationWarning'
     ], function(
         deprecationWarning) {
-    'use strict';
+        'use strict';
+
+describe('Core/deprecationWarning', function() {
 
     it('logs a warning', function() {
         spyOn(console, 'warn');
@@ -27,4 +29,5 @@ defineSuite([
             deprecationWarning('identifier');
         }).toThrowDeveloperError();
     });
+});
 });

@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/PolylineColorAppearance',
+define([
         'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
@@ -7,10 +6,10 @@ defineSuite([
         'Core/GeometryInstance',
         'Core/PolylineGeometry',
         'Scene/Appearance',
+        'Scene/PolylineColorAppearance',
         'Scene/Primitive',
         'Specs/createScene'
     ], function(
-        PolylineColorAppearance,
         ArcType,
         Cartesian3,
         Color,
@@ -18,9 +17,12 @@ defineSuite([
         GeometryInstance,
         PolylineGeometry,
         Appearance,
+        PolylineColorAppearance,
         Primitive,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PolylineColorAppearance', function() {
 
     var scene;
     var primitive;
@@ -80,3 +82,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

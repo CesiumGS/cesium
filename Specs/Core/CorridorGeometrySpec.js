@@ -1,8 +1,8 @@
-defineSuite([
-        'Core/CorridorGeometry',
+define([
         'Core/arrayFill',
         'Core/Cartesian3',
         'Core/CornerType',
+        'Core/CorridorGeometry',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Core/Math',
@@ -10,17 +10,19 @@ defineSuite([
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        CorridorGeometry,
         arrayFill,
         Cartesian3,
         CornerType,
+        CorridorGeometry,
         Ellipsoid,
         GeometryOffsetAttribute,
         CesiumMath,
         Rectangle,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/CorridorGeometry', function() {
 
     it('throws without positions', function() {
         expect(function() {
@@ -434,4 +436,5 @@ defineSuite([
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, 0.0, -1);
     createPackableSpecs(CorridorGeometry, corridor, packedInstance);
+});
 });

@@ -1,26 +1,28 @@
-defineSuite([
-        'DataSources/RectangleGraphics',
+define([
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/Rectangle',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/RectangleGraphics',
         'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        RectangleGraphics,
         Color,
         DistanceDisplayCondition,
         Rectangle,
         ColorMaterialProperty,
         ConstantProperty,
+        RectangleGraphics,
         ClassificationType,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/RectangleGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -240,4 +242,5 @@ defineSuite([
         testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
         testDefinitionChanged(property, 'zIndex', 20, 5);
     });
+});
 });
