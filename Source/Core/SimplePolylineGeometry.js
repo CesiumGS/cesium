@@ -126,14 +126,7 @@ define([
         this._colors = colors;
         this._colorsPerVertex = colorsPerVertex;
 
-        this._followSurface = defaultValue(options.followSurface, true);
-        if (defined(options.followSurface)) {
-            deprecationWarning('PolylineGeometry.followSurface', 'PolylineGeometry.followSurface is deprecated and will be removed in Cesium 1.57. Use PolylineGeometry.arcType instead.');
-            options.arcType = options.followSurface ? ArcType.GEODESIC : ArcType.NONE;
-        }
         this._arcType = defaultValue(options.arcType, ArcType.GEODESIC);
-        this._followSurface = this._arcType === ArcType.NONE;
-
         this._granularity = defaultValue(options.granularity, CesiumMath.RADIANS_PER_DEGREE);
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         this._workerName = 'createSimplePolylineGeometry';

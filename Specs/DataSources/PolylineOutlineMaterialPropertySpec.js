@@ -1,18 +1,20 @@
-defineSuite([
-        'DataSources/PolylineOutlineMaterialProperty',
+define([
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/PolylineOutlineMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty'
     ], function(
-        PolylineOutlineMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
+        PolylineOutlineMaterialProperty,
         TimeIntervalCollectionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineOutlineMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new PolylineOutlineMaterialProperty();
@@ -195,4 +197,5 @@ defineSuite([
         }));
         expect(property.isConstant).toBe(false);
     });
+});
 });

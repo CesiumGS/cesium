@@ -11,6 +11,7 @@
 /.travis.yml
 /.vscode
 /Apps
+/Build/Coverage
 /Build/minifyShaders.state
 /Build/Stubs
 /Build/Documentation
@@ -20,7 +21,6 @@
 /gulpfile.js
 /index.html
 /index.release.html
-/Instrumented
 /launches
 /server.js
 /Source/copyrightHeader.js

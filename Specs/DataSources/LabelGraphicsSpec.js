@@ -1,26 +1,28 @@
-defineSuite([
-        'DataSources/LabelGraphics',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/NearFarScalar',
         'DataSources/ConstantProperty',
+        'DataSources/LabelGraphics',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin'
     ], function(
-        LabelGraphics,
         Cartesian2,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
         NearFarScalar,
         ConstantProperty,
+        LabelGraphics,
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/LabelGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -245,4 +247,5 @@ defineSuite([
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

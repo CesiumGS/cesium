@@ -1,12 +1,14 @@
-defineSuite([
-        'Widgets/Viewer/viewerPerformanceWatchdogMixin',
+define([
         'Specs/createViewer',
-        'Widgets/PerformanceWatchdog/PerformanceWatchdog'
+        'Widgets/PerformanceWatchdog/PerformanceWatchdog',
+        'Widgets/Viewer/viewerPerformanceWatchdogMixin'
     ], function(
-        viewerPerformanceWatchdogMixin,
         createViewer,
-        PerformanceWatchdog) {
-    'use strict';
+        PerformanceWatchdog,
+        viewerPerformanceWatchdogMixin) {
+        'use strict';
+
+describe('Widgets/Viewer/viewerPerformanceWatchdogMixin', function() {
 
     var container;
     var viewer;
@@ -45,3 +47,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

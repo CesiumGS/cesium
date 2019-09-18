@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/GeometryVisualizer',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -8,19 +7,15 @@ defineSuite([
         'Core/JulianDate',
         'Core/ShowGeometryInstanceAttribute',
         'DataSources/BoundingSphereState',
-        'DataSources/CallbackProperty',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
-        'DataSources/EllipseGeometryUpdater',
         'DataSources/EllipseGraphics',
         'DataSources/Entity',
         'DataSources/EntityCollection',
+        'DataSources/GeometryVisualizer',
         'DataSources/GridMaterialProperty',
         'DataSources/SampledProperty',
-        'DataSources/StaticGeometryColorBatch',
-        'DataSources/StaticGeometryPerMaterialBatch',
-        'DataSources/StaticOutlineGeometryBatch',
         'Scene/ClassificationType',
         'Scene/GroundPrimitive',
         'Scene/MaterialAppearance',
@@ -30,7 +25,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        GeometryVisualizer,
         ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
@@ -39,19 +33,15 @@ defineSuite([
         JulianDate,
         ShowGeometryInstanceAttribute,
         BoundingSphereState,
-        CallbackProperty,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
-        EllipseGeometryUpdater,
         EllipseGraphics,
         Entity,
         EntityCollection,
+        GeometryVisualizer,
         GridMaterialProperty,
         SampledProperty,
-        StaticGeometryColorBatch,
-        StaticGeometryPerMaterialBatch,
-        StaticOutlineGeometryBatch,
         ClassificationType,
         GroundPrimitive,
         MaterialAppearance,
@@ -60,7 +50,9 @@ defineSuite([
         createDynamicProperty,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/GeometryVisualizer', function() {
 
     var time = JulianDate.now();
 
@@ -516,6 +508,23 @@ defineSuite([
         expect(entityCollection.collectionChanged.numberOfListeners).toEqual(0);
     });
 
+    it('calls destroy on all updaterSets', function() {
+        var entityCollection = new EntityCollection();
+        var visualizer = new GeometryVisualizer(scene, entityCollection, scene.primitives, scene.groundPrimitives);
+
+        var destroySpy = jasmine.createSpy('destroy');
+        visualizer._updaterSets.set('test', {
+            destroy: destroySpy
+        });
+
+        expect(visualizer._updaterSets.values.length).toBe(1);
+
+        visualizer.destroy();
+
+        expect(destroySpy).toHaveBeenCalled();
+        expect(visualizer._updaterSets.values.length).toBe(0);
+    });
+
     it('Computes dynamic geometry bounding sphere.', function() {
         var entityCollection = new EntityCollection();
         var visualizer = new GeometryVisualizer(scene, entityCollection, scene.primitives, scene.groundPrimitives);
@@ -862,3 +871,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

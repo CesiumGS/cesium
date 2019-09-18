@@ -27,6 +27,8 @@ define([
         for (var i = 0; i < propertyNamesLength; i++) {
             entity[propertyNames[i]] = undefined;
         }
+        entity._name = undefined;
+        entity._availability = undefined;
     }
 
     function subscribeToEntity(that, eventHash, collectionId, entity) {

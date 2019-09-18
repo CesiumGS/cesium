@@ -1,22 +1,22 @@
 define([
         '../../Core/buildModuleUrl',
         '../../Scene/ArcGisMapServerImageryProvider',
-        '../../Scene/IonWorldImageryStyle',
-        '../../Scene/createOpenStreetMapImageryProvider',
-        '../../Scene/createTileMapServiceImageryProvider',
+        '../../Scene/OpenStreetMapImageryProvider',
+        '../../Scene/TileMapServiceImageryProvider',
         '../../Scene/createWorldImagery',
         '../../Scene/IonImageryProvider',
-        '../../Scene/MapboxImageryProvider',
+        '../../Scene/IonWorldImageryStyle',
+        '../../Scene/MapboxStyleImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,
         ArcGisMapServerImageryProvider,
-        IonWorldImageryStyle,
-        createOpenStreetMapImageryProvider,
-        createTileMapServiceImageryProvider,
+        OpenStreetMapImageryProvider,
+        TileMapServiceImageryProvider,
         createWorldImagery,
         IonImageryProvider,
-        MapboxImageryProvider,
+        IonWorldImageryStyle,
+        MapboxStyleImageryProvider,
         ProviderViewModel) {
     'use strict';
 
@@ -67,8 +67,8 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxSatellite.png'),
             category : 'Other',
             creationFunction: function() {
-                return new MapboxImageryProvider({
-                    mapId: 'mapbox.satellite'
+                return new MapboxStyleImageryProvider({
+                    styleId: 'satellite-v9'
                 });
             }
         }));
@@ -79,8 +79,8 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxTerrain.png'),
             category : 'Other',
             creationFunction: function() {
-                return new MapboxImageryProvider({
-                    mapId: 'mapbox.streets'
+                return new MapboxStyleImageryProvider({
+                    styleId: 'satellite-streets-v11'
                 });
             }
         }));
@@ -91,8 +91,8 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxStreets.png'),
             category : 'Other',
             creationFunction: function() {
-                return new MapboxImageryProvider({
-                    mapId: 'mapbox.streets-basic'
+                return new MapboxStyleImageryProvider({
+                    styleId: 'streets-v11'
                 });
             }
         }));
@@ -157,7 +157,7 @@ mapping applications.\nhttp://www.esri.com',
 of the world.\nhttp://www.openstreetmap.org',
             category : 'Other',
             creationFunction : function() {
-                return createOpenStreetMapImageryProvider({
+                return new OpenStreetMapImageryProvider({
                     url : 'https://a.tile.openstreetmap.org/'
                 });
             }
@@ -170,7 +170,7 @@ of the world.\nhttp://www.openstreetmap.org',
 area washes and organic edges over a paper texture to add warm pop to any map.\nhttp://maps.stamen.com',
             category : 'Other',
             creationFunction : function() {
-                return createOpenStreetMapImageryProvider({
+                return new OpenStreetMapImageryProvider({
                     url : 'https://stamen-tiles.a.ssl.fastly.net/watercolor/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
@@ -183,7 +183,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             tooltip : 'A high contrast black and white map.\nhttp://maps.stamen.com',
             category : 'Other',
             creationFunction : function() {
-                return createOpenStreetMapImageryProvider({
+                return new OpenStreetMapImageryProvider({
                     url : 'https://stamen-tiles.a.ssl.fastly.net/toner/',
                     credit : 'Map tiles by Stamen Design, under CC BY 3.0. Data by OpenStreetMap, under CC BY SA.'
                 });
@@ -226,7 +226,7 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
             tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
             category : 'Cesium ion',
             creationFunction : function() {
-                return createTileMapServiceImageryProvider({
+                return new TileMapServiceImageryProvider({
                     url : buildModuleUrl('Assets/Textures/NaturalEarthII')
                 });
             }

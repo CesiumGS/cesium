@@ -1,22 +1,24 @@
-defineSuite([
-        'DataSources/GridMaterialProperty',
+define([
         'Core/Cartesian2',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/GridMaterialProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty'
     ], function(
-        GridMaterialProperty,
         Cartesian2,
         Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
+        GridMaterialProperty,
         SampledProperty,
         TimeIntervalCollectionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/GridMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new GridMaterialProperty();
@@ -282,4 +284,5 @@ defineSuite([
         property.lineOffset.addSample(JulianDate.now(), 1);
         expect(property.isConstant).toBe(false);
     });
+});
 });

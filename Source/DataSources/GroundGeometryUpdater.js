@@ -130,6 +130,20 @@ define([
     };
 
     /**
+     * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
+    GroundGeometryUpdater.prototype.destroy = function() {
+        if (defined(this._terrainOffsetProperty)) {
+            this._terrainOffsetProperty.destroy();
+            this._terrainOffsetProperty = undefined;
+        }
+
+        GeometryUpdater.prototype.destroy.call(this);
+    };
+
+    /**
      * @private
      */
     GroundGeometryUpdater.getGeometryHeight = function(height, heightReference) {

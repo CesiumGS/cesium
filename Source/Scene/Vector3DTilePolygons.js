@@ -285,8 +285,8 @@ define([
             var minimumHeights = polygons._polygonMinimumHeights;
             var maximumHeights = polygons._polygonMaximumHeights;
             if (defined(minimumHeights) && defined(maximumHeights)) {
-				minimumHeights = arraySlice(minimumHeights);
-				maximumHeights = arraySlice(maximumHeights);
+                minimumHeights = arraySlice(minimumHeights);
+                maximumHeights = arraySlice(maximumHeights);
 
                 transferrableObjects.push(minimumHeights.buffer, maximumHeights.buffer);
                 parameters.minimumHeights = minimumHeights;

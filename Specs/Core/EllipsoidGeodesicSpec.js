@@ -1,14 +1,16 @@
-defineSuite([
-        'Core/EllipsoidGeodesic',
+define([
         'Core/Cartographic',
         'Core/Ellipsoid',
+        'Core/EllipsoidGeodesic',
         'Core/Math'
     ], function(
-        EllipsoidGeodesic,
         Cartographic,
         Ellipsoid,
+        EllipsoidGeodesic,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/EllipsoidGeodesic', function() {
 
     it('throws without start', function() {
         expect(function() {
@@ -243,4 +245,5 @@ defineSuite([
         expect(expectedMid.longitude).toEqualEpsilon(result.longitude, CesiumMath.EPSILON13);
         expect(expectedMid.latitude).toEqualEpsilon(result.latitude, CesiumMath.EPSILON13);
     });
+});
 });

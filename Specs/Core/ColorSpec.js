@@ -1,14 +1,16 @@
-defineSuite([
-        'Core/Color',
+define([
         'Core/Cartesian4',
+        'Core/Color',
         'Core/Math',
         'Specs/createPackableSpecs'
     ], function(
-        Color,
         Cartesian4,
+        Color,
         CesiumMath,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/Color', function() {
 
     it('Constructing without arguments produces expected defaults', function() {
         var v = new Color();
@@ -103,17 +105,17 @@ defineSuite([
 
     it('clone with no parameters returns a new identical copy.', function() {
         var v = new Color(0.1, 0.2, 0.3, 0.4);
-        var v2 = v.clone();
-        expect(v).toEqual(v2);
-        expect(v === v2).toEqual(false);
+        var clone = v.clone();
+        expect(clone).toEqual(v);
+        expect(clone).not.toBe(v);
     });
 
     it('clone with a parameter modifies the parameter.', function() {
         var v = new Color(0.1, 0.2, 0.3, 0.4);
         var v2 = new Color();
-        var v3 = v.clone(v2);
-        expect(v).toEqual(v2);
-        expect(v3 === v2).toEqual(true);
+        var clone = v.clone(v2);
+        expect(clone).toEqual(v2);
+        expect(clone).toBe(v2);
     });
 
     it('equals works', function() {
@@ -749,4 +751,5 @@ defineSuite([
     });
 
     createPackableSpecs(Color, new Color(0.1, 0.2, 0.3, 0.4), [0.1, 0.2, 0.3, 0.4]);
+});
 });

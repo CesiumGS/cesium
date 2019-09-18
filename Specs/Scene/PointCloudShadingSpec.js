@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Scene/PointCloudShading',
         'Specs/createScene'
     ], function(
         PointCloudShading,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PointCloudShading', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var pointCloudShading = new PointCloudShading();
@@ -46,4 +48,5 @@ defineSuite([
         expect(PointCloudShading.isSupported(scene)).toEqual(expectedSupport);
         scene.destroyForSpecs();
     });
+});
 });

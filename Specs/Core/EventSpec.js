@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/Event'
     ], function(
         Event) {
-    'use strict';
+        'use strict';
+
+describe('Core/Event', function() {
 
     var event;
     var spyListener;
@@ -220,4 +222,5 @@ defineSuite([
             event.removeEventListener(null);
         }).toThrowDeveloperError();
     });
+});
 });

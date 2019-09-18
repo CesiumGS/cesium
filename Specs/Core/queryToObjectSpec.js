@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/queryToObject'
     ], function(
         queryToObject) {
-    'use strict';
+        'use strict';
+
+describe('Core/queryToObject', function() {
 
     it('can decode data', function() {
         var str = 'key1=some%20value&key2=a%2Fb';
@@ -57,4 +59,5 @@ defineSuite([
             queryToObject();
         }).toThrowDeveloperError();
     });
+});
 });

@@ -1,20 +1,23 @@
-defineSuite([
-        'Core/PolylineVolumeGeometry',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/CornerType',
         'Core/Ellipsoid',
+        'Core/PolylineVolumeGeometry',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        PolylineVolumeGeometry,
         Cartesian2,
         Cartesian3,
         CornerType,
         Ellipsoid,
+        PolylineVolumeGeometry,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/PolylineVolumeGeometry', function() {
+
     var shape;
 
     beforeAll(function() {
@@ -247,4 +250,5 @@ defineSuite([
     });
     var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 3.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.1];
     createPackableSpecs(PolylineVolumeGeometry, volume, packedInstance);
+});
 });

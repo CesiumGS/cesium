@@ -26,6 +26,7 @@ define([
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
+
         this.color = color;
     }
 
@@ -43,6 +44,7 @@ define([
                 return Property.isConstant(this._color);
             }
         },
+
         /**
          * Gets the event that is raised whenever the definition of this property changes.
          * The definition is considered to have changed if a call to getValue would return
@@ -57,6 +59,7 @@ define([
                 return this._definitionChanged;
             }
         },
+
         /**
          * Gets or sets the {@link Color} {@link Property}.
          * @memberof ColorMaterialProperty.prototype

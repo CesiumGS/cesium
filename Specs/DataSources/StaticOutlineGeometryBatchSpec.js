@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/StaticOutlineGeometryBatch',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
@@ -10,12 +9,12 @@ defineSuite([
         'DataSources/CallbackProperty',
         'DataSources/EllipseGeometryUpdater',
         'DataSources/Entity',
+        'DataSources/StaticOutlineGeometryBatch',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/ShadowMode',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        StaticOutlineGeometryBatch,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
@@ -26,11 +25,14 @@ defineSuite([
         CallbackProperty,
         EllipseGeometryUpdater,
         Entity,
+        StaticOutlineGeometryBatch,
         TimeIntervalCollectionProperty,
         ShadowMode,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/StaticOutlineGeometryBatch', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -360,4 +362,5 @@ defineSuite([
                 batch.removeAllPrimitives();
             });
     });
+});
 });

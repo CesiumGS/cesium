@@ -96,8 +96,6 @@ define([
         var target = this._textureTarget;
         var targetFace = this._targetFace;
 
-        // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
@@ -111,6 +109,13 @@ define([
 
         var preMultiplyAlpha = this._preMultiplyAlpha;
         var flipY = this._flipY;
+
+        var unpackAlignment = 4;
+        if (defined(arrayBufferView)) {
+            unpackAlignment = PixelFormat.alignmentInBytes(pixelFormat, pixelDatatype, width);
+        }
+
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
         var uploaded = false;
         if (!this._initialized) {
@@ -144,7 +149,7 @@ define([
         }
 
         if (!uploaded) {
-            if (arrayBufferView) {
+            if (defined(arrayBufferView)) {
                 gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 

@@ -1,17 +1,17 @@
 define([
-    'Core/GeographicTilingScheme',
-    'Core/Resource',
-    'Core/RuntimeError',
-    'ThirdParty/when',
-    './createTileKey',
-    './runLater'
-], function(
-    GeographicTilingScheme,
-    Resource,
-    RuntimeError,
-    when,
-    createTileKey,
-    runLater) {
+        './createTileKey',
+        './runLater',
+        'Core/GeographicTilingScheme',
+        'Core/Resource',
+        'Core/RuntimeError',
+        'ThirdParty/when'
+    ], function(
+        createTileKey,
+        runLater,
+        GeographicTilingScheme,
+        Resource,
+        RuntimeError,
+        when) {
    'use strict';
 
     function MockImageryProvider() {

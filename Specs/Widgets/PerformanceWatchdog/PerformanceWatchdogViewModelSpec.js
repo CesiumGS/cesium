@@ -1,16 +1,18 @@
-defineSuite([
-        'Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel',
+define([
         'Core/defined',
         'Core/getTimestamp',
         'Scene/FrameRateMonitor',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel'
     ], function(
-        PerformanceWatchdogViewModel,
         defined,
         getTimestamp,
         FrameRateMonitor,
-        createScene) {
-    'use strict';
+        createScene,
+        PerformanceWatchdogViewModel) {
+        'use strict';
+
+describe('Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel', function() {
 
     var scene;
     beforeAll(function() {
@@ -205,3 +207,4 @@ defineSuite([
         expect(viewModel.showingLowFrameRateMessage).toBe(false);
     });
 }, 'WebGL');
+});
