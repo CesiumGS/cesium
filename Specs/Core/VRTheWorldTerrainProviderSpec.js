@@ -1,5 +1,4 @@
-defineSuite([
-        'Core/VRTheWorldTerrainProvider',
+define([
         'Core/DefaultProxy',
         'Core/GeographicTilingScheme',
         'Core/HeightmapTerrainData',
@@ -8,10 +7,10 @@ defineSuite([
         'Core/RequestScheduler',
         'Core/Resource',
         'Core/TerrainProvider',
+        'Core/VRTheWorldTerrainProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        VRTheWorldTerrainProvider,
         DefaultProxy,
         GeographicTilingScheme,
         HeightmapTerrainData,
@@ -20,9 +19,12 @@ defineSuite([
         RequestScheduler,
         Resource,
         TerrainProvider,
+        VRTheWorldTerrainProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/VRTheWorldTerrainProvider', function() {
 
     var imageUrl = 'Data/Images/Red16x16.png';
 
@@ -297,4 +299,5 @@ defineSuite([
             });
         });
     });
+});
 });

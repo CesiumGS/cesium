@@ -1,20 +1,22 @@
-defineSuite([
-        'Core/OrthographicFrustum',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Math',
         'Core/Matrix4',
+        'Core/OrthographicFrustum',
         'Specs/createPackableSpecs'
     ], function(
-        OrthographicFrustum,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumMath,
         Matrix4,
+        OrthographicFrustum,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/OrthographicFrustum', function() {
 
     var frustum, planes;
 
@@ -236,4 +238,5 @@ defineSuite([
         near : 3.0,
         far : 4.0
     }), [1.0, 2.0, 3.0, 4.0]);
+});
 });

@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/VelocityOrientationProperty',
+define([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Event',
@@ -8,9 +7,9 @@ defineSuite([
         'Core/Quaternion',
         'Core/Transforms',
         'DataSources/CallbackProperty',
-        'DataSources/SampledPositionProperty'
+        'DataSources/SampledPositionProperty',
+        'DataSources/VelocityOrientationProperty'
     ], function(
-        VelocityOrientationProperty,
         Cartesian3,
         Ellipsoid,
         Event,
@@ -19,8 +18,11 @@ defineSuite([
         Quaternion,
         Transforms,
         CallbackProperty,
-        SampledPositionProperty) {
-    'use strict';
+        SampledPositionProperty,
+        VelocityOrientationProperty) {
+        'use strict';
+
+describe('DataSources/VelocityOrientationProperty', function() {
 
     var time = JulianDate.now();
 
@@ -201,4 +203,5 @@ defineSuite([
             property.getValue();
         }).toThrowDeveloperError();
     });
+});
 });

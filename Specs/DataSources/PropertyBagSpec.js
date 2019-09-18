@@ -1,14 +1,16 @@
-defineSuite([
-        'DataSources/PropertyBag',
+define([
         'Core/JulianDate',
         'DataSources/ConstantProperty',
+        'DataSources/PropertyBag',
         'DataSources/SampledProperty'
     ], function(
-        PropertyBag,
         JulianDate,
         ConstantProperty,
+        PropertyBag,
         SampledProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PropertyBag', function() {
 
     var time = JulianDate.now();
 
@@ -280,4 +282,5 @@ defineSuite([
 
         expect(property.isConstant).toBe(false);
     });
+});
 });

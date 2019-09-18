@@ -1,16 +1,18 @@
-defineSuite([
-        'Core/PeliasGeocoderService',
-        'Core/GeocodeType',
+define([
         'Core/Cartesian3',
+        'Core/GeocodeType',
+        'Core/PeliasGeocoderService',
         'Core/Resource',
         'ThirdParty/when'
     ], function(
-        PeliasGeocoderService,
-        GeocodeType,
         Cartesian3,
+        GeocodeType,
+        PeliasGeocoderService,
         Resource,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/PeliasGeocoderService', function() {
 
     it('constructor throws without url', function() {
         expect(function() {
@@ -90,4 +92,5 @@ defineSuite([
             }
         });
     });
+});
 });

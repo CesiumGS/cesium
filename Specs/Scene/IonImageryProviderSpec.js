@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/IonImageryProvider',
+define([
         'Core/Credit',
         'Core/defaultValue',
         'Core/IonResource',
@@ -10,6 +9,7 @@ defineSuite([
         'Scene/BingMapsImageryProvider',
         'Scene/GoogleEarthEnterpriseMapsProvider',
         'Scene/ImageryProvider',
+        'Scene/IonImageryProvider',
         'Scene/MapboxImageryProvider',
         'Scene/SingleTileImageryProvider',
         'Scene/UrlTemplateImageryProvider',
@@ -17,7 +17,6 @@ defineSuite([
         'Scene/WebMapTileServiceImageryProvider',
         'ThirdParty/when'
     ], function(
-        IonImageryProvider,
         Credit,
         defaultValue,
         IonResource,
@@ -28,13 +27,16 @@ defineSuite([
         BingMapsImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
         ImageryProvider,
+        IonImageryProvider,
         MapboxImageryProvider,
         SingleTileImageryProvider,
         UrlTemplateImageryProvider,
         WebMapServiceImageryProvider,
         WebMapTileServiceImageryProvider,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/IonImageryProvider', function() {
 
     function createTestProvider(endpointData) {
         endpointData = defaultValue(endpointData, {
@@ -290,4 +292,5 @@ defineSuite([
     it('createImageryProvider works with WMTS', function() {
         return testExternalImagery('WMTS', { url: 'http://test.invalid', layer: '', style: '', tileMatrixSetID: 1 }, WebMapTileServiceImageryProvider);
     });
+});
 });

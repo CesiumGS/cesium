@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/CzmlDataSource',
+define([
         'Core/ArcType',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
@@ -31,6 +30,7 @@ defineSuite([
         'DataSources/CompositeProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
+        'DataSources/CzmlDataSource',
         'DataSources/EntityCollection',
         'DataSources/ReferenceProperty',
         'DataSources/SampledPositionProperty',
@@ -47,7 +47,6 @@ defineSuite([
         'Scene/VerticalOrigin',
         'ThirdParty/when'
     ], function(
-        CzmlDataSource,
         ArcType,
         BoundingRectangle,
         Cartesian2,
@@ -79,6 +78,7 @@ defineSuite([
         CompositeProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        CzmlDataSource,
         EntityCollection,
         ReferenceProperty,
         SampledPositionProperty,
@@ -94,7 +94,9 @@ defineSuite([
         ShadowMode,
         VerticalOrigin,
         when) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CzmlDataSource', function() {
 
     function makeDocument(packet) {
         var documentPacket = {
@@ -7928,4 +7930,5 @@ defineSuite([
             expect(e.properties.custom_wsenDegrees.getValue(documentStopDate)).toEqual(Rectangle.fromDegrees(37, 16, 25, 23));
         });
     });
+});
 });

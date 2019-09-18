@@ -1,16 +1,13 @@
-defineSuite([
-        'Scene/TimeDynamicPointCloud',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Clock',
         'Core/ClockStep',
-        'Core/combine',
         'Core/defaultValue',
         'Core/defined',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/JulianDate',
-        'Core/Math',
         'Core/Matrix4',
         'Core/Resource',
         'Core/TimeIntervalCollection',
@@ -21,23 +18,21 @@ defineSuite([
         'Scene/DracoLoader',
         'Scene/PointCloudEyeDomeLighting',
         'Scene/ShadowMode',
+        'Scene/TimeDynamicPointCloud',
         'Specs/createCanvas',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        TimeDynamicPointCloud,
         BoundingSphere,
         Cartesian3,
         Clock,
         ClockStep,
-        combine,
         defaultValue,
         defined,
         HeadingPitchRange,
         HeadingPitchRoll,
         JulianDate,
-        CesiumMath,
         Matrix4,
         Resource,
         TimeIntervalCollection,
@@ -48,11 +43,14 @@ defineSuite([
         DracoLoader,
         PointCloudEyeDomeLighting,
         ShadowMode,
+        TimeDynamicPointCloud,
         createCanvas,
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TimeDynamicPointCloud', function() {
 
     var scene;
 
@@ -789,3 +787,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

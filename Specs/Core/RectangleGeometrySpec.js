@@ -1,5 +1,4 @@
-defineSuite([
-        'Core/RectangleGeometry',
+define([
         'Core/arrayFill',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -9,10 +8,10 @@ defineSuite([
         'Core/Math',
         'Core/Matrix2',
         'Core/Rectangle',
+        'Core/RectangleGeometry',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        RectangleGeometry,
         arrayFill,
         Cartesian2,
         Cartesian3,
@@ -22,9 +21,12 @@ defineSuite([
         CesiumMath,
         Matrix2,
         Rectangle,
+        RectangleGeometry,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/RectangleGeometry', function() {
 
     it('computes positions', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
@@ -538,4 +540,5 @@ defineSuite([
     });
     var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1];
     createPackableSpecs(RectangleGeometry, rectangle, packedInstance);
+});
 });

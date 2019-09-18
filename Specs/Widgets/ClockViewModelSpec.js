@@ -1,16 +1,18 @@
-defineSuite([
-        'Widgets/ClockViewModel',
+define([
         'Core/Clock',
         'Core/ClockRange',
         'Core/ClockStep',
-        'Core/JulianDate'
+        'Core/JulianDate',
+        'Widgets/ClockViewModel'
     ], function(
-        ClockViewModel,
         Clock,
         ClockRange,
         ClockStep,
-        JulianDate) {
-    'use strict';
+        JulianDate,
+        ClockViewModel) {
+        'use strict';
+
+describe('Widgets/ClockViewModel', function() {
 
     it('default constructor creates a clock', function() {
         var clockViewModel = new ClockViewModel();
@@ -86,4 +88,5 @@ defineSuite([
         expect(clockViewModel.clockRange).toEqual(clock.clockRange);
         expect(clockViewModel.shouldAnimate).toEqual(clock.shouldAnimate);
     });
+});
 });

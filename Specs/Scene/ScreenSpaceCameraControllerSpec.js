@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/ScreenSpaceCameraController',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/combine',
@@ -17,11 +16,11 @@ defineSuite([
         'Scene/CameraEventType',
         'Scene/MapMode2D',
         'Scene/SceneMode',
+        'Scene/ScreenSpaceCameraController',
         'Specs/createCamera',
         'Specs/createCanvas',
         'Specs/DomEventSimulator'
     ], function(
-        ScreenSpaceCameraController,
         Cartesian2,
         Cartesian3,
         combine,
@@ -39,10 +38,13 @@ defineSuite([
         CameraEventType,
         MapMode2D,
         SceneMode,
+        ScreenSpaceCameraController,
         createCamera,
         createCanvas,
         DomEventSimulator) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ScreenSpaceCameraController', function() {
 
     var usePointerEvents;
     var scene;
@@ -1209,4 +1211,5 @@ defineSuite([
         controller.destroy();
         expect(controller.isDestroyed()).toEqual(true);
     });
+});
 });

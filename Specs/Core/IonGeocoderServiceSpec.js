@@ -1,20 +1,18 @@
-defineSuite([
-        'Core/IonGeocoderService',
-        'Core/Ion',
+define([
         'Core/GeocodeType',
-        'Core/Rectangle',
-        'Core/Resource',
-        'ThirdParty/when',
-        'Specs/createScene'
+        'Core/Ion',
+        'Core/IonGeocoderService',
+        'Specs/createScene',
+        'ThirdParty/when'
     ], function(
-        IonGeocoderService,
-        Ion,
         GeocodeType,
-        Rectangle,
-        Resource,
-        when,
-        createScene) {
-    'use strict';
+        Ion,
+        IonGeocoderService,
+        createScene,
+        when) {
+        'use strict';
+
+describe('Core/IonGeocoderService', function() {
 
     var scene;
     beforeEach(function() {
@@ -57,4 +55,5 @@ defineSuite([
         expect(result).toBe(expectedResult);
         expect(service._pelias.geocode).toHaveBeenCalledWith(query, GeocodeType.SEARCH);
    });
+});
 });

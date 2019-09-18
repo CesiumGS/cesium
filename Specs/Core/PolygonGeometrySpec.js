@@ -1,5 +1,4 @@
-defineSuite([
-        'Core/PolygonGeometry',
+define([
         'Core/ArcType',
         'Core/arrayFill',
         'Core/BoundingSphere',
@@ -9,11 +8,11 @@ defineSuite([
         'Core/GeometryOffsetAttribute',
         'Core/GeometryPipeline',
         'Core/Math',
+        'Core/PolygonGeometry',
         'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        PolygonGeometry,
         ArcType,
         arrayFill,
         BoundingSphere,
@@ -23,10 +22,13 @@ defineSuite([
         GeometryOffsetAttribute,
         GeometryPipeline,
         CesiumMath,
+        PolygonGeometry,
         Rectangle,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/PolygonGeometry', function() {
 
     it('throws without hierarchy', function() {
         expect(function() {
@@ -1281,4 +1283,5 @@ defineSuite([
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 0, -1, ArcType.GEODESIC, 54);
     createPackableSpecs(PolygonGeometry, polygon, packedInstance);
+});
 });

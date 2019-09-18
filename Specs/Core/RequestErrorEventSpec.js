@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/RequestErrorEvent'
     ], function(
         RequestErrorEvent) {
-    'use strict';
+        'use strict';
+
+describe('Core/RequestErrorEvent', function() {
 
     it('parses response headers provided as a string', function() {
         var event = new RequestErrorEvent(404, 'foo', 'This-is-a-test: first\r\nAnother: second value!');
@@ -22,4 +24,5 @@ defineSuite([
             'Another': 'second value!'
         });
     });
+});
 });

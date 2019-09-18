@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/appendForwardSlash'
     ], function(
         appendForwardSlash) {
-    'use strict';
+        'use strict';
+
+describe('Core/appendForwardSlash', function() {
 
     it('Appends to a url', function() {
         expect(appendForwardSlash('http://cesiumjs.org')).toEqual('http://cesiumjs.org/');
@@ -15,4 +17,5 @@ defineSuite([
     it('Appends to an empty string', function() {
         expect(appendForwardSlash('')).toEqual('/');
     });
+});
 });

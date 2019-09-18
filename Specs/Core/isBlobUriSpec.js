@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/isBlobUri'
     ], function(
         isBlobUri) {
-    'use strict';
+        'use strict';
+
+describe('Core/isBlobUri', function() {
 
     it('Throws if url is undefined', function() {
         expect(function() {
@@ -23,4 +25,5 @@ defineSuite([
         var blobUrl = window.URL.createObjectURL(blob);
         expect(isBlobUri(blobUrl)).toEqual(true);
     });
+});
 });

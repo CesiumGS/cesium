@@ -1,9 +1,9 @@
 define([
-    '../Core/defined',
-    '../Core/CoplanarPolygonGeometry'
-], function(
-    defined,
-    CoplanarPolygonGeometry) {
+        '../Core/CoplanarPolygonGeometry',
+        '../Core/defined'
+    ], function(
+        CoplanarPolygonGeometry,
+        defined) {
     'use strict';
 
     function createCoplanarPolygonGeometry(polygonGeometry, offset) {

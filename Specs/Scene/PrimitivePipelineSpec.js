@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/PrimitivePipeline',
+define([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian3',
@@ -7,9 +6,9 @@ defineSuite([
         'Core/Geometry',
         'Core/GeometryAttribute',
         'Core/GeometryAttributes',
-        'Core/PrimitiveType'
+        'Core/PrimitiveType',
+        'Scene/PrimitivePipeline'
     ], function(
-        PrimitivePipeline,
         BoundingSphere,
         BoxGeometry,
         Cartesian3,
@@ -17,8 +16,11 @@ defineSuite([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        PrimitiveType) {
-    'use strict';
+        PrimitiveType,
+        PrimitivePipeline) {
+        'use strict';
+
+describe('Scene/PrimitivePipeline', function() {
 
     it('can pack and unpack geometry', function() {
         var boxGeometry = BoxGeometry.createGeometry(BoxGeometry.fromDimensions({
@@ -63,3 +65,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,12 +1,14 @@
-defineSuite([
-        'Scene/CircleEmitter',
+define([
         'Core/Cartesian3',
+        'Scene/CircleEmitter',
         'Scene/Particle'
     ], function(
-        CircleEmitter,
         Cartesian3,
+        CircleEmitter,
         Particle) {
-    'use strict';
+        'use strict';
+
+describe('Scene/CircleEmitter', function() {
 
     var emitter;
 
@@ -59,4 +61,5 @@ defineSuite([
             expect(particle.velocity).toEqual(Cartesian3.UNIT_Z);
         }
     });
+});
 });
