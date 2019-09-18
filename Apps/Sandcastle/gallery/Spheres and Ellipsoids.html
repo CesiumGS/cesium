@@ -194,29 +194,11 @@ viewer.entities.add({
 });
 
 viewer.entities.add({
-    name : 'Parital ellipsoid',
-    position : new Cesium.ReferenceProperty(viewer.entities, 'airplane', ['position']),
+    name : 'Wedge',
+    position : Cesium.Cartesian3.fromDegrees(-102.0, 35.0, 20000.0),
     orientation : Cesium.Transforms.headingPitchRollQuaternion(
-        Cesium.Cartesian3.fromDegrees(-110.0, 35.0, 250000.0),
-        new Cesium.HeadingPitchRoll(Cesium.Math.PI_OVER_TWO, -Cesium.Math.PI_OVER_FOUR, 0.0)
-    ),
-    ellipsoid : {
-        radii : new Cesium.Cartesian3(300000.0, 300000.0, 300000.0),
-        innerRadii : new Cesium.Cartesian3(1.0, 1.0, 1.0),
-        minimumClock : Cesium.Math.toRadians(-10.0),
-        maximumClock : Cesium.Math.toRadians(10.0),
-        minimumCone : Cesium.Math.toRadians(80.0),
-        maximumCone : Cesium.Math.toRadians(100.0),
-        material : Cesium.Color.DARKCYAN.withAlpha(0.3),
-        outline : true
-    }
-});
-viewer.entities.add({
-    name : 'Partial ellipsoid',
-    position : new Cesium.ReferenceProperty(viewer.entities, 'truck', ['position']),
-    orientation : Cesium.Transforms.headingPitchRollQuaternion(
-        Cesium.Cartesian3.fromDegrees(-102.0, 35.0),
-        new Cesium.HeadingPitchRoll(Cesium.Math.PI / 1.5, Cesium.Math.PI_OVER_FOUR, 0.0)
+        Cesium.Cartesian3.fromDegrees(-102.0, 35.0, 20000.0),
+        new Cesium.HeadingPitchRoll(Cesium.Math.PI / 1.5, 0, 0.0)
     ),
     ellipsoid : {
         radii : new Cesium.Cartesian3(500000.0, 500000.0, 500000.0),
