@@ -1,26 +1,28 @@
-defineSuite([
-        'DataSources/CorridorGraphics',
+define([
         'Core/Color',
         'Core/CornerType',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/CorridorGraphics',
         'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        CorridorGraphics,
         Color,
         CornerType,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        CorridorGraphics,
         ClassificationType,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CorridorGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -240,4 +242,5 @@ defineSuite([
         testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
         testDefinitionChanged(property, 'zIndex', 3, 0);
     });
+});
 });

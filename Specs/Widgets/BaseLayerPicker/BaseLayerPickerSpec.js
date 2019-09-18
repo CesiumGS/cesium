@@ -1,16 +1,18 @@
-defineSuite([
-        'Widgets/BaseLayerPicker/BaseLayerPicker',
+define([
         'Core/EllipsoidTerrainProvider',
         'Core/FeatureDetection',
         'Scene/ImageryLayerCollection',
-        'Specs/DomEventSimulator'
+        'Specs/DomEventSimulator',
+        'Widgets/BaseLayerPicker/BaseLayerPicker'
     ], function(
-        BaseLayerPicker,
         EllipsoidTerrainProvider,
         FeatureDetection,
         ImageryLayerCollection,
-        DomEventSimulator) {
-    'use strict';
+        DomEventSimulator,
+        BaseLayerPicker) {
+        'use strict';
+
+describe('Widgets/BaseLayerPicker/BaseLayerPicker', function() {
 
     function MockGlobe(){
         this.imageryLayers = new ImageryLayerCollection();
@@ -86,4 +88,5 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
+});
 });

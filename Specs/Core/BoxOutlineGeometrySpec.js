@@ -1,18 +1,20 @@
-defineSuite([
-        'Core/BoxOutlineGeometry',
+define([
         'Core/arrayFill',
         'Core/AxisAlignedBoundingBox',
+        'Core/BoxOutlineGeometry',
         'Core/Cartesian3',
         'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
-        BoxOutlineGeometry,
         arrayFill,
         AxisAlignedBoundingBox,
+        BoxOutlineGeometry,
         Cartesian3,
         GeometryOffsetAttribute,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/BoxOutlineGeometry', function() {
 
     it('constructor throws without maximum corner', function() {
         expect(function() {
@@ -109,4 +111,5 @@ defineSuite([
         minimum : new Cartesian3(1.0, 2.0, 3.0),
         maximum : new Cartesian3(4.0, 5.0, 6.0)
     }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, -1.0]);
+});
 });

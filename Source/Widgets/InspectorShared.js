@@ -1,9 +1,9 @@
 define([
-        '../Core/defined',
-        '../Core/Check'
-    ],function(
-        defined,
-        Check) {
+        '../Core/Check',
+        '../Core/defined'
+    ], function(
+        Check,
+        defined) {
     'use strict';
 
     /**

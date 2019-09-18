@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/isLeapYear'
     ], function(
         isLeapYear) {
-    'use strict';
+        'use strict';
+
+describe('Core/isLeapYear', function() {
 
     it('Check for valid leap years', function() {
         expect(isLeapYear(2000)).toEqual(true);
@@ -31,4 +33,5 @@ defineSuite([
             isLeapYear('asd');
         }).toThrowDeveloperError();
     });
+});
 });

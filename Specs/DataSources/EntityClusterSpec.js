@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/EntityCluster',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/defineProperties',
@@ -9,11 +8,11 @@ defineSuite([
         'DataSources/CustomDataSource',
         'DataSources/DataSourceDisplay',
         'DataSources/Entity',
+        'DataSources/EntityCluster',
         'Scene/SceneTransforms',
         'Specs/createCanvas',
         'Specs/createScene'
     ], function(
-        EntityCluster,
         Cartesian2,
         Cartesian3,
         defineProperties,
@@ -23,10 +22,13 @@ defineSuite([
         CustomDataSource,
         DataSourceDisplay,
         Entity,
+        EntityCluster,
         SceneTransforms,
         createCanvas,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/EntityCluster', function() {
 
     var scene;
     var cluster;
@@ -637,3 +639,4 @@ defineSuite([
         expect(cluster._billboardCollection.length).toEqual(2);
     });
 }, 'WebGL');
+});

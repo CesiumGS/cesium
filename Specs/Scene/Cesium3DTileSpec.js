@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Cesium3DTile',
+define([
         'Core/Cartesian3',
         'Core/clone',
         'Core/HeadingPitchRoll',
@@ -8,13 +7,13 @@ defineSuite([
         'Core/Matrix4',
         'Core/Rectangle',
         'Core/Transforms',
+        'Scene/Cesium3DTile',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTilesetHeatmap',
         'Scene/TileBoundingRegion',
         'Scene/TileOrientedBoundingBox',
         'Specs/createScene'
     ], function(
-        Cesium3DTile,
         Cartesian3,
         clone,
         HeadingPitchRoll,
@@ -23,12 +22,15 @@ defineSuite([
         Matrix4,
         Rectangle,
         Transforms,
+        Cesium3DTile,
         Cesium3DTileRefine,
         Cesium3DTilesetHeatmap,
         TileBoundingRegion,
         TileOrientedBoundingBox,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Cesium3DTile', function() {
 
     var tileWithBoundingSphere = {
         geometricError : 1,
@@ -420,3 +422,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/ModelVisualizer',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -17,6 +16,7 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/ModelGraphics',
+        'DataSources/ModelVisualizer',
         'DataSources/NodeTransformationProperty',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
@@ -24,7 +24,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        ModelVisualizer,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -42,13 +41,16 @@ defineSuite([
         ConstantProperty,
         EntityCollection,
         ModelGraphics,
+        ModelVisualizer,
         NodeTransformationProperty,
         ClippingPlane,
         ClippingPlaneCollection,
         Globe,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/ModelVisualizer', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxArticulationsUrl = './Data/Models/Box-Articulations/Box-Articulations.gltf';
@@ -400,3 +402,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

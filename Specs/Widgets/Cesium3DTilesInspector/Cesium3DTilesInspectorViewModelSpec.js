@@ -1,18 +1,20 @@
-defineSuite([
-        'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel',
+define([
         'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/Globe',
         'Specs/createScene',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        'Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel'
     ], function(
-        Cesium3DTilesInspectorViewModel,
         Cesium3DTileset,
         Cesium3DTileStyle,
         Globe,
         createScene,
-        when) {
-    'use strict';
+        when,
+        Cesium3DTilesInspectorViewModel) {
+        'use strict';
+
+describe('Widgets/Cesium3DTilesInspector/Cesium3DTilesInspectorViewModel', function() {
 
     // Parent tile with content and four child tiles with content
     var tilesetUrl = './Data/Cesium3DTiles/Tilesets/Tileset/tileset.json';
@@ -314,3 +316,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

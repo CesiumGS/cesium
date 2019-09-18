@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/WallGeometryUpdater',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
@@ -11,6 +10,7 @@ defineSuite([
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
+        'DataSources/WallGeometryUpdater',
         'DataSources/WallGraphics',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
@@ -18,7 +18,6 @@ defineSuite([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        WallGeometryUpdater,
         Cartesian3,
         Color,
         JulianDate,
@@ -30,13 +29,16 @@ defineSuite([
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
+        WallGeometryUpdater,
         WallGraphics,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/WallGeometryUpdater', function() {
 
     var time;
     var time2;
@@ -224,3 +226,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(WallGeometryUpdater, 'wall', createDynamicWall, getScene);
 }, 'WebGL');
+});

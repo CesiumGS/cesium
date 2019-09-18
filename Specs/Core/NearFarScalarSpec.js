@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/NearFarScalar',
         'Specs/createPackableSpecs'
     ], function(
         NearFarScalar,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/NearFarScalar', function() {
 
     it('constructs without arguments', function() {
         var scalar = new NearFarScalar();
@@ -45,4 +47,5 @@ defineSuite([
     });
 
     createPackableSpecs(NearFarScalar, new NearFarScalar(1, 2, 3, 4), [1, 2, 3, 4]);
+});
 });

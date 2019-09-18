@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/PolygonGraphics',
+define([
         'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
@@ -7,12 +6,12 @@ defineSuite([
         'Core/PolygonHierarchy',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/PolygonGraphics',
         'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        PolygonGraphics,
         ArcType,
         Cartesian3,
         Color,
@@ -20,11 +19,14 @@ defineSuite([
         PolygonHierarchy,
         ColorMaterialProperty,
         ConstantProperty,
+        PolygonGraphics,
         ClassificationType,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolygonGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -302,4 +304,5 @@ defineSuite([
         expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
         expect(hierarchy.positions).toEqual(positions);
     });
+});
 });

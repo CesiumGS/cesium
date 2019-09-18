@@ -1,5 +1,4 @@
-defineSuite([
-        'Renderer/CubeMap',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/defined',
@@ -7,6 +6,7 @@ defineSuite([
         'Core/Resource',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
+        'Renderer/CubeMap',
         'Renderer/PixelDatatype',
         'Renderer/Sampler',
         'Renderer/Texture',
@@ -16,7 +16,6 @@ defineSuite([
         'Specs/createContext',
         'ThirdParty/when'
     ], function(
-        CubeMap,
         Cartesian3,
         Color,
         defined,
@@ -24,6 +23,7 @@ defineSuite([
         Resource,
         ClearCommand,
         ContextLimits,
+        CubeMap,
         PixelDatatype,
         Sampler,
         Texture,
@@ -32,7 +32,9 @@ defineSuite([
         TextureWrap,
         createContext,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/CubeMap', function() {
 
     var context;
     var cubeMap;
@@ -1363,3 +1365,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

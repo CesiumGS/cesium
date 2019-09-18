@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/BingMapsGeocoderService',
         'Core/Rectangle',
         'Core/Resource'
@@ -6,7 +6,9 @@ defineSuite([
         BingMapsGeocoderService,
         Rectangle,
         Resource) {
-    'use strict';
+        'use strict';
+
+describe('Core/BingMapsGeocoderService', function() {
 
     afterAll(function() {
         Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
@@ -65,4 +67,5 @@ defineSuite([
             done();
         });
     });
+});
 });

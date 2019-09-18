@@ -1,14 +1,16 @@
-defineSuite([
-        'Widgets/HomeButton/HomeButtonViewModel',
+define([
         'Core/Ellipsoid',
         'Scene/Globe',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/HomeButton/HomeButtonViewModel'
     ], function(
-        HomeButtonViewModel,
         Ellipsoid,
         Globe,
-        createScene) {
-    'use strict';
+        createScene,
+        HomeButtonViewModel) {
+        'use strict';
+
+describe('Widgets/HomeButton/HomeButtonViewModel', function() {
 
     var scene;
     var ellipsoid = Ellipsoid.WGS84;
@@ -63,3 +65,4 @@ defineSuite([
         viewModel.command();
     });
 }, 'WebGL');
+});

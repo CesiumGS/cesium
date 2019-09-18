@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/PathVisualizer',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
@@ -12,6 +11,7 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/PathGraphics',
+        'DataSources/PathVisualizer',
         'DataSources/PolylineGlowMaterialProperty',
         'DataSources/PolylineOutlineMaterialProperty',
         'DataSources/ReferenceProperty',
@@ -21,7 +21,6 @@ defineSuite([
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
-        PathVisualizer,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
@@ -34,6 +33,7 @@ defineSuite([
         ConstantProperty,
         EntityCollection,
         PathGraphics,
+        PathVisualizer,
         PolylineGlowMaterialProperty,
         PolylineOutlineMaterialProperty,
         ReferenceProperty,
@@ -42,7 +42,9 @@ defineSuite([
         TimeIntervalCollectionPositionProperty,
         SceneMode,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PathVisualizer', function() {
 
     var scene;
     var visualizer;
@@ -663,3 +665,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

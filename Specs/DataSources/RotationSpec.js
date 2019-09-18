@@ -1,16 +1,18 @@
-defineSuite([
-        'DataSources/Rotation',
+define([
         'Core/JulianDate',
         'Core/Math',
+        'DataSources/Rotation',
         'DataSources/SampledProperty',
         'Specs/createPackableSpecs'
     ], function(
-        Rotation,
         JulianDate,
         CesiumMath,
+        Rotation,
         SampledProperty,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/Rotation', function() {
 
     it('Interpolates towards the closest angle.', function() {
         var time1 = JulianDate.fromIso8601('2010-05-07T00:00:00');
@@ -29,4 +31,5 @@ defineSuite([
     });
 
     createPackableSpecs(Rotation, 1, [1]);
+});
 });

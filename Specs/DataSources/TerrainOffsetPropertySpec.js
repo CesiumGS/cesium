@@ -1,26 +1,22 @@
-defineSuite([
-    'DataSources/TerrainOffsetProperty',
-    'Core/Cartesian3',
-    'Core/Event',
-    'Core/JulianDate',
-    'Core/Rectangle',
-    'Scene/HeightReference',
-    'DataSources/CallbackProperty',
-    'DataSources/ConstantProperty',
-    'Specs/createGlobe',
-    'Specs/createScene'
-], function(
-    TerrainOffsetProperty,
-    Cartesian3,
-    Event,
-    JulianDate,
-    Rectangle,
-    HeightReference,
-    CallbackProperty,
-    ConstantProperty,
-    createGlobe,
-    createScene) {
-    'use strict';
+define([
+        'Core/Cartesian3',
+        'Core/JulianDate',
+        'DataSources/CallbackProperty',
+        'DataSources/ConstantProperty',
+        'DataSources/TerrainOffsetProperty',
+        'Specs/createGlobe',
+        'Specs/createScene'
+    ], function(
+        Cartesian3,
+        JulianDate,
+        CallbackProperty,
+        ConstantProperty,
+        TerrainOffsetProperty,
+        createGlobe,
+        createScene) {
+        'use strict';
+
+describe('DataSources/TerrainOffsetProperty', function() {
 
     var scene;
     var time = JulianDate.now();
@@ -60,4 +56,5 @@ defineSuite([
             return new TerrainOffsetProperty(scene, undefined, height, extrudedHeight);
         }).toThrowDeveloperError();
     });
+});
 });

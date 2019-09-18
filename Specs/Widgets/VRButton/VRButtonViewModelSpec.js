@@ -1,12 +1,14 @@
-defineSuite([
-        'Widgets/VRButton/VRButtonViewModel',
+define([
         'Core/Fullscreen',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/VRButton/VRButtonViewModel'
     ], function(
-        VRButtonViewModel,
         Fullscreen,
-        createScene) {
-    'use strict';
+        createScene,
+        VRButtonViewModel) {
+        'use strict';
+
+describe('Widgets/VRButton/VRButtonViewModel', function() {
 
     var scene;
 
@@ -71,4 +73,5 @@ defineSuite([
             viewModel.vrElement = {};
         }).toThrowDeveloperError();
     });
+});
 });

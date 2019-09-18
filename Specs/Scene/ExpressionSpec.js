@@ -1,20 +1,22 @@
-defineSuite([
-        'Scene/Expression',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Color',
         'Core/Math',
+        'Scene/Expression',
         'Scene/ExpressionNodeType'
     ], function(
-        Expression,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Color,
         CesiumMath,
+        Expression,
         ExpressionNodeType) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Expression', function() {
 
     function MockFeature() {
         this._properties = {};
@@ -3666,4 +3668,5 @@ defineSuite([
             return expression.getShaderExpression('', {});
         }).toThrowRuntimeError();
     });
+});
 });

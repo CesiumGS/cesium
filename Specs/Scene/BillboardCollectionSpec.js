@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/BillboardCollection',
+define([
         'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -15,6 +14,7 @@ defineSuite([
         'Core/Rectangle',
         'Core/Resource',
         'Scene/Billboard',
+        'Scene/BillboardCollection',
         'Scene/BlendOption',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
@@ -25,7 +25,6 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        BillboardCollection,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -41,6 +40,7 @@ defineSuite([
         Rectangle,
         Resource,
         Billboard,
+        BillboardCollection,
         BlendOption,
         HeightReference,
         HorizontalOrigin,
@@ -50,7 +50,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/BillboardCollection', function() {
 
     var scene;
     var context;
@@ -1965,3 +1967,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

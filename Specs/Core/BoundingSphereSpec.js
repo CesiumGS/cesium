@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -28,7 +28,9 @@ defineSuite([
         Plane,
         Rectangle,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/BoundingSphere', function() {
 
     var positionsRadius = 1.0;
     var positionsCenter = new Cartesian3(10000001.0, 0.0, 0.0);
@@ -914,4 +916,5 @@ defineSuite([
     });
 
     createPackableSpecs(BoundingSphere, new BoundingSphere(new Cartesian3(1.0, 2.0, 3.0), 4.0), [1.0, 2.0, 3.0, 4.0]);
+});
 });

@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Vector3DTileGeometry',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -20,11 +19,11 @@ defineSuite([
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Scene/StencilConstants',
+        'Scene/Vector3DTileGeometry',
         'Specs/createContext',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        Vector3DTileGeometry,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -45,10 +44,13 @@ defineSuite([
         PerInstanceColorAppearance,
         Primitive,
         StencilConstants,
+        Vector3DTileGeometry,
         createContext,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Vector3DTileGeometry', function() {
 
     createGeometrySpecs({});
     var c = createContext({ requestWebgl2 : true });
@@ -793,3 +795,4 @@ defineSuite([
     }
 
 }, 'WebGL');
+});

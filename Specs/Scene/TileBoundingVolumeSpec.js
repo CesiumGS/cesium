@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Scene/TileBoundingVolume'
     ], function(
         TileBoundingVolume) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TileBoundingVolume', function() {
 
     it('throws', function() {
         var boundingVolume = new TileBoundingVolume();
@@ -16,4 +18,5 @@ defineSuite([
             boundingVolume.intersectPlane();
         }).toThrowDeveloperError();
     });
+});
 });

@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/EllipsoidTerrainProvider',
         'Core/TerrainProvider',
         'Specs/createContext'
@@ -6,7 +6,9 @@ defineSuite([
         EllipsoidTerrainProvider,
         TerrainProvider,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Core/EllipsoidTerrainProvider', function() {
 
     var context;
 
@@ -48,3 +50,4 @@ defineSuite([
         expect(provider.getTileDataAvailable()).toBeUndefined();
     });
 }, 'WebGL');
+});
