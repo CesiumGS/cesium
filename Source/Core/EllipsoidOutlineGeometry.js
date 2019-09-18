@@ -372,7 +372,7 @@ define([
 
         // Create indices for the latitude lines
         index = 0;
-        for (i = 0; i < stackPartitions*vertexMultiplier; i++) {
+        for (i = 0; i < stackPartitions * vertexMultiplier; i++) {
             var topOffset = i * subdivisions;
             for (j = 0; j < subdivisions - 1; j++) {
                 indices[index++] = topOffset + j;
@@ -423,7 +423,7 @@ define([
         }
 
         var attributes = new GeometryAttributes({
-            position: new GeometryAttribute({
+            position : new GeometryAttribute({
                 componentDatatype : ComponentDatatype.DOUBLE,
                 componentsPerAttribute : 3,
                 values : positions
@@ -438,7 +438,7 @@ define([
             attributes.applyOffset = new GeometryAttribute({
                 componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                 componentsPerAttribute : 1,
-                values: applyOffset
+                values : applyOffset
             });
         }
 
