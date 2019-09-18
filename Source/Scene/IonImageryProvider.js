@@ -10,7 +10,7 @@ define([
         '../ThirdParty/when',
         './ArcGisMapServerImageryProvider',
         './BingMapsImageryProvider',
-        './createTileMapServiceImageryProvider',
+        './TileMapServiceImageryProvider',
         './GoogleEarthEnterpriseMapsProvider',
         './MapboxImageryProvider',
         './SingleTileImageryProvider',
@@ -29,7 +29,7 @@ define([
         when,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
-        createTileMapServiceImageryProvider,
+        TileMapServiceImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
         MapboxImageryProvider,
         SingleTileImageryProvider,
@@ -52,7 +52,7 @@ define([
         GOOGLE_EARTH: createFactory(GoogleEarthEnterpriseMapsProvider),
         MAPBOX: createFactory(MapboxImageryProvider),
         SINGLE_TILE: createFactory(SingleTileImageryProvider),
-        TMS: createTileMapServiceImageryProvider,
+        TMS: createFactory(TileMapServiceImageryProvider),
         URL_TEMPLATE: createFactory(UrlTemplateImageryProvider),
         WMS: createFactory(WebMapServiceImageryProvider),
         WMTS: createFactory(WebMapTileServiceImageryProvider)
@@ -175,7 +175,7 @@ define([
                 var imageryProvider;
                 var externalType = endpoint.externalType;
                 if (!defined(externalType)) {
-                    imageryProvider = createTileMapServiceImageryProvider({
+                    imageryProvider = new TileMapServiceImageryProvider({
                         url: new IonResource(endpoint, endpointResource)
                     });
                 } else {

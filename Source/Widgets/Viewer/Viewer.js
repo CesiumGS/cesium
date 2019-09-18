@@ -325,7 +325,7 @@ define([
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
-     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider({
+     *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
      *         url : 'https://a.tile.openstreetmap.org/'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
