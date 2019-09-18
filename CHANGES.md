@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.62 - 2019-10-01
+
+##### Fixes :wrench:
+* `Camera.flyTo` flies to the correct location in 2D when the destination crosses the international date line [#7909](https://github.com/AnalyticalGraphicsInc/cesium/pull/7909)
+
 ### 1.61 - 2019-09-03
 
 ##### Additions :tada:
