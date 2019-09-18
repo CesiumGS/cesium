@@ -225,10 +225,12 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Alexander Popiak](https://github.com/apopiak)
 * [Trubie Turner](https://github.com/flexei)
 * [Merijn Wijngaard](https://github.com/mwijngaard)
+* [Michael Hayes](https://github.com/michaelhayes-dev)
 * [Dennis Adams](https://github.com/dennisadams)
 * [Hai Zhou](https://github.com/verybigzhouhai)
 * [Pascal Poulain](https://github.com/ppoulainpro)
 * [Abu Darda](https://github.com/abuDarda97)
 * [jony89](https://github.com/jony89)
 * [TJKoury](https://github.com/tjkoury)
+* [Qiming Zhang](https://github.com/bbbbx)
 
