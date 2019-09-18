@@ -1,4 +1,5 @@
 define([
+        'Scene/TileMapServiceImageryProvider',
         'Core/Cartesian2',
         'Core/Cartographic',
         'Core/GeographicProjection',
@@ -10,7 +11,6 @@ define([
         'Core/Resource',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
-        'Scene/createTileMapServiceImageryProvider',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryState',
@@ -18,6 +18,7 @@ define([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
+        TileMapServiceImageryProvider,
         Cartesian2,
         Cartographic,
         GeographicProjection,
@@ -29,7 +30,6 @@ define([
         Resource,
         WebMercatorProjection,
         WebMercatorTilingScheme,
-        createTileMapServiceImageryProvider,
         Imagery,
         ImageryLayer,
         ImageryState,
@@ -38,7 +38,7 @@ define([
         when) {
         'use strict';
 
-describe('Scene/createTileMapServiceImageryProvider', function() {
+describe('Scene/TileMapServiceImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -50,14 +50,14 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
     });
 
     it('return a UrlTemplateImageryProvider', function() {
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
         });
         expect(provider).toBeInstanceOf(UrlTemplateImageryProvider);
     });
 
     it('resolves readyPromise', function() {
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
         });
 
@@ -68,7 +68,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
     });
 
     it('resolves readyPromise when promise url is used', function() {
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : when.resolve('made/up/tms/server/')
         });
 
@@ -83,7 +83,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             url : 'made/up/tms/server/'
         });
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : resource
         });
 
@@ -95,7 +95,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
 
     it('rejects readyPromise if options.url rejects', function() {
         var error = new Error();
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : when.reject(error)
         });
         return provider.readyPromise.then(function() {
@@ -130,7 +130,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             }, 1);
         };
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -165,7 +165,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             }, 1);
         };
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -179,14 +179,14 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
 
     it('requires the url to be specified', function() {
         function createWithoutUrl() {
-            return createTileMapServiceImageryProvider({});
+            return new TileMapServiceImageryProvider({});
         }
 
         expect(createWithoutUrl).toThrowDeveloperError();
     });
 
     it('returns valid value for hasAlphaChannel', function() {
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
         });
 
@@ -199,7 +199,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
 
     it('supports a slash at the end of the URL', function() {
         var baseUrl = 'made/up/tms/server/';
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : baseUrl
         });
 
@@ -221,7 +221,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
     });
 
     it('supports no slash at the endof the URL', function() {
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'http://made/up/tms/server'
         });
 
@@ -244,7 +244,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
 
     it('supports a query string at the end of the URL', function() {
         var baseUrl = 'made/up/tms/server/';
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : baseUrl + '?a=some&b=query'
         });
 
@@ -266,7 +266,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
     });
 
     it('requestImage returns a promise for an image and loads it for cross-origin use', function() {
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server/'
         });
 
@@ -293,7 +293,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
     });
 
     it('when no credit is supplied, the provider has no logo', function() {
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
         return pollToPromise(function() {
@@ -304,7 +304,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
     });
 
     it('turns the supplied credit into a logo', function() {
-        var providerWithCredit = createTileMapServiceImageryProvider({
+        var providerWithCredit = new TileMapServiceImageryProvider({
             url : 'made/up/gms/server',
             credit : 'Thanks to our awesome made up source of this imagery!'
         });
@@ -323,7 +323,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             deferred.reject(); //since the TMS server doesn't exist (and doesn't need too) we can just reject here.
         });
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'http://server.invalid?query=1'
         });
 
@@ -335,7 +335,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
 
     it('rectangle passed to constructor does not affect tile numbering', function() {
         var rectangle = new Rectangle(0.1, 0.2, 0.3, 0.4);
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server',
             rectangle : rectangle
         });
@@ -368,7 +368,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
     });
 
     it('uses maximumLevel passed to constructor', function() {
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server',
             maximumLevel : 5
         });
@@ -381,7 +381,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
     });
 
     it('raises error event when image cannot be loaded', function() {
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -448,7 +448,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             deferred.resolve(xml);
         };
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -486,7 +486,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             deferred.resolve(xml);
         };
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -518,7 +518,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             deferred.resolve(xml);
         };
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -550,7 +550,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             deferred.resolve(xml);
         };
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -582,7 +582,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             deferred.resolve(xml);
         };
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -623,7 +623,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             deferred.resolve(xml);
         };
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
@@ -663,7 +663,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             deferred.resolve(xml);
         };
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server',
             flipXY : true
         });
@@ -704,7 +704,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             deferred.resolve(xml);
         };
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server',
             flipXY : true
         });
@@ -749,7 +749,7 @@ describe('Scene/createTileMapServiceImageryProvider', function() {
             }, 1);
         };
 
-        var provider = createTileMapServiceImageryProvider({
+        var provider = new TileMapServiceImageryProvider({
             url : 'made/up/tms/server'
         });
 
