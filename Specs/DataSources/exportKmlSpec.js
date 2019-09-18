@@ -1,5 +1,4 @@
 define([
-        'DataSources/exportKml',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -17,6 +16,7 @@ define([
         'DataSources/ColorMaterialProperty',
         'DataSources/Entity',
         'DataSources/EntityCollection',
+        'DataSources/exportKml',
         'DataSources/ImageMaterialProperty',
         'DataSources/PolylineOutlineMaterialProperty',
         'DataSources/SampledPositionProperty',
@@ -25,7 +25,6 @@ define([
         'Scene/VerticalOrigin',
         'ThirdParty/when'
     ], function(
-        exportKml,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -43,6 +42,7 @@ define([
         ColorMaterialProperty,
         Entity,
         EntityCollection,
+        exportKml,
         ImageMaterialProperty,
         PolylineOutlineMaterialProperty,
         SampledPositionProperty,

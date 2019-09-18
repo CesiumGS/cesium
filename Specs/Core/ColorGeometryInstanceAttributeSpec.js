@@ -1,10 +1,10 @@
 define([
-        'Core/ColorGeometryInstanceAttribute',
         'Core/Color',
+        'Core/ColorGeometryInstanceAttribute',
         'Core/ComponentDatatype'
     ], function(
-        ColorGeometryInstanceAttribute,
         Color,
+        ColorGeometryInstanceAttribute,
         ComponentDatatype) {
         'use strict';
 

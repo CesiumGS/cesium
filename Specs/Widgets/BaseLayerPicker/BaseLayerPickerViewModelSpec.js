@@ -1,12 +1,12 @@
 define([
-        'Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         'Core/EllipsoidTerrainProvider',
         'Scene/ImageryLayerCollection',
+        'Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         'Widgets/BaseLayerPicker/ProviderViewModel'
     ], function(
-        BaseLayerPickerViewModel,
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
+        BaseLayerPickerViewModel,
         ProviderViewModel) {
         'use strict';
 

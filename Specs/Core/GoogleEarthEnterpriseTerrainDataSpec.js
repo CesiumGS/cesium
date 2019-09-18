@@ -1,20 +1,20 @@
 define([
-        'Core/GoogleEarthEnterpriseTerrainData',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
+        'Core/GoogleEarthEnterpriseTerrainData',
         'Core/Math',
         'Core/Rectangle',
         'Core/TerrainData',
         'Core/TerrainMesh',
         'ThirdParty/when'
     ], function(
-        GoogleEarthEnterpriseTerrainData,
         Cartesian3,
         Cartographic,
         Ellipsoid,
         GeographicTilingScheme,
+        GoogleEarthEnterpriseTerrainData,
         CesiumMath,
         Rectangle,
         TerrainData,

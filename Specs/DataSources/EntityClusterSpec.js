@@ -1,5 +1,4 @@
 define([
-        'DataSources/EntityCluster',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/defineProperties',
@@ -9,11 +8,11 @@ define([
         'DataSources/CustomDataSource',
         'DataSources/DataSourceDisplay',
         'DataSources/Entity',
+        'DataSources/EntityCluster',
         'Scene/SceneTransforms',
         'Specs/createCanvas',
         'Specs/createScene'
     ], function(
-        EntityCluster,
         Cartesian2,
         Cartesian3,
         defineProperties,
@@ -23,6 +22,7 @@ define([
         CustomDataSource,
         DataSourceDisplay,
         Entity,
+        EntityCluster,
         SceneTransforms,
         createCanvas,
         createScene) {

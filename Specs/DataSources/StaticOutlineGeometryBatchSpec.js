@@ -1,5 +1,4 @@
 define([
-        'DataSources/StaticOutlineGeometryBatch',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
@@ -10,12 +9,12 @@ define([
         'DataSources/CallbackProperty',
         'DataSources/EllipseGeometryUpdater',
         'DataSources/Entity',
+        'DataSources/StaticOutlineGeometryBatch',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/ShadowMode',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        StaticOutlineGeometryBatch,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
@@ -26,6 +25,7 @@ define([
         CallbackProperty,
         EllipseGeometryUpdater,
         Entity,
+        StaticOutlineGeometryBatch,
         TimeIntervalCollectionProperty,
         ShadowMode,
         createScene,

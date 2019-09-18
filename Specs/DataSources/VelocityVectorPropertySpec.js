@@ -1,5 +1,4 @@
 define([
-        'DataSources/VelocityVectorProperty',
         'Core/Cartesian3',
         'Core/Event',
         'Core/ExtrapolationType',
@@ -7,9 +6,9 @@ define([
         'Core/Math',
         'DataSources/CallbackProperty',
         'DataSources/ConstantPositionProperty',
-        'DataSources/SampledPositionProperty'
+        'DataSources/SampledPositionProperty',
+        'DataSources/VelocityVectorProperty'
     ], function(
-        VelocityVectorProperty,
         Cartesian3,
         Event,
         ExtrapolationType,
@@ -17,7 +16,8 @@ define([
         CesiumMath,
         CallbackProperty,
         ConstantPositionProperty,
-        SampledPositionProperty) {
+        SampledPositionProperty,
+        VelocityVectorProperty) {
         'use strict';
 
 describe('DataSources/VelocityVectorProperty', function() {

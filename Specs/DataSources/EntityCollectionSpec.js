@@ -1,17 +1,17 @@
 define([
-        'DataSources/EntityCollection',
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DataSources/Entity'
+        'DataSources/Entity',
+        'DataSources/EntityCollection'
     ], function(
-        EntityCollection,
         Iso8601,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
-        Entity) {
+        Entity,
+        EntityCollection) {
         'use strict';
 
 describe('DataSources/EntityCollection', function() {

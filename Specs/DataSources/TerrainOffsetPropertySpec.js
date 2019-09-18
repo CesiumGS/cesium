@@ -1,23 +1,17 @@
 define([
-        'DataSources/TerrainOffsetProperty',
         'Core/Cartesian3',
-        'Core/Event',
         'Core/JulianDate',
-        'Core/Rectangle',
         'DataSources/CallbackProperty',
         'DataSources/ConstantProperty',
-        'Scene/HeightReference',
+        'DataSources/TerrainOffsetProperty',
         'Specs/createGlobe',
         'Specs/createScene'
     ], function(
-        TerrainOffsetProperty,
         Cartesian3,
-        Event,
         JulianDate,
-        Rectangle,
         CallbackProperty,
         ConstantProperty,
-        HeightReference,
+        TerrainOffsetProperty,
         createGlobe,
         createScene) {
         'use strict';

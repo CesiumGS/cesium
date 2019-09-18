@@ -1,16 +1,16 @@
 define([
-        'Scene/Sun',
         'Core/BoundingSphere',
         'Core/Color',
         'Core/Math',
         'Scene/SceneMode',
+        'Scene/Sun',
         'Specs/createScene'
     ], function(
-        Sun,
         BoundingSphere,
         Color,
         CesiumMath,
         SceneMode,
+        Sun,
         createScene) {
         'use strict';
 

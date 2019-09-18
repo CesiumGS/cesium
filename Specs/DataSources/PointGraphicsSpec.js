@@ -1,16 +1,16 @@
 define([
-        'DataSources/PointGraphics',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/NearFarScalar',
         'DataSources/ConstantProperty',
+        'DataSources/PointGraphics',
         'Scene/HeightReference'
     ], function(
-        PointGraphics,
         Color,
         DistanceDisplayCondition,
         NearFarScalar,
         ConstantProperty,
+        PointGraphics,
         HeightReference) {
         'use strict';
 

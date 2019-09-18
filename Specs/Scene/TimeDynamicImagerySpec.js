@@ -1,5 +1,4 @@
 define([
-        'Scene/TimeDynamicImagery',
         'Core/Clock',
         'Core/ClockStep',
         'Core/JulianDate',
@@ -7,9 +6,9 @@ define([
         'Core/RequestScheduler',
         'Core/RequestType',
         'Core/TimeIntervalCollection',
+        'Scene/TimeDynamicImagery',
         'ThirdParty/when'
     ], function(
-        TimeDynamicImagery,
         Clock,
         ClockStep,
         JulianDate,
@@ -17,6 +16,7 @@ define([
         RequestScheduler,
         RequestType,
         TimeIntervalCollection,
+        TimeDynamicImagery,
         when) {
         'use strict';
 

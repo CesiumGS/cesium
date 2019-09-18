@@ -1,19 +1,19 @@
 define([
-        'DataSources/NodeTransformationProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/Quaternion',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/NodeTransformationProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Specs/testDefinitionChanged'
     ], function(
-        NodeTransformationProperty,
         Cartesian3,
         JulianDate,
         Quaternion,
         TimeInterval,
         ConstantProperty,
+        NodeTransformationProperty,
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {
         'use strict';

@@ -1,18 +1,18 @@
 define([
-        'DataSources/KmlTour',
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
         'Core/Math',
         'DataSources/KmlLookAt',
+        'DataSources/KmlTour',
         'DataSources/KmlTourFlyTo',
         'DataSources/KmlTourWait',
         'Specs/pollToPromise'
     ], function(
-        KmlTour,
         Cartesian3,
         HeadingPitchRange,
         CesiumMath,
         KmlLookAt,
+        KmlTour,
         KmlTourFlyTo,
         KmlTourWait,
         pollToPromise) {

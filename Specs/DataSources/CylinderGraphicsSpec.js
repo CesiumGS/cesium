@@ -1,18 +1,18 @@
 define([
-        'DataSources/CylinderGraphics',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/CylinderGraphics',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        CylinderGraphics,
         Color,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        CylinderGraphics,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {

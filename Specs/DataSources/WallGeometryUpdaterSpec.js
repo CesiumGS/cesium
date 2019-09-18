@@ -1,5 +1,4 @@
 define([
-        'DataSources/WallGeometryUpdater',
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
@@ -11,6 +10,7 @@ define([
         'DataSources/SampledPositionProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty',
+        'DataSources/WallGeometryUpdater',
         'DataSources/WallGraphics',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
@@ -18,7 +18,6 @@ define([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        WallGeometryUpdater,
         Cartesian3,
         Color,
         JulianDate,
@@ -30,6 +29,7 @@ define([
         SampledPositionProperty,
         SampledProperty,
         TimeIntervalCollectionProperty,
+        WallGeometryUpdater,
         WallGraphics,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,

@@ -1,13 +1,13 @@
 define([
-        'Widgets/HomeButton/HomeButtonViewModel',
         'Core/Ellipsoid',
         'Scene/Globe',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/HomeButton/HomeButtonViewModel'
     ], function(
-        HomeButtonViewModel,
         Ellipsoid,
         Globe,
-        createScene) {
+        createScene,
+        HomeButtonViewModel) {
         'use strict';
 
 describe('Widgets/HomeButton/HomeButtonViewModel', function() {

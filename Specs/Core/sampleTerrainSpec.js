@@ -1,13 +1,13 @@
 define([
-        'Core/sampleTerrain',
         'Core/Cartographic',
         'Core/CesiumTerrainProvider',
-        'Core/createWorldTerrain'
+        'Core/createWorldTerrain',
+        'Core/sampleTerrain'
     ], function(
-        sampleTerrain,
         Cartographic,
         CesiumTerrainProvider,
-        createWorldTerrain) {
+        createWorldTerrain,
+        sampleTerrain) {
         'use strict';
 
 describe('Core/sampleTerrain', function() {

@@ -1,5 +1,4 @@
 define([
-        'Scene/ClassificationPrimitive',
         'Core/BoxGeometry',
         'Core/Cartesian3',
         'Core/Color',
@@ -14,17 +13,16 @@ define([
         'Core/Transforms',
         'Renderer/Pass',
         'Renderer/RenderState',
+        'Scene/ClassificationPrimitive',
         'Scene/ClassificationType',
         'Scene/InvertClassification',
         'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
-        'Scene/ShadowVolumeAppearance',
         'Scene/StencilConstants',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        ClassificationPrimitive,
         BoxGeometry,
         Cartesian3,
         Color,
@@ -39,12 +37,12 @@ define([
         Transforms,
         Pass,
         RenderState,
+        ClassificationPrimitive,
         ClassificationType,
         InvertClassification,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
-        ShadowVolumeAppearance,
         StencilConstants,
         createScene,
         pollToPromise) {

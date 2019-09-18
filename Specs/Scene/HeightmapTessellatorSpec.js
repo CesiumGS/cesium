@@ -1,16 +1,16 @@
 define([
-        'Core/HeightmapTessellator',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/HeightmapTessellator',
         'Core/Math',
         'Core/Rectangle',
         'Core/WebMercatorProjection'
     ], function(
-        HeightmapTessellator,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
+        HeightmapTessellator,
         CesiumMath,
         Rectangle,
         WebMercatorProjection) {

@@ -2392,12 +2392,20 @@ define([
     var viewRectangle2DSouthWest = new Cartesian3();
     function rectangleCameraPosition2D(camera, rectangle, result) {
         var projection = camera._projection;
+
+        // Account for the rectangle crossing the International Date Line in 2D mode
+        var east = rectangle.east;
         if (rectangle.west > rectangle.east) {
-            rectangle = Rectangle.MAX_VALUE;
+            if(camera._scene.mapMode2D === MapMode2D.INFINITE_SCROLL) {
+                east += CesiumMath.TWO_PI;
+            } else {
+                rectangle = Rectangle.MAX_VALUE;
+                east = rectangle.east;
+            }
         }
 
         var cart = viewRectangle2DCartographic;
-        cart.longitude = rectangle.east;
+        cart.longitude = east;
         cart.latitude = rectangle.north;
         var northEast = projection.project(cart, viewRectangle2DNorthEast);
         cart.longitude = rectangle.west;

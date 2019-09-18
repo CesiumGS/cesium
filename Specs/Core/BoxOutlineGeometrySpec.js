@@ -1,14 +1,14 @@
 define([
-        'Core/BoxOutlineGeometry',
         'Core/arrayFill',
         'Core/AxisAlignedBoundingBox',
+        'Core/BoxOutlineGeometry',
         'Core/Cartesian3',
         'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
-        BoxOutlineGeometry,
         arrayFill,
         AxisAlignedBoundingBox,
+        BoxOutlineGeometry,
         Cartesian3,
         GeometryOffsetAttribute,
         createPackableSpecs) {

@@ -1,5 +1,4 @@
 define([
-        'Renderer/CubeMap',
         'Core/Cartesian3',
         'Core/Color',
         'Core/defined',
@@ -7,6 +6,7 @@ define([
         'Core/Resource',
         'Renderer/ClearCommand',
         'Renderer/ContextLimits',
+        'Renderer/CubeMap',
         'Renderer/PixelDatatype',
         'Renderer/Sampler',
         'Renderer/Texture',
@@ -16,7 +16,6 @@ define([
         'Specs/createContext',
         'ThirdParty/when'
     ], function(
-        CubeMap,
         Cartesian3,
         Color,
         defined,
@@ -24,6 +23,7 @@ define([
         Resource,
         ClearCommand,
         ContextLimits,
+        CubeMap,
         PixelDatatype,
         Sampler,
         Texture,

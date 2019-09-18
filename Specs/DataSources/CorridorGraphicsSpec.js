@@ -1,21 +1,21 @@
 define([
-        'DataSources/CorridorGraphics',
         'Core/Color',
         'Core/CornerType',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/CorridorGraphics',
         'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        CorridorGraphics,
         Color,
         CornerType,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        CorridorGraphics,
         ClassificationType,
         ShadowMode,
         testDefinitionChanged,

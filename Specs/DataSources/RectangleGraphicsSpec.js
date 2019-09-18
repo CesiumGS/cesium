@@ -1,21 +1,21 @@
 define([
-        'DataSources/RectangleGraphics',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/Rectangle',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/RectangleGraphics',
         'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        RectangleGraphics,
         Color,
         DistanceDisplayCondition,
         Rectangle,
         ColorMaterialProperty,
         ConstantProperty,
+        RectangleGraphics,
         ClassificationType,
         ShadowMode,
         testDefinitionChanged,

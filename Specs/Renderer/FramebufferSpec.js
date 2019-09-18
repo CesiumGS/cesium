@@ -1,5 +1,4 @@
 define([
-        'Renderer/Framebuffer',
         'Core/Color',
         'Core/PixelFormat',
         'Core/PrimitiveType',
@@ -10,6 +9,7 @@ define([
         'Renderer/ContextLimits',
         'Renderer/CubeMap',
         'Renderer/DrawCommand',
+        'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
         'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
@@ -19,7 +19,6 @@ define([
         'Renderer/VertexArray',
         'Specs/createContext'
     ], function(
-        Framebuffer,
         Color,
         PixelFormat,
         PrimitiveType,
@@ -30,6 +29,7 @@ define([
         ContextLimits,
         CubeMap,
         DrawCommand,
+        Framebuffer,
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,

@@ -1,11 +1,11 @@
 define([
-        'Core/RequestScheduler',
         'Core/Request',
+        'Core/RequestScheduler',
         'Core/RequestState',
         'ThirdParty/when'
     ], function(
-        RequestScheduler,
         Request,
+        RequestScheduler,
         RequestState,
         when) {
         'use strict';

@@ -1,18 +1,18 @@
 define([
-        'DataSources/WallGraphics',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/WallGraphics',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        WallGraphics,
         Color,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        WallGraphics,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {

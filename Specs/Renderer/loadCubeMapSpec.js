@@ -1,20 +1,20 @@
 define([
-        'Renderer/loadCubeMap',
         'Core/Cartesian3',
         'Core/PrimitiveType',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/loadCubeMap',
         'Renderer/ShaderProgram',
         'Renderer/VertexArray',
         'Specs/createContext'
     ], function(
-        loadCubeMap,
         Cartesian3,
         PrimitiveType,
         Buffer,
         BufferUsage,
         DrawCommand,
+        loadCubeMap,
         ShaderProgram,
         VertexArray,
         createContext) {

@@ -1,5 +1,4 @@
 define([
-        'DataSources/BillboardVisualizer',
         'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -10,6 +9,7 @@ define([
         'Core/JulianDate',
         'Core/NearFarScalar',
         'DataSources/BillboardGraphics',
+        'DataSources/BillboardVisualizer',
         'DataSources/BoundingSphereState',
         'DataSources/ConstantProperty',
         'DataSources/EntityCluster',
@@ -21,7 +21,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        BillboardVisualizer,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -32,6 +31,7 @@ define([
         JulianDate,
         NearFarScalar,
         BillboardGraphics,
+        BillboardVisualizer,
         BoundingSphereState,
         ConstantProperty,
         EntityCluster,

@@ -1,14 +1,14 @@
 define([
-        'Core/TileAvailability',
         'Core/Cartographic',
         'Core/GeographicTilingScheme',
         'Core/Rectangle',
+        'Core/TileAvailability',
         'Core/WebMercatorTilingScheme'
     ], function(
-        TileAvailability,
         Cartographic,
         GeographicTilingScheme,
         Rectangle,
+        TileAvailability,
         WebMercatorTilingScheme) {
         'use strict';
 

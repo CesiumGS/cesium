@@ -1,11 +1,11 @@
 define([
-        'Widgets/VRButton/VRButtonViewModel',
         'Core/Fullscreen',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/VRButton/VRButtonViewModel'
     ], function(
-        VRButtonViewModel,
         Fullscreen,
-        createScene) {
+        createScene,
+        VRButtonViewModel) {
         'use strict';
 
 describe('Widgets/VRButton/VRButtonViewModel', function() {

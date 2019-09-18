@@ -1,5 +1,4 @@
 define([
-        'Scene/Scene',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -36,6 +35,7 @@ define([
         'Scene/Material',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
+        'Scene/Scene',
         'Scene/SceneTransforms',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
@@ -44,7 +44,6 @@ define([
         'Specs/pollToPromise',
         'Specs/render'
     ], function(
-        Scene,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -81,6 +80,7 @@ define([
         Material,
         Primitive,
         PrimitiveCollection,
+        Scene,
         SceneTransforms,
         ScreenSpaceCameraController,
         TweenCollection,

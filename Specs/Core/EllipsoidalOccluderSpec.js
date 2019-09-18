@@ -1,17 +1,17 @@
 define([
-        'Core/EllipsoidalOccluder',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/EllipsoidalOccluder',
         'Core/IntersectionTests',
         'Core/Math',
         'Core/Ray',
         'Core/Rectangle'
     ], function(
-        EllipsoidalOccluder,
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
+        EllipsoidalOccluder,
         IntersectionTests,
         CesiumMath,
         Ray,

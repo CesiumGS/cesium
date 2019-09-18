@@ -1,12 +1,12 @@
 define([
-        'Core/JulianDate',
         'Core/Iso8601',
+        'Core/JulianDate',
         'Core/Math',
         'Core/TimeConstants',
         'Core/TimeStandard'
     ], function(
-        JulianDate,
         Iso8601,
+        JulianDate,
         CesiumMath,
         TimeConstants,
         TimeStandard) {

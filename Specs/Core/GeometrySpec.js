@@ -1,20 +1,20 @@
 define([
-        'Core/Geometry',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/ComponentDatatype',
         'Core/Ellipsoid',
+        'Core/Geometry',
         'Core/GeometryAttribute',
         'Core/GeometryType',
         'Core/Math',
         'Core/PrimitiveType',
         'Core/Rectangle'
     ], function(
-        Geometry,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
         Ellipsoid,
+        Geometry,
         GeometryAttribute,
         GeometryType,
         CesiumMath,

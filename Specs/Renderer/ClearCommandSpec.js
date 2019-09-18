@@ -1,9 +1,9 @@
 define([
-        'Renderer/ClearCommand',
-        'Core/Color'
+        'Core/Color',
+        'Renderer/ClearCommand'
     ], function(
-        ClearCommand,
-        Color) {
+        Color,
+        ClearCommand) {
         'use strict';
 
 describe('Renderer/ClearCommand', function() {

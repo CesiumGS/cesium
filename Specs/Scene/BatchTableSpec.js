@@ -1,18 +1,18 @@
 define([
-        'Scene/BatchTable',
         'Core/Cartesian4',
         'Core/ComponentDatatype',
         'Core/Math',
         'Renderer/PixelDatatype',
         'Renderer/Texture',
+        'Scene/BatchTable',
         'Specs/createScene'
     ], function(
-        BatchTable,
         Cartesian4,
         ComponentDatatype,
         CesiumMath,
         PixelDatatype,
         Texture,
+        BatchTable,
         createScene) {
         'use strict';
 

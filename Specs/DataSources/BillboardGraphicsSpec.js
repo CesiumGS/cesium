@@ -1,21 +1,21 @@
 define([
-        'DataSources/BillboardGraphics',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/NearFarScalar',
+        'DataSources/BillboardGraphics',
         'DataSources/ConstantProperty',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/VerticalOrigin'
     ], function(
-        BillboardGraphics,
         Cartesian2,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
         NearFarScalar,
+        BillboardGraphics,
         ConstantProperty,
         HeightReference,
         HorizontalOrigin,

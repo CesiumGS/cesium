@@ -1,13 +1,13 @@
 define([
-        'Widgets/SelectionIndicator/SelectionIndicatorViewModel',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/SelectionIndicator/SelectionIndicatorViewModel'
     ], function(
-        SelectionIndicatorViewModel,
         Cartesian2,
         Cartesian3,
-        createScene) {
+        createScene,
+        SelectionIndicatorViewModel) {
         'use strict';
 
 describe('Widgets/SelectionIndicator/SelectionIndicatorViewModel', function() {

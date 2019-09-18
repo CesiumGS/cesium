@@ -1,11 +1,11 @@
 define([
-        'Core/Matrix2',
         'Core/Cartesian2',
-        'Core/Math'
+        'Core/Math',
+        'Core/Matrix2'
     ], function(
-        Matrix2,
         Cartesian2,
-        CesiumMath) {
+        CesiumMath,
+        Matrix2) {
         'use strict';
 
 describe('Core/Matrix2', function() {

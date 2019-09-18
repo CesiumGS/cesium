@@ -7,7 +7,6 @@ define([
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
         'Scene/Model',
-        'Scene/TileBoundingSphere',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], 'Scene/Instanced3DModel3DTileContent', function(
@@ -19,7 +18,6 @@ define([
         ClippingPlane,
         ClippingPlaneCollection,
         Model,
-        TileBoundingSphere,
         Cesium3DTilesTester,
         createScene) {
         'use strict';

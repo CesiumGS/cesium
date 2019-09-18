@@ -1,5 +1,4 @@
 define([
-        'Scene/Primitive',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian3',
@@ -26,6 +25,7 @@ define([
         'Scene/Camera',
         'Scene/MaterialAppearance',
         'Scene/PerInstanceColorAppearance',
+        'Scene/Primitive',
         'Scene/SceneMode',
         'Specs/BadGeometry',
         'Specs/createContext',
@@ -33,7 +33,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        Primitive,
         BoundingSphere,
         BoxGeometry,
         Cartesian3,
@@ -60,6 +59,7 @@ define([
         Camera,
         MaterialAppearance,
         PerInstanceColorAppearance,
+        Primitive,
         SceneMode,
         BadGeometry,
         createContext,

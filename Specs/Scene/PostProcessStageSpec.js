@@ -1,5 +1,4 @@
 define([
-        'Scene/PostProcessStage',
         'Core/BoundingRectangle',
         'Core/Cartesian3',
         'Core/Color',
@@ -10,12 +9,12 @@ define([
         'Core/Transforms',
         'Renderer/PixelDatatype',
         'Scene/Model',
+        'Scene/PostProcessStage',
         'Scene/PostProcessStageSampleMode',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        PostProcessStage,
         BoundingRectangle,
         Cartesian3,
         Color,
@@ -26,6 +25,7 @@ define([
         Transforms,
         PixelDatatype,
         Model,
+        PostProcessStage,
         PostProcessStageSampleMode,
         createScene,
         pollToPromise,

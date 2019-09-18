@@ -1,16 +1,16 @@
 define([
-        'Scene/SkyAtmosphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
         'Scene/SceneMode',
+        'Scene/SkyAtmosphere',
         'Specs/createScene'
     ], function(
-        SkyAtmosphere,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
         SceneMode,
+        SkyAtmosphere,
         createScene) {
         'use strict';
 

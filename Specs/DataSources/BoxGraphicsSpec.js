@@ -1,18 +1,18 @@
 define([
-        'DataSources/BoxGraphics',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
+        'DataSources/BoxGraphics',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        BoxGraphics,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
+        BoxGraphics,
         ColorMaterialProperty,
         ConstantProperty,
         ShadowMode,

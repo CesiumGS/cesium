@@ -1,11 +1,11 @@
 define([
-        'Core/CylinderOutlineGeometry',
         'Core/arrayFill',
+        'Core/CylinderOutlineGeometry',
         'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
-        CylinderOutlineGeometry,
         arrayFill,
+        CylinderOutlineGeometry,
         GeometryOffsetAttribute,
         createPackableSpecs) {
         'use strict';

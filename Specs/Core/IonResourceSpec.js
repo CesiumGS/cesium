@@ -1,13 +1,13 @@
 define([
-        'Core/IonResource',
         'Core/Ion',
+        'Core/IonResource',
         'Core/RequestErrorEvent',
         'Core/Resource',
         'Core/RuntimeError',
         'ThirdParty/when'
     ], function(
-        IonResource,
         Ion,
+        IonResource,
         RequestErrorEvent,
         Resource,
         RuntimeError,
