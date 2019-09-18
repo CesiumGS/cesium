@@ -86,7 +86,7 @@ define([
      * });
      */
     function TileMapServiceImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
