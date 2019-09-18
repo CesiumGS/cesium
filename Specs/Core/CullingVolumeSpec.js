@@ -1,18 +1,20 @@
-defineSuite([
-        'Core/CullingVolume',
+define([
         'Core/AxisAlignedBoundingBox',
         'Core/BoundingSphere',
         'Core/Cartesian3',
+        'Core/CullingVolume',
         'Core/Intersect',
         'Core/PerspectiveFrustum'
     ], function(
-        CullingVolume,
         AxisAlignedBoundingBox,
         BoundingSphere,
         Cartesian3,
+        CullingVolume,
         Intersect,
         PerspectiveFrustum) {
-    'use strict';
+        'use strict';
+
+describe('Core/CullingVolume', function() {
 
     var cullingVolume;
 
@@ -402,4 +404,5 @@ defineSuite([
             });
         });
     });
+});
 });

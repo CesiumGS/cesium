@@ -1,8 +1,8 @@
 define([
-        '../Core/defaultValue',
         '../Core/AssociativeArray',
         '../Core/Color',
         '../Core/ColorGeometryInstanceAttribute',
+        '../Core/defaultValue',
         '../Core/defined',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
@@ -15,10 +15,10 @@ define([
         './MaterialProperty',
         './Property'
     ], function(
-        defaultValue,
         AssociativeArray,
         Color,
         ColorGeometryInstanceAttribute,
+        defaultValue,
         defined,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,

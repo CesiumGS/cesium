@@ -1,11 +1,10 @@
-defineSuite([
-        'Core/GoogleEarthEnterpriseTerrainProvider',
-        'Core/DefaultProxy',
+define([
         'Core/defaultValue',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/GoogleEarthEnterpriseMetadata',
         'Core/GoogleEarthEnterpriseTerrainData',
+        'Core/GoogleEarthEnterpriseTerrainProvider',
         'Core/GoogleEarthEnterpriseTileInformation',
         'Core/Math',
         'Core/Request',
@@ -15,13 +14,12 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        GoogleEarthEnterpriseTerrainProvider,
-        DefaultProxy,
         defaultValue,
         Ellipsoid,
         GeographicTilingScheme,
         GoogleEarthEnterpriseMetadata,
         GoogleEarthEnterpriseTerrainData,
+        GoogleEarthEnterpriseTerrainProvider,
         GoogleEarthEnterpriseTileInformation,
         CesiumMath,
         Request,
@@ -30,7 +28,9 @@ defineSuite([
         TerrainProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/GoogleEarthEnterpriseTerrainProvider', function() {
 
     function installMockGetQuadTreePacket() {
         spyOn(GoogleEarthEnterpriseMetadata.prototype, 'getQuadTreePacket').and.callFake(function(quadKey, version) {
@@ -364,4 +364,5 @@ defineSuite([
             });
         });
     });
+});
 });

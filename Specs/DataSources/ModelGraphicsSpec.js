@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/ModelGraphics',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
@@ -7,6 +6,7 @@ defineSuite([
         'Core/JulianDate',
         'Core/Quaternion',
         'DataSources/ConstantProperty',
+        'DataSources/ModelGraphics',
         'DataSources/NodeTransformationProperty',
         'DataSources/PropertyBag',
         'Scene/ClippingPlaneCollection',
@@ -14,7 +14,6 @@ defineSuite([
         'Scene/HeightReference',
         'Scene/ShadowMode'
     ], function(
-        ModelGraphics,
         Cartesian2,
         Cartesian3,
         Color,
@@ -22,13 +21,16 @@ defineSuite([
         JulianDate,
         Quaternion,
         ConstantProperty,
+        ModelGraphics,
         NodeTransformationProperty,
         PropertyBag,
         ClippingPlaneCollection,
         ColorBlendMode,
         HeightReference,
         ShadowMode) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/ModelGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -350,4 +352,5 @@ defineSuite([
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

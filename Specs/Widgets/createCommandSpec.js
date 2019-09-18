@@ -1,12 +1,14 @@
-defineSuite([
-        'Widgets/createCommand',
+define([
         'Specs/getArguments',
-        'ThirdParty/knockout'
+        'ThirdParty/knockout',
+        'Widgets/createCommand'
     ], function(
-        createCommand,
         getArguments,
-        knockout) {
-    'use strict';
+        knockout,
+        createCommand) {
+        'use strict';
+
+describe('Widgets/createCommand', function() {
 
     var spyFunction;
     var spyFunctionReturnValue = 5;
@@ -92,4 +94,5 @@ defineSuite([
         expect(beforeExecuteSpy.calls.count()).toEqual(1);
         expect(afterExecuteSpy).not.toHaveBeenCalled();
     });
+});
 });

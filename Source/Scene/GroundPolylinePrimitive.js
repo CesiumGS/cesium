@@ -10,15 +10,15 @@ define([
         '../Core/GeometryInstanceAttribute',
         '../Core/GroundPolylineGeometry',
         '../Core/isArray',
-        '../Shaders/PolylineShadowVolumeVS',
-        '../Shaders/PolylineShadowVolumeFS',
-        '../Shaders/PolylineShadowVolumeMorphVS',
-        '../Shaders/PolylineShadowVolumeMorphFS',
         '../Renderer/DrawCommand',
         '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
+        '../Shaders/PolylineShadowVolumeFS',
+        '../Shaders/PolylineShadowVolumeMorphFS',
+        '../Shaders/PolylineShadowVolumeMorphVS',
+        '../Shaders/PolylineShadowVolumeVS',
         '../ThirdParty/when',
         './BlendingState',
         './ClassificationType',
@@ -42,15 +42,15 @@ define([
         GeometryInstanceAttribute,
         GroundPolylineGeometry,
         isArray,
-        PolylineShadowVolumeVS,
-        PolylineShadowVolumeFS,
-        PolylineShadowVolumeMorphVS,
-        PolylineShadowVolumeMorphFS,
         DrawCommand,
         Pass,
         RenderState,
         ShaderProgram,
         ShaderSource,
+        PolylineShadowVolumeFS,
+        PolylineShadowVolumeMorphFS,
+        PolylineShadowVolumeMorphVS,
+        PolylineShadowVolumeVS,
         when,
         BlendingState,
         ClassificationType,
@@ -101,9 +101,7 @@ define([
      *
      * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
      *   geometryInstances : instance,
-     *   appearance : new Cesium.PolylineMaterialAppearance({
-     *     material : Cesium.Material.fromType('Color')
-     *   })
+     *   appearance : new Cesium.PolylineMaterialAppearance()
      * }));
      *
      * // 2. Draw a looped polyline on terrain with per-instance color and a distance display condition.
@@ -122,14 +120,14 @@ define([
      *   }),
      *   attributes : {
      *      color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('green').withAlpha(0.7)),
-            distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(1000, 30000)
+     *      distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(1000, 30000)
      *   },
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });
      *
      * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
      *   geometryInstances : instance,
-     *   appearance : Cesium.PolylineColorAppearance()
+     *   appearance : new Cesium.PolylineColorAppearance()
      * }));
      */
     function GroundPolylinePrimitive(options) {

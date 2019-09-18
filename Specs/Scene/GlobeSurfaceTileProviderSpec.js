@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/GlobeSurfaceTileProvider',
+define([
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
@@ -19,6 +18,7 @@ defineSuite([
         'Scene/Fog',
         'Scene/Globe',
         'Scene/GlobeSurfaceShaderSet',
+        'Scene/GlobeSurfaceTileProvider',
         'Scene/ImageryLayerCollection',
         'Scene/ImagerySplitDirection',
         'Scene/Model',
@@ -30,7 +30,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        GlobeSurfaceTileProvider,
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
@@ -50,6 +49,7 @@ defineSuite([
         Fog,
         Globe,
         GlobeSurfaceShaderSet,
+        GlobeSurfaceTileProvider,
         ImageryLayerCollection,
         ImagerySplitDirection,
         Model,
@@ -60,7 +60,9 @@ defineSuite([
         WebMapServiceImageryProvider,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GlobeSurfaceTileProvider', function() {
 
     var scene;
 
@@ -1066,3 +1068,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,8 +1,6 @@
-defineSuite([
-        'Renderer/Texture',
+define([
         'Core/Cartesian2',
         'Core/Color',
-        'Core/FeatureDetection',
         'Core/loadKTX',
         'Core/PixelFormat',
         'Core/Resource',
@@ -10,16 +8,15 @@ defineSuite([
         'Renderer/ContextLimits',
         'Renderer/PixelDatatype',
         'Renderer/Sampler',
+        'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
         'Specs/createContext',
         'ThirdParty/when'
     ], function(
-        Texture,
         Cartesian2,
         Color,
-        FeatureDetection,
         loadKTX,
         PixelFormat,
         Resource,
@@ -27,12 +24,15 @@ defineSuite([
         ContextLimits,
         PixelDatatype,
         Sampler,
+        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
         createContext,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Texture', function() {
 
     var context;
     var greenImage;
@@ -1466,3 +1466,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

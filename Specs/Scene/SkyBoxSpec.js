@@ -1,14 +1,16 @@
-defineSuite([
-        'Scene/SkyBox',
+define([
         'Core/Resource',
         'Scene/SceneMode',
+        'Scene/SkyBox',
         'Specs/createScene'
     ], function(
-        SkyBox,
         Resource,
         SceneMode,
+        SkyBox,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/SkyBox', function() {
 
     var scene;
     var skyBox;
@@ -359,3 +361,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

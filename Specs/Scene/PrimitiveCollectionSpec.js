@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/PrimitiveCollection',
+define([
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
         'Core/defined',
@@ -10,10 +9,10 @@ defineSuite([
         'Scene/LabelCollection',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
+        'Scene/PrimitiveCollection',
         'Scene/VerticalOrigin',
         'Specs/createScene'
     ], function(
-        PrimitiveCollection,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
@@ -24,9 +23,12 @@ defineSuite([
         LabelCollection,
         PerInstanceColorAppearance,
         Primitive,
+        PrimitiveCollection,
         VerticalOrigin,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PrimitiveCollection', function() {
 
     var scene;
     var context;
@@ -624,3 +626,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

@@ -1,16 +1,18 @@
-defineSuite([
-        'Scene/DiscardMissingTileImagePolicy',
+define([
         'Core/Cartesian2',
         'Core/Resource',
+        'Scene/DiscardMissingTileImagePolicy',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        DiscardMissingTileImagePolicy,
         Cartesian2,
         Resource,
+        DiscardMissingTileImagePolicy,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/DiscardMissingTileImagePolicy', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {
@@ -162,4 +164,5 @@ defineSuite([
             }).toThrowDeveloperError();
         });
     });
+});
 });

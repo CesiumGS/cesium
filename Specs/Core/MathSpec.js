@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/Math'
     ], function(
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/Math', function() {
 
     it('sign of -2', function() {
         expect(CesiumMath.sign(-2)).toEqual(-1);
@@ -611,4 +613,5 @@ defineSuite([
             CesiumMath.fastApproximateAtan2(0, 0);
         }).toThrowDeveloperError();
     });
+});
 });

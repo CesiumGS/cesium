@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/PlaneGeometryUpdater',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/JulianDate',
@@ -8,6 +7,7 @@ defineSuite([
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
+        'DataSources/PlaneGeometryUpdater',
         'DataSources/PlaneGraphics',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
@@ -15,7 +15,6 @@ defineSuite([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        PlaneGeometryUpdater,
         Cartesian2,
         Cartesian3,
         JulianDate,
@@ -24,13 +23,16 @@ defineSuite([
         ConstantPositionProperty,
         ConstantProperty,
         Entity,
+        PlaneGeometryUpdater,
         PlaneGraphics,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PlaneGeometryUpdater', function() {
 
     var scene;
 
@@ -124,3 +126,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(PlaneGeometryUpdater, 'plane', createDynamicPlane, getScene);
 }, 'WebGL');
+});

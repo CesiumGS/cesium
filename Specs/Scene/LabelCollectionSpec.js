@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/LabelCollection',
+define([
         'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -14,12 +13,12 @@ defineSuite([
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/Label',
+        'Scene/LabelCollection',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
         'Specs/createGlobe',
         'Specs/createScene'
     ], function(
-        LabelCollection,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -34,11 +33,14 @@ defineSuite([
         HeightReference,
         HorizontalOrigin,
         Label,
+        LabelCollection,
         LabelStyle,
         VerticalOrigin,
         createGlobe,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/LabelCollection', function() {
 
     // TODO: rendering tests for pixel offset, eye offset, horizontal origin, vertical origin, font, style, outlineColor, outlineWidth, and fillColor properties
 
@@ -2406,3 +2408,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

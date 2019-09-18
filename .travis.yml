@@ -16,9 +16,8 @@ script:
   - npm --silent run eslint
 
   - npm --silent run build
-  - npm --silent run test -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
+  - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
-  - npm --silent run clean
   - travis_wait 20 npm --silent run makeZipFile -- --concurrency 1
   - npm pack &> /dev/null
 
@@ -27,7 +26,7 @@ script:
   - npm --silent run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
   - npm --silent run deploy-status -- --status success --message Deployed
 
-  - npm --silent run test -- --browsers FirefoxHeadless --failTaskOnError --webgl-stub --release --suppressPassed
+  - npm --silent run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
 
 # Various Node.js smoke-screen tests
   - node -e "const Cesium = require('./');"

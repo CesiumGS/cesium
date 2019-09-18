@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/Queue'
     ], function(
         Queue) {
-    'use strict';
+        'use strict';
+
+describe('Core/Queue', function() {
 
     var queue;
     beforeEach(function() {
@@ -93,4 +95,5 @@ defineSuite([
         expect(queue.dequeue()).toEqual(6);
         expect(queue.dequeue()).toEqual(53);
     });
+});
 });

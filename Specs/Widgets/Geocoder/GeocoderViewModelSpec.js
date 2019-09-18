@@ -1,18 +1,20 @@
-defineSuite([
-        'Widgets/Geocoder/GeocoderViewModel',
+define([
         'Core/Cartesian3',
         'Core/Rectangle',
         'Specs/createScene',
         'Specs/pollToPromise',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        'Widgets/Geocoder/GeocoderViewModel'
     ], function(
-        GeocoderViewModel,
         Cartesian3,
         Rectangle,
         createScene,
         pollToPromise,
-        when) {
-    'use strict';
+        when,
+        GeocoderViewModel) {
+        'use strict';
+
+describe('Widgets/Geocoder/GeocoderViewModel', function() {
 
     var scene;
     var mockDestination = new Cartesian3(1.0, 2.0, 3.0);
@@ -256,3 +258,4 @@ defineSuite([
         expect(viewModel._selectedSuggestion).toBeUndefined();
     });
 }, 'WebGL');
+});

@@ -251,5 +251,8 @@ define([
         document[_names.exitFullscreen]();
     };
 
+    //For unit tests
+    Fullscreen._names = _names;
+
     return Fullscreen;
 });
