@@ -91,7 +91,7 @@
     "makeZipFile": "gulp makeZipFile",
     "minify": "gulp minify",
     "minifyRelease": "gulp minifyRelease",
-    "optimizeApproximateTerrainHeights": "gulp optimizeApproximateTerrainHeights",
+    "optimizeApproximateTerrainHeights": "gulp optimizeApproximateTerrainHeights -p 2",
     "release": "gulp release",
     "test": "gulp test",
     "test-all": "gulp test --all",

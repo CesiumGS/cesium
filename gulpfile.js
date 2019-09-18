@@ -138,7 +138,9 @@ gulp.task('requirejs', function(done) {
 // the approximate terrain heights are only used when the terrain provider does not have this
 // information and not a high level of precision is required
 gulp.task('optimizeApproximateTerrainHeights', function() {
-    const precision = 1;
+    var argv = yargs.usage('Usage: optimizeApproximateTerrainHeights -p [degree of precision]').argv;
+    var precision = typeof argv.p !== undefined ? argv.p : 1;
+    precision = Math.pow(10, precision);
     return gulp.src('Source/Assets/approximateTerrainHeightsPrecise.json')
         .pipe(gulpJsonTransform(function(data, file) {
             Object.entries(data).forEach(function(entry) {
