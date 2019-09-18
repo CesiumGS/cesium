@@ -136,6 +136,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Brandon Barker](https://github.com/ProjectBarks)
    * [Peter Gagliardi](https://github.com/ptrgags)
    * [Ian Lilley](https://github.com/IanLilleyT)
+   * [Shehzan Mohammed](https://github.com/shehzan10)
 * [Northrop Grumman](http://www.northropgrumman.com)
    * [Joseph Stein](https://github.com/nahgrin)
 
