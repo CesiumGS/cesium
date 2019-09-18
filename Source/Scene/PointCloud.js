@@ -772,8 +772,15 @@ define([
         });
     }
 
-    function createUniformMap(pointCloud, frameState) {
+    function getMutableUniformFunction(mutableUniformDefinition) {
+        return function() {
+            return mutableUniformDefinition.value;
+        };
+    }
+
+    function createUniformMap(pointCloud, style, frameState) {
         var context = frameState.context;
+        var hasStyle = defined(style);
         var isQuantized = pointCloud._isQuantized;
         var isQuantizedDraco = pointCloud._isQuantizedDraco;
         var isOctEncodedDraco = pointCloud._isOctEncodedDraco;
@@ -847,6 +854,21 @@ define([
             });
         }
 
+        if (hasStyle) {
+            var mutables = style.mutables;
+            if (Object.keys(mutables).length > 0) {
+                var mutableUniforms = {};
+                for (var name in mutables) {
+                    if (mutables.hasOwnProperty(name)) {
+                        var mutableUniformDefinition = mutables[name];
+                        var mutableUniformName = 'u_mutable' + name;
+                        mutableUniforms[mutableUniformName] = getMutableUniformFunction(mutableUniformDefinition);
+                    }
+                }
+                uniformMap = combine(uniformMap, mutableUniforms);
+            }
+        }
+
         if (defined(pointCloud._uniformMapLoaded)) {
             uniformMap = pointCloud._uniformMapLoaded(uniformMap);
         }
@@ -869,6 +891,17 @@ define([
         }
     }
 
+    function getGlslType(type) {
+        switch (type) {
+            case 'Boolean': return 'bool';
+            case 'Number': return 'float';
+            case 'vec2': return 'vec2';
+            case 'vec3': return 'vec3';
+            case 'vec4': return 'vec4';
+        }
+        throw new RuntimeError('Invalid mutable type: "' + type + '"');
+    }
+
     function getVertexAttribute(vertexArray, index) {
         var numberOfAttributes = vertexArray.numberOfAttributes;
         for (var i = 0; i < numberOfAttributes; ++i) {
@@ -879,14 +912,26 @@ define([
         }
     }
 
-    function modifyStyleFunction(source) {
+    function modifyStyleFunction(source, mutables) {
+        var styleName;
+        var replaceName;
+
         // Replace occurrences of czm_tiles3d_style_DEFAULTPROPERTY
         var length = defaultProperties.length;
         for (var i = 0; i < length; ++i) {
             var property = defaultProperties[i];
-            var styleName = 'czm_tiles3d_style_' + property;
-            var replaceName = property.toLowerCase();
+            styleName = 'czm_tiles3d_style_' + property;
+            replaceName = property.toLowerCase();
             source = source.replace(new RegExp(styleName + '(\\W)', 'g'), replaceName + '$1');
+        }
+
+        // Replace occurences of czm_tiles3d_style_MUTABLENAME
+        for (var name in mutables) {
+            if (mutables.hasOwnProperty(name)) {
+                styleName = 'czm_tiles3d_style_' + name;
+                replaceName = 'u_mutable' + name;
+                source = source.replace(new RegExp(styleName + '(\\W)', 'g'), replaceName + '$1');
+            }
         }
 
         // Edit the function header to accept the point position, color, and normal
@@ -897,6 +942,7 @@ define([
         var i;
         var name;
         var attribute;
+        var mutables;
 
         var context = frameState.context;
         var hasStyle = defined(style);
@@ -921,6 +967,7 @@ define([
         var styleTranslucent = isTranslucent;
 
         if (hasStyle) {
+            mutables = style.mutables;
             var shaderState = {
                 translucent : false
             };
@@ -944,22 +991,25 @@ define([
 
         if (hasColorStyle) {
             getStyleableProperties(colorStyleFunction, styleableProperties);
-            colorStyleFunction = modifyStyleFunction(colorStyleFunction);
+            colorStyleFunction = modifyStyleFunction(colorStyleFunction, mutables);
         }
         if (hasShowStyle) {
             getStyleableProperties(showStyleFunction, styleableProperties);
-            showStyleFunction = modifyStyleFunction(showStyleFunction);
+            showStyleFunction = modifyStyleFunction(showStyleFunction, mutables);
         }
         if (hasPointSizeStyle) {
             getStyleableProperties(pointSizeStyleFunction, styleableProperties);
-            pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction);
+            pointSizeStyleFunction = modifyStyleFunction(pointSizeStyleFunction, mutables);
         }
 
         var usesColorSemantic = (styleableProperties.indexOf('COLOR') >= 0);
         var usesNormalSemantic = (styleableProperties.indexOf('NORMAL') >= 0);
 
         // Split default properties from user properties
-        var userProperties = styleableProperties.filter(function(property) { return defaultProperties.indexOf(property) === -1; });
+        var userProperties = styleableProperties.filter(function(property) {
+            return defaultProperties.indexOf(property) === -1 &&
+                   !(defined(mutables) && (defined(mutables[property])));
+        });
 
         if (usesNormalSemantic && !hasNormals) {
             throw new RuntimeError('Style references the NORMAL semantic but the point cloud does not have normals');
@@ -1026,7 +1076,7 @@ define([
             attributeLocations[attributeName] = attribute.location;
         }
 
-        createUniformMap(pointCloud, frameState);
+        createUniformMap(pointCloud, style, frameState);
 
         var vs = 'attribute vec3 a_position; \n' +
                  'varying vec4 v_color; \n' +
@@ -1039,6 +1089,14 @@ define([
         if (attenuation) {
             vs += 'float u_geometricError; \n' +
                   'float u_depthMultiplier; \n';
+        }
+
+        for (name in mutables) {
+            if (mutables.hasOwnProperty(name)) {
+                var mutableUniformName = 'u_mutable' + name;
+                var mutableUniformDefinition = mutables[name];
+                vs += 'uniform ' + getGlslType(mutableUniformDefinition.type) + ' ' + mutableUniformName + '; \n';
+            }
         }
 
         vs += attributeDeclarations;

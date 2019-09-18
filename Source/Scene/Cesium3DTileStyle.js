@@ -86,6 +86,7 @@ define([
         this._labelHorizontalOrigin = undefined;
         this._labelVerticalOrigin = undefined;
         this._meta = undefined;
+        this._mutables = undefined;
 
         this._colorShaderFunction = undefined;
         this._showShaderFunction = undefined;
@@ -154,6 +155,8 @@ define([
         }
 
         that._meta = meta;
+
+        that._mutables = defaultValue(styleJson.mutables, defaultValue.EMPTY_OBJECT);
 
         that._ready = true;
     }
@@ -1555,6 +1558,48 @@ define([
             set : function(value) {
                 this._meta = value;
             }
+        },
+
+        /**
+         * Gets or sets the definition of mutable variables. Mutable variables may be referenced in expressions.
+         *
+         * @memberof Cesium3DTileStyle.prototype
+         *
+         * @exception {DeveloperError} The style is not loaded. Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
+         *
+         * @example
+         * var style = new Cesium3DTileStyle({
+         *     mutables : {
+         *         radius : {
+         *             type : 'Number',
+         *             value : 50.0
+         *         },
+         *         position : {
+         *             type : 'vec3',
+         *             value : new Cesium.Cartesian3()
+         *         }
+         *         status : {
+         *             type : 'Boolean',
+         *             value : true
+         *         }
+         *     }
+         * });
+         *
+         * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/Styling|3D Tiles Styling language}
+         */
+        mutables : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this._ready) {
+                    throw new DeveloperError('The style is not loaded. Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                return this._mutables;
+            },
+            set : function(value) {
+                this._mutables = value;
+            }
         }
     });
 
@@ -1624,6 +1669,16 @@ define([
         this._pointSizeShaderFunctionReady = true;
         this._pointSizeShaderFunction = defined(this.pointSize) ? this.pointSize.getShaderFunction(functionName, attributePrefix, shaderState, 'float') : undefined;
         return this._pointSizeShaderFunction;
+    };
+
+    Cesium3DTileStyle.prototype.setMutableValue = function(mutableName, value) {
+        var mutables = this._mutables;
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(mutables) || !defined(mutables[mutableName])) {
+            throw new DeveloperError('Unknown mutable "' + mutableName + '".');
+        }
+        //>>includeEnd('debug');
+        mutables[mutableName].value = value;
     };
 
     return Cesium3DTileStyle;

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Point cloud styling with mutables">
+    <meta name="cesium-sandcastle-labels" content="3D Tiles">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === "function") {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+// Mt. St. Helens 3D Tileset generated from LAS provided by https://www.liblas.org/samples/
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    shouldAnimate : true
+});
+
+var entityPosition = new Cesium.Cartesian3();
+
+var style = new Cesium.Cesium3DTileStyle({
+    mutables : {
+        entityPosition : {
+            type : 'vec3',
+            value : entityPosition
+        }
+    },
+    defines : {
+        distance : 'clamp(distance(${POSITION_ABSOLUTE}, ${entityPosition}) / 2000.0, 0.0, 1.0)'
+    },
+    color : 'mix(color("yellow"), color("red"), ${distance})'
+});
+
+var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5713) });
+viewer.scene.primitives.add(tileset);
+tileset.pointCloudShading.attenuation = true;
+tileset.style = style;
+
+var start = Cesium.JulianDate.fromDate(new Date(2015, 2, 25, 16));
+var stop = Cesium.JulianDate.addSeconds(start, 360, new Cesium.JulianDate());
+
+viewer.clock.startTime = start;
+viewer.clock.stopTime = stop;
+viewer.clock.currentTime = start;
+viewer.clock.clockRange = Cesium.ClockRange.LOOP_STOP;
+viewer.clock.multiplier = 50;
+
+viewer.timeline.zoomTo(start, stop);
+
+function computeCirclularFlight(lon, lat, radius) {
+    var property = new Cesium.SampledPositionProperty();
+    for (var i = 0; i <= 360; i += 45) {
+        var radians = Cesium.Math.toRadians(i);
+        var time = Cesium.JulianDate.addSeconds(start, i, new Cesium.JulianDate());
+        var position = Cesium.Cartesian3.fromDegrees(lon + (radius * 1.5 * Math.cos(radians)), lat + (radius * Math.sin(radians)), 2750);
+        property.addSample(time, position);
+    }
+    return property;
+}
+
+var positionProperty = computeCirclularFlight(-122.2, 46.2, 0.01);
+positionProperty.setInterpolationOptions({
+    interpolationDegree : 5,
+    interpolationAlgorithm : Cesium.LagrangePolynomialApproximation
+});
+
+var entity = viewer.entities.add({
+    availability : new Cesium.TimeIntervalCollection([new Cesium.TimeInterval({
+        start : start,
+        stop : stop
+    })]),
+    position : positionProperty,
+    orientation : new Cesium.VelocityOrientationProperty(positionProperty),
+    model : {
+        uri : '../../SampleData/models/CesiumAir/Cesium_Air.gltf',
+        minimumPixelSize : 80
+    }
+});
+
+viewer.scene.postUpdate.addEventListener(function(scene, time) {
+    style.setMutableValue('entityPosition', positionProperty.getValue(time, entityPosition));
+});
+
+// Set the initial camera view
+var initialPosition = Cesium.Cartesian3.fromRadians(-2.1344873183780484, 0.8071380277370774, 5743.394497982162);
+var initialOrientation = new Cesium.HeadingPitchRoll.fromDegrees(112.99596671210358, -21.34390550872461, 0.0716951918898415);
+viewer.scene.camera.setView({
+    destination: initialPosition,
+    orientation: initialOrientation,
+    endTransform: Cesium.Matrix4.IDENTITY
+});
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== "undefined") {
+    startup(Cesium);
+} else if (typeof require === "function") {
+    require(["Cesium"], startup);
+}
+</script>
+</body>
+</html>
