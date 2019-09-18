@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/ClassificationModel',
+define([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -13,9 +12,9 @@ defineSuite([
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Core/Resource',
-        'Core/Transforms',
         'Renderer/Pass',
         'Renderer/RenderState',
+        'Scene/ClassificationModel',
         'Scene/ClassificationType',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
@@ -26,7 +25,6 @@ defineSuite([
         'ThirdParty/GltfPipeline/parseGlb',
         'ThirdParty/GltfPipeline/updateVersion'
     ], function(
-        ClassificationModel,
         Cartesian3,
         Cartographic,
         Color,
@@ -40,9 +38,9 @@ defineSuite([
         Rectangle,
         RectangleGeometry,
         Resource,
-        Transforms,
         Pass,
         RenderState,
+        ClassificationModel,
         ClassificationType,
         PerInstanceColorAppearance,
         Primitive,
@@ -52,7 +50,9 @@ defineSuite([
         addDefaults,
         parseGlb,
         updateVersion) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ClassificationModel', function() {
 
     var scene;
     var modelMatrix;
@@ -325,3 +325,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

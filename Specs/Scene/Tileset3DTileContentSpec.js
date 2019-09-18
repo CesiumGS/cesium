@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Cartesian3',
         'Core/HeadingPitchRange',
         'Specs/Cesium3DTilesTester',
@@ -8,7 +8,9 @@ defineSuite([
         HeadingPitchRange,
         Cesium3DTilesTester,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Core/Cartesian3', function() {
 
     var scene;
     var centerLongitude = -1.31968;
@@ -62,3 +64,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,18 +1,18 @@
-defineSuite([
-        'Scene/PostProcessStageCollection',
-        'Core/Color',
+define([
         'Scene/PostProcessStage',
+        'Scene/PostProcessStageCollection',
         'Scene/Tonemapper',
         'Specs/createScene',
         'Specs/ViewportPrimitive'
     ], function(
-        PostProcessStageCollection,
-        Color,
         PostProcessStage,
+        PostProcessStageCollection,
         Tonemapper,
         createScene,
         ViewportPrimitive) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PostProcessStageCollection', function() {
 
     var scene;
 
@@ -357,3 +357,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

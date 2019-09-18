@@ -1,30 +1,32 @@
-defineSuite([
-        'Scene/Batched3DModel3DTileContent',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Matrix4',
         'Core/Transforms',
+        'Scene/Batched3DModel3DTileContent',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
         'Scene/Model',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], function(
-        Batched3DModel3DTileContent,
         Cartesian3,
         Color,
         HeadingPitchRange,
         HeadingPitchRoll,
         Matrix4,
         Transforms,
+        Batched3DModel3DTileContent,
         ClippingPlane,
         ClippingPlaneCollection,
         Model,
         Cesium3DTilesTester,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Batched3DModel3DTileContent', function() {
 
     var scene;
     var centerLongitude = -1.31968;
@@ -379,3 +381,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

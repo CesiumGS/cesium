@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/Check'
     ], function(
         Check) {
-    'use strict';
+        'use strict';
+
+describe('Core/Check', function() {
 
     describe('type checks', function () {
         it('Check.typeOf.bool does not throw when passed a boolean', function () {
@@ -254,4 +256,5 @@ defineSuite([
             }).not.toThrowDeveloperError();
         });
     });
+});
 });

@@ -1,10 +1,8 @@
-defineSuite([
-        'Scene/ArcGisMapServerImageryProvider',
+define([
         'Core/appendForwardSlash',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
-        'Core/DefaultProxy',
         'Core/defined',
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
@@ -15,6 +13,7 @@ defineSuite([
         'Core/Resource',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
+        'Scene/ArcGisMapServerImageryProvider',
         'Scene/DiscardMissingTileImagePolicy',
         'Scene/Imagery',
         'Scene/ImageryLayer',
@@ -24,12 +23,10 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/Uri'
     ], function(
-        ArcGisMapServerImageryProvider,
         appendForwardSlash,
         Cartesian2,
         Cartesian3,
         Cartographic,
-        DefaultProxy,
         defined,
         GeographicTilingScheme,
         getAbsoluteUri,
@@ -40,6 +37,7 @@ defineSuite([
         Resource,
         WebMercatorProjection,
         WebMercatorTilingScheme,
+        ArcGisMapServerImageryProvider,
         DiscardMissingTileImagePolicy,
         Imagery,
         ImageryLayer,
@@ -48,7 +46,9 @@ defineSuite([
         ImageryState,
         pollToPromise,
         Uri) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ArcGisMapServerImageryProvider', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {
@@ -987,4 +987,5 @@ defineSuite([
             });
         });
     });
+});
 });

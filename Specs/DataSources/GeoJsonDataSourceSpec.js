@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/GeoJsonDataSource',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/Event',
@@ -9,10 +8,10 @@ defineSuite([
         'DataSources/CallbackProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
+        'DataSources/GeoJsonDataSource',
         'Scene/HeightReference',
         'ThirdParty/when'
     ], function(
-        GeoJsonDataSource,
         Cartesian3,
         Color,
         Event,
@@ -22,9 +21,12 @@ defineSuite([
         CallbackProperty,
         ConstantProperty,
         EntityCollection,
+        GeoJsonDataSource,
         HeightReference,
         when) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/GeoJsonDataSource', function() {
 
     var defaultMarkerSize;
     var defaultSymbol;
@@ -1259,4 +1261,5 @@ defineSuite([
             expect(dataSource.isLoading).toBe(false);
         });
     });
+});
 });

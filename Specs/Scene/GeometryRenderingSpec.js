@@ -1,15 +1,14 @@
-defineSuite([
+define([
         'Core/ArcType',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
-        'Core/PlaneGeometry',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/CircleGeometry',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
-        'Core/CoplanarPolygonGeometry',
         'Core/ComponentDatatype',
+        'Core/CoplanarPolygonGeometry',
         'Core/CornerType',
         'Core/CorridorGeometry',
         'Core/CylinderGeometry',
@@ -23,6 +22,7 @@ defineSuite([
         'Core/Math',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
+        'Core/PlaneGeometry',
         'Core/PolygonGeometry',
         'Core/PolylineGeometry',
         'Core/PolylineVolumeGeometry',
@@ -45,14 +45,13 @@ defineSuite([
         ArcType,
         BoundingSphere,
         BoxGeometry,
-        PlaneGeometry,
         Cartesian2,
         Cartesian3,
         CircleGeometry,
         Color,
         ColorGeometryInstanceAttribute,
-        CoplanarPolygonGeometry,
         ComponentDatatype,
+        CoplanarPolygonGeometry,
         CornerType,
         CorridorGeometry,
         CylinderGeometry,
@@ -66,6 +65,7 @@ defineSuite([
         CesiumMath,
         Matrix4,
         PerspectiveFrustum,
+        PlaneGeometry,
         PolygonGeometry,
         PolylineGeometry,
         PolylineVolumeGeometry,
@@ -84,7 +84,9 @@ defineSuite([
         SceneMode,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Core/ArcType', function() {
 
     var scene;
     var ellipsoid;
@@ -1745,3 +1747,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

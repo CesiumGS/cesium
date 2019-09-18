@@ -25,7 +25,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the box.
      * @param {Property} [options.dimensions] A {@link Cartesian3} Property specifying the length, width, and height of the box.
-     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the box is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the box.
      * @param {Property} [options.outline=false] A boolean Property specifying whether the box is outlined.

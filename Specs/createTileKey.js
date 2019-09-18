@@ -1,9 +1,9 @@
 define([
-    'Core/defined',
-    'Core/DeveloperError'
-], function(
-    defined,
-    DeveloperError) {
+        'Core/defined',
+        'Core/DeveloperError'
+    ], function(
+        defined,
+        DeveloperError) {
    'use strict';
 
     function createTileKey(xOrTile, y, level) {

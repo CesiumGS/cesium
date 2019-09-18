@@ -1,15 +1,15 @@
 define([
         '../ThirdParty/when',
         './Check',
-        './defined',
         './defaultValue',
+        './defined',
         './FeatureDetection',
         './Resource'
     ], function(
         when,
         Check,
-        defined,
         defaultValue,
+        defined,
         FeatureDetection,
         Resource) {
     'use strict';

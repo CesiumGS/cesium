@@ -1,20 +1,22 @@
-defineSuite([
-        'Scene/computeFlyToLocationForRectangle',
+define([
         'Core/EllipsoidTerrainProvider',
         'Core/Rectangle',
+        'Scene/computeFlyToLocationForRectangle',
         'Scene/Globe',
         'Scene/SceneMode',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
-        computeFlyToLocationForRectangle,
         EllipsoidTerrainProvider,
         Rectangle,
+        computeFlyToLocationForRectangle,
         Globe,
         SceneMode,
         createScene,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/computeFlyToLocationForRectangle', function() {
 
     var scene;
 
@@ -146,4 +148,5 @@ defineSuite([
                 expect(computeFlyToLocationForRectangle._sampleTerrainMostDetailed).not.toHaveBeenCalled();
             });
     });
+});
 });

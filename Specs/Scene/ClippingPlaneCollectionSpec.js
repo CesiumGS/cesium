@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/ClippingPlaneCollection',
+define([
         'Core/AttributeCompression',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -12,13 +11,12 @@ defineSuite([
         'Core/PixelFormat',
         'Core/Plane',
         'Renderer/PixelDatatype',
-        'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
         'Scene/ClippingPlane',
+        'Scene/ClippingPlaneCollection',
         'Specs/createScene'
     ], function(
-        ClippingPlaneCollection,
         AttributeCompression,
         BoundingSphere,
         Cartesian2,
@@ -31,12 +29,14 @@ defineSuite([
         PixelFormat,
         Plane,
         PixelDatatype,
-        TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
         ClippingPlane,
+        ClippingPlaneCollection,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ClippingPlaneCollection', function() {
 
     var clippingPlanes;
     var planes = [
@@ -776,4 +776,5 @@ defineSuite([
         clippingPlanes.destroy();
         scene.destroyForSpecs();
     });
+});
 });

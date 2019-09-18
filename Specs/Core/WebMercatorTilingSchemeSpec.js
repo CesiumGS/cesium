@@ -1,22 +1,24 @@
-defineSuite([
-        'Core/WebMercatorTilingScheme',
+define([
         'Core/Cartesian2',
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/Rectangle',
         'Core/TilingScheme',
-        'Core/WebMercatorProjection'
+        'Core/WebMercatorProjection',
+        'Core/WebMercatorTilingScheme'
     ], function(
-        WebMercatorTilingScheme,
         Cartesian2,
         Cartographic,
         Ellipsoid,
         CesiumMath,
         Rectangle,
         TilingScheme,
-        WebMercatorProjection) {
-    'use strict';
+        WebMercatorProjection,
+        WebMercatorTilingScheme) {
+        'use strict';
+
+describe('Core/WebMercatorTilingScheme', function() {
 
     var tilingScheme;
     beforeEach(function() {
@@ -274,4 +276,5 @@ defineSuite([
             expect(resultParameter).toEqual(new Cartesian2(1, 0));
         });
     });
+});
 });

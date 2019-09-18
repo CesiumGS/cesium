@@ -1,10 +1,12 @@
-defineSuite([
-        'Core/QuarticRealPolynomial',
-        'Core/Math'
+define([
+        'Core/Math',
+        'Core/QuarticRealPolynomial'
     ], function(
-        QuarticRealPolynomial,
-        CesiumMath) {
-    'use strict';
+        CesiumMath,
+        QuarticRealPolynomial) {
+        'use strict';
+
+describe('Core/QuarticRealPolynomial', function() {
 
     it('discriminant throws without a', function() {
         expect(function() {
@@ -186,4 +188,5 @@ defineSuite([
         expect(actual[0]).toEqualEpsilon(expected[0], CesiumMath.EPSILON11);
         expect(actual[1]).toEqualEpsilon(expected[1], CesiumMath.EPSILON11);
     });
+});
 });

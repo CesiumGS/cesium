@@ -1,14 +1,16 @@
-defineSuite([
-        'Widgets/ProjectionPicker/ProjectionPicker',
+define([
         'Core/FeatureDetection',
         'Specs/createScene',
-        'Specs/DomEventSimulator'
+        'Specs/DomEventSimulator',
+        'Widgets/ProjectionPicker/ProjectionPicker'
     ], function(
-        ProjectionPicker,
         FeatureDetection,
         createScene,
-        DomEventSimulator) {
-    'use strict';
+        DomEventSimulator,
+        ProjectionPicker) {
+        'use strict';
+
+describe('Widgets/ProjectionPicker/ProjectionPicker', function() {
 
     var scene;
 
@@ -125,3 +127,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

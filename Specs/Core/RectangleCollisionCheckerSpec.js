@@ -1,10 +1,12 @@
-defineSuite([
-        'Core/RectangleCollisionChecker',
-        'Core/Rectangle'
+define([
+        'Core/Rectangle',
+        'Core/RectangleCollisionChecker'
     ], function(
-        RectangleCollisionChecker,
-        Rectangle) {
-    'use strict';
+        Rectangle,
+        RectangleCollisionChecker) {
+        'use strict';
+
+describe('Core/RectangleCollisionChecker', function() {
 
     var testRectangle1 = new Rectangle(0.0, 0.0, 1.0, 1.0);
     var testRectangle2 = new Rectangle(1.1, 1.1, 2.1, 2.1);
@@ -32,4 +34,5 @@ defineSuite([
 
         expect(collisionChecker.collides(testRectangle2)).toBe(false);
     });
+});
 });
