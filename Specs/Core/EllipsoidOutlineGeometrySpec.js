@@ -3,12 +3,14 @@ define([
         'Core/Cartesian3',
         'Core/EllipsoidOutlineGeometry',
         'Core/GeometryOffsetAttribute',
+        'Core/Math',
         'Specs/createPackableSpecs'
     ], function(
         arrayFill,
         Cartesian3,
         EllipsoidOutlineGeometry,
         GeometryOffsetAttribute,
+        CesiumMath,
         createPackableSpecs) {
         'use strict';
 
