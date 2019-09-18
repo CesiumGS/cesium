@@ -30,9 +30,9 @@ define([
      * @param {Property} [options.semiMajorAxis] The numeric Property specifying the semi-major axis.
      * @param {Property} [options.semiMinorAxis] The numeric Property specifying the semi-minor axis.
      * @param {Property} [options.height=0] A numeric Property specifying the altitude of the ellipse relative to the ellipsoid surface.
-     * @param {Property} [options.heightReference] A Property specifying what the height is relative to.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the ellipse's extruded face relative to the ellipsoid surface.
-     * @param {Property} [options.extrudedHeightReference] A Property specifying what the extrudedHeight is relative to.
+     * @param {Property} [options.extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
      * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the ellipse counter-clockwise from north.
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the ellipse texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the ellipse.

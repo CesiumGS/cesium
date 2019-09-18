@@ -101,9 +101,7 @@ define([
      *
      * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
      *   geometryInstances : instance,
-     *   appearance : new Cesium.PolylineMaterialAppearance({
-     *     material : Cesium.Material.fromType('Color')
-     *   })
+     *   appearance : new Cesium.PolylineMaterialAppearance()
      * }));
      *
      * // 2. Draw a looped polyline on terrain with per-instance color and a distance display condition.
@@ -122,14 +120,14 @@ define([
      *   }),
      *   attributes : {
      *      color : Cesium.ColorGeometryInstanceAttribute.fromColor(Cesium.Color.fromCssColorString('green').withAlpha(0.7)),
-            distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(1000, 30000)
+     *      distanceDisplayCondition : new Cesium.DistanceDisplayConditionGeometryInstanceAttribute(1000, 30000)
      *   },
      *   id : 'object returned when this instance is picked and to get/set per-instance attributes'
      * });
      *
      * scene.groundPrimitives.add(new Cesium.GroundPolylinePrimitive({
      *   geometryInstances : instance,
-     *   appearance : Cesium.PolylineColorAppearance()
+     *   appearance : new Cesium.PolylineColorAppearance()
      * }));
      */
     function GroundPolylinePrimitive(options) {
