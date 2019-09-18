@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/PointVisualizer',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -15,12 +14,12 @@ defineSuite([
         'DataSources/EntityCluster',
         'DataSources/EntityCollection',
         'DataSources/PointGraphics',
+        'DataSources/PointVisualizer',
         'Scene/BillboardCollection',
         'Scene/HeightReference',
         'Scene/PointPrimitiveCollection',
         'Specs/createScene'
     ], function(
-        PointVisualizer,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -36,11 +35,14 @@ defineSuite([
         EntityCluster,
         EntityCollection,
         PointGraphics,
+        PointVisualizer,
         BillboardCollection,
         HeightReference,
         PointPrimitiveCollection,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PointVisualizer', function() {
 
     var scene;
     var entityCluster;
@@ -395,3 +397,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

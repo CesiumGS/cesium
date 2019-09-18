@@ -91,7 +91,7 @@ define([
     /**
      * Gets the value of the property.
      *
-     * @param {JulianDate} [time] The time for which to retrieve the value.  This parameter is unused since the value does not change with respect to time.
+     * @param {JulianDate} time The time for which to retrieve the value.
      * @param {Cartesian3[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
      * @returns {Cartesian3[]} The modified result parameter or a new instance if the result parameter was not supplied.
      */
@@ -104,8 +104,8 @@ define([
      *
      * @param {JulianDate} time The time for which to retrieve the value.
      * @param {ReferenceFrame} referenceFrame The desired referenceFrame of the result.
-     * @param {Cartesian3} [result] The object to store the value into, if omitted, a new instance is created and returned.
-     * @returns {Cartesian3} The modified result parameter or a new instance if the result parameter was not supplied.
+     * @param {Cartesian3[]} [result] The object to store the value into, if omitted, a new instance is created and returned.
+     * @returns {Cartesian3[]} The modified result parameter or a new instance if the result parameter was not supplied.
      */
     PositionPropertyArray.prototype.getValueInReferenceFrame = function(time, referenceFrame, result) {
         //>>includeStart('debug', pragmas.debug);

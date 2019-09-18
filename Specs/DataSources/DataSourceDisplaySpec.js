@@ -1,32 +1,34 @@
-defineSuite([
-        'DataSources/DataSourceDisplay',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Iso8601',
         'DataSources/BoundingSphereState',
         'DataSources/DataSourceCollection',
+        'DataSources/DataSourceDisplay',
         'DataSources/Entity',
         'Scene/GroundPolylinePrimitive',
         'Scene/GroundPrimitive',
-        'ThirdParty/when',
         'Specs/createScene',
-        'Specs/MockDataSource'
+        'Specs/MockDataSource',
+        'ThirdParty/when'
     ], function(
-        DataSourceDisplay,
         ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
         Iso8601,
         BoundingSphereState,
         DataSourceCollection,
+        DataSourceDisplay,
         Entity,
         GroundPolylinePrimitive,
         GroundPrimitive,
-        when,
         createScene,
-        MockDataSource) {
-    'use strict';
+        MockDataSource,
+        when) {
+        'use strict';
+
+describe('DataSources/DataSourceDisplay', function() {
 
     var dataSourceCollection;
     var scene;
@@ -551,3 +553,4 @@ defineSuite([
         expect(scene.groundPrimitives.contains(display._groundPrimitives)).toBe(true);
     });
 }, 'WebGL');
+});

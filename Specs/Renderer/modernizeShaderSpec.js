@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Renderer/modernizeShader'
     ], function(
         modernizeShader) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/modernizeShader', function() {
 
     it('adds version string', function() {
         var simple =
@@ -314,4 +316,5 @@ defineSuite([
         expect(output).toContain(expected0);
         expect(output).toContain(expected1);
     });
+});
 });

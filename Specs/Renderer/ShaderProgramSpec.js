@@ -1,14 +1,16 @@
-defineSuite([
-        'Renderer/ShaderProgram',
+define([
         'Renderer/ContextLimits',
+        'Renderer/ShaderProgram',
         'Renderer/ShaderSource',
         'Specs/createContext'
     ], function(
-        ShaderProgram,
         ContextLimits,
+        ShaderProgram,
         ShaderSource,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/ShaderProgram', function() {
 
     var webglStub = !!window.webglStub;
     var context;
@@ -547,3 +549,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

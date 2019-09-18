@@ -1,28 +1,30 @@
-defineSuite([
-    'Core/EllipsoidGeometry',
-    'Core/arrayFill',
-    'Core/Cartesian3',
-    'Core/GeometryOffsetAttribute',
-    'Core/Math',
-    'Core/VertexFormat',
-    'Specs/createPackableSpecs'
-], function(
-    EllipsoidGeometry,
-    arrayFill,
-    Cartesian3,
-    GeometryOffsetAttribute,
-    CesiumMath,
-    VertexFormat,
-    createPackableSpecs) {
+define([
+        'Core/arrayFill',
+        'Core/Cartesian3',
+        'Core/EllipsoidGeometry',
+        'Core/GeometryOffsetAttribute',
+        'Core/Math',
+        'Core/VertexFormat',
+        'Specs/createPackableSpecs'
+    ], function(
+        arrayFill,
+        Cartesian3,
+        EllipsoidGeometry,
+        GeometryOffsetAttribute,
+        CesiumMath,
+        VertexFormat,
+        createPackableSpecs) {
         'use strict';
 
-        it('constructor rounds floating-point slicePartitions', function() {
-            var m = new EllipsoidGeometry({
-                slicePartitions: 3.5,
-                stackPartitions: 3
-            });
-            expect(m._slicePartitions).toEqual(4);
+describe('Core/EllipsoidGeometry', function() {
+
+    it('constructor rounds floating-point slicePartitions', function() {
+        var m = new EllipsoidGeometry({
+            slicePartitions: 3.5,
+            stackPartitions: 3
         });
+        expect(m._slicePartitions).toEqual(4);
+    });
 
         it('constructor rounds floating-point stackPartitions', function() {
             var m = new EllipsoidGeometry({
@@ -344,3 +346,7 @@ defineSuite([
         ];
         createPackableSpecs(EllipsoidGeometry, ellipsoidgeometry, packedInstance);
     });
+    var packedInstance = [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 3.0, 3.0, -1.0];
+    createPackableSpecs(EllipsoidGeometry, ellipsoidgeometry, packedInstance);
+});
+});

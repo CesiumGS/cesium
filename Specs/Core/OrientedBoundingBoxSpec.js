@@ -1,5 +1,4 @@
-defineSuite([
-        'Core/OrientedBoundingBox',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -8,12 +7,12 @@ defineSuite([
         'Core/Math',
         'Core/Matrix3',
         'Core/Occluder',
+        'Core/OrientedBoundingBox',
         'Core/Plane',
         'Core/Quaternion',
         'Core/Rectangle',
         'Specs/createPackableSpecs'
     ], function(
-        OrientedBoundingBox,
         BoundingSphere,
         Cartesian3,
         Cartesian4,
@@ -22,11 +21,14 @@ defineSuite([
         CesiumMath,
         Matrix3,
         Occluder,
+        OrientedBoundingBox,
         Plane,
         Quaternion,
         Rectangle,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/OrientedBoundingBox', function() {
 
     var positions = [
         new Cartesian3(2.0, 0.0, 0.0),
@@ -770,4 +772,5 @@ defineSuite([
     });
 
     createPackableSpecs(OrientedBoundingBox, new OrientedBoundingBox(new Cartesian3(1.0, 2.0, 3.0), Matrix3.IDENTITY), [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]);
+});
 });

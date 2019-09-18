@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
@@ -26,7 +26,9 @@ defineSuite([
         createCamera,
         createContext,
         createFrameState) {
-    'use strict';
+        'use strict';
+
+describe('Core/Cartesian2', function() {
 
     var context;
 
@@ -1371,3 +1373,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

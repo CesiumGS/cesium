@@ -1,10 +1,12 @@
-defineSuite([
-        'Core/LeapSecond',
-        'Core/JulianDate'
+define([
+        'Core/JulianDate',
+        'Core/LeapSecond'
     ], function(
-        LeapSecond,
-        JulianDate) {
-    'use strict';
+        JulianDate,
+        LeapSecond) {
+        'use strict';
+
+describe('Core/LeapSecond', function() {
 
     it('default constructor sets expected values', function() {
         var leapSecond = new LeapSecond();
@@ -19,4 +21,5 @@ defineSuite([
         expect(leapSecond.julianDate).toEqual(date);
         expect(leapSecond.offset).toEqual(offset);
     });
+});
 });

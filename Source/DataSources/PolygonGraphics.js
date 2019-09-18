@@ -4,6 +4,9 @@ define([
         '../Core/defineProperties',
         '../Core/DeveloperError',
         '../Core/Event',
+        '../Core/isArray',
+        '../Core/PolygonHierarchy',
+        './ConstantProperty',
         './createMaterialPropertyDescriptor',
         './createPropertyDescriptor'
     ], function(
@@ -12,9 +15,20 @@ define([
         defineProperties,
         DeveloperError,
         Event,
+        isArray,
+        PolygonHierarchy,
+        ConstantProperty,
         createMaterialPropertyDescriptor,
         createPropertyDescriptor) {
     'use strict';
+
+    function createPolygonHierarchyProperty(value) {
+        if (isArray(value)) {
+            // convert array of positions to PolygonHierarchy object
+            value = new PolygonHierarchy(value);
+        }
+        return new ConstantProperty(value);
+    }
 
     /**
      * Describes a polygon defined by an hierarchy of linear rings which make up the outer shape and any nested holes.
@@ -28,9 +42,9 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the polygon.
      * @param {Property} [options.hierarchy] A Property specifying the {@link PolygonHierarchy}.
      * @param {Property} [options.height=0] A numeric Property specifying the altitude of the polygon relative to the ellipsoid surface.
-     * @param {Property} [options.heightReference] A Property specifying what the height is relative to.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the polygon's extruded face relative to the ellipsoid surface.
-     * @param {Property} [options.extrudedHeightReference] A Property specifying what the extrudedHeight is relative to.
+     * @param {Property} [options.extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the polygon texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between each latitude and longitude point.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the polygon is filled with the provided material.
@@ -125,7 +139,7 @@ define([
          * @memberof PolygonGraphics.prototype
          * @type {Property}
          */
-        hierarchy : createPropertyDescriptor('hierarchy'),
+        hierarchy : createPropertyDescriptor('hierarchy', undefined, createPolygonHierarchyProperty),
 
         /**
          * Gets or sets the numeric Property specifying the constant altitude of the polygon.

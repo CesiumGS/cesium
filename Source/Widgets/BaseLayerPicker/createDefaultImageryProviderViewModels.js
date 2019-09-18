@@ -1,22 +1,22 @@
 define([
         '../../Core/buildModuleUrl',
         '../../Scene/ArcGisMapServerImageryProvider',
-        '../../Scene/IonWorldImageryStyle',
         '../../Scene/createOpenStreetMapImageryProvider',
         '../../Scene/createTileMapServiceImageryProvider',
         '../../Scene/createWorldImagery',
         '../../Scene/IonImageryProvider',
-        '../../Scene/MapboxImageryProvider',
+        '../../Scene/IonWorldImageryStyle',
+        '../../Scene/MapboxStyleImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,
         ArcGisMapServerImageryProvider,
-        IonWorldImageryStyle,
         createOpenStreetMapImageryProvider,
         createTileMapServiceImageryProvider,
         createWorldImagery,
         IonImageryProvider,
-        MapboxImageryProvider,
+        IonWorldImageryStyle,
+        MapboxStyleImageryProvider,
         ProviderViewModel) {
     'use strict';
 
@@ -67,8 +67,8 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxSatellite.png'),
             category : 'Other',
             creationFunction: function() {
-                return new MapboxImageryProvider({
-                    mapId: 'mapbox.satellite'
+                return new MapboxStyleImageryProvider({
+                    styleId: 'satellite-v9'
                 });
             }
         }));
@@ -79,8 +79,8 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxTerrain.png'),
             category : 'Other',
             creationFunction: function() {
-                return new MapboxImageryProvider({
-                    mapId: 'mapbox.streets'
+                return new MapboxStyleImageryProvider({
+                    styleId: 'satellite-streets-v11'
                 });
             }
         }));
@@ -91,8 +91,8 @@ define([
             iconUrl: buildModuleUrl('Widgets/Images/ImageryProviders/mapboxStreets.png'),
             category : 'Other',
             creationFunction: function() {
-                return new MapboxImageryProvider({
-                    mapId: 'mapbox.streets-basic'
+                return new MapboxStyleImageryProvider({
+                    styleId: 'streets-v11'
                 });
             }
         }));

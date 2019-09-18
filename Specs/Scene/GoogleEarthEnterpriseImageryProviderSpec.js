@@ -1,7 +1,5 @@
-defineSuite([
-        'Scene/GoogleEarthEnterpriseImageryProvider',
+define([
         'Core/decodeGoogleEarthEnterpriseData',
-        'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/defined',
         'Core/GeographicTilingScheme',
@@ -11,6 +9,7 @@ defineSuite([
         'Core/RequestScheduler',
         'Core/Resource',
         'Scene/DiscardMissingTileImagePolicy',
+        'Scene/GoogleEarthEnterpriseImageryProvider',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
@@ -19,9 +18,7 @@ defineSuite([
         'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
-        GoogleEarthEnterpriseImageryProvider,
         decodeGoogleEarthEnterpriseData,
-        DefaultProxy,
         defaultValue,
         defined,
         GeographicTilingScheme,
@@ -31,6 +28,7 @@ defineSuite([
         RequestScheduler,
         Resource,
         DiscardMissingTileImagePolicy,
+        GoogleEarthEnterpriseImageryProvider,
         Imagery,
         ImageryLayer,
         ImageryProvider,
@@ -38,7 +36,9 @@ defineSuite([
         pollToPromise,
         Uri,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -307,4 +307,5 @@ defineSuite([
             });
         });
     });
+});
 });

@@ -1,16 +1,18 @@
-defineSuite([
-        'Core/Iau2006XysData',
+define([
         'Core/buildModuleUrl',
         'Core/defined',
+        'Core/Iau2006XysData',
         'Core/Iau2006XysSample',
         'Specs/pollToPromise'
     ], function(
-        Iau2006XysData,
         buildModuleUrl,
         defined,
+        Iau2006XysData,
         Iau2006XysSample,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Core/Iau2006XysData', function() {
 
     var xys;
 
@@ -65,4 +67,5 @@ defineSuite([
             return defined(xys.computeXysRadians(2442398, 1234.56));
         });
     });
+});
 });

@@ -1,28 +1,32 @@
-defineSuite([
-        'DataSources/PolygonGraphics',
+define([
         'Core/ArcType',
+        'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/PolygonHierarchy',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/PolygonGraphics',
         'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        PolygonGraphics,
         ArcType,
+        Cartesian3,
         Color,
         DistanceDisplayCondition,
         PolygonHierarchy,
         ColorMaterialProperty,
         ConstantProperty,
+        PolygonGraphics,
         ClassificationType,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolygonGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -275,4 +279,30 @@ defineSuite([
         testDefinitionChanged(property, 'arcType', ArcType.GEODESIC, ArcType.RHUMB);
         testDefinitionChanged(property, 'zIndex', 54, 3);
     });
+
+    it('converts an array of positions to a PolygonHierarchy', function() {
+        var positions = [
+            new Cartesian3(1, 2, 3),
+            new Cartesian3(4, 5, 6),
+            new Cartesian3(7, 8, 9)
+        ];
+
+        var graphics = new PolygonGraphics({
+            hierarchy: positions
+        });
+
+        expect(graphics.hierarchy).toBeInstanceOf(ConstantProperty);
+        var hierarchy = graphics.hierarchy.getValue();
+        expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+        expect(hierarchy.positions).toEqual(positions);
+
+        graphics = new PolygonGraphics();
+        graphics.hierarchy = positions;
+
+        expect(graphics.hierarchy).toBeInstanceOf(ConstantProperty);
+        hierarchy = graphics.hierarchy.getValue();
+        expect(hierarchy).toBeInstanceOf(PolygonHierarchy);
+        expect(hierarchy.positions).toEqual(positions);
+    });
+});
 });

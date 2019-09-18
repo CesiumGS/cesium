@@ -1,18 +1,20 @@
-defineSuite([
-        'DataSources/PositionPropertyArray',
+define([
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/ReferenceFrame',
         'DataSources/ConstantPositionProperty',
+        'DataSources/PositionPropertyArray',
         'DataSources/SampledPositionProperty'
     ], function(
-        PositionPropertyArray,
         Cartesian3,
         JulianDate,
         ReferenceFrame,
         ConstantPositionProperty,
+        PositionPropertyArray,
         SampledPositionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PositionPropertyArray', function() {
 
     var time = JulianDate.now();
 
@@ -109,4 +111,5 @@ defineSuite([
 
         expect(property.isConstant).toBe(false);
     });
+});
 });

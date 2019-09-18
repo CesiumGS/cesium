@@ -1,20 +1,22 @@
-defineSuite([
-        'DataSources/TimeIntervalCollectionPositionProperty',
+define([
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/ReferenceFrame',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DataSources/PositionProperty'
+        'DataSources/PositionProperty',
+        'DataSources/TimeIntervalCollectionPositionProperty'
     ], function(
-        TimeIntervalCollectionPositionProperty,
         Cartesian3,
         JulianDate,
         ReferenceFrame,
         TimeInterval,
         TimeIntervalCollection,
-        PositionProperty) {
-    'use strict';
+        PositionProperty,
+        TimeIntervalCollectionPositionProperty) {
+        'use strict';
+
+describe('DataSources/TimeIntervalCollectionPositionProperty', function() {
 
     it('default constructor has expected values', function() {
         var property = new TimeIntervalCollectionPositionProperty();
@@ -233,4 +235,5 @@ defineSuite([
         property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
     });
+});
 });

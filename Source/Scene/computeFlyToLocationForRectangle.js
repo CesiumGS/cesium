@@ -1,15 +1,15 @@
 define([
-    '../Core/defined',
-    '../Core/Rectangle',
-    '../Core/sampleTerrainMostDetailed',
-    './SceneMode',
-    '../ThirdParty/when'
-], function(
-    defined,
-    Rectangle,
-    sampleTerrainMostDetailed,
-    SceneMode,
-    when) {
+        '../Core/defined',
+        '../Core/Rectangle',
+        '../Core/sampleTerrainMostDetailed',
+        '../ThirdParty/when',
+        './SceneMode'
+    ], function(
+        defined,
+        Rectangle,
+        sampleTerrainMostDetailed,
+        when,
+        SceneMode) {
 'use strict';
 
     /**

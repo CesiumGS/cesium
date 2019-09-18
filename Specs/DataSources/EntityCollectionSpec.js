@@ -1,18 +1,20 @@
-defineSuite([
-        'DataSources/EntityCollection',
+define([
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DataSources/Entity'
+        'DataSources/Entity',
+        'DataSources/EntityCollection'
     ], function(
-        EntityCollection,
         Iso8601,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
-        Entity) {
-    'use strict';
+        Entity,
+        EntityCollection) {
+        'use strict';
+
+describe('DataSources/EntityCollection', function() {
 
     function CollectionListener() {
         this.timesCalled = 0;
@@ -469,4 +471,5 @@ defineSuite([
             entityCollection.getOrCreateEntity(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

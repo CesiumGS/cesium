@@ -1,22 +1,24 @@
-defineSuite([
-        'Scene/PerInstanceColorAppearance',
+define([
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Scene/Appearance',
+        'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Specs/createScene'
     ], function(
-        PerInstanceColorAppearance,
         ColorGeometryInstanceAttribute,
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
         Appearance,
+        PerInstanceColorAppearance,
         Primitive,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PerInstanceColorAppearance', function() {
 
     var scene;
     var rectangle;
@@ -90,3 +92,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,16 +1,18 @@
-defineSuite([
-        'Core/SphereGeometry',
+define([
         'Core/Cartesian3',
         'Core/Math',
+        'Core/SphereGeometry',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        SphereGeometry,
         Cartesian3,
         CesiumMath,
+        SphereGeometry,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/SphereGeometry', function() {
 
     it('constructor throws with invalid stackPartitions', function() {
         expect(function() {
@@ -109,4 +111,5 @@ defineSuite([
     // Adding TWO_PI and PI here for maximum clock/cone and other options from partial ellipsoids
     var packedInstance = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, CesiumMath.TWO_PI, 0.0, CesiumMath.PI, 3.0, 3.0, -1.0];
     createPackableSpecs(SphereGeometry, sphere, packedInstance);
+});
 });

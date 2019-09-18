@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/defined'
     ], function(
         defined) {
-    'use strict';
+        'use strict';
+
+describe('Core/defined', function() {
 
     it('works for defined value', function() {
         expect(defined(0)).toEqual(true);
@@ -15,4 +17,5 @@ defineSuite([
     it('works for undefined value', function() {
         expect(defined(undefined)).toEqual(false);
     });
+});
 });

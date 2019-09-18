@@ -1,14 +1,16 @@
-defineSuite([
-        'Renderer/VertexArrayFacade',
+define([
         'Core/ComponentDatatype',
         'Renderer/BufferUsage',
+        'Renderer/VertexArrayFacade',
         'Specs/createContext'
     ], function(
-        VertexArrayFacade,
         ComponentDatatype,
         BufferUsage,
+        VertexArrayFacade,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/VertexArrayFacade', function() {
 
     var context;
 
@@ -329,3 +331,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

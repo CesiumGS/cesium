@@ -1,14 +1,16 @@
-defineSuite([
-        'Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
+define([
         'Core/EllipsoidTerrainProvider',
         'Scene/ImageryLayerCollection',
+        'Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
         'Widgets/BaseLayerPicker/ProviderViewModel'
     ], function(
-        BaseLayerPickerViewModel,
         EllipsoidTerrainProvider,
         ImageryLayerCollection,
+        BaseLayerPickerViewModel,
         ProviderViewModel) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/BaseLayerPicker/BaseLayerPickerViewModel', function() {
 
     function MockGlobe() {
         this.imageryLayers = new ImageryLayerCollection();
@@ -282,4 +284,5 @@ defineSuite([
             return new BaseLayerPickerViewModel({});
         }).toThrowDeveloperError();
     });
+});
 });

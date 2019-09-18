@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/isDataUri'
     ], function(
         isDataUri) {
-    'use strict';
+        'use strict';
+
+describe('Core/isDataUri', function() {
 
     it('Throws if url is undefined', function() {
         expect(function() {
@@ -18,4 +20,5 @@ defineSuite([
         var uri = 'data:text/plain;base64,' + btoa('a data uri');
         expect(isDataUri(uri)).toEqual(true);
     });
+});
 });

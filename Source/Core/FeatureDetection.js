@@ -1,17 +1,17 @@
 define([
+        '../ThirdParty/when',
         './defaultValue',
         './defined',
         './defineProperties',
         './DeveloperError',
-        './Fullscreen',
-        '../ThirdParty/when'
+        './Fullscreen'
     ], function(
+        when,
         defaultValue,
         defined,
         defineProperties,
         DeveloperError,
-        Fullscreen,
-        when) {
+        Fullscreen) {
     'use strict';
     /*global CanvasPixelArray*/
 

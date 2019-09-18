@@ -1,14 +1,16 @@
-defineSuite([
-        'Core/Cartographic',
+define([
         'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math'
     ], function(
-        Cartographic,
         Cartesian3,
+        Cartographic,
         Ellipsoid,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/Cartographic', function() {
 
     var surfaceCartesian = new Cartesian3(4094327.7921465295, 1909216.4044747739, 4487348.4088659193);
     var surfaceCartographic = new Cartographic(CesiumMath.toRadians(25.0), CesiumMath.toRadians(45.0), 0.0);
@@ -194,4 +196,5 @@ defineSuite([
             Cartographic.equalsEpsilon(new Cartographic(), new Cartographic(), {});
         }).toThrowDeveloperError();
     });
+});
 });

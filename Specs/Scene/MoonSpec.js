@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Moon',
+define([
         'Core/BoundingSphere',
         'Core/Color',
         'Core/defined',
@@ -7,9 +6,9 @@ defineSuite([
         'Core/Matrix3',
         'Core/Simon1994PlanetaryPositions',
         'Core/Transforms',
+        'Scene/Moon',
         'Specs/createScene'
     ], function(
-        Moon,
         BoundingSphere,
         Color,
         defined,
@@ -17,8 +16,11 @@ defineSuite([
         Matrix3,
         Simon1994PlanetaryPositions,
         Transforms,
+        Moon,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Moon', function() {
 
     var scene;
     var backgroundColor = [255, 0, 0, 255];
@@ -85,3 +87,4 @@ defineSuite([
         expect(moon.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

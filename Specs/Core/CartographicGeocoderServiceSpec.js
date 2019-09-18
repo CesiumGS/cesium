@@ -1,10 +1,12 @@
-defineSuite([
-        'Core/CartographicGeocoderService',
-        'Core/Cartesian3'
+define([
+        'Core/Cartesian3',
+        'Core/CartographicGeocoderService'
     ], function(
-        CartographicGeocoderService,
-        Cartesian3) {
-    'use strict';
+        Cartesian3,
+        CartographicGeocoderService) {
+        'use strict';
+
+describe('Core/CartographicGeocoderService', function() {
 
     var service = new CartographicGeocoderService();
 
@@ -77,4 +79,5 @@ defineSuite([
         });
     });
 
+});
 });

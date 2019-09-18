@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Scene/Cesium3DTileContent'
     ], function(
         Cesium3DTileContent) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Cesium3DTileContent', function() {
 
     it('throws', function() {
         var content = new Cesium3DTileContent();
@@ -64,4 +66,5 @@ defineSuite([
             content.destroy();
         }).toThrowDeveloperError();
     });
+});
 });
