@@ -193,21 +193,11 @@ viewer.entities.add({
     }
 });
 
-var airplanePosition = Cesium.Cartesian3.fromDegrees(-110.0, 35.0, 250000.0);
 viewer.entities.add({
-    id : 'airplane',
-    name : 'Airplane with sensor',
-    position : airplanePosition,
-    model : {
-        uri : '../../SampleData/models/CesiumAir/Cesium_Air.gltf',
-        scale : 6000
-    }
-});
-viewer.entities.add({
-    name : 'Airplane sensor coverage',
+    name : 'Parital ellipsoid',
     position : new Cesium.ReferenceProperty(viewer.entities, 'airplane', ['position']),
     orientation : Cesium.Transforms.headingPitchRollQuaternion(
-        airplanePosition,
+        Cesium.Cartesian3.fromDegrees(-110.0, 35.0, 250000.0),
         new Cesium.HeadingPitchRoll(Cesium.Math.PI_OVER_TWO, -Cesium.Math.PI_OVER_FOUR, 0.0)
     ),
     ellipsoid : {
@@ -221,22 +211,11 @@ viewer.entities.add({
         outline : true
     }
 });
-
-var truckPosition = Cesium.Cartesian3.fromDegrees(-102.0, 35.0);
 viewer.entities.add({
-    id : 'truck',
-    name : 'Truck with sensor',
-    position : truckPosition,
-    model : {
-        uri : '../../SampleData/models/CesiumGround/Cesium_Ground.gltf',
-        scale : 8000
-    }
-});
-viewer.entities.add({
-    name : 'Truck sensor coverage',
+    name : 'Partial ellipsoid',
     position : new Cesium.ReferenceProperty(viewer.entities, 'truck', ['position']),
     orientation : Cesium.Transforms.headingPitchRollQuaternion(
-        truckPosition,
+        Cesium.Cartesian3.fromDegrees(-102.0, 35.0),
         new Cesium.HeadingPitchRoll(Cesium.Math.PI / 1.5, Cesium.Math.PI_OVER_FOUR, 0.0)
     ),
     ellipsoid : {
@@ -250,20 +229,9 @@ viewer.entities.add({
         outline : true
     }
 });
-
-truckPosition = Cesium.Cartesian3.fromDegrees(-95.0, 34.0);
 viewer.entities.add({
-    id : 'truck2',
-    name : 'Truck with sensor',
-    position : truckPosition,
-    model : {
-        uri : '../../SampleData/models/CesiumGround/Cesium_Ground.gltf',
-        scale : 8000
-    }
-});
-viewer.entities.add({
-    name : 'Truck sensor coverage',
-    position : new Cesium.ReferenceProperty(viewer.entities, 'truck2', ['position']),
+    name : 'Partial ellipsoid',
+    position : Cesium.Cartesian3.fromDegrees(-95.0, 34.0),
     ellipsoid : {
         radii : new Cesium.Cartesian3(300000.0, 300000.0, 300000.0),
         innerRadii : new Cesium.Cartesian3(70000.0, 70000.0, 70000.0),
