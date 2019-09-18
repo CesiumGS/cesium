@@ -28,9 +28,9 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the rectangle.
      * @param {Property} [options.coordinates] The Property specifying the {@link Rectangle}.
      * @param {Property} [options.height=0] A numeric Property specifying the altitude of the rectangle relative to the ellipsoid surface.
-     * @param {Property} [options.heightReference] A Property specifying what the height is relative to.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the rectangle's extruded face relative to the ellipsoid surface.
-     * @param {Property} [options.extrudedHeightReference] A Property specifying what the extrudedHeight is relative to.
+     * @param {Property} [options.extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
      * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the rectangle clockwise from north.
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the rectangle texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the rectangle.
