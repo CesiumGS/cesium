@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/AxisAlignedBoundingBox',
         'Core/Cartesian3',
         'Core/Intersect',
@@ -8,7 +8,9 @@ defineSuite([
         Cartesian3,
         Intersect,
         Plane) {
-    'use strict';
+        'use strict';
+
+describe('Core/AxisAlignedBoundingBox', function() {
 
     var positions = [
                      new Cartesian3(3, -1, -3),
@@ -161,4 +163,5 @@ defineSuite([
             AxisAlignedBoundingBox.intersectPlane(box, undefined);
         }).toThrowDeveloperError();
     });
+});
 });

@@ -222,7 +222,22 @@ define([
             toBeInstanceOf : function(util, customEqualityTesters) {
                 return {
                     compare : function(actual, expectedConstructor) {
-                        return { pass : actual instanceof expectedConstructor };
+                        var result = {};
+                        if (expectedConstructor === String) {
+                            result.pass = typeof actual === 'string' || actual instanceof String;
+                        } else if (expectedConstructor === Number) {
+                            result.pass = typeof actual === 'number' || actual instanceof Number;
+                        } else if (expectedConstructor === Function) {
+                            result.pass = typeof actual === 'function' || actual instanceof Function;
+                        } else if (expectedConstructor === Object) {
+                            result.pass = actual !== null && typeof actual === 'object';
+                        } else if (expectedConstructor === Boolean) {
+                            result.pass = typeof actual === 'boolean';
+                        } else {
+                            result.pass = actual instanceof expectedConstructor;
+                        }
+                        result.message = 'Expected ' + Object.prototype.toString.call(actual) + ' to be instance of ' + expectedConstructor.name + ', but was instance of ' + (actual && actual.constructor.name);
+                        return result;
                     }
                 };
             },
@@ -576,6 +591,21 @@ define([
                 };
             },
 
+            toBeImageOrImageBitmap : function(util, customEqualityTesters) {
+                return {
+                    compare : function(actual) {
+                        if (typeof createImageBitmap !== 'function') {
+                            return {
+                                pass : actual instanceof Image
+                            };
+                        }
+
+                        return {
+                            pass : actual instanceof ImageBitmap || actual instanceof Image
+                        };
+                    }
+                };
+            },
             toThrowDeveloperError : makeThrowFunction(debug, DeveloperError, 'DeveloperError'),
 
             toThrowRuntimeError : makeThrowFunction(true, RuntimeError, 'RuntimeError'),

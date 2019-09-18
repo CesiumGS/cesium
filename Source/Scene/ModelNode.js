@@ -38,6 +38,7 @@ define([
 
         this._show = true;
         this._matrix = Matrix4.clone(matrix);
+        this._originalMatrix = Matrix4.clone(matrix);
     }
 
     defineProperties(ModelNode.prototype, {
@@ -111,6 +112,19 @@ define([
                 var model = this._model;
                 model._cesiumAnimationsDirty = true;
                 this._runtimeNode.dirtyNumber = model._maxDirtyNumber;
+            }
+        },
+
+        /**
+         * Gets the node's original 4x4 matrix transform from its local coordinates to
+         * its parent's, without any node transformations or articulations applied.
+         *
+         * @memberof ModelNode.prototype
+         * @type {Matrix4}
+         */
+        originalMatrix : {
+            get : function() {
+                return this._originalMatrix;
             }
         }
     });

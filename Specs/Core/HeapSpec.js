@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/Heap'
     ], function(
         Heap) {
-    'use strict';
+        'use strict';
+
+describe('Core/Heap', function() {
 
     var length = 100;
 
@@ -68,7 +70,7 @@ defineSuite([
             pass = pass && checkHeap(heap, comparator);
         }
         expect(pass).toBe(true);
-        expect(heap.length <= heap.maximumLength).toBe(true);
+        expect(heap.length).toBeLessThanOrEqualTo(heap.maximumLength);
         // allowed one extra slot for swapping
         expect(heap.internalArray.length).toBeLessThanOrEqualTo(heap.maximumLength + 1);
     });
@@ -171,4 +173,5 @@ defineSuite([
             currentId = element.id;
         }
     });
+});
 });

@@ -1,14 +1,16 @@
-defineSuite([
-        'Scene/Appearance',
+define([
         'Core/WebGLConstants',
+        'Scene/Appearance',
         'Scene/BlendingState',
         'Scene/Material'
     ], function(
-        Appearance,
         WebGLConstants,
+        Appearance,
         BlendingState,
         Material) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Appearance', function() {
 
     it('constructor', function() {
         var material = Material.fromType('Color');
@@ -122,4 +124,5 @@ defineSuite([
         expect(rs.depthMask).toEqual(false);
         expect(rs.blending).toBe(BlendingState.ALPHA_BLEND);
     });
+});
 });

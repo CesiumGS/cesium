@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/HeadingPitchRoll',
         'Core/Math',
         'Core/Quaternion'
@@ -6,7 +6,10 @@ defineSuite([
         HeadingPitchRoll,
         CesiumMath,
         Quaternion) {
-    'use strict';
+        'use strict';
+
+describe('Core/HeadingPitchRoll', function() {
+
     /*global it,expect*/
 
     var deg2rad = CesiumMath.RADIANS_PER_DEGREE;
@@ -49,6 +52,12 @@ defineSuite([
             expect(init[1]).toEqualEpsilon(result.pitch, CesiumMath.EPSILON11);
             expect(init[2]).toEqualEpsilon(result.roll, CesiumMath.EPSILON11);
         }
+    });
+
+    it('it should return the correct pitch, even with a quaternion rounding error', function() {
+        var q = new Quaternion(8.801218199179452e-17, -0.7071067801637715, -8.801218315071006e-17, -0.7071067822093238);
+        var result = HeadingPitchRoll.fromQuaternion(q);
+        expect(result.pitch).toEqual(-(Math.PI / 2));
     });
 
     it('conversion from degrees', function() {
@@ -174,4 +183,5 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+});
 });

@@ -488,7 +488,11 @@ define([
                     return invalidImage;
                 }
 
-                return loadImageFromTypedArray(a, type);
+                return loadImageFromTypedArray({
+                    uint8Array: a,
+                    format: type,
+                    flipY: true
+                });
             });
     };
 

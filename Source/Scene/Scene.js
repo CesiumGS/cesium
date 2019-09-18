@@ -14,7 +14,6 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/DeveloperError',
         '../Core/EllipsoidGeometry',
@@ -32,7 +31,6 @@ define([
         '../Core/OrthographicOffCenterFrustum',
         '../Core/PerspectiveFrustum',
         '../Core/PerspectiveOffCenterFrustum',
-        '../Core/PixelFormat',
         '../Core/Ray',
         '../Core/RequestScheduler',
         '../Core/ShowGeometryInstanceAttribute',
@@ -43,17 +41,16 @@ define([
         '../Renderer/Context',
         '../Renderer/ContextLimits',
         '../Renderer/DrawCommand',
-        '../Renderer/Framebuffer',
         '../Renderer/Pass',
-        '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
-        '../Renderer/Texture',
         '../ThirdParty/when',
         './BrdfLutGenerator',
         './Camera',
         './Cesium3DTileFeature',
+        './Cesium3DTilePass',
+        './Cesium3DTilePassState',
         './Cesium3DTileset',
         './CreditDisplay',
         './DebugCameraPrimitive',
@@ -98,7 +95,6 @@ define([
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
         DeveloperError,
         EllipsoidGeometry,
@@ -116,7 +112,6 @@ define([
         OrthographicOffCenterFrustum,
         PerspectiveFrustum,
         PerspectiveOffCenterFrustum,
-        PixelFormat,
         Ray,
         RequestScheduler,
         ShowGeometryInstanceAttribute,
@@ -127,17 +122,16 @@ define([
         Context,
         ContextLimits,
         DrawCommand,
-        Framebuffer,
         Pass,
-        PixelDatatype,
         RenderState,
         ShaderProgram,
         ShaderSource,
-        Texture,
         when,
         BrdfLutGenerator,
         Camera,
         Cesium3DTileFeature,
+        Cesium3DTilePass,
+        Cesium3DTilePassState,
         Cesium3DTileset,
         CreditDisplay,
         DebugCameraPrimitive,
@@ -176,10 +170,10 @@ define([
         };
     };
 
-    function AsyncRayPick(ray, width, primitives) {
+    function MostDetailedRayPick(ray, width, tilesets) {
         this.ray = ray;
         this.width = width;
-        this.primitives = primitives;
+        this.tilesets = tilesets;
         this.ready = false;
         this.deferred = when.defer();
         this.promise = this.deferred.promise;
@@ -298,7 +292,7 @@ define([
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
 
-        this._asyncRayPicks = [];
+        this._mostDetailedRayPicks = [];
 
         this._logDepthBuffer = context.fragmentDepth;
         this._logDepthBufferDirty = true;
@@ -797,8 +791,21 @@ define([
             near: 0.1
         });
 
-        this._view = new View(this, camera, viewport);
         this._pickOffscreenView = new View(this, pickOffscreenCamera, pickOffscreenViewport);
+
+        /**
+         * The camera view for the scene camera flight destination. Used for preloading flight destination tiles.
+         * @type {Camera}
+         * @private
+         */
+        this.preloadFlightCamera = new Camera(this);
+
+        /**
+         * The culling volume for the scene camera flight destination. Used for preloading flight destination tiles.
+         * @type {CullingVolume}
+         * @private
+         */
+        this.preloadFlightCullingVolume = undefined;
 
         /**
          * @private
@@ -810,7 +817,7 @@ define([
 
         this._hdr = undefined;
         this._hdrDirty = undefined;
-        this.highDynamicRange = true;
+        this.highDynamicRange = false;
         this.gamma = 2.2;
         this._sunColor = new Cartesian3(1.8, 1.85, 2.0);
 
@@ -1577,6 +1584,24 @@ define([
         },
 
         /**
+         * Ratio between a pixel and a density-independent pixel. Provides a standard unity of
+         * measure for real pixel measurements appropriate to a particular device.
+         *
+         * @memberof Scene.prototype
+         * @type {Number}
+         * @default 1.0
+         * @private
+         */
+        pixelRatio: {
+            get: function() {
+                return this._frameState.pixelRatio;
+            },
+            set: function(value) {
+                this._frameState.pixelRatio = value;
+            }
+        },
+
+        /**
          * @private
          */
         opaqueFrustumNearOffset : {
@@ -1688,6 +1713,34 @@ define([
         }
     };
 
+    var mostDetailedPreloadTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.MOST_DETAILED_PRELOAD
+    });
+
+    var mostDetailedPickTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.MOST_DETAILED_PICK
+    });
+
+    var renderTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.RENDER
+    });
+
+    var pickTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.PICK
+    });
+
+    var preloadTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.PRELOAD
+    });
+
+    var preloadFlightTilesetPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.PRELOAD_FLIGHT
+    });
+
+    var requestRenderModeDeferCheckPassState = new Cesium3DTilePassState({
+        pass : Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK
+    });
+
     var scratchOccluderBoundingSphere = new BoundingSphere();
     var scratchOccluder;
 
@@ -1711,7 +1764,6 @@ define([
         passes.depth = false;
         passes.postProcess = false;
         passes.offscreen = false;
-        passes.asynchronous = false;
     }
 
     function updateFrameNumber(scene, frameNumber, time) {
@@ -1764,6 +1816,8 @@ define([
         }
 
         clearPasses(frameState.passes);
+
+        frameState.tilesetPassState = undefined;
     }
 
     var scratchCullingVolume = new CullingVolume();
@@ -3153,26 +3207,36 @@ define([
         }
     }
 
-    function update(scene) {
+    function prePassesUpdate(scene) {
+        scene._jobScheduler.resetBudgets();
+
         var frameState = scene._frameState;
+        var primitives = scene.primitives;
+        primitives.prePassesUpdate(frameState);
 
         if (defined(scene.globe)) {
             scene.globe.update(frameState);
         }
 
-        updateAsyncRayPicks(scene);
-
+        scene._pickPositionCacheDirty = true;
         frameState.creditDisplay.update();
+    }
+
+    function postPassesUpdate(scene) {
+        var frameState = scene._frameState;
+        var primitives = scene.primitives;
+        primitives.postPassesUpdate(frameState);
+
+        RequestScheduler.update();
     }
 
     var scratchBackgroundColor = new Color();
 
     function render(scene) {
-        scene._pickPositionCacheDirty = true;
+        var frameState = scene._frameState;
 
         var context = scene.context;
         var us = context.uniformState;
-        var frameState = scene._frameState;
 
         var view = scene._defaultView;
         scene._view = view;
@@ -3180,6 +3244,7 @@ define([
         updateFrameState(scene);
         frameState.passes.render = true;
         frameState.passes.postProcess = scene.postProcessStages.hasSelected;
+        frameState.tilesetPassState = renderTilesetPassState;
 
         var backgroundColor = defaultValue(scene.backgroundColor, Color.BLACK);
         if (scene._hdr) {
@@ -3260,13 +3325,21 @@ define([
      * @private
      */
     Scene.prototype.render = function(time) {
+        /**
+         *
+         * Pre passes update. Execute any pass invariant code that should run before the passes here.
+         *
+         */
+        this._preUpdate.raiseEvent(this, time);
+
+        var frameState = this._frameState;
+        frameState.newFrame = false;
+
         if (!defined(time)) {
             time = JulianDate.now();
         }
 
-        var frameState = this._frameState;
-        this._jobScheduler.resetBudgets();
-
+        // Determine if shouldRender
         var cameraChanged = this._view.checkForCameraUpdates(this);
         var shouldRender = !this.requestRenderMode || this._renderRequested || cameraChanged || this._logDepthBufferDirty || this._hdrDirty || (this.mode === SceneMode.MORPHING);
         if (!shouldRender && defined(this.maximumRenderTimeChange) && defined(this._lastRenderTime)) {
@@ -3282,22 +3355,43 @@ define([
 
             var frameNumber = CesiumMath.incrementWrap(frameState.frameNumber, 15000000.0, 1.0);
             updateFrameNumber(this, frameNumber, time);
+            frameState.newFrame = true;
         }
 
-        // Update
-        this._preUpdate.raiseEvent(this, time);
-        tryAndCatchError(this, update);
+        tryAndCatchError(this, prePassesUpdate);
+
+        /**
+         *
+         * Passes update. Add any passes here
+         *
+         */
+        if (this.primitives.show)
+        {
+            tryAndCatchError(this, updateMostDetailedRayPicks);
+            tryAndCatchError(this, updatePreloadPass);
+            tryAndCatchError(this, updatePreloadFlightPass);
+            if (!shouldRender) {
+                tryAndCatchError(this, updateRequestRenderModeDeferCheckPass);
+            }
+        }
+
         this._postUpdate.raiseEvent(this, time);
 
         if (shouldRender) {
-            // Render
             this._preRender.raiseEvent(this, time);
             tryAndCatchError(this, render);
-
-            RequestScheduler.update();
         }
 
+        /**
+         *
+         * Post passes update. Execute any pass invariant code that should run after the passes here.
+         *
+         */
         updateDebugShowFramesPerSecond(this, shouldRender);
+        tryAndCatchError(this, postPassesUpdate);
+
+        // Often used to trigger events (so don't want in trycatch) that the user might be subscribed to. Things like the tile load events, ready promises, etc.
+        // We don't want those events to resolve during the render loop because the events might add new primitives
         callAfterRenderFunctions(this);
 
         if (shouldRender) {
@@ -3483,6 +3577,7 @@ define([
         frameState.cullingVolume = getPickCullingVolume(this, drawingBufferPosition, rectangleWidth, rectangleHeight, viewport);
         frameState.invertClassification = false;
         frameState.passes.pick = true;
+        frameState.tilesetPassState = pickTilesetPassState;
 
         us.update(frameState);
 
@@ -3524,6 +3619,7 @@ define([
         frameState.passes.pick = true;
         frameState.passes.depth = true;
         frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, 1, 1, viewport);
+        frameState.tilesetPassState = pickTilesetPassState;
 
         updateEnvironment(scene);
         environmentState.renderTranslucentDepthForPick = true;
@@ -3798,6 +3894,34 @@ define([
         });
     };
 
+    function updatePreloadPass(scene) {
+        var frameState = scene._frameState;
+        preloadTilesetPassState.camera = frameState.camera;
+        preloadTilesetPassState.cullingVolume = frameState.cullingVolume;
+
+        var primitives = scene.primitives;
+        primitives.updateForPass(frameState, preloadTilesetPassState);
+    }
+
+    function updatePreloadFlightPass(scene) {
+        var frameState = scene._frameState;
+        var camera = frameState.camera;
+        if (!camera.hasCurrentFlight()) {
+            return;
+        }
+
+        preloadFlightTilesetPassState.camera = scene.preloadFlightCamera;
+        preloadFlightTilesetPassState.cullingVolume = scene.preloadFlightCullingVolume;
+
+        var primitives = scene.primitives;
+        primitives.updateForPass(frameState, preloadFlightTilesetPassState);
+    }
+
+    function updateRequestRenderModeDeferCheckPass(scene) {
+        // Check if any ignored requests are ready to go (to wake rendering up again)
+        scene.primitives.updateForPass(scene._frameState, requestRenderModeDeferCheckPassState);
+    }
+
     var scratchRight = new Cartesian3();
     var scratchUp = new Cartesian3();
 
@@ -3813,84 +3937,78 @@ define([
         camera.right = right;
 
         camera.frustum.width = defaultValue(width, scene.pickOffscreenDefaultWidth);
+        return camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
     }
 
-    function updateAsyncRayPick(scene, asyncRayPick) {
-        var context = scene._context;
-        var uniformState = context.uniformState;
+    function updateMostDetailedRayPick(scene, rayPick) {
         var frameState = scene._frameState;
 
-        var view = scene._pickOffscreenView;
-        scene._view = view;
+        var ray = rayPick.ray;
+        var width = rayPick.width;
+        var tilesets = rayPick.tilesets;
 
-        var ray = asyncRayPick.ray;
-        var width = asyncRayPick.width;
-        var primitives = asyncRayPick.primitives;
+        var camera = scene._pickOffscreenView.camera;
+        var cullingVolume = updateOffscreenCameraFromRay(scene, ray, width, camera);
 
-        updateOffscreenCameraFromRay(scene, ray, width, view.camera);
-
-        updateFrameState(scene);
-        frameState.passes.offscreen = true;
-        frameState.passes.asynchronous = true;
-
-        uniformState.update(frameState);
-
-        var commandList = frameState.commandList;
-        var commandsLength = commandList.length;
+        var tilesetPassState = mostDetailedPreloadTilesetPassState;
+        tilesetPassState.camera = camera;
+        tilesetPassState.cullingVolume = cullingVolume;
 
         var ready = true;
-        var primitivesLength = primitives.length;
-        for (var i = 0; i < primitivesLength; ++i) {
-            var primitive = primitives[i];
-            if (primitive.show && scene.primitives.contains(primitive)) {
-                // Only update primitives that are still contained in the scene's primitive collection and are still visible
-                // Update primitives continually until all primitives are ready. This way tiles are never removed from the cache.
-                var primitiveReady = primitive.updateAsync(frameState);
-                ready = (ready && primitiveReady);
+        var tilesetsLength = tilesets.length;
+        for (var i = 0; i < tilesetsLength; ++i) {
+            var tileset = tilesets[i];
+            if (tileset.show && scene.primitives.contains(tileset)) {
+                // Only update tilesets that are still contained in the scene's primitive collection and are still visible
+                // Update tilesets continually until all tilesets are ready. This way tiles are never removed from the cache.
+                tileset.updateForPass(frameState, tilesetPassState);
+                ready = (ready && tilesetPassState.ready);
             }
         }
 
-        // Ignore commands pushed during asynchronous pass
-        commandList.length = commandsLength;
-
-        scene._view = scene._defaultView;
-
         if (ready) {
-            asyncRayPick.deferred.resolve();
+            rayPick.deferred.resolve();
         }
 
         return ready;
     }
 
-    function updateAsyncRayPicks(scene) {
+    function updateMostDetailedRayPicks(scene) {
         // Modifies array during iteration
-        var asyncRayPicks = scene._asyncRayPicks;
-        for (var i = 0; i < asyncRayPicks.length; ++i) {
-            if (updateAsyncRayPick(scene, asyncRayPicks[i])) {
-                asyncRayPicks.splice(i--, 1);
+        var rayPicks = scene._mostDetailedRayPicks;
+        for (var i = 0; i < rayPicks.length; ++i) {
+            if (updateMostDetailedRayPick(scene, rayPicks[i])) {
+                rayPicks.splice(i--, 1);
             }
         }
     }
 
-    function launchAsyncRayPick(scene, ray, objectsToExclude, width, callback) {
-        var asyncPrimitives = [];
-        var primitives = scene.primitives;
+    function getTilesets(primitives, objectsToExclude, tilesets) {
         var length = primitives.length;
         for (var i = 0; i < length; ++i) {
             var primitive = primitives.get(i);
-            if ((primitive instanceof Cesium3DTileset) && primitive.show) {
-                if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
-                    asyncPrimitives.push(primitive);
+            if (primitive.show) {
+                if ((primitive instanceof Cesium3DTileset)) {
+                    if (!defined(objectsToExclude) || objectsToExclude.indexOf(primitive) === -1) {
+                        tilesets.push(primitive);
+                    }
+                } else if (primitive instanceof PrimitiveCollection) {
+                    getTilesets(primitive, objectsToExclude, tilesets);
                 }
             }
         }
-        if (asyncPrimitives.length === 0) {
+    }
+
+    function launchMostDetailedRayPick(scene, ray, objectsToExclude, width, callback) {
+        var tilesets = [];
+        getTilesets(scene.primitives, objectsToExclude, tilesets);
+        if (tilesets.length === 0) {
             return when.resolve(callback());
         }
 
-        var asyncRayPick = new AsyncRayPick(ray, width, asyncPrimitives);
-        scene._asyncRayPicks.push(asyncRayPick);
-        return asyncRayPick.promise.then(function() {
+        var rayPick = new MostDetailedRayPick(ray, width, tilesets);
+        scene._mostDetailedRayPicks.push(rayPick);
+        return rayPick.promise.then(function() {
             return callback();
         });
     }
@@ -3904,7 +4022,7 @@ define([
                (objectsToExclude.indexOf(object.id) > -1);
     }
 
-    function getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, asynchronous) {
+    function getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, mostDetailed) {
         var context = scene._context;
         var uniformState = context.uniformState;
         var frameState = scene._frameState;
@@ -3924,7 +4042,12 @@ define([
         frameState.invertClassification = false;
         frameState.passes.pick = true;
         frameState.passes.offscreen = true;
-        frameState.passes.asynchronous = asynchronous;
+
+        if (mostDetailed) {
+            frameState.tilesetPassState = mostDetailedPickTilesetPassState;
+        } else {
+            frameState.tilesetPassState = pickTilesetPassState;
+        }
 
         uniformState.update(frameState);
 
@@ -3963,22 +4086,35 @@ define([
         }
     }
 
-    function getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, asynchronous) {
+    function getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, mostDetailed) {
         var pickCallback = function() {
-            return getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, asynchronous);
+            return getRayIntersection(scene, ray, objectsToExclude, width, requirePosition, mostDetailed);
         };
         return drillPick(limit, pickCallback);
     }
 
-    function pickFromRay(scene, ray, objectsToExclude, width, requirePosition, asynchronous) {
-        var results = getRayIntersections(scene, ray, 1, objectsToExclude, width, requirePosition, asynchronous);
+    function pickFromRay(scene, ray, objectsToExclude, width, requirePosition, mostDetailed) {
+        var results = getRayIntersections(scene, ray, 1, objectsToExclude, width, requirePosition, mostDetailed);
         if (results.length > 0) {
             return results[0];
         }
     }
 
-    function drillPickFromRay(scene, ray, limit, objectsToExclude, width, requirePosition, asynchronous) {
-        return getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, asynchronous);
+    function drillPickFromRay(scene, ray, limit, objectsToExclude, width, requirePosition, mostDetailed) {
+        return getRayIntersections(scene, ray, limit, objectsToExclude, width, requirePosition, mostDetailed);
+    }
+
+    function deferPromiseUntilPostRender(scene, promise) {
+        // Resolve promise after scene's postRender in case entities are created when the promise resolves.
+        // Entities can't be created between viewer._onTick and viewer._postRender.
+        var deferred = when.defer();
+        promise.then(function(result) {
+            var removeCallback = scene.postRender.addEventListener(function() {
+                deferred.resolve(result);
+                removeCallback();
+            });
+        });
+        return deferred.promise;
     }
 
     /**
@@ -4064,9 +4200,9 @@ define([
         var that = this;
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return launchAsyncRayPick(this, ray, objectsToExclude, width, function() {
+        return deferPromiseUntilPostRender(this, launchMostDetailedRayPick(this, ray, objectsToExclude, width, function() {
             return pickFromRay(that, ray, objectsToExclude, width, false, true);
-        });
+        }));
     };
 
     /**
@@ -4093,9 +4229,9 @@ define([
         var that = this;
         ray = Ray.clone(ray);
         objectsToExclude = defined(objectsToExclude) ? objectsToExclude.slice() : objectsToExclude;
-        return launchAsyncRayPick(this, ray, objectsToExclude, width, function() {
+        return deferPromiseUntilPostRender(this, launchMostDetailedRayPick(this, ray, objectsToExclude, width, function() {
             return drillPickFromRay(that, ray, limit, objectsToExclude, width, false, true);
-        });
+        }));
     };
 
     var scratchSurfacePosition = new Cartesian3();
@@ -4134,7 +4270,7 @@ define([
 
     function sampleHeightMostDetailed(scene, cartographic, objectsToExclude, width) {
         var ray = getRayForSampleHeight(scene, cartographic);
-        return launchAsyncRayPick(scene, ray, objectsToExclude, width, function() {
+        return launchMostDetailedRayPick(scene, ray, objectsToExclude, width, function() {
             var pickResult = pickFromRay(scene, ray, objectsToExclude, width, true, true);
             if (defined(pickResult)) {
                 return getHeightFromCartesian(scene, pickResult.position);
@@ -4144,7 +4280,7 @@ define([
 
     function clampToHeightMostDetailed(scene, cartesian, objectsToExclude, width, result) {
         var ray = getRayForClampToHeight(scene, cartesian);
-        return launchAsyncRayPick(scene, ray, objectsToExclude, width, function() {
+        return launchMostDetailedRayPick(scene, ray, objectsToExclude, width, function() {
             var pickResult = pickFromRay(scene, ray, objectsToExclude, width, true, true);
             if (defined(pickResult)) {
                 return Cartesian3.clone(pickResult.position, result);
@@ -4233,12 +4369,6 @@ define([
         }
         //>>includeEnd('debug');
 
-        if (width instanceof Cartesian3) {
-            result = width;
-            width = undefined;
-            deprecationWarning('clampToHeight-parameter-change', 'clampToHeight now takes an optional width argument before the result argument in Cesium 1.54.  The previous function definition will no longer work in 1.56.');
-        }
-
         var ray = getRayForClampToHeight(this, cartesian);
         var pickResult = pickFromRay(this, ray, objectsToExclude, width, true, false);
         if (defined(pickResult)) {
@@ -4290,13 +4420,13 @@ define([
         for (var i = 0; i < length; ++i) {
             promises[i] = sampleHeightMostDetailed(this, positions[i], objectsToExclude, width);
         }
-        return when.all(promises).then(function(heights) {
+        return deferPromiseUntilPostRender(this, when.all(promises).then(function(heights) {
             var length = heights.length;
             for (var i = 0; i < length; ++i) {
                 positions[i].height = heights[i];
             }
             return positions;
-        });
+        }));
     };
 
     /**
@@ -4342,13 +4472,13 @@ define([
         for (var i = 0; i < length; ++i) {
             promises[i] = clampToHeightMostDetailed(this, cartesians[i], objectsToExclude, width, cartesians[i]);
         }
-        return when.all(promises).then(function(clampedCartesians) {
+        return deferPromiseUntilPostRender(this, when.all(promises).then(function(clampedCartesians) {
             var length = clampedCartesians.length;
             for (var i = 0; i < length; ++i) {
                 cartesians[i] = clampedCartesians[i];
             }
             return cartesians;
-        });
+        }));
     };
 
     /**

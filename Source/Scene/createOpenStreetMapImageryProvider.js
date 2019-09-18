@@ -1,9 +1,23 @@
 define([
+        '../Core/Credit',
+        '../Core/defaultValue',
         '../Core/deprecationWarning',
+        '../Core/DeveloperError',
+        '../Core/Rectangle',
+        '../Core/Resource',
+        '../Core/WebMercatorTilingScheme',
         './OpenStreetMapImageryProvider'
+        './UrlTemplateImageryProvider'
     ], function(
+        Credit,
+        defaultValue,
         deprecationWarning,
-        OpenStreetMapImageryProvider) {
+        DeveloperError,
+        Rectangle,
+        Resource,
+        WebMercatorTilingScheme,
+        OpenStreetMapImageryProvide,
+        UrlTemplateImageryProvider) {
     'use strict';
 
     /**

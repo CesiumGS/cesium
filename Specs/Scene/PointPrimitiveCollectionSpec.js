@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/PointPrimitiveCollection',
+define([
         'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -11,9 +10,9 @@ defineSuite([
         'Core/Rectangle',
         'Scene/BlendOption',
         'Scene/PointPrimitive',
+        'Scene/PointPrimitiveCollection',
         'Specs/createScene'
     ], function(
-        PointPrimitiveCollection,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -25,8 +24,11 @@ defineSuite([
         Rectangle,
         BlendOption,
         PointPrimitive,
+        PointPrimitiveCollection,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PointPrimitiveCollection', function() {
 
     var scene;
     var camera;
@@ -943,3 +945,4 @@ defineSuite([
         expect(actual.radius).toBeGreaterThan(expected.radius);
     });
 }, 'WebGL');
+});

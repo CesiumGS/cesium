@@ -60,13 +60,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        var url = options.url;
-        if (!defined(url)) {
-            url = 'https://{s}.tiles.mapbox.com/v4/';
-        }
-        this._url = url;
-
-        var resource = Resource.createIfNeeded(url);
+        var resource = Resource.createIfNeeded(defaultValue(options.url, 'https://{s}.tiles.mapbox.com/v4/'));
 
         var accessToken = MapboxApi.getAccessToken(options.accessToken);
         this._mapId = mapId;
@@ -120,7 +114,7 @@ define([
          */
         url : {
             get : function() {
-                return this._url;
+                return this._imageryProvider.url;
             }
         },
 

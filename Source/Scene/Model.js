@@ -169,6 +169,8 @@ define([
     // glTF MIME types discussed in https://github.com/KhronosGroup/glTF/issues/412 and https://github.com/KhronosGroup/glTF/issues/943
     var defaultModelAccept = 'model/gltf-binary,model/gltf+json;q=0.8,application/json;q=0.2,*/*;q=0.01';
 
+    var articulationEpsilon = CesiumMath.EPSILON16;
+
     ///////////////////////////////////////////////////////////////////////////
 
     function setCachedGltf(model, cachedGltf) {
@@ -237,21 +239,25 @@ define([
      * Cesium supports glTF assets with the following extensions:
      * <ul>
      * <li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes (glTF 1.0)}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations/README.md|AGI_articulations}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/pull/1302|KHR_blend (draft)}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_blend/README.md|KHR_blend}
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
      * </li>
      * </ul>
      * </p>
@@ -615,6 +621,9 @@ define([
 
         this._runtime = {
             animations : undefined,
+            articulationsByName : undefined,
+            articulationsByStageKey : undefined,
+            stagesByKey : undefined,
             rootNodes : undefined,
             nodes : undefined,            // Indexed with the node's index
             nodesByName : undefined,      // Indexed with name property in the node
@@ -666,7 +675,6 @@ define([
         this._rtcCenter3D = undefined;  // in world coordinates
         this._rtcCenter2D = undefined;  // in projected world coordinates
 
-        this._keepPipelineExtras = options.keepPipelineExtras; // keep the buffers in memory for use in other applications
         this._sourceVersion = undefined;
         this._sourceKHRTechniquesWebGL = undefined;
 
@@ -1235,7 +1243,7 @@ define([
                 return this._specularEnvironmentMaps;
             },
             set : function(value) {
-                this._shouldUpdateSpecularMapAtlas = value !== this._specularEnvironmentMaps;
+                this._shouldUpdateSpecularMapAtlas = this._shouldUpdateSpecularMapAtlas || value !== this._specularEnvironmentMaps;
                 this._specularEnvironmentMaps = value;
             }
         }
@@ -1281,21 +1289,25 @@ define([
      * Cesium supports glTF assets with the following extensions:
      * <ul>
      * <li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_binary_glTF/README.md|KHR_binary_glTF (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Khronos/KHR_materials_common/README.md|KHR_materials_common (glTF 1.0)}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/1.0/Vendor/WEB3D_quantized_attributes/README.md|WEB3D_quantized_attributes (glTF 1.0)}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Vendor/AGI_articulations/README.md|AGI_articulations}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/pull/1302|KHR_blend (draft)}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_draco_mesh_compression/README.md|KHR_draco_mesh_compression}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
-     * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_blend/README.md|KHR_blend}
+     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
      * </li><li>
      * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_unlit/README.md|KHR_materials_unlit}
      * </li><li>
-     * {@link https://github.com/KhronosGroup/glTF/tree/master/extensions/2.0/Khronos/KHR_materials_pbrSpecularGlossiness/README.md|KHR_materials_pbrSpecularGlossiness}
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_techniques_webgl/README.md|KHR_techniques_webgl}
+     * </li><li>
+     * {@link https://github.com/KhronosGroup/glTF/blob/master/extensions/2.0/Khronos/KHR_texture_transform/README.md|KHR_texture_transform}
      * </li>
      * </ul>
      * </p>
@@ -1498,6 +1510,147 @@ define([
         return getRuntime(this, 'materialsByName', name);
     };
 
+    /**
+     * Sets the current value of an articulation stage.  After setting one or multiple stage values, call
+     * Model.applyArticulations() to cause the node matrices to be recalculated.
+     *
+     * @param {String} articulationStageKey The name of the articulation, a space, and the name of the stage.
+     * @param {Number} value The numeric value of this stage of the articulation.
+     *
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+     *
+     * @see Model#applyArticulations
+     */
+    Model.prototype.setArticulationStage = function(articulationStageKey, value) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.number('value', value);
+        //>>includeEnd('debug');
+
+        var stage = getRuntime(this, 'stagesByKey', articulationStageKey);
+        var articulation = getRuntime(this, 'articulationsByStageKey', articulationStageKey);
+        if (defined(stage) && defined(articulation)) {
+            value = CesiumMath.clamp(value, stage.minimumValue, stage.maximumValue);
+            if (!CesiumMath.equalsEpsilon(stage.currentValue, value, articulationEpsilon)) {
+                stage.currentValue = value;
+                articulation.isDirty = true;
+            }
+        }
+    };
+
+    var scratchArticulationCartesian = new Cartesian3();
+    var scratchArticulationRotation = new Matrix3();
+
+    /**
+     * Modifies a Matrix4 by applying a transformation for a given value of a stage.  Note this is different usage
+     * from the typical <code>result</code> parameter, in that the incoming value of <code>result</code> is
+     * meaningful.  Various stages of an articulation can be multiplied together, so their
+     * transformations are all merged into a composite Matrix4 representing them all.
+     *
+     * @param {object} stage The stage of an articulation that is being evaluated.
+     * @param {Matrix4} result The matrix to be modified.
+     * @returns {Matrix4} A matrix transformed as requested by the articulation stage.
+     *
+     * @private
+     */
+    function applyArticulationStageMatrix(stage, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('stage', stage);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        var value = stage.currentValue;
+        var cartesian = scratchArticulationCartesian;
+        var rotation;
+        switch (stage.type) {
+            case 'xRotate':
+                rotation = Matrix3.fromRotationX(CesiumMath.toRadians(value), scratchArticulationRotation);
+                Matrix4.multiplyByMatrix3(result, rotation, result);
+                break;
+            case 'yRotate':
+                rotation = Matrix3.fromRotationY(CesiumMath.toRadians(value), scratchArticulationRotation);
+                Matrix4.multiplyByMatrix3(result, rotation, result);
+                break;
+            case 'zRotate':
+                rotation = Matrix3.fromRotationZ(CesiumMath.toRadians(value), scratchArticulationRotation);
+                Matrix4.multiplyByMatrix3(result, rotation, result);
+                break;
+            case 'xTranslate':
+                cartesian.x = value;
+                cartesian.y = 0.0;
+                cartesian.z = 0.0;
+                Matrix4.multiplyByTranslation(result, cartesian, result);
+                break;
+            case 'yTranslate':
+                cartesian.x = 0.0;
+                cartesian.y = value;
+                cartesian.z = 0.0;
+                Matrix4.multiplyByTranslation(result, cartesian, result);
+                break;
+            case 'zTranslate':
+                cartesian.x = 0.0;
+                cartesian.y = 0.0;
+                cartesian.z = value;
+                Matrix4.multiplyByTranslation(result, cartesian, result);
+                break;
+            case 'xScale':
+                cartesian.x = value;
+                cartesian.y = 1.0;
+                cartesian.z = 1.0;
+                Matrix4.multiplyByScale(result, cartesian, result);
+                break;
+            case 'yScale':
+                cartesian.x = 1.0;
+                cartesian.y = value;
+                cartesian.z = 1.0;
+                Matrix4.multiplyByScale(result, cartesian, result);
+                break;
+            case 'zScale':
+                cartesian.x = 1.0;
+                cartesian.y = 1.0;
+                cartesian.z = value;
+                Matrix4.multiplyByScale(result, cartesian, result);
+                break;
+            case 'uniformScale':
+                Matrix4.multiplyByUniformScale(result, value, result);
+                break;
+            default:
+                break;
+        }
+        return result;
+    }
+
+    var scratchApplyArticulationTransform = new Matrix4();
+
+    /**
+     * Applies any modified articulation stages to the matrix of each node that participates
+     * in any articulation.  Note that this will overwrite any nodeTransformations on participating nodes.
+     *
+     * @exception {DeveloperError} The model is not loaded.  Use Model.readyPromise or wait for Model.ready to be true.
+     */
+    Model.prototype.applyArticulations = function() {
+        var articulationsByName = this._runtime.articulationsByName;
+        for (var articulationName in articulationsByName) {
+            if (articulationsByName.hasOwnProperty(articulationName)) {
+                var articulation = articulationsByName[articulationName];
+                if (articulation.isDirty) {
+                    articulation.isDirty = false;
+                    var numNodes = articulation.nodes.length;
+                    for (var n = 0; n < numNodes; ++n) {
+                        var node = articulation.nodes[n];
+                        var transform = Matrix4.clone(node.originalMatrix, scratchApplyArticulationTransform);
+
+                        var numStages = articulation.stages.length;
+                        for (var s = 0; s < numStages; ++s) {
+                            var stage = articulation.stages[s];
+                            transform = applyArticulationStageMatrix(stage, transform);
+                        }
+                        node.matrix = transform;
+                    }
+                }
+            }
+        }
+    };
+
     ///////////////////////////////////////////////////////////////////////////
 
     function addBuffersToLoadResources(model) {
@@ -1628,6 +1781,44 @@ define([
         }
     }
 
+    function parseArticulations(model) {
+        var articulationsByName = {};
+        var articulationsByStageKey = {};
+        var runtimeStagesByKey = {};
+
+        model._runtime.articulationsByName = articulationsByName;
+        model._runtime.articulationsByStageKey = articulationsByStageKey;
+        model._runtime.stagesByKey = runtimeStagesByKey;
+
+        var gltf = model.gltf;
+        if (!hasExtension(gltf, 'AGI_articulations') || !defined(gltf.extensions) || !defined(gltf.extensions.AGI_articulations)) {
+            return;
+        }
+
+        var gltfArticulations = gltf.extensions.AGI_articulations.articulations;
+        if (!defined(gltfArticulations)) {
+            return;
+        }
+
+        var numArticulations = gltfArticulations.length;
+        for (var i = 0; i < numArticulations; ++i) {
+            var articulation = clone(gltfArticulations[i]);
+            articulation.nodes = [];
+            articulation.isDirty = true;
+            articulationsByName[articulation.name] = articulation;
+
+            var numStages = articulation.stages.length;
+            for (var s = 0; s < numStages; ++s) {
+                var stage = articulation.stages[s];
+                stage.currentValue = stage.initialValue;
+
+                var stageKey = articulation.name + ' ' + stage.name;
+                articulationsByStageKey[stageKey] = articulation;
+                runtimeStagesByKey[stageKey] = stage;
+            }
+        }
+    }
+
     function imageLoad(model, textureId) {
         return function(image) {
             var loadResources = model._loadResources;
@@ -1730,12 +1921,15 @@ define([
         });
     }
 
+    var scratchArticulationStageInitialTransform = new Matrix4();
+
     function parseNodes(model) {
         var runtimeNodes = {};
         var runtimeNodesByName = {};
         var skinnedNodes = [];
 
         var skinnedNodesIds = model._loadResources.skinnedNodesIds;
+        var articulationsByName = model._runtime.articulationsByName;
 
         ForEach.node(model.gltf, function(node, id) {
             var runtimeNode = {
@@ -1782,6 +1976,22 @@ define([
             if (defined(node.skin)) {
                 skinnedNodesIds.push(id);
                 skinnedNodes.push(runtimeNode);
+            }
+
+            if (defined(node.extensions) && defined(node.extensions.AGI_articulations)) {
+                var articulationName = node.extensions.AGI_articulations.articulationName;
+                if (defined(articulationName)) {
+                    var transform = Matrix4.clone(runtimeNode.publicNode.originalMatrix, scratchArticulationStageInitialTransform);
+                    var articulation = articulationsByName[articulationName];
+                    articulation.nodes.push(runtimeNode.publicNode);
+
+                    var numStages = articulation.stages.length;
+                    for (var s = 0; s < numStages; ++s) {
+                        var stage = articulation.stages[s];
+                        transform = applyArticulationStageMatrix(stage, transform);
+                    }
+                    runtimeNode.publicNode.matrix = transform;
+                }
             }
         });
 
@@ -2325,7 +2535,11 @@ define([
                 ++model._loadResources.pendingTextureLoads;
             } else {
                 var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
-                loadImageFromTypedArray(loadResources.getBuffer(bufferView), gltfTexture.mimeType)
+                loadImageFromTypedArray({
+                    uint8Array: loadResources.getBuffer(bufferView),
+                    format: gltfTexture.mimeType,
+                    flipY: false
+                })
                     .then(onload).otherwise(onerror);
                 ++loadResources.pendingBufferViewToImage;
             }
@@ -2375,24 +2589,67 @@ define([
 
         var rendererSamplers = model._rendererResources.samplers;
         var sampler = rendererSamplers[texture.sampler];
-        sampler = defaultValue(sampler, new Sampler({
-            wrapS : TextureWrap.REPEAT,
-            wrapT : TextureWrap.REPEAT
-        }));
+        if (!defined(sampler)) {
+            sampler = new Sampler({
+                wrapS : TextureWrap.REPEAT,
+                wrapT : TextureWrap.REPEAT
+            });
+        }
+
+        var usesTextureTransform = false;
+        var materials = model.gltf.materials;
+        var materialsLength = materials.length;
+        for (var i = 0; i < materialsLength; ++i) {
+            var material = materials[i];
+            if (defined(material.extensions) && defined(material.extensions.KHR_techniques_webgl)) {
+                var values = material.extensions.KHR_techniques_webgl.values;
+                for (var valueName in values) {
+                    if (values.hasOwnProperty(valueName) && valueName.indexOf('Texture') !== -1) {
+                        var value = values[valueName];
+                        if (value.index === gltfTexture.id && defined(value.extensions) && defined(value.extensions.KHR_texture_transform)) {
+                            usesTextureTransform = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            if (usesTextureTransform) {
+                break;
+            }
+        }
+
+        var wrapS = sampler.wrapS;
+        var wrapT = sampler.wrapT;
+        var minFilter = sampler.minificationFilter;
+
+        if (usesTextureTransform && minFilter !== TextureMinificationFilter.LINEAR && minFilter !== TextureMinificationFilter.NEAREST) {
+            if (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST || minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) {
+                minFilter = TextureMinificationFilter.NEAREST;
+            } else {
+                minFilter = TextureMinificationFilter.LINEAR;
+            }
+
+            sampler = new Sampler({
+                wrapS : sampler.wrapS,
+                wrapT : sampler.wrapT,
+                textureMinificationFilter : minFilter,
+                textureMagnificationFilter : sampler.magnificationFilter
+            });
+        }
 
         var internalFormat = gltfTexture.internalFormat;
 
         var mipmap =
             (!(defined(internalFormat) && PixelFormat.isCompressedFormat(internalFormat))) &&
-            ((sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
-             (sampler.minificationFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
-             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
-             (sampler.minificationFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
+            ((minFilter === TextureMinificationFilter.NEAREST_MIPMAP_NEAREST) ||
+             (minFilter === TextureMinificationFilter.NEAREST_MIPMAP_LINEAR) ||
+             (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_NEAREST) ||
+             (minFilter === TextureMinificationFilter.LINEAR_MIPMAP_LINEAR));
         var requiresNpot = mipmap ||
-           (sampler.wrapS === TextureWrap.REPEAT) ||
-           (sampler.wrapS === TextureWrap.MIRRORED_REPEAT) ||
-           (sampler.wrapT === TextureWrap.REPEAT) ||
-           (sampler.wrapT === TextureWrap.MIRRORED_REPEAT);
+           (wrapS === TextureWrap.REPEAT) ||
+           (wrapS === TextureWrap.MIRRORED_REPEAT) ||
+           (wrapT === TextureWrap.REPEAT) ||
+           (wrapT === TextureWrap.MIRRORED_REPEAT);
 
         var tx;
         var source = gltfTexture.image;
@@ -4303,10 +4560,11 @@ define([
             return;
         }
 
-        var supportsWebP = FeatureDetection.supportsWebPSync();
-        if (!defined(supportsWebP)) {
+        if (!FeatureDetection.supportsWebP.initialized) {
+            FeatureDetection.supportsWebP.initialize();
             return;
         }
+        var supportsWebP = FeatureDetection.supportsWebP();
 
         var context = frameState.context;
         this._defaultTexture = context.defaultTexture;
@@ -4386,7 +4644,7 @@ define([
                     ModelUtility.updateForwardAxis(this);
 
                     // glTF pipeline updates, not needed if loading from cache
-                    if (!this._loadRendererResourcesFromCache) {
+                    if (!defined(this.gltf.extras.sourceVersion)) {
                         var gltf = this.gltf;
                         // Add the original version so it remains cached
                         gltf.extras.sourceVersion = ModelUtility.getAssetVersion(gltf);
@@ -4414,6 +4672,7 @@ define([
 
                     // We do this after to make sure that the ids don't change
                     addBuffersToLoadResources(this);
+                    parseArticulations(this);
                     parseTechniques(this);
                     if (!this._loadRendererResourcesFromCache) {
                         parseBufferViews(this);
@@ -4465,10 +4724,6 @@ define([
             }
 
             if (loadResources.finished()) {
-                if (!this._keepPipelineExtras) {
-                    removePipelineExtras(this.gltf);
-                }
-
                 this._loadResources = undefined;  // Clear CPU memory since WebGL resources were created.
 
                 var resources = this._rendererResources;

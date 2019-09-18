@@ -1,20 +1,22 @@
-defineSuite([
-        'Core/PolylineGeometry',
+define([
         'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
         'Core/Ellipsoid',
+        'Core/PolylineGeometry',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        PolylineGeometry,
         ArcType,
         Cartesian3,
         Color,
         Ellipsoid,
+        PolylineGeometry,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/PolylineGeometry', function() {
 
     it('constructor throws with no positions', function() {
         expect(function() {
@@ -37,24 +39,6 @@ defineSuite([
                 colors : []
             });
         }).toThrowDeveloperError();
-    });
-
-    it('constructor converts followSurface to arcType', function() {
-        var line = new PolylineGeometry({
-            positions: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
-            followSurface: false
-        });
-
-        expect(line._followSurface).toBe(false);
-        expect(line._arcType).toBe(ArcType.NONE);
-
-        line = new PolylineGeometry({
-            positions: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
-            followSurface: true
-        });
-
-        expect(line._followSurface).toBe(true);
-        expect(line._arcType).toBe(ArcType.GEODESIC);
     });
 
     it('constructor returns undefined when line width is negative', function() {
@@ -224,4 +208,5 @@ defineSuite([
     });
     packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 1, 0, 0, 0, 0, 0, 10, 0, 2, 11];
     createPackableSpecs(PolylineGeometry, line, packedInstance, 'rhumb line');
+});
 });

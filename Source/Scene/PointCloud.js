@@ -3,7 +3,6 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Math',
         '../Core/Check',
         '../Core/Color',
         '../Core/combine',
@@ -14,10 +13,10 @@ define([
         '../Core/destroyObject',
         '../Core/FeatureDetection',
         '../Core/getStringFromTypedArray',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
         '../Core/OrthographicFrustum',
-        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
         '../Core/Transforms',
@@ -27,12 +26,10 @@ define([
         '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../ThirdParty/when',
         './BlendingState',
         './Cesium3DTileBatchTable',
-        './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
         './DracoLoader',
         './getClipAndStyleCode',
@@ -45,7 +42,6 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartesian4,
-        CesiumMath,
         Check,
         Color,
         combine,
@@ -56,10 +52,10 @@ define([
         destroyObject,
         FeatureDetection,
         getStringFromTypedArray,
+        CesiumMath,
         Matrix4,
         oneTimeWarning,
         OrthographicFrustum,
-        Plane,
         PrimitiveType,
         RuntimeError,
         Transforms,
@@ -69,12 +65,10 @@ define([
         Pass,
         RenderState,
         ShaderProgram,
-        ShaderSource,
         VertexArray,
         when,
         BlendingState,
         Cesium3DTileBatchTable,
-        Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
         DracoLoader,
         getClipAndStyleCode,
@@ -516,7 +510,7 @@ define([
         return boundingSphere;
     }
 
-    function prepareVertexAttribute(typedArray) {
+    function prepareVertexAttribute(typedArray, name) {
         // WebGL does not support UNSIGNED_INT, INT, or DOUBLE vertex attributes. Convert these to FLOAT.
         var componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
         if (componentDatatype === ComponentDatatype.INT || componentDatatype === ComponentDatatype.UNSIGNED_INT || componentDatatype === ComponentDatatype.DOUBLE) {
@@ -573,7 +567,7 @@ define([
             for (var name in styleableProperties) {
                 if (styleableProperties.hasOwnProperty(name)) {
                     var property = styleableProperties[name];
-                    var typedArray = prepareVertexAttribute(property.typedArray);
+                    var typedArray = prepareVertexAttribute(property.typedArray, name);
                     componentsPerAttribute = property.componentCount;
                     componentDatatype = ComponentDatatype.fromTypedArray(typedArray);
 
@@ -634,7 +628,7 @@ define([
 
         var batchIdsVertexBuffer;
         if (hasBatchIds) {
-            batchIds = prepareVertexAttribute(batchIds);
+            batchIds = prepareVertexAttribute(batchIds, 'batchIds');
             batchIdsVertexBuffer = Buffer.createVertexBuffer({
                 context : context,
                 typedArray : batchIds,
@@ -1137,6 +1131,7 @@ define([
             } else {
                 vs += '    vec3 normal = a_normal; \n';
             }
+            vs += '    vec3 normalEC = czm_normal * normal; \n';
         } else {
             vs += '    vec3 normal = vec3(1.0); \n';
         }
@@ -1163,8 +1158,7 @@ define([
         vs += '    color = color * u_highlightColor; \n';
 
         if (usesNormals && normalShading) {
-            vs += '    normal = czm_normal * normal; \n' +
-                  '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normal); \n' +
+            vs += '    float diffuseStrength = czm_getLambertDiffuse(czm_sunDirectionEC, normalEC); \n' +
                   '    diffuseStrength = max(diffuseStrength, 0.4); \n' + // Apply some ambient lighting
                   '    color.xyz *= diffuseStrength; \n';
         }
@@ -1173,7 +1167,7 @@ define([
               '    gl_Position = czm_modelViewProjection * vec4(position, 1.0); \n';
 
         if (usesNormals && backFaceCulling) {
-            vs += '    float visible = step(-normal.z, 0.0); \n' +
+            vs += '    float visible = step(-normalEC.z, 0.0); \n' +
                   '    gl_Position *= visible; \n' +
                   '    gl_PointSize *= visible; \n';
         }

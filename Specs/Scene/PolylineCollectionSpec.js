@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/PolylineCollection',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -9,10 +8,10 @@ defineSuite([
         'Core/Matrix4',
         'Scene/Camera',
         'Scene/Material',
+        'Scene/PolylineCollection',
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
-        PolylineCollection,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -22,9 +21,12 @@ defineSuite([
         Matrix4,
         Camera,
         Material,
+        PolylineCollection,
         SceneMode,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PolylineCollection', function() {
 
     var scene;
     var polylines;
@@ -1659,3 +1661,4 @@ defineSuite([
         expect(polylines.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

@@ -1,8 +1,6 @@
 define([
         '../Core/defaultValue',
         '../Core/defineProperties',
-        '../Core/defined',
-        '../Core/deprecationWarning',
         '../Core/Event',
         '../Core/JulianDate',
         './ModelAnimationLoop',
@@ -10,8 +8,6 @@ define([
     ], function(
         defaultValue,
         defineProperties,
-        defined,
-        deprecationWarning,
         Event,
         JulianDate,
         ModelAnimationLoop,

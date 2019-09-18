@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian2',
@@ -52,7 +52,9 @@ defineSuite([
         TextureAtlas,
         createScene,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/BoundingSphere', function() {
 
     var scene;
     var context;
@@ -374,3 +376,4 @@ defineSuite([
         expect(scene.frustumCommandsList.length).toEqual(1);
     });
 }, 'WebGL');
+});

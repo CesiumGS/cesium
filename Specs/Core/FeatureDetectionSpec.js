@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/FeatureDetection'
     ], function(
         FeatureDetection) {
-    'use strict';
+        'use strict';
+
+describe('Core/FeatureDetection', function() {
 
     //generally, these tests just make sure the function runs, the test can't expect a value of true or false
     it('detects fullscreen support', function() {
@@ -116,11 +118,23 @@ defineSuite([
         }
     });
 
+    it('supportWebP throws when it has not been initialized', function() {
+        FeatureDetection.supportsWebP._promise = undefined;
+        FeatureDetection.supportsWebP._result = undefined;
+        expect(function() {
+            FeatureDetection.supportsWebP();
+        }).toThrowDeveloperError();
+    });
+
     it('detects WebP support', function() {
-        return FeatureDetection.supportsWebP()
+        FeatureDetection.supportsWebP._promise = undefined;
+        FeatureDetection.supportsWebP._result = undefined;
+
+        return FeatureDetection.supportsWebP.initialize()
             .then(function(supportsWebP) {
                 expect(typeof supportsWebP).toEqual('boolean');
-                expect(FeatureDetection.supportsWebPSync()).toEqual(supportsWebP);
+                expect(FeatureDetection.supportsWebP()).toEqual(supportsWebP);
             });
     });
+});
 });

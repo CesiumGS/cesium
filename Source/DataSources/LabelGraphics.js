@@ -27,63 +27,64 @@ define([
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the label.
      * @param {Property} [options.text] A Property specifying the text. Explicit newlines '\n' are supported.
      * @param {Property} [options.font='30px sans-serif'] A Property specifying the CSS font.
      * @param {Property} [options.style=LabelStyle.FILL] A Property specifying the {@link LabelStyle}.
-     * @param {Property} [options.fillColor=Color.WHITE] A Property specifying the fill {@link Color}.
-     * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the outline {@link Color}.
-     * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the outline width.
-     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the label.
+     * @param {Property} [options.scale=1.0] A numeric Property specifying the scale to apply to the text.
      * @param {Property} [options.showBackground=false] A boolean Property specifying the visibility of the background behind the label.
      * @param {Property} [options.backgroundColor=new Color(0.165, 0.165, 0.165, 0.8)] A Property specifying the background {@link Color}.
      * @param {Property} [options.backgroundPadding=new Cartesian2(7, 5)] A {@link Cartesian2} Property specifying the horizontal and vertical background padding in pixels.
-     * @param {Property} [options.scale=1.0] A numeric Property specifying the scale to apply to the text.
+     * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
+     * @param {Property} [options.eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
      * @param {Property} [options.horizontalOrigin=HorizontalOrigin.CENTER] A Property specifying the {@link HorizontalOrigin}.
      * @param {Property} [options.verticalOrigin=VerticalOrigin.CENTER] A Property specifying the {@link VerticalOrigin}.
-     * @param {Property} [options.eyeOffset=Cartesian3.ZERO] A {@link Cartesian3} Property specifying the eye offset.
-     * @param {Property} [options.pixelOffset=Cartesian2.ZERO] A {@link Cartesian2} Property specifying the pixel offset.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
+     * @param {Property} [options.fillColor=Color.WHITE] A Property specifying the fill {@link Color}.
+     * @param {Property} [options.outlineColor=Color.BLACK] A Property specifying the outline {@link Color}.
+     * @param {Property} [options.outlineWidth=1.0] A numeric Property specifying the outline width.
      * @param {Property} [options.translucencyByDistance] A {@link NearFarScalar} Property used to set translucency based on distance from the camera.
      * @param {Property} [options.pixelOffsetScaleByDistance] A {@link NearFarScalar} Property used to set pixelOffset based on distance from the camera.
      * @param {Property} [options.scaleByDistance] A {@link NearFarScalar} Property used to set scale based on distance from the camera.
-     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
      * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     function LabelGraphics(options) {
+        this._definitionChanged = new Event();
+        this._show = undefined;
+        this._showSubscription = undefined;
         this._text = undefined;
         this._textSubscription = undefined;
         this._font = undefined;
         this._fontSubscription = undefined;
         this._style = undefined;
         this._styleSubscription = undefined;
-        this._fillColor = undefined;
-        this._fillColorSubscription = undefined;
-        this._outlineColor = undefined;
-        this._outlineColorSubscription = undefined;
-        this._outlineWidth = undefined;
-        this._outlineWidthSubscription = undefined;
-        this._horizontalOrigin = undefined;
-        this._horizontalOriginSubscription = undefined;
-        this._verticalOrigin = undefined;
-        this._verticalOriginSubscription = undefined;
-        this._eyeOffset = undefined;
-        this._eyeOffsetSubscription = undefined;
-        this._heightReference = undefined;
-        this._heightReferenceSubscription = undefined;
-        this._pixelOffset = undefined;
-        this._pixelOffsetSubscription = undefined;
         this._scale = undefined;
         this._scaleSubscription = undefined;
-        this._show = undefined;
-        this._showSubscription = undefined;
         this._showBackground = undefined;
         this._showBackgroundSubscription = undefined;
         this._backgroundColor = undefined;
         this._backgroundColorSubscription = undefined;
         this._backgroundPadding = undefined;
         this._backgroundPaddingSubscription = undefined;
+        this._pixelOffset = undefined;
+        this._pixelOffsetSubscription = undefined;
+        this._eyeOffset = undefined;
+        this._eyeOffsetSubscription = undefined;
+        this._horizontalOrigin = undefined;
+        this._horizontalOriginSubscription = undefined;
+        this._verticalOrigin = undefined;
+        this._verticalOriginSubscription = undefined;
+        this._heightReference = undefined;
+        this._heightReferenceSubscription = undefined;
+        this._fillColor = undefined;
+        this._fillColorSubscription = undefined;
+        this._outlineColor = undefined;
+        this._outlineColorSubscription = undefined;
+        this._outlineWidth = undefined;
+        this._outlineWidthSubscription = undefined;
         this._translucencyByDistance = undefined;
         this._translucencyByDistanceSubscription = undefined;
         this._pixelOffsetScaleByDistance = undefined;
@@ -94,7 +95,6 @@ define([
         this._distanceDisplayConditionSubscription = undefined;
         this._disableDepthTestDistance = undefined;
         this._disableDepthTestDistanceSubscription = undefined;
-        this._definitionChanged = new Event();
 
         this.merge(defaultValue(options, defaultValue.EMPTY_OBJECT));
     }
@@ -112,6 +112,13 @@ define([
                 return this._definitionChanged;
             }
         },
+
+        /**
+         * Gets or sets the boolean Property specifying the visibility of the label.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         */
+        show : createPropertyDescriptor('show'),
 
         /**
          * Gets or sets the string Property specifying the text of the label.
@@ -137,39 +144,65 @@ define([
         style : createPropertyDescriptor('style'),
 
         /**
-         * Gets or sets the Property specifying the fill {@link Color}.
+         * Gets or sets the numeric Property specifying the uniform scale to apply to the image.
+         * A scale greater than <code>1.0</code> enlarges the label while a scale less than <code>1.0</code> shrinks it.
+         * <p>
+         * <div align='center'>
+         * <img src='Images/Label.setScale.png' width='400' height='300' /><br/>
+         * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>,
+         * and <code>2.0</code>.
+         * </div>
+         * </p>
          * @memberof LabelGraphics.prototype
          * @type {Property}
+         * @default 1.0
          */
-        fillColor : createPropertyDescriptor('fillColor'),
+        scale : createPropertyDescriptor('scale'),
 
         /**
-         * Gets or sets the Property specifying the outline {@link Color}.
+         * Gets or sets the boolean Property specifying the visibility of the background behind the label.
          * @memberof LabelGraphics.prototype
          * @type {Property}
+         * @default false
          */
-        outlineColor : createPropertyDescriptor('outlineColor'),
+        showBackground : createPropertyDescriptor('showBackground'),
 
         /**
-         * Gets or sets the numeric Property specifying the outline width.
+         * Gets or sets the Property specifying the background {@link Color}.
          * @memberof LabelGraphics.prototype
          * @type {Property}
+         * @default new Color(0.165, 0.165, 0.165, 0.8)
          */
-        outlineWidth : createPropertyDescriptor('outlineWidth'),
+        backgroundColor : createPropertyDescriptor('backgroundColor'),
 
         /**
-         * Gets or sets the Property specifying the {@link HorizontalOrigin}.
+         * Gets or sets the {@link Cartesian2} Property specifying the label's horizontal and vertical
+         * background padding in pixels.
          * @memberof LabelGraphics.prototype
          * @type {Property}
+         * @default new Cartesian2(7, 5)
          */
-        horizontalOrigin : createPropertyDescriptor('horizontalOrigin'),
+        backgroundPadding : createPropertyDescriptor('backgroundPadding'),
 
         /**
-         * Gets or sets the Property specifying the {@link VerticalOrigin}.
+         * Gets or sets the {@link Cartesian2} Property specifying the label's pixel offset in screen space
+         * from the origin of this label.  This is commonly used to align multiple labels and labels at
+         * the same position, e.g., an image and text.  The screen space origin is the top, left corner of the
+         * canvas; <code>x</code> increases from left to right, and <code>y</code> increases from top to bottom.
+         * <p>
+         * <div align='center'>
+         * <table border='0' cellpadding='5'><tr>
+         * <td align='center'><code>default</code><br/><img src='Images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
+         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, 75);</code><br/><img src='Images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
+         * </tr></table>
+         * The label's origin is indicated by the yellow point.
+         * </div>
+         * </p>
          * @memberof LabelGraphics.prototype
          * @type {Property}
+         * @default Cartesian2.ZERO
          */
-        verticalOrigin : createPropertyDescriptor('verticalOrigin'),
+        pixelOffset : createPropertyDescriptor('pixelOffset'),
 
         /**
          * Gets or sets the {@link Cartesian3} Property specifying the label's offset in eye coordinates.
@@ -197,6 +230,20 @@ define([
         eyeOffset : createPropertyDescriptor('eyeOffset'),
 
         /**
+         * Gets or sets the Property specifying the {@link HorizontalOrigin}.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         */
+        horizontalOrigin : createPropertyDescriptor('horizontalOrigin'),
+
+        /**
+         * Gets or sets the Property specifying the {@link VerticalOrigin}.
+         * @memberof LabelGraphics.prototype
+         * @type {Property}
+         */
+        verticalOrigin : createPropertyDescriptor('verticalOrigin'),
+
+        /**
          * Gets or sets the Property specifying the {@link HeightReference}.
          * @memberof LabelGraphics.prototype
          * @type {Property}
@@ -205,72 +252,25 @@ define([
         heightReference : createPropertyDescriptor('heightReference'),
 
         /**
-         * Gets or sets the {@link Cartesian2} Property specifying the label's pixel offset in screen space
-         * from the origin of this label.  This is commonly used to align multiple labels and labels at
-         * the same position, e.g., an image and text.  The screen space origin is the top, left corner of the
-         * canvas; <code>x</code> increases from left to right, and <code>y</code> increases from top to bottom.
-         * <p>
-         * <div align='center'>
-         * <table border='0' cellpadding='5'><tr>
-         * <td align='center'><code>default</code><br/><img src='Images/Label.setPixelOffset.default.png' width='250' height='188' /></td>
-         * <td align='center'><code>l.pixeloffset = new Cartesian2(25, 75);</code><br/><img src='Images/Label.setPixelOffset.x50y-25.png' width='250' height='188' /></td>
-         * </tr></table>
-         * The label's origin is indicated by the yellow point.
-         * </div>
-         * </p>
+         * Gets or sets the Property specifying the fill {@link Color}.
          * @memberof LabelGraphics.prototype
          * @type {Property}
-         * @default Cartesian2.ZERO
          */
-        pixelOffset : createPropertyDescriptor('pixelOffset'),
+        fillColor : createPropertyDescriptor('fillColor'),
 
         /**
-         * Gets or sets the numeric Property specifying the uniform scale to apply to the image.
-         * A scale greater than <code>1.0</code> enlarges the label while a scale less than <code>1.0</code> shrinks it.
-         * <p>
-         * <div align='center'>
-         * <img src='Images/Label.setScale.png' width='400' height='300' /><br/>
-         * From left to right in the above image, the scales are <code>0.5</code>, <code>1.0</code>,
-         * and <code>2.0</code>.
-         * </div>
-         * </p>
+         * Gets or sets the Property specifying the outline {@link Color}.
          * @memberof LabelGraphics.prototype
          * @type {Property}
-         * @default 1.0
          */
-        scale : createPropertyDescriptor('scale'),
+        outlineColor : createPropertyDescriptor('outlineColor'),
 
         /**
-         * Gets or sets the boolean Property specifying the visibility of the label.
+         * Gets or sets the numeric Property specifying the outline width.
          * @memberof LabelGraphics.prototype
          * @type {Property}
          */
-        show : createPropertyDescriptor('show'),
-
-        /**
-         * Gets or sets the boolean Property specifying the visibility of the background behind the label.
-         * @memberof LabelGraphics.prototype
-         * @type {Property}
-         * @default false
-         */
-        showBackground : createPropertyDescriptor('showBackground'),
-
-        /**
-         * Gets or sets the Property specifying the background {@link Color}.
-         * @memberof LabelGraphics.prototype
-         * @type {Property}
-         * @default new Color(0.165, 0.165, 0.165, 0.8)
-         */
-        backgroundColor : createPropertyDescriptor('backgroundColor'),
-
-        /**
-         * Gets or sets the {@link Cartesian2} Property specifying the label's horizontal and vertical
-         * background padding in pixels.
-         * @memberof LabelGraphics.prototype
-         * @type {Property}
-         * @default new Cartesian2(7, 5)
-         */
-        backgroundPadding : createPropertyDescriptor('backgroundPadding'),
+        outlineWidth : createPropertyDescriptor('outlineWidth'),
 
         /**
          * Gets or sets {@link NearFarScalar} Property specifying the translucency of the label based on the distance from the camera.
@@ -332,22 +332,22 @@ define([
         if (!defined(result)) {
             return new LabelGraphics(this);
         }
+        result.show = this.show;
         result.text = this.text;
         result.font = this.font;
-        result.show = this.show;
         result.style = this.style;
-        result.fillColor = this.fillColor;
-        result.outlineColor = this.outlineColor;
-        result.outlineWidth = this.outlineWidth;
+        result.scale = this.scale;
         result.showBackground = this.showBackground;
         result.backgroundColor = this.backgroundColor;
         result.backgroundPadding = this.backgroundPadding;
-        result.scale = this.scale;
+        result.pixelOffset = this.pixelOffset;
+        result.eyeOffset = this.eyeOffset;
         result.horizontalOrigin = this.horizontalOrigin;
         result.verticalOrigin = this.verticalOrigin;
-        result.eyeOffset = this.eyeOffset;
         result.heightReference = this.heightReference;
-        result.pixelOffset = this.pixelOffset;
+        result.fillColor = this.fillColor;
+        result.outlineColor = this.outlineColor;
+        result.outlineWidth = this.outlineWidth;
         result.translucencyByDistance = this.translucencyByDistance;
         result.pixelOffsetScaleByDistance = this.pixelOffsetScaleByDistance;
         result.scaleByDistance = this.scaleByDistance;
@@ -369,22 +369,22 @@ define([
         }
         //>>includeEnd('debug');
 
+        this.show = defaultValue(this.show, source.show);
         this.text = defaultValue(this.text, source.text);
         this.font = defaultValue(this.font, source.font);
-        this.show = defaultValue(this.show, source.show);
         this.style = defaultValue(this.style, source.style);
-        this.fillColor = defaultValue(this.fillColor, source.fillColor);
-        this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
-        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
+        this.scale = defaultValue(this.scale, source.scale);
         this.showBackground = defaultValue(this.showBackground, source.showBackground);
         this.backgroundColor = defaultValue(this.backgroundColor, source.backgroundColor);
         this.backgroundPadding = defaultValue(this.backgroundPadding, source.backgroundPadding);
-        this.scale = defaultValue(this.scale, source.scale);
+        this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
+        this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
         this.horizontalOrigin = defaultValue(this.horizontalOrigin, source.horizontalOrigin);
         this.verticalOrigin = defaultValue(this.verticalOrigin, source.verticalOrigin);
-        this.eyeOffset = defaultValue(this.eyeOffset, source.eyeOffset);
         this.heightReference = defaultValue(this.heightReference, source.heightReference);
-        this.pixelOffset = defaultValue(this.pixelOffset, source.pixelOffset);
+        this.fillColor = defaultValue(this.fillColor, source.fillColor);
+        this.outlineColor = defaultValue(this.outlineColor, source.outlineColor);
+        this.outlineWidth = defaultValue(this.outlineWidth, source.outlineWidth);
         this.translucencyByDistance = defaultValue(this.translucencyByDistance, source.translucencyByDistance);
         this.pixelOffsetScaleByDistance = defaultValue(this.pixelOffsetScaleByDistance, source.pixelOffsetScaleByDistance);
         this.scaleByDistance = defaultValue(this.scaleByDistance, source.scaleByDistance);

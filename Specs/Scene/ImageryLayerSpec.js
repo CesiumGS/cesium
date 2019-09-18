@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/ImageryLayer',
+define([
         'Core/EllipsoidTerrainProvider',
         'Core/Rectangle',
         'Core/RequestScheduler',
@@ -12,6 +11,7 @@ defineSuite([
         'Scene/TileMapServiceImageryProvider',
         'Scene/GlobeSurfaceTile',
         'Scene/Imagery',
+        'Scene/ImageryLayer',
         'Scene/ImageryLayerCollection',
         'Scene/ImageryState',
         'Scene/NeverTileDiscardPolicy',
@@ -22,7 +22,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        ImageryLayer,
         EllipsoidTerrainProvider,
         Rectangle,
         RequestScheduler,
@@ -35,6 +34,7 @@ defineSuite([
         TileMapServiceImageryProvider,
         GlobeSurfaceTile,
         Imagery,
+        ImageryLayer,
         ImageryLayerCollection,
         ImageryState,
         NeverTileDiscardPolicy,
@@ -44,7 +44,9 @@ defineSuite([
         WebMapServiceImageryProvider,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ImageryLayer', function() {
 
     var scene;
     var computeEngine;
@@ -715,3 +717,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

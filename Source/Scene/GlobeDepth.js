@@ -8,12 +8,12 @@ define([
         '../Renderer/Framebuffer',
         '../Renderer/PixelDatatype',
         '../Renderer/RenderState',
-        '../Renderer/ShaderSource',
         '../Renderer/Sampler',
+        '../Renderer/ShaderSource',
         '../Renderer/Texture',
-        '../Renderer/TextureWrap',
         '../Renderer/TextureMagnificationFilter',
         '../Renderer/TextureMinificationFilter',
+        '../Renderer/TextureWrap',
         '../Shaders/PostProcessStages/DepthViewPacked',
         '../Shaders/PostProcessStages/PassThrough',
         '../Shaders/PostProcessStages/PassThroughDepth',
@@ -30,12 +30,12 @@ define([
         Framebuffer,
         PixelDatatype,
         RenderState,
-        ShaderSource,
         Sampler,
+        ShaderSource,
         Texture,
-        TextureWrap,
         TextureMagnificationFilter,
         TextureMinificationFilter,
+        TextureWrap,
         DepthViewPacked,
         PassThrough,
         PassThroughDepth,
@@ -289,6 +289,8 @@ define([
                 owner : globeDepth
             });
         }
+
+        globeDepth._copyColorCommand.renderState = globeDepth._rs;
 
         if (!defined(globeDepth._tempCopyDepthCommand)) {
             globeDepth._tempCopyDepthCommand = context.createViewportQuadCommand(PassThroughDepth, {

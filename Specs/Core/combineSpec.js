@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/combine'
     ], function(
         combine) {
-    'use strict';
+        'use strict';
+
+describe('Core/combine', function() {
 
     it('can combine shallow references', function() {
         var obj1 = {
@@ -78,4 +80,5 @@ defineSuite([
         expect(combine(undefined, undefined)).toEqual({});
         expect(combine(undefined, undefined, true)).toEqual({});
     });
+});
 });

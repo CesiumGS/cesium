@@ -9,7 +9,6 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Math',
         '../Core/PixelFormat',
         '../Core/Resource',
         '../Renderer/PassState',
@@ -34,7 +33,6 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        CesiumMath,
         PixelFormat,
         Resource,
         PassState,
@@ -670,6 +668,7 @@ define([
                 var resource = new Resource({
                     url : stageNameUrlOrImage
                 });
+
                 promises.push(resource.fetchImage().then(createLoadImageFunction(stage, name)));
             } else {
                 stage._texturesToCreate.push({

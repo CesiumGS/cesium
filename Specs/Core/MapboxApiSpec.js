@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/MapboxApi'
     ], function(
         MapboxApi) {
-    'use strict';
+        'use strict';
+
+describe('Core/MapboxApi', function() {
 
     it('getAccessToken returns provided access token if one is provided', function() {
         expect(MapboxApi.getAccessToken('foo')).toEqual('foo');
@@ -21,4 +23,5 @@ defineSuite([
         expect(MapboxApi.getAccessToken(undefined).length).toBeGreaterThan(0);
         MapboxApi.defaultAccessToken = oldAccessToken;
     });
+});
 });

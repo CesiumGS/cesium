@@ -8,7 +8,6 @@ define([
         '../Core/DeveloperError',
         '../Core/FeatureDetection',
         '../Core/GeographicProjection',
-        '../Core/GeographicTilingScheme',
         '../Core/IndexDatatype',
         '../Core/Math',
         '../Core/PixelFormat',
@@ -19,7 +18,6 @@ define([
         '../Core/TerrainProvider',
         '../Core/TileProviderError',
         '../Core/WebMercatorProjection',
-        '../Core/WebMercatorTilingScheme',
         '../Renderer/Buffer',
         '../Renderer/BufferUsage',
         '../Renderer/ComputeCommand',
@@ -50,7 +48,6 @@ define([
         DeveloperError,
         FeatureDetection,
         GeographicProjection,
-        GeographicTilingScheme,
         IndexDatatype,
         CesiumMath,
         PixelFormat,
@@ -61,7 +58,6 @@ define([
         TerrainProvider,
         TileProviderError,
         WebMercatorProjection,
-        WebMercatorTilingScheme,
         Buffer,
         BufferUsage,
         ComputeCommand,
@@ -158,11 +154,13 @@ define([
      * @param {Number} [options.maximumTerrainLevel] The maximum terrain level-of-detail at which to show this imagery layer,
      *                 or undefined to show it at all levels.  Level zero is the least-detailed level.
      * @param {Rectangle} [options.cutoutRectangle] Cartographic rectangle for cutting out a portion of this ImageryLayer.
+     * @param {Color} [options.colorToAlpha] Color to be used as alpha.
+     * @param {Number} [options.colorToAlphaThreshold=0.004] Threshold for color-to-alpha.
      */
     function ImageryLayer(imageryProvider, options) {
         this._imageryProvider = imageryProvider;
 
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
          * The alpha blending value of this layer, with 0.0 representing fully transparent and
@@ -287,6 +285,20 @@ define([
          * @type {Rectangle}
          */
         this.cutoutRectangle = options.cutoutRectangle;
+
+        /**
+         * Color value that should be set to transparent.
+         *
+         * @type {Color}
+         */
+        this.colorToAlpha = options.colorToAlpha;
+
+        /**
+         * Normalized (0-1) threshold for color-to-alpha.
+         *
+         * @type {Number}
+         */
+        this.colorToAlphaThreshold = defaultValue(options.colorToAlphaThreshold, ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD);
     }
 
     defineProperties(ImageryLayer.prototype, {
@@ -376,6 +388,14 @@ define([
      * @default TextureMagnificationFilter.LINEAR
      */
     ImageryLayer.DEFAULT_MAGNIFICATION_FILTER = TextureMagnificationFilter.LINEAR;
+
+    /**
+     * This value is used as the default threshold for color-to-alpha if one is not provided
+     * during construction or by the imagery provider.
+     * @type {Number}
+     * @default 0.004
+     */
+    ImageryLayer.DEFAULT_APPLY_COLOR_TO_ALPHA_THRESHOLD = 0.004;
 
     /**
      * Gets a value indicating whether this layer is the base layer in the

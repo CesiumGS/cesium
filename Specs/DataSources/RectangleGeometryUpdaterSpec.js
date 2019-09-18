@@ -1,14 +1,13 @@
-defineSuite([
-        'DataSources/RectangleGeometryUpdater',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
-        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
         'Core/Math',
         'Core/Rectangle',
         'Core/TimeIntervalCollection',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
+        'DataSources/RectangleGeometryUpdater',
         'DataSources/RectangleGraphics',
         'DataSources/SampledProperty',
         'Scene/PrimitiveCollection',
@@ -18,16 +17,15 @@ defineSuite([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        RectangleGeometryUpdater,
         ApproximateTerrainHeights,
         Cartesian3,
-        GeometryOffsetAttribute,
         JulianDate,
         CesiumMath,
         Rectangle,
         TimeIntervalCollection,
         ConstantProperty,
         Entity,
+        RectangleGeometryUpdater,
         RectangleGraphics,
         SampledProperty,
         PrimitiveCollection,
@@ -36,7 +34,9 @@ defineSuite([
         createGeometryUpdaterGroundGeometrySpecs,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/RectangleGeometryUpdater', function() {
 
     var time;
     var scene;
@@ -254,3 +254,4 @@ defineSuite([
 
     createGeometryUpdaterGroundGeometrySpecs(RectangleGeometryUpdater, 'rectangle', createBasicRectangleWithoutHeight, createDynamicRectangleWithoutHeight, getScene);
 }, 'WebGL');
+});

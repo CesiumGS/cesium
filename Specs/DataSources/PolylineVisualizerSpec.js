@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/PolylineVisualizer',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -16,6 +15,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/PolylineArrowMaterialProperty',
         'DataSources/PolylineGraphics',
+        'DataSources/PolylineVisualizer',
         'Scene/ClassificationType',
         'Scene/PolylineColorAppearance',
         'Scene/PolylineMaterialAppearance',
@@ -24,7 +24,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        PolylineVisualizer,
         ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
@@ -41,6 +40,7 @@ defineSuite([
         EntityCollection,
         PolylineArrowMaterialProperty,
         PolylineGraphics,
+        PolylineVisualizer,
         ClassificationType,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
@@ -48,7 +48,9 @@ defineSuite([
         createDynamicProperty,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineVisualizer', function() {
 
     var time = JulianDate.now();
 
@@ -767,3 +769,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});
