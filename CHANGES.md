@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+##### Fixes :wrench:
+* Fixed a bug where GlobeSurfaceTile would not render the tile until all layers completed loading causing globe to appear to hang. [#7974](https://github.com/AnalyticalGraphicsInc/cesium/issues/7974)
+
 ### 1.61 - 2019-09-03
 
 ##### Additions :tada:
@@ -31,7 +34,6 @@ Change Log
 * Fixed crash when using ArcGIS terrain with clipping planes. [#7998](https://github.com/AnalyticalGraphicsInc/cesium/pull/7998)
 * `PolygonGraphics.hierarchy` now converts constant array values to a `PolygonHierarchy` when set, so code that accesses the value of the property can rely on it always being a `PolygonHierarchy`.
 * Fixed a bug with lengthwise texture coordinates in the first segment of ground polylines, as observed in some WebGL implementations such as Chrome on Linux. [#8017](https://github.com/AnalyticalGraphicsInc/cesium/issues/8017)
-* Fixed a bug where GlobeSurfaceTile would not render the tile until all layers completed loading causing globe to appear to hang. [#7974](https://github.com/AnalyticalGraphicsInc/cesium/issues/7974)
 
 ### 1.59 - 2019-07-01
 
