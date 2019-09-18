@@ -1,18 +1,20 @@
-defineSuite([
-        'DataSources/PolylineDashMaterialProperty',
+define([
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/PolylineDashMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty'
     ], function(
-        PolylineDashMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
+        PolylineDashMaterialProperty,
         TimeIntervalCollectionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineDashMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new PolylineDashMaterialProperty();
@@ -247,4 +249,5 @@ defineSuite([
         }));
         expect(property.isConstant).toBe(false);
     });
+});
 });

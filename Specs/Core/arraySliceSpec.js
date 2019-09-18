@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/arraySlice',
         'Core/FeatureDetection'
     ], function(
         arraySlice,
         FeatureDetection) {
-    'use strict';
+        'use strict';
+
+describe('Core/arraySlice', function() {
 
     var array = [1, 2, 3, 4, 5];
 
@@ -49,4 +51,5 @@ defineSuite([
             return arraySlice(array, undefined, {});
         }).toThrowDeveloperError();
     });
+});
 });

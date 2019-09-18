@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/loadImageFromTypedArray',
         'Core/Resource',
         'ThirdParty/when'
@@ -6,7 +6,18 @@ defineSuite([
         loadImageFromTypedArray,
         Resource,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/loadImageFromTypedArray', function() {
+
+    var supportsImageBitmapOptions;
+
+    beforeAll(function() {
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
+    });
 
     it('can load an image', function() {
         return Resource.fetchArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {
@@ -23,6 +34,10 @@ defineSuite([
     });
 
     it('flips image only when flipY is true', function() {
+        if (!supportsImageBitmapOptions) {
+            return;
+        }
+
         var options = {
             uint8Array: new Uint8Array([67, 101, 115, 105, 117, 109]), // This is an invalid PNG.
             format: 'image/png',
@@ -42,7 +57,8 @@ defineSuite([
                 return loadImageFromTypedArray(options)
                     .then(function() {
                         expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-                            imageOrientation: 'flipY'
+                            imageOrientation: 'flipY',
+                            premultiplyAlpha: 'none'
                         });
 
                          window.createImageBitmap.calls.reset();
@@ -51,13 +67,18 @@ defineSuite([
                     })
                     .then(function() {
                         expect(window.createImageBitmap).toHaveBeenCalledWith(blob, {
-                            imageOrientation: 'none'
+                            imageOrientation: 'none',
+                            premultiplyAlpha: 'none'
                         });
                     });
             });
     });
 
     it('can load an image when ImageBitmap is not supported', function() {
+        if (!supportsImageBitmapOptions) {
+            return;
+        }
+
         spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
         spyOn(window, 'createImageBitmap').and.callThrough();
         return Resource.fetchArrayBuffer('./Data/Images/Blue10x10.png').then(function(arrayBuffer) {
@@ -98,4 +119,5 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
+});
 });

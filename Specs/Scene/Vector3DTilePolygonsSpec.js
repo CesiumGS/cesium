@@ -1,7 +1,5 @@
-defineSuite([
-        'Scene/Vector3DTilePolygons',
+define([
         'Core/BoundingSphere',
-        'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/combine',
@@ -9,10 +7,8 @@ defineSuite([
         'Core/Ellipsoid',
         'Core/GeometryInstance',
         'Core/Math',
-        'Core/Matrix4',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Core/Transforms',
         'Renderer/Pass',
         'Renderer/RenderState',
         'Scene/Cesium3DTileBatchTable',
@@ -21,13 +17,12 @@ defineSuite([
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Scene/StencilConstants',
+        'Scene/Vector3DTilePolygons',
         'Specs/createContext',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        Vector3DTilePolygons,
         BoundingSphere,
-        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         combine,
@@ -35,10 +30,8 @@ defineSuite([
         Ellipsoid,
         GeometryInstance,
         CesiumMath,
-        Matrix4,
         Rectangle,
         RectangleGeometry,
-        Transforms,
         Pass,
         RenderState,
         Cesium3DTileBatchTable,
@@ -47,10 +40,13 @@ defineSuite([
         PerInstanceColorAppearance,
         Primitive,
         StencilConstants,
+        Vector3DTilePolygons,
         createContext,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Vector3DTilePolygons', function() {
 
     createPolygonSpecs({});
     var c = createContext({ requestWebgl2 : true });
@@ -632,3 +628,4 @@ defineSuite([
     }
 
 }, 'WebGL');
+});

@@ -1,14 +1,16 @@
-defineSuite([
-        'Core/PlaneGeometry',
+define([
         'Core/Cartesian3',
+        'Core/PlaneGeometry',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        PlaneGeometry,
         Cartesian3,
+        PlaneGeometry,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/PlaneGeometry', function() {
 
     it('constructor creates optimized number of positions for VertexFormat.POSITIONS_ONLY', function() {
         var m = PlaneGeometry.createGeometry(new PlaneGeometry({
@@ -41,4 +43,5 @@ defineSuite([
     createPackableSpecs(PlaneGeometry, new PlaneGeometry({
         vertexFormat : VertexFormat.POSITION_AND_NORMAL
     }), [1.0, 1.0, 0.0, 0.0, 0.0, 0.0]);
+});
 });

@@ -186,7 +186,7 @@ define([
      * Flattens an array of Cartesian3s into an array of components.
      *
      * @param {Cartesian3[]} array The array of cartesians to pack.
-     * @param {Number[]} result The array onto which to store the result.
+     * @param {Number[]} [result] The array onto which to store the result.
      * @returns {Number[]} The packed array.
      */
     Cartesian3.packArray = function(array, result) {
@@ -211,7 +211,7 @@ define([
      * Unpacks an array of cartesian components into an array of Cartesian3s.
      *
      * @param {Number[]} array The array of components to unpack.
-     * @param {Cartesian3[]} result The array onto which to store the result.
+     * @param {Cartesian3[]} [result] The array onto which to store the result.
      * @returns {Cartesian3[]} The unpacked array.
      */
     Cartesian3.unpackArray = function(array, result) {

@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/LinearApproximation'
     ], function(
         LinearApproximation) {
-    'use strict';
+        'use strict';
+
+describe('Core/LinearApproximation', function() {
 
     it('should produce correct results', function() {
         var xTable = [2.0, 4.0];
@@ -71,4 +73,5 @@ defineSuite([
     it('getRequiredDataPoints returns 2', function() {
         expect(LinearApproximation.getRequiredDataPoints(1)).toEqual(2);
     });
+});
 });

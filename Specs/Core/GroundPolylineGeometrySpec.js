@@ -1,5 +1,4 @@
-defineSuite([
-        'Core/GroundPolylineGeometry',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/ArcType',
         'Core/arraySlice',
@@ -7,11 +6,11 @@ defineSuite([
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
+        'Core/GroundPolylineGeometry',
         'Core/Math',
         'Core/WebMercatorProjection',
         'Specs/createPackableSpecs'
     ], function(
-        GroundPolylineGeometry,
         ApproximateTerrainHeights,
         ArcType,
         arraySlice,
@@ -19,10 +18,13 @@ defineSuite([
         Cartographic,
         Ellipsoid,
         GeographicProjection,
+        GroundPolylineGeometry,
         CesiumMath,
         WebMercatorProjection,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/GroundPolylineGeometry', function() {
 
     beforeAll(function() {
         return ApproximateTerrainHeights.initialize();
@@ -112,16 +114,16 @@ defineSuite([
 
         // Expect rightNormalAndTextureCoordinateNormalizationY and texcoordNormalization2D.y to encode if the vertex is on the bottom
         values = rightNormalAndTextureCoordinateNormalizationY.values;
-        expect(values[3] > 1.0).toBe(true);
-        expect(values[1 * 4 + 3] > 1.0).toBe(true);
-        expect(values[4 * 4 + 3] > 1.0).toBe(true);
-        expect(values[5 * 4 + 3] > 1.0).toBe(true);
+        expect(values[3]).toBeGreaterThan(1.0);
+        expect(values[1 * 4 + 3]).toBeGreaterThan(1.0);
+        expect(values[4 * 4 + 3]).toBeGreaterThan(1.0);
+        expect(values[5 * 4 + 3]).toBeGreaterThan(1.0);
 
         values = texcoordNormalization2D.values;
-        expect(values[1] > 1.0).toBe(true);
-        expect(values[1 * 2 + 1] > 1.0).toBe(true);
-        expect(values[4 * 2 + 1] > 1.0).toBe(true);
-        expect(values[5 * 2 + 1] > 1.0).toBe(true);
+        expect(values[1]).toBeGreaterThan(1.0);
+        expect(values[1 * 2 + 1]).toBeGreaterThan(1.0);
+        expect(values[4 * 2 + 1]).toBeGreaterThan(1.0);
+        expect(values[5 * 2 + 1]).toBeGreaterThan(1.0);
 
         // Line segment geometry is encoded as:
         // - start position
@@ -287,7 +289,7 @@ defineSuite([
             positions : Cartesian3.fromDegreesArray([
                 0.01, 0.0,
                 0.02, 0.0,
-                0.01, 0.0
+                0.01, CesiumMath.EPSILON7
             ]),
             granularity : 0.0
         });
@@ -299,11 +301,10 @@ defineSuite([
 
         var miteredStartNormal = Cartesian3.unpack(startNormalAndForwardOffsetZvalues, 32);
         var miteredEndNormal = Cartesian3.unpack(endNormalAndTextureCoordinateNormalizationXvalues, 0);
-        var reverseMiteredEndNormal = Cartesian3.multiplyByScalar(miteredEndNormal, -1.0, new Cartesian3());
 
-        expect(Cartesian3.equalsEpsilon(miteredStartNormal, reverseMiteredEndNormal, CesiumMath.EPSILON7)).toBe(true);
+        expect(Cartesian3.equalsEpsilon(miteredStartNormal, miteredEndNormal, CesiumMath.EPSILON7)).toBe(true);
 
-        var approximateExpectedMiterNormal = new Cartesian3(0.0, 1.0, 0.0);
+        var approximateExpectedMiterNormal = new Cartesian3(0.0, -1.0, 0.0);
 
         Cartesian3.normalize(approximateExpectedMiterNormal, approximateExpectedMiterNormal);
         expect(Cartesian3.equalsEpsilon(approximateExpectedMiterNormal, miteredStartNormal, CesiumMath.EPSILON2)).toBe(true);
@@ -635,8 +636,8 @@ defineSuite([
         var boundingSphere = geometry.boundingSphere;
         var pointsDistance = Cartesian3.distance(positions[0], positions[1]);
 
-        expect(boundingSphere.radius > pointsDistance).toBe(true);
-        expect(boundingSphere.radius > 1000.0).toBe(true); // starting top/bottom height
+        expect(boundingSphere.radius).toBeGreaterThan(pointsDistance);
+        expect(boundingSphere.radius).toBeGreaterThan(1000.0); // starting top/bottom height
     });
 
     var packedInstance = [positions.length];
@@ -653,4 +654,5 @@ defineSuite([
     packedInstance.push(0.0); // scene3DModeOnly = false
 
     createPackableSpecs(GroundPolylineGeometry, polyline, packedInstance);
+});
 });

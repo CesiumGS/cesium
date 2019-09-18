@@ -285,6 +285,14 @@ define([
         /**
          * @private
          */
+        alignmentInBytes : function(pixelFormat, pixelDatatype, width) {
+            var mod = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, 1) % 4;
+            return mod === 0 ? 4 : (mod === 2 ? 2 : 1);
+        },
+
+        /**
+         * @private
+         */
         createTypedArray : function(pixelFormat, pixelDatatype, width, height) {
             var constructor;
             var sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);

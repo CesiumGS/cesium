@@ -1,14 +1,13 @@
-defineSuite([
-        'DataSources/CorridorGeometryUpdater',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
         'Core/CornerType',
-        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
         'Core/Math',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DataSources/ConstantProperty',
+        'DataSources/CorridorGeometryUpdater',
         'DataSources/CorridorGraphics',
         'DataSources/Entity',
         'DataSources/PropertyArray',
@@ -22,16 +21,15 @@ defineSuite([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        CorridorGeometryUpdater,
         ApproximateTerrainHeights,
         Cartesian3,
         CornerType,
-        GeometryOffsetAttribute,
         JulianDate,
         CesiumMath,
         TimeInterval,
         TimeIntervalCollection,
         ConstantProperty,
+        CorridorGeometryUpdater,
         CorridorGraphics,
         Entity,
         PropertyArray,
@@ -44,7 +42,9 @@ defineSuite([
         createGeometryUpdaterGroundGeometrySpecs,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CorridorGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -299,3 +299,4 @@ defineSuite([
 
     createGeometryUpdaterGroundGeometrySpecs(CorridorGeometryUpdater, 'corridor', createBasicCorridorWithoutHeight, createDynamicCorridorWithoutHeight, getScene);
 }, 'WebGL');
+});

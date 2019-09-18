@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/ShadowMap',
+define([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian3',
@@ -26,12 +25,12 @@ defineSuite([
         'Scene/Model',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
+        'Scene/ShadowMap',
         'Scene/ShadowMode',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        ShadowMap,
         BoundingSphere,
         BoxGeometry,
         Cartesian3,
@@ -58,11 +57,14 @@ defineSuite([
         Model,
         PerInstanceColorAppearance,
         Primitive,
+        ShadowMap,
         ShadowMode,
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ShadowMap', function() {
 
     var scene;
     var sunShadowMap;
@@ -1198,3 +1200,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

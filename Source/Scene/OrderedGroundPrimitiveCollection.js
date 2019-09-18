@@ -1,19 +1,17 @@
 define([
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/destroyObject',
-    '../Core/Check',
-    '../Core/DeveloperError',
-    './PrimitiveCollection'
-], function(
-    defaultValue,
-    defined,
-    defineProperties,
-    destroyObject,
-    Check,
-    DeveloperError,
-    PrimitiveCollection) {
+        '../Core/Check',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/destroyObject',
+        './PrimitiveCollection'
+    ], function(
+        Check,
+        defaultValue,
+        defined,
+        defineProperties,
+        destroyObject,
+        PrimitiveCollection) {
     'use strict';
 
     /**

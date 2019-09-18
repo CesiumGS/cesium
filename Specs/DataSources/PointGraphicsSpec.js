@@ -1,18 +1,20 @@
-defineSuite([
-        'DataSources/PointGraphics',
+define([
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'Core/NearFarScalar',
         'DataSources/ConstantProperty',
+        'DataSources/PointGraphics',
         'Scene/HeightReference'
     ], function(
-        PointGraphics,
         Color,
         DistanceDisplayCondition,
         NearFarScalar,
         ConstantProperty,
+        PointGraphics,
         HeightReference) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PointGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -148,4 +150,5 @@ defineSuite([
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

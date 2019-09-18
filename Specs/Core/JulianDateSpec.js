@@ -1,16 +1,18 @@
-defineSuite([
-        'Core/JulianDate',
+define([
         'Core/Iso8601',
+        'Core/JulianDate',
         'Core/Math',
         'Core/TimeConstants',
         'Core/TimeStandard'
     ], function(
-        JulianDate,
         Iso8601,
+        JulianDate,
         CesiumMath,
         TimeConstants,
         TimeStandard) {
-    'use strict';
+        'use strict';
+
+describe('Core/JulianDate', function() {
 
     // All exact Julian Dates found using NASA's Time Conversion Tool: http://ssd.jpl.nasa.gov/tc.cgi
     it('Construct a default date', function() {
@@ -1061,4 +1063,5 @@ defineSuite([
         expect(iso86011).toEqual(iso86012);
         expect(JulianDate.compare(julian1, julian2)).toEqual(0);
     });
+});
 });

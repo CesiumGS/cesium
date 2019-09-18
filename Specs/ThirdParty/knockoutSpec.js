@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'ThirdParty/knockout'
     ], function(
         knockout) {
-    'use strict';
+        'use strict';
+
+describe('ThirdParty/knockout', function() {
 
     it('can track all properties', function() {
         var obj = {
@@ -21,4 +23,5 @@ defineSuite([
         expect(knockout.getObservable(obj, 'two')).not.toBeNull();
         expect(knockout.getObservable(obj, 'three')).not.toBeNull();
     });
+});
 });

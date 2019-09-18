@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/IndexDatatype',
         'Core/Math'
     ], function(
         IndexDatatype,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/IndexDatatype', function() {
 
     it('IndexDatatype.validate validates input', function() {
         expect(IndexDatatype.validate(IndexDatatype.UNSIGNED_SHORT)).toEqual(true);
@@ -89,4 +91,5 @@ defineSuite([
             IndexDatatype.getSizeInBytes(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

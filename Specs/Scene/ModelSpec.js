@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Model',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -32,12 +31,12 @@ defineSuite([
         'Scene/ColorBlendMode',
         'Scene/DracoLoader',
         'Scene/HeightReference',
+        'Scene/Model',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        Model,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -70,11 +69,14 @@ defineSuite([
         ColorBlendMode,
         DracoLoader,
         HeightReference,
+        Model,
         ModelAnimationLoop,
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Model', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
@@ -95,6 +97,7 @@ defineSuite([
     var boxRtcUrl = './Data/Models/Box-RTC/Box.gltf';
     var boxEcefUrl = './Data/Models/Box-ECEF/ecef.gltf';
     var boxWithUnusedMaterial = './Data/Models/BoxWithUnusedMaterial/Box.gltf';
+    var boxArticulationsUrl = './Data/Models/Box-Articulations/Box-Articulations.gltf';
 
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
     var cesiumAir_0_8Url = './Data/Models/CesiumAir/Cesium_Air_0_8.gltf';
@@ -1025,7 +1028,7 @@ defineSuite([
                 scene : scene,
                 time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
             }).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([193, 17, 16, 255], 5); // Red
+                expect(rgba).toEqualEpsilon([174, 6, 5, 255], 5); // Red
             });
 
             primitives.remove(m);
@@ -1037,6 +1040,38 @@ defineSuite([
             verifyRender(m);
             m.show = true;
             expect(scene).toRender([204, 0, 0, 255]); // Red
+            primitives.remove(m);
+        });
+    });
+
+    it('loads a glTF 2.0 model with AGI_articulations extension', function() {
+        return loadModel(boxArticulationsUrl).then(function(m) {
+            verifyRender(m);
+
+            m.setArticulationStage('SampleArticulation MoveX', 1.0);
+            m.setArticulationStage('SampleArticulation MoveY', 2.0);
+            m.setArticulationStage('SampleArticulation MoveZ', 3.0);
+            m.setArticulationStage('SampleArticulation Yaw', 4.0);
+            m.setArticulationStage('SampleArticulation Pitch', 5.0);
+            m.setArticulationStage('SampleArticulation Roll', 6.0);
+            m.setArticulationStage('SampleArticulation Size', 0.9);
+            m.setArticulationStage('SampleArticulation SizeX', 0.8);
+            m.setArticulationStage('SampleArticulation SizeY', 0.7);
+            m.setArticulationStage('SampleArticulation SizeZ', 0.6);
+            m.applyArticulations();
+
+            var node = m.getNode('Root');
+            expect(node.useMatrix).toBe(true);
+
+            var expected = [
+                0.7147690483240505, -0.04340611926232735, -0.0749741046529782, 0,
+                -0.06188330295778636, 0.05906797312763484, -0.6241645867602773, 0,
+                0.03752515582279579, 0.5366347296529127, 0.04706410108373541, 0,
+                1, 3, -2, 1
+            ];
+
+            expect(node.matrix).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+
             primitives.remove(m);
         });
     });
@@ -3508,3 +3543,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

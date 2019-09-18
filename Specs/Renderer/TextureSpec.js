@@ -1,8 +1,6 @@
-defineSuite([
-        'Renderer/Texture',
+define([
         'Core/Cartesian2',
         'Core/Color',
-        'Core/FeatureDetection',
         'Core/loadKTX',
         'Core/PixelFormat',
         'Core/Resource',
@@ -10,16 +8,15 @@ defineSuite([
         'Renderer/ContextLimits',
         'Renderer/PixelDatatype',
         'Renderer/Sampler',
+        'Renderer/Texture',
         'Renderer/TextureMagnificationFilter',
         'Renderer/TextureMinificationFilter',
         'Renderer/TextureWrap',
         'Specs/createContext',
         'ThirdParty/when'
     ], function(
-        Texture,
         Cartesian2,
         Color,
-        FeatureDetection,
         loadKTX,
         PixelFormat,
         Resource,
@@ -27,12 +24,15 @@ defineSuite([
         ContextLimits,
         PixelDatatype,
         Sampler,
+        Texture,
         TextureMagnificationFilter,
         TextureMinificationFilter,
         TextureWrap,
         createContext,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Texture', function() {
 
     var context;
     var greenImage;
@@ -49,6 +49,9 @@ defineSuite([
     var fs =
         'uniform sampler2D u_texture;' +
         'void main() { gl_FragColor = texture2D(u_texture, vec2(0.0)); }';
+    var fsLuminanceAlpha =
+        'uniform sampler2D u_texture;' +
+        'void main() { gl_FragColor = vec4(texture2D(u_texture, vec2(0.0)).ra, 0.0, 1.0); }';
     var texture;
     var uniformMap = {
         u_texture : function() {
@@ -531,6 +534,52 @@ defineSuite([
             fragmentShader : fragmentShaderSource,
             uniformMap : um
         }).contextToRender([255, 0, 0, 255]);
+    });
+
+    it('draws the expected luminance texture color', function() {
+        var color = new Color(0.6, 0.6, 0.6, 1.0);
+        var arrayBufferView = new Uint8Array([153]);
+
+        texture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.LUMINANCE,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            source : {
+                width : 1,
+                height : 1,
+                arrayBufferView : arrayBufferView
+            },
+            flipY : false
+        });
+
+        expect({
+            context : context,
+            fragmentShader : fs,
+            uniformMap : uniformMap
+        }).contextToRender(color.toBytes());
+    });
+
+    it('draws the expected luminance alpha texture color', function() {
+        var color = new Color(0.6, 0.8, 0.0, 1.0);
+        var arrayBufferView = new Uint8Array([153, 204]);
+
+        texture = new Texture({
+            context : context,
+            pixelFormat : PixelFormat.LUMINANCE_ALPHA,
+            pixelDatatype : PixelDatatype.UNSIGNED_BYTE,
+            source : {
+                width : 1,
+                height : 1,
+                arrayBufferView : arrayBufferView
+            },
+            flipY : false
+        });
+
+        expect({
+            context : context,
+            fragmentShader : fsLuminanceAlpha,
+            uniformMap : uniformMap
+        }).contextToRender(color.toBytes());
     });
 
     it('can be created from a typed array', function() {
@@ -1417,3 +1466,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

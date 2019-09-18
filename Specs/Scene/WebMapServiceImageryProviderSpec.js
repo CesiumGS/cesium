@@ -1,9 +1,7 @@
-defineSuite([
-        'Scene/WebMapServiceImageryProvider',
+define([
         'Core/Cartographic',
         'Core/Clock',
         'Core/ClockStep',
-        'Core/DefaultProxy',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/JulianDate',
@@ -22,14 +20,13 @@ defineSuite([
         'Scene/ImageryLayerFeatureInfo',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/WebMapServiceImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/Uri'
     ], function(
-        WebMapServiceImageryProvider,
         Cartographic,
         Clock,
         ClockStep,
-        DefaultProxy,
         Ellipsoid,
         GeographicTilingScheme,
         JulianDate,
@@ -48,9 +45,12 @@ defineSuite([
         ImageryLayerFeatureInfo,
         ImageryProvider,
         ImageryState,
+        WebMapServiceImageryProvider,
         pollToPromise,
         Uri) {
-    'use strict';
+        'use strict';
+
+describe('Scene/WebMapServiceImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -1409,4 +1409,5 @@ defineSuite([
             });
 
         });
+});
 });

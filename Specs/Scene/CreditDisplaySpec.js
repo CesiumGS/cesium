@@ -1,14 +1,16 @@
-defineSuite([
-        'Scene/CreditDisplay',
+define([
         'Core/Credit',
         'Core/defined',
+        'Scene/CreditDisplay',
         'Specs/absolutize'
     ], function(
-        CreditDisplay,
         Credit,
         defined,
+        CreditDisplay,
         absolutize) {
-    'use strict';
+        'use strict';
+
+describe('Scene/CreditDisplay', function() {
 
     var container;
     var creditDisplay;
@@ -383,4 +385,5 @@ defineSuite([
         expect(creditDisplay._currentCesiumCredit).toEqual(creditDisplay2._currentCesiumCredit);
         expect(creditDisplay._currentCesiumCredit).not.toBe(creditDisplay2._currentCesiumCredit);
     });
+});
 });

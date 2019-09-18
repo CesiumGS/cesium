@@ -95,6 +95,70 @@ var czml = [{
             3600, -45, 65, 3000
         ]
     }
+}, {
+    "id": "Polygon with Dynamic Holes",
+    "polygon": {
+        "positions": {
+            "cartographicDegrees" : [
+                -110, 43, 0,
+                -90, 43, 0,
+                -90, 30, 0,
+                -110, 30, 0
+            ]
+        },
+        "holes": {
+            references: [
+                [
+                    'target4#position',
+                    'target5#position',
+                    'target6#position'
+                ]
+            ]
+        },
+        "material": {
+            "solidColor": {
+                "color": {
+                    "rgba" : [255, 150, 0, 255]
+                }
+            }
+        }
+    }
+},{
+    "id": "target4",
+    "position": {
+        "interpolationAlgorithm": "LINEAR",
+        "interpolationDegree": 1,
+        "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+        "epoch" : "2012-08-04T16:00:00Z",
+        "cartographicDegrees": [
+            0, -100, 41, 0,
+            3600, -95, 41, 0
+        ]
+    }
+},{
+    "id": "target5",
+    "position": {
+        "interpolationAlgorithm": "LINEAR",
+        "interpolationDegree": 1,
+        "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+        "epoch" : "2012-08-04T16:00:00Z",
+        "cartographicDegrees": [
+            0, -92, 42, 0,
+            3600, -92, 36, 0
+        ]
+    }
+},{
+    "id": "target6",
+    "position": {
+        "interpolationAlgorithm": "LINEAR",
+        "interpolationDegree": 1,
+        "interval" : "2012-08-04T16:00:00Z/2012-08-04T17:00:00Z",
+        "epoch" : "2012-08-04T16:00:00Z",
+        "cartographicDegrees": [
+            0, -95, 37, 0,
+            3600, -108, 38, 0
+        ]
+    }
 }];
 
 var viewer = new Cesium.Viewer('cesiumContainer', {

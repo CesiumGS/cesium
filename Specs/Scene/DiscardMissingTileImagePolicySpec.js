@@ -1,16 +1,18 @@
-defineSuite([
-        'Scene/DiscardMissingTileImagePolicy',
+define([
         'Core/Cartesian2',
         'Core/Resource',
+        'Scene/DiscardMissingTileImagePolicy',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        DiscardMissingTileImagePolicy,
         Cartesian2,
         Resource,
+        DiscardMissingTileImagePolicy,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/DiscardMissingTileImagePolicy', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {
@@ -49,7 +51,7 @@ defineSuite([
         it('requests the missing image url', function() {
             var missingImageUrl = 'http://some.host.invalid/missingImage.png';
 
-            spyOn(Resource._Implementations, 'createImageBitmapFromBlob').and.callThrough();
+            spyOn(Resource, 'createImageBitmapFromBlob').and.callThrough();
             spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
                 if (/^blob:/.test(url)) {
                     Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
@@ -73,7 +75,7 @@ defineSuite([
                 return policy.isReady();
             }).then(function() {
                 if (supportsImageBitmapOptions) {
-                    expect(Resource._Implementations.createImageBitmapFromBlob).toHaveBeenCalled();
+                    expect(Resource.createImageBitmapFromBlob).toHaveBeenCalled();
                 } else {
                     expect(Resource._Implementations.createImage).toHaveBeenCalled();
                 }
@@ -162,4 +164,5 @@ defineSuite([
             }).toThrowDeveloperError();
         });
     });
+});
 });

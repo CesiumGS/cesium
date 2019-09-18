@@ -1,20 +1,22 @@
-defineSuite([
-        'Renderer/Context',
+define([
         'Core/Color',
         'Core/IndexDatatype',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
+        'Renderer/Context',
         'Renderer/ContextLimits',
         'Specs/createContext'
     ], function(
-        Context,
         Color,
         IndexDatatype,
         Buffer,
         BufferUsage,
+        Context,
         ContextLimits,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Context', function() {
 
     var context;
 
@@ -176,8 +178,8 @@ defineSuite([
     });
 
     it('gets maximum texture filter anisotropy', function() {
-        if(context.textureFilterAnisotropic) {
-            expect(ContextLimits.maximumTextureFilterAnisotropy >= 2).toEqual(true);
+        if (context.textureFilterAnisotropic) {
+            expect(ContextLimits.maximumTextureFilterAnisotropy).toBeGreaterThanOrEqualTo(2);
         } else {
             expect(ContextLimits.maximumTextureFilterAnisotropy).toEqual(1);
         }
@@ -314,3 +316,4 @@ defineSuite([
         c.destroyForSpecs();
     });
 }, 'WebGL');
+});

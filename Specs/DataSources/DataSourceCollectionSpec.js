@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/DataSourceCollection',
         'Specs/MockDataSource',
         'ThirdParty/when'
@@ -6,7 +6,9 @@ defineSuite([
         DataSourceCollection,
         MockDataSource,
         when) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/DataSourceCollection', function() {
 
     it('contains, get, getLength, and indexOf work', function() {
         var collection = new DataSourceCollection();
@@ -29,6 +31,26 @@ defineSuite([
 
         expect(collection.remove(source)).toEqual(true);
         expect(collection.contains(source)).toEqual(false);
+    });
+
+    it('getByName works', function() {
+        var collection = new DataSourceCollection();
+        var source1 = new MockDataSource();
+        source1.name = 'Name1';
+        collection.add(source1);
+
+        var source2 = new MockDataSource();
+        source2.name = 'Name1';
+        collection.add(source2);
+
+        var source3 = new MockDataSource();
+        source3.name = 'Name2';
+        collection.add(source3);
+
+        var res = collection.getByName('Name1');
+        expect(res.length).toEqual(2);
+        expect(res[0].name).toEqual('Name1');
+        expect(res[1].name).toEqual('Name1');
     });
 
     it('add and remove events work', function() {
@@ -181,4 +203,5 @@ defineSuite([
             collection.add(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

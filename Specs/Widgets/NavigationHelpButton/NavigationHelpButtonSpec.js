@@ -1,12 +1,14 @@
-defineSuite([
-        'Widgets/NavigationHelpButton/NavigationHelpButton',
+define([
         'Core/FeatureDetection',
-        'Specs/DomEventSimulator'
+        'Specs/DomEventSimulator',
+        'Widgets/NavigationHelpButton/NavigationHelpButton'
     ], function(
-        NavigationHelpButton,
         FeatureDetection,
-        DomEventSimulator) {
-    'use strict';
+        DomEventSimulator,
+        NavigationHelpButton) {
+        'use strict';
+
+describe('Widgets/NavigationHelpButton/NavigationHelpButton', function() {
 
     it('can create and destroy', function() {
         var container = document.createElement('span');
@@ -101,4 +103,5 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
+});
 });
