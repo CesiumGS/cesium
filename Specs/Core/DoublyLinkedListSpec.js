@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/DoublyLinkedList'
     ], function(
         DoublyLinkedList) {
-    'use strict';
+        'use strict';
+
+describe('Core/DoublyLinkedList', function() {
 
     it('constructs', function() {
         var list = new DoublyLinkedList();
@@ -364,4 +366,5 @@ defineSuite([
         list.splice(node, node3);
         expectOrder(list, [node, node3, node2, node4]);
     });
+});
 });

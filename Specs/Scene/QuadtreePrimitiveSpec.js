@@ -1,5 +1,6 @@
-defineSuite([
-        'Scene/QuadtreePrimitive',
+define([
+        '../MockTerrainProvider',
+        '../TerrainTileProcessor',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/defined',
@@ -14,15 +15,15 @@ defineSuite([
         'Scene/Camera',
         'Scene/GlobeSurfaceTileProvider',
         'Scene/ImageryLayerCollection',
+        'Scene/QuadtreePrimitive',
         'Scene/QuadtreeTileLoadState',
         'Scene/SceneMode',
         'Specs/createScene',
         'Specs/pollToPromise',
-        'ThirdParty/when',
-        '../MockTerrainProvider',
-        '../TerrainTileProcessor'
+        'ThirdParty/when'
     ], function(
-        QuadtreePrimitive,
+        MockTerrainProvider,
+        TerrainTileProcessor,
         Cartesian3,
         Cartographic,
         defined,
@@ -37,14 +38,15 @@ defineSuite([
         Camera,
         GlobeSurfaceTileProvider,
         ImageryLayerCollection,
+        QuadtreePrimitive,
         QuadtreeTileLoadState,
         SceneMode,
         createScene,
         pollToPromise,
-        when,
-        MockTerrainProvider,
-        TerrainTileProcessor) {
-    'use strict';
+        when) {
+        'use strict';
+
+describe('Scene/QuadtreePrimitive', function() {
 
     describe('selectTilesForRendering', function() {
         var scene;
@@ -1028,4 +1030,5 @@ defineSuite([
         var cartesian = Ellipsoid.WGS84.cartographicToCartesian(position);
         camera.lookAt(cartesian, new Cartesian3(0.0, 0.0, distance));
     }
+});
 });

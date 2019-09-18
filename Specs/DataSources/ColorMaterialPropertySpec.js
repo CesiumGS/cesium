@@ -1,18 +1,20 @@
-defineSuite([
-        'DataSources/ColorMaterialProperty',
+define([
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
+        'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/TimeIntervalCollectionProperty'
     ], function(
-        ColorMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
+        ColorMaterialProperty,
         ConstantProperty,
         TimeIntervalCollectionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/ColorMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new ColorMaterialProperty();
@@ -100,4 +102,5 @@ defineSuite([
         property.color = property.color;
         expect(listener.calls.count()).toEqual(0);
     });
+});
 });

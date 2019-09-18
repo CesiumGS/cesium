@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/StaticGeometryPerMaterialBatch',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
@@ -20,6 +19,7 @@ defineSuite([
         'DataSources/PolylineArrowMaterialProperty',
         'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
+        'DataSources/StaticGeometryPerMaterialBatch',
         'DataSources/StripeMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/MaterialAppearance',
@@ -29,7 +29,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        StaticGeometryPerMaterialBatch,
         Cartesian2,
         Cartesian3,
         Color,
@@ -50,6 +49,7 @@ defineSuite([
         PolylineArrowMaterialProperty,
         PolylineGeometryUpdater,
         PolylineGraphics,
+        StaticGeometryPerMaterialBatch,
         StripeMaterialProperty,
         TimeIntervalCollectionProperty,
         MaterialAppearance,
@@ -58,7 +58,9 @@ defineSuite([
         ShadowMode,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/StaticGeometryPerMaterialBatch', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -495,4 +497,5 @@ defineSuite([
                 batch.removeAllPrimitives();
             });
     });
+});
 });

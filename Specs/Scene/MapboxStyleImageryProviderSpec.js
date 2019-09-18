@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/MapboxStyleImageryProvider',
+define([
         'Core/MapboxApi',
         'Core/Math',
         'Core/Rectangle',
@@ -10,9 +9,9 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/MapboxStyleImageryProvider',
         'Specs/pollToPromise'
     ], function(
-        MapboxStyleImageryProvider,
         MapboxApi,
         CesiumMath,
         Rectangle,
@@ -23,8 +22,11 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
+        MapboxStyleImageryProvider,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/MapboxStyleImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -357,4 +359,5 @@ defineSuite([
             return provider.requestImage(0, 0, 0);
         });
     });
+});
 });

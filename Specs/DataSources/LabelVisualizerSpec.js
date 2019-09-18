@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/LabelVisualizer',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -13,13 +12,13 @@ defineSuite([
         'DataSources/EntityCluster',
         'DataSources/EntityCollection',
         'DataSources/LabelGraphics',
+        'DataSources/LabelVisualizer',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
         'Specs/createGlobe',
         'Specs/createScene'
     ], function(
-        LabelVisualizer,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -33,12 +32,15 @@ defineSuite([
         EntityCluster,
         EntityCollection,
         LabelGraphics,
+        LabelVisualizer,
         HorizontalOrigin,
         LabelStyle,
         VerticalOrigin,
         createGlobe,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/LabelVisualizer', function() {
 
     var scene;
     var entityCluster;
@@ -358,3 +360,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

@@ -1,5 +1,4 @@
-defineSuite([
-        'Core/GeometryPipeline',
+define([
         'Core/arraySlice',
         'Core/AttributeCompression',
         'Core/BoundingSphere',
@@ -14,6 +13,7 @@ defineSuite([
         'Core/Geometry',
         'Core/GeometryAttribute',
         'Core/GeometryInstance',
+        'Core/GeometryPipeline',
         'Core/GeometryType',
         'Core/Math',
         'Core/Matrix4',
@@ -22,7 +22,6 @@ defineSuite([
         'Core/Tipsify',
         'Core/VertexFormat'
     ], function(
-        GeometryPipeline,
         arraySlice,
         AttributeCompression,
         BoundingSphere,
@@ -37,6 +36,7 @@ defineSuite([
         Geometry,
         GeometryAttribute,
         GeometryInstance,
+        GeometryPipeline,
         GeometryType,
         CesiumMath,
         Matrix4,
@@ -44,7 +44,9 @@ defineSuite([
         PrimitiveType,
         Tipsify,
         VertexFormat) {
-    'use strict';
+        'use strict';
+
+describe('Core/GeometryPipeline', function() {
 
     it('converts triangles to wireframe in place', function() {
         var geometry = GeometryPipeline.toWireframe(new Geometry({
@@ -3036,4 +3038,5 @@ defineSuite([
             return GeometryPipeline.splitLongitude();
         }).toThrowDeveloperError();
     });
+});
 });

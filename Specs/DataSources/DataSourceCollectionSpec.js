@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'DataSources/DataSourceCollection',
         'Specs/MockDataSource',
         'ThirdParty/when'
@@ -6,7 +6,9 @@ defineSuite([
         DataSourceCollection,
         MockDataSource,
         when) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/DataSourceCollection', function() {
 
     it('contains, get, getLength, and indexOf work', function() {
         var collection = new DataSourceCollection();
@@ -201,4 +203,5 @@ defineSuite([
             collection.add(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

@@ -1,21 +1,21 @@
 define([
         '../../Core/buildModuleUrl',
         '../../Scene/ArcGisMapServerImageryProvider',
-        '../../Scene/IonWorldImageryStyle',
         '../../Scene/createOpenStreetMapImageryProvider',
         '../../Scene/createTileMapServiceImageryProvider',
         '../../Scene/createWorldImagery',
         '../../Scene/IonImageryProvider',
+        '../../Scene/IonWorldImageryStyle',
         '../../Scene/MapboxStyleImageryProvider',
         '../BaseLayerPicker/ProviderViewModel'
     ], function(
         buildModuleUrl,
         ArcGisMapServerImageryProvider,
-        IonWorldImageryStyle,
         createOpenStreetMapImageryProvider,
         createTileMapServiceImageryProvider,
         createWorldImagery,
         IonImageryProvider,
+        IonWorldImageryStyle,
         MapboxStyleImageryProvider,
         ProviderViewModel) {
     'use strict';

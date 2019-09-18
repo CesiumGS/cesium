@@ -1,20 +1,22 @@
-defineSuite([
-        'Core/VideoSynchronizer',
+define([
         'Core/Clock',
         'Core/FeatureDetection',
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/Math',
+        'Core/VideoSynchronizer',
         'Specs/pollToPromise'
     ], function(
-        VideoSynchronizer,
         Clock,
         FeatureDetection,
         Iso8601,
         JulianDate,
         CesiumMath,
+        VideoSynchronizer,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Core/VideoSynchronizer', function() {
 
     //Video textures do not work on Internet Explorer
     if (FeatureDetection.isInternetExplorer()) {
@@ -191,4 +193,5 @@ defineSuite([
 
         videoSynchronizer.destroy();
     });
+});
 });

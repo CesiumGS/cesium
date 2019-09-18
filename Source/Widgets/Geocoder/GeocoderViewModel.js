@@ -1,5 +1,4 @@
 define([
-        '../../Core/IonGeocoderService',
         '../../Core/CartographicGeocoderService',
         '../../Core/defaultValue',
         '../../Core/defined',
@@ -7,6 +6,7 @@ define([
         '../../Core/DeveloperError',
         '../../Core/Event',
         '../../Core/GeocodeType',
+        '../../Core/IonGeocoderService',
         '../../Core/Math',
         '../../Core/Matrix4',
         '../../Core/Rectangle',
@@ -17,7 +17,6 @@ define([
         '../createCommand',
         '../getElement'
     ], function(
-        IonGeocoderService,
         CartographicGeocoderService,
         defaultValue,
         defined,
@@ -25,6 +24,7 @@ define([
         DeveloperError,
         Event,
         GeocodeType,
+        IonGeocoderService,
         CesiumMath,
         Matrix4,
         Rectangle,

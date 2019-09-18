@@ -1,21 +1,21 @@
 define([
-    '../Core/Credit',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/MapboxApi',
-    '../Core/Resource',
-    './UrlTemplateImageryProvider'
-], function(
-    Credit,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    MapboxApi,
-    Resource,
-    UrlTemplateImageryProvider) {
+        '../Core/Credit',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/DeveloperError',
+        '../Core/MapboxApi',
+        '../Core/Resource',
+        './UrlTemplateImageryProvider'
+    ], function(
+        Credit,
+        defaultValue,
+        defined,
+        defineProperties,
+        DeveloperError,
+        MapboxApi,
+        Resource,
+        UrlTemplateImageryProvider) {
 'use strict';
 
 var trailingSlashRegex = /\/$/;

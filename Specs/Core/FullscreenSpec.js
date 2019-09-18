@@ -1,10 +1,12 @@
-defineSuite([
-        'Core/Fullscreen',
-        'Core/FeatureDetection'
+define([
+        'Core/FeatureDetection',
+        'Core/Fullscreen'
     ], function(
-        Fullscreen,
-        FeatureDetection) {
-    'use strict';
+        FeatureDetection,
+        Fullscreen) {
+        'use strict';
+
+describe('Core/Fullscreen', function() {
 
     it('can tell if fullscreen is supported', function() {
         // just make sure the function runs, the test can't expect a particular result.
@@ -72,4 +74,5 @@ defineSuite([
             }
         });
     }
+});
 });

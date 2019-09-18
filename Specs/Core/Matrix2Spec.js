@@ -1,12 +1,14 @@
-defineSuite([
-        'Core/Matrix2',
+define([
         'Core/Cartesian2',
-        'Core/Math'
+        'Core/Math',
+        'Core/Matrix2'
     ], function(
-        Matrix2,
         Cartesian2,
-        CesiumMath) {
-    'use strict';
+        CesiumMath,
+        Matrix2) {
+        'use strict';
+
+describe('Core/Matrix2', function() {
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix2();
@@ -814,4 +816,5 @@ defineSuite([
             expect(intArray[index]).toEqual(index + 1);
         }
     });
+});
 });

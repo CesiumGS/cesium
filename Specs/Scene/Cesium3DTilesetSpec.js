@@ -1,11 +1,10 @@
-defineSuite([
-        'Scene/Cesium3DTileset',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
-        'Core/defined',
         'Core/CullingVolume',
+        'Core/defined',
         'Core/getAbsoluteUri',
         'Core/getStringFromTypedArray',
         'Core/HeadingPitchRange',
@@ -28,6 +27,7 @@ defineSuite([
         'Scene/Cesium3DTilePass',
         'Scene/Cesium3DTilePassState',
         'Scene/Cesium3DTileRefine',
+        'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/ClippingPlane',
         'Scene/ClippingPlaneCollection',
@@ -37,13 +37,12 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        Cesium3DTileset,
         Cartesian2,
         Cartesian3,
         Cartographic,
         Color,
-        defined,
         CullingVolume,
+        defined,
         getAbsoluteUri,
         getStringFromTypedArray,
         HeadingPitchRange,
@@ -66,6 +65,7 @@ defineSuite([
         Cesium3DTilePass,
         Cesium3DTilePassState,
         Cesium3DTileRefine,
+        Cesium3DTileset,
         Cesium3DTileStyle,
         ClippingPlane,
         ClippingPlaneCollection,
@@ -74,7 +74,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Cesium3DTileset', function() {
 
     // It's not easily possible to mock the most detailed pick functions
     // so don't run those tests when using the WebGL stub
@@ -3714,3 +3716,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

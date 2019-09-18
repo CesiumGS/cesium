@@ -1,16 +1,18 @@
-defineSuite([
-        'Scene/DebugCameraPrimitive',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Scene/Camera',
+        'Scene/DebugCameraPrimitive',
         'Specs/createScene'
     ], function(
-        DebugCameraPrimitive,
         Cartesian3,
         Color,
         Camera,
+        DebugCameraPrimitive,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/DebugCameraPrimitive', function() {
 
     var scene;
     var camera;
@@ -124,3 +126,4 @@ defineSuite([
         expect(p.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

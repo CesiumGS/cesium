@@ -1,26 +1,28 @@
-defineSuite([
-        'Core/GoogleEarthEnterpriseTerrainData',
+define([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
+        'Core/GoogleEarthEnterpriseTerrainData',
         'Core/Math',
         'Core/Rectangle',
         'Core/TerrainData',
         'Core/TerrainMesh',
         'ThirdParty/when'
     ], function(
-        GoogleEarthEnterpriseTerrainData,
         Cartesian3,
         Cartographic,
         Ellipsoid,
         GeographicTilingScheme,
+        GoogleEarthEnterpriseTerrainData,
         CesiumMath,
         Rectangle,
         TerrainData,
         TerrainMesh,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/GoogleEarthEnterpriseTerrainData', function() {
 
     var sizeOfUint8 = Uint8Array.BYTES_PER_ELEMENT;
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
@@ -496,4 +498,5 @@ defineSuite([
             /*eslint-enable no-unused-vars*/
         }).toThrowDeveloperError();
     });
+});
 });
