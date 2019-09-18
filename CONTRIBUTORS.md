@@ -233,4 +233,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [jony89](https://github.com/jony89)
 * [TJKoury](https://github.com/tjkoury)
 * [Qiming Zhang](https://github.com/bbbbx)
-
+* [Chris Wingler](https://github.com/chriswingler)
