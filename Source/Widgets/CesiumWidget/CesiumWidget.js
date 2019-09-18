@@ -182,9 +182,9 @@ define([
      * //Widget with no terrain and default Bing Maps imagery provider.
      * var widget = new Cesium.CesiumWidget('cesiumContainer');
      *
-     * //Widget with OpenStreetMaps imagery provider and Cesium World Terrain.
+     * //Widget with ion imagery and Cesium World Terrain.
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
-     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider(),
+     *     imageryProvider : Cesium.createWorldImagery(),
      *     terrainProvider : Cesium.createWorldTerrain(),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({

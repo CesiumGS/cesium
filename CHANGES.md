@@ -3,13 +3,18 @@ Change Log
 
 ### 1.62 - 2019-10-01
 
+##### Deprecated :hourglass_flowing_sand:
+* `createTileMapServiceImageryProvider` and `createOpenStreetMapImageryProvider` have been deprecated and will be removed in Cesium 1.65.  Instead, pass the same options to `new TileMapServiceImageryProvider` and `new OpenStreetMapImageryProvider` respectively.
+
 ##### Additions :tada:
 * Added ability to create partial ellipsoids using both the Entity API and CZML. New ellipsoid geometry properties: `innerRadii`, `minimumClock`, `maximumClock`, `minimumCone`, and `maximumCone`. This affects both `EllipsoidGeometry` and `EllipsoidOutlineGeometry`. See the updated [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Partial%20Ellipsoids.html&label=Geometries). [#5995](https://github.com/AnalyticalGraphicsInc/cesium/pull/5995)
+* Added `TileMapResourceImageryProvider` and `OpenStreetMapImageryProvider` classes to improve API consistency: [#4812](https://github.com/AnalyticalGraphicsInc/cesium/issues/4812)
 
 ##### Fixes :wrench:
 * `Camera.flyTo` flies to the correct location in 2D when the destination crosses the international date line [#7909](https://github.com/AnalyticalGraphicsInc/cesium/pull/7909)
-* Fixed relative-to-center check, `depthFailAppearance` resource freeing for `Primitive` [#8044](https://github.com/AnalyticalGraphicsInc/cesium/pull/8044)
+* Fixed 3D tiles style coloring when multiple tilesets are in the scene [#8051](https://github.com/AnalyticalGraphicsInc/cesium/pull/8051)
 * Improved display of tile coordinates for `TileCoordinatesImageryProvider` [#8131](https://github.com/AnalyticalGraphicsInc/cesium/pull/8131)
+* Fixed relative-to-center check, `depthFailAppearance` resource freeing for `Primitive` [#8044](https://github.com/AnalyticalGraphicsInc/cesium/pull/8044)
 
 ### 1.61 - 2019-09-03
 
