@@ -3,6 +3,7 @@ define([
         '../Core/Cartesian3',
         '../Core/Color',
         '../Core/createGuid',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -32,6 +33,7 @@ define([
         Cartesian3,
         Color,
         createGuid,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
@@ -511,6 +513,7 @@ define([
         this._promises = [];
         this._pinBuilder = new PinBuilder();
         this._entityCluster = new EntityCluster();
+        this._credits = [];
     }
 
     /**
@@ -526,6 +529,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
@@ -786,6 +790,16 @@ define([
                 //>>includeEnd('debug');
                 this._entityCluster = value;
             }
+        },
+        /**
+         * Gets the credits that will be displayed for the data source
+         * @memberof GeoJsonDataSource.prototype
+         * @type {Credit[]}
+         */
+        credits : {
+            get : function() {
+                return this._credits;
+            }
         }
     });
 
@@ -804,6 +818,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
      */
@@ -815,16 +830,33 @@ define([
         //>>includeEnd('debug');
 
         DataSource.setLoading(this, true);
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        // User specified credit
+        var credits = this._credits;
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        if (defined(credit)) {
+            credits.push(credit);
+        }
 
         var promise = data;
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var sourceUri = options.sourceUri;
         if (typeof data === 'string' || (data instanceof Resource)) {
             data = Resource.createIfNeeded(data);
-
             promise = data.fetchJson();
-
             sourceUri = defaultValue(sourceUri, data.getUrlComponent());
+
+            // Add resource credits to our list of credits to display
+            var resourceCredits = data.credits;
+            if (defined(resourceCredits)) {
+                var length = resourceCredits.length;
+                for (var i = 0; i < length; i++) {
+                    credits.push(resourceCredits[i]);
+                }
+            }
         }
 
         options = {

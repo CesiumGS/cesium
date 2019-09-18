@@ -284,6 +284,26 @@ define([
         return result;
     };
 
+    /**
+     * Updates the credits.
+     */
+    DataSourceDisplay.prototype.updateCredits = function() {
+        var frameState = this._scene.frameState;
+        var dataSources = this._dataSourceCollection;
+        var length = dataSources.length;
+        for (var i = 0; i < length; i++) {
+            var dataSource = dataSources.get(i);
+
+            var credits = dataSource.credits;
+            if (defined(credits)) {
+                var creditCount = credits.length;
+                for (var c = 0; c < creditCount; c++) {
+                    frameState.creditDisplay.addCredit(credits[c]);
+                }
+            }
+        }
+    };
+
     var getBoundingSphereArrayScratch = [];
     var getBoundingSphereBoundingSphereScratch = new BoundingSphere();
 
