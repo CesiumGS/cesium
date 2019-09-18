@@ -61,7 +61,7 @@ define([
      * });
      */
     function createTileMapServiceImageryProvider(options) {
-        deprecationWarning('createTileMapServiceImageryProvider', 'createTileMapServiceImageryProvider is deprecated and will be removed in Cesium 1.46. Please use TileMapServiceImageryProvider instead.');
+        deprecationWarning('createTileMapServiceImageryProvider', 'createTileMapServiceImageryProvider is deprecated and will be removed in Cesium 1.65. Please use TileMapServiceImageryProvider instead.');
 
         return new TileMapServiceImageryProvider(options);
     }

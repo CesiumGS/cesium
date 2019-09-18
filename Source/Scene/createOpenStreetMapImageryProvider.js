@@ -1,23 +1,9 @@
 define([
-        '../Core/Credit',
-        '../Core/defaultValue',
         '../Core/deprecationWarning',
-        '../Core/DeveloperError',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/WebMercatorTilingScheme',
         './OpenStreetMapImageryProvider'
-        './UrlTemplateImageryProvider'
     ], function(
-        Credit,
-        defaultValue,
         deprecationWarning,
-        DeveloperError,
-        Rectangle,
-        Resource,
-        WebMercatorTilingScheme,
-        OpenStreetMapImageryProvide,
-        UrlTemplateImageryProvider) {
+        OpenStreetMapImageryProvider) {
     'use strict';
 
     /**
@@ -61,7 +47,7 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function createOpenStreetMapImageryProvider(options) {
-        deprecationWarning('createOpenStreetMapImageryProvider', 'createOpenStreetMapImageryProvider is deprecated and will be removed in Cesium 1.46. Please use OpenStreetMapImageryProvider instead.');
+        deprecationWarning('createOpenStreetMapImageryProvider', 'createOpenStreetMapImageryProvider is deprecated and will be removed in Cesium 1.65. Please use OpenStreetMapImageryProvider instead.');
 
         return new OpenStreetMapImageryProvider(options);
     }
