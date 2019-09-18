@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/TileBoundingRegion',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
@@ -11,9 +10,9 @@ defineSuite([
         'Core/Plane',
         'Core/Rectangle',
         'Scene/SceneMode',
+        'Scene/TileBoundingRegion',
         'Specs/createFrameState'
     ], function(
-        TileBoundingRegion,
         Cartesian2,
         Cartesian3,
         Cartographic,
@@ -25,8 +24,11 @@ defineSuite([
         Plane,
         Rectangle,
         SceneMode,
+        TileBoundingRegion,
         createFrameState) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TileBoundingRegion', function() {
 
     var boundingVolumeRegion = [0.0, 0.0, 1.0, 1.0, 0, 1];
     var regionBox = boundingVolumeRegion.slice(0, 4);
@@ -218,4 +220,5 @@ defineSuite([
         var plane = new Plane(normal, -distanceFromCenter);
         expect(tileBoundingRegion.intersectPlane(plane)).toEqual(Intersect.INTERSECTING);
     });
+});
 });

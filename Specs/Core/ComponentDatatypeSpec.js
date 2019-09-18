@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/ComponentDatatype'
     ], function(
         ComponentDatatype) {
-    'use strict';
+        'use strict';
+
+describe('Core/ComponentDatatype', function() {
 
     it('fromTypedArray works', function() {
         expect(ComponentDatatype.fromTypedArray(new Int8Array())).toBe(ComponentDatatype.BYTE);
@@ -165,4 +167,5 @@ defineSuite([
             ComponentDatatype.fromName();
         }).toThrowDeveloperError();
     });
+});
 });

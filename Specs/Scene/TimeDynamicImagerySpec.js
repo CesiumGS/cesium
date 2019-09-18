@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/TimeDynamicImagery',
+define([
         'Core/Clock',
         'Core/ClockStep',
         'Core/JulianDate',
@@ -7,9 +6,9 @@ defineSuite([
         'Core/RequestScheduler',
         'Core/RequestType',
         'Core/TimeIntervalCollection',
+        'Scene/TimeDynamicImagery',
         'ThirdParty/when'
     ], function(
-        TimeDynamicImagery,
         Clock,
         ClockStep,
         JulianDate,
@@ -17,8 +16,11 @@ defineSuite([
         RequestScheduler,
         RequestType,
         TimeIntervalCollection,
+        TimeDynamicImagery,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TimeDynamicImagery', function() {
 
     var clock = new Clock({
         clockStep : ClockStep.TICK_DEPENDENT,
@@ -232,4 +234,5 @@ defineSuite([
         }
 
     });
+});
 });

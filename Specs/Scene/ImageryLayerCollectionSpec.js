@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/ImageryLayerCollection',
+define([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Event',
@@ -11,13 +10,13 @@ defineSuite([
         'Core/WebMercatorTilingScheme',
         'Scene/Globe',
         'Scene/ImageryLayer',
+        'Scene/ImageryLayerCollection',
         'Scene/ImageryLayerFeatureInfo',
         'Scene/ImageryProvider',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        ImageryLayerCollection,
         Cartesian3,
         Ellipsoid,
         Event,
@@ -29,12 +28,15 @@ defineSuite([
         WebMercatorTilingScheme,
         Globe,
         ImageryLayer,
+        ImageryLayerCollection,
         ImageryLayerFeatureInfo,
         ImageryProvider,
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ImageryLayerCollection', function() {
 
     var fakeProvider = {
             isReady : function() { return false; }
@@ -567,3 +569,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

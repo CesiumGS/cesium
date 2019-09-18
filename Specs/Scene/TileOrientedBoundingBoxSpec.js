@@ -1,22 +1,24 @@
-defineSuite([
-        'Scene/TileOrientedBoundingBox',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/Intersect',
         'Core/Math',
         'Core/Matrix3',
         'Core/Plane',
+        'Scene/TileOrientedBoundingBox',
         'Specs/createFrameState'
     ], function(
-        TileOrientedBoundingBox,
         Cartesian3,
         Color,
         Intersect,
         CesiumMath,
         Matrix3,
         Plane,
+        TileOrientedBoundingBox,
         createFrameState) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TileOrientedBoundingBox', function() {
 
     var center = new Cartesian3(0.0, 0.0, 0.0);
     var halfAxes = Matrix3.fromScale(new Cartesian3(0.5, 0.5, 0.5), new Matrix3());
@@ -105,4 +107,5 @@ defineSuite([
         expect(tileBoundingVolume.intersectPlane(plane)).toEqual(Intersect.OUTSIDE);
     });
 
+});
 });

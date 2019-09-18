@@ -1,12 +1,14 @@
-defineSuite([
-        'Widgets/InfoBox/InfoBox',
+define([
         'Core/defined',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'Widgets/InfoBox/InfoBox'
     ], function(
-        InfoBox,
         defined,
-        pollToPromise) {
-    'use strict';
+        pollToPromise,
+        InfoBox) {
+        'use strict';
+
+describe('Widgets/InfoBox/InfoBox', function() {
 
     var testContainer;
     var infoBox;
@@ -74,4 +76,5 @@ defineSuite([
             return new InfoBox('foo');
         }).toThrowDeveloperError();
     });
+});
 });

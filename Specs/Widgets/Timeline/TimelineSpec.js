@@ -1,10 +1,12 @@
-defineSuite([
-        'Widgets/Timeline/Timeline',
-        'Core/Clock'
+define([
+        'Core/Clock',
+        'Widgets/Timeline/Timeline'
     ], function(
-        Timeline,
-        Clock) {
-    'use strict';
+        Clock,
+        Timeline) {
+        'use strict';
+
+describe('Widgets/Timeline/Timeline', function() {
 
     var container;
     beforeEach(function(){
@@ -26,4 +28,5 @@ defineSuite([
         timeline.destroy();
         expect(timeline.isDestroyed()).toEqual(true);
     });
+});
 });

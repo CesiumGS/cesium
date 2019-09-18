@@ -1,16 +1,15 @@
-defineSuite([
-        'DataSources/EllipsoidGeometryUpdater',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
-        'Core/Math',
         'Core/Quaternion',
         'Core/TimeIntervalCollection',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
+        'DataSources/EllipsoidGeometryUpdater',
         'DataSources/EllipsoidGraphics',
         'DataSources/Entity',
         'DataSources/SampledPositionProperty',
@@ -22,18 +21,17 @@ defineSuite([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        EllipsoidGeometryUpdater,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         GeometryOffsetAttribute,
         JulianDate,
-        CesiumMath,
         Quaternion,
         TimeIntervalCollection,
         ColorMaterialProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        EllipsoidGeometryUpdater,
         EllipsoidGraphics,
         Entity,
         SampledPositionProperty,
@@ -44,7 +42,9 @@ defineSuite([
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/EllipsoidGeometryUpdater', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -391,3 +391,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(EllipsoidGeometryUpdater, 'ellipsoid', createDynamicEllipsoid, getScene);
 }, 'WebGL');
+});

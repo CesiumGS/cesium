@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/Entity',
+define([
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/Matrix3',
@@ -16,6 +15,7 @@ defineSuite([
         'DataSources/CylinderGraphics',
         'DataSources/EllipseGraphics',
         'DataSources/EllipsoidGraphics',
+        'DataSources/Entity',
         'DataSources/LabelGraphics',
         'DataSources/ModelGraphics',
         'DataSources/PathGraphics',
@@ -27,7 +27,6 @@ defineSuite([
         'DataSources/RectangleGraphics',
         'DataSources/WallGraphics'
     ], function(
-        Entity,
         Cartesian3,
         JulianDate,
         Matrix3,
@@ -44,6 +43,7 @@ defineSuite([
         CylinderGraphics,
         EllipseGraphics,
         EllipsoidGraphics,
+        Entity,
         LabelGraphics,
         ModelGraphics,
         PathGraphics,
@@ -54,7 +54,9 @@ defineSuite([
         PolylineVolumeGraphics,
         RectangleGraphics,
         WallGraphics) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/Entity', function() {
 
     it('constructor sets expected properties.', function() {
         var entity = new Entity();
@@ -501,4 +503,5 @@ defineSuite([
         expect(listener.calls.argsFor(0)).toEqual([entity, 'isShowing', true, false]);
         expect(entity.isShowing).toBe(true);
     });
+});
 });

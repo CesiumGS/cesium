@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/parseResponseHeaders'
     ], function(
         parseResponseHeaders) {
-    'use strict';
+        'use strict';
+
+describe('Core/parseResponseHeaders', function() {
 
     it('returns an empty object literal when given falsy input', function() {
         expect(parseResponseHeaders()).toEqual({});
@@ -27,4 +29,5 @@ defineSuite([
             'Content-Type': 'text/plain; charset=utf-8'
         });
     });
+});
 });

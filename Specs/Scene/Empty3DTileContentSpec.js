@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Scene/Empty3DTileContent'
     ], function(
         Empty3DTileContent) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Empty3DTileContent', function() {
 
     it('destroys', function() {
         var content = new Empty3DTileContent();
@@ -28,4 +30,5 @@ defineSuite([
         expect(content.url).toBeUndefined();
         expect(content.batchTable).toBeUndefined();
     });
+});
 });

@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Scene',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -36,6 +35,7 @@ defineSuite([
         'Scene/Material',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
+        'Scene/Scene',
         'Scene/SceneTransforms',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
@@ -44,7 +44,6 @@ defineSuite([
         'Specs/pollToPromise',
         'Specs/render'
     ], function(
-        Scene,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -81,6 +80,7 @@ defineSuite([
         Material,
         Primitive,
         PrimitiveCollection,
+        Scene,
         SceneTransforms,
         ScreenSpaceCameraController,
         TweenCollection,
@@ -88,7 +88,9 @@ defineSuite([
         createScene,
         pollToPromise,
         render) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Scene', function() {
 
     var scene;
     var simpleShaderProgram;
@@ -1769,3 +1771,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

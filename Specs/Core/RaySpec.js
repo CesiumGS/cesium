@@ -1,10 +1,12 @@
-defineSuite([
-        'Core/Ray',
-        'Core/Cartesian3'
+define([
+        'Core/Cartesian3',
+        'Core/Ray'
     ], function(
-        Ray,
-        Cartesian3) {
-    'use strict';
+        Cartesian3,
+        Ray) {
+        'use strict';
+
+describe('Core/Ray', function() {
 
     it('default constructor create zero valued Ray', function() {
         var ray = new Ray();
@@ -90,4 +92,5 @@ defineSuite([
             Ray.getPoint(ray, undefined);
         }).toThrowDeveloperError();
     });
+});
 });

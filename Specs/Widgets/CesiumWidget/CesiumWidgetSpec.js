@@ -1,5 +1,4 @@
-defineSuite([
-        'Widgets/CesiumWidget/CesiumWidget',
+define([
         'Core/Clock',
         'Core/defaultValue',
         'Core/EllipsoidTerrainProvider',
@@ -13,9 +12,9 @@ defineSuite([
         'Scene/TileCoordinatesImageryProvider',
         'Specs/DomEventSimulator',
         'Specs/getWebGLStub',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'Widgets/CesiumWidget/CesiumWidget'
     ], function(
-        CesiumWidget,
         Clock,
         defaultValue,
         EllipsoidTerrainProvider,
@@ -29,8 +28,11 @@ defineSuite([
         TileCoordinatesImageryProvider,
         DomEventSimulator,
         getWebGLStub,
-        pollToPromise) {
-    'use strict';
+        pollToPromise,
+        CesiumWidget) {
+        'use strict';
+
+describe('Widgets/CesiumWidget/CesiumWidget', function() {
 
     var container;
     var widget;
@@ -365,3 +367,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

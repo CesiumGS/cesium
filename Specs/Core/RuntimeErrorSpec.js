@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/RuntimeError'
     ], function(
         RuntimeError) {
-    'use strict';
+        'use strict';
+
+describe('Core/RuntimeError', function() {
 
     var name = 'RuntimeError';
     var testMessage = 'Testing';
@@ -30,4 +32,5 @@ defineSuite([
         expect(str).toContain(name + ': ' + testMessage);
         expect(str).toContain('Core/RuntimeErrorSpec.js');
     });
+});
 });

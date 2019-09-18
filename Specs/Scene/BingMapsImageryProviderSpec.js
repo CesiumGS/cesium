@@ -1,11 +1,11 @@
-defineSuite([
-        'Scene/BingMapsImageryProvider',
+define([
         'Core/appendForwardSlash',
         'Core/defined',
         'Core/queryToObject',
         'Core/RequestScheduler',
         'Core/Resource',
         'Core/WebMercatorTilingScheme',
+        'Scene/BingMapsImageryProvider',
         'Scene/BingMapsStyle',
         'Scene/DiscardEmptyTileImagePolicy',
         'Scene/Imagery',
@@ -16,13 +16,13 @@ defineSuite([
         'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
-        BingMapsImageryProvider,
         appendForwardSlash,
         defined,
         queryToObject,
         RequestScheduler,
         Resource,
         WebMercatorTilingScheme,
+        BingMapsImageryProvider,
         BingMapsStyle,
         DiscardEmptyTileImagePolicy,
         Imagery,
@@ -32,7 +32,9 @@ defineSuite([
         pollToPromise,
         Uri,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/BingMapsImageryProvider', function() {
 
     var supportsImageBitmapOptions;
     beforeAll(function() {
@@ -586,4 +588,5 @@ defineSuite([
             });
         });
     });
+});
 });

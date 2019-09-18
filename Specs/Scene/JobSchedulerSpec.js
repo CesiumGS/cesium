@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Scene/JobScheduler',
         'Scene/JobType'
     ], function(
         JobScheduler,
         JobType) {
-    'use strict';
+        'use strict';
+
+describe('Scene/JobScheduler', function() {
 
     var originalGetTimestamp;
 
@@ -191,4 +193,5 @@ defineSuite([
           return new JobScheduler([1.0]);
       }).toThrowDeveloperError();
   });
+});
 });

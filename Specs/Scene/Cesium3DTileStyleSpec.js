@@ -1,20 +1,22 @@
-defineSuite([
-        'Scene/Cesium3DTileStyle',
+define([
         'Core/Cartesian2',
         'Core/Cartesian4',
         'Core/Color',
         'Core/Resource',
+        'Scene/Cesium3DTileStyle',
         'Scene/ConditionsExpression',
         'Scene/Expression'
     ], function(
-        Cesium3DTileStyle,
         Cartesian2,
         Cartesian4,
         Color,
         Resource,
+        Cesium3DTileStyle,
         ConditionsExpression,
         Expression) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Cesium3DTileStyle', function() {
 
     function MockFeature() {
         this._properties = {};
@@ -3866,4 +3868,5 @@ defineSuite([
         expect(showFunction).toBeUndefined();
         expect(pointSizeFunction).toBeUndefined();
     });
+});
 });

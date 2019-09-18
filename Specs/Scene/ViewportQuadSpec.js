@@ -1,22 +1,24 @@
-defineSuite([
-        'Scene/ViewportQuad',
+define([
         'Core/BoundingRectangle',
         'Core/Color',
         'Core/Resource',
         'Renderer/Texture',
         'Scene/Material',
+        'Scene/ViewportQuad',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        ViewportQuad,
         BoundingRectangle,
         Color,
         Resource,
         Texture,
         Material,
+        ViewportQuad,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ViewportQuad', function() {
 
     var scene;
     var viewportQuad;
@@ -117,3 +119,4 @@ defineSuite([
         expect(vq.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});

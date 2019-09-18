@@ -1,10 +1,12 @@
-defineSuite([
-        'Widgets/HomeButton/HomeButton',
-        'Specs/createScene'
+define([
+        'Specs/createScene',
+        'Widgets/HomeButton/HomeButton'
     ], function(
-        HomeButton,
-        createScene) {
-    'use strict';
+        createScene,
+        HomeButton) {
+        'use strict';
+
+describe('Widgets/HomeButton/HomeButton', function() {
 
     var scene;
     beforeAll(function() {
@@ -53,3 +55,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

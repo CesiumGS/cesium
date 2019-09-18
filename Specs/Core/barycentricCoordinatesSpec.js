@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/barycentricCoordinates',
         'Core/Cartesian3',
         'Core/Math'
@@ -6,7 +6,9 @@ defineSuite([
         barycentricCoordinates,
         Cartesian3,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/barycentricCoordinates', function() {
 
     var p0 = new Cartesian3(-1.0, 0.0, 0.0);
     var p1 = new Cartesian3( 1.0, 0.0, 0.0);
@@ -80,4 +82,5 @@ defineSuite([
             barycentricCoordinates(new Cartesian3(), new Cartesian3(), new Cartesian3());
         }).toThrowDeveloperError();
     });
+});
 });

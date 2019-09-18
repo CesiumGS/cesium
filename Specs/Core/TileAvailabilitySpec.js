@@ -1,16 +1,18 @@
-defineSuite([
-        'Core/TileAvailability',
+define([
         'Core/Cartographic',
         'Core/GeographicTilingScheme',
         'Core/Rectangle',
+        'Core/TileAvailability',
         'Core/WebMercatorTilingScheme'
     ], function(
-        TileAvailability,
         Cartographic,
         GeographicTilingScheme,
         Rectangle,
+        TileAvailability,
         WebMercatorTilingScheme) {
-    'use strict';
+        'use strict';
+
+describe('Core/TileAvailability', function() {
 
     var webMercator = new WebMercatorTilingScheme();
     var geographic = new GeographicTilingScheme();
@@ -124,4 +126,5 @@ defineSuite([
             expect(availability.computeMaximumLevelAtPosition(new Cartographic(-Math.PI / 2.0, 0.0))).toBe(1);
         });
     });
+});
 });

@@ -237,17 +237,19 @@ define([
                 scratchCartographic.longitude = longitude;
                 var latitude = originY + dv.getUint8(offset++) * stepY;
                 scratchCartographic.latitude = latitude;
-                // Height is stored in units of (1/EarthRadius) or (1/6371010.0)
-                var height = dv.getFloat32(offset, true) * 6371010.0;
+
+                var height = dv.getFloat32(offset, true);
                 offset += sizeOfFloat;
 
                 // In order to support old clients, negative altitude values are stored as
                 // height/-2^32. Old clients see the value as really close to 0 but new clients multiply
                 // by -2^32 to get the real negative altitude value.
-                if (height < negativeElevationThreshold) {
-                    height *= negativeAltitudeExponentBias;
+                if (height !== 0 && height < negativeElevationThreshold) {
+                    height *= -Math.pow(2, negativeAltitudeExponentBias);
                 }
-                height *= exaggeration;
+
+                // Height is stored in units of (1/EarthRadius) or (1/6371010.0)
+                height *= 6371010.0 * exaggeration;
 
                 scratchCartographic.height = height;
 

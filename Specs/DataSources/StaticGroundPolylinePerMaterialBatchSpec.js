@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/StaticGroundPolylinePerMaterialBatch',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -14,16 +13,16 @@ defineSuite([
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
-        'DataSources/PolylineOutlineMaterialProperty',
         'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
+        'DataSources/PolylineOutlineMaterialProperty',
+        'DataSources/StaticGroundPolylinePerMaterialBatch',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/ClassificationType',
         'Scene/GroundPolylinePrimitive',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        StaticGroundPolylinePerMaterialBatch,
         ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
@@ -38,15 +37,18 @@ defineSuite([
         ColorMaterialProperty,
         ConstantProperty,
         Entity,
-        PolylineOutlineMaterialProperty,
         PolylineGeometryUpdater,
         PolylineGraphics,
+        PolylineOutlineMaterialProperty,
+        StaticGroundPolylinePerMaterialBatch,
         TimeIntervalCollectionProperty,
         ClassificationType,
         GroundPolylinePrimitive,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/StaticGroundPolylinePerMaterialBatch', function() {
 
     var time = JulianDate.now();
     var batch;
@@ -568,4 +570,5 @@ defineSuite([
                 batch.removeAllPrimitives();
             });
     });
+});
 });

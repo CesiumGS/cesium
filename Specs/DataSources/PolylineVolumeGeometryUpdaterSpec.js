@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/PolylineVolumeGeometryUpdater',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/CornerType',
@@ -8,6 +7,7 @@ defineSuite([
         'Core/TimeIntervalCollection',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
+        'DataSources/PolylineVolumeGeometryUpdater',
         'DataSources/PolylineVolumeGraphics',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
@@ -16,7 +16,6 @@ defineSuite([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        PolylineVolumeGeometryUpdater,
         Cartesian2,
         Cartesian3,
         CornerType,
@@ -25,6 +24,7 @@ defineSuite([
         TimeIntervalCollection,
         ConstantProperty,
         Entity,
+        PolylineVolumeGeometryUpdater,
         PolylineVolumeGraphics,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,
@@ -32,7 +32,9 @@ defineSuite([
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineVolumeGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -210,3 +212,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(PolylineVolumeGeometryUpdater, 'polylineVolume', createDynamicPolylineVolume, getScene);
 }, 'WebGL');
+});

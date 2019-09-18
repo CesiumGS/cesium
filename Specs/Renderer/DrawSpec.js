@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/BoundingRectangle',
         'Core/Color',
         'Core/ComponentDatatype',
@@ -34,7 +34,9 @@ defineSuite([
         VertexArray,
         BlendingState,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Core/BoundingRectangle', function() {
 
     var context;
     var sp;
@@ -1376,3 +1378,4 @@ defineSuite([
         }
     });
 }, 'WebGL');
+});

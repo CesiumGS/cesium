@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/objectToQuery',
         'Core/queryToObject'
     ], function(
         objectToQuery,
         queryToObject) {
-    'use strict';
+        'use strict';
+
+describe('Core/objectToQuery', function() {
 
     it('can encode data', function() {
         var obj = {
@@ -54,4 +56,5 @@ defineSuite([
             objectToQuery();
         }).toThrowDeveloperError();
     });
+});
 });
