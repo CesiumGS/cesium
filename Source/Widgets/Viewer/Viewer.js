@@ -13,7 +13,6 @@ define([
         '../../Core/HeadingPitchRange',
         '../../Core/isArray',
         '../../Core/Matrix4',
-        '../../Core/Rectangle',
         '../../Core/ScreenSpaceEventType',
         '../../DataSources/BoundingSphereState',
         '../../DataSources/ConstantPositionProperty',
@@ -63,7 +62,6 @@ define([
         HeadingPitchRange,
         isArray,
         Matrix4,
-        Rectangle,
         ScreenSpaceEventType,
         BoundingSphereState,
         ConstantPositionProperty,
@@ -327,7 +325,7 @@ define([
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
-     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider({
+     *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
      *         url : 'https://a.tile.openstreetmap.org/'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
@@ -709,7 +707,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._needTrackedEntityUpdate = false;
         this._selectedEntity = undefined;
         this._clockTrackedDataSource = undefined;
-        this._forceResize = false;
         this._zoomIsFlight = false;
         this._zoomTarget = undefined;
         this._zoomPromise = undefined;
@@ -1195,7 +1192,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             },
             set : function(value) {
                 this._cesiumWidget.resolutionScale = value;
-                this._forceResize = true;
             }
         },
 
@@ -1359,12 +1355,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var animationExists = defined(this._animation);
         var timelineExists = defined(this._timeline);
 
-        if (!this._forceResize && width === this._lastWidth && height === this._lastHeight) {
+        cesiumWidget.resize();
+
+        if (width === this._lastWidth && height === this._lastHeight) {
             return;
         }
 
-        cesiumWidget.resize();
-        this._forceResize = false;
         var panelMaxHeight = height - 125;
         var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
 

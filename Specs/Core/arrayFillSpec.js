@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/arrayFill'
     ], function(
         arrayFill) {
-    'use strict';
+        'use strict';
+
+describe('Core/arrayFill', function() {
 
     var array;
 
@@ -53,4 +55,5 @@ defineSuite([
             arrayFill(array, 1, 1, array);
         }).toThrowDeveloperError('end must be a valid index.');
     });
+});
 });

@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Model',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -32,12 +31,12 @@ defineSuite([
         'Scene/ColorBlendMode',
         'Scene/DracoLoader',
         'Scene/HeightReference',
+        'Scene/Model',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        Model,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -70,11 +69,14 @@ defineSuite([
         ColorBlendMode,
         DracoLoader,
         HeightReference,
+        Model,
         ModelAnimationLoop,
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Model', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
@@ -1026,7 +1028,7 @@ defineSuite([
                 scene : scene,
                 time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
             }).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([193, 17, 16, 255], 5); // Red
+                expect(rgba).toEqualEpsilon([174, 6, 5, 255], 5); // Red
             });
 
             primitives.remove(m);
@@ -3541,3 +3543,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

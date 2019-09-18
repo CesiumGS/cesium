@@ -1,9 +1,7 @@
-defineSuite([
-        'Scene/WebMapTileServiceImageryProvider',
+define([
         'Core/Clock',
         'Core/ClockStep',
         'Core/Credit',
-        'Core/DefaultProxy',
         'Core/GeographicTilingScheme',
         'Core/JulianDate',
         'Core/objectToQuery',
@@ -18,14 +16,13 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/WebMapTileServiceImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/Uri'
     ], function(
-        WebMapTileServiceImageryProvider,
         Clock,
         ClockStep,
         Credit,
-        DefaultProxy,
         GeographicTilingScheme,
         JulianDate,
         objectToQuery,
@@ -40,9 +37,12 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
+        WebMapTileServiceImageryProvider,
         pollToPromise,
         Uri) {
-    'use strict';
+        'use strict';
+
+describe('Scene/WebMapTileServiceImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -683,4 +683,5 @@ defineSuite([
                 expect(lastUrl).toEqual(uri.toString());
             });
     });
+});
 });

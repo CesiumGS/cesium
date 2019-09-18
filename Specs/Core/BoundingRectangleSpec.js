@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Ellipsoid',
@@ -14,7 +14,9 @@ defineSuite([
         Intersect,
         Rectangle,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/BoundingRectangle', function() {
 
     it('default constructor sets expected values', function() {
         var rectangle = new BoundingRectangle();
@@ -256,4 +258,5 @@ defineSuite([
     });
 
     createPackableSpecs(BoundingRectangle, new BoundingRectangle(1, 2, 3, 4), [1, 2, 3, 4]);
+});
 });

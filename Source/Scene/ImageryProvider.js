@@ -25,8 +25,8 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see OpenStreetMapImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see GoogleEarthEnterpriseImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
      * @see GridImageryProvider
@@ -340,11 +340,11 @@ define([
 
         var resource = Resource.createIfNeeded(url);
 
-        if (ktxRegex.test(resource)) {
+        if (ktxRegex.test(resource.url)) {
             return loadKTX(resource);
-        } else if (crnRegex.test(resource)) {
+        } else if (crnRegex.test(resource.url)) {
             return loadCRN(resource);
-        } else if (defined(imageryProvider.tileDiscardPolicy)) {
+        } else if (defined(imageryProvider) && defined(imageryProvider.tileDiscardPolicy)) {
             return resource.fetchImage({
                 preferBlob : true,
                 preferImageBitmap : true,

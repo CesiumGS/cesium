@@ -436,7 +436,7 @@ define([
      * Creates and adds a billboard with the specified initial properties to the collection.
      * The added billboard is returned so it can be modified or removed from the collection later.
      *
-     * @param {Object}[billboard] A template describing the billboard's properties as shown in Example 1.
+     * @param {Object}[options] A template describing the billboard's properties as shown in Example 1.
      * @returns {Billboard} The billboard that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -481,8 +481,8 @@ define([
      * @see BillboardCollection#remove
      * @see BillboardCollection#removeAll
      */
-    BillboardCollection.prototype.add = function(billboard) {
-        var b = new Billboard(billboard, this);
+    BillboardCollection.prototype.add = function(options) {
+        var b = new Billboard(options, this);
         b._index = this._billboards.length;
 
         this._billboards.push(b);

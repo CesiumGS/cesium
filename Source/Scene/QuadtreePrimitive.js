@@ -994,8 +994,10 @@ define([
         var error = (maxGeometricError * height) / (distance * sseDenominator);
 
         if (frameState.fog.enabled) {
-            error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
+            error -= CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
         }
+
+        error /= frameState.pixelRatio;
 
         return error;
     }
@@ -1016,8 +1018,10 @@ define([
         var error = maxGeometricError / pixelSize;
 
         if (frameState.fog.enabled && frameState.mode !== SceneMode.SCENE2D) {
-            error = error - CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
+            error -= CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
         }
+
+        error /= frameState.pixelRatio;
 
         return error;
     }

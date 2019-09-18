@@ -1,20 +1,22 @@
-defineSuite([
-        'Scene/OctahedralProjectedCubeMap',
+define([
         'Core/Cartesian3',
         'Renderer/ComputeEngine',
         'Renderer/Pass',
+        'Scene/OctahedralProjectedCubeMap',
         'Specs/createContext',
         'Specs/createFrameState',
         'Specs/pollToPromise'
     ], function(
-        OctahedralProjectedCubeMap,
         Cartesian3,
         ComputeEngine,
         Pass,
+        OctahedralProjectedCubeMap,
         createContext,
         createFrameState,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/OctahedralProjectedCubeMap', function() {
 
     var context;
     var computeEngine;
@@ -199,3 +201,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

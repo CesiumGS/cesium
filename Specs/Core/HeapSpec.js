@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/Heap'
     ], function(
         Heap) {
-    'use strict';
+        'use strict';
+
+describe('Core/Heap', function() {
 
     var length = 100;
 
@@ -171,4 +173,5 @@ defineSuite([
             currentId = element.id;
         }
     });
+});
 });

@@ -3,9 +3,6 @@
     "env": {
         "jasmine": true
     },
-    "globals": {
-        "defineSuite": true
-    },
     "rules": {
         "no-self-assign": "off"
     }

@@ -1,20 +1,22 @@
-defineSuite([
-        'DataSources/PolylineGlowMaterialProperty',
+define([
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/PolylineGlowMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Specs/testDefinitionChanged'
     ], function(
-        PolylineGlowMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
+        PolylineGlowMaterialProperty,
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineGlowMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new PolylineGlowMaterialProperty();
@@ -158,4 +160,5 @@ defineSuite([
         testDefinitionChanged(property, 'glowPower', 0.25, 0.54);
         testDefinitionChanged(property, 'taperPower', 1.0, 0.44);
     });
+});
 });

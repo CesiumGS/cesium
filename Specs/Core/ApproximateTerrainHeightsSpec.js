@@ -1,14 +1,16 @@
-defineSuite([
-    'Core/ApproximateTerrainHeights',
-    'Core/Cartesian3',
-    'Core/Math',
-    'Core/Rectangle'
-], function(
-    ApproximateTerrainHeights,
-    Cartesian3,
-    CesiumMath,
-    Rectangle) {
-    'use strict';
+define([
+        'Core/ApproximateTerrainHeights',
+        'Core/Cartesian3',
+        'Core/Math',
+        'Core/Rectangle'
+    ], function(
+        ApproximateTerrainHeights,
+        Cartesian3,
+        CesiumMath,
+        Rectangle) {
+        'use strict';
+
+describe('Core/ApproximateTerrainHeights', function() {
 
     beforeAll(function() {
         return ApproximateTerrainHeights.initialize();
@@ -67,4 +69,5 @@ defineSuite([
         });
         ApproximateTerrainHeights._terrainHeights = heights;
     });
+});
 });

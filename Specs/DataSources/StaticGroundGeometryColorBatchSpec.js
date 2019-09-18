@@ -1,44 +1,44 @@
-defineSuite([
-        'DataSources/StaticGroundGeometryColorBatch',
-        'Core/defaultValue',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/defaultValue',
         'Core/DistanceDisplayCondition',
         'Core/JulianDate',
         'Core/Math',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DataSources/CallbackProperty',
-        'DataSources/ColorMaterialProperty',
         'DataSources/EllipseGeometryUpdater',
         'DataSources/Entity',
+        'DataSources/StaticGroundGeometryColorBatch',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/ClassificationType',
         'Scene/GroundPrimitive',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        StaticGroundGeometryColorBatch,
-        defaultValue,
         ApproximateTerrainHeights,
         Cartesian3,
         Color,
+        defaultValue,
         DistanceDisplayCondition,
         JulianDate,
         CesiumMath,
         TimeInterval,
         TimeIntervalCollection,
         CallbackProperty,
-        ColorMaterialProperty,
         EllipseGeometryUpdater,
         Entity,
+        StaticGroundGeometryColorBatch,
         TimeIntervalCollectionProperty,
         ClassificationType,
         GroundPrimitive,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/StaticGroundGeometryColorBatch', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -355,4 +355,5 @@ defineSuite([
                 batch.removeAllPrimitives();
             });
     });
+});
 });

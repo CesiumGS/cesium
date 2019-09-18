@@ -1,9 +1,8 @@
-defineSuite([
-        'Scene/GroundPolylinePrimitive',
+define([
         'Core/ApproximateTerrainHeights',
+        'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
-        'Core/Cartesian3',
         'Core/destroyObject',
         'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/Ellipsoid',
@@ -13,6 +12,7 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
         'Renderer/Pass',
+        'Scene/GroundPolylinePrimitive',
         'Scene/PerInstanceColorAppearance',
         'Scene/PolylineColorAppearance',
         'Scene/PolylineMaterialAppearance',
@@ -20,11 +20,10 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        GroundPolylinePrimitive,
         ApproximateTerrainHeights,
+        Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
-        Cartesian3,
         destroyObject,
         DistanceDisplayConditionGeometryInstanceAttribute,
         Ellipsoid,
@@ -34,13 +33,16 @@ defineSuite([
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
         Pass,
+        GroundPolylinePrimitive,
         PerInstanceColorAppearance,
         PolylineColorAppearance,
         PolylineMaterialAppearance,
         Primitive,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GroundPolylinePrimitive', function() {
 
     var scene;
     var context;
@@ -959,3 +961,4 @@ defineSuite([
         ApproximateTerrainHeights._terrainHeights = terrainHeights;
     });
 }, 'WebGL');
+});

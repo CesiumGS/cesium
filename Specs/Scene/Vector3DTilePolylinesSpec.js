@@ -1,32 +1,30 @@
-defineSuite([
-        'Scene/Vector3DTilePolylines',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Cartographic',
-        'Core/combine',
         'Core/Ellipsoid',
         'Core/Math',
-        'Core/Matrix4',
         'Core/Rectangle',
         'Scene/Cesium3DTileBatchTable',
         'Scene/ColorBlendMode',
+        'Scene/Vector3DTilePolylines',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        Vector3DTilePolylines,
         BoundingSphere,
         Cartesian3,
         Cartographic,
-        combine,
         Ellipsoid,
         CesiumMath,
-        Matrix4,
         Rectangle,
         Cesium3DTileBatchTable,
         ColorBlendMode,
+        Vector3DTilePolylines,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Vector3DTilePolylines', function() {
 
     var scene;
     var rectangle;
@@ -244,3 +242,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

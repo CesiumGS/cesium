@@ -266,7 +266,7 @@ define([
      * Creates and adds a point with the specified initial properties to the collection.
      * The added point is returned so it can be modified or removed from the collection later.
      *
-     * @param {Object}[pointPrimitive] A template describing the point's properties as shown in Example 1.
+     * @param {Object}[options] A template describing the point's properties as shown in Example 1.
      * @returns {PointPrimitive} The point that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -297,8 +297,8 @@ define([
      * @see PointPrimitiveCollection#remove
      * @see PointPrimitiveCollection#removeAll
      */
-    PointPrimitiveCollection.prototype.add = function(pointPrimitive) {
-        var p = new PointPrimitive(pointPrimitive, this);
+    PointPrimitiveCollection.prototype.add = function(options) {
+        var p = new PointPrimitive(options, this);
         p._index = this._pointPrimitives.length;
 
         this._pointPrimitives.push(p);

@@ -95,14 +95,21 @@ define([
         requestAnimationFrame(render);
     }
 
+    function configureSceneResolution(widget) {
+        var devicePixelRatio = window.devicePixelRatio;
+        var resolutionScale = widget._resolutionScale * devicePixelRatio;
+        if (defined(widget._scene)) {
+            widget._scene.pixelRatio = resolutionScale;
+        }
+
+        return resolutionScale;
+    }
+
     function configureCanvasSize(widget) {
         var canvas = widget._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        var resolutionScale = widget._resolutionScale;
-        if (!widget._supportsImageRenderingPixelated) {
-            resolutionScale *= defaultValue(window.devicePixelRatio, 1.0);
-        }
+        var resolutionScale = configureSceneResolution(widget);
 
         widget._canvasWidth = width;
         widget._canvasHeight = height;
@@ -114,6 +121,7 @@ define([
         canvas.height = height;
 
         widget._canRender = width !== 0 && height !== 0;
+        widget._lastDevicePixelRatio = window.devicePixelRatio;
     }
 
     function configureCameraFrustum(widget) {
@@ -174,9 +182,9 @@ define([
      * //Widget with no terrain and default Bing Maps imagery provider.
      * var widget = new Cesium.CesiumWidget('cesiumContainer');
      *
-     * //Widget with OpenStreetMaps imagery provider and Cesium World Terrain.
+     * //Widget with ion imagery and Cesium World Terrain.
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
-     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider(),
+     *     imageryProvider : Cesium.createWorldImagery(),
      *     terrainProvider : Cesium.createWorldTerrain(),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({
@@ -203,7 +211,7 @@ define([
 
         container = getElement(container);
 
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //Configure the widget DOM elements
         var element = document.createElement('div');
@@ -240,6 +248,7 @@ define([
         this._canvas = canvas;
         this._canvasWidth = 0;
         this._canvasHeight = 0;
+        this._lastDevicePixelRatio = 0;
         this._creditViewport = creditViewport;
         this._creditContainer = creditContainer;
         this._innerCreditContainer = innerCreditContainer;
@@ -271,6 +280,7 @@ define([
 
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
+            configureSceneResolution(this);
             configureCameraFrustum(this);
 
             var ellipsoid = defaultValue(scene.mapProjection.ellipsoid, Ellipsoid.WGS84);
@@ -327,7 +337,7 @@ define([
                 scene.terrainProvider = options.terrainProvider;
             }
 
-            this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas, false);
+            this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
 
             if (defined(options.sceneMode)) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
@@ -672,7 +682,7 @@ define([
         var canvas = this._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height) {
+        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height && this._lastDevicePixelRatio === window.devicePixelRatio) {
             return;
         }
         this._forceResize = false;

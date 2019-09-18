@@ -1,24 +1,26 @@
-defineSuite([
-        'DataSources/EllipseGraphics',
+define([
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/EllipseGraphics',
         'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        EllipseGraphics,
         Color,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        EllipseGraphics,
         ClassificationType,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/EllipseGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -260,4 +262,5 @@ defineSuite([
         testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
         testDefinitionChanged(property, 'zIndex', 4, 0);
     });
+});
 });

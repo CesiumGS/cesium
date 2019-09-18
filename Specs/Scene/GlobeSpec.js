@@ -1,20 +1,22 @@
-defineSuite([
-        'Scene/Globe',
+define([
         'Core/CesiumTerrainProvider',
         'Core/Rectangle',
         'Core/Resource',
+        'Scene/Globe',
         'Scene/SingleTileImageryProvider',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        Globe,
         CesiumTerrainProvider,
         Rectangle,
         Resource,
+        Globe,
         SingleTileImageryProvider,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Globe', function() {
 
     var scene;
     var globe;
@@ -268,3 +270,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

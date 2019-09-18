@@ -1,9 +1,9 @@
-defineSuite([
-        'Renderer/ComputeCommand',
+define([
         'Core/BoundingRectangle',
         'Core/PixelFormat',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
+        'Renderer/ComputeCommand',
         'Renderer/ShaderProgram',
         'Renderer/Texture',
         'Renderer/VertexArray',
@@ -11,18 +11,20 @@ defineSuite([
         'Scene/ViewportQuad',
         'Specs/createScene'
     ], function(
-        ComputeCommand,
         BoundingRectangle,
         PixelFormat,
         Buffer,
         BufferUsage,
+        ComputeCommand,
         ShaderProgram,
         Texture,
         VertexArray,
         Material,
         ViewportQuad,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/ComputeCommand', function() {
 
     var scene;
     var context;
@@ -161,3 +163,4 @@ defineSuite([
         expect(scene).notToRender([0, 0, 0, 255]);
     });
 }, 'WebGL');
+});
