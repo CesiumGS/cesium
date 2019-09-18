@@ -59,7 +59,7 @@ define([
      * @param {Cartesian2} [options.imageSize=new Cartesian2(1.0, 1.0)] If set, overrides the minimumImageSize and maximumImageSize inputs that scale the particle image's dimensions in pixels.
      * @param {Cartesian2} [options.minimumImageSize] Sets the minimum bound, width by height, above which to randomly scale the particle image's dimensions in pixels.
      * @param {Cartesian2} [options.maximumImageSize] Sets the maximum bound, width by height, below which to randomly scale the particle image's dimensions in pixels.
-     * @param {Boolean} [options.sizeInMeters] Sets if the size of particles is in meters or pixels. true to size the particles in meters; otherwise, the size is in pixels.
+     * @param {Boolean} [options.sizeInMeters] Sets if the size of particles is in meters or pixels. <code>true</code> to size the particles in meters; otherwise, the size is in pixels.
      * @param {Number} [options.speed=1.0] If set, overrides the minimumSpeed and maximumSpeed inputs with this value.
      * @param {Number} [options.minimumSpeed] Sets the minimum bound in meters per second above which a particle's actual speed will be randomly chosen.
      * @param {Number} [options.maximumSpeed] Sets the maximum bound in meters per second below which a particle's actual speed will be randomly chosen.
@@ -456,7 +456,7 @@ define([
             }
         },
         /**
-         * Gets or sets if the particle size is in meters or pixels. true to size particles in meters; otherwise, the size is in pixels.
+         * Gets or sets if the particle size is in meters or pixels. <code>true</code> to size particles in meters; otherwise, the size is in pixels.
          * @memberof ParticleSystem.prototype
          * @type {Boolean}
          * @default false
@@ -467,6 +467,7 @@ define([
             },
             set : function(value) {
                 //>>includeStart('debug', pragmas.debug);
+                Check.typeOf.bool('value', value);
                 //>>includeEnd('debug');
                 this._sizeInMeters = value;
             }
