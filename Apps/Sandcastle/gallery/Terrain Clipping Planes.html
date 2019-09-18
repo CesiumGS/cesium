@@ -48,7 +48,8 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer', {
     skyAtmosphere: false,
     shouldAnimate : true,
-    terrainProvider: Cesium.createWorldTerrain()
+    terrainProvider: Cesium.createWorldTerrain(),
+    scene3DOnly: true
 });
 var globe = viewer.scene.globe;
 

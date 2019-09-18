@@ -1,18 +1,20 @@
-defineSuite([
-        'Scene/EllipsoidPrimitive',
+define([
         'Core/Cartesian3',
         'Core/defined',
         'Core/Matrix4',
+        'Scene/EllipsoidPrimitive',
         'Scene/Material',
         'Specs/createScene'
     ], function(
-        EllipsoidPrimitive,
         Cartesian3,
         defined,
         Matrix4,
+        EllipsoidPrimitive,
         Material,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/EllipsoidPrimitive', function() {
 
     var scene;
     var ellipsoid;
@@ -198,3 +200,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

@@ -1,14 +1,11 @@
-defineSuite([
-        'Scene/Vector3DTilePoints',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
-        'Core/combine',
         'Core/DistanceDisplayCondition',
         'Core/Ellipsoid',
         'Core/Math',
-        'Core/Matrix4',
         'Core/NearFarScalar',
         'Core/Rectangle',
         'Scene/Cesium3DTileBatchTable',
@@ -16,20 +13,18 @@ defineSuite([
         'Scene/ColorBlendMode',
         'Scene/HorizontalOrigin',
         'Scene/LabelStyle',
+        'Scene/Vector3DTilePoints',
         'Scene/VerticalOrigin',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        Vector3DTilePoints,
         Cartesian2,
         Cartesian3,
         Cartographic,
         Color,
-        combine,
         DistanceDisplayCondition,
         Ellipsoid,
         CesiumMath,
-        Matrix4,
         NearFarScalar,
         Rectangle,
         Cesium3DTileBatchTable,
@@ -37,10 +32,13 @@ defineSuite([
         ColorBlendMode,
         HorizontalOrigin,
         LabelStyle,
+        Vector3DTilePoints,
         VerticalOrigin,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Vector3DTilePoints', function() {
 
     var scene;
     var rectangle;
@@ -450,3 +448,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

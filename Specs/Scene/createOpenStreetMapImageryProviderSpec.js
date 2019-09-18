@@ -1,30 +1,30 @@
-defineSuite([
-        'Scene/createOpenStreetMapImageryProvider',
-        'Core/DefaultProxy',
+define([
         'Core/Math',
         'Core/Rectangle',
         'Core/RequestScheduler',
         'Core/Resource',
         'Core/WebMercatorTilingScheme',
+        'Scene/createOpenStreetMapImageryProvider',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryState',
         'Scene/UrlTemplateImageryProvider',
         'Specs/pollToPromise'
     ], function(
-        createOpenStreetMapImageryProvider,
-        DefaultProxy,
         CesiumMath,
         Rectangle,
         RequestScheduler,
         Resource,
         WebMercatorTilingScheme,
+        createOpenStreetMapImageryProvider,
         Imagery,
         ImageryLayer,
         ImageryState,
         UrlTemplateImageryProvider,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/createOpenStreetMapImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -72,7 +72,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -94,7 +94,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -116,7 +116,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -144,7 +144,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -193,7 +193,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -256,7 +256,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
@@ -273,4 +273,5 @@ defineSuite([
             });
         }).toThrowDeveloperError();
     });
+});
 });

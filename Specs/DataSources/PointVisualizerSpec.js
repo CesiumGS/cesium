@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/PointVisualizer',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
@@ -15,12 +14,12 @@ defineSuite([
         'DataSources/EntityCluster',
         'DataSources/EntityCollection',
         'DataSources/PointGraphics',
+        'DataSources/PointVisualizer',
         'Scene/BillboardCollection',
         'Scene/HeightReference',
         'Scene/PointPrimitiveCollection',
         'Specs/createScene'
     ], function(
-        PointVisualizer,
         BoundingSphere,
         Cartesian3,
         Color,
@@ -36,11 +35,14 @@ defineSuite([
         EntityCluster,
         EntityCollection,
         PointGraphics,
+        PointVisualizer,
         BillboardCollection,
         HeightReference,
         PointPrimitiveCollection,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PointVisualizer', function() {
 
     var scene;
     var entityCluster;
@@ -51,7 +53,6 @@ defineSuite([
         scene.globe = {
             ellipsoid : Ellipsoid.WGS84,
             _surface : {},
-            tileLoadedEvent : new Event(),
             imageryLayersUpdatedEvent : new Event(),
             terrainProviderChanged : new Event()
         };
@@ -176,7 +177,7 @@ defineSuite([
         visualizer.update(time);
 
         var pointPrimitiveCollection = entityCluster._pointCollection;
-        expect(pointPrimitiveCollection instanceof PointPrimitiveCollection).toBe(true);
+        expect(pointPrimitiveCollection).toBeInstanceOf(PointPrimitiveCollection);
         expect(pointPrimitiveCollection.length).toEqual(1);
         var pointPrimitive = pointPrimitiveCollection.get(0);
 
@@ -238,7 +239,7 @@ defineSuite([
         visualizer.update(time);
 
         var billboardCollection = entityCluster._billboardCollection;
-        expect(billboardCollection instanceof BillboardCollection).toBe(true);
+        expect(billboardCollection).toBeInstanceOf(BillboardCollection);
         expect(billboardCollection.length).toEqual(1);
         var billboard = billboardCollection.get(0);
 
@@ -396,3 +397,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

@@ -1,18 +1,20 @@
-defineSuite([
-        'DataSources/PolylineArrowMaterialProperty',
+define([
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/PolylineArrowMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty'
     ], function(
-        PolylineArrowMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
+        PolylineArrowMaterialProperty,
         TimeIntervalCollectionProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineArrowMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new PolylineArrowMaterialProperty();
@@ -100,4 +102,5 @@ defineSuite([
         property.color = property.color;
         expect(listener.calls.count()).toEqual(0);
     });
+});
 });

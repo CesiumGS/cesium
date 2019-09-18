@@ -1,12 +1,16 @@
-defineSuite([
-        'Core/HeightmapTerrainData',
+define([
         'Core/GeographicTilingScheme',
+        'Core/HeightmapEncoding',
+        'Core/HeightmapTerrainData',
         'Core/TerrainData'
     ], function(
-        HeightmapTerrainData,
         GeographicTilingScheme,
+        HeightmapEncoding,
+        HeightmapTerrainData,
         TerrainData) {
-     'use strict';
+        'use strict';
+
+describe('Core/HeightmapTerrainData', function() {
 
      it('conforms to TerrainData interface', function() {
          expect(HeightmapTerrainData).toConformToInterface(TerrainData);
@@ -42,6 +46,29 @@ defineSuite([
                      width : 5
                  });
              }).toThrowDeveloperError();
+         });
+
+         it('non-LERC encoded buffers sets correct buffer type', function() {
+            var data = new HeightmapTerrainData({
+                buffer : new Uint16Array(25),
+                width : 5,
+                height : 5
+            });
+
+            expect(data._encoding).toBe(HeightmapEncoding.NONE);
+            expect(data._bufferType).toBe(Uint16Array);
+         });
+
+         it('LERC encoded buffers sets correct buffer type', function() {
+            var data = new HeightmapTerrainData({
+                buffer : new Uint16Array(25),
+                width : 5,
+                height : 5,
+                encoding: HeightmapEncoding.LERC
+            });
+
+            expect(data._encoding).toBe(HeightmapEncoding.LERC);
+            expect(data._bufferType).toBe(Float32Array);
          });
      });
 
@@ -301,4 +328,5 @@ defineSuite([
              }).toThrowDeveloperError();
          });
      });
+});
 });

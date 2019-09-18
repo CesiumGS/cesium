@@ -1,4 +1,3 @@
-
 [
   {
     "id":"document",
@@ -95,6 +94,7 @@
           57494,62432,42995
         ]
       },
+      "heightReference":"CLAMP_TO_GROUND",
       "fill":true,
       "material":{
         "solidColor":{
@@ -123,12 +123,15 @@
       "show":true,
       "positions":{
         "cartesian":[
-          36415,2702,36618,47759,11706,63277
+          36415,2702,36618,
+          47759,11706,63277
         ]
       },
       "width":20413,
       "height":8062,
+      "heightReference":"CLAMP_TO_GROUND",
       "extrudedHeight":22846,
+      "extrudedHeightReference":"CLAMP_TO_GROUND",
       "cornerType":"BEVELED",
       "granularity":44105,
       "fill":true,
@@ -153,13 +156,16 @@
         "distanceDisplayCondition":[
           15797,46507
         ]
-      }
+      },
+      "classificationType":"TERRAIN",
+      "zIndex":59315
     },
     "cylinder":{
       "show":true,
       "length":33298,
       "topRadius":16245,
       "bottomRadius":59378,
+      "heightReference":"CLAMP_TO_GROUND",
       "fill":true,
       "material":{
         "solidColor":{
@@ -191,7 +197,9 @@
       "semiMajorAxis":60072,
       "semiMinorAxis":38653,
       "height":15549,
+      "heightReference":"CLAMP_TO_GROUND",
       "extrudedHeight":55640,
+      "extrudedHeightReference":"CLAMP_TO_GROUND",
       "rotation":27722,
       "stRotation":4692,
       "granularity":62192,
@@ -218,7 +226,9 @@
         "distanceDisplayCondition":[
           27813,30828
         ]
-      }
+      },
+      "classificationType":"TERRAIN",
+      "zIndex":3341
     },
     "ellipsoid":{
       "show":true,
@@ -227,6 +237,7 @@
           15638,24381,37983
         ]
       },
+      "heightReference":"CLAMP_TO_GROUND",
       "fill":true,
       "material":{
         "solidColor":{
@@ -363,14 +374,17 @@
             ]
           }
         }
+      },
+      "articulations":{
+        "prop":25496
       }
     },
     "path":{
       "show":true,
-      "width":56040,
-      "resolution":31563,
       "leadTime":5997,
       "trailTime":52915,
+      "width":56040,
+      "resolution":31563,
       "material":{
         "solidColor":{
           "color":{
@@ -422,11 +436,30 @@
       "show":true,
       "positions":{
         "cartesian":[
-          39143,2200,6408,27161,33386,62338
+          39143,2200,6408,
+          27161,33386,62338
         ]
       },
+      "holes":{
+        "cartesian":[
+          [
+            47462,20409,3151,
+            58636,39653,53914,
+            31954,4988,47462
+          ],
+          [
+            20409,3151,58636,
+            39653,53914,31954,
+            4988,47462,20409,
+            3151,58636,39653
+          ]
+        ]
+      },
+      "arcType":"RHUMB",
       "height":26391,
+      "heightReference":"CLAMP_TO_GROUND",
       "extrudedHeight":15922,
+      "extrudedHeightReference":"CLAMP_TO_GROUND",
       "stRotation":2555,
       "granularity":17060,
       "fill":true,
@@ -454,15 +487,19 @@
         "distanceDisplayCondition":[
           5989,26104
         ]
-      }
+      },
+      "classificationType":"TERRAIN",
+      "zIndex":31269
     },
     "polyline":{
       "show":true,
       "positions":{
         "cartesian":[
-          23333,31067,17529,57924,41186,31648
+          23333,31067,17529,
+          57924,41186,31648
         ]
       },
+      "arcType":"RHUMB",
       "width":14667,
       "granularity":53395,
       "material":{
@@ -474,7 +511,6 @@
           }
         }
       },
-      "followSurface":true,
       "shadows":"CAST_ONLY",
       "depthFailMaterial":{
         "solidColor":{
@@ -489,7 +525,10 @@
         "distanceDisplayCondition":[
           5807,30486
         ]
-      }
+      },
+      "clampToGround":true,
+      "classificationType":"TERRAIN",
+      "zIndex":17658
     },
     "rectangle":{
       "show":true,
@@ -499,7 +538,9 @@
         ]
       },
       "height":20608,
+      "heightReference":"CLAMP_TO_GROUND",
       "extrudedHeight":23002,
+      "extrudedHeightReference":"CLAMP_TO_GROUND",
       "rotation":54979,
       "stRotation":8079,
       "granularity":60343,
@@ -525,23 +566,28 @@
         "distanceDisplayCondition":[
           21388,23379
         ]
-      }
+      },
+      "classificationType":"TERRAIN",
+      "zIndex":445
     },
     "wall":{
       "show":true,
       "positions":{
         "cartesian":[
-          21681,40276,30621,3959,61967,19442
+          21681,40276,30621,
+          3959,61967,19442
         ]
       },
       "minimumHeights":{
         "array":[
-          49466,44737
+          49466,
+          44737
         ]
       },
       "maximumHeights":{
         "array":[
-          59672,62697
+          59672,
+          62697
         ]
       },
       "granularity":47652,
@@ -647,7 +693,8 @@
       "show":true,
       "directions":{
         "spherical":[
-          49130,29887,4468,25873,21605,54100
+          49130,29887,4468,
+          25873,21605,54100
         ]
       },
       "radius":26731,
@@ -794,7 +841,8 @@
       "show":true,
       "directions":{
         "spherical":[
-          19722,1613,23046,14938,16954,50242
+          19722,1613,23046,
+          14938,16954,50242
         ]
       },
       "radius":54355,
@@ -966,6 +1014,30 @@
     }
   },
   {
+    "id":"material_box_material_checkerboard",
+    "box":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              188,19,247,166
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              70,241,211,45
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              31491,2427
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_box_material_image_color",
     "box":{
       "material":{
@@ -1022,6 +1094,34 @@
     }
   },
   {
+    "id":"constant_box_material_checkerboard_evenColor",
+    "box":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.7411764705882353,0.09411764705882353,0.10196078431372549,0.5098039215686274
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_box_material_checkerboard_oddColor",
+    "box":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.403921568627451,0.7686274509803922,0.7176470588235294,0.0392156862745098
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_box_outlineColor_rgbaf",
     "box":{
       "outlineColor":{
@@ -1036,7 +1136,8 @@
     "corridor":{
       "positions":{
         "cartographicRadians":[
-          0.220356654342316,0.879184920197648,64909,0.175978952571564,1.00316515710468,913
+          0.220356654342316,0.879184920197648,64909,
+          0.175978952571564,1.00316515710468,913
         ]
       }
     }
@@ -1046,7 +1147,8 @@
     "corridor":{
       "positions":{
         "cartographicDegrees":[
-          28,14,63058,15,37,26381
+          28,14,63058,
+          15,37,26381
         ]
       }
     }
@@ -1139,6 +1241,30 @@
     }
   },
   {
+    "id":"material_corridor_material_checkerboard",
+    "corridor":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              24,195,5,165
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              15,107,210,249
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              19640,18252
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_corridor_material_image_color",
     "corridor":{
       "material":{
@@ -1188,6 +1314,34 @@
           "oddColor":{
             "rgbaf":[
               0.2,0.13725490196078433,0.792156862745098,0.30196078431372547
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_corridor_material_checkerboard_evenColor",
+    "corridor":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.28627450980392155,0.6196078431372549,0.615686274509804,0.23137254901960785
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_corridor_material_checkerboard_oddColor",
+    "corridor":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.6901960784313725,0.17254901960784313,0.984313725490196,0.4392156862745098
             ]
           }
         }
@@ -1292,6 +1446,30 @@
     }
   },
   {
+    "id":"material_cylinder_material_checkerboard",
+    "cylinder":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              90,151,142,93
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              29,42,163,118
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              62750,3317
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_cylinder_material_image_color",
     "cylinder":{
       "material":{
@@ -1341,6 +1519,34 @@
           "oddColor":{
             "rgbaf":[
               0.9058823529411765,0.5647058823529412,0.48627450980392156,0.6784313725490196
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_cylinder_material_checkerboard_evenColor",
+    "cylinder":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.5137254901960784,0.7568627450980392,0.7647058823529411,0.8823529411764706
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_cylinder_material_checkerboard_oddColor",
+    "cylinder":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.45098039215686275,0.39215686274509803,0.3333333333333333,0.5372549019607843
             ]
           }
         }
@@ -1445,6 +1651,30 @@
     }
   },
   {
+    "id":"material_ellipse_material_checkerboard",
+    "ellipse":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              62,67,234,118
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              116,61,76,32
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              62262,11507
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_ellipse_material_image_color",
     "ellipse":{
       "material":{
@@ -1494,6 +1724,34 @@
           "oddColor":{
             "rgbaf":[
               0.6823529411764706,0.6588235294117647,0.9529411764705882,0.08235294117647059
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_ellipse_material_checkerboard_evenColor",
+    "ellipse":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.0196078431372549,0.5372549019607843,0.2901960784313726,0.403921568627451
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_ellipse_material_checkerboard_oddColor",
+    "ellipse":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.3176470588235294,0.6901960784313725,0.2235294117647059,0.8862745098039215
             ]
           }
         }
@@ -1598,6 +1856,30 @@
     }
   },
   {
+    "id":"material_ellipsoid_material_checkerboard",
+    "ellipsoid":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              65,215,40,252
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              63,63,46,195
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              40702,13470
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_ellipsoid_material_image_color",
     "ellipsoid":{
       "material":{
@@ -1647,6 +1929,34 @@
           "oddColor":{
             "rgbaf":[
               0.5803921568627451,0.16470588235294117,0.7411764705882353,0.09411764705882353
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_ellipsoid_material_checkerboard_evenColor",
+    "ellipsoid":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.13725490196078433,0.7843137254901961,0.29411764705882354,0.9647058823529412
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_ellipsoid_material_checkerboard_oddColor",
+    "ellipsoid":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.9058823529411765,0.9294117647058824,0.42745098039215684,0.11372549019607843
             ]
           }
         }
@@ -1792,7 +2102,8 @@
               72,114,200,147
             ]
           },
-          "glowPower":42344
+          "glowPower":42344,
+          "taperPower":39950
         }
       }
     }
@@ -1866,6 +2177,30 @@
           },
           "offset":41305,
           "repeat":43637
+        }
+      }
+    }
+  },
+  {
+    "id":"material_path_material_checkerboard",
+    "path":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              174,238,222,107
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              184,189,156,237
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              57303,45535
+            ]
+          }
         }
       }
     }
@@ -2011,6 +2346,34 @@
     }
   },
   {
+    "id":"constant_path_material_checkerboard_evenColor",
+    "path":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.25882352941176473,0.8509803921568627,0.19607843137254902,0.8117647058823529
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_path_material_checkerboard_oddColor",
+    "path":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.07450980392156863,0.9333333333333333,0.1843137254901961,0.11764705882352941
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_point_color_rgbaf",
     "point":{
       "color":{
@@ -2031,21 +2394,63 @@
     }
   },
   {
-    "id":"constant_polygon_hierarchy_cartographicRadians",
+    "id":"constant_polygon_positions_cartographicRadians",
     "polygon":{
       "positions":{
         "cartographicRadians":[
-          0.612948853926511,1.3346715688367,54401,1.1867596160592,0.345663242797974,35811
+          0.278819883450618,1.34192534297912,13112,
+          1.08460649779701,1.26665808721843,9013
         ]
       }
     }
   },
   {
-    "id":"constant_polygon_hierarchy_cartographicDegrees",
+    "id":"constant_polygon_positions_cartographicDegrees",
     "polygon":{
       "positions":{
         "cartographicDegrees":[
-          19,41,50907,28,40,24937
+          20,42,343,
+          21,14,24042
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_polygon_holes_cartographicRadians",
+    "polygon":{
+      "holes":{
+        "cartographicRadians":[
+          [
+            0.799220652820836,1.50366253893541,4776,
+            0.179862066646486,1.42489853818289,42245,
+            0.0636782022426772,0.558333087028927,32510
+          ],
+          [
+            1.50366253893541,0.779166543514464,33810,
+            1.42489853818289,0.00358717805196918,20389,
+            0.558333087028927,0.799220652820836,43134,
+            0.779166543514464,0.179862066646486,1412
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_polygon_holes_cartographicDegrees",
+    "polygon":{
+      "holes":{
+        "cartographicDegrees":[
+          [
+            38,39,52122,
+            30,41,40406,
+            9,42,55073
+          ],
+          [
+            39,12,5835,
+            41,41,39069,
+            42,38,39639,
+            12,30,54806
+          ]
         ]
       }
     }
@@ -2138,6 +2543,30 @@
     }
   },
   {
+    "id":"material_polygon_material_checkerboard",
+    "polygon":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              187,186,46,98
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              19,74,101,217
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              45028,15023
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_polygon_material_image_color",
     "polygon":{
       "material":{
@@ -2194,6 +2623,34 @@
     }
   },
   {
+    "id":"constant_polygon_material_checkerboard_evenColor",
+    "polygon":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.396078431372549,0.5764705882352941,0.4745098039215686,0.9098039215686274
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polygon_material_checkerboard_oddColor",
+    "polygon":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.11764705882352941,0.25882352941176473,0.5411764705882353,0.20784313725490197
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_polygon_outlineColor_rgbaf",
     "polygon":{
       "outlineColor":{
@@ -2208,7 +2665,8 @@
     "polyline":{
       "positions":{
         "cartographicRadians":[
-          0.23083587429617,0.738315731088925,41390,0.537259577218533,0.25389340391868,10573
+          0.23083587429617,0.738315731088925,41390,
+          0.537259577218533,0.25389340391868,10573
         ]
       }
     }
@@ -2218,7 +2676,8 @@
     "polyline":{
       "positions":{
         "cartographicDegrees":[
-          19,5,11802,15,40,39495
+          19,5,11802,
+          15,40,39495
         ]
       }
     }
@@ -2302,7 +2761,8 @@
               59,125,181,171
             ]
           },
-          "glowPower":41345
+          "glowPower":41345,
+          "taperPower":29908
         }
       }
     }
@@ -2376,6 +2836,30 @@
           },
           "offset":10077,
           "repeat":31817
+        }
+      }
+    }
+  },
+  {
+    "id":"material_polyline_material_checkerboard",
+    "polyline":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              29,196,146,39
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              189,110,12,32
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              22832,11097
+            ]
+          }
         }
       }
     }
@@ -2521,6 +3005,34 @@
     }
   },
   {
+    "id":"constant_polyline_material_checkerboard_evenColor",
+    "polyline":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.5058823529411764,0.4666666666666667,0.8627450980392157,0.803921568627451
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polyline_material_checkerboard_oddColor",
+    "polyline":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.3215686274509804,0.4549019607843137,0.803921568627451,0.20392156862745098
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_polyline_depthFailMaterial_solidColor_color",
     "polyline":{
       "depthFailMaterial":{
@@ -2599,7 +3111,8 @@
               82,227,164,249
             ]
           },
-          "glowPower":52932
+          "glowPower":52932,
+          "taperPower":29589
         }
       }
     }
@@ -2673,6 +3186,30 @@
           },
           "offset":58992,
           "repeat":7346
+        }
+      }
+    }
+  },
+  {
+    "id":"material_polyline_depthFailMaterial_checkerboard",
+    "polyline":{
+      "depthFailMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              143,196,196,1
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              49,118,113,119
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              32284,46718
+            ]
+          }
         }
       }
     }
@@ -2818,6 +3355,34 @@
     }
   },
   {
+    "id":"constant_polyline_depthFailMaterial_checkerboard_evenColor",
+    "polyline":{
+      "depthFailMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.1450980392156863,0.8156862745098039,0.11372549019607843,0.7294117647058823
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_polyline_depthFailMaterial_checkerboard_oddColor",
+    "polyline":{
+      "depthFailMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.09411764705882353,0.615686274509804,0.4470588235294118,0.00392156862745098
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_rectangle_coordinates_wsenDegrees",
     "rectangle":{
       "coordinates":{
@@ -2915,6 +3480,30 @@
     }
   },
   {
+    "id":"material_rectangle_material_checkerboard",
+    "rectangle":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              210,132,163,116
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              159,4,119,14
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              27335,51818
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_rectangle_material_image_color",
     "rectangle":{
       "material":{
@@ -2971,6 +3560,34 @@
     }
   },
   {
+    "id":"constant_rectangle_material_checkerboard_evenColor",
+    "rectangle":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.5450980392156862,0.6470588235294118,0.6039215686274509,0.7254901960784313
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_rectangle_material_checkerboard_oddColor",
+    "rectangle":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.22745098039215686,0.16470588235294117,0.6196078431372549,0.9058823529411765
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_rectangle_outlineColor_rgbaf",
     "rectangle":{
       "outlineColor":{
@@ -2985,7 +3602,8 @@
     "wall":{
       "positions":{
         "cartographicRadians":[
-          0.990822494752221,0.11729920547879,47975,1.22405890229697,1.46292679641256,13438
+          0.990822494752221,0.11729920547879,47975,
+          1.22405890229697,1.46292679641256,13438
         ]
       }
     }
@@ -2995,7 +3613,8 @@
     "wall":{
       "positions":{
         "cartographicDegrees":[
-          30,24,27738,14,41,41667
+          30,24,27738,
+          14,41,41667
         ]
       }
     }
@@ -3088,6 +3707,30 @@
     }
   },
   {
+    "id":"material_wall_material_checkerboard",
+    "wall":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              187,134,139,130
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              177,172,79,149
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              22341,60503
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_wall_material_image_color",
     "wall":{
       "material":{
@@ -3137,6 +3780,34 @@
           "oddColor":{
             "rgbaf":[
               0.9686274509803922,0.3686274509803922,0.2196078431372549,0.00392156862745098
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_wall_material_checkerboard_evenColor",
+    "wall":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.3764705882352941,0.396078431372549,0.6980392156862745,0.5450980392156862
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_wall_material_checkerboard_oddColor",
+    "wall":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.396078431372549,0.0196078431372549,0.2784313725490196,0.5254901960784314
             ]
           }
         }
@@ -3251,6 +3922,30 @@
     }
   },
   {
+    "id":"material_conicSensor_lateralSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              143,14,11,115
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              219,175,60,237
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              33167,58753
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_conicSensor_lateralSurfaceMaterial_image_color",
     "agi_conicSensor":{
       "lateralSurfaceMaterial":{
@@ -3300,6 +3995,34 @@
           "oddColor":{
             "rgbaf":[
               0.12549019607843137,0.45098039215686275,0.6078431372549019,0.5686274509803921
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_conicSensor_lateralSurfaceMaterial_checkerboard_evenColor",
+    "agi_conicSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.03137254901960784,0.09803921568627451,0.803921568627451,0.9490196078431372
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_conicSensor_lateralSurfaceMaterial_checkerboard_oddColor",
+    "agi_conicSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.8313725490196079,0.38823529411764707,0.12941176470588237,0.13725490196078433
             ]
           }
         }
@@ -3394,6 +4117,30 @@
     }
   },
   {
+    "id":"material_conicSensor_ellipsoidSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              103,129,36,245
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              125,17,186,45
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              56863,31454
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_conicSensor_ellipsoidSurfaceMaterial_image_color",
     "agi_conicSensor":{
       "ellipsoidSurfaceMaterial":{
@@ -3443,6 +4190,34 @@
           "oddColor":{
             "rgbaf":[
               0.4549019607843137,0.6196078431372549,0.11372549019607843,0.8588235294117647
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_conicSensor_ellipsoidSurfaceMaterial_checkerboard_evenColor",
+    "agi_conicSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.2901960784313726,0.4666666666666667,0.5411764705882353,0.10980392156862745
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_conicSensor_ellipsoidSurfaceMaterial_checkerboard_oddColor",
+    "agi_conicSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.7686274509803922,0.6039215686274509,0.8549019607843137,0.6313725490196078
             ]
           }
         }
@@ -3537,6 +4312,30 @@
     }
   },
   {
+    "id":"material_conicSensor_ellipsoidHorizonSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              184,26,104,64
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              5,165,153,170
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              25804,5220
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_conicSensor_ellipsoidHorizonSurfaceMaterial_image_color",
     "agi_conicSensor":{
       "ellipsoidHorizonSurfaceMaterial":{
@@ -3586,6 +4385,34 @@
           "oddColor":{
             "rgbaf":[
               0.39215686274509803,0.8627450980392157,0.8470588235294118,0.3333333333333333
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_conicSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_evenColor",
+    "agi_conicSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.23921568627450981,0.611764705882353,0.2901960784313726,0.32941176470588235
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_conicSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_oddColor",
+    "agi_conicSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.6352941176470588,0.050980392156862744,0.42745098039215684,0.4627450980392157
             ]
           }
         }
@@ -3680,6 +4507,30 @@
     }
   },
   {
+    "id":"material_conicSensor_domeSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              82,4,132,17
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              224,212,71,253
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              24608,33120
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_conicSensor_domeSurfaceMaterial_image_color",
     "agi_conicSensor":{
       "domeSurfaceMaterial":{
@@ -3729,6 +4580,34 @@
           "oddColor":{
             "rgbaf":[
               0.8823529411764706,0.2235294117647059,0.9411764705882353,0.6509803921568628
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_conicSensor_domeSurfaceMaterial_checkerboard_evenColor",
+    "agi_conicSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.7764705882352941,0.3333333333333333,0.9058823529411765,0.20392156862745098
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_conicSensor_domeSurfaceMaterial_checkerboard_oddColor",
+    "agi_conicSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.06274509803921569,0.4470588235294118,0.39215686274509803,0.788235294117647
             ]
           }
         }
@@ -3823,6 +4702,30 @@
     }
   },
   {
+    "id":"material_conicSensor_environmentOcclusionMaterial_checkerboard",
+    "agi_conicSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              158,112,6,224
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              176,40,146,238
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              29879,39796
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_conicSensor_environmentOcclusionMaterial_image_color",
     "agi_conicSensor":{
       "environmentOcclusionMaterial":{
@@ -3879,6 +4782,34 @@
     }
   },
   {
+    "id":"constant_conicSensor_environmentOcclusionMaterial_checkerboard_evenColor",
+    "agi_conicSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.6352941176470588,0.596078431372549,0.34509803921568627,0.03529411764705882
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_conicSensor_environmentOcclusionMaterial_checkerboard_oddColor",
+    "agi_conicSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.2627450980392157,0.2980392156862745,0.5803921568627451,0.6627450980392157
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_agi_conicSensor_environmentIntersectionColor_rgbaf",
     "agi_conicSensor":{
       "environmentIntersectionColor":{
@@ -3893,7 +4824,8 @@
     "agi_customPatternSensor":{
       "directions":{
         "unitSpherical":[
-          47421,31161,31609,11387
+          47421,31161,
+          31609,11387
         ]
       }
     }
@@ -3903,7 +4835,8 @@
     "agi_customPatternSensor":{
       "directions":{
         "cartesian":[
-          22239,54614,35029,5768,61974,38386
+          22239,54614,35029,
+          5768,61974,38386
         ]
       }
     }
@@ -3913,7 +4846,8 @@
     "agi_customPatternSensor":{
       "directions":{
         "unitCartesian":[
-          0.4878261102190049,0.8708200715109468,0.06081191694285649,0.532391171359761,0.837660156389704,0.122004520634927
+          0.4878261102190049,0.8708200715109468,0.06081191694285649,
+          0.532391171359761,0.837660156389704,0.122004520634927
         ]
       }
     }
@@ -4016,6 +4950,30 @@
     }
   },
   {
+    "id":"material_customPatternSensor_lateralSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              145,158,64,87
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              8,152,176,59
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              32394,37502
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_customPatternSensor_lateralSurfaceMaterial_image_color",
     "agi_customPatternSensor":{
       "lateralSurfaceMaterial":{
@@ -4065,6 +5023,34 @@
           "oddColor":{
             "rgbaf":[
               0.7294117647058823,0.5372549019607843,0.6941176470588235,0.12549019607843137
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_customPatternSensor_lateralSurfaceMaterial_checkerboard_evenColor",
+    "agi_customPatternSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.09411764705882353,0.0784313725490196,0.6313725490196078,0.8941176470588236
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_customPatternSensor_lateralSurfaceMaterial_checkerboard_oddColor",
+    "agi_customPatternSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.7529411764705882,0.30980392156862746,0.8745098039215686,0.8627450980392157
             ]
           }
         }
@@ -4159,6 +5145,30 @@
     }
   },
   {
+    "id":"material_customPatternSensor_ellipsoidSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              95,175,187,156
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              163,10,92,100
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              45574,30898
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_customPatternSensor_ellipsoidSurfaceMaterial_image_color",
     "agi_customPatternSensor":{
       "ellipsoidSurfaceMaterial":{
@@ -4208,6 +5218,34 @@
           "oddColor":{
             "rgbaf":[
               0.27058823529411763,0.2196078431372549,0.8196078431372549,0.13725490196078433
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_customPatternSensor_ellipsoidSurfaceMaterial_checkerboard_evenColor",
+    "agi_customPatternSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.047058823529411764,0.8431372549019608,0.5137254901960784,0.7607843137254902
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_customPatternSensor_ellipsoidSurfaceMaterial_checkerboard_oddColor",
+    "agi_customPatternSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.3411764705882353,0.43137254901960786,0.054901960784313725,0.9411764705882353
             ]
           }
         }
@@ -4302,6 +5340,30 @@
     }
   },
   {
+    "id":"material_customPatternSensor_ellipsoidHorizonSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              167,231,126,165
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              240,113,184,70
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              62427,63987
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_customPatternSensor_ellipsoidHorizonSurfaceMaterial_image_color",
     "agi_customPatternSensor":{
       "ellipsoidHorizonSurfaceMaterial":{
@@ -4351,6 +5413,34 @@
           "oddColor":{
             "rgbaf":[
               0.788235294117647,0.6392156862745098,0.8862745098039215,0.12941176470588237
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_customPatternSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_evenColor",
+    "agi_customPatternSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.9137254901960784,0.38823529411764707,0.48627450980392156,0.8509803921568627
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_customPatternSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_oddColor",
+    "agi_customPatternSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.3333333333333333,0.4666666666666667,0.2,0.9568627450980393
             ]
           }
         }
@@ -4445,6 +5535,30 @@
     }
   },
   {
+    "id":"material_customPatternSensor_domeSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              237,200,236,80
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              253,232,10,14
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              4049,46095
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_customPatternSensor_domeSurfaceMaterial_image_color",
     "agi_customPatternSensor":{
       "domeSurfaceMaterial":{
@@ -4494,6 +5608,34 @@
           "oddColor":{
             "rgbaf":[
               0.8627450980392157,0.44313725490196076,0.6509803921568628,0.34901960784313724
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_customPatternSensor_domeSurfaceMaterial_checkerboard_evenColor",
+    "agi_customPatternSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.16470588235294117,0.0392156862745098,0.13333333333333333,0.7176470588235294
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_customPatternSensor_domeSurfaceMaterial_checkerboard_oddColor",
+    "agi_customPatternSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.0784313725490196,0.3803921568627451,0.1411764705882353,0.6941176470588235
             ]
           }
         }
@@ -4588,6 +5730,30 @@
     }
   },
   {
+    "id":"material_customPatternSensor_environmentOcclusionMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              214,144,88,231
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              133,77,73,79
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              20601,1.8e4
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_customPatternSensor_environmentOcclusionMaterial_image_color",
     "agi_customPatternSensor":{
       "environmentOcclusionMaterial":{
@@ -4637,6 +5803,34 @@
           "oddColor":{
             "rgbaf":[
               0.1803921568627451,0.7215686274509804,0.10196078431372549,0.7058823529411765
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_customPatternSensor_environmentOcclusionMaterial_checkerboard_evenColor",
+    "agi_customPatternSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.01568627450980392,0.054901960784313725,0.6980392156862745,0.13725490196078433
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_customPatternSensor_environmentOcclusionMaterial_checkerboard_oddColor",
+    "agi_customPatternSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.6235294117647059,0.25882352941176473,0.6627450980392157,0.5450980392156862
             ]
           }
         }
@@ -4751,6 +5945,30 @@
     }
   },
   {
+    "id":"material_rectangularSensor_lateralSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              56,163,110,96
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              193,174,249,129
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              18769,30537
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_rectangularSensor_lateralSurfaceMaterial_image_color",
     "agi_rectangularSensor":{
       "lateralSurfaceMaterial":{
@@ -4800,6 +6018,34 @@
           "oddColor":{
             "rgbaf":[
               0.2627450980392157,0.21176470588235294,0.8196078431372549,0.4666666666666667
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_rectangularSensor_lateralSurfaceMaterial_checkerboard_evenColor",
+    "agi_rectangularSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.1411764705882353,0.058823529411764705,0.07058823529411765,0
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_rectangularSensor_lateralSurfaceMaterial_checkerboard_oddColor",
+    "agi_rectangularSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.17254901960784313,0.6823529411764706,0.611764705882353,0.5254901960784314
             ]
           }
         }
@@ -4894,6 +6140,30 @@
     }
   },
   {
+    "id":"material_rectangularSensor_ellipsoidSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              109,156,164,207
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              97,121,77,209
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              40989,43680
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_rectangularSensor_ellipsoidSurfaceMaterial_image_color",
     "agi_rectangularSensor":{
       "ellipsoidSurfaceMaterial":{
@@ -4943,6 +6213,34 @@
           "oddColor":{
             "rgbaf":[
               0.10196078431372549,0.611764705882353,0.8235294117647058,0.00784313725490196
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_rectangularSensor_ellipsoidSurfaceMaterial_checkerboard_evenColor",
+    "agi_rectangularSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.2196078431372549,0.3686274509803922,0.7333333333333333,0.11764705882352941
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_rectangularSensor_ellipsoidSurfaceMaterial_checkerboard_oddColor",
+    "agi_rectangularSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.09803921568627451,0.8509803921568627,0.6431372549019608,0.5254901960784314
             ]
           }
         }
@@ -5037,6 +6335,30 @@
     }
   },
   {
+    "id":"material_rectangularSensor_ellipsoidHorizonSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              180,69,194,123
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              118,6,103,47
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              65401,31999
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_rectangularSensor_ellipsoidHorizonSurfaceMaterial_image_color",
     "agi_rectangularSensor":{
       "ellipsoidHorizonSurfaceMaterial":{
@@ -5086,6 +6408,34 @@
           "oddColor":{
             "rgbaf":[
               0.788235294117647,0.5372549019607843,0.1568627450980392,0.20392156862745098
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_rectangularSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_evenColor",
+    "agi_rectangularSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.27058823529411763,0.8666666666666667,0.30980392156862746,0.03137254901960784
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_rectangularSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_oddColor",
+    "agi_rectangularSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.3215686274509804,0.8392156862745098,0.16470588235294117,0.30196078431372547
             ]
           }
         }
@@ -5180,6 +6530,30 @@
     }
   },
   {
+    "id":"material_rectangularSensor_domeSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              238,64,137,29
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              254,141,98,30
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              58995,46566
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_rectangularSensor_domeSurfaceMaterial_image_color",
     "agi_rectangularSensor":{
       "domeSurfaceMaterial":{
@@ -5229,6 +6603,34 @@
           "oddColor":{
             "rgbaf":[
               0.9411764705882353,0.6313725490196078,0.7058823529411765,0.49411764705882355
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_rectangularSensor_domeSurfaceMaterial_checkerboard_evenColor",
+    "agi_rectangularSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.7529411764705882,0.4235294117647059,0.4588235294117647,0.08235294117647059
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_rectangularSensor_domeSurfaceMaterial_checkerboard_oddColor",
+    "agi_rectangularSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.4,0.9254901960784314,0.043137254901960784,0.803921568627451
             ]
           }
         }
@@ -5323,6 +6725,30 @@
     }
   },
   {
+    "id":"material_rectangularSensor_environmentOcclusionMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              215,166,202,75
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              72,105,185,14
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              51334,47048
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_rectangularSensor_environmentOcclusionMaterial_image_color",
     "agi_rectangularSensor":{
       "environmentOcclusionMaterial":{
@@ -5379,6 +6805,34 @@
     }
   },
   {
+    "id":"constant_rectangularSensor_environmentOcclusionMaterial_checkerboard_evenColor",
+    "agi_rectangularSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.6745098039215687,0.07450980392156863,0.09019607843137255,0.43137254901960786
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_rectangularSensor_environmentOcclusionMaterial_checkerboard_oddColor",
+    "agi_rectangularSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.6745098039215687,0.48627450980392156,0.03137254901960784,0.6039215686274509
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_agi_rectangularSensor_environmentIntersectionColor_rgbaf",
     "agi_rectangularSensor":{
       "environmentIntersectionColor":{
@@ -5393,7 +6847,8 @@
     "agi_fan":{
       "directions":{
         "unitSpherical":[
-          58733,12261,59695,54505
+          58733,12261,
+          59695,54505
         ]
       }
     }
@@ -5403,7 +6858,8 @@
     "agi_fan":{
       "directions":{
         "cartesian":[
-          26610,54119,64979,9469,6948,56091
+          26610,54119,64979,
+          9469,6948,56091
         ]
       }
     }
@@ -5413,7 +6869,8 @@
     "agi_fan":{
       "directions":{
         "unitCartesian":[
-          0.5116366868952748,0.8586182289997567,0.03166445092130639,0.121216354583563,0.632759881014748,0.76480162680245
+          0.5116366868952748,0.8586182289997567,0.03166445092130639,
+          0.121216354583563,0.632759881014748,0.76480162680245
         ]
       }
     }
@@ -5506,6 +6963,30 @@
     }
   },
   {
+    "id":"material_fan_material_checkerboard",
+    "agi_fan":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgba":[
+              65,103,119,9
+            ]
+          },
+          "oddColor":{
+            "rgba":[
+              34,102,5,13
+            ]
+          },
+          "repeat":{
+            "cartesian2":[
+              27029,37737
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"constant_fan_material_image_color",
     "agi_fan":{
       "material":{
@@ -5555,6 +7036,34 @@
           "oddColor":{
             "rgbaf":[
               0.9568627450980393,0.5372549019607843,0.9882352941176471,0.7411764705882353
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_fan_material_checkerboard_evenColor",
+    "agi_fan":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "rgbaf":[
+              0.5686274509803921,0.3215686274509804,0.807843137254902,0.7647058823529411
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"constant_fan_material_checkerboard_oddColor",
+    "agi_fan":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "rgbaf":[
+              0.9803921568627451,0.6549019607843137,0.26666666666666666,0.48627450980392156
             ]
           }
         }
@@ -5749,6 +7258,20 @@
     }
   },
   {
+    "id":"ConstantPosition3",
+    "position":{
+      "cartesian":[
+        1758,45062,8624
+      ]
+    }
+  },
+  {
+    "id":"ConstantDouble3",
+    "billboard":{
+      "scale":50938
+    }
+  },
+  {
     "id":"Reference",
     "description":{
       "reference":"Constant#description"
@@ -5831,6 +7354,9 @@
       "dimensions":{
         "reference":"Constant#box.dimensions"
       },
+      "heightReference":{
+        "reference":"Constant#box.heightReference"
+      },
       "fill":{
         "reference":"Constant#box.fill"
       },
@@ -5863,7 +7389,8 @@
       },
       "positions":{
         "references":[
-          "ConstantPosition1#position","ConstantPosition2#position"
+          "ConstantPosition1#position",
+          "ConstantPosition2#position"
         ]
       },
       "width":{
@@ -5872,8 +7399,14 @@
       "height":{
         "reference":"Constant#corridor.height"
       },
+      "heightReference":{
+        "reference":"Constant#corridor.heightReference"
+      },
       "extrudedHeight":{
         "reference":"Constant#corridor.extrudedHeight"
+      },
+      "extrudedHeightReference":{
+        "reference":"Constant#corridor.extrudedHeightReference"
       },
       "cornerType":{
         "reference":"Constant#corridor.cornerType"
@@ -5905,6 +7438,12 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#corridor.distanceDisplayCondition"
+      },
+      "classificationType":{
+        "reference":"Constant#corridor.classificationType"
+      },
+      "zIndex":{
+        "reference":"Constant#corridor.zIndex"
       }
     },
     "cylinder":{
@@ -5919,6 +7458,9 @@
       },
       "bottomRadius":{
         "reference":"Constant#cylinder.bottomRadius"
+      },
+      "heightReference":{
+        "reference":"Constant#cylinder.heightReference"
       },
       "fill":{
         "reference":"Constant#cylinder.fill"
@@ -5965,8 +7507,14 @@
       "height":{
         "reference":"Constant#ellipse.height"
       },
+      "heightReference":{
+        "reference":"Constant#ellipse.heightReference"
+      },
       "extrudedHeight":{
         "reference":"Constant#ellipse.extrudedHeight"
+      },
+      "extrudedHeightReference":{
+        "reference":"Constant#ellipse.extrudedHeightReference"
       },
       "rotation":{
         "reference":"Constant#ellipse.rotation"
@@ -6004,6 +7552,12 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#ellipse.distanceDisplayCondition"
+      },
+      "classificationType":{
+        "reference":"Constant#ellipse.classificationType"
+      },
+      "zIndex":{
+        "reference":"Constant#ellipse.zIndex"
       }
     },
     "ellipsoid":{
@@ -6012,6 +7566,9 @@
       },
       "radii":{
         "reference":"Constant#ellipsoid.radii"
+      },
+      "heightReference":{
+        "reference":"Constant#ellipsoid.heightReference"
       },
       "fill":{
         "reference":"Constant#ellipsoid.fill"
@@ -6171,23 +7728,28 @@
             "reference":"Constant#model.nodeTransformations.prop.scale"
           }
         }
+      },
+      "articulations":{
+        "referenceProp":{
+          "reference":"Constant#model.articulations.prop"
+        }
       }
     },
     "path":{
       "show":{
         "reference":"Constant#path.show"
       },
-      "width":{
-        "reference":"Constant#path.width"
-      },
-      "resolution":{
-        "reference":"Constant#path.resolution"
-      },
       "leadTime":{
         "reference":"Constant#path.leadTime"
       },
       "trailTime":{
         "reference":"Constant#path.trailTime"
+      },
+      "width":{
+        "reference":"Constant#path.width"
+      },
+      "resolution":{
+        "reference":"Constant#path.resolution"
       },
       "material":{
         "solidColor":{
@@ -6238,14 +7800,33 @@
       },
       "positions":{
         "references":[
-          "ConstantPosition1#position","ConstantPosition2#position"
+          "ConstantPosition1#position",
+          "ConstantPosition2#position"
         ]
+      },
+      "holes":{
+        "references":[
+          [
+            "ConstantPosition1#position",
+            "ConstantPosition2#position",
+            "ConstantPosition3#position"
+          ]
+        ]
+      },
+      "arcType":{
+        "reference":"Constant#polygon.arcType"
       },
       "height":{
         "reference":"Constant#polygon.height"
       },
+      "heightReference":{
+        "reference":"Constant#polygon.heightReference"
+      },
       "extrudedHeight":{
         "reference":"Constant#polygon.extrudedHeight"
+      },
+      "extrudedHeightReference":{
+        "reference":"Constant#polygon.extrudedHeightReference"
       },
       "stRotation":{
         "reference":"Constant#polygon.stRotation"
@@ -6286,6 +7867,12 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#polygon.distanceDisplayCondition"
+      },
+      "classificationType":{
+        "reference":"Constant#polygon.classificationType"
+      },
+      "zIndex":{
+        "reference":"Constant#polygon.zIndex"
       }
     },
     "polyline":{
@@ -6294,8 +7881,12 @@
       },
       "positions":{
         "references":[
-          "ConstantPosition1#position","ConstantPosition2#position"
+          "ConstantPosition1#position",
+          "ConstantPosition2#position"
         ]
+      },
+      "arcType":{
+        "reference":"Constant#polyline.arcType"
       },
       "width":{
         "reference":"Constant#polyline.width"
@@ -6310,9 +7901,6 @@
           }
         }
       },
-      "followSurface":{
-        "reference":"Constant#polyline.followSurface"
-      },
       "shadows":{
         "reference":"Constant#polyline.shadows"
       },
@@ -6325,6 +7913,15 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#polyline.distanceDisplayCondition"
+      },
+      "clampToGround":{
+        "reference":"Constant#polyline.clampToGround"
+      },
+      "classificationType":{
+        "reference":"Constant#polyline.classificationType"
+      },
+      "zIndex":{
+        "reference":"Constant#polyline.zIndex"
       }
     },
     "rectangle":{
@@ -6337,8 +7934,14 @@
       "height":{
         "reference":"Constant#rectangle.height"
       },
+      "heightReference":{
+        "reference":"Constant#rectangle.heightReference"
+      },
       "extrudedHeight":{
         "reference":"Constant#rectangle.extrudedHeight"
+      },
+      "extrudedHeightReference":{
+        "reference":"Constant#rectangle.extrudedHeightReference"
       },
       "rotation":{
         "reference":"Constant#rectangle.rotation"
@@ -6373,6 +7976,12 @@
       },
       "distanceDisplayCondition":{
         "reference":"Constant#rectangle.distanceDisplayCondition"
+      },
+      "classificationType":{
+        "reference":"Constant#rectangle.classificationType"
+      },
+      "zIndex":{
+        "reference":"Constant#rectangle.zIndex"
       }
     },
     "wall":{
@@ -6381,17 +7990,20 @@
       },
       "positions":{
         "references":[
-          "ConstantPosition1#position","ConstantPosition2#position"
+          "ConstantPosition1#position",
+          "ConstantPosition2#position"
         ]
       },
       "minimumHeights":{
         "references":[
-          "ConstantDouble1#billboard.scale","ConstantDouble2#billboard.scale"
+          "ConstantDouble1#billboard.scale",
+          "ConstantDouble2#billboard.scale"
         ]
       },
       "maximumHeights":{
         "references":[
-          "ConstantDouble1#billboard.scale","ConstantDouble2#billboard.scale"
+          "ConstantDouble1#billboard.scale",
+          "ConstantDouble2#billboard.scale"
         ]
       },
       "granularity":{
@@ -6808,6 +8420,24 @@
     }
   },
   {
+    "id":"reference_box_material_checkerboard",
+    "box":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_box_material_checkerboard#box.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_box_material_checkerboard#box.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_box_material_checkerboard#box.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_corridor_material_image",
     "corridor":{
       "material":{
@@ -6871,6 +8501,24 @@
           },
           "repeat":{
             "reference":"material_corridor_material_stripe#corridor.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_corridor_material_checkerboard",
+    "corridor":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_corridor_material_checkerboard#corridor.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_corridor_material_checkerboard#corridor.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_corridor_material_checkerboard#corridor.material.repeat"
           }
         }
       }
@@ -6946,6 +8594,24 @@
     }
   },
   {
+    "id":"reference_cylinder_material_checkerboard",
+    "cylinder":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_cylinder_material_checkerboard#cylinder.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_cylinder_material_checkerboard#cylinder.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_cylinder_material_checkerboard#cylinder.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_ellipse_material_image",
     "ellipse":{
       "material":{
@@ -7009,6 +8675,24 @@
           },
           "repeat":{
             "reference":"material_ellipse_material_stripe#ellipse.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_ellipse_material_checkerboard",
+    "ellipse":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_ellipse_material_checkerboard#ellipse.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_ellipse_material_checkerboard#ellipse.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_ellipse_material_checkerboard#ellipse.material.repeat"
           }
         }
       }
@@ -7084,6 +8768,24 @@
     }
   },
   {
+    "id":"reference_ellipsoid_material_checkerboard",
+    "ellipsoid":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_ellipsoid_material_checkerboard#ellipsoid.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_ellipsoid_material_checkerboard#ellipsoid.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_ellipsoid_material_checkerboard#ellipsoid.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_path_material_polylineOutline",
     "path":{
       "material":{
@@ -7144,6 +8846,9 @@
           },
           "glowPower":{
             "reference":"material_path_material_polylineGlow#path.material.glowPower"
+          },
+          "taperPower":{
+            "reference":"material_path_material_polylineGlow#path.material.taperPower"
           }
         }
       }
@@ -7219,6 +8924,24 @@
     }
   },
   {
+    "id":"reference_path_material_checkerboard",
+    "path":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_path_material_checkerboard#path.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_path_material_checkerboard#path.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_path_material_checkerboard#path.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_polygon_material_image",
     "polygon":{
       "material":{
@@ -7288,6 +9011,24 @@
     }
   },
   {
+    "id":"reference_polygon_material_checkerboard",
+    "polygon":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_polygon_material_checkerboard#polygon.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_polygon_material_checkerboard#polygon.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_polygon_material_checkerboard#polygon.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_polyline_material_polylineOutline",
     "polyline":{
       "material":{
@@ -7348,6 +9089,9 @@
           },
           "glowPower":{
             "reference":"material_polyline_material_polylineGlow#polyline.material.glowPower"
+          },
+          "taperPower":{
+            "reference":"material_polyline_material_polylineGlow#polyline.material.taperPower"
           }
         }
       }
@@ -7423,6 +9167,24 @@
     }
   },
   {
+    "id":"reference_polyline_material_checkerboard",
+    "polyline":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_polyline_material_checkerboard#polyline.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_polyline_material_checkerboard#polyline.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_polyline_material_checkerboard#polyline.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_polyline_depthFailMaterial_polylineOutline",
     "polyline":{
       "depthFailMaterial":{
@@ -7483,6 +9245,9 @@
           },
           "glowPower":{
             "reference":"material_polyline_depthFailMaterial_polylineGlow#polyline.depthFailMaterial.glowPower"
+          },
+          "taperPower":{
+            "reference":"material_polyline_depthFailMaterial_polylineGlow#polyline.depthFailMaterial.taperPower"
           }
         }
       }
@@ -7558,6 +9323,24 @@
     }
   },
   {
+    "id":"reference_polyline_depthFailMaterial_checkerboard",
+    "polyline":{
+      "depthFailMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_polyline_depthFailMaterial_checkerboard#polyline.depthFailMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_polyline_depthFailMaterial_checkerboard#polyline.depthFailMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_polyline_depthFailMaterial_checkerboard#polyline.depthFailMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_rectangle_material_image",
     "rectangle":{
       "material":{
@@ -7621,6 +9404,24 @@
           },
           "repeat":{
             "reference":"material_rectangle_material_stripe#rectangle.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_rectangle_material_checkerboard",
+    "rectangle":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_rectangle_material_checkerboard#rectangle.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_rectangle_material_checkerboard#rectangle.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_rectangle_material_checkerboard#rectangle.material.repeat"
           }
         }
       }
@@ -7696,6 +9497,24 @@
     }
   },
   {
+    "id":"reference_wall_material_checkerboard",
+    "wall":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_wall_material_checkerboard#wall.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_wall_material_checkerboard#wall.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_wall_material_checkerboard#wall.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_conicSensor_lateralSurfaceMaterial_image",
     "agi_conicSensor":{
       "lateralSurfaceMaterial":{
@@ -7759,6 +9578,24 @@
           },
           "repeat":{
             "reference":"material_conicSensor_lateralSurfaceMaterial_stripe#conicSensor.lateralSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_conicSensor_lateralSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_conicSensor_lateralSurfaceMaterial_checkerboard#conicSensor.lateralSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_conicSensor_lateralSurfaceMaterial_checkerboard#conicSensor.lateralSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_conicSensor_lateralSurfaceMaterial_checkerboard#conicSensor.lateralSurfaceMaterial.repeat"
           }
         }
       }
@@ -7834,6 +9671,24 @@
     }
   },
   {
+    "id":"reference_conicSensor_ellipsoidSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_conicSensor_ellipsoidSurfaceMaterial_checkerboard#conicSensor.ellipsoidSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_conicSensor_ellipsoidSurfaceMaterial_checkerboard#conicSensor.ellipsoidSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_conicSensor_ellipsoidSurfaceMaterial_checkerboard#conicSensor.ellipsoidSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_conicSensor_ellipsoidHorizonSurfaceMaterial_image",
     "agi_conicSensor":{
       "ellipsoidHorizonSurfaceMaterial":{
@@ -7897,6 +9752,24 @@
           },
           "repeat":{
             "reference":"material_conicSensor_ellipsoidHorizonSurfaceMaterial_stripe#conicSensor.ellipsoidHorizonSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_conicSensor_ellipsoidHorizonSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_conicSensor_ellipsoidHorizonSurfaceMaterial_checkerboard#conicSensor.ellipsoidHorizonSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_conicSensor_ellipsoidHorizonSurfaceMaterial_checkerboard#conicSensor.ellipsoidHorizonSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_conicSensor_ellipsoidHorizonSurfaceMaterial_checkerboard#conicSensor.ellipsoidHorizonSurfaceMaterial.repeat"
           }
         }
       }
@@ -7972,6 +9845,24 @@
     }
   },
   {
+    "id":"reference_conicSensor_domeSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_conicSensor_domeSurfaceMaterial_checkerboard#conicSensor.domeSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_conicSensor_domeSurfaceMaterial_checkerboard#conicSensor.domeSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_conicSensor_domeSurfaceMaterial_checkerboard#conicSensor.domeSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_conicSensor_environmentOcclusionMaterial_image",
     "agi_conicSensor":{
       "environmentOcclusionMaterial":{
@@ -8035,6 +9926,24 @@
           },
           "repeat":{
             "reference":"material_conicSensor_environmentOcclusionMaterial_stripe#conicSensor.environmentOcclusionMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_conicSensor_environmentOcclusionMaterial_checkerboard",
+    "agi_conicSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_conicSensor_environmentOcclusionMaterial_checkerboard#conicSensor.environmentOcclusionMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_conicSensor_environmentOcclusionMaterial_checkerboard#conicSensor.environmentOcclusionMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_conicSensor_environmentOcclusionMaterial_checkerboard#conicSensor.environmentOcclusionMaterial.repeat"
           }
         }
       }
@@ -8110,6 +10019,24 @@
     }
   },
   {
+    "id":"reference_customPatternSensor_lateralSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_customPatternSensor_lateralSurfaceMaterial_checkerboard#customPatternSensor.lateralSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_customPatternSensor_lateralSurfaceMaterial_checkerboard#customPatternSensor.lateralSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_customPatternSensor_lateralSurfaceMaterial_checkerboard#customPatternSensor.lateralSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_customPatternSensor_ellipsoidSurfaceMaterial_image",
     "agi_customPatternSensor":{
       "ellipsoidSurfaceMaterial":{
@@ -8173,6 +10100,24 @@
           },
           "repeat":{
             "reference":"material_customPatternSensor_ellipsoidSurfaceMaterial_stripe#customPatternSensor.ellipsoidSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_customPatternSensor_ellipsoidSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_customPatternSensor_ellipsoidSurfaceMaterial_checkerboard#customPatternSensor.ellipsoidSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_customPatternSensor_ellipsoidSurfaceMaterial_checkerboard#customPatternSensor.ellipsoidSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_customPatternSensor_ellipsoidSurfaceMaterial_checkerboard#customPatternSensor.ellipsoidSurfaceMaterial.repeat"
           }
         }
       }
@@ -8248,6 +10193,24 @@
     }
   },
   {
+    "id":"reference_customPatternSensor_ellipsoidHorizonSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_customPatternSensor_ellipsoidHorizonSurfaceMaterial_checkerboard#customPatternSensor.ellipsoidHorizonSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_customPatternSensor_ellipsoidHorizonSurfaceMaterial_checkerboard#customPatternSensor.ellipsoidHorizonSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_customPatternSensor_ellipsoidHorizonSurfaceMaterial_checkerboard#customPatternSensor.ellipsoidHorizonSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_customPatternSensor_domeSurfaceMaterial_image",
     "agi_customPatternSensor":{
       "domeSurfaceMaterial":{
@@ -8311,6 +10274,24 @@
           },
           "repeat":{
             "reference":"material_customPatternSensor_domeSurfaceMaterial_stripe#customPatternSensor.domeSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_customPatternSensor_domeSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_customPatternSensor_domeSurfaceMaterial_checkerboard#customPatternSensor.domeSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_customPatternSensor_domeSurfaceMaterial_checkerboard#customPatternSensor.domeSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_customPatternSensor_domeSurfaceMaterial_checkerboard#customPatternSensor.domeSurfaceMaterial.repeat"
           }
         }
       }
@@ -8386,6 +10367,24 @@
     }
   },
   {
+    "id":"reference_customPatternSensor_environmentOcclusionMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_customPatternSensor_environmentOcclusionMaterial_checkerboard#customPatternSensor.environmentOcclusionMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_customPatternSensor_environmentOcclusionMaterial_checkerboard#customPatternSensor.environmentOcclusionMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_customPatternSensor_environmentOcclusionMaterial_checkerboard#customPatternSensor.environmentOcclusionMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_rectangularSensor_lateralSurfaceMaterial_image",
     "agi_rectangularSensor":{
       "lateralSurfaceMaterial":{
@@ -8449,6 +10448,24 @@
           },
           "repeat":{
             "reference":"material_rectangularSensor_lateralSurfaceMaterial_stripe#rectangularSensor.lateralSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_rectangularSensor_lateralSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_rectangularSensor_lateralSurfaceMaterial_checkerboard#rectangularSensor.lateralSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_rectangularSensor_lateralSurfaceMaterial_checkerboard#rectangularSensor.lateralSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_rectangularSensor_lateralSurfaceMaterial_checkerboard#rectangularSensor.lateralSurfaceMaterial.repeat"
           }
         }
       }
@@ -8524,6 +10541,24 @@
     }
   },
   {
+    "id":"reference_rectangularSensor_ellipsoidSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_rectangularSensor_ellipsoidSurfaceMaterial_checkerboard#rectangularSensor.ellipsoidSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_rectangularSensor_ellipsoidSurfaceMaterial_checkerboard#rectangularSensor.ellipsoidSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_rectangularSensor_ellipsoidSurfaceMaterial_checkerboard#rectangularSensor.ellipsoidSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_rectangularSensor_ellipsoidHorizonSurfaceMaterial_image",
     "agi_rectangularSensor":{
       "ellipsoidHorizonSurfaceMaterial":{
@@ -8587,6 +10622,24 @@
           },
           "repeat":{
             "reference":"material_rectangularSensor_ellipsoidHorizonSurfaceMaterial_stripe#rectangularSensor.ellipsoidHorizonSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_rectangularSensor_ellipsoidHorizonSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_rectangularSensor_ellipsoidHorizonSurfaceMaterial_checkerboard#rectangularSensor.ellipsoidHorizonSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_rectangularSensor_ellipsoidHorizonSurfaceMaterial_checkerboard#rectangularSensor.ellipsoidHorizonSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_rectangularSensor_ellipsoidHorizonSurfaceMaterial_checkerboard#rectangularSensor.ellipsoidHorizonSurfaceMaterial.repeat"
           }
         }
       }
@@ -8662,6 +10715,24 @@
     }
   },
   {
+    "id":"reference_rectangularSensor_domeSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_rectangularSensor_domeSurfaceMaterial_checkerboard#rectangularSensor.domeSurfaceMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_rectangularSensor_domeSurfaceMaterial_checkerboard#rectangularSensor.domeSurfaceMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_rectangularSensor_domeSurfaceMaterial_checkerboard#rectangularSensor.domeSurfaceMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_rectangularSensor_environmentOcclusionMaterial_image",
     "agi_rectangularSensor":{
       "environmentOcclusionMaterial":{
@@ -8731,6 +10802,24 @@
     }
   },
   {
+    "id":"reference_rectangularSensor_environmentOcclusionMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_rectangularSensor_environmentOcclusionMaterial_checkerboard#rectangularSensor.environmentOcclusionMaterial.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_rectangularSensor_environmentOcclusionMaterial_checkerboard#rectangularSensor.environmentOcclusionMaterial.oddColor"
+          },
+          "repeat":{
+            "reference":"material_rectangularSensor_environmentOcclusionMaterial_checkerboard#rectangularSensor.environmentOcclusionMaterial.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"reference_fan_material_image",
     "agi_fan":{
       "material":{
@@ -8794,6 +10883,24 @@
           },
           "repeat":{
             "reference":"material_fan_material_stripe#fan.material.repeat"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"reference_fan_material_checkerboard",
+    "agi_fan":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "reference":"material_fan_material_checkerboard#fan.material.evenColor"
+          },
+          "oddColor":{
+            "reference":"material_fan_material_checkerboard#fan.material.oddColor"
+          },
+          "repeat":{
+            "reference":"material_fan_material_checkerboard#fan.material.repeat"
           }
         }
       }
@@ -9041,6 +11148,13 @@
           0,10884,63530,
           3600,20076,27683
         ]
+      },
+      "zIndex":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,36068,
+          3600,60697
+        ]
       }
     },
     "cylinder":{
@@ -9199,6 +11313,13 @@
         "distanceDisplayCondition":[
           0,38393,63947,
           3600,29119,43121
+        ]
+      },
+      "zIndex":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,8989,
+          3600,52730
         ]
       }
     },
@@ -9416,20 +11537,6 @@
       }
     },
     "path":{
-      "width":{
-        "epoch":"2016-06-17T12:00:00Z",
-        "number":[
-          0,32449,
-          3600,33819
-        ]
-      },
-      "resolution":{
-        "epoch":"2016-06-17T12:00:00Z",
-        "number":[
-          0,8399,
-          3600,19400
-        ]
-      },
       "leadTime":{
         "epoch":"2016-06-17T12:00:00Z",
         "number":[
@@ -9442,6 +11549,20 @@
         "number":[
           0,34052,
           3600,57713
+        ]
+      },
+      "width":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,32449,
+          3600,33819
+        ]
+      },
+      "resolution":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,8399,
+          3600,19400
         ]
       },
       "material":{
@@ -9581,6 +11702,13 @@
           0,22140,31962,
           3600,3927,22422
         ]
+      },
+      "zIndex":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,37357,
+          3600,64769
+        ]
       }
     },
     "polyline":{
@@ -9625,6 +11753,13 @@
         "distanceDisplayCondition":[
           0,4857,10258,
           3600,36588,47246
+        ]
+      },
+      "zIndex":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,55130,
+          3600,15491
         ]
       }
     },
@@ -9701,6 +11836,13 @@
         "distanceDisplayCondition":[
           0,24813,30560,
           3600,34617,40071
+        ]
+      },
+      "zIndex":{
+        "epoch":"2016-06-17T12:00:00Z",
+        "number":[
+          0,27256,
+          3600,53581
         ]
       }
     },
@@ -10310,6 +12452,36 @@
     }
   },
   {
+    "id":"sampled_box_material_checkerboard",
+    "box":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,2,215,87,218,
+              3600,164,235,142,227
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,117,88,89,243,
+              3600,104,182,78,49
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,6238,42520,
+              3600,34685,17543
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_box_material_image_color",
     "box":{
       "material":{
@@ -10367,6 +12539,38 @@
             "rgbaf":[
               0,0.5450980392156862,0.16862745098039217,0.6549019607843137,0.19607843137254902,
               3600,0.40784313725490196,0.45098039215686275,0.8745098039215686,0.6039215686274509
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_box_material_checkerboard_evenColor",
+    "box":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.13725490196078433,0.9372549019607843,0.5137254901960784,0.8784313725490196,
+              3600,0.7215686274509804,0.06666666666666667,0.27450980392156865,0.20784313725490197
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_box_material_checkerboard_oddColor",
+    "box":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.35294117647058826,0.27450980392156865,0.8509803921568627,0.00784313725490196,
+              3600,0.8392156862745098,0.7803921568627451,0.796078431372549,0.3843137254901961
             ]
           }
         }
@@ -10506,6 +12710,36 @@
     }
   },
   {
+    "id":"sampled_corridor_material_checkerboard",
+    "corridor":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,135,211,180,110,
+              3600,44,134,8,155
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,212,71,156,47,
+              3600,34,36,157,104
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,62107,62450,
+              3600,51782,25290
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_corridor_material_image_color",
     "corridor":{
       "material":{
@@ -10563,6 +12797,38 @@
             "rgbaf":[
               0,0.13725490196078433,0.4,0.3568627450980392,0.5019607843137255,
               3600,0.9921568627450981,0.43137254901960786,0.30196078431372547,0.2549019607843137
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_corridor_material_checkerboard_evenColor",
+    "corridor":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.29411764705882354,0.058823529411764705,0.14901960784313725,0.7568627450980392,
+              3600,0.24313725490196078,0.5607843137254902,0.2549019607843137,0.8392156862745098
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_corridor_material_checkerboard_oddColor",
+    "corridor":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.7686274509803922,0.6509803921568628,0.5294117647058824,0.37254901960784315,
+              3600,0.12156862745098039,0.7803921568627451,0.7450980392156863,0.7254901960784313
             ]
           }
         }
@@ -10702,6 +12968,36 @@
     }
   },
   {
+    "id":"sampled_cylinder_material_checkerboard",
+    "cylinder":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,199,80,86,158,
+              3600,207,161,23,187
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,175,210,242,198,
+              3600,116,91,127,24
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,27893,32108,
+              3600,57420,52960
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_cylinder_material_image_color",
     "cylinder":{
       "material":{
@@ -10759,6 +13055,38 @@
             "rgbaf":[
               0,0.20784313725490197,0.4666666666666667,0.42745098039215684,0.10980392156862745,
               3600,0.3137254901960784,0.4980392156862745,0.2,0.4235294117647059
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_cylinder_material_checkerboard_evenColor",
+    "cylinder":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.5215686274509804,0.7215686274509804,0.29411764705882354,0.5137254901960784,
+              3600,0.9647058823529412,0.4117647058823529,0.054901960784313725,0.0392156862745098
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_cylinder_material_checkerboard_oddColor",
+    "cylinder":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.7843137254901961,0.30980392156862746,0.06666666666666667,0.403921568627451,
+              3600,0.6431372549019608,0.7372549019607844,0.33725490196078434,0.9254901960784314
             ]
           }
         }
@@ -10898,6 +13226,36 @@
     }
   },
   {
+    "id":"sampled_ellipse_material_checkerboard",
+    "ellipse":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,65,135,226,200,
+              3600,70,33,98,112
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,246,224,230,224,
+              3600,110,127,138,204
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,24670,352,
+              3600,16830,33857
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_ellipse_material_image_color",
     "ellipse":{
       "material":{
@@ -10955,6 +13313,38 @@
             "rgbaf":[
               0,0.2627450980392157,0.17254901960784313,0.2823529411764706,0.12941176470588237,
               3600,0.9686274509803922,0.6352941176470588,0.5254901960784314,0.8313725490196079
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_ellipse_material_checkerboard_evenColor",
+    "ellipse":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.20784313725490197,0.1568627450980392,0.9529411764705882,0.7176470588235294,
+              3600,0.6352941176470588,0.8352941176470589,0.7607843137254902,0.23529411764705882
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_ellipse_material_checkerboard_oddColor",
+    "ellipse":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.8901960784313725,0.1411764705882353,0.23137254901960785,0.6235294117647059,
+              3600,0.19215686274509805,0.29411764705882354,0.7411764705882353,0.027450980392156862
             ]
           }
         }
@@ -11094,6 +13484,36 @@
     }
   },
   {
+    "id":"sampled_ellipsoid_material_checkerboard",
+    "ellipsoid":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,147,239,19,56,
+              3600,5,32,143,178
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,131,51,246,186,
+              3600,214,117,149,89
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,28116,51821,
+              3600,60296,50923
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_ellipsoid_material_image_color",
     "ellipsoid":{
       "material":{
@@ -11151,6 +13571,38 @@
             "rgbaf":[
               0,0.6470588235294118,0.6352941176470588,0.25882352941176473,0.25098039215686274,
               3600,0.9176470588235294,0.2627450980392157,0.6666666666666666,0.9803921568627451
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_ellipsoid_material_checkerboard_evenColor",
+    "ellipsoid":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.8196078431372549,0.2823529411764706,0.9294117647058824,0.5019607843137255,
+              3600,0.8509803921568627,0.29411764705882354,0.4980392156862745,0.9568627450980393
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_ellipsoid_material_checkerboard_oddColor",
+    "ellipsoid":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.22745098039215686,0.8627450980392157,0.8901960784313725,0.20784313725490197,
+              3600,0.796078431372549,0.047058823529411764,0.8431372549019608,0.38823529411764707
             ]
           }
         }
@@ -11346,6 +13798,13 @@
               0,5579,
               3600,59951
             ]
+          },
+          "taperPower":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,30159,
+              3600,35636
+            ]
           }
         }
       }
@@ -11449,6 +13908,36 @@
             "number":[
               0,42078,
               3600,11633
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_path_material_checkerboard",
+    "path":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,29,130,90,174,
+              3600,42,131,191,181
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,32,82,30,56,
+              3600,161,13,144,118
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,14368,54840,
+              3600,58386,2276
             ]
           }
         }
@@ -11616,6 +14105,38 @@
     }
   },
   {
+    "id":"sampled_path_material_checkerboard_evenColor",
+    "path":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.6313725490196078,0.7411764705882353,0.2823529411764706,0.19607843137254902,
+              3600,0.25098039215686274,0.10980392156862745,0.18823529411764706,0.796078431372549
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_path_material_checkerboard_oddColor",
+    "path":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.38823529411764707,0.12941176470588237,0.3333333333333333,0.6588235294117647,
+              3600,0.1568627450980392,0.6313725490196078,0.2901960784313726,0.7137254901960784
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_point_color_rgbaf",
     "point":{
       "color":{
@@ -11760,6 +14281,36 @@
     }
   },
   {
+    "id":"sampled_polygon_material_checkerboard",
+    "polygon":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,167,56,202,219,
+              3600,231,169,74,125
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,88,174,167,35,
+              3600,12,69,69,23
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,32132,20093,
+              3600,31300,27514
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_polygon_material_image_color",
     "polygon":{
       "material":{
@@ -11817,6 +14368,38 @@
             "rgbaf":[
               0,0.3254901960784314,0.34901960784313724,0.5803921568627451,0.7254901960784313,
               3600,0.5686274509803921,0.6901960784313725,0.00392156862745098,0.8588235294117647
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polygon_material_checkerboard_evenColor",
+    "polygon":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.8313725490196079,0.4549019607843137,0.8823529411764706,0.27058823529411763,
+              3600,0.49411764705882355,0.3843137254901961,0.34509803921568627,0.1607843137254902
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polygon_material_checkerboard_oddColor",
+    "polygon":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.011764705882352941,0.9058823529411765,0.592156862745098,0.7843137254901961,
+              3600,0.42745098039215684,0.7019607843137254,0.09019607843137255,0.6431372549019608
             ]
           }
         }
@@ -11952,6 +14535,13 @@
               0,55378,
               3600,60643
             ]
+          },
+          "taperPower":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,50068,
+              3600,2516
+            ]
           }
         }
       }
@@ -12055,6 +14645,36 @@
             "number":[
               0,25313,
               3600,22020
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polyline_material_checkerboard",
+    "polyline":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,94,152,152,31,
+              3600,76,129,223,102
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,71,237,5,172,
+              3600,209,132,204,160
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,19943,17997,
+              3600,55528,16856
             ]
           }
         }
@@ -12222,6 +14842,38 @@
     }
   },
   {
+    "id":"sampled_polyline_material_checkerboard_evenColor",
+    "polyline":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.3137254901960784,0.41568627450980394,0.08235294117647059,0.5764705882352941,
+              3600,0.0196078431372549,0.30980392156862746,0.23921568627450981,0.9333333333333333
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polyline_material_checkerboard_oddColor",
+    "polyline":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.7843137254901961,0.23529411764705882,0.5254901960784314,0.1803921568627451,
+              3600,0.3568627450980392,0.12549019607843137,0.24313725490196078,0.788235294117647
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_polyline_depthFailMaterial_solidColor_color",
     "polyline":{
       "depthFailMaterial":{
@@ -12338,6 +14990,13 @@
               0,8542,
               3600,54440
             ]
+          },
+          "taperPower":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "number":[
+              0,61950,
+              3600,36891
+            ]
           }
         }
       }
@@ -12441,6 +15100,36 @@
             "number":[
               0,58315,
               3600,45308
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polyline_depthFailMaterial_checkerboard",
+    "polyline":{
+      "depthFailMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,0,159,59,160,
+              3600,202,33,125,165
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,19,37,14,24,
+              3600,66,150,238,84
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,15034,58938,
+              3600,62661,23796
             ]
           }
         }
@@ -12608,6 +15297,38 @@
     }
   },
   {
+    "id":"sampled_polyline_depthFailMaterial_checkerboard_evenColor",
+    "polyline":{
+      "depthFailMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.9607843137254902,0.09411764705882353,0.7254901960784313,0.8196078431372549,
+              3600,0.058823529411764705,0.4470588235294118,0.5725490196078431,0.054901960784313725
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_polyline_depthFailMaterial_checkerboard_oddColor",
+    "polyline":{
+      "depthFailMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.3333333333333333,0.043137254901960784,0.8862745098039215,0.3843137254901961,
+              3600,0.23529411764705882,0.7333333333333333,0.7529411764705882,0.5372549019607843
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_rectangle_coordinates_wsenDegrees",
     "rectangle":{
       "coordinates":{
@@ -12740,6 +15461,36 @@
     }
   },
   {
+    "id":"sampled_rectangle_material_checkerboard",
+    "rectangle":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,142,184,89,24,
+              3600,200,249,166,224
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,237,53,233,244,
+              3600,101,61,234,150
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,44089,8876,
+              3600,60682,18669
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_rectangle_material_image_color",
     "rectangle":{
       "material":{
@@ -12797,6 +15548,38 @@
             "rgbaf":[
               0,0.984313725490196,0.8313725490196079,0.8274509803921568,0.9254901960784314,
               3600,0.1450980392156863,0.01568627450980392,0.3803921568627451,0.49019607843137253
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangle_material_checkerboard_evenColor",
+    "rectangle":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.28627450980392155,0.8313725490196079,0.1843137254901961,0.17254901960784313,
+              3600,0.596078431372549,0.6039215686274509,0.6941176470588235,0.23529411764705882
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangle_material_checkerboard_oddColor",
+    "rectangle":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.9294117647058824,0.9215686274509803,0.27058823529411763,0.06666666666666667,
+              3600,0.4117647058823529,0.12549019607843137,0.5058823529411764,0.5098039215686274
             ]
           }
         }
@@ -12936,6 +15719,36 @@
     }
   },
   {
+    "id":"sampled_wall_material_checkerboard",
+    "wall":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,38,200,78,42,
+              3600,115,149,62,135
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,79,103,165,56,
+              3600,201,220,190,217
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,30510,28535,
+              3600,22105,29014
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_wall_material_image_color",
     "wall":{
       "material":{
@@ -12993,6 +15806,38 @@
             "rgbaf":[
               0,0.34509803921568627,0.0196078431372549,0.054901960784313725,0.6627450980392157,
               3600,0.6941176470588235,0.8901960784313725,0.3803921568627451,0.3176470588235294
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_wall_material_checkerboard_evenColor",
+    "wall":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.6705882352941176,0.4627450980392157,0.44313725490196076,0.23921568627450981,
+              3600,0.3137254901960784,0.09019607843137255,0.6235294117647059,0.9333333333333333
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_wall_material_checkerboard_oddColor",
+    "wall":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.1843137254901961,0.7254901960784313,0.8941176470588236,0.5725490196078431,
+              3600,0.7450980392156863,0.43529411764705883,0.611764705882353,0.7764705882352941
             ]
           }
         }
@@ -13144,6 +15989,36 @@
     }
   },
   {
+    "id":"sampled_conicSensor_lateralSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,160,182,11,131,
+              3600,30,29,80,192
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,7,148,122,49,
+              3600,136,179,0,36
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,23744,47196,
+              3600,16577,25920
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_conicSensor_lateralSurfaceMaterial_image_color",
     "agi_conicSensor":{
       "lateralSurfaceMaterial":{
@@ -13201,6 +16076,38 @@
             "rgbaf":[
               0,0.7568627450980392,0.09411764705882353,0.8666666666666667,0.9921568627450981,
               3600,0.058823529411764705,0.1411764705882353,0.6470588235294118,0.3803921568627451
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_lateralSurfaceMaterial_checkerboard_evenColor",
+    "agi_conicSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.3176470588235294,0.30980392156862746,0.6313725490196078,0.9450980392156862,
+              3600,0.17647058823529413,0.25882352941176473,0.30196078431372547,0.6431372549019608
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_lateralSurfaceMaterial_checkerboard_oddColor",
+    "agi_conicSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.2,0.8901960784313725,0.23529411764705882,0.3333333333333333,
+              3600,0.6196078431372549,0.3607843137254902,0.3254901960784314,0.8117647058823529
             ]
           }
         }
@@ -13328,6 +16235,36 @@
     }
   },
   {
+    "id":"sampled_conicSensor_ellipsoidSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,60,54,248,201,
+              3600,127,230,253,149
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,28,77,71,51,
+              3600,100,176,204,32
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,43465,4521,
+              3600,27484,58219
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_conicSensor_ellipsoidSurfaceMaterial_image_color",
     "agi_conicSensor":{
       "ellipsoidSurfaceMaterial":{
@@ -13385,6 +16322,38 @@
             "rgbaf":[
               0,0.40784313725490196,0.4588235294117647,0.5647058823529412,0.7647058823529411,
               3600,0.1803921568627451,0.49411764705882355,0.47843137254901963,0.7372549019607844
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_ellipsoidSurfaceMaterial_checkerboard_evenColor",
+    "agi_conicSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.30980392156862746,0.4470588235294118,0.5333333333333333,0.30980392156862746,
+              3600,0,0.3843137254901961,0.5607843137254902,0.023529411764705882
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_ellipsoidSurfaceMaterial_checkerboard_oddColor",
+    "agi_conicSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.12156862745098039,0.19607843137254902,0.7843137254901961,0.5411764705882353,
+              3600,0.1450980392156863,0.0392156862745098,0.8901960784313725,0.7647058823529411
             ]
           }
         }
@@ -13512,6 +16481,36 @@
     }
   },
   {
+    "id":"sampled_conicSensor_ellipsoidHorizonSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,19,184,118,37,
+              3600,20,185,173,36
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,161,60,224,53,
+              3600,85,151,170,143
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,59856,38121,
+              3600,64609,1020
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_conicSensor_ellipsoidHorizonSurfaceMaterial_image_color",
     "agi_conicSensor":{
       "ellipsoidHorizonSurfaceMaterial":{
@@ -13569,6 +16568,38 @@
             "rgbaf":[
               0,0.3764705882352941,0.050980392156862744,0.7215686274509804,0.027450980392156862,
               3600,0.21568627450980393,0.9529411764705882,0.17254901960784313,0.9254901960784314
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_evenColor",
+    "agi_conicSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.06666666666666667,0.7843137254901961,0.12156862745098039,0.19607843137254902,
+              3600,0.2980392156862745,0.9294117647058824,0.2901960784313726,0.7686274509803922
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_oddColor",
+    "agi_conicSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.8117647058823529,0.5647058823529412,0.5803921568627451,0.6549019607843137,
+              3600,0.8666666666666667,0.5058823529411764,0.12156862745098039,0.21176470588235294
             ]
           }
         }
@@ -13696,6 +16727,36 @@
     }
   },
   {
+    "id":"sampled_conicSensor_domeSurfaceMaterial_checkerboard",
+    "agi_conicSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,245,110,168,165,
+              3600,123,9,221,192
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,14,154,253,179,
+              3600,221,213,240,123
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,36587,22670,
+              3600,7761,46622
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_conicSensor_domeSurfaceMaterial_image_color",
     "agi_conicSensor":{
       "domeSurfaceMaterial":{
@@ -13753,6 +16814,38 @@
             "rgbaf":[
               0,0.7607843137254902,0.9450980392156862,0.9647058823529412,0.4666666666666667,
               3600,0.4980392156862745,0.24705882352941178,0.26666666666666666,0.5372549019607843
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_domeSurfaceMaterial_checkerboard_evenColor",
+    "agi_conicSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.8117647058823529,0.49019607843137253,0.7725490196078432,0.8352941176470589,
+              3600,0.21568627450980393,0.44313725490196076,0.0392156862745098,0.5254901960784314
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_domeSurfaceMaterial_checkerboard_oddColor",
+    "agi_conicSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.1411764705882353,0.4627450980392157,0.8274509803921568,0.7058823529411765,
+              3600,0.8666666666666667,0.4588235294117647,0.058823529411764705,0.615686274509804
             ]
           }
         }
@@ -13880,6 +16973,36 @@
     }
   },
   {
+    "id":"sampled_conicSensor_environmentOcclusionMaterial_checkerboard",
+    "agi_conicSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,220,129,242,69,
+              3600,82,92,121,243
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,173,81,120,114,
+              3600,166,36,208,59
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,50981,48583,
+              3600,32485,61310
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_conicSensor_environmentOcclusionMaterial_image_color",
     "agi_conicSensor":{
       "environmentOcclusionMaterial":{
@@ -13937,6 +17060,38 @@
             "rgbaf":[
               0,0.4823529411764706,0.21176470588235294,0.054901960784313725,0.7450980392156863,
               3600,0.30196078431372547,0.5882352941176471,0.5058823529411764,0.4
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_environmentOcclusionMaterial_checkerboard_evenColor",
+    "agi_conicSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.1803921568627451,0.5764705882352941,0.7098039215686275,0.6313725490196078,
+              3600,0.7803921568627451,0.5686274509803921,0.10196078431372549,0.3058823529411765
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_conicSensor_environmentOcclusionMaterial_checkerboard_oddColor",
+    "agi_conicSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.42745098039215684,0.9568627450980393,0.1450980392156863,0.8549019607843137,
+              3600,0.7647058823529411,0.29411764705882354,0.7843137254901961,0.01568627450980392
             ]
           }
         }
@@ -14088,6 +17243,36 @@
     }
   },
   {
+    "id":"sampled_customPatternSensor_lateralSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,188,142,42,195,
+              3600,106,168,73,83
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,131,240,191,131,
+              3600,220,1,39,11
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,17911,1349,
+              3600,19690,25676
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_customPatternSensor_lateralSurfaceMaterial_image_color",
     "agi_customPatternSensor":{
       "lateralSurfaceMaterial":{
@@ -14145,6 +17330,38 @@
             "rgbaf":[
               0,0.43529411764705883,0.6235294117647059,0.09019607843137255,0.403921568627451,
               3600,0.9764705882352941,0.4980392156862745,0.9372549019607843,0.15294117647058825
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_lateralSurfaceMaterial_checkerboard_evenColor",
+    "agi_customPatternSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.40784313725490196,0.8705882352941177,0.7686274509803922,0.9058823529411765,
+              3600,0.13333333333333333,0.8980392156862745,0.396078431372549,0.34901960784313724
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_lateralSurfaceMaterial_checkerboard_oddColor",
+    "agi_customPatternSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.803921568627451,0.7450980392156863,0.7058823529411765,0.4823529411764706,
+              3600,0.3254901960784314,0.8274509803921568,0.28627450980392155,0.023529411764705882
             ]
           }
         }
@@ -14272,6 +17489,36 @@
     }
   },
   {
+    "id":"sampled_customPatternSensor_ellipsoidSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,22,212,30,16,
+              3600,218,60,248,143
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,146,59,229,117,
+              3600,150,111,214,212
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,62246,30451,
+              3600,37575,26258
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_customPatternSensor_ellipsoidSurfaceMaterial_image_color",
     "agi_customPatternSensor":{
       "ellipsoidSurfaceMaterial":{
@@ -14329,6 +17576,38 @@
             "rgbaf":[
               0,0.7411764705882353,0.3254901960784314,0.9607843137254902,0.5490196078431373,
               3600,0.49411764705882355,0.8980392156862745,0.30980392156862746,0.9333333333333333
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_ellipsoidSurfaceMaterial_checkerboard_evenColor",
+    "agi_customPatternSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.27058823529411763,0.5058823529411764,0.8313725490196079,0.8470588235294118,
+              3600,0.34901960784313724,0.12549019607843137,0.34901960784313724,0.03137254901960784
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_ellipsoidSurfaceMaterial_checkerboard_oddColor",
+    "agi_customPatternSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.7411764705882353,0.14901960784313725,0.37254901960784315,0.08235294117647059,
+              3600,0.6078431372549019,0.8588235294117647,0.45098039215686275,0.3254901960784314
             ]
           }
         }
@@ -14456,6 +17735,36 @@
     }
   },
   {
+    "id":"sampled_customPatternSensor_ellipsoidHorizonSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,246,191,195,135,
+              3600,49,92,224,116
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,131,114,134,251,
+              3600,107,100,206,96
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,52216,34251,
+              3600,42684,49318
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_customPatternSensor_ellipsoidHorizonSurfaceMaterial_image_color",
     "agi_customPatternSensor":{
       "ellipsoidHorizonSurfaceMaterial":{
@@ -14513,6 +17822,38 @@
             "rgbaf":[
               0,0.054901960784313725,0.403921568627451,0.023529411764705882,0.29411764705882354,
               3600,0.43529411764705883,0.4117647058823529,0.20392156862745098,0.12156862745098039
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_evenColor",
+    "agi_customPatternSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.4980392156862745,0.21176470588235294,0.1843137254901961,0.6941176470588235,
+              3600,0.4196078431372549,0.39215686274509803,0.5803921568627451,0.21568627450980393
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_oddColor",
+    "agi_customPatternSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.03137254901960784,0.058823529411764705,0.22745098039215686,0.21176470588235294,
+              3600,0.12549019607843137,0.44313725490196076,0.7019607843137254,0.9137254901960784
             ]
           }
         }
@@ -14640,6 +17981,36 @@
     }
   },
   {
+    "id":"sampled_customPatternSensor_domeSurfaceMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,85,219,208,240,
+              3600,57,93,247,109
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,153,120,96,23,
+              3600,32,47,36,52
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,26766,25960,
+              3600,41604,30626
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_customPatternSensor_domeSurfaceMaterial_image_color",
     "agi_customPatternSensor":{
       "domeSurfaceMaterial":{
@@ -14697,6 +18068,38 @@
             "rgbaf":[
               0,0.7450980392156863,0.6823529411764706,0.6862745098039216,0.592156862745098,
               3600,0.8156862745098039,0.20392156862745098,0.7372549019607844,0.01568627450980392
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_domeSurfaceMaterial_checkerboard_evenColor",
+    "agi_customPatternSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.24705882352941178,0.6274509803921569,0.7686274509803922,0.054901960784313725,
+              3600,0.6470588235294118,0.7333333333333333,0.792156862745098,0.10588235294117647
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_domeSurfaceMaterial_checkerboard_oddColor",
+    "agi_customPatternSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.611764705882353,0.12941176470588237,0.9254901960784314,0.2,
+              3600,0.8666666666666667,0.592156862745098,0.6980392156862745,0.3058823529411765
             ]
           }
         }
@@ -14824,6 +18227,36 @@
     }
   },
   {
+    "id":"sampled_customPatternSensor_environmentOcclusionMaterial_checkerboard",
+    "agi_customPatternSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,47,112,129,63,
+              3600,244,112,201,130
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,172,24,171,110,
+              3600,79,175,200,212
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,47658,17082,
+              3600,53788,22482
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_customPatternSensor_environmentOcclusionMaterial_image_color",
     "agi_customPatternSensor":{
       "environmentOcclusionMaterial":{
@@ -14881,6 +18314,38 @@
             "rgbaf":[
               0,0.49019607843137253,0.47843137254901963,0.21176470588235294,0.8784313725490196,
               3600,0.25882352941176473,0.4117647058823529,0.2549019607843137,0.8705882352941177
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_environmentOcclusionMaterial_checkerboard_evenColor",
+    "agi_customPatternSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.17647058823529413,0.41568627450980394,0.8,0.39215686274509803,
+              3600,0.4588235294117647,0.9529411764705882,0.34509803921568627,0.4666666666666667
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_customPatternSensor_environmentOcclusionMaterial_checkerboard_oddColor",
+    "agi_customPatternSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.9921568627450981,0.5686274509803921,0.34509803921568627,0.9686274509803922,
+              3600,0.8431372549019608,0.7490196078431373,0.3607843137254902,0.9176470588235294
             ]
           }
         }
@@ -15032,6 +18497,36 @@
     }
   },
   {
+    "id":"sampled_rectangularSensor_lateralSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,26,198,89,169,
+              3600,233,195,129,179
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,17,115,191,93,
+              3600,184,78,48,167
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,17119,42050,
+              3600,61338,26607
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_rectangularSensor_lateralSurfaceMaterial_image_color",
     "agi_rectangularSensor":{
       "lateralSurfaceMaterial":{
@@ -15089,6 +18584,38 @@
             "rgbaf":[
               0,0.6392156862745098,0.6470588235294118,0.7764705882352941,0.03529411764705882,
               3600,0.20784313725490197,0.7843137254901961,0.41568627450980394,0.23137254901960785
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_lateralSurfaceMaterial_checkerboard_evenColor",
+    "agi_rectangularSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.20392156862745098,0.5647058823529412,0.37254901960784315,0.25098039215686274,
+              3600,0.8745098039215686,0.8745098039215686,0.08235294117647059,0.9098039215686274
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_lateralSurfaceMaterial_checkerboard_oddColor",
+    "agi_rectangularSensor":{
+      "lateralSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.6196078431372549,0.043137254901960784,0,0.7137254901960784,
+              3600,0.35294117647058826,0.4117647058823529,0.4117647058823529,0.16862745098039217
             ]
           }
         }
@@ -15216,6 +18743,36 @@
     }
   },
   {
+    "id":"sampled_rectangularSensor_ellipsoidSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,108,220,153,128,
+              3600,48,38,33,190
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,84,139,229,73,
+              3600,6,103,50,39
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,61213,61935,
+              3600,53596,3025
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_rectangularSensor_ellipsoidSurfaceMaterial_image_color",
     "agi_rectangularSensor":{
       "ellipsoidSurfaceMaterial":{
@@ -15273,6 +18830,38 @@
             "rgbaf":[
               0,0.07450980392156863,0.23137254901960785,0.7803921568627451,0.8745098039215686,
               3600,0.011764705882352941,0.27058823529411763,0.8980392156862745,0.8235294117647058
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_ellipsoidSurfaceMaterial_checkerboard_evenColor",
+    "agi_rectangularSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.7372549019607844,0.3764705882352941,0.13725490196078433,0.0784313725490196,
+              3600,0.2823529411764706,0.35294117647058826,0.3803921568627451,0.1803921568627451
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_ellipsoidSurfaceMaterial_checkerboard_oddColor",
+    "agi_rectangularSensor":{
+      "ellipsoidSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.7490196078431373,0.3411764705882353,0.34509803921568627,0.24313725490196078,
+              3600,0.8588235294117647,0.19607843137254902,0.7686274509803922,0.2823529411764706
             ]
           }
         }
@@ -15400,6 +18989,36 @@
     }
   },
   {
+    "id":"sampled_rectangularSensor_ellipsoidHorizonSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,215,163,115,242,
+              3600,14,129,184,178
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,106,179,139,91,
+              3600,109,40,46,237
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,22491,23127,
+              3600,34352,6022
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_rectangularSensor_ellipsoidHorizonSurfaceMaterial_image_color",
     "agi_rectangularSensor":{
       "ellipsoidHorizonSurfaceMaterial":{
@@ -15457,6 +19076,38 @@
             "rgbaf":[
               0,0.9137254901960784,0.7294117647058823,0.7137254901960784,0.7254901960784313,
               3600,0.592156862745098,0.9529411764705882,0.4745098039215686,0.8
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_evenColor",
+    "agi_rectangularSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.30196078431372547,0.29411764705882354,0.5843137254901961,0.3607843137254902,
+              3600,0.8549019607843137,0.1411764705882353,0.8666666666666667,0.9372549019607843
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_ellipsoidHorizonSurfaceMaterial_checkerboard_oddColor",
+    "agi_rectangularSensor":{
+      "ellipsoidHorizonSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.4823529411764706,0.9176470588235294,0.15294117647058825,0.058823529411764705,
+              3600,0.2627450980392157,0.7490196078431373,0.47058823529411764,0.12549019607843137
             ]
           }
         }
@@ -15584,6 +19235,36 @@
     }
   },
   {
+    "id":"sampled_rectangularSensor_domeSurfaceMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,189,106,55,3,
+              3600,105,160,100,14
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,18,68,176,56,
+              3600,25,79,0,18
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,18624,13896,
+              3600,39440,15002
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_rectangularSensor_domeSurfaceMaterial_image_color",
     "agi_rectangularSensor":{
       "domeSurfaceMaterial":{
@@ -15641,6 +19322,38 @@
             "rgbaf":[
               0,0.01568627450980392,0.592156862745098,0.5725490196078431,0.9882352941176471,
               3600,0.9647058823529412,0.27450980392156865,0.07450980392156863,0.3137254901960784
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_domeSurfaceMaterial_checkerboard_evenColor",
+    "agi_rectangularSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.01568627450980392,0.29411764705882354,0.49411764705882355,0.7058823529411765,
+              3600,0.12549019607843137,0.10196078431372549,0.5490196078431373,0.8470588235294118
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_domeSurfaceMaterial_checkerboard_oddColor",
+    "agi_rectangularSensor":{
+      "domeSurfaceMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.9568627450980393,0.5333333333333333,0.8627450980392157,0.4392156862745098,
+              3600,0.36470588235294116,0.058823529411764705,0.03529411764705882,0.792156862745098
             ]
           }
         }
@@ -15768,6 +19481,36 @@
     }
   },
   {
+    "id":"sampled_rectangularSensor_environmentOcclusionMaterial_checkerboard",
+    "agi_rectangularSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,200,100,162,200,
+              3600,119,5,79,195
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,105,142,119,38,
+              3600,22,29,213,143
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,30919,15224,
+              3600,4399,15633
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_rectangularSensor_environmentOcclusionMaterial_image_color",
     "agi_rectangularSensor":{
       "environmentOcclusionMaterial":{
@@ -15825,6 +19568,38 @@
             "rgbaf":[
               0,0.33725490196078434,0.4588235294117647,0.2901960784313726,0.26666666666666666,
               3600,0.4666666666666667,0.592156862745098,0.7490196078431373,0.1411764705882353
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_environmentOcclusionMaterial_checkerboard_evenColor",
+    "agi_rectangularSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.4235294117647059,0.9098039215686274,0.5411764705882353,0.34509803921568627,
+              3600,0.7686274509803922,0.6862745098039216,0.38823529411764707,0.9803921568627451
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_rectangularSensor_environmentOcclusionMaterial_checkerboard_oddColor",
+    "agi_rectangularSensor":{
+      "environmentOcclusionMaterial":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.39215686274509803,0.12549019607843137,0.9333333333333333,0.09411764705882353,
+              3600,0.5098039215686274,0.9176470588235294,0.6745098039215687,0.9647058823529412
             ]
           }
         }
@@ -15964,6 +19739,36 @@
     }
   },
   {
+    "id":"sampled_fan_material_checkerboard",
+    "agi_fan":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,47,118,217,208,
+              3600,217,74,171,62
+            ]
+          },
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgba":[
+              0,126,245,28,107,
+              3600,30,145,194,116
+            ]
+          },
+          "repeat":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "cartesian2":[
+              0,50034,2755,
+              3600,23022,2137
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_fan_material_image_color",
     "agi_fan":{
       "material":{
@@ -16028,6 +19833,38 @@
     }
   },
   {
+    "id":"sampled_fan_material_checkerboard_evenColor",
+    "agi_fan":{
+      "material":{
+        "checkerboard":{
+          "evenColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.24313725490196078,0.9215686274509803,0.9372549019607843,0.4549019607843137,
+              3600,0.5333333333333333,0.8901960784313725,0.15294117647058825,0.06274509803921569
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
+    "id":"sampled_fan_material_checkerboard_oddColor",
+    "agi_fan":{
+      "material":{
+        "checkerboard":{
+          "oddColor":{
+            "epoch":"2016-06-17T12:00:00Z",
+            "rgbaf":[
+              0,0.00392156862745098,0.4,0.9333333333333333,0.984313725490196,
+              3600,0.49019607843137253,0.023529411764705882,0.08235294117647059,0.6549019607843137
+            ]
+          }
+        }
+      }
+    }
+  },
+  {
     "id":"sampled_fan_outlineColor_rgbaf",
     "agi_fan":{
       "outlineColor":{
@@ -16082,7 +19919,7 @@
         "epoch":"2016-06-17T12:00:00Z",
         "unitCartesian":[
           0,0.5532827915003591,0.6961099100967651,0.4575031646826541,
-          3600,0.7546657014303162,0.11520131359926604,0.6459166636878882
+          3600,0.7546657014303163,0.11520131359926505,0.6459166636878884
         ]
       }
     }

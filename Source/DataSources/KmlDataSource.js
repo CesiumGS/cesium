@@ -1,4 +1,5 @@
 define([
+        '../Core/ArcType',
         '../Core/AssociativeArray',
         '../Core/BoundingRectangle',
         '../Core/Cartesian2',
@@ -64,6 +65,7 @@ define([
         './TimeIntervalCollectionProperty',
         './WallGraphics'
     ], function(
+        ArcType,
         AssociativeArray,
         BoundingRectangle,
         Cartesian2,
@@ -1287,7 +1289,7 @@ define([
             entity.polyline = polyline;
             polyline.positions = createPositionPropertyArrayFromAltitudeMode(coordinates, altitudeMode, gxAltitudeMode, ellipsoid);
             if (!tessellate || canExtrude) {
-                polyline.followSurface = false;
+                polyline.arcType = ArcType.NONE;
             }
         }
 
@@ -2487,7 +2489,7 @@ define([
      * );
      */
     function KmlDataSource(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var camera = options.camera;
         var canvas = options.canvas;
 
@@ -2698,7 +2700,7 @@ define([
         }
         //>>includeEnd('debug');
 
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         DataSource.setLoading(this, true);
 
         var oldName = this._name;

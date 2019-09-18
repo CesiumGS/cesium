@@ -1,14 +1,16 @@
-defineSuite([
-        'Core/EarthOrientationParameters',
+define([
         'Core/defined',
+        'Core/EarthOrientationParameters',
         'Core/JulianDate',
         'Core/TimeStandard'
     ], function(
-        EarthOrientationParameters,
         defined,
+        EarthOrientationParameters,
         JulianDate,
         TimeStandard) {
-    'use strict';
+        'use strict';
+
+describe('Core/EarthOrientationParameters', function() {
 
     var officialLeapSeconds;
 
@@ -191,4 +193,5 @@ defineSuite([
             expect(Math.abs(resultBefore.ut1MinusUtc - resultAfter.ut1MinusUtc) > 0.5).toEqual(true);
         });
     });
+});
 });

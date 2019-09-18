@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/ParticleSystem',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
@@ -7,9 +6,9 @@ defineSuite([
         'Core/Resource',
         'Scene/CircleEmitter',
         'Scene/ParticleBurst',
+        'Scene/ParticleSystem',
         'Specs/createScene'
     ], function(
-        ParticleSystem,
         Cartesian2,
         Cartesian3,
         Color,
@@ -17,8 +16,11 @@ defineSuite([
         Resource,
         CircleEmitter,
         ParticleBurst,
+        ParticleSystem,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ParticleSystem', function() {
 
     var scene;
     var greenImage;
@@ -323,6 +325,11 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+    it('clones default image size', function() {
+        var p = new ParticleSystem();
+        expect(p.maximumImageSize).not.toBe(p.minimumImageSize);
+    });
+
     it('renders', function() {
         scene.primitives.add(new ParticleSystem({
             image : greenImage,
@@ -349,4 +356,5 @@ defineSuite([
         p.destroy();
         expect(p.isDestroyed()).toEqual(true);
     });
+});
 });

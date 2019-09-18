@@ -1,30 +1,30 @@
 define([
-        './ModelUtility',
-        '../Core/defined',
         '../Core/defaultValue',
+        '../Core/defined',
         '../Core/WebGLConstants',
         '../Core/webGLConstantToGlslType',
         '../ThirdParty/GltfPipeline/addToArray',
         '../ThirdParty/GltfPipeline/ForEach',
         '../ThirdParty/GltfPipeline/hasExtension',
-        '../ThirdParty/GltfPipeline/numberOfComponentsForType'
+        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
+        './ModelUtility'
     ], function(
-        ModelUtility,
-        defined,
         defaultValue,
+        defined,
         WebGLConstants,
         webGLConstantToGlslType,
         addToArray,
         ForEach,
         hasExtension,
-        numberOfComponentsForType) {
+        numberOfComponentsForType,
+        ModelUtility) {
     'use strict';
 
     /**
      * @private
      */
     function processModelMaterialsCommon(gltf, options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         if (!defined(gltf)) {
             return;

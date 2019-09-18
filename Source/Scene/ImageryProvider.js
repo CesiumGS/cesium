@@ -31,6 +31,7 @@ define([
      * @see GoogleEarthEnterpriseMapsProvider
      * @see GridImageryProvider
      * @see MapboxImageryProvider
+     * @see MapboxStyleImageryProvider
      * @see SingleTileImageryProvider
      * @see TileCoordinatesImageryProvider
      * @see UrlTemplateImageryProvider
@@ -339,15 +340,22 @@ define([
 
         var resource = Resource.createIfNeeded(url);
 
-        if (ktxRegex.test(resource)) {
+        if (ktxRegex.test(resource.url)) {
             return loadKTX(resource);
-        } else if (crnRegex.test(resource)) {
+        } else if (crnRegex.test(resource.url)) {
             return loadCRN(resource);
-        } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return resource.fetchImage(true);
+        } else if (defined(imageryProvider) && defined(imageryProvider.tileDiscardPolicy)) {
+            return resource.fetchImage({
+                preferBlob : true,
+                preferImageBitmap : true,
+                flipY : true
+            });
         }
 
-        return resource.fetchImage();
+        return resource.fetchImage({
+            preferImageBitmap : true,
+            flipY : true
+        });
     };
 
     return ImageryProvider;

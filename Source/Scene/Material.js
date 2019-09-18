@@ -18,6 +18,7 @@ define([
         '../Core/Resource',
         '../Renderer/CubeMap',
         '../Renderer/Texture',
+        '../Shaders/Materials/AspectRampMaterial',
         '../Shaders/Materials/BumpMapMaterial',
         '../Shaders/Materials/CheckerboardMaterial',
         '../Shaders/Materials/DotMaterial',
@@ -55,6 +56,7 @@ define([
         Resource,
         CubeMap,
         Texture,
+        AspectRampMaterial,
         BumpMapMaterial,
         CheckerboardMaterial,
         DotMaterial,
@@ -225,6 +227,7 @@ define([
      *  <ul>
      *      <li><code>color</code>: color and maximum alpha for the glow on the line.</li>
      *      <li><code>glowPower</code>: strength of the glow, as a percentage of the total line width (less than 1.0).</li>
+     *      <li><code>taperPower</code>: strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.</li>
      *  </ul>
      *  <li>PolylineOutline</li>
      *  <ul>
@@ -246,7 +249,11 @@ define([
      *  </ul>
      *  <li>SlopeRamp</li>
      *  <ul>
-     *      <li><code>image</code>: color ramp image to use for coloring the terrain.</li>
+     *      <li><code>image</code>: color ramp image to use for coloring the terrain by slope.</li>
+     *  </ul>
+     *  <li>AspectRamp</li>
+     *  <ul>
+     *      <li><code>image</code>: color ramp image to use for color the terrain by aspect.</li>
      *  </ul>
      * </ul>
      * </ul>
@@ -404,7 +411,7 @@ define([
 
     /**
      * Gets whether or not this material is translucent.
-     * @returns <code>true</code> if this material is translucent, <code>false</code> otherwise.
+     * @returns {Boolean} <code>true</code> if this material is translucent, <code>false</code> otherwise.
      */
     Material.prototype.isTranslucent = function() {
         if (defined(this.translucent)) {
@@ -683,6 +690,19 @@ define([
         checkForValidProperties(uniforms, materialNames, duplicateNameError, false);
     }
 
+    function isMaterialFused(shaderComponent, material) {
+        var materials = material._template.materials;
+        for (var subMaterialId in materials) {
+            if (materials.hasOwnProperty(subMaterialId)) {
+                if (shaderComponent.indexOf(subMaterialId) > -1) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
     // Create the czm_getMaterial method body using source or components.
     function createMethodDefinition(material) {
         var components = material._template.components;
@@ -693,12 +713,15 @@ define([
             material.shaderSource += 'czm_material czm_getMaterial(czm_materialInput materialInput)\n{\n';
             material.shaderSource += 'czm_material material = czm_getDefaultMaterial(materialInput);\n';
             if (defined(components)) {
+                var isMultiMaterial = Object.keys(material._template.materials).length > 0;
                 for ( var component in components) {
                     if (components.hasOwnProperty(component)) {
                         if (component === 'diffuse' || component === 'emission') {
-                            material.shaderSource += 'material.' + component + ' = czm_gammaCorrect(' + components[component] + '); \n';
+                            var isFusion = isMultiMaterial && isMaterialFused(components[component], material);
+                            var componentSource = isFusion ? components[component] : 'czm_gammaCorrect(' + components[component]  + ')';
+                            material.shaderSource += 'material.' + component + ' = ' + componentSource + '; \n';
                         } else if (component === 'alpha') {
-                            material.shaderSource += 'material.alpha = czm_gammaCorrect(vec4(vec3(0.0), ' + components.alpha + ')).a; \n';
+                            material.shaderSource += 'material.alpha = ' + components.alpha + '; \n';
                         } else {
                             material.shaderSource += 'material.' + component + ' = ' + components[component] + ';\n';
                         }
@@ -806,9 +829,9 @@ define([
                     var resource = isResource ? uniformValue : Resource.createIfNeeded(uniformValue);
 
                     var promise;
-                    if (ktxRegex.test(uniformValue)) {
+                    if (ktxRegex.test(resource.url)) {
                         promise = loadKTX(resource);
-                    } else if (crnRegex.test(uniformValue)) {
+                    } else if (crnRegex.test(resource.url)) {
                         promise = loadCRN(resource);
                     } else {
                         promise = resource.fetchImage();
@@ -1477,7 +1500,8 @@ define([
             type : Material.PolylineGlowType,
             uniforms : {
                 color : new Color(0.0, 0.5, 1.0, 1.0),
-                glowPower : 0.25
+                glowPower : 0.25,
+                taperPower : 1.0
             },
             source : PolylineGlowMaterial
         },
@@ -1554,9 +1578,26 @@ define([
         fabric : {
             type : Material.SlopeRampMaterialType,
             uniforms : {
-                image: Material.DefaultImageId
+                image : Material.DefaultImageId
             },
             source : SlopeRampMaterial
+        },
+        translucent : false
+    });
+
+    /**
+     * Gets the name of the aspect ramp material.
+     * @type {String}
+     * @readonly
+     */
+    Material.AspectRampMaterialType = 'AspectRamp';
+    Material._materialCache.addMaterial(Material.AspectRampMaterialType, {
+        fabric: {
+            type : Material.AspectRampMaterialType,
+            uniforms : {
+                image : Material.DefaultImageId
+            },
+            source : AspectRampMaterial
         },
         translucent : false
     });

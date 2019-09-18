@@ -50,9 +50,6 @@ before they are accepted.
 * **[Shader languages support for VS Code](https://marketplace.visualstudio.com/items?itemName=slevesque.shader)**
 by slevesque -- This extension provides syntax highlighting for CesiumJS's shader code.
 
-* **[Prettify JSON](https://marketplace.visualstudio.com/items?itemName=mohsen1.prettify-json)**
- by Mohsen Azimi -- This seems generally useful.
-
 * **[glTF Extension for VS Code](https://marketplace.visualstudio.com/items?itemName=cesium.gltf-vscode)**
 by CesiumJS.org -- This extension adds features for previewing and editing 3D models in glTF files.
 

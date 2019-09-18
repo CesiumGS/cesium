@@ -1,16 +1,18 @@
-defineSuite([
-        'Widgets/ProjectionPicker/ProjectionPickerViewModel',
+define([
         'Core/OrthographicFrustum',
         'Core/PerspectiveFrustum',
         'Scene/SceneMode',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/ProjectionPicker/ProjectionPickerViewModel'
     ], function(
-        ProjectionPickerViewModel,
         OrthographicFrustum,
         PerspectiveFrustum,
         SceneMode,
-        createScene) {
-    'use strict';
+        createScene,
+        ProjectionPickerViewModel) {
+        'use strict';
+
+describe('Widgets/ProjectionPicker/ProjectionPickerViewModel', function() {
 
     var scene;
 
@@ -64,15 +66,15 @@ defineSuite([
 
         expect(scene.mode).toEqual(SceneMode.SCENE3D);
         expect(viewModel.isOrthographicProjection).toEqual(false);
-        expect(scene.camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+        expect(scene.camera.frustum).toBeInstanceOf(PerspectiveFrustum);
 
         viewModel.switchToOrthographic();
         expect(viewModel.isOrthographicProjection).toEqual(true);
-        expect(scene.camera.frustum instanceof OrthographicFrustum).toEqual(true);
+        expect(scene.camera.frustum).toBeInstanceOf(OrthographicFrustum);
 
         viewModel.switchToPerspective();
         expect(viewModel.isOrthographicProjection).toEqual(false);
-        expect(scene.camera.frustum instanceof PerspectiveFrustum).toEqual(true);
+        expect(scene.camera.frustum).toBeInstanceOf(PerspectiveFrustum);
 
         viewModel.destroy();
     });
@@ -95,3 +97,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

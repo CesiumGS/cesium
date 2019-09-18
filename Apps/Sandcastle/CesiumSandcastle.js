@@ -1,4 +1,5 @@
-/*global require,Blob,JSHINT*/
+/*global require,Blob,JSHINT */
+/*global decodeBase64Data, embedInSandcastleTemplate */
 /*global gallery_demos, has_new_gallery_demos, hello_world_index*/// defined in gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
 require({
@@ -27,11 +28,11 @@ require({
         location: '../Apps/Sandcastle/ThirdParty'
     }]
 }, [
+        'CodeMirror/lib/codemirror',
         'dijit/Dialog',
         'dijit/form/Button',
         'dijit/form/Form',
         'dijit/form/Textarea',
-        'CodeMirror/lib/codemirror',
         'dijit/layout/ContentPane',
         'dijit/popup',
         'dijit/registry',
@@ -50,8 +51,6 @@ require({
         'dojo/when',
         'Sandcastle/LinkButton',
         'Source/Cesium',
-        'Source/Core/defined',
-        'Source/Core/Resource',
         'ThirdParty/clipboard.min',
         'ThirdParty/pako.min',
         'CodeMirror/addon/hint/show-hint',
@@ -74,11 +73,11 @@ require({
         'dijit/ToolbarSeparator',
         'dojo/domReady!'
     ], function(
+        CodeMirror,
         Dialog,
         Button,
         Form,
         TextArea,
-        CodeMirror,
         ContentPane,
         popup,
         registry,
@@ -97,17 +96,17 @@ require({
         when,
         LinkButton,
         Cesium,
-        defined,
-        Resource,
         ClipboardJS,
         pako) {
     'use strict';
-
     // attach clipboard handling to our Copy button
     var clipboardjs = new ClipboardJS('.copyButton');
 
-    //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
-    if (!defined(window.Cesium)) {
+    if (typeof Cesium !== 'object') {
+        //For built sandcastle
+        Cesium = window.Cesium;
+    } else if (typeof window.Cesium === 'undefined') {
+        //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
         window.Cesium = Cesium;
     }
 
@@ -229,7 +228,7 @@ require({
     }
 
     function openDocTab(title, link) {
-        if (!defined(docTabs[title])) {
+        if (!Cesium.defined(docTabs[title])) {
             docTabs[title] = new ContentPane({
                 title : title,
                 focused : true,
@@ -286,7 +285,7 @@ require({
 
     function onCursorActivity() {
         docNode.style.left = '-999px';
-        if (defined(docTimer)) {
+        if (Cesium.defined(docTimer)) {
             window.clearTimeout(docTimer);
         }
         docTimer = window.setTimeout(showDocPopup, 500);
@@ -296,21 +295,21 @@ require({
         var element = document.createElement('abbr');
         element.className = className;
         switch (className) {
-        case 'hintMarker':
-            element.innerHTML = '&#9650;';
-            break;
-        case 'errorMarker':
-            element.innerHTML = '&times;';
-            break;
-        default:
-            element.innerHTML = '&#9654;';
+            case 'hintMarker':
+                element.innerHTML = '&#9650;';
+                break;
+            case 'errorMarker':
+                element.innerHTML = '&times;';
+                break;
+            default:
+                element.innerHTML = '&#9654;';
         }
         element.title = msg;
         return element;
     }
 
     function closeGalleryTooltip() {
-        if (defined(activeGalleryTooltipDemo)) {
+        if (Cesium.defined(activeGalleryTooltipDemo)) {
             popup.close(demoTooltips[activeGalleryTooltipDemo.name]);
             activeGalleryTooltipDemo = undefined;
         }
@@ -327,7 +326,7 @@ require({
             suffix = 'searchDemo';
         }
 
-        if (defined(activeGalleryTooltipDemo)) {
+        if (Cesium.defined(activeGalleryTooltipDemo)) {
             popup.open({
                 popup : demoTooltips[activeGalleryTooltipDemo.name],
                 around : dom.byId(activeGalleryTooltipDemo.name + suffix),
@@ -339,7 +338,7 @@ require({
     function scheduleGalleryTooltip(demo) {
         if (demo !== activeGalleryTooltipDemo) {
             activeGalleryTooltipDemo = demo;
-            if (defined(galleryTooltipTimer)) {
+            if (Cesium.defined(galleryTooltipTimer)) {
                 window.clearTimeout(galleryTooltipTimer);
             }
             galleryTooltipTimer = window.setTimeout(openGalleryTooltip, 220);
@@ -383,11 +382,11 @@ require({
         // make a copy of the options, JSHint modifies the object it's given
         var options = JSON.parse(JSON.stringify(sandcastleJsHintOptions));
         /*eslint-disable new-cap*/
-        if (!JSHINT(getScriptFromEditor(false), options)) {
+        if (!JSHINT(embedInSandcastleTemplate(jsEditor.getValue(), false), options)) {
             var hints = JSHINT.errors;
             for (i = 0, len = hints.length; i < len; ++i) {
                 var hint = hints[i];
-                if (hint !== null && defined(hint.reason) && hint.line > 0) {
+                if (hint !== null && Cesium.defined(hint.reason) && hint.line > 0) {
                     line = jsEditor.setGutterMarker(scriptLineToEditorLine(hint.line), 'hintGutter', makeLineLabel(hint.reason, 'hintMarker'));
                     jsEditor.addLineClass(line, 'text', 'hintLine');
                     errorLines.push(line);
@@ -398,7 +397,7 @@ require({
     }
 
     function scheduleHint() {
-        if (defined(hintTimer)) {
+        if (Cesium.defined(hintTimer)) {
             window.clearTimeout(hintTimer);
         }
         hintTimer = setTimeout(clearErrorsAddHints, 550);
@@ -406,14 +405,14 @@ require({
     }
 
     function scheduleHintNoChange() {
-        if (defined(hintTimer)) {
+        if (Cesium.defined(hintTimer)) {
             window.clearTimeout(hintTimer);
         }
         hintTimer = setTimeout(clearErrorsAddHints, 550);
     }
 
     function scrollToLine(lineNumber) {
-        if (defined(lineNumber)) {
+        if (Cesium.defined(lineNumber)) {
             jsEditor.setCursor(lineNumber);
             // set selection twice in order to force the editor to scroll
             // to this location if the cursor is already there
@@ -472,13 +471,13 @@ require({
     function registerScroll(demoContainer) {
         if (document.onmousewheel !== undefined) {
             demoContainer.addEventListener('mousewheel', function(e) {
-                if (defined(e.wheelDelta) && e.wheelDelta) {
+                if (Cesium.defined(e.wheelDelta) && e.wheelDelta) {
                     demoContainer.scrollLeft -= e.wheelDelta * 70 / 120;
                 }
             }, false);
         } else {
             demoContainer.addEventListener('DOMMouseScroll', function(e) {
-                if (defined(e.detail) && e.detail) {
+                if (Cesium.defined(e.detail) && e.detail) {
                     demoContainer.scrollLeft += e.detail * 70 / 3;
                 }
             }, false);
@@ -540,22 +539,6 @@ require({
         }
     });
 
-    function getScriptFromEditor(addExtraLine) {
-        return 'function startup(Cesium) {\n' +
-               '    \'use strict\';\n' +
-               '//Sandcastle_Begin\n' +
-               (addExtraLine ? '\n' : '') +
-               jsEditor.getValue() +
-               '//Sandcastle_End\n' +
-               '    Sandcastle.finishedLoading();\n' +
-               '}\n' +
-               'if (typeof Cesium !== \'undefined\') {\n' +
-               '    startup(Cesium);\n' +
-               '} else if (typeof require === \'function\') {\n' +
-               '    require([\'Cesium\'], startup);\n' +
-               '}\n';
-    }
-
     var scriptCodeRegex = /\/\/Sandcastle_Begin\s*([\s\S]*)\/\/Sandcastle_End/;
 
     function activateBucketScripts(bucketDoc) {
@@ -578,6 +561,7 @@ require({
         // Apply user HTML to bucket.
         var htmlElement = bucketDoc.createElement('div');
         htmlElement.innerHTML = htmlEditor.getValue();
+        bucketDoc.body.appendChild(htmlElement);
 
         var onScriptTagError = function() {
             if (bucketFrame.contentDocument === bucketDoc) {
@@ -620,34 +604,12 @@ require({
                 // Firefox line numbers are zero-based, not one-based.
                 var isFirefox = navigator.userAgent.indexOf('Firefox/') >= 0;
 
-                element.textContent = getScriptFromEditor(isFirefox);
+                element.textContent = embedInSandcastleTemplate(jsEditor.getValue(), isFirefox);
                 bucketDoc.body.appendChild(element);
             }
         };
-        // If we just add `htmlElement` to the DOM and run
-        // loadScript(), there's a chance it will inject CSS
-        // before the HTML content is fully loaded, leading to a broken page.
-        // So instead we create an observer instance to watch for when
-        // the element has been added.
-        // See https://github.com/AnalyticalGraphicsInc/cesium/issues/5265
-        var observer = new MutationObserver(function (mutationsList) {
-            // See https://developer.mozilla.org/en-US/docs/Web/API/MutationObserver
-            var length = mutationsList.length;
-            for (var i = 0; i < length; i++) {
-                var mutation = mutationsList[i];
-                // Watch for an element with the data-sandcastle-loaded attribute.
-                if (defined(mutation.target.dataset) && mutation.target.dataset.sandcastleLoaded === 'yes') {
-                    loadScript();
-                    observer.disconnect();
-                }
-            }
-        });
 
-        // Start observing the target node for configured mutations
-        var config = { attributes: true, childList: true, subtree: true };
-        observer.observe(bucketDoc, config);
-
-        bucketDoc.body.appendChild(htmlElement);
+        loadScript();
     }
 
     function applyBucket() {
@@ -699,7 +661,7 @@ require({
     function loadBucket(bucketName) {
         if (local.bucketName !== bucketName) {
             local.bucketName = bucketName;
-            if (defined(bucketTypes[bucketName])) {
+            if (Cesium.defined(bucketTypes[bucketName])) {
                 local.headers = bucketTypes[bucketName];
             } else {
                 local.headers = '<html><head></head><body data-sandcastle-bucket-loaded="no">';
@@ -723,10 +685,10 @@ require({
     if (window.location.search) {
         queryObject = ioQuery.queryToObject(window.location.search.substring(1));
     }
-    if (!defined(queryObject.src)) {
+    if (!Cesium.defined(queryObject.src)) {
         queryObject.src = defaultDemo + '.html';
     }
-    if (!defined(queryObject.label)) {
+    if (!Cesium.defined(queryObject.label)) {
         queryObject.label = defaultLabel;
     }
 
@@ -755,19 +717,19 @@ require({
             }
 
             var json, code, html;
-            if (defined(queryObject.gist)) {
-                Resource.fetchJsonp('https://api.github.com/gists/' + queryObject.gist + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60')
+            if (Cesium.defined(queryObject.gist)) {
+                Cesium.Resource.fetchJsonp('https://api.github.com/gists/' + queryObject.gist + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60')
                     .then(function(data) {
                         var files = data.data.files;
                         var code = files['Cesium-Sandcastle.js'].content;
                         var htmlFile = files['Cesium-Sandcastle.html'];
-                        var html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
+                        var html = Cesium.defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
                         applyLoadedDemo(code, html);
                     }).otherwise(function(error) {
-                        appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
-                        console.log(error);
-                    });
-            } else if (defined(queryObject.code)) {
+                    appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
+                    console.log(error);
+                });
+            } else if (Cesium.defined(queryObject.code)) {
                 //The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
                 json = JSON.parse(window.atob(queryObject.code));
                 code = json.code;
@@ -775,20 +737,10 @@ require({
 
                 applyLoadedDemo(code, html);
             } else if (window.location.hash.indexOf('#c=') === 0) {
-                // data stored in the hash as:
-                // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
                 var base64String = window.location.hash.substr(3);
-                // restore padding
-                while (base64String.length % 4 !== 0) {
-                    base64String += '=';
-                }
-                var jsonString = pako.inflate(atob(base64String), { raw: true, to: 'string' });
-                // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
-                jsonString = '["' + jsonString + '"]';
-                json = JSON.parse(jsonString);
-                // index 0 is code, index 1 is html
-                code = json[0];
-                html = json[1];
+                var data = decodeBase64Data(base64String, pako);
+                code = data.code;
+                html = data.html;
 
                 applyLoadedDemo(code, html);
             } else {
@@ -859,14 +811,14 @@ require({
                     appendConsole('consoleLog', 'Unable to load demo named ' + queryObject.src.replace('.html', '') + '. Redirecting to HelloWorld.\n', true);
                 }
             }
-        } else if (defined(e.data.log)) {
+        } else if (Cesium.defined(e.data.log)) {
             // Console log messages from the iframe display in Sandcastle.
             appendConsole('consoleLog', e.data.log, false);
-        } else if (defined(e.data.error)) {
+        } else if (Cesium.defined(e.data.error)) {
             // Console error messages from the iframe display in Sandcastle
             var errorMsg = e.data.error;
             var lineNumber = e.data.lineNumber;
-            if (defined(lineNumber)) {
+            if (Cesium.defined(lineNumber)) {
                 errorMsg += ' (on line ';
 
                 if (e.data.url) {
@@ -881,10 +833,10 @@ require({
                 }
             }
             appendConsole('consoleError', errorMsg, true);
-        } else if (defined(e.data.warn)) {
+        } else if (Cesium.defined(e.data.warn)) {
             // Console warning messages from the iframe display in Sandcastle.
             appendConsole('consoleWarn', e.data.warn, true);
-        } else if (defined(e.data.highlight)) {
+        } else if (Cesium.defined(e.data.highlight)) {
             // Hovering objects in the embedded Cesium window.
             highlightLine(e.data.highlight);
         }
@@ -953,17 +905,23 @@ require({
         return location.protocol + '//' + location.host + location.pathname;
     }
 
-    registry.byId('buttonShareDrop').on('click', function() {
-        var code = jsEditor.getValue();
-        var html = htmlEditor.getValue();
-
+    function makeCompressedBase64String(data) {
         // data stored in the hash as:
         // Base64 encoded, raw DEFLATE compressed JSON array where index 0 is code, index 1 is html
-        var jsonString = JSON.stringify([code, html]);
+        var jsonString = JSON.stringify(data);
         // we save a few bytes by omitting the leading [" and trailing "] since they are always the same
         jsonString = jsonString.substr(2, jsonString.length - 4);
         var base64String = btoa(pako.deflate(jsonString, { raw: true, to: 'string', level: 9 }));
         base64String = base64String.replace(/\=+$/, ''); // remove padding
+
+        return base64String;
+    }
+
+    registry.byId('buttonShareDrop').on('click', function() {
+        var code = jsEditor.getValue();
+        var html = htmlEditor.getValue();
+
+        var base64String = makeCompressedBase64String([code, html]);
 
         var shareUrlBox = document.getElementById('shareUrl');
         shareUrlBox.value = getBaseUrl() + '#c=' + base64String;
@@ -1019,7 +977,7 @@ require({
         return local.headers + '\n' +
                htmlEditor.getValue() +
                '<script id="cesium_sandcastle_script">\n' +
-               getScriptFromEditor(false) +
+               embedInSandcastleTemplate(jsEditor.getValue(), false) +
                '</script>\n' +
                '</body>\n' +
                '</html>\n';
@@ -1044,25 +1002,20 @@ require({
     });
 
     registry.byId('buttonNewWindow').on('click', function() {
-        var baseHref = window.location.href;
-
-        //Handle case where demo is in a sub-directory.
-        var searchLen = window.location.search.length;
-        if (searchLen > 0) {
-            baseHref = baseHref.substring(0, baseHref.length - searchLen);
-        }
-
+        //Handle case where demo is in a sub-directory by modifying
+        //the demo's HTML to add a base href.
+        var baseHref = getBaseUrl();
         var pos = baseHref.lastIndexOf('/');
         baseHref = baseHref.substring(0, pos) + '/gallery/';
 
-        var html = getDemoHtml();
-        html = html.replace('<head>', '<head>\n    <base href="' + baseHref + '">');
-        var htmlBlob = new Blob([html], {
-            'type' : 'text/html;charset=utf-8',
-            'endings' : 'native'
-        });
-        var htmlBlobURL = URL.createObjectURL(htmlBlob);
-        window.open(htmlBlobURL, '_blank');
+        var code = jsEditor.getValue();
+        var html = htmlEditor.getValue();
+        var data = makeCompressedBase64String([code, html, baseHref]);
+
+        var url = getBaseUrl();
+        url = url.replace('index.html','') + 'standalone.html' + '#c=' + data;
+
+        window.open(url, '_blank');
         window.focus();
     });
 
@@ -1130,11 +1083,11 @@ require({
             }
 
             // Select the demo to load upon opening based on the query parameter.
-            if (defined(queryObject.src)) {
+            if (Cesium.defined(queryObject.src)) {
                 if (demo.name === queryObject.src.replace('.html', '')) {
                     loadFromGallery(demo).then(function() {
                         window.history.replaceState(demo, demo.name, getPushStateUrl(demo));
-                        if (defined(queryObject.gist)) {
+                        if (Cesium.defined(queryObject.gist)) {
                             document.title = 'Gist Import - Cesium Sandcastle';
                         } else {
                             document.title = demo.name + ' - Cesium Sandcastle';
@@ -1157,7 +1110,7 @@ require({
 
     var loading = true;
     function setSubtab(tabName) {
-        currentTab = defined(tabName) && !loading ? tabName : queryObject.label;
+        currentTab = Cesium.defined(tabName) && !loading ? tabName : queryObject.label;
         queryObject.label = tabName;
         loading = false;
     }
@@ -1209,7 +1162,7 @@ require({
 
     function createGalleryButton(demo, tabName) {
         var imgSrc = 'templates/Gallery_tile.jpg';
-        if (defined(demo.img)) {
+        if (Cesium.defined(demo.img)) {
             imgSrc = 'gallery/' + demo.img;
         }
 
@@ -1261,7 +1214,7 @@ require({
     }
 
     var promise;
-    if (!defined(gallery_demos)) {
+    if (!Cesium.defined(gallery_demos)) {
         galleryErrorMsg.textContent = 'No demos found, please run the build script.';
         galleryErrorMsg.style.display = 'inline-block';
     } else {

@@ -4,8 +4,8 @@ define([
         '../Core/defined',
         '../Core/DistanceDisplayCondition',
         '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/ShowGeometryInstanceAttribute',
         '../Core/RectangleCollisionChecker',
+        '../Core/ShowGeometryInstanceAttribute',
         '../Scene/ClassificationType',
         '../Scene/GroundPrimitive',
         '../Scene/ShadowVolumeAppearance',
@@ -19,8 +19,8 @@ define([
         defined,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
-        ShowGeometryInstanceAttribute,
         RectangleCollisionChecker,
+        ShowGeometryInstanceAttribute,
         ClassificationType,
         GroundPrimitive,
         ShadowVolumeAppearance,
@@ -34,8 +34,9 @@ define([
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
 
     // Encapsulates a Primitive and all the entities that it represents.
-    function Batch(primitives, appearanceType, materialProperty, usingSphericalTextureCoordinates, zIndex) {
+    function Batch(primitives, classificationType, appearanceType, materialProperty, usingSphericalTextureCoordinates, zIndex) {
         this.primitives = primitives; // scene level primitive collection
+        this.classificationType = classificationType;
         this.appearanceType = appearanceType;
         this.materialProperty = materialProperty;
         this.updaters = new AssociativeArray();
@@ -142,7 +143,7 @@ define([
                         material : this.material
                         // translucent and closed properties overridden
                     }),
-                    classificationType : ClassificationType.TERRAIN
+                    classificationType : this.classificationType
                 });
 
                 primitives.add(primitive, this.zIndex);
@@ -266,9 +267,10 @@ define([
     /**
      * @private
      */
-    function StaticGroundGeometryPerMaterialBatch(primitives, appearanceType) {
+    function StaticGroundGeometryPerMaterialBatch(primitives, classificationType, appearanceType) {
         this._items = [];
         this._primitives = primitives;
+        this._classificationType = classificationType;
         this._appearanceType = appearanceType;
     }
 
@@ -293,7 +295,7 @@ define([
             }
         }
         // If a compatible batch wasn't found, create a new batch.
-        var batch = new Batch(this._primitives, this._appearanceType, updater.fillMaterialProperty, usingSphericalTextureCoordinates, zIndex);
+        var batch = new Batch(this._primitives, this._classificationType, this._appearanceType, updater.fillMaterialProperty, usingSphericalTextureCoordinates, zIndex);
         batch.add(time, updater, geometryInstance);
         items.push(batch);
     };

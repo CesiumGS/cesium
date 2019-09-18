@@ -1,14 +1,16 @@
-defineSuite([
-        'DataSources/CustomDataSource',
+define([
         'Core/Event',
+        'DataSources/CustomDataSource',
         'DataSources/DataSourceClock',
         'DataSources/EntityCollection'
     ], function(
-        CustomDataSource,
         Event,
+        CustomDataSource,
         DataSourceClock,
         EntityCollection) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CustomDataSource', function() {
 
     it('constructor has expected defaults', function() {
         var dataSource = new CustomDataSource();
@@ -81,4 +83,5 @@ defineSuite([
         expect(entityCollection.owner).toEqual(dataSource);
     });
 
+});
 });

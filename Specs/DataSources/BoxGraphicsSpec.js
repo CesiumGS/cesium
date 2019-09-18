@@ -1,24 +1,26 @@
-defineSuite([
-        'DataSources/BoxGraphics',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
+        'DataSources/BoxGraphics',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        BoxGraphics,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
+        BoxGraphics,
         ColorMaterialProperty,
         ConstantProperty,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/BoxGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -161,4 +163,5 @@ defineSuite([
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
+});
 });

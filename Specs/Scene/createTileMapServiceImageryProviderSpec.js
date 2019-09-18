@@ -1,8 +1,6 @@
-defineSuite([
-        'Scene/createTileMapServiceImageryProvider',
+define([
         'Core/Cartesian2',
         'Core/Cartographic',
-        'Core/DefaultProxy',
         'Core/GeographicProjection',
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
@@ -12,6 +10,7 @@ defineSuite([
         'Core/Resource',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
+        'Scene/createTileMapServiceImageryProvider',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryState',
@@ -19,10 +18,8 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        createTileMapServiceImageryProvider,
         Cartesian2,
         Cartographic,
-        DefaultProxy,
         GeographicProjection,
         GeographicTilingScheme,
         getAbsoluteUri,
@@ -32,13 +29,16 @@ defineSuite([
         Resource,
         WebMercatorProjection,
         WebMercatorTilingScheme,
+        createTileMapServiceImageryProvider,
         Imagery,
         ImageryLayer,
         ImageryState,
         UrlTemplateImageryProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/createTileMapServiceImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -215,7 +215,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -237,7 +237,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -260,7 +260,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -287,7 +287,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -362,7 +362,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -422,7 +422,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
@@ -765,4 +765,5 @@ defineSuite([
             expect(errorRaised).toBe(true);
         });
     });
+});
 });

@@ -1,8 +1,7 @@
 define([
-        '../Core/Cartographic',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/Math',
+        '../Core/Cartographic',
         '../Core/Check',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -10,17 +9,17 @@ define([
         '../Core/defineProperties',
         '../Core/EncodedCartesian3',
         '../Core/GeometryInstanceAttribute',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/Rectangle',
         '../Core/Transforms',
         '../Renderer/ShaderSource',
         '../Scene/PerInstanceColorAppearance',
         '../Shaders/ShadowVolumeAppearanceFS'
-], function(
-        Cartographic,
+    ], function(
         Cartesian2,
         Cartesian3,
-        CesiumMath,
+        Cartographic,
         Check,
         ComponentDatatype,
         defaultValue,
@@ -28,6 +27,7 @@ define([
         defineProperties,
         EncodedCartesian3,
         GeometryInstanceAttribute,
+        CesiumMath,
         Matrix4,
         Rectangle,
         Transforms,

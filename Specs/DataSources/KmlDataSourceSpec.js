@@ -1,5 +1,5 @@
-defineSuite([
-        'DataSources/KmlDataSource',
+define([
+        'Core/ArcType',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -24,6 +24,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
         'DataSources/KmlCamera',
+        'DataSources/KmlDataSource',
         'DataSources/KmlLookAt',
         'DataSources/KmlTour',
         'DataSources/KmlTourFlyTo',
@@ -37,7 +38,7 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        KmlDataSource,
+        ArcType,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -62,6 +63,7 @@ defineSuite([
         EntityCollection,
         ImageMaterialProperty,
         KmlCamera,
+        KmlDataSource,
         KmlLookAt,
         KmlTour,
         KmlTourFlyTo,
@@ -74,7 +76,9 @@ defineSuite([
         createCamera,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/KmlDataSource', function() {
 
     var parser = new DOMParser();
 
@@ -2161,7 +2165,7 @@ defineSuite([
             expect(polyline).toBeDefined();
 
             expect(polyline.positions).toBeUndefined();
-            expect(polyline.followSurface).toBeUndefined();
+            expect(polyline.arcType).toBeUndefined();
             expect(polyline.width).toBeUndefined();
             expect(polyline.show).toBeUndefined();
             expect(polyline.material).toBeUndefined();
@@ -2899,7 +2903,7 @@ defineSuite([
             var entity = entities[0];
             expect(entity.wall).toBeUndefined();
             expect(entity.polyline).toBeDefined();
-            expect(entity.polyline.followSurface.getValue()).toEqual(false);
+            expect(entity.polyline.arcType.getValue()).toEqual(ArcType.NONE);
         });
     });
 
@@ -2923,7 +2927,7 @@ defineSuite([
 
             var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
             expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
-            expect(entity.polyline.followSurface.getValue()).toEqual(false);
+            expect(entity.polyline.arcType.getValue()).toEqual(ArcType.NONE);
         });
     });
 
@@ -2968,7 +2972,7 @@ defineSuite([
             expect(entities.length).toEqual(1);
 
             var entity = entities[0];
-            expect(entity.polyline.followSurface).toBeUndefined();
+            expect(entity.polyline.arcType).toBeUndefined();
             var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
             expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
         });
@@ -2991,7 +2995,7 @@ defineSuite([
             expect(entities.length).toEqual(1);
 
             var entity = entities[0];
-            expect(entity.polyline.followSurface).toBeUndefined();
+            expect(entity.polyline.arcType).toBeUndefined();
             var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
             expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
         });
@@ -3864,16 +3868,16 @@ defineSuite([
         });
     });
 
-	it('can load styles from a KML file with namespaces', function() {
-		return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
-			console.debug(dataSource.entities.values[2]);
-			var polyline = dataSource.entities.values[2].polyline;
-			var expectedColor = Color.fromBytes(0xff, 0x00, 0xff, 0x00);
-			var polylineColor = polyline.material.color.getValue();
-			expect(polylineColor).toEqual(expectedColor);
-			expect(polyline.width.getValue()).toEqual(10);
-		});
-	});
+    it('can load styles from a KML file with namespaces', function() {
+        return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
+            console.debug(dataSource.entities.values[2]);
+            var polyline = dataSource.entities.values[2].polyline;
+            var expectedColor = Color.fromBytes(0xff, 0x00, 0xff, 0x00);
+            var polylineColor = polyline.material.color.getValue();
+            expect(polylineColor).toEqual(expectedColor);
+            expect(polyline.width.getValue()).toEqual(10);
+        });
+    });
 
     it('Boolean values can use true string', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
@@ -3958,7 +3962,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
-			expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon refreshMode: onInterval');
+            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon refreshMode: onInterval');
         });
     });
 
@@ -4540,4 +4544,5 @@ defineSuite([
             expect(dataSource.entities.values[2].polygon.material.color.getValue()).not.toEqual(dataSource.entities.values[3].polygon.material.color.getValue());
         });
     });
+});
 });

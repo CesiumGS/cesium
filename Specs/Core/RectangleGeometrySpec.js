@@ -1,5 +1,4 @@
-defineSuite([
-        'Core/RectangleGeometry',
+define([
         'Core/arrayFill',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -9,10 +8,10 @@ defineSuite([
         'Core/Math',
         'Core/Matrix2',
         'Core/Rectangle',
+        'Core/RectangleGeometry',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        RectangleGeometry,
         arrayFill,
         Cartesian2,
         Cartesian3,
@@ -22,9 +21,12 @@ defineSuite([
         CesiumMath,
         Matrix2,
         Rectangle,
+        RectangleGeometry,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/RectangleGeometry', function() {
 
     it('computes positions', function() {
         var rectangle = new Rectangle(-2.0, -1.0, 0.0, 1.0);
@@ -61,6 +63,28 @@ defineSuite([
         var expectedSECorner = Ellipsoid.WGS84.cartographicToCartesian(Rectangle.southeast(rectangle));
         expect(new Cartesian3(positions[0], positions[1], positions[2])).toEqualEpsilon(expectedNWCorner, CesiumMath.EPSILON8);
         expect(new Cartesian3(positions[length - 3], positions[length - 2], positions[length - 1])).toEqualEpsilon(expectedSECorner, CesiumMath.EPSILON8);
+    });
+
+    it('computes positions at north pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, 89.0, -179.0, 90.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle
+        }));
+        var positions = m.attributes.position.values;
+        expect(positions.length).toEqual(5 * 3);
+        expect(m.indices.length).toEqual(3 * 3);
+    });
+
+    it('computes positions at south pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, -179.0, -89.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle
+        }));
+        var positions = m.attributes.position.values;
+        expect(positions.length).toEqual(5 * 3);
+        expect(m.indices.length).toEqual(3 * 3);
     });
 
     it('computes all attributes', function() {
@@ -205,6 +229,32 @@ defineSuite([
 
         expect(positions.length).toEqual(42 * 3); // (9 fill + 8 edge + 4 corners) * 2 to duplicate for bottom
         expect(m.indices.length).toEqual(32 * 3); // 8 * 2 for fill top and bottom + 4 triangles * 4 walls
+    });
+
+    it('computes positions extruded at the north pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, 89.0, -179.0, 90.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            extrudedHeight : 2
+        }));
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(26 * 3); // (5 fill + 5 edge + 3 corners) * 2 to duplicate for bottom
+        expect(m.indices.length).toEqual(16 * 3); // 3 * 2 for fill top and bottom + 2 triangles * 5 walls
+    });
+
+    it('computes positions extruded at the south pole', function() {
+        var rectangle = Rectangle.fromDegrees(-180.0, -90.0, -179.0, -89.0);
+        var m = RectangleGeometry.createGeometry(new RectangleGeometry({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            rectangle : rectangle,
+            extrudedHeight : 2
+        }));
+        var positions = m.attributes.position.values;
+
+        expect(positions.length).toEqual(26 * 3); // (5 fill + 5 edge + 3 corners) * 2 to duplicate for bottom
+        expect(m.indices.length).toEqual(16 * 3); // 3 * 2 for fill top and bottom + 2 triangles * 5 walls
     });
 
     it('computes all attributes extruded', function() {
@@ -490,4 +540,5 @@ defineSuite([
     });
     var packedInstance = [-2.0, -1.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, -1];
     createPackableSpecs(RectangleGeometry, rectangle, packedInstance);
+});
 });

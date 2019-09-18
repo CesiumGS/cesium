@@ -25,7 +25,6 @@ define([
                 return 0.0;
             },
             _surface : {},
-            tileLoadedEvent : new Event(),
             imageryLayersUpdatedEvent : new Event(),
             _terrainProvider : undefined,
             terrainProviderChanged : new Event(),

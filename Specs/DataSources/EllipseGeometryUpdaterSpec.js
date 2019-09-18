@@ -1,12 +1,11 @@
-defineSuite([
-        'DataSources/EllipseGeometryUpdater',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
-        'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
         'Core/TimeIntervalCollection',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
+        'DataSources/EllipseGeometryUpdater',
         'DataSources/EllipseGraphics',
         'DataSources/Entity',
         'DataSources/SampledPositionProperty',
@@ -18,14 +17,13 @@ defineSuite([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        EllipseGeometryUpdater,
         ApproximateTerrainHeights,
         Cartesian3,
-        GeometryOffsetAttribute,
         JulianDate,
         TimeIntervalCollection,
         ConstantPositionProperty,
         ConstantProperty,
+        EllipseGeometryUpdater,
         EllipseGraphics,
         Entity,
         SampledPositionProperty,
@@ -36,7 +34,9 @@ defineSuite([
         createGeometryUpdaterGroundGeometrySpecs,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/EllipseGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -333,3 +333,4 @@ defineSuite([
 
     createGeometryUpdaterGroundGeometrySpecs(EllipseGeometryUpdater, 'ellipse', createBasicEllipseWithoutHeight, createDynamicEllipseWithoutHeight, getScene);
 }, 'WebGL');
+});

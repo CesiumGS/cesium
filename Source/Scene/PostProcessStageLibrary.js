@@ -1,13 +1,13 @@
 define([
         '../Core/buildModuleUrl',
-        '../Core/createGuid',
         '../Core/Color',
+        '../Core/createGuid',
         '../Core/defined',
         '../Core/defineProperties',
         '../Core/deprecationWarning',
         '../Core/destroyObject',
         '../Core/Ellipsoid',
-        '../Shaders/PostProcessStages/AcesTonemapping',
+        '../Shaders/PostProcessStages/AcesTonemappingStage',
         '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
         '../Shaders/PostProcessStages/AmbientOcclusionModulate',
         '../Shaders/PostProcessStages/BlackAndWhite',
@@ -32,8 +32,8 @@ define([
         './PostProcessStageSampleMode'
     ], function(
         buildModuleUrl,
-        createGuid,
         Color,
+        createGuid,
         defined,
         defineProperties,
         deprecationWarning,

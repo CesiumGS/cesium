@@ -28,6 +28,7 @@ define([
         './ShaderCache',
         './ShaderProgram',
         './Texture',
+        './TextureCache',
         './UniformState',
         './VertexArray'
     ], function(
@@ -60,6 +61,7 @@ define([
         ShaderCache,
         ShaderProgram,
         Texture,
+        TextureCache,
         UniformState,
         VertexArray) {
     'use strict';
@@ -189,6 +191,7 @@ define([
         this._canvas = canvas;
 
         options = clone(options, true);
+        // Don't use defaultValue.EMPTY_OBJECT here because the options object gets modified in the next line.
         options = defaultValue(options, {});
         options.allowTextureFilterAnisotropic = defaultValue(options.allowTextureFilterAnisotropic, true);
         var webglOptions = defaultValue(options.webgl, {});
@@ -234,6 +237,7 @@ define([
         this._throwOnWebGLError = false;
 
         this._shaderCache = new ShaderCache(this);
+        this._textureCache = new TextureCache();
 
         var gl = glContext;
 
@@ -467,6 +471,11 @@ define([
         shaderCache : {
             get : function() {
                 return this._shaderCache;
+            }
+        },
+        textureCache : {
+            get : function() {
+                return this._textureCache;
             }
         },
         uniformState : {
@@ -1288,6 +1297,7 @@ define([
         }
 
         this._shaderCache = this._shaderCache.destroy();
+        this._textureCache = this._textureCache.destroy();
         this._defaultTexture = this._defaultTexture && this._defaultTexture.destroy();
         this._defaultCubeMap = this._defaultCubeMap && this._defaultCubeMap.destroy();
 

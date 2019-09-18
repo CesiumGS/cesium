@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Iau2000Orientation',
         'Core/JulianDate',
         'Core/TimeStandard'
@@ -6,7 +6,9 @@ defineSuite([
         Iau2000Orientation,
         JulianDate,
         TimeStandard) {
-    'use strict';
+        'use strict';
+
+describe('Core/Iau2000Orientation', function() {
 
     it('compute moon', function() {
         var date = new JulianDate(2451545.0, -32.184, TimeStandard.TAI);
@@ -24,4 +26,5 @@ defineSuite([
         expect(param.rotation).toEqual(expectedRotation);
         expect(param.rotationRate).toEqual(expectedRotationRate);
     });
+});
 });

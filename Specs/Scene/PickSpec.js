@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -14,18 +14,17 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
         'Core/Transforms',
-        'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Globe',
         'Scene/PointPrimitiveCollection',
         'Scene/Primitive',
-        'Scene/Scene',
         'Scene/SceneMode',
         'Specs/Cesium3DTilesTester',
         'Specs/createCanvas',
         'Specs/createScene',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'ThirdParty/when'
     ], 'Scene/Pick', function(
         Cartesian3,
         Cartographic,
@@ -42,21 +41,22 @@ defineSuite([
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
         Transforms,
-        Cesium3DTileset,
         Cesium3DTileStyle,
         EllipsoidSurfaceAppearance,
         Globe,
         PointPrimitiveCollection,
         Primitive,
-        Scene,
         SceneMode,
         Cesium3DTilesTester,
         createCanvas,
         createScene,
-        pollToPromise) {
-    'use strict';
+        pollToPromise,
+        when) {
+        'use strict';
 
-    // It's not easily possible to mock the asynchronous pick functions
+describe('Core/Cartesian3', function() {
+
+    // It's not easily possible to mock the most detailed pick functions
     // so don't run those tests when using the WebGL stub
     var webglStub = !!window.webglStub;
 
@@ -68,6 +68,9 @@ defineSuite([
     var offscreenRectangle = Rectangle.fromDegrees(-45.0002, -1.0002, -45.0001, -1.0001);
     var primitiveRay;
     var offscreenRay;
+
+    var batchedTilesetUrl = 'Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json';
+    var pointCloudTilesetUrl = 'Data/Cesium3DTiles/PointCloud/PointCloudWithTransform/tileset.json';
 
     beforeAll(function() {
         scene = createScene({
@@ -138,8 +141,7 @@ defineSuite([
         return createRectangle(height, smallRectangle);
     }
 
-    function createTileset() {
-        var url = 'Data/Cesium3DTiles/Batched/BatchedWithTransformBox/tileset.json';
+    function createTileset(url) {
         var options = {
             maximumScreenSpaceError : 0
         };
@@ -442,7 +444,7 @@ defineSuite([
     });
 
     function picksFromRayTileset(style) {
-        return createTileset().then(function(tileset) {
+        return createTileset(batchedTilesetUrl).then(function(tileset) {
             tileset.style = style;
             expect(scene).toPickFromRayAndCall(function(result) {
                 var primitive = result.object.primitive;
@@ -561,7 +563,18 @@ defineSuite([
             expect(scene).toPickFromRayAndCall(function(result) {
                 expect(result.object.primitive).toBe(point);
                 expect(result.position).toBeUndefined();
-            }, primitiveRay);
+            }, primitiveRay, [], 0.01);
+        });
+
+        it('changes width', function() {
+            return createTileset(pointCloudTilesetUrl).then(function(tileset) {
+                expect(scene).toPickFromRayAndCall(function(result) {
+                    expect(result).toBeUndefined();
+                }, primitiveRay, [], 0.1);
+                expect(scene).toPickFromRayAndCall(function(result) {
+                    expect(result).toBeDefined();
+                }, primitiveRay, [], 1.0);
+            });
         });
 
         it('throws if ray is undefined', function() {
@@ -812,6 +825,17 @@ defineSuite([
             }, primitiveRay, 2, [rectangle5, rectangle3]);
         });
 
+        it('changes width', function() {
+            return createTileset(pointCloudTilesetUrl).then(function(tileset) {
+                expect(scene).toDrillPickFromRayAndCall(function(result) {
+                    expect(result.length).toBe(0);
+                }, primitiveRay, [], 0.1);
+                expect(scene).toDrillPickFromRayAndCall(function(result) {
+                    expect(result.length).toBe(1);
+                }, primitiveRay, Number.POSITIVE_INFINITY, [], 1.0);
+            });
+        });
+
         it('throws if ray is undefined', function() {
             expect(function() {
                 scene.drillPickFromRay(undefined);
@@ -840,7 +864,7 @@ defineSuite([
             }
 
             var cartographic = new Cartographic(0.0, 0.0);
-            return createTileset().then(function(tileset) {
+            return createTileset(batchedTilesetUrl).then(function(tileset) {
                 expect(scene).toSampleHeightAndCall(function(height) {
                     expect(height).toBeGreaterThan(0.0);
                     expect(height).toBeLessThan(20.0); // Rough height of tile
@@ -940,6 +964,22 @@ defineSuite([
             }, cartographic);
         });
 
+        it('changes width', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            var cartographic = new Cartographic(0.0, 0.0);
+            return createTileset(pointCloudTilesetUrl).then(function(tileset) {
+                expect(scene).toSampleHeightAndCall(function(height) {
+                    expect(height).toBeUndefined();
+                }, cartographic, [], 0.1);
+                expect(scene).toSampleHeightAndCall(function(height) {
+                    expect(height).toBeDefined();
+                }, cartographic, [], 1.0);
+            });
+        });
+
         it('throws if position is undefined', function() {
             if (!scene.sampleHeightSupported) {
                 return;
@@ -999,7 +1039,7 @@ defineSuite([
             }
 
             var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100000.0);
-            return createTileset().then(function(tileset) {
+            return createTileset(batchedTilesetUrl).then(function(tileset) {
                 expect(scene).toClampToHeightAndCall(function(position) {
                     var minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
                     var maximumHeight = minimumHeight + 20.0; // Rough height of tile
@@ -1105,6 +1145,22 @@ defineSuite([
             }, cartesian);
         });
 
+        it('changes width', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100.0);
+            return createTileset(pointCloudTilesetUrl).then(function(tileset) {
+                expect(scene).toClampToHeightAndCall(function(clampedCartesian) {
+                    expect(clampedCartesian).toBeUndefined();
+                }, cartesian, [], 0.1);
+                expect(scene).toClampToHeightAndCall(function(clampedCartesian) {
+                    expect(clampedCartesian).toBeDefined();
+                }, cartesian, [], 1.0);
+            });
+        });
+
         it('throws if cartesian is undefined', function() {
             if (!scene.clampToHeightSupported) {
                 return;
@@ -1157,10 +1213,10 @@ defineSuite([
         });
     });
 
-    function pickFromRayMostDetailed(ray, objectsToExclude) {
+    function pickFromRayMostDetailed(ray, objectsToExclude, width) {
         var result;
         var completed = false;
-        scene.pickFromRayMostDetailed(ray, objectsToExclude).then(function(pickResult) {
+        scene.pickFromRayMostDetailed(ray, objectsToExclude, width).then(function(pickResult) {
             result = pickResult;
             completed = true;
         });
@@ -1173,10 +1229,10 @@ defineSuite([
         });
     }
 
-    function drillPickFromRayMostDetailed(ray, limit, objectsToExclude) {
+    function drillPickFromRayMostDetailed(ray, limit, objectsToExclude, width) {
         var result;
         var completed = false;
-        scene.drillPickFromRayMostDetailed(ray, limit, objectsToExclude).then(function(pickResult) {
+        scene.drillPickFromRayMostDetailed(ray, limit, objectsToExclude, width).then(function(pickResult) {
             result = pickResult;
             completed = true;
         });
@@ -1189,10 +1245,10 @@ defineSuite([
         });
     }
 
-    function sampleHeightMostDetailed(cartographics, objectsToExclude) {
+    function sampleHeightMostDetailed(cartographics, objectsToExclude, width) {
         var result;
         var completed = false;
-        scene.sampleHeightMostDetailed(cartographics, objectsToExclude).then(function(pickResult) {
+        scene.sampleHeightMostDetailed(cartographics, objectsToExclude, width).then(function(pickResult) {
             result = pickResult;
             completed = true;
         });
@@ -1205,10 +1261,10 @@ defineSuite([
         });
     }
 
-    function clampToHeightMostDetailed(cartesians, objectsToExclude) {
+    function clampToHeightMostDetailed(cartesians, objectsToExclude, width) {
         var result;
         var completed = false;
-        scene.clampToHeightMostDetailed(cartesians, objectsToExclude).then(function(pickResult) {
+        scene.clampToHeightMostDetailed(cartesians, objectsToExclude, width).then(function(pickResult) {
             result = pickResult;
             completed = true;
         });
@@ -1227,7 +1283,7 @@ defineSuite([
                 return;
             }
             scene.camera.setView({ destination : offscreenRectangle });
-            return createTileset().then(function(tileset) {
+            return createTileset(batchedTilesetUrl).then(function(tileset) {
                 return pickFromRayMostDetailed(primitiveRay).then(function(result) {
                     var primitive = result.object.primitive;
                     var position = result.position;
@@ -1251,7 +1307,7 @@ defineSuite([
                 return;
             }
             scene.camera.setView({ destination : offscreenRectangle });
-            return createTileset().then(function(tileset) {
+            return createTileset(batchedTilesetUrl).then(function(tileset) {
                 var objectsToExclude = [tileset];
                 return pickFromRayMostDetailed(primitiveRay, objectsToExclude).then(function(result) {
                     expect(result).toBeUndefined();
@@ -1264,7 +1320,7 @@ defineSuite([
                 return;
             }
             scene.camera.setView({ destination : offscreenRectangle });
-            return createTileset().then(function(tileset) {
+            return createTileset(batchedTilesetUrl).then(function(tileset) {
                 tileset.show = false;
                 return pickFromRayMostDetailed(primitiveRay).then(function(result) {
                     expect(result).toBeUndefined();
@@ -1345,9 +1401,24 @@ defineSuite([
             });
 
             scene.camera.setView({ destination : offscreenRectangle });
-            return pickFromRayMostDetailed(primitiveRay).then(function(result) {
+            return pickFromRayMostDetailed(primitiveRay, [], 0.01).then(function(result) {
                 expect(result.object.primitive).toBe(point);
                 expect(result.position).toBeUndefined();
+            });
+        });
+
+        it('changes width', function() {
+            if (webglStub) {
+                return;
+            }
+            return createTileset(pointCloudTilesetUrl).then(function(tileset) {
+                var promise1 = pickFromRayMostDetailed(primitiveRay, [], 0.1).then(function(result) {
+                    expect(result).toBeUndefined();
+                });
+                var promise2 = pickFromRayMostDetailed(primitiveRay, [], 1.0).then(function(result) {
+                    expect(result).toBeDefined();
+                });
+                return when.all([promise1, promise2]);
             });
         });
 
@@ -1639,6 +1710,21 @@ defineSuite([
             });
         });
 
+        it('changes width', function() {
+            if (webglStub) {
+                return;
+            }
+            return createTileset(pointCloudTilesetUrl).then(function(tileset) {
+                var promise1 = drillPickFromRayMostDetailed(primitiveRay, 1, [], 0.1).then(function(result) {
+                    expect(result.length).toBe(0);
+                });
+                var promise2 = drillPickFromRayMostDetailed(primitiveRay, 1, [], 1.0).then(function(result) {
+                    expect(result.length).toBe(1);
+                });
+                return when.all([promise1, promise2]);
+            });
+        });
+
         it('throws if ray is undefined', function() {
             expect(function() {
                 scene.drillPickFromRayMostDetailed(undefined);
@@ -1667,7 +1753,7 @@ defineSuite([
             }
 
             var cartographics = [new Cartographic(0.0, 0.0)];
-            return createTileset().then(function() {
+            return createTileset(batchedTilesetUrl).then(function() {
                 return sampleHeightMostDetailed(cartographics).then(function(updatedCartographics) {
                     var height = updatedCartographics[0].height;
                     expect(height).toBeGreaterThan(0.0);
@@ -1829,6 +1915,24 @@ defineSuite([
             });
         });
 
+        it('changes width', function() {
+            if (!scene.sampleHeightSupported) {
+                return;
+            }
+
+            var cartographics1 = [new Cartographic(0.0, 0.0)];
+            var cartographics2 = [new Cartographic(0.0, 0.0)];
+            return createTileset(pointCloudTilesetUrl).then(function(tileset) {
+                var promise1 = sampleHeightMostDetailed(cartographics1, [], 0.1).then(function(updatedCartographics1) {
+                    expect(updatedCartographics1[0].height).toBeUndefined();
+                });
+                var promise2 = sampleHeightMostDetailed(cartographics2, [], 1.0).then(function(updatedCartographics2) {
+                    expect(updatedCartographics2[0].height).toBeDefined();
+                });
+                return when.all([promise1, promise2]);
+            });
+        });
+
         it('handles empty array', function() {
             if (!scene.sampleHeightSupported) {
                 return;
@@ -1899,7 +2003,7 @@ defineSuite([
             }
 
             var cartesians = [Cartesian3.fromRadians(0.0, 0.0, 100000.0)];
-            return createTileset().then(function() {
+            return createTileset(batchedTilesetUrl).then(function() {
                 return clampToHeightMostDetailed(cartesians).then(function(updatedCartesians) {
                     var minimumHeight = Cartesian3.fromRadians(0.0, 0.0).x;
                     var maximumHeight = minimumHeight + 20.0; // Rough height of tile
@@ -2073,6 +2177,25 @@ defineSuite([
             });
         });
 
+        it('changes width', function() {
+            if (!scene.clampToHeightSupported) {
+                return;
+            }
+
+            var cartesian = Cartesian3.fromRadians(0.0, 0.0, 100.0);
+            var cartesians1 = [Cartesian3.clone(cartesian)];
+            var cartesians2 = [Cartesian3.clone(cartesian)];
+            return createTileset(pointCloudTilesetUrl).then(function(tileset) {
+                var promise1 = clampToHeightMostDetailed(cartesians1, [], 0.1).then(function(clampedCartesians1) {
+                    expect(clampedCartesians1[0]).toBeUndefined();
+                });
+                var promise2 = clampToHeightMostDetailed(cartesians2, [], 1.0).then(function(clampedCartesians2) {
+                    expect(clampedCartesians2[0]).toBeDefined();
+                });
+                return when.all([promise1, promise2]);
+            });
+        });
+
         it('handles empty array', function() {
             if (!scene.clampToHeightSupported) {
                 return;
@@ -2232,3 +2355,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

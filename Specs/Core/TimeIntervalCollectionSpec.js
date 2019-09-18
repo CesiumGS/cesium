@@ -1,18 +1,20 @@
-defineSuite([
-        'Core/TimeIntervalCollection',
+define([
         'Core/defaultValue',
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
         'Core/TimeStandard'
     ], function(
-        TimeIntervalCollection,
         defaultValue,
         Iso8601,
         JulianDate,
         TimeInterval,
+        TimeIntervalCollection,
         TimeStandard) {
-    'use strict';
+        'use strict';
+
+describe('Core/TimeIntervalCollection', function() {
 
     function defaultDataCallback(interval, index) {
         return index;
@@ -1903,4 +1905,5 @@ defineSuite([
         // Remove leading interval and check the rest
         checkIntervals(intervals, julianDates, false, false, dataCallback);
     });
+});
 });

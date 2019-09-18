@@ -10,10 +10,12 @@
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
     <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
     <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
     </script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
@@ -92,6 +94,7 @@ var entityPath = viewer.entities.add({
         resolution : 1,
         material : new Cesium.PolylineGlowMaterialProperty({
             glowPower : 0.3,
+            taperPower : 0.3,
             color : Cesium.Color.PALEGOLDENROD
         })
     }

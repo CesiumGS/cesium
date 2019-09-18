@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Widgets/InfoBox/InfoBoxViewModel'
     ], function(
         InfoBoxViewModel) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/InfoBox/InfoBoxViewModel', function() {
 
     it('constructor sets expected values', function() {
         var viewModel = new InfoBoxViewModel();
@@ -48,4 +50,5 @@ defineSuite([
         viewModel.isCameraTracking = true;
         expect(viewModel.cameraIconPath).toBe(disableTrackingPath);
     });
+});
 });

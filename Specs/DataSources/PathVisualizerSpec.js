@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/PathVisualizer',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
@@ -12,6 +11,7 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
         'DataSources/PathGraphics',
+        'DataSources/PathVisualizer',
         'DataSources/PolylineGlowMaterialProperty',
         'DataSources/PolylineOutlineMaterialProperty',
         'DataSources/ReferenceProperty',
@@ -21,7 +21,6 @@ defineSuite([
         'Scene/SceneMode',
         'Specs/createScene'
     ], function(
-        PathVisualizer,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
@@ -34,6 +33,7 @@ defineSuite([
         ConstantProperty,
         EntityCollection,
         PathGraphics,
+        PathVisualizer,
         PolylineGlowMaterialProperty,
         PolylineOutlineMaterialProperty,
         ReferenceProperty,
@@ -42,7 +42,9 @@ defineSuite([
         TimeIntervalCollectionPositionProperty,
         SceneMode,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PathVisualizer', function() {
 
     var scene;
     var visualizer;
@@ -231,6 +233,7 @@ defineSuite([
         path.material = new PolylineGlowMaterialProperty();
         path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
         path.material.glowPower = new ConstantProperty(0.2);
+        path.material.taperPower = new ConstantProperty(0.15);
         path.width = new ConstantProperty(12.5);
         path.leadTime = new ConstantProperty(25);
         path.trailTime = new ConstantProperty(10);
@@ -245,6 +248,7 @@ defineSuite([
         var material = primitive.material;
         expect(material.uniforms.color).toEqual(testObject.path.material.color.getValue(updateTime));
         expect(material.uniforms.glowPower).toEqual(testObject.path.material.glowPower.getValue(updateTime));
+        expect(material.uniforms.taperPower).toEqual(testObject.path.material.taperPower.getValue(updateTime));
     });
 
     it('Reuses primitives when hiding one and showing another', function() {
@@ -661,3 +665,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

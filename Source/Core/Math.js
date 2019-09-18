@@ -199,6 +199,13 @@ define([
     CesiumMath.SIXTY_FOUR_KILOBYTES = 64 * 1024;
 
     /**
+     * 4 * 1024 * 1024 * 1024
+     * @type {Number}
+     * @constant
+     */
+    CesiumMath.FOUR_GIGABYTES = 4 * 1024 * 1024 * 1024;
+
+    /**
      * Returns the sign of the value; 1 if the value is positive, -1 if the value is
      * negative, or 0 if the value is 0.
      *
@@ -227,29 +234,41 @@ define([
     };
 
     /**
-     * Converts a scalar value in the range [-1.0, 1.0] to a SNORM in the range [0, rangeMax]
+     * Converts a scalar value in the range [-1.0, 1.0] to a SNORM in the range [0, rangeMaximum]
      * @param {Number} value The scalar value in the range [-1.0, 1.0]
-     * @param {Number} [rangeMax=255] The maximum value in the mapped range, 255 by default.
-     * @returns {Number} A SNORM value, where 0 maps to -1.0 and rangeMax maps to 1.0.
+     * @param {Number} [rangeMaximum=255] The maximum value in the mapped range, 255 by default.
+     * @returns {Number} A SNORM value, where 0 maps to -1.0 and rangeMaximum maps to 1.0.
      *
      * @see CesiumMath.fromSNorm
      */
-    CesiumMath.toSNorm = function(value, rangeMax) {
-        rangeMax = defaultValue(rangeMax, 255);
-        return Math.round((CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMax);
+    CesiumMath.toSNorm = function(value, rangeMaximum) {
+        rangeMaximum = defaultValue(rangeMaximum, 255);
+        return Math.round((CesiumMath.clamp(value, -1.0, 1.0) * 0.5 + 0.5) * rangeMaximum);
     };
 
     /**
-     * Converts a SNORM value in the range [0, rangeMax] to a scalar in the range [-1.0, 1.0].
-     * @param {Number} value SNORM value in the range [0, 255]
-     * @param {Number} [rangeMax=255] The maximum value in the SNORM range, 255 by default.
+     * Converts a SNORM value in the range [0, rangeMaximum] to a scalar in the range [-1.0, 1.0].
+     * @param {Number} value SNORM value in the range [0, rangeMaximum]
+     * @param {Number} [rangeMaximum=255] The maximum value in the SNORM range, 255 by default.
      * @returns {Number} Scalar in the range [-1.0, 1.0].
      *
      * @see CesiumMath.toSNorm
      */
-    CesiumMath.fromSNorm = function(value, rangeMax) {
-        rangeMax = defaultValue(rangeMax, 255);
-        return CesiumMath.clamp(value, 0.0, rangeMax) / rangeMax * 2.0 - 1.0;
+    CesiumMath.fromSNorm = function(value, rangeMaximum) {
+        rangeMaximum = defaultValue(rangeMaximum, 255);
+        return CesiumMath.clamp(value, 0.0, rangeMaximum) / rangeMaximum * 2.0 - 1.0;
+    };
+
+    /**
+     * Converts a scalar value in the range [rangeMinimum, rangeMaximum] to a scalar in the range [0.0, 1.0]
+     * @param {Number} value The scalar value in the range [rangeMinimum, rangeMaximum]
+     * @param {Number} rangeMinimum The minimum value in the mapped range.
+     * @param {Number} rangeMaximum The maximum value in the mapped range.
+     * @returns {Number} A scalar value, where rangeMinimum maps to 0.0 and rangeMaximum maps to 1.0.
+     */
+    CesiumMath.normalize = function(value, rangeMinimum, rangeMaximum) {
+        rangeMaximum = Math.max(rangeMaximum - rangeMinimum, 0.0);
+        return rangeMaximum === 0.0 ? 0.0 : CesiumMath.clamp((value - rangeMinimum) / rangeMaximum, 0.0, 1.0);
     };
 
     /**
@@ -583,6 +602,108 @@ define([
         return absDiff <= absoluteEpsilon || absDiff <= relativeEpsilon * Math.max(Math.abs(left), Math.abs(right));
     };
 
+    /**
+     * Determines if the left value is less than the right value. If the two values are within
+     * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns false.
+     *
+     * @param {Number} left The first number to compare.
+     * @param {Number} right The second number to compare.
+     * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
+     * @returns {Boolean} <code>true</code> if <code>left</code> is less than <code>right</code> by more than
+     *          <code>absoluteEpsilon<code>. <code>false</code> if <code>left</code> is greater or if the two
+     *          values are nearly equal.
+     */
+    CesiumMath.lessThan = function(left, right, absoluteEpsilon) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('first is required.');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('second is required.');
+        }
+        if (!defined(absoluteEpsilon)) {
+            throw new DeveloperError('relativeEpsilon is required.');
+        }
+        //>>includeEnd('debug');
+        return left - right < -absoluteEpsilon;
+    };
+
+    /**
+     * Determines if the left value is less than or equal to the right value. If the two values are within
+     * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns true.
+     *
+     * @param {Number} left The first number to compare.
+     * @param {Number} right The second number to compare.
+     * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
+     * @returns {Boolean} <code>true</code> if <code>left</code> is less than <code>right</code> or if the
+     *          the values are nearly equal.
+     */
+    CesiumMath.lessThanOrEquals = function(left, right, absoluteEpsilon) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('first is required.');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('second is required.');
+        }
+        if (!defined(absoluteEpsilon)) {
+            throw new DeveloperError('relativeEpsilon is required.');
+        }
+        //>>includeEnd('debug');
+        return left - right < absoluteEpsilon;
+    };
+
+    /**
+     * Determines if the left value is greater the right value. If the two values are within
+     * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns false.
+     *
+     * @param {Number} left The first number to compare.
+     * @param {Number} right The second number to compare.
+     * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
+     * @returns {Boolean} <code>true</code> if <code>left</code> is greater than <code>right</code> by more than
+     *          <code>absoluteEpsilon<code>. <code>false</code> if <code>left</code> is less or if the two
+     *          values are nearly equal.
+     */
+    CesiumMath.greaterThan = function(left, right, absoluteEpsilon) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('first is required.');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('second is required.');
+        }
+        if (!defined(absoluteEpsilon)) {
+            throw new DeveloperError('relativeEpsilon is required.');
+        }
+        //>>includeEnd('debug');
+        return left - right > absoluteEpsilon;
+    };
+
+    /**
+     * Determines if the left value is greater than or equal to the right value. If the two values are within
+     * <code>absoluteEpsilon</code> of each other, they are considered equal and this function returns true.
+     *
+     * @param {Number} left The first number to compare.
+     * @param {Number} right The second number to compare.
+     * @param {Number} absoluteEpsilon The absolute epsilon to use in comparison.
+     * @returns {Boolean} <code>true</code> if <code>left</code> is greater than <code>right</code> or if the
+     *          the values are nearly equal.
+     */
+    CesiumMath.greaterThanOrEquals = function(left, right, absoluteEpsilon) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(left)) {
+            throw new DeveloperError('first is required.');
+        }
+        if (!defined(right)) {
+            throw new DeveloperError('second is required.');
+        }
+        if (!defined(absoluteEpsilon)) {
+            throw new DeveloperError('relativeEpsilon is required.');
+        }
+        //>>includeEnd('debug');
+        return left - right > -absoluteEpsilon;
+    };
+
     var factorials = [1];
 
     /**
@@ -611,7 +732,9 @@ define([
         if (n >= length) {
             var sum = factorials[length - 1];
             for (var i = length; i <= n; i++) {
-                factorials.push(sum * i);
+                var next = sum * i;
+                factorials.push(next);
+                sum = next;
             }
         }
         return factorials[n];

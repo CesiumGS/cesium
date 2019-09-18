@@ -1,9 +1,7 @@
-defineSuite([
-        'Scene/WebMapTileServiceImageryProvider',
+define([
         'Core/Clock',
         'Core/ClockStep',
         'Core/Credit',
-        'Core/DefaultProxy',
         'Core/GeographicTilingScheme',
         'Core/JulianDate',
         'Core/objectToQuery',
@@ -18,14 +16,13 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/WebMapTileServiceImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/Uri'
     ], function(
-        WebMapTileServiceImageryProvider,
         Clock,
         ClockStep,
         Credit,
-        DefaultProxy,
         GeographicTilingScheme,
         JulianDate,
         objectToQuery,
@@ -40,9 +37,12 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
+        WebMapTileServiceImageryProvider,
         pollToPromise,
         Uri) {
-    'use strict';
+        'use strict';
+
+describe('Scene/WebMapTileServiceImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -364,7 +364,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -414,7 +414,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
@@ -683,4 +683,5 @@ defineSuite([
                 expect(lastUrl).toEqual(uri.toString());
             });
     });
+});
 });

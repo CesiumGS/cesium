@@ -1,18 +1,20 @@
-defineSuite([
-        'Core/IonResource',
+define([
         'Core/Ion',
+        'Core/IonResource',
         'Core/RequestErrorEvent',
         'Core/Resource',
         'Core/RuntimeError',
         'ThirdParty/when'
     ], function(
-        IonResource,
         Ion,
+        IonResource,
         RequestErrorEvent,
         Resource,
         RuntimeError,
         when) {
-'use strict';
+        'use strict';
+
+describe('Core/IonResource', function() {
 
     var assetId = 123890213;
     var endpoint = {
@@ -221,12 +223,26 @@ defineSuite([
         expect(_makeRequest.calls.argsFor(0)[0]).toBe(options);
     });
 
+    it('Calls base _makeRequest with no changes for ion assets with external urls', function() {
+        var originalOptions = {};
+        var expectedOptions = {};
+
+        var _makeRequest = spyOn(Resource.prototype, '_makeRequest');
+        var endpointResource = IonResource._createEndpointResource(assetId);
+        var resource = new IonResource(endpoint, endpointResource);
+        resource.url = 'http://test.invalid';
+        resource._makeRequest(originalOptions);
+        expect(_makeRequest).toHaveBeenCalledWith(expectedOptions);
+    });
+
     it('Calls base fetchImage with preferBlob for ion assets', function() {
         var fetchImage = spyOn(Resource.prototype, 'fetchImage');
         var endpointResource = IonResource._createEndpointResource(assetId);
         var resource = new IonResource(endpoint, endpointResource);
-        resource.fetchImage(false, true);
-        expect(fetchImage).toHaveBeenCalledWith(true, true);
+        resource.fetchImage();
+        expect(fetchImage).toHaveBeenCalledWith({
+            preferBlob : true
+        });
     });
 
     it('Calls base fetchImage with no changes for external assets', function() {
@@ -240,8 +256,12 @@ defineSuite([
         var fetchImage = spyOn(Resource.prototype, 'fetchImage');
         var endpointResource = IonResource._createEndpointResource(assetId);
         var resource = new IonResource(externalEndpoint, endpointResource);
-        resource.fetchImage(false, true);
-        expect(fetchImage).toHaveBeenCalledWith(false, true);
+        resource.fetchImage({
+            preferBlob : false
+        });
+        expect(fetchImage).toHaveBeenCalledWith({
+            preferBlob : false
+        });
     });
 
     describe('retryCallback', function() {
@@ -322,4 +342,5 @@ defineSuite([
             });
         });
     });
+});
 });

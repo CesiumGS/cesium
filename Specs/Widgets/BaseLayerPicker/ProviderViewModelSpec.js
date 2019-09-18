@@ -1,12 +1,14 @@
-defineSuite([
-        'Widgets/BaseLayerPicker/ProviderViewModel',
+define([
         'ThirdParty/knockout',
+        'Widgets/BaseLayerPicker/ProviderViewModel',
         'Widgets/createCommand'
     ], function(
-        ProviderViewModel,
         knockout,
+        ProviderViewModel,
         createCommand) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/BaseLayerPicker/ProviderViewModel', function() {
 
     var spyCreationFunction;
     beforeEach(function() {
@@ -150,4 +152,5 @@ defineSuite([
             }).toThrowDeveloperError();
         });
     });
+});
 });

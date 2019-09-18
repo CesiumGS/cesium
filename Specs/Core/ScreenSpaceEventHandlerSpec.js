@@ -1,24 +1,26 @@
-defineSuite([
-        'Core/ScreenSpaceEventHandler',
+define([
         'Core/Cartesian2',
         'Core/clone',
         'Core/combine',
         'Core/defined',
         'Core/FeatureDetection',
         'Core/KeyboardEventModifier',
+        'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
         'Specs/DomEventSimulator'
     ], function(
-        ScreenSpaceEventHandler,
         Cartesian2,
         clone,
         combine,
         defined,
         FeatureDetection,
         KeyboardEventModifier,
+        ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         DomEventSimulator) {
-    'use strict';
+        'use strict';
+
+describe('Core/ScreenSpaceEventHandler', function() {
 
     var usePointerEvents;
     var element;
@@ -1207,6 +1209,89 @@ defineSuite([
         expect(action).not.toHaveBeenCalled();
     });
 
+    it('handles touch and hold gesture', function() {
+        jasmine.clock().install();
+
+        var delay = ScreenSpaceEventHandler.touchHoldDelayMilliseconds;
+
+        var eventType = ScreenSpaceEventType.RIGHT_CLICK;
+
+        var action = createCloningSpy('action');
+        handler.setInputAction(action, eventType);
+
+        expect(handler.getInputAction(eventType)).toEqual(action);
+
+        // start, then end
+        function simulateInput(timeout) {
+            var touchStartPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+            var touchEndPosition = {
+                clientX : 1,
+                clientY : 2
+            };
+
+            if (usePointerEvents) {
+                DomEventSimulator.firePointerDown(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchStartPosition));
+                jasmine.clock().tick(timeout);
+                DomEventSimulator.firePointerUp(element, combine({
+                    pointerType : 'touch',
+                    pointerId : 1
+                }, touchEndPosition));
+            } else {
+                DomEventSimulator.fireTouchStart(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchStartPosition)]
+                });
+                jasmine.clock().tick(timeout);
+                DomEventSimulator.fireTouchEnd(element, {
+                    changedTouches : [combine({
+                        identifier : 0
+                    }, touchEndPosition)]
+                });
+            }
+        }
+
+        simulateInput(delay + 1);
+
+        expect(action.calls.count()).toEqual(1);
+        expect(action).toHaveBeenCalledWith({
+            position : new Cartesian2(1, 2)
+        });
+
+        // Should not be fired if hold delay is less than touchHoldDelayMilliseconds.
+        action.calls.reset();
+
+        simulateInput(delay - 1);
+
+        expect(action).not.toHaveBeenCalled();
+
+        // Should not be fired after removal.
+        action.calls.reset();
+
+        handler.removeInputAction(eventType);
+
+        simulateInput(delay + 1);
+
+        expect(action).not.toHaveBeenCalled();
+
+        // Should not fire click action if touch and hold is triggered.
+        eventType = ScreenSpaceEventType.LEFT_CLICK;
+
+        handler.setInputAction(action, eventType);
+
+        simulateInput(delay + 1);
+
+        expect(action).not.toHaveBeenCalled();
+
+        jasmine.clock().uninstall();
+    });
+
     it('treats touch cancel as touch end for touch clicks', function() {
         var eventType = ScreenSpaceEventType.LEFT_CLICK;
 
@@ -1287,4 +1372,5 @@ defineSuite([
 
         expect(element.removeEventListener.calls.count()).toEqual(element.addEventListener.calls.count());
     });
+});
 });

@@ -31,6 +31,7 @@ define([
         './Cesium3DTileColorBlendMode',
         './CullFace',
         './getBinaryAccessor',
+        './StencilConstants',
         './StencilFunction',
         './StencilOperation'
     ], function(
@@ -66,6 +67,7 @@ define([
         Cesium3DTileColorBlendMode,
         CullFace,
         getBinaryAccessor,
+        StencilConstants,
         StencilFunction,
         StencilOperation) {
     'use strict';
@@ -1261,30 +1263,42 @@ define([
                 derivedCommands.originalCommand = deriveCommand(command);
                 command.dirty = false;
             }
+            var originalCommand = derivedCommands.originalCommand;
 
-            if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE) {
+            if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_OPAQUE && command.pass !== Pass.TRANSLUCENT) {
                 if (!defined(derivedCommands.translucent)) {
-                    derivedCommands.translucent = deriveTranslucentCommand(derivedCommands.originalCommand);
+                    derivedCommands.translucent = deriveTranslucentCommand(originalCommand);
                 }
             }
 
-            if (bivariateVisibilityTest) {
-                if (command.pass !== Pass.TRANSLUCENT && !finalResolution) {
-                    if (!defined(derivedCommands.zback)) {
-                        derivedCommands.zback = deriveZBackfaceCommand(frameState.context, derivedCommands.originalCommand);
+            if (styleCommandsNeeded !== StyleCommandsNeeded.ALL_TRANSLUCENT && command.pass !== Pass.TRANSLUCENT) {
+                if (!defined(derivedCommands.opaque)) {
+                    derivedCommands.opaque = deriveOpaqueCommand(originalCommand);
+                }
+
+                if (bivariateVisibilityTest) {
+                    if (!finalResolution) {
+                        if (!defined(derivedCommands.zback)) {
+                            derivedCommands.zback = deriveZBackfaceCommand(frameState.context, originalCommand);
+                        }
+                        tileset._backfaceCommands.push(derivedCommands.zback);
                     }
-                    tileset._backfaceCommands.push(derivedCommands.zback);
-                }
-                if (!defined(derivedCommands.stencil) || tile._selectionDepth !== getLastSelectionDepth(derivedCommands.stencil)) {
-                    derivedCommands.stencil = deriveStencilCommand(derivedCommands.originalCommand, tile._selectionDepth);
+                    if (!defined(derivedCommands.stencil) || (tile._selectionDepth !== getLastSelectionDepth(derivedCommands.stencil))) {
+                        if (command.renderState.depthMask) {
+                            derivedCommands.stencil = deriveStencilCommand(originalCommand, tile._selectionDepth);
+                        } else {
+                            // Ignore if tile does not write depth
+                            derivedCommands.stencil = derivedCommands.opaque;
+                        }
+                    }
                 }
             }
 
-            var opaqueCommand = bivariateVisibilityTest ? derivedCommands.stencil : derivedCommands.originalCommand;
+            var opaqueCommand = bivariateVisibilityTest ? derivedCommands.stencil : derivedCommands.opaque;
             var translucentCommand = derivedCommands.translucent;
 
             // If the command was originally opaque:
-            //    * If the styling applied to the tile is all opaque, use the original command
+            //    * If the styling applied to the tile is all opaque, use the opaque command
             //      (with one additional uniform needed for the shader).
             //    * If the styling is all translucent, use new (cached) derived commands (front
             //      and back faces) with a translucent render state.
@@ -1308,7 +1322,7 @@ define([
                 // as of now, a style can't change an originally translucent feature to
                 // opaque since the style's alpha is modulated, not a replacement.  When
                 // this changes, we need to derive new opaque commands here.
-                commandList[i] = opaqueCommand;
+                commandList[i] = originalCommand;
             }
         }
     };
@@ -1345,6 +1359,12 @@ define([
         var derivedCommand = DrawCommand.shallowClone(command);
         derivedCommand.pass = Pass.TRANSLUCENT;
         derivedCommand.renderState = getTranslucentRenderState(command.renderState);
+        return derivedCommand;
+    }
+
+    function deriveOpaqueCommand(command) {
+        var derivedCommand = DrawCommand.shallowClone(command);
+        derivedCommand.renderState = getOpaqueRenderState(command.renderState);
         return derivedCommand;
     }
 
@@ -1385,6 +1405,10 @@ define([
             factor : 5.0,
             units : 5.0
         };
+        // Set the 3D Tiles bit
+        rs.stencilTest = StencilConstants.setCesium3DTileBit();
+        rs.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
+
         derivedCommand.renderState = RenderState.fromCache(rs);
         derivedCommand.castShadows = false;
         derivedCommand.receiveShadows = false;
@@ -1395,27 +1419,27 @@ define([
     }
 
     function deriveStencilCommand(command, reference) {
-        var derivedCommand = command;
-        if (command.renderState.depthMask) { // ignore if tile does not write depth (ex. translucent)
-            // Tiles only draw if their selection depth is >= the tile drawn already. They write their
-            // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
-            derivedCommand = DrawCommand.shallowClone(command);
-            var rs = clone(derivedCommand.renderState, true);
-            // Stencil test is masked to the most significant 4 bits so the reference is shifted.
-            // This is to prevent clearing the stencil before classification which needs the least significant
-            // bits for increment/decrement operations.
-            rs.stencilTest.enabled = true;
-            rs.stencilTest.mask = 0xF0;
-            rs.stencilTest.reference = reference << 4;
-            rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
-            rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
-            derivedCommand.renderState = RenderState.fromCache(rs);
-        }
+        // Tiles only draw if their selection depth is >= the tile drawn already. They write their
+        // selection depth to the stencil buffer to prevent ancestor tiles from drawing on top
+        var derivedCommand = DrawCommand.shallowClone(command);
+        var rs = clone(derivedCommand.renderState, true);
+        // Stencil test is masked to the most significant 3 bits so the reference is shifted. Writes 0 for the terrain bit
+        rs.stencilTest.enabled = true;
+        rs.stencilTest.mask = StencilConstants.SKIP_LOD_MASK;
+        rs.stencilTest.reference = StencilConstants.CESIUM_3D_TILE_MASK | (reference << StencilConstants.SKIP_LOD_BIT_SHIFT);
+        rs.stencilTest.frontFunction = StencilFunction.GREATER_OR_EQUAL;
+        rs.stencilTest.frontOperation.zPass = StencilOperation.REPLACE;
+        rs.stencilTest.backFunction = StencilFunction.GREATER_OR_EQUAL;
+        rs.stencilTest.backOperation.zPass = StencilOperation.REPLACE;
+        rs.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK | StencilConstants.SKIP_LOD_MASK;
+        derivedCommand.renderState = RenderState.fromCache(rs);
         return derivedCommand;
     }
 
     function getLastSelectionDepth(stencilCommand) {
-        return stencilCommand.renderState.stencilTest.reference >>> 4;
+        // Isolate the selection depth from the stencil reference.
+        var reference = stencilCommand.renderState.stencilTest.reference;
+        return (reference & StencilConstants.SKIP_LOD_MASK) >>> StencilConstants.SKIP_LOD_BIT_SHIFT;
     }
 
     function getTranslucentRenderState(renderState) {
@@ -1424,6 +1448,14 @@ define([
         rs.depthTest.enabled = true;
         rs.depthMask = false;
         rs.blending = BlendingState.ALPHA_BLEND;
+
+        return RenderState.fromCache(rs);
+    }
+
+    function getOpaqueRenderState(renderState) {
+        var rs = clone(renderState, true);
+        rs.stencilTest = StencilConstants.setCesium3DTileBit();
+        rs.stencilMask = StencilConstants.CESIUM_3D_TILE_MASK;
 
         return RenderState.fromCache(rs);
     }

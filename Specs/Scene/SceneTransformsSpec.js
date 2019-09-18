@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/SceneTransforms',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
@@ -8,9 +7,9 @@ defineSuite([
         'Core/Rectangle',
         'Scene/Camera',
         'Scene/SceneMode',
+        'Scene/SceneTransforms',
         'Specs/createScene'
     ], function(
-        SceneTransforms,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
@@ -19,8 +18,11 @@ defineSuite([
         Rectangle,
         Camera,
         SceneMode,
+        SceneTransforms,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/SceneTransforms', function() {
 
     var scene;
     var defaultCamera;
@@ -240,3 +242,4 @@ defineSuite([
         scene.destroyForSpecs();
     });
 }, 'WebGL');
+});
