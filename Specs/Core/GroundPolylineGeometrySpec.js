@@ -1,5 +1,4 @@
-defineSuite([
-        'Core/GroundPolylineGeometry',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/ArcType',
         'Core/arraySlice',
@@ -7,11 +6,11 @@ defineSuite([
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
+        'Core/GroundPolylineGeometry',
         'Core/Math',
         'Core/WebMercatorProjection',
         'Specs/createPackableSpecs'
     ], function(
-        GroundPolylineGeometry,
         ApproximateTerrainHeights,
         ArcType,
         arraySlice,
@@ -19,10 +18,13 @@ defineSuite([
         Cartographic,
         Ellipsoid,
         GeographicProjection,
+        GroundPolylineGeometry,
         CesiumMath,
         WebMercatorProjection,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/GroundPolylineGeometry', function() {
 
     beforeAll(function() {
         return ApproximateTerrainHeights.initialize();
@@ -652,4 +654,5 @@ defineSuite([
     packedInstance.push(0.0); // scene3DModeOnly = false
 
     createPackableSpecs(GroundPolylineGeometry, polyline, packedInstance);
+});
 });

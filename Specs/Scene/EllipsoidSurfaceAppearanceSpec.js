@@ -1,24 +1,26 @@
-defineSuite([
-        'Scene/EllipsoidSurfaceAppearance',
+define([
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Scene/Appearance',
+        'Scene/EllipsoidSurfaceAppearance',
         'Scene/Material',
         'Scene/Primitive',
         'Specs/createScene'
     ], function(
-        EllipsoidSurfaceAppearance,
         ColorGeometryInstanceAttribute,
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
         Appearance,
+        EllipsoidSurfaceAppearance,
         Material,
         Primitive,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/EllipsoidSurfaceAppearance', function() {
 
     var scene;
     var rectangle;
@@ -83,3 +85,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/VelocityVectorProperty',
+define([
         'Core/Cartesian3',
         'Core/Event',
         'Core/ExtrapolationType',
@@ -7,9 +6,9 @@ defineSuite([
         'Core/Math',
         'DataSources/CallbackProperty',
         'DataSources/ConstantPositionProperty',
-        'DataSources/SampledPositionProperty'
+        'DataSources/SampledPositionProperty',
+        'DataSources/VelocityVectorProperty'
     ], function(
-        VelocityVectorProperty,
         Cartesian3,
         Event,
         ExtrapolationType,
@@ -17,8 +16,11 @@ defineSuite([
         CesiumMath,
         CallbackProperty,
         ConstantPositionProperty,
-        SampledPositionProperty) {
-    'use strict';
+        SampledPositionProperty,
+        VelocityVectorProperty) {
+        'use strict';
+
+describe('DataSources/VelocityVectorProperty', function() {
 
     var time = JulianDate.now();
 
@@ -234,4 +236,5 @@ defineSuite([
             property.getValue();
         }).toThrowDeveloperError();
     });
+});
 });

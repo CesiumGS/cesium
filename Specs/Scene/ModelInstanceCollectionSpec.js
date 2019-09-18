@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/ModelInstanceCollection',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/defaultValue',
@@ -11,12 +10,12 @@ defineSuite([
         'Core/Resource',
         'Core/Transforms',
         'Scene/Model',
+        'Scene/ModelInstanceCollection',
         'Scene/ShadowMode',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        ModelInstanceCollection,
         BoundingSphere,
         Cartesian3,
         defaultValue,
@@ -28,11 +27,14 @@ defineSuite([
         Resource,
         Transforms,
         Model,
+        ModelInstanceCollection,
         ShadowMode,
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/ModelInstanceCollection', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var cesiumAirUrl = './Data/Models/CesiumAir/Cesium_Air.gltf';
@@ -690,3 +692,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

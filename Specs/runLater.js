@@ -1,9 +1,9 @@
 define([
-    'Core/defaultValue',
-    'ThirdParty/when'
-], function(
-    defaultValue,
-    when) {
+        'Core/defaultValue',
+        'ThirdParty/when'
+    ], function(
+        defaultValue,
+        when) {
     'use strict';
 
     function runLater(functionToRunLater, milliseconds) {

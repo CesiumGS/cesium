@@ -1,22 +1,24 @@
-defineSuite([
-        'Core/EllipsoidalOccluder',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/EllipsoidalOccluder',
         'Core/IntersectionTests',
         'Core/Math',
         'Core/Ray',
         'Core/Rectangle'
     ], function(
-        EllipsoidalOccluder,
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
+        EllipsoidalOccluder,
         IntersectionTests,
         CesiumMath,
         Ray,
         Rectangle) {
-    'use strict';
+        'use strict';
+
+describe('Core/EllipsoidalOccluder', function() {
 
     it('uses ellipsoid', function() {
         var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);
@@ -294,4 +296,5 @@ defineSuite([
             expect(foundOneNearZero).toBe(true);
         });
     });
+});
 });

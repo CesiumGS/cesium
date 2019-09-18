@@ -1,14 +1,16 @@
-defineSuite([
-        'Widgets/CesiumInspector/CesiumInspector',
+define([
         'Core/Ellipsoid',
         'Scene/Globe',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/CesiumInspector/CesiumInspector'
     ], function(
-        CesiumInspector,
         Ellipsoid,
         Globe,
-        createScene) {
-    'use strict';
+        createScene,
+        CesiumInspector) {
+        'use strict';
+
+describe('Widgets/CesiumInspector/CesiumInspector', function() {
 
     var scene;
     beforeAll(function() {
@@ -55,3 +57,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

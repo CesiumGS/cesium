@@ -99,23 +99,23 @@ define([
         this._onDataSourceAdded(undefined, defaultDataSource);
         this._defaultDataSource = defaultDataSource;
 
-        var removeDefaultDataSoureListener;
+        var removeDefaultDataSourceListener;
         var removeDataSourceCollectionListener;
         if (!primitivesAdded) {
             var that = this;
             var addPrimitives = function() {
                 scene.primitives.add(primitives);
                 scene.groundPrimitives.add(groundPrimitives);
-                removeDefaultDataSoureListener();
+                removeDefaultDataSourceListener();
                 removeDataSourceCollectionListener();
-                that._removeDefaultDataSoureListener = undefined;
+                that._removeDefaultDataSourceListener = undefined;
                 that._removeDataSourceCollectionListener = undefined;
             };
-            removeDefaultDataSoureListener = defaultDataSource.entities.collectionChanged.addEventListener(addPrimitives);
+            removeDefaultDataSourceListener = defaultDataSource.entities.collectionChanged.addEventListener(addPrimitives);
             removeDataSourceCollectionListener = dataSourceCollection.dataSourceAdded.addEventListener(addPrimitives);
         }
 
-        this._removeDefaultDataSoureListener = removeDefaultDataSoureListener;
+        this._removeDefaultDataSourceListener = removeDefaultDataSourceListener;
         this._removeDataSourceCollectionListener = removeDataSourceCollectionListener;
 
         this._ready = false;
@@ -225,8 +225,8 @@ define([
         }
         this._onDataSourceRemoved(undefined, this._defaultDataSource);
 
-        if (defined(this._removeDefaultDataSoureListener)) {
-            this._removeDefaultDataSoureListener();
+        if (defined(this._removeDefaultDataSourceListener)) {
+            this._removeDefaultDataSourceListener();
             this._removeDataSourceCollectionListener();
         } else {
             this._scene.primitives.remove(this._primitives);

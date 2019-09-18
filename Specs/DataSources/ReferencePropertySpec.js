@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/ReferenceProperty',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
@@ -9,9 +8,9 @@ defineSuite([
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
-        'DataSources/EntityCollection'
+        'DataSources/EntityCollection',
+        'DataSources/ReferenceProperty'
     ], function(
-        ReferenceProperty,
         Cartesian3,
         Color,
         JulianDate,
@@ -21,8 +20,11 @@ defineSuite([
         ConstantPositionProperty,
         ConstantProperty,
         Entity,
-        EntityCollection) {
-    'use strict';
+        EntityCollection,
+        ReferenceProperty) {
+        'use strict';
+
+describe('DataSources/ReferenceProperty', function() {
 
     var time = JulianDate.now();
 
@@ -299,4 +301,5 @@ defineSuite([
             property.getValue(time);
         }).toThrowRuntimeError();
     });
+});
 });

@@ -1,15 +1,34 @@
 Change Log
 ==========
 
+### 1.61 - 2019-09-03
+
+##### Additions :tada:
+* Added optional `index` parameter to `PrimitiveCollection.add`. [#8041](https://github.com/AnalyticalGraphicsInc/cesium/pull/8041)
+* Cesium now renders at native device resolution by default instead of CSS pixel resolution, to go back to the old behavior, set `viewer.resolutionScale = 1.0 / window.devicePixelRatio`. [#8082](https://github.com/AnalyticalGraphicsInc/cesium/issues/8082)
+* Added `getByName` method to `DataSourceCollection` allowing to retrieve `DataSource`s by their name property from the collection
+
+##### Fixes :wrench:
+* Disable FXAA by default. To re-enable, set `scene.postProcessStages.fxaa.enabled = true` [#7875](https://github.com/AnalyticalGraphicsInc/cesium/issues/7875)
+* Fixed a crash when a glTF model used `KHR_texture_transform` without a sampler defined. [#7916](https://github.com/AnalyticalGraphicsInc/cesium/issues/7916)
+* Fixed post-processing selection filtering to work for bloom. [#7984](https://github.com/AnalyticalGraphicsInc/cesium/issues/7984)
+* Disabled HDR by default to improve visual quality in most standard use cases. Set `viewer.scene.highDynamicRange = true` to re-enable. [#7966](https://github.com/AnalyticalGraphicsInc/cesium/issues/7966)
+* Fixed a bug that causes hidden point primitives to still appear on some operating systems. [#8043](https://github.com/AnalyticalGraphicsInc/cesium/issues/8043)
+* Fix negative altitude altitude handling in `GoogleEarthEnterpriseTerrainProvider`. [#8109](https://github.com/AnalyticalGraphicsInc/cesium/pull/8109)
+* Fixed issue where KTX or CRN files would not be properly identified. [#7979](https://github.com/AnalyticalGraphicsInc/cesium/issues/7979)
+* Fixed multiple globe materials making the globe darker. [#7726](https://github.com/AnalyticalGraphicsInc/cesium/issues/7726)
+* Fixed atmosphere brightness when High Dynamic Range is disabled. [#8149](https://github.com/AnalyticalGraphicsInc/cesium/issues/8149)
+
 ### 1.60 - 2019-08-01
 
 ##### Additions :tada:
 * Reworked label rendering to use signed distance fields (SDF) for crisper text. [#7730](https://github.com/AnalyticalGraphicsInc/cesium/pull/7730)
 * Added a [new Sandcastle example](https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Labels%20SDF.html) to showcase the new SDF labels.
-* Added `totalScale` property to `Label` which is the total scale of the label taking into account the label's scale and the relative size of the desired font compared to the generated glyph size.
 * Added support for polygon holes to CZML. [#7991](https://github.com/AnalyticalGraphicsInc/cesium/pull/7991)
+* Added `totalScale` property to `Label` which is the total scale of the label taking into account the label's scale and the relative size of the desired font compared to the generated glyph size.
 
 ##### Fixes :wrench:
+* Fixed crash when using ArcGIS terrain with clipping planes. [#7998](https://github.com/AnalyticalGraphicsInc/cesium/pull/7998)
 * `PolygonGraphics.hierarchy` now converts constant array values to a `PolygonHierarchy` when set, so code that accesses the value of the property can rely on it always being a `PolygonHierarchy`.
 * Fixed a bug with lengthwise texture coordinates in the first segment of ground polylines, as observed in some WebGL implementations such as Chrome on Linux. [#8017](https://github.com/AnalyticalGraphicsInc/cesium/issues/8017)
 * Fixed undefined `quadDetails` error from zooming into the map really close. [#8011](https://github.com/AnalyticalGraphicsInc/cesium/pull/8011)

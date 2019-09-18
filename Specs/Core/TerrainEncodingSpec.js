@@ -1,22 +1,24 @@
-defineSuite([
-        'Core/TerrainEncoding',
+define([
         'Core/AttributeCompression',
         'Core/AxisAlignedBoundingBox',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Matrix4',
+        'Core/TerrainEncoding',
         'Core/TerrainQuantization',
         'Core/Transforms'
     ], function(
-        TerrainEncoding,
         AttributeCompression,
         AxisAlignedBoundingBox,
         Cartesian2,
         Cartesian3,
         Matrix4,
+        TerrainEncoding,
         TerrainQuantization,
         Transforms) {
-    'use strict';
+        'use strict';
+
+describe('Core/TerrainEncoding', function() {
 
     var center;
     var maximum;
@@ -341,4 +343,5 @@ defineSuite([
         expect(cloned.matrix).toEqual(encoding.matrix);
         expect(cloned.hasVertexNormals).toEqual(encoding.hasVertexNormals);
     });
+});
 });

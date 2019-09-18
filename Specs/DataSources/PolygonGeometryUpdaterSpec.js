@@ -1,21 +1,20 @@
-defineSuite([
-        'DataSources/PolygonGeometryUpdater',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
-        'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
-        'Core/JulianDate',
-        'Core/Math',
         'Core/CoplanarPolygonGeometry',
         'Core/CoplanarPolygonOutlineGeometry',
+        'Core/Ellipsoid',
+        'Core/JulianDate',
+        'Core/Math',
         'Core/PolygonGeometry',
-        'Core/PolygonOutlineGeometry',
         'Core/PolygonHierarchy',
+        'Core/PolygonOutlineGeometry',
         'Core/TimeIntervalCollection',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
+        'DataSources/PolygonGeometryUpdater',
         'DataSources/PolygonGraphics',
         'DataSources/PropertyArray',
         'DataSources/SampledPositionProperty',
@@ -29,23 +28,22 @@ defineSuite([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        PolygonGeometryUpdater,
         ApproximateTerrainHeights,
         ArcType,
         Cartesian3,
         Color,
-        Ellipsoid,
-        GeometryOffsetAttribute,
-        JulianDate,
-        CesiumMath,
         CoplanarPolygonGeometry,
         CoplanarPolygonOutlineGeometry,
+        Ellipsoid,
+        JulianDate,
+        CesiumMath,
         PolygonGeometry,
-        PolygonOutlineGeometry,
         PolygonHierarchy,
+        PolygonOutlineGeometry,
         TimeIntervalCollection,
         ConstantProperty,
         Entity,
+        PolygonGeometryUpdater,
         PolygonGraphics,
         PropertyArray,
         SampledPositionProperty,
@@ -58,7 +56,9 @@ defineSuite([
         createGeometryUpdaterGroundGeometrySpecs,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolygonGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -454,3 +454,4 @@ defineSuite([
 
     createGeometryUpdaterGroundGeometrySpecs(PolygonGeometryUpdater, 'polygon', createBasicPolygonWithoutHeight, createDynamicPolygonWithoutHeight, getScene);
 }, 'WebGL');
+});

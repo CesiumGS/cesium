@@ -1,16 +1,18 @@
-defineSuite([
-        'Widgets/ProjectionPicker/ProjectionPickerViewModel',
+define([
         'Core/OrthographicFrustum',
         'Core/PerspectiveFrustum',
         'Scene/SceneMode',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/ProjectionPicker/ProjectionPickerViewModel'
     ], function(
-        ProjectionPickerViewModel,
         OrthographicFrustum,
         PerspectiveFrustum,
         SceneMode,
-        createScene) {
-    'use strict';
+        createScene,
+        ProjectionPickerViewModel) {
+        'use strict';
+
+describe('Widgets/ProjectionPicker/ProjectionPickerViewModel', function() {
 
     var scene;
 
@@ -95,3 +97,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

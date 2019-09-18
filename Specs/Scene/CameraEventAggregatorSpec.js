@@ -1,22 +1,24 @@
-defineSuite([
-        'Scene/CameraEventAggregator',
+define([
         'Core/Cartesian2',
         'Core/combine',
         'Core/FeatureDetection',
         'Core/KeyboardEventModifier',
+        'Scene/CameraEventAggregator',
         'Scene/CameraEventType',
         'Specs/createCanvas',
         'Specs/DomEventSimulator'
     ], function(
-        CameraEventAggregator,
         Cartesian2,
         combine,
         FeatureDetection,
         KeyboardEventModifier,
+        CameraEventAggregator,
         CameraEventType,
         createCanvas,
         DomEventSimulator) {
-    'use strict';
+        'use strict';
+
+describe('Scene/CameraEventAggregator', function() {
 
     var usePointerEvents;
     var canvas;
@@ -309,4 +311,5 @@ defineSuite([
         handler.destroy();
         expect(handler.isDestroyed()).toEqual(true);
     });
+});
 });

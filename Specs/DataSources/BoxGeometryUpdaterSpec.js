@@ -1,10 +1,10 @@
-defineSuite([
-        'DataSources/BoxGeometryUpdater',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
         'Core/TimeIntervalCollection',
+        'DataSources/BoxGeometryUpdater',
         'DataSources/BoxGraphics',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
@@ -16,12 +16,12 @@ defineSuite([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        BoxGeometryUpdater,
         Cartesian3,
         Color,
         GeometryOffsetAttribute,
         JulianDate,
         TimeIntervalCollection,
+        BoxGeometryUpdater,
         BoxGraphics,
         ConstantPositionProperty,
         ConstantProperty,
@@ -32,7 +32,9 @@ defineSuite([
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/BoxGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -186,3 +188,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(BoxGeometryUpdater, 'box', createDynamicBox, getScene);
 }, 'WebGL');
+});

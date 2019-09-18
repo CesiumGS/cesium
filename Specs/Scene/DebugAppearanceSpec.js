@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/DebugAppearance',
+define([
         'Core/ComponentDatatype',
         'Core/defaultValue',
         'Core/GeometryInstance',
@@ -8,10 +7,10 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/VertexFormat',
         'Scene/Appearance',
+        'Scene/DebugAppearance',
         'Scene/Primitive',
         'Specs/createScene'
     ], function(
-        DebugAppearance,
         ComponentDatatype,
         defaultValue,
         GeometryInstance,
@@ -20,9 +19,12 @@ defineSuite([
         RectangleGeometry,
         VertexFormat,
         Appearance,
+        DebugAppearance,
         Primitive,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/DebugAppearance', function() {
 
     var scene;
     var primitive;
@@ -366,3 +368,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

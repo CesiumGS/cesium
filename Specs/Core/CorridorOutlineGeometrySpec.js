@@ -1,20 +1,22 @@
-defineSuite([
-        'Core/CorridorOutlineGeometry',
+define([
         'Core/arrayFill',
         'Core/Cartesian3',
         'Core/CornerType',
+        'Core/CorridorOutlineGeometry',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
-        CorridorOutlineGeometry,
         arrayFill,
         Cartesian3,
         CornerType,
+        CorridorOutlineGeometry,
         Ellipsoid,
         GeometryOffsetAttribute,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/CorridorOutlineGeometry', function() {
 
     it('throws without positions', function() {
         expect(function() {
@@ -247,4 +249,5 @@ defineSuite([
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, -1);
     createPackableSpecs(CorridorOutlineGeometry, corridor, packedInstance);
+});
 });

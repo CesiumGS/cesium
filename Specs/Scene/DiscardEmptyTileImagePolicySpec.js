@@ -1,14 +1,16 @@
-defineSuite([
-        'Scene/DiscardEmptyTileImagePolicy',
+define([
         'Core/Resource',
+        'Scene/DiscardEmptyTileImagePolicy',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        DiscardEmptyTileImagePolicy,
         Resource,
+        DiscardEmptyTileImagePolicy,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/DiscardEmptyTileImagePolicy', function() {
 
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
@@ -51,4 +53,5 @@ defineSuite([
         });
 
     });
+});
 });

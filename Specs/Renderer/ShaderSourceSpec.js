@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Renderer/ShaderSource'
     ], function(
         ShaderSource) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/ShaderSource', function() {
 
     var mockContext = {
         webgl2 : false
@@ -94,4 +96,5 @@ defineSuite([
         expect(clone.pickColorQualifier).toEqual(source.pickColorQualifier);
         expect(clone.includeBuiltIns).toEqual(source.includeBuiltIns);
     });
+});
 });

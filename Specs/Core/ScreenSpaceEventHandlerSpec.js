@@ -1,24 +1,26 @@
-defineSuite([
-        'Core/ScreenSpaceEventHandler',
+define([
         'Core/Cartesian2',
         'Core/clone',
         'Core/combine',
         'Core/defined',
         'Core/FeatureDetection',
         'Core/KeyboardEventModifier',
+        'Core/ScreenSpaceEventHandler',
         'Core/ScreenSpaceEventType',
         'Specs/DomEventSimulator'
     ], function(
-        ScreenSpaceEventHandler,
         Cartesian2,
         clone,
         combine,
         defined,
         FeatureDetection,
         KeyboardEventModifier,
+        ScreenSpaceEventHandler,
         ScreenSpaceEventType,
         DomEventSimulator) {
-    'use strict';
+        'use strict';
+
+describe('Core/ScreenSpaceEventHandler', function() {
 
     var usePointerEvents;
     var element;
@@ -1370,4 +1372,5 @@ defineSuite([
 
         expect(element.removeEventListener.calls.count()).toEqual(element.addEventListener.calls.count());
     });
+});
 });

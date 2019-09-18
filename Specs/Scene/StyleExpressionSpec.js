@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Scene/StyleExpression'
     ], function(
         StyleExpression) {
-    'use strict';
+        'use strict';
+
+describe('Scene/StyleExpression', function() {
 
     function MockFeature() {
     }
@@ -23,4 +25,5 @@ defineSuite([
             return expression.evaluateColor(feature);
         }).toThrowDeveloperError();
     });
+});
 });

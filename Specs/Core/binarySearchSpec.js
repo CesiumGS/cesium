@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/binarySearch'
     ], function(
         binarySearch) {
-    'use strict';
+        'use strict';
+
+describe('Core/binarySearch', function() {
 
     it('can perform a binary search for 0', function() {
         var array = [0, 1, 2, 3, 4, 5, 6, 7];
@@ -70,4 +72,5 @@ defineSuite([
             binarySearch([0, 1, 2], 1, undefined);
         }).toThrowDeveloperError();
     });
+});
 });
