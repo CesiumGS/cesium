@@ -12,7 +12,9 @@ Change Log
 
 ##### Fixes :wrench:
 * `Camera.flyTo` flies to the correct location in 2D when the destination crosses the international date line [#7909](https://github.com/AnalyticalGraphicsInc/cesium/pull/7909)
+* Fixed 3D tiles style coloring when multiple tilesets are in the scene [#8051](https://github.com/AnalyticalGraphicsInc/cesium/pull/8051)
 * Improved display of tile coordinates for `TileCoordinatesImageryProvider` [#8131](https://github.com/AnalyticalGraphicsInc/cesium/pull/8131)
+* Fixed relative-to-center check, `depthFailAppearance` resource freeing for `Primitive` [#8044](https://github.com/AnalyticalGraphicsInc/cesium/pull/8044)
 * Fixed undefined `quadDetails` error from zooming into the map really close. [#8011](https://github.com/AnalyticalGraphicsInc/cesium/pull/8011)
 
 ### 1.61 - 2019-09-03

@@ -515,8 +515,7 @@ define([
          *
          * @default Color.WHITE
          */
-        this.color = defaultValue(options.color, Color.WHITE);
-        this._color = new Color();
+        this.color = Color.clone(defaultValue(options.color, Color.WHITE));
         this._colorPreviousAlpha = 1.0;
 
         /**
