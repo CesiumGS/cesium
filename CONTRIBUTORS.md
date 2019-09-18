@@ -136,6 +136,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Brandon Barker](https://github.com/ProjectBarks)
    * [Peter Gagliardi](https://github.com/ptrgags)
    * [Ian Lilley](https://github.com/IanLilleyT)
+* [Northrop Grumman](http://www.northropgrumman.com)
+   * [Joseph Stein](https://github.com/nahgrin)
 
 ## [Individual CLA](Documentation/Contributors/CLAs/individual-contributor-license-agreement-v1.0.pdf)
 * [Victor Berchet](https://github.com/vicb)
@@ -205,6 +207,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Cody Guldner](https://github.com/burn123)
 * [Nacho Carnicero](https://github.com/nacho-carnicero)
 * [Y.Selim Abidin](https://github.com/SelimAbidin)
+* [Steven Trotter](https://github.com/srtrotter)
 * [Tamar Cohen](https://github.com/tamarmot)
 * [Stephen Wiseman](https://github.com/srwiseman)
 * [Gabriel Macario](https://github.com/gabriel-macario)
