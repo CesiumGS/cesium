@@ -294,7 +294,13 @@ define([
         for (var i = 0; i < length; i++) {
             var dataSource = dataSources.get(i);
 
-            var credits = dataSource.credits;
+            var credit = dataSource.credit;
+            if (defined(credit)) {
+                frameState.creditDisplay.addCredit(credit);
+            }
+
+            // Credits from the resource that the user can't remove
+            var credits = dataSource._resourceCredits;
             if (defined(credits)) {
                 var creditCount = credits.length;
                 for (var c = 0; c < creditCount; c++) {

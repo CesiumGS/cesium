@@ -513,7 +513,8 @@ define([
         this._promises = [];
         this._pinBuilder = new PinBuilder();
         this._entityCluster = new EntityCluster();
-        this._credits = [];
+        this._credit = undefined;
+        this._resourceCredits = [];
     }
 
     /**
@@ -792,13 +793,13 @@ define([
             }
         },
         /**
-         * Gets the credits that will be displayed for the data source
+         * Gets the credit that will be displayed for the data source
          * @memberof GeoJsonDataSource.prototype
-         * @type {Credit[]}
+         * @type {Credit}
          */
-        credits : {
+        credit : {
             get : function() {
-                return this._credits;
+                return this._credit;
             }
         }
     });
@@ -833,14 +834,11 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         // User specified credit
-        var credits = this._credits;
         var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
-        if (defined(credit)) {
-            credits.push(credit);
-        }
+        this._credit = credit;
 
         var promise = data;
         var sourceUri = options.sourceUri;
@@ -850,11 +848,12 @@ define([
             sourceUri = defaultValue(sourceUri, data.getUrlComponent());
 
             // Add resource credits to our list of credits to display
-            var resourceCredits = data.credits;
-            if (defined(resourceCredits)) {
-                var length = resourceCredits.length;
+            var resourceCredits = this._resourceCredits;
+            var credits = data.credits;
+            if (defined(credits)) {
+                var length = credits.length;
                 for (var i = 0; i < length; i++) {
-                    credits.push(resourceCredits[i]);
+                    resourceCredits.push(credits[i]);
                 }
             }
         }

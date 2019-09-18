@@ -175,7 +175,7 @@ describe('DataSources/KmlDataSource', function() {
         expect(dataSource.loadingEvent).toBeInstanceOf(Event);
         expect(dataSource.unsupportedNodeEvent).toBeInstanceOf(Event);
         expect(dataSource.show).toBe(true);
-        expect(dataSource.credits[0]).toBeInstanceOf(Credit);
+        expect(dataSource.credit).toBeInstanceOf(Credit);
     });
 
     it('setting name raises changed event', function() {

@@ -215,7 +215,7 @@ describe('DataSources/CzmlDataSource', function() {
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
         expect(dataSource.show).toEqual(true);
-        expect(dataSource.credits).toEqual([]);
+        expect(dataSource.credit).toBeUndefined();
     });
 
     it('show sets underlying entity collection show.', function() {
@@ -248,7 +248,7 @@ describe('DataSources/CzmlDataSource', function() {
         return CzmlDataSource.load(nameCzml, {
                 credit: 'This is my credit'
             }).then(function(dataSource) {
-                expect(dataSource.credits[0]).toBeInstanceOf(Credit);
+                expect(dataSource.credit).toBeInstanceOf(Credit);
             });
     });
 

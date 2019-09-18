@@ -2153,14 +2153,11 @@ define([
         var sourceUri = options.sourceUri;
 
         // User specified credit
-        var credits = dataSource._credits;
         var credit = options.credit;
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
-        if (defined(credit)) {
-            credits.push(credit);
-        }
+        dataSource._credit = credit;
 
         // If the czml is a URL
         if (typeof czml === 'string' || (czml instanceof Resource)) {
@@ -2169,11 +2166,12 @@ define([
             sourceUri = defaultValue(sourceUri, czml.clone());
 
             // Add resource credits to our list of credits to display
-            var resourceCredits = czml.credits;
-            if (defined(resourceCredits)) {
-                var length = resourceCredits.length;
+            var resourceCredits = dataSource._resourceCredits;
+            var credits = czml.credits;
+            if (defined(credits)) {
+                var length = credits.length;
                 for (var i = 0; i < length; i++) {
-                    credits.push(resourceCredits[i]);
+                    resourceCredits.push(credits[i]);
                 }
             }
         }
@@ -2248,7 +2246,8 @@ define([
         this._version = undefined;
         this._entityCollection = new EntityCollection(this);
         this._entityCluster = new EntityCluster();
-        this._credits = [];
+        this._credit = undefined;
+        this._resourceCredits = [];
     }
 
     /**
@@ -2371,13 +2370,13 @@ define([
             }
         },
         /**
-         * Gets the credits that will be displayed for the data source
+         * Gets the credit that will be displayed for the data source
          * @memberof CzmlDataSource.prototype
-         * @type {Credit[]}
+         * @type {Credit}
          */
-        credits : {
+        credit : {
             get : function() {
-                return this._credits;
+                return this._credit;
             }
         }
     });

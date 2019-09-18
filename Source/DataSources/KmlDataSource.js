@@ -2396,12 +2396,12 @@ define([
             sourceUri = defaultValue(sourceUri, data.clone());
 
             // Add resource credits to our list of credits to display
-            var credits = dataSource._credits;
-            var resourceCredits = data.credits;
-            if (defined(resourceCredits)) {
-                var length = resourceCredits.length;
+            var resourceCredits = dataSource._resourceCredits;
+            var credits = data.credits;
+            if (defined(credits)) {
+                var length = credits.length;
                 for (var i = 0; i < length; i++) {
-                    credits.push(resourceCredits[i]);
+                    resourceCredits.push(credits[i]);
                 }
             }
         } else {
@@ -2545,12 +2545,10 @@ define([
         if (typeof credit === 'string') {
             credit = new Credit(credit);
         }
+        this._credit = credit;
 
-        // Create a list of Credit's so they can be added from the Resource later
-        var credits = this._credits = [];
-        if (defined(credit)) {
-            credits.push(credit);
-        }
+        // Create a list of Credit's from the resource that the user can't remove
+        this._resourceCredits = [];
     }
 
     /**
@@ -2707,13 +2705,13 @@ define([
             }
         },
         /**
-         * Gets the credits that will be displayed for the data source
+         * Gets the credit that will be displayed for the data source
          * @memberof KmlDataSource.prototype
-         * @type {Credit[]}
+         * @type {Credit}
          */
-        credits : {
+        credit : {
             get : function() {
-                return this._credits;
+                return this._credit;
             }
         }
     });
