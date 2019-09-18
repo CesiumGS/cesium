@@ -304,18 +304,16 @@ define([
     GlobeSurfaceTile.prototype.processImagery = function(tile, terrainProvider, frameState, skipLoading) {
         var surfaceTile = tile.data;
         var isUpsampledOnly = tile.upsampledFromParent;
-        var isDoneLoading = true;
         var isAnyTileLoaded = false;
+        var isDoneLoading = true;
 
         // Transition imagery states
         var tileImageryCollection = surfaceTile.imagery;
-        var loadableCount = tileImageryCollection.length;
         var i, len;
         for (i = 0, len = tileImageryCollection.length; i < len; ++i) {
             var tileImagery = tileImageryCollection[i];
             if (!defined(tileImagery.loadingImagery)) {
                 isUpsampledOnly = false;
-                --loadableCount;
                 continue;
             }
 
@@ -328,7 +326,6 @@ define([
                     tileImageryCollection.splice(i, 1);
                     imageryLayer._createTileImagerySkeletons(tile, terrainProvider, i);
                     --i;
-                    --loadableCount;
                     len = tileImageryCollection.length;
                     continue;
                 } else {
@@ -349,7 +346,7 @@ define([
         tile.upsampledFromParent = isUpsampledOnly;
 
         // Allow rendering if any available layers are loaded
-        tile.renderable = tile.renderable && (isAnyTileLoaded || loadableCount === 0);
+        tile.renderable = tile.renderable && (isAnyTileLoaded || isDoneLoading);
 
         return isDoneLoading;
     };
