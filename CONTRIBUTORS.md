@@ -228,4 +228,5 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Abu Darda](https://github.com/abuDarda97)
 * [jony89](https://github.com/jony89)
 * [TJKoury](https://github.com/tjkoury)
+* [Qiming Zhang](https://github.com/bbbbx)
 
