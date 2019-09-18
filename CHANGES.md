@@ -15,6 +15,7 @@ Change Log
 * Fixed 3D tiles style coloring when multiple tilesets are in the scene [#8051](https://github.com/AnalyticalGraphicsInc/cesium/pull/8051)
 * Improved display of tile coordinates for `TileCoordinatesImageryProvider` [#8131](https://github.com/AnalyticalGraphicsInc/cesium/pull/8131)
 * Fixed relative-to-center check, `depthFailAppearance` resource freeing for `Primitive` [#8044](https://github.com/AnalyticalGraphicsInc/cesium/pull/8044)
+* Reduces size of approximateTerrainHeights.json by rounding the numbers [#7959](https://github.com/AnalyticalGraphicsInc/cesium/pull/7959)
 
 ### 1.61 - 2019-09-03
 
@@ -33,10 +34,6 @@ Change Log
 * Fixed issue where KTX or CRN files would not be properly identified. [#7979](https://github.com/AnalyticalGraphicsInc/cesium/issues/7979)
 * Fixed multiple globe materials making the globe darker. [#7726](https://github.com/AnalyticalGraphicsInc/cesium/issues/7726)
 * Fixed atmosphere brightness when High Dynamic Range is disabled. [#8149](https://github.com/AnalyticalGraphicsInc/cesium/issues/8149)
-
-
-#### Fixes :wrench:
-* Reduces size of approximateTerrainHeights.json by rounding the numbers [#7959](https://github.com/AnalyticalGraphicsInc/cesium/pull/7959)
 
 ### 1.60 - 2019-08-01
 
