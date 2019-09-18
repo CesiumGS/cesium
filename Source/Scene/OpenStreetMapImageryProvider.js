@@ -1,47 +1,47 @@
 define([
-    '../Core/Cartesian2',
-    '../Core/Cartesian3',
-    '../Core/Cartographic',
-    '../Core/appendForwardSlash',
-    '../Core/clone',
-    '../Core/combine',
-    '../Core/Credit',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/deprecationWarning',
-    '../Core/DeveloperError',
-    '../Core/Event',
-    '../Core/GeographicTilingScheme',
-    '../Core/isArray',
-    '../Core/Math',
-    '../Core/Rectangle',
-    '../Core/Resource',
-    '../Core/WebMercatorTilingScheme',
-    '../ThirdParty/when',
-    './UrlTemplateImageryProvider'
-], function(
-    Cartesian2,
-    Cartesian3,
-    Cartographic,
-    appendForwardSlash,
-    clone,
-    combine,
-    Credit,
-    defaultValue,
-    defined,
-    defineProperties,
-    deprecationWarning,
-    DeveloperError,
-    Event,
-    GeographicTilingScheme,
-    isArray,
-    CesiumMath,
-    Rectangle,
-    Resource,
-    WebMercatorTilingScheme,
-    when,
-    UrlTemplateImageryProvider) {
+        '../Core/Cartesian2',
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
+        '../Core/appendForwardSlash',
+        '../Core/clone',
+        '../Core/combine',
+        '../Core/Credit',
+        '../Core/defaultValue',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/deprecationWarning',
+        '../Core/DeveloperError',
+        '../Core/Event',
+        '../Core/GeographicTilingScheme',
+        '../Core/isArray',
+        '../Core/Math',
+        '../Core/Rectangle',
+        '../Core/Resource',
+        '../Core/WebMercatorTilingScheme',
+        '../ThirdParty/when',
+        './UrlTemplateImageryProvider'
+    ], function(
+        Cartesian2,
+        Cartesian3,
+        Cartographic,
+        appendForwardSlash,
+        clone,
+        combine,
+        Credit,
+        defaultValue,
+        defined,
+        defineProperties,
+        deprecationWarning,
+        DeveloperError,
+        Event,
+        GeographicTilingScheme,
+        isArray,
+        CesiumMath,
+        Rectangle,
+        Resource,
+        WebMercatorTilingScheme,
+        when,
+        UrlTemplateImageryProvider) {
     'use strict';
 
     var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
@@ -86,12 +86,11 @@ define([
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function OpenStreetMapImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
-        var url = defaultValue(options.url, 'https://a.tile.openstreetmap.org/');
-        url = appendForwardSlash(url);
-        url += '{z}/{x}/{y}.' + defaultValue(options.fileExtension, 'png');
-        var resource = Resource.createIfNeeded(url);
+        var resource = Resource.createIfNeeded(defaultValue(options.url, 'https://a.tile.openstreetmap.org/'));
+        resource.appendForwardSlash();
+        resource.url += '{z}/{x}/{y}.' + defaultValue(options.fileExtension, 'png');
 
         var tilingScheme = new WebMercatorTilingScheme({ ellipsoid : options.ellipsoid });
 
