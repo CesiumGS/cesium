@@ -278,7 +278,10 @@ function generateDocumentation() {
 gulp.task('generateDocumentation', generateDocumentation);
 
 gulp.task('generateDocumentation-watch', function() {
-    return gulp.watch(sourceFiles, gulp.series('generateDocumentation'));
+    return generateDocumentation().done(() => {
+        console.log('Listening for changes in documentation...');
+        return gulp.watch(sourceFiles, gulp.series('generateDocumentation'));
+    });
 });
 
 gulp.task('instrumentForCoverage', gulp.series('build', function(done) {
