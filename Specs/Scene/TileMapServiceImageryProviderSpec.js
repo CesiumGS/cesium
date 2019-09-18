@@ -11,7 +11,6 @@ define([
         'Core/Resource',
         'Core/WebMercatorProjection',
         'Core/WebMercatorTilingScheme',
-        'Scene/createTileMapServiceImageryProvider',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryState',
@@ -31,7 +30,6 @@ define([
         Resource,
         WebMercatorProjection,
         WebMercatorTilingScheme,
-        createTileMapServiceImageryProvider,
         Imagery,
         ImageryLayer,
         ImageryState,
@@ -40,7 +38,7 @@ define([
         when) {
         'use strict';
 
-describe('Scene/createTileMapServiceImageryProvider', function() {
+describe('Scene/TileMapServiceImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
