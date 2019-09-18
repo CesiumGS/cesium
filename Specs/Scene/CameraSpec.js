@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Camera',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -18,12 +17,12 @@ defineSuite([
         'Core/Rectangle',
         'Core/Transforms',
         'Core/WebMercatorProjection',
+        'Scene/Camera',
         'Scene/CameraFlightPath',
         'Scene/MapMode2D',
         'Scene/SceneMode',
         'Scene/TweenCollection'
     ], function(
-        Camera,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -42,11 +41,14 @@ defineSuite([
         Rectangle,
         Transforms,
         WebMercatorProjection,
+        Camera,
         CameraFlightPath,
         MapMode2D,
         SceneMode,
         TweenCollection) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Camera', function() {
 
     var scene;
     var camera;
@@ -3078,4 +3080,5 @@ defineSuite([
         expect(camera.positionWCDeltaMagnitude).toEqual(0);
         expect(camera.positionWCDeltaMagnitudeLastFrame).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
     });
+});
 });

@@ -1,28 +1,30 @@
-defineSuite([
-        'DataSources/CompositeEntityCollection',
+define([
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DataSources/BillboardGraphics',
+        'DataSources/CompositeEntityCollection',
         'DataSources/CompositePositionProperty',
         'DataSources/CompositeProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
         'DataSources/EntityCollection'
     ], function(
-        CompositeEntityCollection,
         Iso8601,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
         BillboardGraphics,
+        CompositeEntityCollection,
         CompositePositionProperty,
         CompositeProperty,
         ConstantProperty,
         Entity,
         EntityCollection) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CompositeEntityCollection', function() {
 
     function CollectionListener() {
         this.timesCalled = 0;
@@ -898,4 +900,5 @@ defineSuite([
             composite.getById(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

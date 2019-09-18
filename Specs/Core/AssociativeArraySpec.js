@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/AssociativeArray'
     ], function(
         AssociativeArray) {
-    'use strict';
+        'use strict';
+
+describe('Core/AssociativeArray', function() {
 
     it('constructor has expected default values', function() {
         var associativeArray = new AssociativeArray();
@@ -75,4 +77,5 @@ defineSuite([
         var associativeArray = new AssociativeArray();
         expect(associativeArray.remove(undefined)).toBe(false);
     });
+});
 });

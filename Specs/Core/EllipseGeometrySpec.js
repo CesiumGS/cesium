@@ -1,7 +1,7 @@
-defineSuite([
-        'Core/EllipseGeometry',
+define([
         'Core/arrayFill',
         'Core/Cartesian3',
+        'Core/EllipseGeometry',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Core/Math',
@@ -9,16 +9,18 @@ defineSuite([
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        EllipseGeometry,
         arrayFill,
         Cartesian3,
+        EllipseGeometry,
         Ellipsoid,
         GeometryOffsetAttribute,
         CesiumMath,
         Rectangle,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/EllipseGeometry', function() {
 
     it('throws without a center', function() {
         expect(function() {
@@ -420,4 +422,5 @@ defineSuite([
     var packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 1.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, CesiumMath.PI_OVER_TWO, 0.0, 0.1, 0.0, 0.0, -1];
     createPackableSpecs(EllipseGeometry, packableInstance, packedInstance);
 
+});
 });

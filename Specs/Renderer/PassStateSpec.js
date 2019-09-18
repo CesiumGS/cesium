@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Renderer/PassState'
     ], function(
         PassState) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/PassState', function() {
 
     it('creates a pass state', function() {
         var context = {};
@@ -12,4 +14,5 @@ defineSuite([
         expect(passState.blendingEnabled).not.toBeDefined();
         expect(passState.scissorTest).not.toBeDefined();
     });
+});
 });

@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/PolylineGeometryUpdater',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/ArcType',
         'Core/BoundingSphere',
@@ -21,6 +20,7 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/Entity',
         'DataSources/GridMaterialProperty',
+        'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
         'DataSources/PropertyArray',
         'DataSources/SampledPositionProperty',
@@ -33,7 +33,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        PolylineGeometryUpdater,
         ApproximateTerrainHeights,
         ArcType,
         BoundingSphere,
@@ -55,6 +54,7 @@ defineSuite([
         ConstantProperty,
         Entity,
         GridMaterialProperty,
+        PolylineGeometryUpdater,
         PolylineGraphics,
         PropertyArray,
         SampledPositionProperty,
@@ -66,7 +66,9 @@ defineSuite([
         createDynamicProperty,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineGeometryUpdater', function() {
 
     var scene;
     beforeAll(function(){
@@ -871,3 +873,4 @@ defineSuite([
         updater.destroy();
     });
 }, 'WebGL');
+});

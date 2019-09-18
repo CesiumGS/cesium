@@ -1,28 +1,28 @@
-defineSuite([
-        'Core/Resource',
-        'Core/defaultValue',
+define([
         'Core/DefaultProxy',
+        'Core/defaultValue',
         'Core/queryToObject',
         'Core/Request',
         'Core/RequestErrorEvent',
         'Core/RequestScheduler',
-        'Core/TrustedServers',
+        'Core/Resource',
         'Specs/createCanvas',
         'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
-        Resource,
-        defaultValue,
         DefaultProxy,
+        defaultValue,
         queryToObject,
         Request,
         RequestErrorEvent,
         RequestScheduler,
-        TrustedServers,
+        Resource,
         createCanvas,
         Uri,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/Resource', function() {
 
     var dataUri = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIW2Nk+M/wHwAEBgIA5agATwAAAABJRU5ErkJggg==';
     var supportsImageBitmapOptions;
@@ -1891,6 +1891,37 @@ defineSuite([
                     expect(rejectedError).toBeInstanceOf(RequestErrorEvent);
                 });
 
+                it('is an image with status code 204 with preferImageBitmap', function() {
+                    if (!supportsImageBitmapOptions) {
+                        return;
+                    }
+
+                    var promise = Resource.fetchImage({
+                        url: './Data/Images/Green.png',
+                        preferImageBitmap: true
+                    });
+
+                    expect(promise).toBeDefined();
+
+                    var resolved = false;
+                    var resolvedValue;
+                    var rejectedError;
+                    promise.then(function(value) {
+                        resolved = true;
+                        resolvedValue = value;
+                    }).otherwise(function (error) {
+                        rejectedError = error;
+                    });
+
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeUndefined();
+
+                    fakeXHR.simulateHttpResponse(204);
+                    expect(resolved).toBe(false);
+                    expect(resolvedValue).toBeUndefined();
+                    expect(rejectedError).toBeDefined();
+                });
+
                 it('resolves undefined for status code 204', function() {
                     var promise = loadWithXhr({
                         url : 'http://example.invalid'
@@ -2309,4 +2340,5 @@ defineSuite([
         });
     });
 
+});
 });

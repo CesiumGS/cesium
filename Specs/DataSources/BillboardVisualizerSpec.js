@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/BillboardVisualizer',
+define([
         'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -10,6 +9,7 @@ defineSuite([
         'Core/JulianDate',
         'Core/NearFarScalar',
         'DataSources/BillboardGraphics',
+        'DataSources/BillboardVisualizer',
         'DataSources/BoundingSphereState',
         'DataSources/ConstantProperty',
         'DataSources/EntityCluster',
@@ -21,7 +21,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        BillboardVisualizer,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -32,6 +31,7 @@ defineSuite([
         JulianDate,
         NearFarScalar,
         BillboardGraphics,
+        BillboardVisualizer,
         BoundingSphereState,
         ConstantProperty,
         EntityCluster,
@@ -42,7 +42,9 @@ defineSuite([
         createGlobe,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/BillboardVisualizer', function() {
 
     var scene;
     var entityCluster;
@@ -416,3 +418,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

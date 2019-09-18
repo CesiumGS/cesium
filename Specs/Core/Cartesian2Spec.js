@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Cartesian2',
         'Core/Math',
         'Specs/createPackableArraySpecs',
@@ -8,7 +8,9 @@ defineSuite([
         CesiumMath,
         createPackableArraySpecs,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/Cartesian2', function() {
 
     it('construct with default values', function() {
         var cartesian = new Cartesian2();
@@ -849,4 +851,5 @@ defineSuite([
 
     createPackableSpecs(Cartesian2, new Cartesian2(1, 2), [1, 2]);
     createPackableArraySpecs(Cartesian2, [new Cartesian2(1, 2), new Cartesian2(3, 4)], [1, 2, 3, 4]);
+});
 });

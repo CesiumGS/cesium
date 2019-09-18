@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/GroundPrimitive',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/arraySlice',
         'Core/Color',
@@ -18,6 +17,7 @@ defineSuite([
         'Renderer/RenderState',
         'Scene/ClassificationType',
         'Scene/EllipsoidSurfaceAppearance',
+        'Scene/GroundPrimitive',
         'Scene/InvertClassification',
         'Scene/Material',
         'Scene/PerInstanceColorAppearance',
@@ -27,7 +27,6 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        GroundPrimitive,
         ApproximateTerrainHeights,
         arraySlice,
         Color,
@@ -46,6 +45,7 @@ defineSuite([
         RenderState,
         ClassificationType,
         EllipsoidSurfaceAppearance,
+        GroundPrimitive,
         InvertClassification,
         Material,
         PerInstanceColorAppearance,
@@ -54,7 +54,9 @@ defineSuite([
         createCanvas,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GroundPrimitive', function() {
 
     var scene;
     var context;
@@ -1387,3 +1389,4 @@ defineSuite([
         ApproximateTerrainHeights._terrainHeights = terrainHeights;
     });
 }, 'WebGL');
+});

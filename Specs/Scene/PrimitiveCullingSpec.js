@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
@@ -44,7 +44,9 @@ defineSuite([
         SceneMode,
         VerticalOrigin,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Core/Cartesian3', function() {
 
     var scene;
     var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0);
@@ -268,3 +270,4 @@ defineSuite([
         testOcclusionCull(primitive);
     });
 }, 'WebGL');
+});

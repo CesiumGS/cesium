@@ -1498,6 +1498,8 @@ define([
          * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
          * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
          *
+         * @memberof Cesium3DTileset.prototype
+         *
          * @type {Cartesian2}
          * @default Cartesian2(1.0, 1.0)
          */
@@ -1558,8 +1560,6 @@ define([
             // Append the tileset version to the resource
             this._basePath += '?v=' + tilesetVersion;
             resource.setQueryParameters({ v: tilesetVersion });
-        } else {
-            delete resource.queryParameters.v;
         }
 
         // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
@@ -2277,7 +2277,7 @@ define([
         var pass = tilesetPassState.pass;
         if ((pass === Cesium3DTilePass.PRELOAD && (!this.preloadWhenHidden || this.show)) ||
             (pass === Cesium3DTilePass.PRELOAD_FLIGHT && (!this.preloadFlightDestinations || (!this.show && !this.preloadWhenHidden))) ||
-            (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK && !this.cullRequestsWhileMoving && this.foveatedTimeDelay <= 0)) {
+            (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK && ((!this.cullRequestsWhileMoving && this.foveatedTimeDelay <= 0) || !this.show))) {
             return;
         }
 

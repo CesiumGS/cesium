@@ -440,6 +440,21 @@
           27161,33386,62338
         ]
       },
+      "holes":{
+        "cartesian":[
+          [
+            47462,20409,3151,
+            58636,39653,53914,
+            31954,4988,47462
+          ],
+          [
+            20409,3151,58636,
+            39653,53914,31954,
+            4988,47462,20409,
+            3151,58636,39653
+          ]
+        ]
+      },
       "arcType":"RHUMB",
       "height":26391,
       "heightReference":"CLAMP_TO_GROUND",
@@ -2379,23 +2394,63 @@
     }
   },
   {
-    "id":"constant_polygon_hierarchy_cartographicRadians",
+    "id":"constant_polygon_positions_cartographicRadians",
     "polygon":{
       "positions":{
         "cartographicRadians":[
-          0.612948853926511,1.3346715688367,54401,
-          1.1867596160592,0.345663242797974,35811
+          0.278819883450618,1.34192534297912,13112,
+          1.08460649779701,1.26665808721843,9013
         ]
       }
     }
   },
   {
-    "id":"constant_polygon_hierarchy_cartographicDegrees",
+    "id":"constant_polygon_positions_cartographicDegrees",
     "polygon":{
       "positions":{
         "cartographicDegrees":[
-          19,41,50907,
-          28,40,24937
+          20,42,343,
+          21,14,24042
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_polygon_holes_cartographicRadians",
+    "polygon":{
+      "holes":{
+        "cartographicRadians":[
+          [
+            0.799220652820836,1.50366253893541,4776,
+            0.179862066646486,1.42489853818289,42245,
+            0.0636782022426772,0.558333087028927,32510
+          ],
+          [
+            1.50366253893541,0.779166543514464,33810,
+            1.42489853818289,0.00358717805196918,20389,
+            0.558333087028927,0.799220652820836,43134,
+            0.779166543514464,0.179862066646486,1412
+          ]
+        ]
+      }
+    }
+  },
+  {
+    "id":"constant_polygon_holes_cartographicDegrees",
+    "polygon":{
+      "holes":{
+        "cartographicDegrees":[
+          [
+            38,39,52122,
+            30,41,40406,
+            9,42,55073
+          ],
+          [
+            39,12,5835,
+            41,41,39069,
+            42,38,39639,
+            12,30,54806
+          ]
         ]
       }
     }
@@ -7203,6 +7258,20 @@
     }
   },
   {
+    "id":"ConstantPosition3",
+    "position":{
+      "cartesian":[
+        1758,45062,8624
+      ]
+    }
+  },
+  {
+    "id":"ConstantDouble3",
+    "billboard":{
+      "scale":50938
+    }
+  },
+  {
     "id":"Reference",
     "description":{
       "reference":"Constant#description"
@@ -7733,6 +7802,15 @@
         "references":[
           "ConstantPosition1#position",
           "ConstantPosition2#position"
+        ]
+      },
+      "holes":{
+        "references":[
+          [
+            "ConstantPosition1#position",
+            "ConstantPosition2#position",
+            "ConstantPosition3#position"
+          ]
         ]
       },
       "arcType":{
@@ -19841,7 +19919,7 @@
         "epoch":"2016-06-17T12:00:00Z",
         "unitCartesian":[
           0,0.5532827915003591,0.6961099100967651,0.4575031646826541,
-          3600,0.7546657014303162,0.11520131359926604,0.6459166636878882
+          3600,0.7546657014303163,0.11520131359926505,0.6459166636878884
         ]
       }
     }

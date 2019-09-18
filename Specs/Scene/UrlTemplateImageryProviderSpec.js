@@ -1,6 +1,4 @@
-defineSuite([
-        'Scene/UrlTemplateImageryProvider',
-        'Core/DefaultProxy',
+define([
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/Math',
@@ -14,11 +12,10 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/UrlTemplateImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        UrlTemplateImageryProvider,
-        DefaultProxy,
         Ellipsoid,
         GeographicTilingScheme,
         CesiumMath,
@@ -32,9 +29,12 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
+        UrlTemplateImageryProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/UrlTemplateImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -806,4 +806,5 @@ defineSuite([
             return provider.pickFeatures();
         }).toThrowDeveloperError();
     });
+});
 });

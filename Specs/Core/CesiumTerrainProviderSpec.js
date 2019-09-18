@@ -1,6 +1,5 @@
-defineSuite([
+define([
         'Core/CesiumTerrainProvider',
-        'Core/DefaultProxy',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
@@ -16,7 +15,6 @@ defineSuite([
         'ThirdParty/when'
     ], function(
         CesiumTerrainProvider,
-        DefaultProxy,
         Ellipsoid,
         GeographicTilingScheme,
         getAbsoluteUri,
@@ -30,7 +28,9 @@ defineSuite([
         TerrainProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/CesiumTerrainProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -867,4 +867,5 @@ defineSuite([
             });
         });
     });
+});
 });

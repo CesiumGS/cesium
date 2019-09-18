@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/KmlDataSource',
+define([
         'Core/ArcType',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
@@ -25,6 +24,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
         'DataSources/KmlCamera',
+        'DataSources/KmlDataSource',
         'DataSources/KmlLookAt',
         'DataSources/KmlTour',
         'DataSources/KmlTourFlyTo',
@@ -38,7 +38,6 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        KmlDataSource,
         ArcType,
         BoundingRectangle,
         Cartesian2,
@@ -64,6 +63,7 @@ defineSuite([
         EntityCollection,
         ImageMaterialProperty,
         KmlCamera,
+        KmlDataSource,
         KmlLookAt,
         KmlTour,
         KmlTourFlyTo,
@@ -76,7 +76,9 @@ defineSuite([
         createCamera,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/KmlDataSource', function() {
 
     var parser = new DOMParser();
 
@@ -4542,4 +4544,5 @@ defineSuite([
             expect(dataSource.entities.values[2].polygon.material.color.getValue()).not.toEqual(dataSource.entities.values[3].polygon.material.color.getValue());
         });
     });
+});
 });

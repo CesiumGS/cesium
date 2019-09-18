@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -14,13 +14,11 @@ defineSuite([
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
         'Core/Transforms',
-        'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Globe',
         'Scene/PointPrimitiveCollection',
         'Scene/Primitive',
-        'Scene/Scene',
         'Scene/SceneMode',
         'Specs/Cesium3DTilesTester',
         'Specs/createCanvas',
@@ -43,20 +41,20 @@ defineSuite([
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
         Transforms,
-        Cesium3DTileset,
         Cesium3DTileStyle,
         EllipsoidSurfaceAppearance,
         Globe,
         PointPrimitiveCollection,
         Primitive,
-        Scene,
         SceneMode,
         Cesium3DTilesTester,
         createCanvas,
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/Cartesian3', function() {
 
     // It's not easily possible to mock the most detailed pick functions
     // so don't run those tests when using the WebGL stub
@@ -2357,3 +2355,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

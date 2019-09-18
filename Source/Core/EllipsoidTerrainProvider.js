@@ -38,7 +38,7 @@ define([
      * @see TerrainProvider
      */
     function EllipsoidTerrainProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._tilingScheme = options.tilingScheme;
         if (!defined(this._tilingScheme)) {

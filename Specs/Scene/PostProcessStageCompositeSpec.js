@@ -1,20 +1,22 @@
-defineSuite([
-        'Scene/PostProcessStageComposite',
+define([
         'Core/Color',
         'Core/defined',
         'Scene/PostProcessStage',
+        'Scene/PostProcessStageComposite',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        PostProcessStageComposite,
         Color,
         defined,
         PostProcessStage,
+        PostProcessStageComposite,
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PostProcessStageComposite', function() {
 
     var scene;
 
@@ -181,6 +183,13 @@ defineSuite([
         }
 
         expect(s).toRender([0, 0, 0, 255]);
+        // Dummy Stage
+        var bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
+        s.postProcessStages.add(new PostProcessStage({
+            fragmentShader : 'void main() { gl_FragColor = vec4(vec3(' + (bgColor / 255) + '), 1.0); }'
+        }));
+
+        //Stage we expect to not run
         var stage = s.postProcessStages.add(new PostProcessStageComposite({
             stages : [new PostProcessStage({
                 fragmentShader : 'uniform sampler2D depthTexture; void main() { gl_FragColor = vec4(1.0); }'
@@ -190,7 +199,7 @@ defineSuite([
             s.renderForSpecs();
             return stage.ready;
         }).then(function() {
-            expect(s).toRender([0, 0, 0, 255]);
+            expect(s).toRender([bgColor, bgColor, bgColor, 255]);
         }).always(function(e) {
             s.destroyForSpecs();
             if (e) {
@@ -219,3 +228,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

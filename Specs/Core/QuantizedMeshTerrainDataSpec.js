@@ -1,22 +1,24 @@
-defineSuite([
-        'Core/QuantizedMeshTerrainData',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/GeographicTilingScheme',
         'Core/Math',
+        'Core/QuantizedMeshTerrainData',
         'Core/TerrainData',
         'Core/TerrainMesh',
         'ThirdParty/when'
     ], function(
-        QuantizedMeshTerrainData,
         BoundingSphere,
         Cartesian3,
         GeographicTilingScheme,
         CesiumMath,
+        QuantizedMeshTerrainData,
         TerrainData,
         TerrainMesh,
         when) {
-     'use strict';
+        'use strict';
+
+describe('Core/QuantizedMeshTerrainData', function() {
 
      it('conforms to TerrainData interface', function() {
          expect(QuantizedMeshTerrainData).toConformToInterface(TerrainData);
@@ -806,4 +808,5 @@ defineSuite([
              expect(data.isChildAvailable(10, 20, 21, 41)).toBe(false);
          });
      });
+});
 });

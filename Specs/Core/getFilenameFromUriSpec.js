@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/getFilenameFromUri'
     ], function(
         getFilenameFromUri) {
-    'use strict';
+        'use strict';
+
+describe('Core/getFilenameFromUri', function() {
 
     it('works as expected', function() {
         var result = getFilenameFromUri('http://www.mysite.com/awesome?makeitawesome=true');
@@ -17,4 +19,5 @@ defineSuite([
             getFilenameFromUri(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

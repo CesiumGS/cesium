@@ -73,6 +73,7 @@ define([
 
         var tonemapping = this._tonemapping;
 
+        fxaa.enabled = false;
         ao.enabled = false;
         bloom.enabled = false;
         tonemapping.enabled = false; // will be enabled if necessary in update

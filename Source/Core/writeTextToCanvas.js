@@ -103,8 +103,9 @@ define([
         //While the height of the letter is correct, we need to adjust
         //where we start drawing it so that letters like j and y properly dip
         //below the line.
+
         var height = dimensions.height + doublePadding;
-        var baseline = height - dimensions.ascent + doublePadding;
+        var baseline = height - dimensions.ascent + padding;
         var y = height - baseline + doublePadding;
 
         canvas.width = width;

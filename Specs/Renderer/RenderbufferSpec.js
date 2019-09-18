@@ -1,14 +1,16 @@
-defineSuite([
-        'Renderer/Renderbuffer',
+define([
         'Renderer/ContextLimits',
+        'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
         'Specs/createContext'
     ], function(
-        Renderbuffer,
         ContextLimits,
+        Renderbuffer,
         RenderbufferFormat,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Renderbuffer', function() {
 
     var context;
     var renderbuffer;
@@ -119,3 +121,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});
