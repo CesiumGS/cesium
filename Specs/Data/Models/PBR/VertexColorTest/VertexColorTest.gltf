@@ -1,154 +1,205 @@
 {
-    "accessors" : [
-        {
-            "bufferView" : 0,
-            "componentType" : 5126,
-            "count" : 96,
-            "max" : [
-                1,
-                1,
-                1
-            ],
-            "min" : [
-                -1,
-                -1,
-                -1
-            ],
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 1,
-            "componentType" : 5126,
-            "count" : 96,
-            "type" : "VEC3"
-        },
-        {
-            "bufferView" : 2,
-            "componentType" : 5123,
-            "count" : 132,
-            "type" : "SCALAR"
-        }
-    ],
-    "asset" : {
-        "copyright": "Copyright 2019 Analytical Graphics, Inc, CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/ - Model by Ed Mackey.",
-        "generator" : "Khronos Blender glTF 2.0 I/O, with hand-edits",
-        "version" : "2.0"
+  "accessors": [
+    {
+      "bufferView": 0,
+      "componentType": 5126,
+      "count": 96,
+      "max": [
+        1,
+        1,
+        1
+      ],
+      "min": [
+        -1,
+        -1,
+        -1
+      ],
+      "type": "VEC3",
+      "byteOffset": 0
     },
-    "bufferViews" : [
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 96,
+      "type": "VEC3",
+      "byteOffset": 0
+    },
+    {
+      "bufferView": 2,
+      "componentType": 5123,
+      "count": 132,
+      "type": "SCALAR",
+      "byteOffset": 0
+    }
+  ],
+  "asset": {
+    "copyright": "Copyright 2019 Analytical Graphics, Inc, CC-BY 4.0 https://creativecommons.org/licenses/by/4.0/ - Model by Ed Mackey.",
+    "generator": "Khronos Blender glTF 2.0 I/O, with hand-edits",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 1152,
+      "byteOffset": 0,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 1152,
+      "byteOffset": 1152,
+      "byteStride": 12,
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 264,
+      "byteOffset": 2304,
+      "target": 34963
+    }
+  ],
+  "buffers": [
+    {
+      "name": "VertexColorTest",
+      "byteLength": 2568,
+      "uri": "data:application/octet-stream;base64,4qoqPwAAgL/iqio/4qoqvwAAgL/iqiq/4qoqPwAAgL/iqiq/4qoqvwAAgL/iqio/AACAv+KqKj/iqio/AACAv+KqKr/iqiq/AACAv+KqKr/iqio/AACAv+KqKj/iqiq/4qoqP+KqKj8AAIA/4qoqv+KqKr8AAIA/4qoqP+KqKr8AAIA/4qoqv+KqKj8AAIA/4qoqvwAAgD/iqio/4qoqPwAAgD/iqiq/4qoqvwAAgD/iqiq/4qoqPwAAgD/iqio/AACAP+KqKj/iqiq/AACAP+KqKr/iqio/AACAP+KqKr/iqiq/AACAP+KqKj/iqio/4qoqP+KqKj8AAIC/4qoqPwAAgD/iqiq/AACAP+KqKj/iqiq/4qoqPwAAgL/iqiq/4qoqP+KqKr8AAIC/AACAP+KqKr/iqiq/AACAP+KqKj/iqio/4qoqPwAAgD/iqio/4qoqP+KqKj8AAIA/AACAP+KqKr/iqio/4qoqP+KqKr8AAIA/4qoqPwAAgL/iqio/4qoqv+KqKj8AAIC/AACAv+KqKj/iqiq/4qoqvwAAgD/iqiq/AACAv+KqKr/iqiq/4qoqv+KqKr8AAIC/4qoqvwAAgL/iqiq/AACAv+KqKj/iqio/4qoqv+KqKj8AAIA/4qoqvwAAgD/iqio/4qoqvwAAgL/iqio/4qoqv+KqKr8AAIA/AACAv+KqKr/iqio/AACAv+KqKr/iqio/4qoqvwAAgL/iqiq/4qoqvwAAgL/iqio/AACAv+KqKr/iqiq/4qoqv+KqKr8AAIC/4qoqPwAAgL/iqiq/4qoqvwAAgL/iqiq/4qoqP+KqKr8AAIC/4qoqP+KqKj8AAIC/AACAP+KqKr/iqiq/4qoqP+KqKr8AAIC/AACAP+KqKj/iqiq/4qoqv+KqKj8AAIA/AACAv+KqKr/iqio/4qoqv+KqKr8AAIA/AACAv+KqKj/iqio/AACAP+KqKj/iqio/4qoqP+KqKr8AAIA/AACAP+KqKr/iqio/4qoqP+KqKj8AAIA/AACAv+KqKj/iqiq/4qoqv+KqKr8AAIC/AACAv+KqKr/iqiq/4qoqv+KqKj8AAIC/4qoqPwAAgD/iqio/4qoqv+KqKj8AAIA/4qoqP+KqKj8AAIA/4qoqvwAAgD/iqio/4qoqPwAAgD/iqiq/AACAP+KqKj/iqio/AACAP+KqKj/iqiq/4qoqPwAAgD/iqio/4qoqP+KqKr8AAIA/4qoqvwAAgL/iqio/4qoqPwAAgL/iqio/4qoqv+KqKr8AAIA/4qoqvwAAgD/iqio/AACAv+KqKj/iqiq/AACAv+KqKj/iqio/4qoqvwAAgD/iqiq/4qoqvwAAgD/iqiq/4qoqP+KqKj8AAIC/4qoqv+KqKj8AAIC/4qoqPwAAgD/iqiq/AACAP+KqKr/iqiq/4qoqPwAAgL/iqio/4qoqPwAAgL/iqiq/AACAP+KqKr/iqio/4qoqv+KqKj8AAIC/4qoqP+KqKr8AAIC/4qoqv+KqKr8AAIC/4qoqP+KqKj8AAIC/AAAAAAAAgL8AAACAAAAAAAAAgL8AAACAAAAAAAAAgL8AAACAAAAAAAAAgL8AAACAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAAAAAAIA/AAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAAAAAAAAgD8AAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAAACAPwAAAAAAAAAAOs0TPzrNEz86zRO/Os0TPzrNEz86zRO/Os0TPzrNEz86zRO/Os0TPzrNE786zRO/Os0TPzrNE786zRO/Os0TPzrNE786zRO/Os0TPzrNEz86zRM/Os0TPzrNEz86zRM/Os0TPzrNEz86zRM/Os0TPzrNE786zRM/Os0TPzrNE786zRM/Os0TPzrNE786zRM/Os0TvzrNEz86zRO/Os0TvzrNEz86zRO/Os0TvzrNEz86zRO/Os0TvzrNE786zRO/Os0TvzrNE786zRO/Os0TvzrNE786zRO/Os0TvzrNEz86zRM/Os0TvzrNEz86zRM/Os0TvzrNEz86zRM/Os0TvzrNE786zRM/Os0TvzrNE786zRM/Os0TvzrNE786zRM/8wQ1v/MENb8AAACA8wQ1v/MENb8AAACA8wQ1v/MENb8AAACA8wQ1v/MENb8AAACAAAAAAPMENb/zBDW/AAAAAPMENb/zBDW/AAAAAPMENb/zBDW/AAAAAPMENb/zBDW/8wQ1PwAAAADzBDW/8wQ1PwAAAADzBDW/8wQ1PwAAAADzBDW/8wQ1PwAAAADzBDW/8wQ1vwAAAADzBDU/8wQ1vwAAAADzBDU/8wQ1vwAAAADzBDU/8wQ1vwAAAADzBDU/8wQ1PwAAAADzBDU/8wQ1PwAAAADzBDU/8wQ1PwAAAADzBDU/8wQ1PwAAAADzBDU/8wQ1vwAAAADzBDW/8wQ1vwAAAADzBDW/8wQ1vwAAAADzBDW/8wQ1vwAAAADzBDW/AAAAAPMENT/zBDU/AAAAAPMENT/zBDU/AAAAAPMENT/zBDU/AAAAAPMENT/zBDU/8wQ1P/MENT8AAACA8wQ1P/MENT8AAACA8wQ1P/MENT8AAACA8wQ1P/MENT8AAACAAAAAAPMENb/zBDU/AAAAAPMENb/zBDU/AAAAAPMENb/zBDU/AAAAAPMENb/zBDU/8wQ1v/MENT8AAACA8wQ1v/MENT8AAACA8wQ1v/MENT8AAACA8wQ1v/MENT8AAACAAAAAAPMENT/zBDW/AAAAAPMENT/zBDW/AAAAAPMENT/zBDW/AAAAAPMENT/zBDW/8wQ1P/MENb8AAACA8wQ1P/MENb8AAACA8wQ1P/MENb8AAACA8wQ1P/MENb8AAACAAAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAAAAAAAAAAAAIC/AAABAAIAAAADAAEABAAFAAYABAAHAAUACAAJAAoACAALAAkADAANAA4ADAAPAA0AEAARABIAEAATABEAFAAVABYAFwAYABkAGgAbABwAHQAeAB8AIAAhACIAIwAkACUAJgAnACgAKQAqACsALAAtAC4ALAAvAC0AMAAxADIAMAAzADEANAA1ADYANAA3ADUAOAA5ADoAOAA7ADkAPAA9AD4APAA/AD0AQABBAEIAQABDAEEARABFAEYARABHAEUASABJAEoASABLAEkATABNAE4ATABPAE0AUABRAFIAUABTAFEAVABVAFYAVABXAFUAWABZAFoAWABbAFkAXABdAF4AXABfAF0A"
+    }
+  ],
+  "materials": [
+    {
+      "name": "Red",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          1,
+          0,
+          0,
+          1
+        ],
+        "metallicFactor": 1,
+        "roughnessFactor": 1
+      },
+      "extensions": {
+        "KHR_materials_unlit": {}
+      },
+      "emissiveFactor": [
+        0,
+        0,
+        0
+      ],
+      "alphaMode": "OPAQUE",
+      "doubleSided": false
+    },
+    {
+      "name": "Blue",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0,
+          0,
+          1,
+          1
+        ],
+        "metallicFactor": 1,
+        "roughnessFactor": 1
+      },
+      "extensions": {
+        "KHR_materials_unlit": {}
+      },
+      "emissiveFactor": [
+        0,
+        0,
+        0
+      ],
+      "alphaMode": "OPAQUE",
+      "doubleSided": false
+    }
+  ],
+  "meshes": [
+    {
+      "name": "Red Mesh",
+      "primitives": [
         {
-            "buffer" : 0,
-            "byteLength" : 1152,
-            "byteOffset" : 0
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 1152,
-            "byteOffset" : 1152
-        },
-        {
-            "buffer" : 0,
-            "byteLength" : 264,
-            "byteOffset" : 2304
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0
+          },
+          "indices": 2,
+          "material": 0,
+          "mode": 4
         }
-    ],
-    "buffers" : [
+      ]
+    },
+    {
+      "name": "Blue Mesh",
+      "primitives": [
         {
-            "byteLength" : 2568,
-            "uri" : "VertexColorTest.bin"
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0
+          },
+          "indices": 2,
+          "material": 1,
+          "mode": 4
         }
-    ],
-    "materials" : [
-        {
-            "name" : "Red",
-            "pbrMetallicRoughness" : {
-                "baseColorFactor": [
-                    1,
-                    0,
-                    0,
-                    1
-                ]
-            },
-            "extensions": {
-                "KHR_materials_unlit": {}
-            }
-        },
-        {
-            "name" : "Blue",
-            "pbrMetallicRoughness" : {
-                "baseColorFactor": [
-                    0,
-                    0,
-                    1,
-                    1
-                ]
-            },
-            "extensions": {
-                "KHR_materials_unlit": {}
-            }
-        }
-    ],
-    "meshes" : [
-        {
-            "name" : "Red Mesh",
-            "primitives" : [
-                {
-                    "attributes" : {
-                        "NORMAL" : 1,
-                        "POSITION" : 0
-                    },
-                    "indices" : 2,
-                    "material" : 0
-                }
-            ]
-        },
-        {
-            "name" : "Blue Mesh",
-            "primitives" : [
-                {
-                    "attributes" : {
-                        "NORMAL" : 1,
-                        "POSITION" : 0
-                    },
-                    "indices" : 2,
-                    "material" : 1
-                }
-            ]
-        }
-    ],
-    "nodes" : [
-        {
-            "mesh" : 0,
-            "name" : "Red Object",
-            "translation": [
-                -1.2,
-                0,
-                0
-            ]
-        },
-        {
-            "mesh" : 1,
-            "name" : "Blue Object",
-            "translation": [
-                1.2,
-                0,
-                0
-            ]
-        }
-    ],
-    "scene" : 0,
-    "scenes" : [
-        {
-            "name" : "Scene",
-            "nodes" : [
-                0,
-                1
-            ]
-        }
-    ],
-    "extensionsUsed": [
-        "KHR_materials_unlit"
-    ],
-    "extensionsRequired": [
-        "KHR_materials_unlit"
-    ]
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "mesh": 0,
+      "name": "Red Object",
+      "translation": [
+        -1.2,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    },
+    {
+      "mesh": 1,
+      "name": "Blue Object",
+      "translation": [
+        1.2,
+        0,
+        0
+      ],
+      "rotation": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ]
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        0,
+        1
+      ]
+    }
+  ],
+  "extensionsUsed": [
+    "KHR_materials_unlit"
+  ],
+  "extensionsRequired": [
+    "KHR_materials_unlit"
+  ]
 }
