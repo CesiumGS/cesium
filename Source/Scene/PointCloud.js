@@ -1,88 +1,40 @@
-define([
-        '../Core/arraySlice',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/FeatureDetection',
-        '../Core/getStringFromTypedArray',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/oneTimeWarning',
-        '../Core/OrthographicFrustum',
-        '../Core/PrimitiveType',
-        '../Core/RuntimeError',
-        '../Core/Transforms',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/VertexArray',
-        '../ThirdParty/when',
-        './BlendingState',
-        './Cesium3DTileBatchTable',
-        './Cesium3DTileFeatureTable',
-        './DracoLoader',
-        './getClipAndStyleCode',
-        './getClippingFunction',
-        './SceneMode',
-        './ShadowMode',
-        './StencilConstants'
-    ], function(
-        arraySlice,
-        BoundingSphere,
-        Cartesian3,
-        Cartesian4,
-        Check,
-        Color,
-        combine,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        FeatureDetection,
-        getStringFromTypedArray,
-        CesiumMath,
-        Matrix4,
-        oneTimeWarning,
-        OrthographicFrustum,
-        PrimitiveType,
-        RuntimeError,
-        Transforms,
-        Buffer,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        VertexArray,
-        when,
-        BlendingState,
-        Cesium3DTileBatchTable,
-        Cesium3DTileFeatureTable,
-        DracoLoader,
-        getClipAndStyleCode,
-        getClippingFunction,
-        SceneMode,
-        ShadowMode,
-        StencilConstants) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import arraySlice from '../Core/arraySlice.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import oneTimeWarning from '../Core/oneTimeWarning.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Transforms from '../Core/Transforms.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import when from '../ThirdParty/when.js';
+import BlendingState from './BlendingState.js';
+import Cesium3DTileBatchTable from './Cesium3DTileBatchTable.js';
+import Cesium3DTileFeatureTable from './Cesium3DTileFeatureTable.js';
+import DracoLoader from './DracoLoader.js';
+import getClipAndStyleCode from './getClipAndStyleCode.js';
+import getClippingFunction from './getClippingFunction.js';
+import SceneMode from './SceneMode.js';
+import ShadowMode from './ShadowMode.js';
+import StencilConstants from './StencilConstants.js';
 
     var DecodingState = {
         NEEDS_DECODE : 0,
@@ -1406,6 +1358,4 @@ define([
         }
         return destroyObject(this);
     };
-
-    return PointCloud;
-});
+export default PointCloud;

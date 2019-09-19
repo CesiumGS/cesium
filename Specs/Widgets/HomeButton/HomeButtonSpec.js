@@ -1,10 +1,5 @@
-define([
-        'Specs/createScene',
-        'Widgets/HomeButton/HomeButton'
-    ], function(
-        createScene,
-        HomeButton) {
-        'use strict';
+import createScene from '../../createScene.js';
+import { HomeButton } from '../../../Source/Cesium.js';
 
 describe('Widgets/HomeButton/HomeButton', function() {
 
@@ -55,4 +50,3 @@ describe('Widgets/HomeButton/HomeButton', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

@@ -1,26 +1,13 @@
-define([
-        'Core/Color',
-        'Core/CornerType',
-        'Core/DistanceDisplayCondition',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/CorridorGraphics',
-        'Scene/ClassificationType',
-        'Scene/ShadowMode',
-        'Specs/testDefinitionChanged',
-        'Specs/testMaterialDefinitionChanged'
-    ], function(
-        Color,
-        CornerType,
-        DistanceDisplayCondition,
-        ColorMaterialProperty,
-        ConstantProperty,
-        CorridorGraphics,
-        ClassificationType,
-        ShadowMode,
-        testDefinitionChanged,
-        testMaterialDefinitionChanged) {
-        'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { CornerType } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { CorridorGraphics } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
+import testMaterialDefinitionChanged from '../testMaterialDefinitionChanged.js';
 
 describe('DataSources/CorridorGraphics', function() {
 
@@ -242,5 +229,4 @@ describe('DataSources/CorridorGraphics', function() {
         testDefinitionChanged(property, 'classificationType', ClassificationType.TERRAIN, ClassificationType.BOTH);
         testDefinitionChanged(property, 'zIndex', 3, 0);
     });
-});
 });

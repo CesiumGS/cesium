@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     /**
      * @private
@@ -10,6 +8,4 @@ define(function() {
         }
         return url;
     }
-
-    return appendForwardSlash;
-});
+export default appendForwardSlash;

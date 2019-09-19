@@ -1,26 +1,13 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/NearFarScalar',
-        'DataSources/BillboardGraphics',
-        'DataSources/ConstantProperty',
-        'Scene/HeightReference',
-        'Scene/HorizontalOrigin',
-        'Scene/VerticalOrigin'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        NearFarScalar,
-        BillboardGraphics,
-        ConstantProperty,
-        HeightReference,
-        HorizontalOrigin,
-        VerticalOrigin) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { BillboardGraphics } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
 
 describe('DataSources/BillboardGraphics', function() {
 
@@ -277,5 +264,4 @@ describe('DataSources/BillboardGraphics', function() {
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
-});
 });

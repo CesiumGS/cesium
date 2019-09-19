@@ -1,10 +1,4 @@
-define([
-        './Cartesian3',
-        './defaultValue'
-    ], function(
-        Cartesian3,
-        defaultValue) {
-    'use strict';
+import defaultValue from './defaultValue.js';
 
     /**
       * A mesh plus related metadata for a single tile of terrain.  Instances of this type are
@@ -140,6 +134,4 @@ define([
          */
         this.northIndicesWestToEast = northIndicesWestToEast;
     }
-
-    return TerrainMesh;
-});
+export default TerrainMesh;

@@ -1,46 +1,23 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/ComponentDatatype',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/IndexDatatype',
-        '../Core/loadKTX',
-        '../Core/PixelFormat',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/ComputeCommand',
-        '../Renderer/CubeMap',
-        '../Renderer/PixelDatatype',
-        '../Renderer/ShaderProgram',
-        '../Renderer/Texture',
-        '../Renderer/VertexArray',
-        '../Shaders/OctahedralProjectionAtlasFS',
-        '../Shaders/OctahedralProjectionFS',
-        '../Shaders/OctahedralProjectionVS',
-        '../ThirdParty/when'
-    ], function(
-        Cartesian3,
-        ComponentDatatype,
-        defined,
-        defineProperties,
-        destroyObject,
-        IndexDatatype,
-        loadKTX,
-        PixelFormat,
-        Buffer,
-        BufferUsage,
-        ComputeCommand,
-        CubeMap,
-        PixelDatatype,
-        ShaderProgram,
-        Texture,
-        VertexArray,
-        OctahedralProjectionAtlasFS,
-        OctahedralProjectionFS,
-        OctahedralProjectionVS,
-        when) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import loadKTX from '../Core/loadKTX.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import ComputeCommand from '../Renderer/ComputeCommand.js';
+import CubeMap from '../Renderer/CubeMap.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import Texture from '../Renderer/Texture.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import OctahedralProjectionAtlasFS from '../Shaders/OctahedralProjectionAtlasFS.js';
+import OctahedralProjectionFS from '../Shaders/OctahedralProjectionFS.js';
+import OctahedralProjectionVS from '../Shaders/OctahedralProjectionVS.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * Packs all mip levels of a cube map into a 2D texture atlas.
@@ -411,6 +388,4 @@ define([
         this._texture = this._texture && this._texture.destroy();
         return destroyObject(this);
     };
-
-    return OctahedralProjectedCubeMap;
-});
+export default OctahedralProjectedCubeMap;

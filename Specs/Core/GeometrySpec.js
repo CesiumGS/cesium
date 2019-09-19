@@ -1,26 +1,13 @@
-define([
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/ComponentDatatype',
-        'Core/Ellipsoid',
-        'Core/Geometry',
-        'Core/GeometryAttribute',
-        'Core/GeometryType',
-        'Core/Math',
-        'Core/PrimitiveType',
-        'Core/Rectangle'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        ComponentDatatype,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryType,
-        CesiumMath,
-        PrimitiveType,
-        Rectangle) {
-        'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Geometry } from '../../Source/Cesium.js';
+import { GeometryAttribute } from '../../Source/Cesium.js';
+import { GeometryType } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
 
 describe('Core/Geometry', function() {
 
@@ -154,5 +141,4 @@ describe('Core/Geometry', function() {
         expect(textureCoordinateRotationPoints[4]).toEqualEpsilon(1, CesiumMath.EPSILON7);
         expect(textureCoordinateRotationPoints[5]).toEqualEpsilon(0, CesiumMath.EPSILON7);
     });
-});
 });

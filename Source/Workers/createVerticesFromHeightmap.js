@@ -1,22 +1,10 @@
-define([
-        '../Core/defined',
-        '../Core/Ellipsoid',
-        '../Core/HeightmapEncoding',
-        '../Core/HeightmapTessellator',
-        '../Core/Rectangle',
-        '../Core/RuntimeError',
-        '../ThirdParty/LercDecode',
-        './createTaskProcessorWorker'
-    ], function(
-        defined,
-        Ellipsoid,
-        HeightmapEncoding,
-        HeightmapTessellator,
-        Rectangle,
-        RuntimeError,
-        Lerc,
-        createTaskProcessorWorker) {
-    'use strict';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import HeightmapEncoding from '../Core/HeightmapEncoding.js';
+import HeightmapTessellator from '../Core/HeightmapTessellator.js';
+import Rectangle from '../Core/Rectangle.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Lerc from '../ThirdParty/LercDecode.js';
+import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     function createVerticesFromHeightmap(parameters, transferableObjects) {
         // LERC encoded buffers must be decoded, then we can process them like normal
@@ -70,6 +58,4 @@ define([
             northIndicesWestToEast : statistics.northIndicesWestToEast
         };
     }
-
-    return createTaskProcessorWorker(createVerticesFromHeightmap);
-});
+export default createTaskProcessorWorker(createVerticesFromHeightmap);

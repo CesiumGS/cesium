@@ -1,20 +1,10 @@
-define([
-        'Core/defined',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Simon1994PlanetaryPositions',
-        'Core/TimeStandard',
-        'Core/Transforms'
-    ], function(
-        defined,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        PlanetaryPositions,
-        TimeStandard,
-        Transforms) {
-        'use strict';
+import { defined } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Simon1994PlanetaryPositions as PlanetaryPositions } from '../../Source/Cesium.js';
+import { TimeStandard } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
 
 describe('Core/Simon1994PlanetaryPositions', function() {
 
@@ -110,5 +100,4 @@ describe('Core/Simon1994PlanetaryPositions', function() {
         PlanetaryPositions.computeSunPositionInEarthInertialFrame(undefined);
     });
 
-});
 });

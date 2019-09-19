@@ -1,24 +1,12 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/IndexDatatype',
-        '../Core/WebGLConstants',
-        './BufferUsage'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        IndexDatatype,
-        WebGLConstants,
-        BufferUsage) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import BufferUsage from './BufferUsage.js';
 
     /**
      * @private
@@ -356,6 +344,4 @@ define([
         this._gl.deleteBuffer(this._buffer);
         return destroyObject(this);
     };
-
-    return Buffer;
-});
+export default Buffer;

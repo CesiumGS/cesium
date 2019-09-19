@@ -1,32 +1,16 @@
-define([
-        'Core/ArcType',
-        'Core/arrayFill',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
-        'Core/GeometryPipeline',
-        'Core/Math',
-        'Core/PolygonGeometry',
-        'Core/Rectangle',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        ArcType,
-        arrayFill,
-        BoundingSphere,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        GeometryOffsetAttribute,
-        GeometryPipeline,
-        CesiumMath,
-        PolygonGeometry,
-        Rectangle,
-        VertexFormat,
-        createPackableSpecs) {
-        'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { arrayFill } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { GeometryPipeline } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PolygonGeometry } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/PolygonGeometry', function() {
 
@@ -1283,5 +1267,4 @@ describe('Core/PolygonGeometry', function() {
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 0, -1, ArcType.GEODESIC, 54);
     createPackableSpecs(PolygonGeometry, polygon, packedInstance);
-});
 });

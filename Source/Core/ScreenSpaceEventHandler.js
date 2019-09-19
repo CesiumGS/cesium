@@ -1,26 +1,13 @@
-define([
-        './AssociativeArray',
-        './Cartesian2',
-        './defaultValue',
-        './defined',
-        './destroyObject',
-        './DeveloperError',
-        './FeatureDetection',
-        './getTimestamp',
-        './KeyboardEventModifier',
-        './ScreenSpaceEventType'
-    ], function(
-        AssociativeArray,
-        Cartesian2,
-        defaultValue,
-        defined,
-        destroyObject,
-        DeveloperError,
-        FeatureDetection,
-        getTimestamp,
-        KeyboardEventModifier,
-        ScreenSpaceEventType) {
-    'use strict';
+import AssociativeArray from './AssociativeArray.js';
+import Cartesian2 from './Cartesian2.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import destroyObject from './destroyObject.js';
+import DeveloperError from './DeveloperError.js';
+import FeatureDetection from './FeatureDetection.js';
+import getTimestamp from './getTimestamp.js';
+import KeyboardEventModifier from './KeyboardEventModifier.js';
+import ScreenSpaceEventType from './ScreenSpaceEventType.js';
 
     function getPosition(screenSpaceEventHandler, event, result) {
         var element = screenSpaceEventHandler._element;
@@ -839,6 +826,4 @@ define([
      * @default 1500
      */
     ScreenSpaceEventHandler.touchHoldDelayMilliseconds = 1500;
-
-    return ScreenSpaceEventHandler;
-});
+export default ScreenSpaceEventHandler;

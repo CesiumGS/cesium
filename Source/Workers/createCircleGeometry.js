@@ -1,14 +1,7 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/CircleGeometry',
-        '../Core/defined',
-        '../Core/Ellipsoid'
-    ], function(
-        Cartesian3,
-        CircleGeometry,
-        defined,
-        Ellipsoid) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import CircleGeometry from '../Core/CircleGeometry.js';
+import defined from '../Core/defined.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
 
     function createCircleGeometry(circleGeometry, offset) {
         if (defined(offset)) {
@@ -18,6 +11,4 @@ define([
         circleGeometry._ellipseGeometry._ellipsoid = Ellipsoid.clone(circleGeometry._ellipseGeometry._ellipsoid);
         return CircleGeometry.createGeometry(circleGeometry);
     }
-
-    return createCircleGeometry;
-});
+export default createCircleGeometry;

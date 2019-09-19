@@ -1,38 +1,18 @@
-define([
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './GeometryOffsetAttribute',
-        './GeometryType',
-        './Matrix2',
-        './Matrix3',
-        './Matrix4',
-        './PrimitiveType',
-        './Quaternion',
-        './Rectangle',
-        './Transforms'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        GeometryOffsetAttribute,
-        GeometryType,
-        Matrix2,
-        Matrix3,
-        Matrix4,
-        PrimitiveType,
-        Quaternion,
-        Rectangle,
-        Transforms) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import GeometryType from './GeometryType.js';
+import Matrix2 from './Matrix2.js';
+import Matrix3 from './Matrix3.js';
+import Matrix4 from './Matrix4.js';
+import PrimitiveType from './PrimitiveType.js';
+import Quaternion from './Quaternion.js';
+import Rectangle from './Rectangle.js';
+import Transforms from './Transforms.js';
 
     /**
      * A geometry representation with attributes forming vertices and optional index data
@@ -346,6 +326,4 @@ define([
 
         return result;
     };
-
-    return Geometry;
-});
+export default Geometry;

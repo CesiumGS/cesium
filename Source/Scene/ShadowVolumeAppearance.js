@@ -1,40 +1,20 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Check',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/EncodedCartesian3',
-        '../Core/GeometryInstanceAttribute',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/Rectangle',
-        '../Core/Transforms',
-        '../Renderer/ShaderSource',
-        '../Scene/PerInstanceColorAppearance',
-        '../Shaders/ShadowVolumeAppearanceFS'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        EncodedCartesian3,
-        GeometryInstanceAttribute,
-        CesiumMath,
-        Matrix4,
-        Rectangle,
-        Transforms,
-        ShaderSource,
-        PerInstanceColorAppearance,
-        ShadowVolumeAppearanceFS) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Check from '../Core/Check.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
+import GeometryInstanceAttribute from '../Core/GeometryInstanceAttribute.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Rectangle from '../Core/Rectangle.js';
+import Transforms from '../Core/Transforms.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
 
     var projectionExtentDefines = {
         eastMostYhighDefine : '',
@@ -766,6 +746,4 @@ define([
      * @private
      */
     ShadowVolumeAppearance.MAX_WIDTH_FOR_PLANAR_EXTENTS = CesiumMath.toRadians(1.0);
-
-    return ShadowVolumeAppearance;
-});
+export default ShadowVolumeAppearance;

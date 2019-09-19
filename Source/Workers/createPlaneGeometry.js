@@ -1,15 +1,10 @@
-define([
-        '../Core/defined',
-        '../Core/PlaneGeometry'
-    ], function(
-        defined,
-        PlaneGeometry) {
-    'use strict';
+import defined from '../Core/defined.js';
+import PlaneGeometry from '../Core/PlaneGeometry.js';
 
-    return function(planeGeometry, offset) {
+    function createPlaneGeometry(planeGeometry, offset) {
         if (defined(offset)) {
             planeGeometry = PlaneGeometry.unpack(planeGeometry, offset);
         }
         return PlaneGeometry.createGeometry(planeGeometry);
-    };
-});
+    }
+export default createPlaneGeometry;

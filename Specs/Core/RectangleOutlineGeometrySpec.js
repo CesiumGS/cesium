@@ -1,28 +1,14 @@
-define([
-        'Core/arrayFill',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/GeometryOffsetAttribute',
-        'Core/Math',
-        'Core/Matrix2',
-        'Core/Rectangle',
-        'Core/RectangleOutlineGeometry',
-        'Specs/createPackableSpecs'
-    ], function(
-        arrayFill,
-        Cartesian2,
-        Cartesian3,
-        Ellipsoid,
-        GeographicProjection,
-        GeometryOffsetAttribute,
-        CesiumMath,
-        Matrix2,
-        Rectangle,
-        RectangleOutlineGeometry,
-        createPackableSpecs) {
-        'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix2 } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleOutlineGeometry } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/RectangleOutlineGeometry', function() {
 
@@ -299,5 +285,4 @@ describe('Core/RectangleOutlineGeometry', function() {
     packedInstance = [0.1, 0.2, 0.3, 0.4, 5, 6, 7, 8, 9, 10, 9, -1];
     createPackableSpecs(RectangleOutlineGeometry, rectangle, packedInstance, 'at height');
 
-});
 });

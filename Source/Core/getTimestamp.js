@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
     /*global performance*/
 
     /**
@@ -23,6 +21,4 @@ define(function() {
             return Date.now();
         };
     }
-
-    return getTimestamp;
-});
+export default getTimestamp;

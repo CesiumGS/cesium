@@ -1,22 +1,11 @@
-define([
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/JulianDate',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/Entity',
-        'DataSources/EntityView',
-        'Specs/createScene'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Ellipsoid,
-        JulianDate,
-        ConstantPositionProperty,
-        Entity,
-        EntityView,
-        createScene) {
-        'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { EntityView } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('DataSources/EntityView', function() {
 
@@ -113,4 +102,3 @@ describe('DataSources/EntityView', function() {
         view.update(JulianDate.now());
     });
 }, 'WebGL');
-});

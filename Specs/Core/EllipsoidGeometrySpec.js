@@ -1,20 +1,10 @@
-define([
-        'Core/arrayFill',
-        'Core/Cartesian3',
-        'Core/EllipsoidGeometry',
-        'Core/GeometryOffsetAttribute',
-        'Core/Math',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        arrayFill,
-        Cartesian3,
-        EllipsoidGeometry,
-        GeometryOffsetAttribute,
-        CesiumMath,
-        VertexFormat,
-        createPackableSpecs) {
-    'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { EllipsoidGeometry } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/EllipsoidGeometry', function() {
     it('constructor rounds floating-point slicePartitions', function() {
@@ -344,5 +334,4 @@ describe('Core/EllipsoidGeometry', function() {
         -1
     ];
     createPackableSpecs(EllipsoidGeometry, ellipsoidgeometry, packedInstance);
-});
 });

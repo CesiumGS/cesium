@@ -1,12 +1,6 @@
-define([
-        '../Core/defined',
-        '../Core/Ellipsoid',
-        '../Core/PolylineVolumeOutlineGeometry'
-    ], function(
-        defined,
-        Ellipsoid,
-        PolylineVolumeOutlineGeometry) {
-    'use strict';
+import defined from '../Core/defined.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import PolylineVolumeOutlineGeometry from '../Core/PolylineVolumeOutlineGeometry.js';
 
     function createPolylineVolumeOutlineGeometry(polylineVolumeOutlineGeometry, offset) {
         if (defined(offset)) {
@@ -15,6 +9,4 @@ define([
         polylineVolumeOutlineGeometry._ellipsoid = Ellipsoid.clone(polylineVolumeOutlineGeometry._ellipsoid);
         return PolylineVolumeOutlineGeometry.createGeometry(polylineVolumeOutlineGeometry);
     }
-
-    return createPolylineVolumeOutlineGeometry;
-});
+export default createPolylineVolumeOutlineGeometry;

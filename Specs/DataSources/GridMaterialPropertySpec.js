@@ -1,22 +1,11 @@
-define([
-        'Core/Cartesian2',
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'DataSources/ConstantProperty',
-        'DataSources/GridMaterialProperty',
-        'DataSources/SampledProperty',
-        'DataSources/TimeIntervalCollectionProperty'
-    ], function(
-        Cartesian2,
-        Color,
-        JulianDate,
-        TimeInterval,
-        ConstantProperty,
-        GridMaterialProperty,
-        SampledProperty,
-        TimeIntervalCollectionProperty) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
 
 describe('DataSources/GridMaterialProperty', function() {
 
@@ -284,5 +273,4 @@ describe('DataSources/GridMaterialProperty', function() {
         property.lineOffset.addSample(JulianDate.now(), 1);
         expect(property.isConstant).toBe(false);
     });
-});
 });

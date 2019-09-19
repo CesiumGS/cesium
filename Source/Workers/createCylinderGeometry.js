@@ -1,15 +1,10 @@
-define([
-        '../Core/CylinderGeometry',
-        '../Core/defined'
-    ], function(
-        CylinderGeometry,
-        defined) {
-    'use strict';
+import CylinderGeometry from '../Core/CylinderGeometry.js';
+import defined from '../Core/defined.js';
 
-    return function(cylinderGeometry, offset) {
+    function createCylinderGeometry(cylinderGeometry, offset) {
         if (defined(offset)) {
             cylinderGeometry = CylinderGeometry.unpack(cylinderGeometry, offset);
         }
         return CylinderGeometry.createGeometry(cylinderGeometry);
-    };
-});
+    }
+export default createCylinderGeometry;

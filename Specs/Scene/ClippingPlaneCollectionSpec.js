@@ -1,40 +1,20 @@
-define([
-        'Core/AttributeCompression',
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Color',
-        'Core/Intersect',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/PixelFormat',
-        'Core/Plane',
-        'Renderer/PixelDatatype',
-        'Renderer/TextureMinificationFilter',
-        'Renderer/TextureWrap',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Specs/createScene'
-    ], function(
-        AttributeCompression,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        Intersect,
-        CesiumMath,
-        Matrix4,
-        PixelFormat,
-        Plane,
-        PixelDatatype,
-        TextureMinificationFilter,
-        TextureWrap,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        createScene) {
-        'use strict';
+import { AttributeCompression } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Plane } from '../../Source/Cesium.js';
+import { PixelDatatype } from '../../Source/Cesium.js';
+import { TextureMinificationFilter } from '../../Source/Cesium.js';
+import { TextureWrap } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/ClippingPlaneCollection', function() {
 
@@ -776,5 +756,4 @@ describe('Scene/ClippingPlaneCollection', function() {
         clippingPlanes.destroy();
         scene.destroyForSpecs();
     });
-});
 });

@@ -1,14 +1,7 @@
-define([
-        'Core/ComponentDatatype',
-        'Renderer/BufferUsage',
-        'Renderer/VertexArrayFacade',
-        'Specs/createContext'
-    ], function(
-        ComponentDatatype,
-        BufferUsage,
-        VertexArrayFacade,
-        createContext) {
-        'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import { VertexArrayFacade } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
 describe('Renderer/VertexArrayFacade', function() {
 
@@ -331,4 +324,3 @@ describe('Renderer/VertexArrayFacade', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

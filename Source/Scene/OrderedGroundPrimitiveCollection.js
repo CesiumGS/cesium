@@ -1,18 +1,9 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        './PrimitiveCollection'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        PrimitiveCollection) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import PrimitiveCollection from './PrimitiveCollection.js';
 
     /**
      * A primitive collection for helping maintain the order or ground primitives based on a z-index
@@ -220,6 +211,4 @@ define([
         this.removeAll();
         return destroyObject(this);
     };
-
-    return OrderedGroundPrimitiveCollection;
-});
+export default OrderedGroundPrimitiveCollection;

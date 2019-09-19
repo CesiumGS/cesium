@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Scene/SceneMode',
-        'Scene/SkyAtmosphere',
-        'Specs/createScene'
-    ], function(
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        SceneMode,
-        SkyAtmosphere,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { SkyAtmosphere } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/SkyAtmosphere', function() {
 
@@ -161,4 +152,3 @@ describe('Scene/SkyAtmosphere', function() {
         expect(s.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
-});

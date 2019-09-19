@@ -1,10 +1,5 @@
-define([
-        '../Core/defineProperties',
-        '../Core/DeveloperError'
-    ], function(
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * Defines the interface for data sources, which turn arbitrary data into a
@@ -123,6 +118,4 @@ define([
             dataSource._loading.raiseEvent(dataSource, isLoading);
         }
     };
-
-    return DataSource;
-});
+export default DataSource;

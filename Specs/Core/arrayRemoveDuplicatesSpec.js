@@ -1,14 +1,7 @@
-define([
-        'Core/arrayRemoveDuplicates',
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/Spherical'
-    ], function(
-        arrayRemoveDuplicates,
-        Cartesian3,
-        CesiumMath,
-        Spherical) {
-        'use strict';
+import { arrayRemoveDuplicates } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Spherical } from '../../Source/Cesium.js';
 
 describe('Core/arrayRemoveDuplicates', function() {
 
@@ -166,5 +159,4 @@ describe('Core/arrayRemoveDuplicates', function() {
         expect(noDuplicates).toEqual(expectedPositions);
     });
 
-});
 });

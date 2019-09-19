@@ -1,10 +1,5 @@
-define([
-        '../Core/defined',
-        '../Core/FrustumOutlineGeometry'
-    ], function(
-        defined,
-        FrustumOutlineGeometry) {
-    'use strict';
+import defined from '../Core/defined.js';
+import FrustumOutlineGeometry from '../Core/FrustumOutlineGeometry.js';
 
     function createFrustumOutlineGeometry(frustumGeometry, offset) {
         if (defined(offset)) {
@@ -12,6 +7,4 @@ define([
         }
         return FrustumOutlineGeometry.createGeometry(frustumGeometry);
     }
-
-    return createFrustumOutlineGeometry;
-});
+export default createFrustumOutlineGeometry;

@@ -1,70 +1,35 @@
-define([
-        '../Core/Check',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
-        '../Core/Matrix4',
-        '../Core/PixelFormat',
-        '../Core/PrimitiveType',
-        '../Core/RuntimeError',
-        '../Core/WebGLConstants',
-        '../Shaders/ViewportQuadVS',
-        './BufferUsage',
-        './ClearCommand',
-        './ContextLimits',
-        './CubeMap',
-        './DrawCommand',
-        './PassState',
-        './PixelDatatype',
-        './RenderState',
-        './ShaderCache',
-        './ShaderProgram',
-        './Texture',
-        './TextureCache',
-        './UniformState',
-        './VertexArray'
-    ], function(
-        Check,
-        clone,
-        Color,
-        ComponentDatatype,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Geometry,
-        GeometryAttribute,
-        Matrix4,
-        PixelFormat,
-        PrimitiveType,
-        RuntimeError,
-        WebGLConstants,
-        ViewportQuadVS,
-        BufferUsage,
-        ClearCommand,
-        ContextLimits,
-        CubeMap,
-        DrawCommand,
-        PassState,
-        PixelDatatype,
-        RenderState,
-        ShaderCache,
-        ShaderProgram,
-        Texture,
-        TextureCache,
-        UniformState,
-        VertexArray) {
-    'use strict';
+import Check from '../Core/Check.js';
+import clone from '../Core/clone.js';
+import Color from '../Core/Color.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Geometry from '../Core/Geometry.js';
+import GeometryAttribute from '../Core/GeometryAttribute.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import ViewportQuadVS from '../Shaders/ViewportQuadVS.js';
+import BufferUsage from './BufferUsage.js';
+import ClearCommand from './ClearCommand.js';
+import ContextLimits from './ContextLimits.js';
+import CubeMap from './CubeMap.js';
+import DrawCommand from './DrawCommand.js';
+import PassState from './PassState.js';
+import PixelDatatype from './PixelDatatype.js';
+import RenderState from './RenderState.js';
+import ShaderCache from './ShaderCache.js';
+import ShaderProgram from './ShaderProgram.js';
+import Texture from './Texture.js';
+import TextureCache from './TextureCache.js';
+import UniformState from './UniformState.js';
+import VertexArray from './VertexArray.js';
     /*global WebGLRenderingContext*/
 
     /*global WebGL2RenderingContext*/
@@ -1303,6 +1268,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return Context;
-});
+export default Context;

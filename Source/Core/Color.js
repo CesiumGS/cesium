@@ -1,18 +1,9 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './FeatureDetection',
-        './freezeObject',
-        './Math'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        FeatureDetection,
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import FeatureDetection from './FeatureDetection.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
 
     function hue2rgb(m1, m2, h) {
         if (h < 0) {
@@ -2179,6 +2170,4 @@ define([
      * @type {Color}
      */
     Color.TRANSPARENT = freezeObject(new Color(0, 0, 0, 0));
-
-    return Color;
-});
+export default Color;

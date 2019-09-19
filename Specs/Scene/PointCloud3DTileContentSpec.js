@@ -1,48 +1,24 @@
-define([
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ComponentDatatype',
-        'Core/defined',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'Core/Math',
-        'Core/PerspectiveFrustum',
-        'Core/Transforms',
-        'Renderer/Pass',
-        'Scene/Cesium3DTileRefine',
-        'Scene/Cesium3DTileStyle',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/DracoLoader',
-        'Scene/Expression',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createCanvas',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        Cartesian3,
-        Color,
-        ComponentDatatype,
-        defined,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        CesiumMath,
-        PerspectiveFrustum,
-        Transforms,
-        Pass,
-        Cesium3DTileRefine,
-        Cesium3DTileStyle,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        DracoLoader,
-        Expression,
-        Cesium3DTilesTester,
-        createCanvas,
-        createScene,
-        pollToPromise,
-        when) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { Cesium3DTileRefine } from '../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { DracoLoader } from '../../Source/Cesium.js';
+import { Expression } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createCanvas from '../createCanvas.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/PointCloud3DTileContent', function() {
 
@@ -1030,4 +1006,3 @@ describe('Scene/PointCloud3DTileContent', function() {
     });
 
 }, 'WebGL');
-});

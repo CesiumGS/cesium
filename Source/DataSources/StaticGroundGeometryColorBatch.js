@@ -1,24 +1,12 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/DistanceDisplayCondition',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/GroundPrimitive',
-        './BoundingSphereState',
-        './Property'
-    ], function(
-        AssociativeArray,
-        Color,
-        defined,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        ShowGeometryInstanceAttribute,
-        GroundPrimitive,
-        BoundingSphereState,
-        Property) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import GroundPrimitive from '../Scene/GroundPrimitive.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import Property from './Property.js';
 
     var colorScratch = new Color();
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
@@ -341,6 +329,4 @@ define([
             batchesArray[i].removeAllPrimitives();
         }
     };
-
-    return StaticGroundGeometryColorBatch;
-});
+export default StaticGroundGeometryColorBatch;

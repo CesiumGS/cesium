@@ -1,18 +1,9 @@
-define([
-        'Core/Ion',
-        'Core/IonResource',
-        'Core/RequestErrorEvent',
-        'Core/Resource',
-        'Core/RuntimeError',
-        'ThirdParty/when'
-    ], function(
-        Ion,
-        IonResource,
-        RequestErrorEvent,
-        Resource,
-        RuntimeError,
-        when) {
-        'use strict';
+import { Ion } from '../../Source/Cesium.js';
+import { IonResource } from '../../Source/Cesium.js';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Core/IonResource', function() {
 
@@ -342,5 +333,4 @@ describe('Core/IonResource', function() {
             });
         });
     });
-});
 });

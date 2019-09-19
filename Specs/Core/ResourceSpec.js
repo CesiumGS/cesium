@@ -1,26 +1,13 @@
-define([
-        'Core/DefaultProxy',
-        'Core/defaultValue',
-        'Core/queryToObject',
-        'Core/Request',
-        'Core/RequestErrorEvent',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Specs/createCanvas',
-        'ThirdParty/Uri',
-        'ThirdParty/when'
-    ], function(
-        DefaultProxy,
-        defaultValue,
-        queryToObject,
-        Request,
-        RequestErrorEvent,
-        RequestScheduler,
-        Resource,
-        createCanvas,
-        Uri,
-        when) {
-        'use strict';
+import { DefaultProxy } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { queryToObject } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import createCanvas from '../createCanvas.js';
+import { Uri } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Core/Resource', function() {
 
@@ -2340,5 +2327,4 @@ describe('Core/Resource', function() {
         });
     });
 
-});
 });

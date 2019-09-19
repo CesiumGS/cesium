@@ -1,12 +1,6 @@
-define([
-        'DataSources/DataSourceCollection',
-        'Specs/MockDataSource',
-        'ThirdParty/when'
-    ], function(
-        DataSourceCollection,
-        MockDataSource,
-        when) {
-        'use strict';
+import { DataSourceCollection } from '../../Source/Cesium.js';
+import MockDataSource from '../MockDataSource.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('DataSources/DataSourceCollection', function() {
 
@@ -203,5 +197,4 @@ describe('DataSources/DataSourceCollection', function() {
             collection.add(undefined);
         }).toThrowDeveloperError();
     });
-});
 });

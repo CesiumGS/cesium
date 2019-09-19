@@ -1,8 +1,4 @@
-define([
-        'Core/LagrangePolynomialApproximation'
-    ], function(
-        LagrangePolynomialApproximation) {
-        'use strict';
+import { LagrangePolynomialApproximation } from '../../Source/Cesium.js';
 
 describe('Core/LagrangePolynomialApproximation', function() {
 
@@ -43,5 +39,4 @@ describe('Core/LagrangePolynomialApproximation', function() {
         expect(LagrangePolynomialApproximation.getRequiredDataPoints(2)).toEqual(3);
         expect(LagrangePolynomialApproximation.getRequiredDataPoints(3)).toEqual(4);
     });
-});
 });

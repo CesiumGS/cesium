@@ -1,15 +1,10 @@
-define([
-        '../Core/defined',
-        '../Core/PlaneOutlineGeometry'
-    ], function(
-        defined,
-        PlaneOutlineGeometry) {
-    'use strict';
+import defined from '../Core/defined.js';
+import PlaneOutlineGeometry from '../Core/PlaneOutlineGeometry.js';
 
-    return function(planeGeometry, offset) {
+    function createPlaneOutlineGeometry(planeGeometry, offset) {
         if (defined(offset)) {
             planeGeometry = PlaneOutlineGeometry.unpack(planeGeometry, offset);
         }
         return PlaneOutlineGeometry.createGeometry(planeGeometry);
-    };
-});
+    }
+export default createPlaneOutlineGeometry;

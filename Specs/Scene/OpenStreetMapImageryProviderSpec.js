@@ -1,32 +1,14 @@
-define([
-        'Scene/OpenStreetMapImageryProvider',
-        'Core/DefaultProxy',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorTilingScheme',
-        'Scene/createOpenStreetMapImageryProvider',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryState',
-        'Scene/UrlTemplateImageryProvider',
-        'Specs/pollToPromise'
-    ], function(
-        OpenStreetMapImageryProvider,
-        DefaultProxy,
-        CesiumMath,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        WebMercatorTilingScheme,
-        createOpenStreetMapImageryProvider,
-        Imagery,
-        ImageryLayer,
-        ImageryState,
-        UrlTemplateImageryProvider,
-        pollToPromise) {
-        'use strict';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { OpenStreetMapImageryProvider } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { UrlTemplateImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/createOpenStreetMapImageryProvider', function() {
 
@@ -277,5 +259,4 @@ describe('Scene/createOpenStreetMapImageryProvider', function() {
             });
         }).toThrowDeveloperError();
     });
-});
 });

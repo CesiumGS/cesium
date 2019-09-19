@@ -1,38 +1,19 @@
-define([
-        '../MockImageryProvider',
-        '../MockTerrainProvider',
-        '../TerrainTileProcessor',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/createWorldTerrain',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/Ray',
-        'Scene/GlobeSurfaceTile',
-        'Scene/ImageryLayerCollection',
-        'Scene/QuadtreeTile',
-        'Scene/QuadtreeTileLoadState',
-        'Scene/TerrainState',
-        'Specs/createScene',
-        'ThirdParty/when'
-    ], function(
-        MockImageryProvider,
-        MockTerrainProvider,
-        TerrainTileProcessor,
-        Cartesian3,
-        Cartesian4,
-        createWorldTerrain,
-        Ellipsoid,
-        GeographicTilingScheme,
-        Ray,
-        GlobeSurfaceTile,
-        ImageryLayerCollection,
-        QuadtreeTile,
-        QuadtreeTileLoadState,
-        TerrainState,
-        createScene,
-        when) {
-        'use strict';
+import MockImageryProvider from '../MockImageryProvider.js';
+import MockTerrainProvider from '../MockTerrainProvider.js';
+import TerrainTileProcessor from '../TerrainTileProcessor.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { createWorldTerrain } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Ray } from '../../Source/Cesium.js';
+import { GlobeSurfaceTile } from '../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../Source/Cesium.js';
+import { QuadtreeTile } from '../../Source/Cesium.js';
+import { QuadtreeTileLoadState } from '../../Source/Cesium.js';
+import { TerrainState } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/GlobeSurfaceTile', function() {
 
@@ -398,5 +379,4 @@ describe('Scene/GlobeSurfaceTile', function() {
             });
         });
     });
-});
 });

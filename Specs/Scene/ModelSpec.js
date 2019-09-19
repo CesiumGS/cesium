@@ -1,80 +1,40 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/CesiumTerrainProvider',
-        'Core/Color',
-        'Core/combine',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/defineProperties',
-        'Core/DistanceDisplayCondition',
-        'Core/Ellipsoid',
-        'Core/Event',
-        'Core/FeatureDetection',
-        'Core/HeadingPitchRange',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/PerspectiveFrustum',
-        'Core/PrimitiveType',
-        'Core/Resource',
-        'Core/Transforms',
-        'Core/WebGLConstants',
-        'Renderer/Pass',
-        'Renderer/RenderState',
-        'Renderer/ShaderSource',
-        'Scene/Axis',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/ColorBlendMode',
-        'Scene/DracoLoader',
-        'Scene/HeightReference',
-        'Scene/Model',
-        'Scene/ModelAnimationLoop',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        CesiumTerrainProvider,
-        Color,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        DistanceDisplayCondition,
-        Ellipsoid,
-        Event,
-        FeatureDetection,
-        HeadingPitchRange,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        PerspectiveFrustum,
-        PrimitiveType,
-        Resource,
-        Transforms,
-        WebGLConstants,
-        Pass,
-        RenderState,
-        ShaderSource,
-        Axis,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        ColorBlendMode,
-        DracoLoader,
-        HeightReference,
-        Model,
-        ModelAnimationLoop,
-        createScene,
-        pollToPromise,
-        when) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { CesiumTerrainProvider } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { combine } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { defineProperties } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { WebGLConstants } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { ShaderSource } from '../../Source/Cesium.js';
+import { Axis } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { ColorBlendMode } from '../../Source/Cesium.js';
+import { DracoLoader } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { Model } from '../../Source/Cesium.js';
+import { ModelAnimationLoop } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/Model', function() {
 
@@ -3543,4 +3503,3 @@ describe('Scene/Model', function() {
         });
     });
 }, 'WebGL');
-});

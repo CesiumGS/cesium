@@ -1,16 +1,8 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/getImagePixels',
-        '../Core/Resource'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        getImagePixels,
-        Resource) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import getImagePixels from '../Core/getImagePixels.js';
+import Resource from '../Core/Resource.js';
 
     /**
      * A policy for discarding tile images that match a known image containing a
@@ -144,6 +136,4 @@ define([
         }
         return true;
     };
-
-    return DiscardMissingTileImagePolicy;
-});
+export default DiscardMissingTileImagePolicy;

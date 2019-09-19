@@ -1,10 +1,5 @@
-define([
-        'Core/Math',
-        'Core/QuarticRealPolynomial'
-    ], function(
-        CesiumMath,
-        QuarticRealPolynomial) {
-        'use strict';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { QuarticRealPolynomial } from '../../Source/Cesium.js';
 
 describe('Core/QuarticRealPolynomial', function() {
 
@@ -188,5 +183,4 @@ describe('Core/QuarticRealPolynomial', function() {
         expect(actual[0]).toEqualEpsilon(expected[0], CesiumMath.EPSILON11);
         expect(actual[1]).toEqualEpsilon(expected[1], CesiumMath.EPSILON11);
     });
-});
 });

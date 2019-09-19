@@ -1,8 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from './defined.js';
 
     var definePropertyWorks = (function() {
         try {
@@ -28,6 +24,4 @@ define([
             return o;
         };
     }
-
-    return defineProperties;
-});
+export default defineProperties;

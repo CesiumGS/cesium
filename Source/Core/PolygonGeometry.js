@@ -1,70 +1,33 @@
-define([
-        './ArcType',
-        './arrayFill',
-        './BoundingRectangle',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Ellipsoid',
-        './EllipsoidGeodesic',
-        './EllipsoidRhumbLine',
-        './EllipsoidTangentPlane',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryInstance',
-        './GeometryOffsetAttribute',
-        './GeometryPipeline',
-        './IndexDatatype',
-        './Math',
-        './Matrix2',
-        './Matrix3',
-        './PolygonGeometryLibrary',
-        './PolygonPipeline',
-        './Quaternion',
-        './Rectangle',
-        './VertexFormat',
-        './WindingOrder'
-    ], function(
-        ArcType,
-        arrayFill,
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        EllipsoidGeodesic,
-        EllipsoidRhumbLine,
-        EllipsoidTangentPlane,
-        Geometry,
-        GeometryAttribute,
-        GeometryInstance,
-        GeometryOffsetAttribute,
-        GeometryPipeline,
-        IndexDatatype,
-        CesiumMath,
-        Matrix2,
-        Matrix3,
-        PolygonGeometryLibrary,
-        PolygonPipeline,
-        Quaternion,
-        Rectangle,
-        VertexFormat,
-        WindingOrder) {
-    'use strict';
+import ArcType from './ArcType.js';
+import arrayFill from './arrayFill.js';
+import BoundingRectangle from './BoundingRectangle.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import EllipsoidGeodesic from './EllipsoidGeodesic.js';
+import EllipsoidTangentPlane from './EllipsoidTangentPlane.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryInstance from './GeometryInstance.js';
+import GeometryOffsetAttribute from './GeometryOffsetAttribute.js';
+import GeometryPipeline from './GeometryPipeline.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import PolygonGeometryLibrary from './PolygonGeometryLibrary.js';
+import PolygonPipeline from './PolygonPipeline.js';
+import Quaternion from './Quaternion.js';
+import Rectangle from './Rectangle.js';
+import VertexFormat from './VertexFormat.js';
+import WindingOrder from './WindingOrder.js';
 
     var scratchCarto1 = new Cartographic();
     var scratchCarto2 = new Cartographic();
@@ -1142,6 +1105,4 @@ define([
             }
         }
     });
-
-    return PolygonGeometry;
-});
+export default PolygonGeometry;

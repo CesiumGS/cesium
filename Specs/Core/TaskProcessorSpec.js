@@ -1,18 +1,9 @@
-define([
-        'Core/FeatureDetection',
-        'Core/TaskProcessor',
-        'require',
-        'Specs/absolutize',
-        'ThirdParty/when'
-    ], function(
-        FeatureDetection,
-        TaskProcessor,
-        require,
-        absolutize,
-        when) {
-        'use strict';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { TaskProcessor } from '../../Source/Cesium.js';
+import absolutize from '../absolutize.js';
+import { when } from '../../Source/Cesium.js';
 
-describe('Core/TaskProcessor', function() {
+xdescribe('Core/TaskProcessor', function() {
 
     var taskProcessor;
 
@@ -219,5 +210,4 @@ describe('Core/TaskProcessor', function() {
             });
         }).toThrowRuntimeError();
     });
-});
 });

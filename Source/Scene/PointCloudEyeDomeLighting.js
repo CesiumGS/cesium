@@ -1,48 +1,24 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Core/PrimitiveType',
-        '../Renderer/ClearCommand',
-        '../Renderer/DrawCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/Pass',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Scene/BlendingState',
-        '../Scene/StencilConstants',
-        '../Shaders/PostProcessStages/PointCloudEyeDomeLighting'
-    ], function(
-        Cartesian3,
-        Color,
-        defined,
-        destroyObject,
-        PixelFormat,
-        PrimitiveType,
-        ClearCommand,
-        DrawCommand,
-        Framebuffer,
-        Pass,
-        PixelDatatype,
-        RenderState,
-        Sampler,
-        ShaderSource,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        BlendingState,
-        StencilConstants,
-        PointCloudEyeDomeLightingShader) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import Pass from '../Renderer/Pass.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import BlendingState from '../Scene/BlendingState.js';
+import StencilConstants from '../Scene/StencilConstants.js';
+import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointCloudEyeDomeLighting.js';
 
     /**
      * Eye dome lighting. Does not support points with per-point translucency, but does allow translucent styling against the globe.
@@ -313,6 +289,4 @@ define([
         destroyFramebuffer(this);
         return destroyObject(this);
     };
-
-    return PointCloudEyeDomeLighting;
-});
+export default PointCloudEyeDomeLighting;

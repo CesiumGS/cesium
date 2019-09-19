@@ -1,8 +1,4 @@
-define([
-        'Core/isBlobUri'
-    ], function(
-        isBlobUri) {
-        'use strict';
+import { isBlobUri } from '../../Source/Cesium.js';
 
 describe('Core/isBlobUri', function() {
 
@@ -25,5 +21,4 @@ describe('Core/isBlobUri', function() {
         var blobUrl = window.URL.createObjectURL(blob);
         expect(isBlobUri(blobUrl)).toEqual(true);
     });
-});
 });

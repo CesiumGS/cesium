@@ -1,10 +1,5 @@
-define([
-        'Core/Cartesian3',
-        'Core/CartographicGeocoderService'
-    ], function(
-        Cartesian3,
-        CartographicGeocoderService) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CartographicGeocoderService } from '../../Source/Cesium.js';
 
 describe('Core/CartographicGeocoderService', function() {
 
@@ -79,5 +74,4 @@ describe('Core/CartographicGeocoderService', function() {
         });
     });
 
-});
 });

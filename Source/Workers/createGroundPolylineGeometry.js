@@ -1,12 +1,6 @@
-define([
-        '../Core/ApproximateTerrainHeights',
-        '../Core/defined',
-        '../Core/GroundPolylineGeometry'
-    ], function(
-        ApproximateTerrainHeights,
-        defined,
-        GroundPolylineGeometry) {
-    'use strict';
+import ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
+import defined from '../Core/defined.js';
+import GroundPolylineGeometry from '../Core/GroundPolylineGeometry.js';
 
     function createGroundPolylineGeometry(groundPolylineGeometry, offset) {
         return ApproximateTerrainHeights.initialize()
@@ -17,6 +11,4 @@ define([
                 return GroundPolylineGeometry.createGeometry(groundPolylineGeometry);
             });
     }
-
-    return createGroundPolylineGeometry;
-});
+export default createGroundPolylineGeometry;

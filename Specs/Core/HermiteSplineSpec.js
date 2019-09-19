@@ -1,12 +1,6 @@
-define([
-        'Core/Cartesian3',
-        'Core/HermiteSpline',
-        'Core/Math'
-    ], function(
-        Cartesian3,
-        HermiteSpline,
-        CesiumMath) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { HermiteSpline } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
 
 describe('Core/HermiteSpline', function() {
 
@@ -379,5 +373,4 @@ describe('Core/HermiteSpline', function() {
         var t = (times[0] + times[1]) * 0.5;
         expect(hs.evaluate(t)).toEqual(Cartesian3.lerp(points[0], points[1], t, new Cartesian3()));
     });
-});
 });

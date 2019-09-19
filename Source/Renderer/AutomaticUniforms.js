@@ -1,15 +1,6 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/WebGLConstants'
-    ], function(
-        Cartesian3,
-        CesiumMath,
-        Matrix4,
-        WebGLConstants) {
-    'use strict';
-    /*global WebGLRenderingContext*/
+import Cartesian3 from '../Core/Cartesian3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     var viewerPositionWCScratch = new Cartesian3();
 
@@ -17,11 +8,6 @@ define([
         this._size = options.size;
         this._datatype = options.datatype;
         this.getValue = options.getValue;
-    }
-
-    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
-    if (typeof WebGLRenderingContext === 'undefined') {
-        return {};
     }
 
     var datatypeToGlsl = {};
@@ -1793,6 +1779,4 @@ define([
             }
         })
     };
-
-    return AutomaticUniforms;
-});
+export default AutomaticUniforms;

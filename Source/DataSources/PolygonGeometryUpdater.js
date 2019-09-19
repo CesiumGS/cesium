@@ -1,64 +1,32 @@
-define([
-        '../Core/ApproximateTerrainHeights',
-        '../Core/ArcType',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/CoplanarPolygonGeometry',
-        '../Core/CoplanarPolygonOutlineGeometry',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/EllipsoidTangentPlane',
-        '../Core/GeometryInstance',
-        '../Core/Iso8601',
-        '../Core/OffsetGeometryInstanceAttribute',
-        '../Core/oneTimeWarning',
-        '../Core/PolygonGeometry',
-        '../Core/PolygonOutlineGeometry',
-        '../Core/Rectangle',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/HeightReference',
-        '../Scene/MaterialAppearance',
-        '../Scene/PerInstanceColorAppearance',
-        './ColorMaterialProperty',
-        './DynamicGeometryUpdater',
-        './GeometryUpdater',
-        './GroundGeometryUpdater',
-        './Property'
-    ], function(
-        ApproximateTerrainHeights,
-        ArcType,
-        Cartesian2,
-        Cartesian3,
-        Check,
-        Color,
-        ColorGeometryInstanceAttribute,
-        CoplanarPolygonGeometry,
-        CoplanarPolygonOutlineGeometry,
-        defined,
-        DeveloperError,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        EllipsoidTangentPlane,
-        GeometryInstance,
-        Iso8601,
-        OffsetGeometryInstanceAttribute,
-        oneTimeWarning,
-        PolygonGeometry,
-        PolygonOutlineGeometry,
-        Rectangle,
-        ShowGeometryInstanceAttribute,
-        HeightReference,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        ColorMaterialProperty,
-        DynamicGeometryUpdater,
-        GeometryUpdater,
-        GroundGeometryUpdater,
-        Property) {
-    'use strict';
+import ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
+import ArcType from '../Core/ArcType.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import CoplanarPolygonGeometry from '../Core/CoplanarPolygonGeometry.js';
+import CoplanarPolygonOutlineGeometry from '../Core/CoplanarPolygonOutlineGeometry.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import EllipsoidTangentPlane from '../Core/EllipsoidTangentPlane.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import Iso8601 from '../Core/Iso8601.js';
+import OffsetGeometryInstanceAttribute from '../Core/OffsetGeometryInstanceAttribute.js';
+import oneTimeWarning from '../Core/oneTimeWarning.js';
+import PolygonGeometry from '../Core/PolygonGeometry.js';
+import PolygonOutlineGeometry from '../Core/PolygonOutlineGeometry.js';
+import Rectangle from '../Core/Rectangle.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import HeightReference from '../Scene/HeightReference.js';
+import MaterialAppearance from '../Scene/MaterialAppearance.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import DynamicGeometryUpdater from './DynamicGeometryUpdater.js';
+import GeometryUpdater from './GeometryUpdater.js';
+import GroundGeometryUpdater from './GroundGeometryUpdater.js';
+import Property from './Property.js';
 
     var heightAndPerPositionHeightWarning = 'Entity polygons cannot have both height and perPositionHeight.  height will be ignored';
     var heightReferenceAndPerPositionHeightWarning = 'heightReference is not supported for entity polygons with perPositionHeight. heightReference will be ignored';
@@ -397,6 +365,4 @@ define([
 
         options.extrudedHeight = extrudedHeightValue;
     };
-
-    return PolygonGeometryUpdater;
-});
+export default PolygonGeometryUpdater;

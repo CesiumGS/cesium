@@ -1,12 +1,6 @@
-define([
-        'Core/HeadingPitchRoll',
-        'Core/Math',
-        'Core/Quaternion'
-    ], function(
-        HeadingPitchRoll,
-        CesiumMath,
-        Quaternion) {
-        'use strict';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
 
 describe('Core/HeadingPitchRoll', function() {
 
@@ -183,5 +177,4 @@ describe('Core/HeadingPitchRoll', function() {
         }).toThrowDeveloperError();
     });
 
-});
 });

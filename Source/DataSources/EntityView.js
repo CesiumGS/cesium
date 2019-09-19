@@ -1,32 +1,16 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Ellipsoid',
-        '../Core/HeadingPitchRange',
-        '../Core/JulianDate',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/Transforms',
-        '../Scene/SceneMode'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        HeadingPitchRange,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Transforms,
-        SceneMode) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import HeadingPitchRange from '../Core/HeadingPitchRange.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Transforms from '../Core/Transforms.js';
+import SceneMode from '../Scene/SceneMode.js';
 
     var updateTransformMatrix3Scratch1 = new Matrix3();
     var updateTransformMatrix3Scratch2 = new Matrix3();
@@ -331,6 +315,4 @@ define([
 
         updateTransform(this, camera, updateLookAt, saveCamera, positionProperty, time, ellipsoid);
     };
-
-    return EntityView;
-});
+export default EntityView;

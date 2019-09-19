@@ -1,18 +1,9 @@
-define([
-        'Core/Iau2000Orientation',
-        'Core/IauOrientationAxes',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/TimeStandard'
-    ], function(
-        Iau2000Orientation,
-        IauOrientationAxes,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        TimeStandard) {
-        'use strict';
+import { Iau2000Orientation } from '../../Source/Cesium.js';
+import { IauOrientationAxes } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { TimeStandard } from '../../Source/Cesium.js';
 
 describe('Core/IauOrientationAxes', function() {
 
@@ -34,5 +25,4 @@ describe('Core/IauOrientationAxes', function() {
         var mtx = axes.evaluate(date);
         expect(mtx).toEqualEpsilon(expectedMatrix, CesiumMath.EPSILON13);
     });
-});
 });

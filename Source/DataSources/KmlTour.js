@@ -1,10 +1,5 @@
-define([
-        '../Core/defined',
-        '../Core/Event'
-    ], function(
-        defined,
-        Event) {
-    'use strict';
+import defined from '../Core/defined.js';
+import Event from '../Core/Event.js';
     /**
      * @alias KmlTour
      * @constructor
@@ -158,6 +153,4 @@ define([
             playEntry.call(this, viewer, cameraOptions, allDone);
         }
     }
-
-    return KmlTour;
-});
+export default KmlTour;

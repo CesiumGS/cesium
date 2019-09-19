@@ -1,12 +1,6 @@
-define([
-        '../Core/defined',
-        '../Core/Ellipsoid',
-        '../Core/PolygonOutlineGeometry'
-    ], function(
-        defined,
-        Ellipsoid,
-        PolygonOutlineGeometry) {
-    'use strict';
+import defined from '../Core/defined.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import PolygonOutlineGeometry from '../Core/PolygonOutlineGeometry.js';
 
     function createPolygonOutlineGeometry(polygonGeometry, offset) {
         if (defined(offset)) {
@@ -15,6 +9,4 @@ define([
         polygonGeometry._ellipsoid = Ellipsoid.clone(polygonGeometry._ellipsoid);
         return PolygonOutlineGeometry.createGeometry(polygonGeometry);
     }
-
-    return createPolygonOutlineGeometry;
-});
+export default createPolygonOutlineGeometry;
