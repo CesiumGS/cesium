@@ -256,7 +256,7 @@ describe('Scene/Cesium3DTile', function() {
             for (var i = 0; i < boxes.length; ++i) {
                 var box = boxes[i];
 
-                tileWithBoundingBox0Volume.box = box;
+                tileWithBoundingBox0Volume.boundingVolume.box = box;
 
                 var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox0Volume, undefined);
                 expect(tile.boundingVolume).toBeDefined();
