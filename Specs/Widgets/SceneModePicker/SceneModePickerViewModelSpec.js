@@ -1,15 +1,15 @@
 define([
-        'Widgets/SceneModePicker/SceneModePickerViewModel',
         'Core/Ellipsoid',
         'Scene/Globe',
         'Scene/SceneMode',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/SceneModePicker/SceneModePickerViewModel'
     ], function(
-        SceneModePickerViewModel,
         Ellipsoid,
         Globe,
         SceneMode,
-        createScene) {
+        createScene,
+        SceneModePickerViewModel) {
         'use strict';
 
 describe('Widgets/SceneModePicker/SceneModePickerViewModel', function() {

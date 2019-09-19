@@ -1,9 +1,9 @@
 define([
-        'Core/TimeInterval',
-        'Core/JulianDate'
+        'Core/JulianDate',
+        'Core/TimeInterval'
     ], function(
-        TimeInterval,
-        JulianDate) {
+        JulianDate,
+        TimeInterval) {
         'use strict';
 
 describe('Core/TimeInterval', function() {

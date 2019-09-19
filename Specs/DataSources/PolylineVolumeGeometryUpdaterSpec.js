@@ -1,5 +1,4 @@
 define([
-        'DataSources/PolylineVolumeGeometryUpdater',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/CornerType',
@@ -8,6 +7,7 @@ define([
         'Core/TimeIntervalCollection',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
+        'DataSources/PolylineVolumeGeometryUpdater',
         'DataSources/PolylineVolumeGraphics',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/PrimitiveCollection',
@@ -16,7 +16,6 @@ define([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        PolylineVolumeGeometryUpdater,
         Cartesian2,
         Cartesian3,
         CornerType,
@@ -25,6 +24,7 @@ define([
         TimeIntervalCollection,
         ConstantProperty,
         Entity,
+        PolylineVolumeGeometryUpdater,
         PolylineVolumeGraphics,
         TimeIntervalCollectionProperty,
         PrimitiveCollection,

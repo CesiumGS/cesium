@@ -1,11 +1,11 @@
 define([
-        'Scene/SphereEmitter',
         'Core/Cartesian3',
-        'Scene/Particle'
+        'Scene/Particle',
+        'Scene/SphereEmitter'
     ], function(
-        SphereEmitter,
         Cartesian3,
-        Particle) {
+        Particle,
+        SphereEmitter) {
         'use strict';
 
 describe('Scene/SphereEmitter', function() {

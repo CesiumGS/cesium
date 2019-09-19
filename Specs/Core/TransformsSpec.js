@@ -1,5 +1,4 @@
 define([
-        'Core/Transforms',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -14,9 +13,9 @@ define([
         'Core/Matrix4',
         'Core/Quaternion',
         'Core/Resource',
-        'Core/TimeInterval'
+        'Core/TimeInterval',
+        'Core/Transforms'
     ], function(
-        Transforms,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -31,7 +30,8 @@ define([
         Matrix4,
         Quaternion,
         Resource,
-        TimeInterval) {
+        TimeInterval,
+        Transforms) {
         'use strict';
 
 describe('Core/Transforms', function() {

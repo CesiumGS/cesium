@@ -1,20 +1,20 @@
 define([
-        'DataSources/EllipsoidGraphics',
         'Core/Cartesian3',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/EllipsoidGraphics',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        EllipsoidGraphics,
         Cartesian3,
         Color,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        EllipsoidGraphics,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
@@ -67,6 +67,11 @@ describe('DataSources/EllipsoidGraphics', function() {
         var source = new EllipsoidGraphics();
         source.material = new ColorMaterialProperty();
         source.radii = new ConstantProperty();
+        source.innerRadii = new ConstantProperty();
+        source.minimumClock = new ConstantProperty();
+        source.maximumClock = new ConstantProperty();
+        source.minimumCone = new ConstantProperty();
+        source.maximumCone = new ConstantProperty();
         source.show = new ConstantProperty();
         source.stackPartitions = new ConstantProperty();
         source.slicePartitions = new ConstantProperty();
@@ -83,6 +88,11 @@ describe('DataSources/EllipsoidGraphics', function() {
 
         expect(target.material).toBe(source.material);
         expect(target.radii).toBe(source.radii);
+        expect(target.innerRadii).toBe(source.innerRadii);
+        expect(target.minimumClock).toBe(source.minimumClock);
+        expect(target.maximumClock).toBe(source.maximumClock);
+        expect(target.minimumCone).toBe(source.minimumCone);
+        expect(target.maximumCone).toBe(source.maximumCone);
         expect(target.show).toBe(source.show);
         expect(target.stackPartitions).toBe(source.stackPartitions);
         expect(target.slicePartitions).toBe(source.slicePartitions);
@@ -100,6 +110,11 @@ describe('DataSources/EllipsoidGraphics', function() {
 
         var material = new ColorMaterialProperty();
         var radii = new ConstantProperty();
+        var innerRadii = new ConstantProperty();
+        var minimumClock = new ConstantProperty();
+        var maximumClock = new ConstantProperty();
+        var minimumCone = new ConstantProperty();
+        var maximumCone = new ConstantProperty();
         var show = new ConstantProperty();
         var stackPartitions = new ConstantProperty();
         var slicePartitions = new ConstantProperty();
@@ -114,6 +129,11 @@ describe('DataSources/EllipsoidGraphics', function() {
         var target = new EllipsoidGraphics();
         target.material = material;
         target.radii = radii;
+        target.innerRadii = innerRadii;
+        target.minimumClock = minimumClock;
+        target.maximumClock = maximumClock;
+        target.minimumCone = minimumCone;
+        target.maximumCone = maximumCone;
         target.show = show;
         target.stackPartitions = stackPartitions;
         target.slicePartitions = slicePartitions;
@@ -130,6 +150,11 @@ describe('DataSources/EllipsoidGraphics', function() {
 
         expect(target.material).toBe(material);
         expect(target.radii).toBe(radii);
+        expect(target.innerRadii).toBe(innerRadii);
+        expect(target.minimumClock).toBe(minimumClock);
+        expect(target.maximumClock).toBe(maximumClock);
+        expect(target.minimumCone).toBe(minimumCone);
+        expect(target.maximumCone).toBe(maximumCone);
         expect(target.show).toBe(show);
         expect(target.stackPartitions).toBe(stackPartitions);
         expect(target.slicePartitions).toBe(slicePartitions);
@@ -158,6 +183,21 @@ describe('DataSources/EllipsoidGraphics', function() {
         source.distanceDisplayCondition = new ConstantProperty();
 
         var result = source.clone();
+        expect(result.material).toBe(source.material);
+        expect(result.radii).toBe(source.radii);
+        expect(result.show).toBe(source.show);
+        expect(result.stackPartitions).toBe(source.stackPartitions);
+        expect(result.slicePartitions).toBe(source.slicePartitions);
+        expect(result.subdivisions).toBe(source.subdivisions);
+        expect(result.fill).toBe(source.fill);
+        expect(result.outline).toBe(source.outline);
+        expect(result.outlineColor).toBe(source.outlineColor);
+        expect(result.outlineWidth).toBe(source.outlineWidth);
+        expect(result.shadows).toBe(source.shadows);
+        expect(result.distanceDisplayCondition).toBe(source.distanceDisplayCondition);
+
+        // Clone with source passed
+        result = source.clone(source);
         expect(result.material).toBe(source.material);
         expect(result.radii).toBe(source.radii);
         expect(result.show).toBe(source.show);

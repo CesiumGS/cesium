@@ -1,5 +1,4 @@
 define([
-        'Scene/IonImageryProvider',
         'Core/Credit',
         'Core/defaultValue',
         'Core/IonResource',
@@ -10,6 +9,7 @@ define([
         'Scene/BingMapsImageryProvider',
         'Scene/GoogleEarthEnterpriseMapsProvider',
         'Scene/ImageryProvider',
+        'Scene/IonImageryProvider',
         'Scene/MapboxImageryProvider',
         'Scene/SingleTileImageryProvider',
         'Scene/UrlTemplateImageryProvider',
@@ -17,7 +17,6 @@ define([
         'Scene/WebMapTileServiceImageryProvider',
         'ThirdParty/when'
     ], function(
-        IonImageryProvider,
         Credit,
         defaultValue,
         IonResource,
@@ -28,6 +27,7 @@ define([
         BingMapsImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
         ImageryProvider,
+        IonImageryProvider,
         MapboxImageryProvider,
         SingleTileImageryProvider,
         UrlTemplateImageryProvider,

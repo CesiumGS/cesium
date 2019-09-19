@@ -1,20 +1,20 @@
 define([
-        'Scene/EllipsoidSurfaceAppearance',
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Scene/Appearance',
+        'Scene/EllipsoidSurfaceAppearance',
         'Scene/Material',
         'Scene/Primitive',
         'Specs/createScene'
     ], function(
-        EllipsoidSurfaceAppearance,
         ColorGeometryInstanceAttribute,
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
         Appearance,
+        EllipsoidSurfaceAppearance,
         Material,
         Primitive,
         createScene) {

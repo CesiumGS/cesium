@@ -50,6 +50,12 @@ describe('Core/barycentricCoordinates', function() {
         expect(barycentricCoordinates(point, p0, p1, p2)).toEqualEpsilon(new Cartesian3(scalar, scalar, scalar), CesiumMath.EPSILON14);
     });
 
+    it('evaluates without throwing a NaN', function() {
+        var point = Cartesian3.multiplyByScalar(Cartesian3.add(p1, p1, p1), 0.5, new Cartesian3());
+        var coord = barycentricCoordinates(point, p0, p1, p2);
+        expect(coord.z).not.toBeNaN();
+    });
+
     it('evaluates with equal length sides', function() {
         var p0 = new Cartesian3(9635312487071484, 13827945400273020, -16479219993905144);
         var p1 = new Cartesian3(12832234.180639317, -10455085.701705107, 750010.7274386138);

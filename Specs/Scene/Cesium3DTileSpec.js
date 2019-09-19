@@ -1,5 +1,4 @@
 define([
-        'Scene/Cesium3DTile',
         'Core/Cartesian3',
         'Core/clone',
         'Core/HeadingPitchRoll',
@@ -8,13 +7,13 @@ define([
         'Core/Matrix4',
         'Core/Rectangle',
         'Core/Transforms',
+        'Scene/Cesium3DTile',
         'Scene/Cesium3DTileRefine',
         'Scene/Cesium3DTilesetHeatmap',
         'Scene/TileBoundingRegion',
         'Scene/TileOrientedBoundingBox',
         'Specs/createScene'
     ], function(
-        Cesium3DTile,
         Cartesian3,
         clone,
         HeadingPitchRoll,
@@ -23,6 +22,7 @@ define([
         Matrix4,
         Rectangle,
         Transforms,
+        Cesium3DTile,
         Cesium3DTileRefine,
         Cesium3DTilesetHeatmap,
         TileBoundingRegion,

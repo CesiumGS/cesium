@@ -1,9 +1,9 @@
 define([
-        'Core/GeometryInstanceAttribute',
-        'Core/ComponentDatatype'
+        'Core/ComponentDatatype',
+        'Core/GeometryInstanceAttribute'
     ], function(
-        GeometryInstanceAttribute,
-        ComponentDatatype) {
+        ComponentDatatype,
+        GeometryInstanceAttribute) {
         'use strict';
 
 describe('Core/GeometryInstanceAttribute', function() {

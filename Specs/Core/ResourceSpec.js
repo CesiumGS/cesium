@@ -1,24 +1,22 @@
 define([
-        'Core/Resource',
         'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/queryToObject',
         'Core/Request',
         'Core/RequestErrorEvent',
         'Core/RequestScheduler',
-        'Core/TrustedServers',
+        'Core/Resource',
         'Specs/createCanvas',
         'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
-        Resource,
         DefaultProxy,
         defaultValue,
         queryToObject,
         Request,
         RequestErrorEvent,
         RequestScheduler,
-        TrustedServers,
+        Resource,
         createCanvas,
         Uri,
         when) {

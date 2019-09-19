@@ -1,16 +1,16 @@
 define([
-        'Core/PolygonPipeline',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Core/PolygonPipeline',
         'Core/WindingOrder'
     ], function(
-        PolygonPipeline,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        PolygonPipeline,
         WindingOrder) {
         'use strict';
 

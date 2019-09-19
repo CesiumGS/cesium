@@ -1,12 +1,12 @@
 define([
-        'Core/CylinderGeometry',
         'Core/arrayFill',
+        'Core/CylinderGeometry',
         'Core/GeometryOffsetAttribute',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        CylinderGeometry,
         arrayFill,
+        CylinderGeometry,
         GeometryOffsetAttribute,
         VertexFormat,
         createPackableSpecs) {

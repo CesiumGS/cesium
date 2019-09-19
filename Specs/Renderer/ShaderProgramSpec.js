@@ -1,11 +1,11 @@
 define([
-        'Renderer/ShaderProgram',
         'Renderer/ContextLimits',
+        'Renderer/ShaderProgram',
         'Renderer/ShaderSource',
         'Specs/createContext'
     ], function(
-        ShaderProgram,
         ContextLimits,
+        ShaderProgram,
         ShaderSource,
         createContext) {
         'use strict';

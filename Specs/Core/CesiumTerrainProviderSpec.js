@@ -1,6 +1,5 @@
 define([
         'Core/CesiumTerrainProvider',
-        'Core/DefaultProxy',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/getAbsoluteUri',
@@ -16,7 +15,6 @@ define([
         'ThirdParty/when'
     ], function(
         CesiumTerrainProvider,
-        DefaultProxy,
         Ellipsoid,
         GeographicTilingScheme,
         getAbsoluteUri,

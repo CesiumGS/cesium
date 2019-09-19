@@ -1,10 +1,8 @@
 define([
         'Core/PlaneOutlineGeometry',
-        'Core/Cartesian3',
         'Specs/createPackableSpecs'
     ], function(
         PlaneOutlineGeometry,
-        Cartesian3,
         createPackableSpecs) {
         'use strict';
 

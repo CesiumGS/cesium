@@ -1,10 +1,10 @@
 define([
-        'Core/requestAnimationFrame',
         'Core/cancelAnimationFrame',
+        'Core/requestAnimationFrame',
         'ThirdParty/when'
     ], function(
-        requestAnimationFrame,
         cancelAnimationFrame,
+        requestAnimationFrame,
         when) {
         'use strict';
 

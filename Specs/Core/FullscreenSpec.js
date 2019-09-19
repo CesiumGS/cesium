@@ -1,9 +1,9 @@
 define([
-        'Core/Fullscreen',
-        'Core/FeatureDetection'
+        'Core/FeatureDetection',
+        'Core/Fullscreen'
     ], function(
-        Fullscreen,
-        FeatureDetection) {
+        FeatureDetection,
+        Fullscreen) {
         'use strict';
 
 describe('Core/Fullscreen', function() {

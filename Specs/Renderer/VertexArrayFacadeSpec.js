@@ -1,12 +1,12 @@
 define([
-        'Renderer/VertexArrayFacade',
         'Core/ComponentDatatype',
         'Renderer/BufferUsage',
+        'Renderer/VertexArrayFacade',
         'Specs/createContext'
     ], function(
-        VertexArrayFacade,
         ComponentDatatype,
         BufferUsage,
+        VertexArrayFacade,
         createContext) {
         'use strict';
 

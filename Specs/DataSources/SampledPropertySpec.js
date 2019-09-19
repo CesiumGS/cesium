@@ -1,5 +1,4 @@
 define([
-        'DataSources/SampledProperty',
         'Core/Cartesian3',
         'Core/defined',
         'Core/ExtrapolationType',
@@ -9,9 +8,9 @@ define([
         'Core/LinearApproximation',
         'Core/Math',
         'Core/Quaternion',
-        'Core/TimeInterval'
+        'Core/TimeInterval',
+        'DataSources/SampledProperty'
     ], function(
-        SampledProperty,
         Cartesian3,
         defined,
         ExtrapolationType,
@@ -21,7 +20,8 @@ define([
         LinearApproximation,
         CesiumMath,
         Quaternion,
-        TimeInterval) {
+        TimeInterval,
+        SampledProperty) {
         'use strict';
 
 describe('DataSources/SampledProperty', function() {

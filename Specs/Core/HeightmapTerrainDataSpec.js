@@ -1,12 +1,12 @@
 define([
-        'Core/HeightmapTerrainData',
         'Core/GeographicTilingScheme',
         'Core/HeightmapEncoding',
+        'Core/HeightmapTerrainData',
         'Core/TerrainData'
     ], function(
-        HeightmapTerrainData,
         GeographicTilingScheme,
         HeightmapEncoding,
+        HeightmapTerrainData,
         TerrainData) {
         'use strict';
 

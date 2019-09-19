@@ -1,11 +1,11 @@
 define([
-        'Core/PlaneGeometry',
         'Core/Cartesian3',
+        'Core/PlaneGeometry',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        PlaneGeometry,
         Cartesian3,
+        PlaneGeometry,
         VertexFormat,
         createPackableSpecs) {
         'use strict';

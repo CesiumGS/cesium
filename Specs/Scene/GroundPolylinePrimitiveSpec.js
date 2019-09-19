@@ -1,5 +1,4 @@
 define([
-        'Scene/GroundPolylinePrimitive',
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian3',
         'Core/Color',
@@ -13,6 +12,7 @@ define([
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
         'Renderer/Pass',
+        'Scene/GroundPolylinePrimitive',
         'Scene/PerInstanceColorAppearance',
         'Scene/PolylineColorAppearance',
         'Scene/PolylineMaterialAppearance',
@@ -20,7 +20,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        GroundPolylinePrimitive,
         ApproximateTerrainHeights,
         Cartesian3,
         Color,
@@ -34,6 +33,7 @@ define([
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
         Pass,
+        GroundPolylinePrimitive,
         PerInstanceColorAppearance,
         PolylineColorAppearance,
         PolylineMaterialAppearance,

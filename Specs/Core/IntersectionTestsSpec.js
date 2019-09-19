@@ -1,16 +1,16 @@
 define([
-        'Core/IntersectionTests',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/IntersectionTests',
         'Core/Math',
         'Core/Plane',
         'Core/Ray'
     ], function(
-        IntersectionTests,
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
+        IntersectionTests,
         CesiumMath,
         Plane,
         Ray) {

@@ -1,16 +1,16 @@
 define([
-        'DataSources/PolylineDashMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/PolylineDashMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty'
     ], function(
-        PolylineDashMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
+        PolylineDashMaterialProperty,
         TimeIntervalCollectionProperty) {
         'use strict';
 

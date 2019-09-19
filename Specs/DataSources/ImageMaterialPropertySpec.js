@@ -1,18 +1,18 @@
 define([
-        'DataSources/ImageMaterialProperty',
         'Core/Cartesian2',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/ImageMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty'
     ], function(
-        ImageMaterialProperty,
         Cartesian2,
         Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
+        ImageMaterialProperty,
         TimeIntervalCollectionProperty) {
         'use strict';
 

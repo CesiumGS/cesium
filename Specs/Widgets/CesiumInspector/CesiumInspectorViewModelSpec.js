@@ -1,5 +1,4 @@
 define([
-        'Widgets/CesiumInspector/CesiumInspectorViewModel',
         'Core/defined',
         'Core/GeometryInstance',
         'Core/Math',
@@ -11,9 +10,9 @@ define([
         'Scene/GlobeSurfaceTile',
         'Scene/Primitive',
         'Scene/QuadtreeTile',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/CesiumInspector/CesiumInspectorViewModel'
     ], function(
-        CesiumInspectorViewModel,
         defined,
         GeometryInstance,
         CesiumMath,
@@ -25,7 +24,8 @@ define([
         GlobeSurfaceTile,
         Primitive,
         QuadtreeTile,
-        createScene) {
+        createScene,
+        CesiumInspectorViewModel) {
         'use strict';
 
 describe('Widgets/CesiumInspector/CesiumInspectorViewModel', function() {

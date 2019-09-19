@@ -1,5 +1,4 @@
 define([
-        'Core/PolygonGeometry',
         'Core/ArcType',
         'Core/arrayFill',
         'Core/BoundingSphere',
@@ -9,11 +8,11 @@ define([
         'Core/GeometryOffsetAttribute',
         'Core/GeometryPipeline',
         'Core/Math',
+        'Core/PolygonGeometry',
         'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        PolygonGeometry,
         ArcType,
         arrayFill,
         BoundingSphere,
@@ -23,6 +22,7 @@ define([
         GeometryOffsetAttribute,
         GeometryPipeline,
         CesiumMath,
+        PolygonGeometry,
         Rectangle,
         VertexFormat,
         createPackableSpecs) {

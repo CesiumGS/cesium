@@ -1,11 +1,11 @@
 define([
-        'Core/Spherical',
         'Core/Cartesian3',
-        'Core/Math'
+        'Core/Math',
+        'Core/Spherical'
     ], function(
-        Spherical,
         Cartesian3,
-        CesiumMath) {
+        CesiumMath,
+        Spherical) {
         'use strict';
 
 describe('Core/Spherical', function() {

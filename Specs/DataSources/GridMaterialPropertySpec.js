@@ -1,19 +1,19 @@
 define([
-        'DataSources/GridMaterialProperty',
         'Core/Cartesian2',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/GridMaterialProperty',
         'DataSources/SampledProperty',
         'DataSources/TimeIntervalCollectionProperty'
     ], function(
-        GridMaterialProperty,
         Cartesian2,
         Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
+        GridMaterialProperty,
         SampledProperty,
         TimeIntervalCollectionProperty) {
         'use strict';

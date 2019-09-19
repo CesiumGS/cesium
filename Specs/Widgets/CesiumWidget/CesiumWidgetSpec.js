@@ -1,5 +1,4 @@
 define([
-        'Widgets/CesiumWidget/CesiumWidget',
         'Core/Clock',
         'Core/defaultValue',
         'Core/EllipsoidTerrainProvider',
@@ -13,9 +12,9 @@ define([
         'Scene/TileCoordinatesImageryProvider',
         'Specs/DomEventSimulator',
         'Specs/getWebGLStub',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'Widgets/CesiumWidget/CesiumWidget'
     ], function(
-        CesiumWidget,
         Clock,
         defaultValue,
         EllipsoidTerrainProvider,
@@ -29,7 +28,8 @@ define([
         TileCoordinatesImageryProvider,
         DomEventSimulator,
         getWebGLStub,
-        pollToPromise) {
+        pollToPromise,
+        CesiumWidget) {
         'use strict';
 
 describe('Widgets/CesiumWidget/CesiumWidget', function() {

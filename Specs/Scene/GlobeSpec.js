@@ -1,16 +1,16 @@
 define([
-        'Scene/Globe',
         'Core/CesiumTerrainProvider',
         'Core/Rectangle',
         'Core/Resource',
+        'Scene/Globe',
         'Scene/SingleTileImageryProvider',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        Globe,
         CesiumTerrainProvider,
         Rectangle,
         Resource,
+        Globe,
         SingleTileImageryProvider,
         createScene,
         pollToPromise) {

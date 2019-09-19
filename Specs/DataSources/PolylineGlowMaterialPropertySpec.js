@@ -1,17 +1,17 @@
 define([
-        'DataSources/PolylineGlowMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/PolylineGlowMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty',
         'Specs/testDefinitionChanged'
     ], function(
-        PolylineGlowMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
+        PolylineGlowMaterialProperty,
         TimeIntervalCollectionProperty,
         testDefinitionChanged) {
         'use strict';

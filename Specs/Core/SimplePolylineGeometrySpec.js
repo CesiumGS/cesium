@@ -1,5 +1,4 @@
 define([
-        'Core/SimplePolylineGeometry',
         'Core/ArcType',
         'Core/BoundingSphere',
         'Core/Cartesian3',
@@ -7,9 +6,9 @@ define([
         'Core/Ellipsoid',
         'Core/Math',
         'Core/PrimitiveType',
+        'Core/SimplePolylineGeometry',
         'Specs/createPackableSpecs'
     ], function(
-        SimplePolylineGeometry,
         ArcType,
         BoundingSphere,
         Cartesian3,
@@ -17,6 +16,7 @@ define([
         Ellipsoid,
         CesiumMath,
         PrimitiveType,
+        SimplePolylineGeometry,
         createPackableSpecs) {
         'use strict';
 

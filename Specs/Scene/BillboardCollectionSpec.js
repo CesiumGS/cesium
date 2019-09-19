@@ -1,5 +1,4 @@
 define([
-        'Scene/BillboardCollection',
         'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -15,6 +14,7 @@ define([
         'Core/Rectangle',
         'Core/Resource',
         'Scene/Billboard',
+        'Scene/BillboardCollection',
         'Scene/BlendOption',
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
@@ -25,7 +25,6 @@ define([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        BillboardCollection,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -41,6 +40,7 @@ define([
         Rectangle,
         Resource,
         Billboard,
+        BillboardCollection,
         BlendOption,
         HeightReference,
         HorizontalOrigin,

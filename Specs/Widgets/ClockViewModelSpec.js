@@ -1,15 +1,15 @@
 define([
-        'Widgets/ClockViewModel',
         'Core/Clock',
         'Core/ClockRange',
         'Core/ClockStep',
-        'Core/JulianDate'
+        'Core/JulianDate',
+        'Widgets/ClockViewModel'
     ], function(
-        ClockViewModel,
         Clock,
         ClockRange,
         ClockStep,
-        JulianDate) {
+        JulianDate,
+        ClockViewModel) {
         'use strict';
 
 describe('Widgets/ClockViewModel', function() {

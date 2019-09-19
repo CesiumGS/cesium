@@ -1,5 +1,4 @@
 define([
-        'DataSources/CzmlDataSource',
         'Core/ArcType',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
@@ -31,6 +30,7 @@ define([
         'DataSources/CompositeProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
+        'DataSources/CzmlDataSource',
         'DataSources/EntityCollection',
         'DataSources/ReferenceProperty',
         'DataSources/SampledPositionProperty',
@@ -47,7 +47,6 @@ define([
         'Scene/VerticalOrigin',
         'ThirdParty/when'
     ], function(
-        CzmlDataSource,
         ArcType,
         BoundingRectangle,
         Cartesian2,
@@ -79,6 +78,7 @@ define([
         CompositeProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        CzmlDataSource,
         EntityCollection,
         ReferenceProperty,
         SampledPositionProperty,

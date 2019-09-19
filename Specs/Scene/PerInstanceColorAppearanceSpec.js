@@ -1,19 +1,19 @@
 define([
-        'Scene/PerInstanceColorAppearance',
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryInstance',
         'Core/Rectangle',
         'Core/RectangleGeometry',
         'Scene/Appearance',
+        'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
         'Specs/createScene'
     ], function(
-        PerInstanceColorAppearance,
         ColorGeometryInstanceAttribute,
         GeometryInstance,
         Rectangle,
         RectangleGeometry,
         Appearance,
+        PerInstanceColorAppearance,
         Primitive,
         createScene) {
         'use strict';

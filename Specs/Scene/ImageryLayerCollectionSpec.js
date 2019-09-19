@@ -1,5 +1,4 @@
 define([
-        'Scene/ImageryLayerCollection',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Event',
@@ -11,13 +10,13 @@ define([
         'Core/WebMercatorTilingScheme',
         'Scene/Globe',
         'Scene/ImageryLayer',
+        'Scene/ImageryLayerCollection',
         'Scene/ImageryLayerFeatureInfo',
         'Scene/ImageryProvider',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        ImageryLayerCollection,
         Cartesian3,
         Ellipsoid,
         Event,
@@ -29,6 +28,7 @@ define([
         WebMercatorTilingScheme,
         Globe,
         ImageryLayer,
+        ImageryLayerCollection,
         ImageryLayerFeatureInfo,
         ImageryProvider,
         createScene,

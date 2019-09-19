@@ -1,5 +1,4 @@
 define([
-        'Scene/ImageryLayer',
         'Core/EllipsoidTerrainProvider',
         'Core/Rectangle',
         'Core/RequestScheduler',
@@ -9,9 +8,10 @@ define([
         'Renderer/TextureMinificationFilter',
         'Scene/ArcGisMapServerImageryProvider',
         'Scene/BingMapsImageryProvider',
-        'Scene/createTileMapServiceImageryProvider',
+        'Scene/TileMapServiceImageryProvider',
         'Scene/GlobeSurfaceTile',
         'Scene/Imagery',
+        'Scene/ImageryLayer',
         'Scene/ImageryLayerCollection',
         'Scene/ImageryState',
         'Scene/NeverTileDiscardPolicy',
@@ -22,7 +22,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        ImageryLayer,
         EllipsoidTerrainProvider,
         Rectangle,
         RequestScheduler,
@@ -32,9 +31,10 @@ define([
         TextureMinificationFilter,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
-        createTileMapServiceImageryProvider,
+        TileMapServiceImageryProvider,
         GlobeSurfaceTile,
         Imagery,
+        ImageryLayer,
         ImageryLayerCollection,
         ImageryState,
         NeverTileDiscardPolicy,
@@ -485,7 +485,7 @@ describe('Scene/ImageryLayer', function() {
 
     describe('createTileImagerySkeletons', function() {
         it('handles a base layer that does not cover the entire globe', function() {
-            var provider = createTileMapServiceImageryProvider({
+            var provider = new TileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 
@@ -534,7 +534,7 @@ describe('Scene/ImageryLayer', function() {
                 url : 'Data/Images/Blue.png'
             });
 
-            var provider = createTileMapServiceImageryProvider({
+            var provider = new TileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 
@@ -580,7 +580,7 @@ describe('Scene/ImageryLayer', function() {
                 url : 'Data/Images/Green4x4.png'
             });
 
-            var provider = createTileMapServiceImageryProvider({
+            var provider = new TileMapServiceImageryProvider({
                 url : 'Data/TMS/SmallArea'
             });
 

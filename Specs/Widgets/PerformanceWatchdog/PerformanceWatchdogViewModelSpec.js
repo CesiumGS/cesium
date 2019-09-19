@@ -1,15 +1,15 @@
 define([
-        'Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel',
         'Core/defined',
         'Core/getTimestamp',
         'Scene/FrameRateMonitor',
-        'Specs/createScene'
+        'Specs/createScene',
+        'Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel'
     ], function(
-        PerformanceWatchdogViewModel,
         defined,
         getTimestamp,
         FrameRateMonitor,
-        createScene) {
+        createScene,
+        PerformanceWatchdogViewModel) {
         'use strict';
 
 describe('Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel', function() {

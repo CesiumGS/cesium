@@ -1,9 +1,9 @@
 define([
-        'Core/RectangleCollisionChecker',
-        'Core/Rectangle'
+        'Core/Rectangle',
+        'Core/RectangleCollisionChecker'
     ], function(
-        RectangleCollisionChecker,
-        Rectangle) {
+        Rectangle,
+        RectangleCollisionChecker) {
         'use strict';
 
 describe('Core/RectangleCollisionChecker', function() {

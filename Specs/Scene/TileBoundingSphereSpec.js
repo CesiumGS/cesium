@@ -1,18 +1,18 @@
 define([
-        'Scene/TileBoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
         'Core/Intersect',
         'Core/Math',
         'Core/Plane',
+        'Scene/TileBoundingSphere',
         'Specs/createFrameState'
     ], function(
-        TileBoundingSphere,
         Cartesian3,
         Color,
         Intersect,
         CesiumMath,
         Plane,
+        TileBoundingSphere,
         createFrameState) {
         'use strict';
 

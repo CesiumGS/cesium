@@ -1,5 +1,4 @@
 define([
-        'Scene/LabelCollection',
         'Core/BoundingRectangle',
         'Core/BoundingSphere',
         'Core/Cartesian2',
@@ -14,12 +13,12 @@ define([
         'Scene/HeightReference',
         'Scene/HorizontalOrigin',
         'Scene/Label',
+        'Scene/LabelCollection',
         'Scene/LabelStyle',
         'Scene/VerticalOrigin',
         'Specs/createGlobe',
         'Specs/createScene'
     ], function(
-        LabelCollection,
         BoundingRectangle,
         BoundingSphere,
         Cartesian2,
@@ -34,6 +33,7 @@ define([
         HeightReference,
         HorizontalOrigin,
         Label,
+        LabelCollection,
         LabelStyle,
         VerticalOrigin,
         createGlobe,

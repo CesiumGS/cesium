@@ -1,17 +1,17 @@
 define([
-        'Widgets/Geocoder/GeocoderViewModel',
         'Core/Cartesian3',
         'Core/Rectangle',
         'Specs/createScene',
         'Specs/pollToPromise',
-        'ThirdParty/when'
+        'ThirdParty/when',
+        'Widgets/Geocoder/GeocoderViewModel'
     ], function(
-        GeocoderViewModel,
         Cartesian3,
         Rectangle,
         createScene,
         pollToPromise,
-        when) {
+        when,
+        GeocoderViewModel) {
         'use strict';
 
 describe('Widgets/Geocoder/GeocoderViewModel', function() {

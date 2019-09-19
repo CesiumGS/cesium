@@ -1,5 +1,4 @@
 define([
-        'Scene/MapboxStyleImageryProvider',
         'Core/MapboxApi',
         'Core/Math',
         'Core/Rectangle',
@@ -10,9 +9,9 @@ define([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/MapboxStyleImageryProvider',
         'Specs/pollToPromise'
     ], function(
-        MapboxStyleImageryProvider,
         MapboxApi,
         CesiumMath,
         Rectangle,
@@ -23,6 +22,7 @@ define([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
+        MapboxStyleImageryProvider,
         pollToPromise) {
         'use strict';
 

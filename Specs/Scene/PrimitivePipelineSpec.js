@@ -1,5 +1,4 @@
 define([
-        'Scene/PrimitivePipeline',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian3',
@@ -7,9 +6,9 @@ define([
         'Core/Geometry',
         'Core/GeometryAttribute',
         'Core/GeometryAttributes',
-        'Core/PrimitiveType'
+        'Core/PrimitiveType',
+        'Scene/PrimitivePipeline'
     ], function(
-        PrimitivePipeline,
         BoundingSphere,
         BoxGeometry,
         Cartesian3,
@@ -17,7 +16,8 @@ define([
         Geometry,
         GeometryAttribute,
         GeometryAttributes,
-        PrimitiveType) {
+        PrimitiveType,
+        PrimitivePipeline) {
         'use strict';
 
 describe('Scene/PrimitivePipeline', function() {

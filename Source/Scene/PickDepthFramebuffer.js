@@ -1,28 +1,20 @@
 define([
         '../Core/BoundingRectangle',
-        '../Core/Color',
-        '../Core/defaultValue',
         '../Core/defined',
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/Framebuffer',
         '../Renderer/PassState',
         '../Renderer/PixelDatatype',
-        '../Renderer/Renderbuffer',
-        '../Renderer/RenderbufferFormat',
         '../Renderer/Texture'
     ], function(
         BoundingRectangle,
-        Color,
-        defaultValue,
         defined,
         destroyObject,
         PixelFormat,
         Framebuffer,
         PassState,
         PixelDatatype,
-        Renderbuffer,
-        RenderbufferFormat,
         Texture) {
     'use strict';
 
