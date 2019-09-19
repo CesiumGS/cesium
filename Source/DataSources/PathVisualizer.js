@@ -433,7 +433,7 @@ define([
 
         var items = this._items.values;
         
-        if (!items.length && this._updaters && Object.values(this._updaters).length) {
+        if (!items.length && defined(this._updaters) && Object.values(this._updaters).length) {
             for (let u in this._updaters) {
                 this._scene.primitives.removeAndDestroy(this._updaters[u]._polylineCollection);
             };
