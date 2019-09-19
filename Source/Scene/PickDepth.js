@@ -112,20 +112,33 @@ define([
         }
     }
 
-    function updateCopyCommands(pickDepth, context, depthTexture) {
+    function updateCopyCommands(pickDepth, context, depthTexture, colorTextureMask) {
         if (!defined(pickDepth._copyDepthCommand)) {
             var fs =
                 'uniform sampler2D u_texture;\n' +
+                'uniform sampler2D u_colorTextureMask;\n' +
                 'varying vec2 v_textureCoordinates;\n' +
                 'void main()\n' +
                 '{\n' +
-                '    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
+                '    float pickDepth = texture2D(u_texture, v_textureCoordinates).r;\n' +
+                '    bool noColor = all(equal(texture2D(u_colorTextureMask, v_textureCoordinates), vec4(0.0)));\n' +
+                '    if (noColor)\n' +
+                '    {\n' +
+                '        gl_FragColor = texture2D(czm_globeDepthTexture, v_textureCoordinates);\n' +
+                '    }\n' +
+                '    else\n' +
+                '    {\n' +
+                '        gl_FragColor = czm_packDepth(pickDepth);\n' +
+                '    }\n' +
                 '}\n';
             pickDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
                 renderState : RenderState.fromCache(),
                 uniformMap : {
                     u_texture : function() {
                         return pickDepth._textureToCopy;
+                    },
+                    u_colorTextureMask : function() {
+                        return colorTextureMask;
                     }
                 },
                 owner : pickDepth
@@ -140,9 +153,9 @@ define([
         executeDebugPickDepth(this, context, passState, useLogDepth);
     };
 
-    PickDepth.prototype.update = function(context, depthTexture) {
+    PickDepth.prototype.update = function(context, depthTexture, colorTextureMask) {
         updateFramebuffers(this, context, depthTexture);
-        updateCopyCommands(this, context, depthTexture);
+        updateCopyCommands(this, context, depthTexture, colorTextureMask);
     };
 
     var scratchPackedDepth = new Cartesian4();

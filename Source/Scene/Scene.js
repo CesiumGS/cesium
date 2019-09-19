@@ -2240,6 +2240,7 @@ define([
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
         var useDepthPlane = environmentState.useDepthPlane;
+        var usePrimitiveFramebuffer = clearGlobeDepth && environmentState.useGlobeDepthFramebuffer;
         var clearDepth = scene._depthClearCommand;
         var clearStencil = scene._stencilClearCommand;
         var clearClassificationStencil = scene._classificationStencilClearCommand;
@@ -2282,6 +2283,11 @@ define([
                 passState.framebuffer = globeDepth.framebuffer;
             }
 
+            if (usePrimitiveFramebuffer) {
+                // TODO comment
+                passState.framebuffer = globeDepth.framebuffer;
+            }
+
             clearDepth.execute(context, passState);
 
             if (context.stencilBuffer) {
@@ -2316,6 +2322,11 @@ define([
                 if (useDepthPlane) {
                     depthPlane.execute(context, passState);
                 }
+            }
+
+            if (usePrimitiveFramebuffer) {
+                // TODO comment
+                passState.framebuffer = globeDepth.primitiveFramebuffer;
             }
 
             if (!environmentState.useInvertClassification || picking) {
@@ -2456,7 +2467,7 @@ define([
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var depthStencilTexture = renderTranslucentDepthForPick ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
                 var pickDepth = getPickDepth(scene, index);
-                pickDepth.update(context, depthStencilTexture);
+                pickDepth.update(context, depthStencilTexture, passState.framebuffer.getColorTexture(0));
                 pickDepth.executeCopyDepth(context, passState);
             }
 
@@ -3106,15 +3117,22 @@ define([
         var frameState = scene._frameState;
         var environmentState = scene._environmentState;
         var view = scene._view;
+        var globeDepth = view.globeDepth;
 
         var useOIT = environmentState.useOIT;
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
+        var usePrimitiveFramebuffer = environmentState.clearGlobeDepth && useGlobeDepthFramebuffer;
         var usePostProcess = environmentState.usePostProcess;
 
         var defaultFramebuffer = environmentState.originalFramebuffer;
-        var globeFramebuffer = useGlobeDepthFramebuffer ? view.globeDepth.framebuffer : undefined;
+        var globeFramebuffer = useGlobeDepthFramebuffer ? globeDepth.framebuffer : undefined;
         var sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
         var idFramebuffer = view.sceneFramebuffer.getIdFramebuffer();
+
+        if (usePrimitiveFramebuffer) {
+            // TODO comment
+            globeDepth.executeMergeColor(context, passState);
+        }
 
         if (useOIT) {
             passState.framebuffer = usePostProcess ? sceneFramebuffer : defaultFramebuffer;
@@ -3137,7 +3155,7 @@ define([
 
         if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {
             passState.framebuffer = defaultFramebuffer;
-            view.globeDepth.executeCopyColor(context, passState);
+            globeDepth.executeCopyColor(context, passState);
         }
 
         var useLogDepth = frameState.useLogDepth;
