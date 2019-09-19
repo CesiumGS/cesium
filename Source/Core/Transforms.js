@@ -376,7 +376,7 @@ define([
         //>>includeEnd('debug');
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, headingPitchRoll, ellipsoid, fixedFrameTransform, scratchENUMatrix4);
-        var rotation = Matrix4.getRotation(transform, scratchHPRMatrix3);
+        var rotation = Matrix4.getMatrix3(transform, scratchHPRMatrix3);
         return Quaternion.fromRotationMatrix(rotation, result);
     };
 
@@ -421,7 +421,7 @@ define([
         transformCopy = Matrix4.setTranslation(transformCopy, Cartesian3.ZERO, transformCopy);
 
         toFixedFrame = Matrix4.multiply(toFixedFrame, transformCopy, toFixedFrame);
-        var quaternionRotation = Quaternion.fromRotationMatrix(Matrix4.getRotation(toFixedFrame, hprRotationScratch), hprQuaternionScratch);
+        var quaternionRotation = Quaternion.fromRotationMatrix(Matrix4.getMatrix3(toFixedFrame, hprRotationScratch), hprQuaternionScratch);
         quaternionRotation = Quaternion.normalize(quaternionRotation, quaternionRotation);
 
         return HeadingPitchRoll.fromQuaternion(quaternionRotation, result);
@@ -878,7 +878,7 @@ define([
         // Assuming the instance are positioned in WGS84, invert the WGS84 transform to get the local transform and then convert to 2D
         var fromENU = Transforms.eastNorthUpToFixedFrame(rtcCenter, ellipsoid, scratchFromENU);
         var toENU = Matrix4.inverseTransformation(fromENU, scratchToENU);
-        var rotation = Matrix4.getRotation(matrix, scratchRotation);
+        var rotation = Matrix4.getMatrix3(matrix, scratchRotation);
         var local = Matrix4.multiplyByMatrix3(toENU, rotation, result);
         Matrix4.multiply(swizzleMatrix, local, result); // Swap x, y, z for 2D
         Matrix4.setTranslation(result, projectedPosition, result); // Use the projected center

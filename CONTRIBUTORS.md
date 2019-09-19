@@ -69,6 +69,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Nathan Schulte](https://github.com/nmschulte)
    * [Jed Fong](https://github.com/jedfong)
    * [Brandon McAllister](https://github.com/bmcallis)
+   * [Eric Strabala](https://github.com/emstrabala)
 * [Inovaworks](http://www.inovaworks.com/)
    * [Sergio Flores](https://github.com/relfos)
 * [CubeWerx Inc.](http://www.cubewerx.com/)
