@@ -1030,7 +1030,7 @@ define([
      *
      * @param {Matrix3} matrix The matrix.
      * @param {Matrix3} result The object onto which to store the result.
-     * @returns {Cartesian3} The modified result parameter
+     * @returns {Matrix3} The modified result parameter
      */
     Matrix3.getRotation = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);

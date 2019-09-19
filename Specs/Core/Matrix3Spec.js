@@ -652,7 +652,6 @@ describe('Core/Matrix3', function() {
         var scale = new Cartesian3();
         var expectedScale = new Cartesian3(1.0, 1.0, 1.0);
         result = Matrix3.getRotation(matrix, result);
-        console.log(result);
         var resultScale = Matrix3.getScale(result, scale);
         expect(resultScale).toEqualEpsilon(expectedScale, CesiumMath.EPSILON14);
         expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
@@ -673,6 +672,12 @@ describe('Core/Matrix3', function() {
     it('getRotation throws without a matrix', function() {
         expect(function() {
             return Matrix3.getRotation();
+        }).toThrowDeveloperError();
+    });
+
+    it('getRotation throws without a result', function() {
+        expect(function() {
+            return Matrix3.getRotation(new Matrix3());
         }).toThrowDeveloperError();
     });
 
