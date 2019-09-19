@@ -432,6 +432,14 @@ define([
         }
 
         var items = this._items.values;
+        
+        if (!items.length && this._updaters && Object.values(this._updaters).length) {
+            for (let u in this._updaters) {
+                this._scene.primitives.removeAndDestroy(this._updaters[u]._polylineCollection);
+            };
+            this._updaters = {};
+        };
+        
         for (var i = 0, len = items.length; i < len; i++) {
             var item = items[i];
             var entity = item.entity;
