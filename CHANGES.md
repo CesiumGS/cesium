@@ -5,6 +5,7 @@ Change Log
 
 ##### Deprecated :hourglass_flowing_sand:
 * `createTileMapServiceImageryProvider` and `createOpenStreetMapImageryProvider` have been deprecated and will be removed in Cesium 1.65.  Instead, pass the same options to `new TileMapServiceImageryProvider` and `new OpenStreetMapImageryProvider` respectively.
+* The function `Matrix4.getRotation` has been deprecated and renamed to `Matrix4.getMatrix3`. `Matrix4.getRotation` will be removed in version 1.65.
 
 ##### Additions :tada:
 * Added ability to create partial ellipsoids using both the Entity API and CZML. New ellipsoid geometry properties: `innerRadii`, `minimumClock`, `maximumClock`, `minimumCone`, and `maximumCone`. This affects both `EllipsoidGeometry` and `EllipsoidOutlineGeometry`. See the updated [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Partial%20Ellipsoids.html&label=Geometries). [#5995](https://github.com/AnalyticalGraphicsInc/cesium/pull/5995)
