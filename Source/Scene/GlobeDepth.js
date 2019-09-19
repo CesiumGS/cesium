@@ -2,6 +2,7 @@ define([
         '../Core/BoundingRectangle',
         '../Core/Color',
         '../Core/defined',
+        '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/PixelFormat',
         '../Renderer/ClearCommand',
@@ -24,6 +25,7 @@ define([
         BoundingRectangle,
         Color,
         defined,
+        defineProperties,
         destroyObject,
         PixelFormat,
         ClearCommand,
@@ -54,7 +56,7 @@ define([
         this._tempGlobeDepthTexture = undefined;
         this._tempCopyDepthTexture = undefined;
 
-        this.framebuffer = undefined;
+        this._framebuffer = undefined;
         this._copyDepthFramebuffer = undefined;
         this._tempCopyDepthFramebuffer = undefined;
         this._updateDepthFramebuffer = undefined;
@@ -77,6 +79,14 @@ define([
 
         this._debugGlobeDepthViewportCommand = undefined;
     }
+
+    defineProperties(GlobeDepth.prototype, {
+        framebuffer : {
+            get : function() {
+                return this._framebuffer;
+            }
+        }
+    });
 
     function executeDebugGlobeDepth(globeDepth, context, passState, useLogDepth) {
         if (!defined(globeDepth._debugGlobeDepthViewportCommand) || useLogDepth !== globeDepth._useLogDepth) {
@@ -120,7 +130,7 @@ define([
     }
 
     function destroyFramebuffers(globeDepth) {
-        globeDepth.framebuffer = globeDepth.framebuffer && !globeDepth.framebuffer.isDestroyed() && globeDepth.framebuffer.destroy();
+        globeDepth._framebuffer = globeDepth._framebuffer && !globeDepth._framebuffer.isDestroyed() && globeDepth._framebuffer.destroy();
         globeDepth._copyDepthFramebuffer = globeDepth._copyDepthFramebuffer && !globeDepth._copyDepthFramebuffer.isDestroyed() && globeDepth._copyDepthFramebuffer.destroy();
     }
 
@@ -197,7 +207,7 @@ define([
     }
 
     function createFramebuffers(globeDepth, context) {
-        globeDepth.framebuffer = new Framebuffer({
+        globeDepth._framebuffer = new Framebuffer({
             context : context,
             colorTextures : [globeDepth._colorTexture],
             depthStencilTexture : globeDepth._depthStencilTexture,
@@ -214,7 +224,7 @@ define([
     function updateFramebuffers(globeDepth, context, width, height, hdr) {
         var colorTexture = globeDepth._colorTexture;
         var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height || hdr !== globeDepth._useHdr;
-        if (!defined(globeDepth.framebuffer) || textureChanged) {
+        if (!defined(globeDepth._framebuffer) || textureChanged) {
             destroyTextures(globeDepth);
             destroyFramebuffers(globeDepth);
             createTextures(globeDepth, context, width, height, hdr);
@@ -328,7 +338,7 @@ define([
             });
         }
 
-        globeDepth._clearColorCommand.framebuffer = globeDepth.framebuffer;
+        globeDepth._clearColorCommand.framebuffer = globeDepth._framebuffer;
     }
 
     GlobeDepth.prototype.executeDebugGlobeDepth = function(context, passState, useLogDepth) {
