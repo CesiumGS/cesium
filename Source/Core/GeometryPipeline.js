@@ -808,7 +808,7 @@ define([
 
             Matrix4.inverse(modelMatrix, inverseTranspose);
             Matrix4.transpose(inverseTranspose, inverseTranspose);
-            Matrix4.getRotation(inverseTranspose, normalMatrix);
+            Matrix4.getMatrix3(inverseTranspose, normalMatrix);
 
             transformVector(normalMatrix, attributes.normal);
             transformVector(normalMatrix, attributes.tangent);
