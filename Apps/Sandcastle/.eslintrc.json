@@ -7,6 +7,9 @@
         "Sandcastle": true,
         "Cesium": true
     },
+    "parserOptions": {
+        "sourceType": "script"
+    },
     "rules": {
         "no-alert": ["off"],
         "no-implicit-globals": "off",

@@ -26,6 +26,9 @@ Contributors:  Johannes Schmid, (LERC v1)
 
 /* Copyright 2015-2018 Esri. Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with the License. You may obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0 @preserve */
 
+var exports = {};
+var module = { exports: exports };
+
 /**
  * a module for decoding LERC blobs
  * @module Lerc
@@ -2111,3 +2114,5 @@ Contributors:  Johannes Schmid, (LERC v1)
   }
 
 })();
+
+export default module.exports;

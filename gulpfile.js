@@ -30,6 +30,7 @@ var Karma = require('karma');
 var yargs = require('yargs');
 var AWS = require('aws-sdk');
 var mime = require('mime');
+var rollup = require('rollup');
 
 var packageJson = require('./package.json');
 var version = packageJson.version;
@@ -69,6 +70,7 @@ var buildFiles = ['Specs/**/*.js',
 var filesToClean = ['Source/Cesium.js',
                     'Build',
                     'Source/Shaders/**/*.js',
+                    'Source/Workers/Build',
                     'Source/ThirdParty/Shaders/*.js',
                     'Specs/SpecList.js',
                     'Apps/Sandcastle/jsHintOptions.js',
@@ -111,12 +113,30 @@ var filesToConvertES6 = ['Source/**/*.js',
                          '!Specs/TestWorkers/**'
                         ];
 
+function createWorkers() {
+    rimraf.sync('Source/Workers/Build');
+    var workers = globby.sync([
+        'Source/Workers/**',
+        '!Source/Workers/cesiumWorkerBootstrapper.js',
+        '!Source/Workers/transferTypedArrayTest.js'
+    ]);
+    return rollup.rollup({
+        input: workers
+    }).then(bundle => {
+        return bundle.write({
+            dir: 'Source/Workers/Build',
+            format: 'amd'
+        });
+    });
+}
+
 gulp.task('build', function(done) {
     mkdirp.sync('Build');
     glslToJavaScript(minifyShaders, 'Build/minifyShaders.state');
     createCesiumJs();
     createSpecList();
     createJsHintOptions();
+    createWorkers();
     createGalleryList(done);
 });
 
@@ -1243,10 +1263,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
         contents = contents.split('"').join('\\"').replace(/\n/gm, '\\n\\\n');
         contents = copyrightComments + '\
 //This file is automatically rebuilt by the Cesium build process.\n\
-define(function() {\n\
-    \'use strict\';\n\
-    return "' + contents + '";\n\
-});';
+export default "' + contents + '";\n';
 
         fs.writeFileSync(jsFile, contents);
     });
@@ -1257,78 +1274,44 @@ define(function() {\n\
     });
 
     var generateBuiltinContents = function(contents, builtins, path) {
-        var amdPath = contents.amdPath;
-        var amdClassName = contents.amdClassName;
-        var builtinLookup = contents.builtinLookup;
         for (var i = 0; i < builtins.length; i++) {
             var builtin = builtins[i];
-            amdPath = amdPath + ',\n        \'./' + path + '/' + builtin + '\'';
-            amdClassName = amdClassName + ',\n        ' + 'czm_' + builtin;
-            builtinLookup = builtinLookup + ',\n        ' + 'czm_' + builtin + ' : ' + 'czm_' + builtin;
+            contents.imports.push('import czm_' + builtin + ' from \'./' + path + '/' + builtin + '.js\'');
+            contents.builtinLookup.push('czm_' + builtin + ' : ' + 'czm_' + builtin);
         }
-        contents.amdPath = amdPath;
-        contents.amdClassName = amdClassName;
-        contents.builtinLookup = builtinLookup;
     };
 
-//generate the JS file for Built-in GLSL Functions, Structs, and Constants
-    var contents = {amdPath : '', amdClassName : '', builtinLookup : ''};
+    //generate the JS file for Built-in GLSL Functions, Structs, and Constants
+    var contents = {
+        imports : [],
+        builtinLookup: []
+    };
     generateBuiltinContents(contents, builtinConstants, 'Constants');
     generateBuiltinContents(contents, builtinStructs, 'Structs');
     generateBuiltinContents(contents, builtinFunctions, 'Functions');
 
-    contents.amdPath = contents.amdPath.replace(',\n', '');
-    contents.amdClassName = contents.amdClassName.replace(',\n', '');
-    contents.builtinLookup = contents.builtinLookup.replace(',\n', '');
-
-    var fileContents = '\
-//This file is automatically rebuilt by the Cesium build process.\n\
-define([\n' +
-                       contents.amdPath +
-                       '\n    ], function(\n' +
-                       contents.amdClassName +
-                       ') {\n\
-                           \'use strict\';\n\
-                           return {\n' + contents.builtinLookup + '};\n\
-});';
+    var fileContents = '//This file is automatically rebuilt by the Cesium build process.\n' +
+        contents.imports.join('\n') +
+        '\n\nexport default {\n    ' + contents.builtinLookup.join(',\n    ') + '\n};\n';
 
     fs.writeFileSync(path.join('Source', 'Shaders', 'Builtin', 'CzmBuiltins.js'), fileContents);
 }
 
 function createCesiumJs() {
-    var moduleIds = [];
-    var parameters = [];
-    var assignments = [];
-
-    var nonIdentifierRegexp = /[^0-9a-zA-Z_$]/g;
-
+    var contents = '';
     globby.sync(sourceFiles).forEach(function(file) {
         file = path.relative('Source', file);
+
         var moduleId = file;
         moduleId = filePathToModuleId(moduleId);
 
-        var assignmentName = "['" + path.basename(file, path.extname(file)) + "']";
+        var assignmentName = path.basename(file, path.extname(file));
         if (moduleId.indexOf('Shaders/') === 0) {
-            assignmentName = '._shaders' + assignmentName;
+            assignmentName = '_shaders' + assignmentName;
         }
-
-        var parameterName = moduleId.replace(nonIdentifierRegexp, '_');
-
-        moduleIds.push("'./" + moduleId + "'");
-        parameters.push(parameterName);
-        assignments.push('Cesium' + assignmentName + ' = ' + parameterName + ';');
+        assignmentName = assignmentName.replace(/(\.|-)/g, '_');
+        contents += 'export { default as ' + assignmentName + " } from './" + moduleId + ".js';" + os.EOL;
     });
-
-    var contents = '\
-define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
-  \'use strict\';\n\
-  var Cesium = {\n\
-    VERSION : \'' + version + '\',\n\
-    _shaders : {}\n\
-  };\n\
-  ' + assignments.join('\n  ') + '\n\
-  return Cesium;\n\
-});\n';
 
     fs.writeFileSync('Source/Cesium.js', contents);
 }

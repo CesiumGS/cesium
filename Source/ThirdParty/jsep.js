@@ -2,7 +2,8 @@
 //     JSEP may be freely distributed under the MIT License
 //     http://jsep.from.so/
 
-define(function() {
+var exports = {};
+var module = { exports: exports };
 
 /*global module: true, exports: true, console: true */
 (function (root) {
@@ -680,8 +681,4 @@ define(function() {
 	}
 }(this));
 
-    // `jsep` only exists when running in the browser
-    if (typeof jsep !== 'undefined') {
-        return jsep.noConflict();
-    }
-});
+export default module.exports;

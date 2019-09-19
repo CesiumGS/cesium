@@ -1,3 +1,6 @@
+var exports = {};
+var module = { exports: exports };
+
 (function (root, factory) {
   if (typeof define === 'function' && define.amd) {
     // AMD. Register as an anonymous module unless amdModuleId is set
@@ -2749,8 +2752,10 @@ Autolinker.match.Url = Autolinker.Util.extend( Autolinker.match.Match, {
 		}
 		return anchorText;
 	}
-	
+
 } );
 return Autolinker;
 
 }));
+
+export default module.exports;

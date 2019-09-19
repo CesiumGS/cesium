@@ -71,6 +71,7 @@
     "open": "^6.4.0",
     "request": "^2.79.0",
     "rimraf": "^2.6.1",
+    "rollup": "^1.21.4",
     "stream-to-promise": "^2.2.0",
     "yargs": "^14.0.0"
   },

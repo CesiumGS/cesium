@@ -3,6 +3,9 @@
     "plugins": [
         "html"
     ],
+    "parserOptions": {
+        "sourceType": "module"
+    },
     "rules": {
         "no-unused-vars": ["error", {"vars": "all", "args": "none"}]
     }

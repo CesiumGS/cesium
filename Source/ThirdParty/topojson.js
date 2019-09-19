@@ -30,7 +30,6 @@ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE,
 EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-!function() {
   var topojson = {
     version: "1.6.18",
     mesh: function(topology) { return object(topology, meshArcs.apply(this, arguments)); },
@@ -559,7 +558,4 @@ EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
   function noop() {}
 
-  if (typeof define === "function" && define.amd) define(topojson);
-  else if (typeof module === "object" && module.exports) module.exports = topojson;
-  else this.topojson = topojson;
-}();
+export default topojson;
