@@ -1,36 +1,18 @@
-define([
-        'Core/Clock',
-        'Core/defaultValue',
-        'Core/EllipsoidTerrainProvider',
-        'Core/ScreenSpaceEventHandler',
-        'Core/WebMercatorProjection',
-        'Scene/Camera',
-        'Scene/ImageryLayerCollection',
-        'Scene/Scene',
-        'Scene/SceneMode',
-        'Scene/SkyBox',
-        'Scene/TileCoordinatesImageryProvider',
-        'Specs/DomEventSimulator',
-        'Specs/getWebGLStub',
-        'Specs/pollToPromise',
-        'Widgets/CesiumWidget/CesiumWidget'
-    ], function(
-        Clock,
-        defaultValue,
-        EllipsoidTerrainProvider,
-        ScreenSpaceEventHandler,
-        WebMercatorProjection,
-        Camera,
-        ImageryLayerCollection,
-        Scene,
-        SceneMode,
-        SkyBox,
-        TileCoordinatesImageryProvider,
-        DomEventSimulator,
-        getWebGLStub,
-        pollToPromise,
-        CesiumWidget) {
-        'use strict';
+import { Clock } from '../../../Source/Cesium.js';
+import { defaultValue } from '../../../Source/Cesium.js';
+import { EllipsoidTerrainProvider } from '../../../Source/Cesium.js';
+import { ScreenSpaceEventHandler } from '../../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../../Source/Cesium.js';
+import { Camera } from '../../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../../Source/Cesium.js';
+import { Scene } from '../../../Source/Cesium.js';
+import { SceneMode } from '../../../Source/Cesium.js';
+import { SkyBox } from '../../../Source/Cesium.js';
+import { TileCoordinatesImageryProvider } from '../../../Source/Cesium.js';
+import DomEventSimulator from '../../DomEventSimulator.js';
+import getWebGLStub from '../../getWebGLStub.js';
+import pollToPromise from '../../pollToPromise.js';
+import { CesiumWidget } from '../../../Source/Cesium.js';
 
 describe('Widgets/CesiumWidget/CesiumWidget', function() {
 
@@ -367,4 +349,3 @@ describe('Widgets/CesiumWidget/CesiumWidget', function() {
         });
     });
 }, 'WebGL');
-});

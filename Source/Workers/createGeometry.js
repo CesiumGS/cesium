@@ -1,16 +1,7 @@
-define([
-        '../Core/defined',
-        '../Scene/PrimitivePipeline',
-        '../ThirdParty/when',
-        './createTaskProcessorWorker',
-        'require'
-    ], function(
-        defined,
-        PrimitivePipeline,
-        when,
-        createTaskProcessorWorker,
-        require) {
-    'use strict';
+import defined from '../Core/defined.js';
+import PrimitivePipeline from '../Scene/PrimitivePipeline.js';
+import when from '../ThirdParty/when.js';
+import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     var moduleCache = {};
 
@@ -55,6 +46,4 @@ define([
             return PrimitivePipeline.packCreateGeometryResults(results, transferableObjects);
         });
     }
-
-    return createTaskProcessorWorker(createGeometry);
-});
+export default createTaskProcessorWorker(createGeometry);

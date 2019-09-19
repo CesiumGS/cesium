@@ -1,16 +1,8 @@
-define([
-        'Core/Cartesian2',
-        'Core/Resource',
-        'Scene/DiscardMissingTileImagePolicy',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        Cartesian2,
-        Resource,
-        DiscardMissingTileImagePolicy,
-        pollToPromise,
-        when) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { DiscardMissingTileImagePolicy } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/DiscardMissingTileImagePolicy', function() {
 
@@ -164,5 +156,4 @@ describe('Scene/DiscardMissingTileImagePolicy', function() {
             }).toThrowDeveloperError();
         });
     });
-});
 });

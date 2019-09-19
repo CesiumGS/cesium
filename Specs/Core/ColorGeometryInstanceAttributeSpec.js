@@ -1,12 +1,6 @@
-define([
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/ComponentDatatype'
-    ], function(
-        Color,
-        ColorGeometryInstanceAttribute,
-        ComponentDatatype) {
-        'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
 
 describe('Core/ColorGeometryInstanceAttribute', function() {
 
@@ -69,5 +63,4 @@ describe('Core/ColorGeometryInstanceAttribute', function() {
         expect(ColorGeometryInstanceAttribute.equals(color, undefined)).toEqual(false);
         expect(ColorGeometryInstanceAttribute.equals(undefined, color)).toEqual(false);
     });
-});
 });

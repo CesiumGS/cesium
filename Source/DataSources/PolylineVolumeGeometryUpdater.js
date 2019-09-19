@@ -1,40 +1,20 @@
-define([
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/GeometryInstance',
-        '../Core/Iso8601',
-        '../Core/PolylineVolumeGeometry',
-        '../Core/PolylineVolumeOutlineGeometry',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/MaterialAppearance',
-        '../Scene/PerInstanceColorAppearance',
-        './ColorMaterialProperty',
-        './DynamicGeometryUpdater',
-        './GeometryUpdater',
-        './Property'
-    ], function(
-        Check,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defined,
-        DeveloperError,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        GeometryInstance,
-        Iso8601,
-        PolylineVolumeGeometry,
-        PolylineVolumeOutlineGeometry,
-        ShowGeometryInstanceAttribute,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        ColorMaterialProperty,
-        DynamicGeometryUpdater,
-        GeometryUpdater,
-        Property) {
-    'use strict';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import Iso8601 from '../Core/Iso8601.js';
+import PolylineVolumeGeometry from '../Core/PolylineVolumeGeometry.js';
+import PolylineVolumeOutlineGeometry from '../Core/PolylineVolumeOutlineGeometry.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import MaterialAppearance from '../Scene/MaterialAppearance.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import DynamicGeometryUpdater from './DynamicGeometryUpdater.js';
+import GeometryUpdater from './GeometryUpdater.js';
+import Property from './Property.js';
 
     var scratchColor = new Color();
 
@@ -211,6 +191,4 @@ define([
         options.granularity = Property.getValueOrUndefined(polylineVolume.granularity, time);
         options.cornerType = Property.getValueOrUndefined(polylineVolume.cornerType, time);
     };
-
-    return PolylineVolumeGeometryUpdater;
-});
+export default PolylineVolumeGeometryUpdater;

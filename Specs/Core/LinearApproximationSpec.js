@@ -1,8 +1,4 @@
-define([
-        'Core/LinearApproximation'
-    ], function(
-        LinearApproximation) {
-        'use strict';
+import { LinearApproximation } from '../../Source/Cesium.js';
 
 describe('Core/LinearApproximation', function() {
 
@@ -73,5 +69,4 @@ describe('Core/LinearApproximation', function() {
     it('getRequiredDataPoints returns 2', function() {
         expect(LinearApproximation.getRequiredDataPoints(1)).toEqual(2);
     });
-});
 });

@@ -1,48 +1,24 @@
-define([
-        '../ThirdParty/when',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartesian4',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './EarthOrientationParameters',
-        './EarthOrientationParametersSample',
-        './Ellipsoid',
-        './HeadingPitchRoll',
-        './Iau2006XysData',
-        './Iau2006XysSample',
-        './JulianDate',
-        './Math',
-        './Matrix3',
-        './Matrix4',
-        './Quaternion',
-        './TimeConstants'
-    ], function(
-        when,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        EarthOrientationParameters,
-        EarthOrientationParametersSample,
-        Ellipsoid,
-        HeadingPitchRoll,
-        Iau2006XysData,
-        Iau2006XysSample,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        TimeConstants) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartesian4 from './Cartesian4.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import EarthOrientationParameters from './EarthOrientationParameters.js';
+import EarthOrientationParametersSample from './EarthOrientationParametersSample.js';
+import Ellipsoid from './Ellipsoid.js';
+import HeadingPitchRoll from './HeadingPitchRoll.js';
+import Iau2006XysData from './Iau2006XysData.js';
+import Iau2006XysSample from './Iau2006XysSample.js';
+import JulianDate from './JulianDate.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import Matrix4 from './Matrix4.js';
+import Quaternion from './Quaternion.js';
+import TimeConstants from './TimeConstants.js';
 
     /**
      * Contains functions for transforming positions to various reference frames.
@@ -917,6 +893,4 @@ define([
 
         return result;
     };
-
-    return Transforms;
-});
+export default Transforms;

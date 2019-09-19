@@ -1,16 +1,8 @@
-define([
-        '../Core/ComponentDatatype',
-        '../Core/defined',
-        '../Core/IndexDatatype',
-        '../Core/RuntimeError',
-        './createTaskProcessorWorker'
-    ], function(
-        ComponentDatatype,
-        defined,
-        IndexDatatype,
-        RuntimeError,
-        createTaskProcessorWorker) {
-    'use strict';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defined from '../Core/defined.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     var draco;
 
@@ -289,6 +281,4 @@ define([
             });
         }
     }
-
-    return decodeDraco;
-});
+export default decodeDraco;

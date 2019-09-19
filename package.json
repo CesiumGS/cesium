@@ -75,6 +75,7 @@
     "yargs": "^14.0.0"
   },
   "scripts": {
+    "convertToModules": "gulp convertToModules",
     "start": "node server.js",
     "startPublic": "node server.js --public",
     "build": "gulp build",

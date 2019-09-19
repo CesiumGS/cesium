@@ -1,14 +1,7 @@
-define([
-        'Core/JulianDate',
-        'DataSources/ConstantProperty',
-        'DataSources/PropertyBag',
-        'DataSources/SampledProperty'
-    ], function(
-        JulianDate,
-        ConstantProperty,
-        PropertyBag,
-        SampledProperty) {
-        'use strict';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { PropertyBag } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
 
 describe('DataSources/PropertyBag', function() {
 
@@ -282,5 +275,4 @@ describe('DataSources/PropertyBag', function() {
 
         expect(property.isConstant).toBe(false);
     });
-});
 });

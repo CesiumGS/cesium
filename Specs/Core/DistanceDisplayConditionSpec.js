@@ -1,10 +1,5 @@
-define([
-        'Core/DistanceDisplayCondition',
-        'Specs/createPackableSpecs'
-    ], function(
-        DistanceDisplayCondition,
-        createPackableSpecs) {
-        'use strict';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/DistanceDisplayCondition', function() {
 
@@ -93,5 +88,4 @@ describe('Core/DistanceDisplayCondition', function() {
     });
 
     createPackableSpecs(DistanceDisplayCondition, new DistanceDisplayCondition(1, 2), [1, 2]);
-});
 });

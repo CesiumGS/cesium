@@ -1,20 +1,10 @@
-define([
-        '../Core/AttributeCompression',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Ellipsoid',
-        '../Core/Math',
-        '../Core/Rectangle',
-        './createTaskProcessorWorker'
-    ], function(
-        AttributeCompression,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        CesiumMath,
-        Rectangle,
-        createTaskProcessorWorker) {
-    'use strict';
+import AttributeCompression from '../Core/AttributeCompression.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import CesiumMath from '../Core/Math.js';
+import Rectangle from '../Core/Rectangle.js';
+import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     var maxShort = 32767;
 
@@ -77,6 +67,4 @@ define([
             positions : decoded.buffer
         };
     }
-
-    return createTaskProcessorWorker(createVectorTilePoints);
-});
+export default createTaskProcessorWorker(createVectorTilePoints);

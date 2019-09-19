@@ -1,14 +1,7 @@
-define([
-        '../Core/clone',
-        '../Core/defined',
-        '../Core/defineProperties',
-        './Expression'
-    ], function(
-        clone,
-        defined,
-        defineProperties,
-        Expression) {
-    'use strict';
+import clone from '../Core/clone.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Expression from './Expression.js';
 
     /**
      * An expression for a style applied to a {@link Cesium3DTileset}.
@@ -180,6 +173,4 @@ define([
 
         return shaderFunction;
     };
-
-    return ConditionsExpression;
-});
+export default ConditionsExpression;

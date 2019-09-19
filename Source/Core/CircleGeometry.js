@@ -1,22 +1,11 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './EllipseGeometry',
-        './Ellipsoid',
-        './VertexFormat'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        EllipseGeometry,
-        Ellipsoid,
-        VertexFormat) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import EllipseGeometry from './EllipseGeometry.js';
+import Ellipsoid from './Ellipsoid.js';
+import VertexFormat from './VertexFormat.js';
 
     /**
      * A description of a circle on the ellipsoid. Circle geometry can be rendered with both {@link Primitive} and {@link GroundPrimitive}.
@@ -195,6 +184,4 @@ define([
             }
         }
     });
-
-    return CircleGeometry;
-});
+export default CircleGeometry;

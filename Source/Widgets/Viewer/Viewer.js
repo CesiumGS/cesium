@@ -1,102 +1,51 @@
-define([
-        '../../Core/BoundingSphere',
-        '../../Core/Cartesian3',
-        '../../Core/Cartographic',
-        '../../Core/Clock',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/Event',
-        '../../Core/EventHelper',
-        '../../Core/HeadingPitchRange',
-        '../../Core/isArray',
-        '../../Core/Matrix4',
-        '../../Core/ScreenSpaceEventType',
-        '../../DataSources/BoundingSphereState',
-        '../../DataSources/ConstantPositionProperty',
-        '../../DataSources/DataSourceCollection',
-        '../../DataSources/DataSourceDisplay',
-        '../../DataSources/Entity',
-        '../../DataSources/EntityView',
-        '../../DataSources/Property',
-        '../../Scene/Cesium3DTileset',
-        '../../Scene/computeFlyToLocationForRectangle',
-        '../../Scene/ImageryLayer',
-        '../../Scene/SceneMode',
-        '../../Scene/TimeDynamicPointCloud',
-        '../../ThirdParty/knockout',
-        '../../ThirdParty/when',
-        '../Animation/Animation',
-        '../Animation/AnimationViewModel',
-        '../BaseLayerPicker/BaseLayerPicker',
-        '../BaseLayerPicker/createDefaultImageryProviderViewModels',
-        '../BaseLayerPicker/createDefaultTerrainProviderViewModels',
-        '../CesiumWidget/CesiumWidget',
-        '../ClockViewModel',
-        '../FullscreenButton/FullscreenButton',
-        '../Geocoder/Geocoder',
-        '../getElement',
-        '../HomeButton/HomeButton',
-        '../InfoBox/InfoBox',
-        '../NavigationHelpButton/NavigationHelpButton',
-        '../ProjectionPicker/ProjectionPicker',
-        '../SceneModePicker/SceneModePicker',
-        '../SelectionIndicator/SelectionIndicator',
-        '../subscribeAndEvaluate',
-        '../Timeline/Timeline',
-        '../VRButton/VRButton'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Cartographic,
-        Clock,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Event,
-        EventHelper,
-        HeadingPitchRange,
-        isArray,
-        Matrix4,
-        ScreenSpaceEventType,
-        BoundingSphereState,
-        ConstantPositionProperty,
-        DataSourceCollection,
-        DataSourceDisplay,
-        Entity,
-        EntityView,
-        Property,
-        Cesium3DTileset,
-        computeFlyToLocationForRectangle,
-        ImageryLayer,
-        SceneMode,
-        TimeDynamicPointCloud,
-        knockout,
-        when,
-        Animation,
-        AnimationViewModel,
-        BaseLayerPicker,
-        createDefaultImageryProviderViewModels,
-        createDefaultTerrainProviderViewModels,
-        CesiumWidget,
-        ClockViewModel,
-        FullscreenButton,
-        Geocoder,
-        getElement,
-        HomeButton,
-        InfoBox,
-        NavigationHelpButton,
-        ProjectionPicker,
-        SceneModePicker,
-        SelectionIndicator,
-        subscribeAndEvaluate,
-        Timeline,
-        VRButton) {
-    'use strict';
+import BoundingSphere from '../../Core/BoundingSphere.js';
+import Cartesian3 from '../../Core/Cartesian3.js';
+import Cartographic from '../../Core/Cartographic.js';
+import Clock from '../../Core/Clock.js';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import Event from '../../Core/Event.js';
+import EventHelper from '../../Core/EventHelper.js';
+import HeadingPitchRange from '../../Core/HeadingPitchRange.js';
+import isArray from '../../Core/isArray.js';
+import Matrix4 from '../../Core/Matrix4.js';
+import ScreenSpaceEventType from '../../Core/ScreenSpaceEventType.js';
+import BoundingSphereState from '../../DataSources/BoundingSphereState.js';
+import ConstantPositionProperty from '../../DataSources/ConstantPositionProperty.js';
+import DataSourceCollection from '../../DataSources/DataSourceCollection.js';
+import DataSourceDisplay from '../../DataSources/DataSourceDisplay.js';
+import Entity from '../../DataSources/Entity.js';
+import EntityView from '../../DataSources/EntityView.js';
+import Property from '../../DataSources/Property.js';
+import Cesium3DTileset from '../../Scene/Cesium3DTileset.js';
+import computeFlyToLocationForRectangle from '../../Scene/computeFlyToLocationForRectangle.js';
+import ImageryLayer from '../../Scene/ImageryLayer.js';
+import SceneMode from '../../Scene/SceneMode.js';
+import TimeDynamicPointCloud from '../../Scene/TimeDynamicPointCloud.js';
+import knockout from '../../ThirdParty/knockout.js';
+import when from '../../ThirdParty/when.js';
+import Animation from '../Animation/Animation.js';
+import AnimationViewModel from '../Animation/AnimationViewModel.js';
+import BaseLayerPicker from '../BaseLayerPicker/BaseLayerPicker.js';
+import createDefaultImageryProviderViewModels from '../BaseLayerPicker/createDefaultImageryProviderViewModels.js';
+import createDefaultTerrainProviderViewModels from '../BaseLayerPicker/createDefaultTerrainProviderViewModels.js';
+import CesiumWidget from '../CesiumWidget/CesiumWidget.js';
+import ClockViewModel from '../ClockViewModel.js';
+import FullscreenButton from '../FullscreenButton/FullscreenButton.js';
+import Geocoder from '../Geocoder/Geocoder.js';
+import getElement from '../getElement.js';
+import HomeButton from '../HomeButton/HomeButton.js';
+import InfoBox from '../InfoBox/InfoBox.js';
+import NavigationHelpButton from '../NavigationHelpButton/NavigationHelpButton.js';
+import ProjectionPicker from '../ProjectionPicker/ProjectionPicker.js';
+import SceneModePicker from '../SceneModePicker/SceneModePicker.js';
+import SelectionIndicator from '../SelectionIndicator/SelectionIndicator.js';
+import subscribeAndEvaluate from '../subscribeAndEvaluate.js';
+import Timeline from '../Timeline/Timeline.js';
+import VRButton from '../VRButton/VRButton.js';
 
     var boundingSphereScratch = new BoundingSphere();
 
@@ -2094,6 +2043,4 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
      *
      * @see Viewer#extend
      */
-
-    return Viewer;
-});
+export default Viewer;

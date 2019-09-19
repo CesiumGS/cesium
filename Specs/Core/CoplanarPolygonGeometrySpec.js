@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian3',
-        'Core/CoplanarPolygonGeometry',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian3,
-        CoplanarPolygonGeometry,
-        Ellipsoid,
-        CesiumMath,
-        VertexFormat,
-        createPackableSpecs) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CoplanarPolygonGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/CoplanarPolygonGeometry', function() {
 
@@ -172,6 +163,4 @@ describe('Core/CoplanarPolygonGeometry', function() {
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(1, 0, 0, 0, 0, 0, 0, 44);
     createPackableSpecs(CoplanarPolygonGeometry, polygon, packedInstance);
-});
-
 });

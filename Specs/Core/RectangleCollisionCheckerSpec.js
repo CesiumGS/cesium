@@ -1,10 +1,5 @@
-define([
-        'Core/Rectangle',
-        'Core/RectangleCollisionChecker'
-    ], function(
-        Rectangle,
-        RectangleCollisionChecker) {
-        'use strict';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleCollisionChecker } from '../../Source/Cesium.js';
 
 describe('Core/RectangleCollisionChecker', function() {
 
@@ -34,5 +29,4 @@ describe('Core/RectangleCollisionChecker', function() {
 
         expect(collisionChecker.collides(testRectangle2)).toBe(false);
     });
-});
 });

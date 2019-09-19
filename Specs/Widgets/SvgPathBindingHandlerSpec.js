@@ -1,8 +1,4 @@
-define([
-        'ThirdParty/knockout'
-    ], function(
-        knockout) {
-        'use strict';
+import { knockout } from '../../Source/Cesium.js';
 
 describe('ThirdParty/knockout', function() {
 
@@ -87,5 +83,4 @@ cesiumSvgPath: svgPath');
         knockout.cleanNode(div);
         document.body.removeChild(div);
     });
-});
 });

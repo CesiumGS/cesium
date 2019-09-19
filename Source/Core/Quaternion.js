@@ -1,22 +1,11 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './FeatureDetection',
-        './freezeObject',
-        './Math',
-        './Matrix3'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        FeatureDetection,
-        freezeObject,
-        CesiumMath,
-        Matrix3) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import FeatureDetection from './FeatureDetection.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
 
     /**
      * A set of 4-dimensional coordinates used to represent rotation in 3-dimensional space.
@@ -1030,6 +1019,4 @@ define([
     Quaternion.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
     };
-
-    return Quaternion;
-});
+export default Quaternion;

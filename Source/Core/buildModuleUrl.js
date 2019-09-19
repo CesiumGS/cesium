@@ -1,16 +1,8 @@
-define([
-        './defined',
-        './DeveloperError',
-        './getAbsoluteUri',
-        './Resource',
-        'require'
-    ], function(
-        defined,
-        DeveloperError,
-        getAbsoluteUri,
-        Resource,
-        require) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import getAbsoluteUri from './getAbsoluteUri.js';
+import Resource from './Resource.js';
+
     /*global CESIUM_BASE_URL*/
 
     var cesiumScriptRegex = /((?:.*\/)|^)cesium[\w-]*\.js(?:\W|$)/i;
@@ -52,8 +44,10 @@ define([
         var baseUrlString;
         if (typeof CESIUM_BASE_URL !== 'undefined') {
             baseUrlString = CESIUM_BASE_URL;
-        } else if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
+        } else if (typeof define === 'object' && defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
             baseUrlString = getAbsoluteUri('..', buildModuleUrl('Core/buildModuleUrl.js'));
+        } else if (defined(import.meta.url)){
+            baseUrlString = getAbsoluteUri('..', import.meta.url)
         } else {
             baseUrlString = getBaseUrlFromCesiumScript();
         }
@@ -96,7 +90,7 @@ define([
     function buildModuleUrl(moduleID) {
         if (!defined(implementation)) {
             //select implementation
-            if (defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
+            if (typeof define === 'object' && defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl)) {
                 implementation = buildModuleUrlFromRequireToUrl;
             } else {
                 implementation = buildModuleUrlFromBaseUrl;
@@ -129,5 +123,4 @@ define([
      */
     buildModuleUrl.getCesiumBaseUrl = getCesiumBaseUrl;
 
-    return buildModuleUrl;
-});
+export default buildModuleUrl;

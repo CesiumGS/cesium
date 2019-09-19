@@ -1,22 +1,11 @@
-define([
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Ellipsoid',
-        './freezeObject',
-        './Math'
-    ], function(
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import Ellipsoid from './Ellipsoid.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
 
     /**
      * A two dimensional region specified as longitude and latitude coordinates.
@@ -879,6 +868,4 @@ define([
      * @constant
     */
     Rectangle.MAX_VALUE = freezeObject(new Rectangle(-Math.PI, -CesiumMath.PI_OVER_TWO, Math.PI, CesiumMath.PI_OVER_TWO));
-
-    return Rectangle;
-});
+export default Rectangle;

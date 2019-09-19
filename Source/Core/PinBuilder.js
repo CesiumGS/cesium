@@ -1,18 +1,9 @@
-define([
-        './buildModuleUrl',
-        './Color',
-        './defined',
-        './DeveloperError',
-        './Resource',
-        './writeTextToCanvas'
-    ], function(
-        buildModuleUrl,
-        Color,
-        defined,
-        DeveloperError,
-        Resource,
-        writeTextToCanvas) {
-    'use strict';
+import buildModuleUrl from './buildModuleUrl.js';
+import Color from './Color.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Resource from './Resource.js';
+import writeTextToCanvas from './writeTextToCanvas.js';
 
     /**
      * A utility class for generating custom map pins as canvas elements.
@@ -234,6 +225,4 @@ define([
         cache[id] = canvas;
         return canvas;
     }
-
-    return PinBuilder;
-});
+export default PinBuilder;

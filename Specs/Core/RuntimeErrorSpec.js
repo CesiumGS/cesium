@@ -1,8 +1,4 @@
-define([
-        'Core/RuntimeError'
-    ], function(
-        RuntimeError) {
-        'use strict';
+import { RuntimeError } from '../../Source/Cesium.js';
 
 describe('Core/RuntimeError', function() {
 
@@ -32,5 +28,4 @@ describe('Core/RuntimeError', function() {
         expect(str).toContain(name + ': ' + testMessage);
         expect(str).toContain('Core/RuntimeErrorSpec.js');
     });
-});
 });

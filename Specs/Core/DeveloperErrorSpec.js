@@ -1,8 +1,4 @@
-define([
-        'Core/DeveloperError'
-    ], function(
-        DeveloperError) {
-        'use strict';
+import { DeveloperError } from '../../Source/Cesium.js';
 
 describe('Core/DeveloperError', function() {
 
@@ -32,5 +28,4 @@ describe('Core/DeveloperError', function() {
         expect(str).toContain(name + ': ' + testMessage);
         expect(str).toContain('Core/DeveloperErrorSpec.js');
     });
-});
 });

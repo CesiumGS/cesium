@@ -1,8 +1,4 @@
-define([
-        'Core/clone'
-    ], function(
-        clone) {
-        'use strict';
+import { clone } from '../../Source/Cesium.js';
 
 describe('Core/clone', function() {
 
@@ -47,5 +43,4 @@ describe('Core/clone', function() {
         expect(clonedObj.c.e.f).not.toBe(obj.c.e.f);
         expect(clonedObj.c.e.f.g).toEqual(obj.c.e.f.g);
     });
-});
 });

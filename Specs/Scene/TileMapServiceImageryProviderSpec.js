@@ -1,42 +1,21 @@
-define([
-        'Scene/TileMapServiceImageryProvider',
-        'Core/Cartesian2',
-        'Core/Cartographic',
-        'Core/GeographicProjection',
-        'Core/GeographicTilingScheme',
-        'Core/getAbsoluteUri',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorProjection',
-        'Core/WebMercatorTilingScheme',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryState',
-        'Scene/UrlTemplateImageryProvider',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        TileMapServiceImageryProvider,
-        Cartesian2,
-        Cartographic,
-        GeographicProjection,
-        GeographicTilingScheme,
-        getAbsoluteUri,
-        CesiumMath,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        WebMercatorProjection,
-        WebMercatorTilingScheme,
-        Imagery,
-        ImageryLayer,
-        ImageryState,
-        UrlTemplateImageryProvider,
-        pollToPromise,
-        when) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { getAbsoluteUri } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { TileMapServiceImageryProvider } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { UrlTemplateImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/TileMapServiceImageryProvider', function() {
 
@@ -765,5 +744,4 @@ describe('Scene/TileMapServiceImageryProvider', function() {
             expect(errorRaised).toBe(true);
         });
     });
-});
 });

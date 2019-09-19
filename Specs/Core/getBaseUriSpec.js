@@ -1,8 +1,4 @@
-define([
-        'Core/getBaseUri'
-    ], function(
-        getBaseUri) {
-        'use strict';
+import { getBaseUri } from '../../Source/Cesium.js';
 
 describe('Core/getBaseUri', function() {
 
@@ -27,5 +23,4 @@ describe('Core/getBaseUri', function() {
             getBaseUri(undefined);
         }).toThrowDeveloperError();
     });
-});
 });

@@ -1,12 +1,6 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject) {
-    'use strict';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
 
     /**
      * @private
@@ -85,6 +79,4 @@ define([
         }
         return destroyObject(this);
     };
-
-    return TextureCache;
-});
+export default TextureCache;

@@ -1,12 +1,6 @@
-define([
-        'Core/Fullscreen',
-        'Specs/createScene',
-        'Widgets/VRButton/VRButtonViewModel'
-    ], function(
-        Fullscreen,
-        createScene,
-        VRButtonViewModel) {
-        'use strict';
+import { Fullscreen } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
+import { VRButtonViewModel } from '../../../Source/Cesium.js';
 
 describe('Widgets/VRButton/VRButtonViewModel', function() {
 
@@ -73,5 +67,4 @@ describe('Widgets/VRButton/VRButtonViewModel', function() {
             viewModel.vrElement = {};
         }).toThrowDeveloperError();
     });
-});
 });

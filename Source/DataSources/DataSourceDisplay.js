@@ -1,48 +1,24 @@
-define([
-        '../Core/ApproximateTerrainHeights',
-        '../Core/BoundingSphere',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/EventHelper',
-        '../Scene/GroundPolylinePrimitive',
-        '../Scene/GroundPrimitive',
-        '../Scene/OrderedGroundPrimitiveCollection',
-        '../Scene/PrimitiveCollection',
-        './BillboardVisualizer',
-        './BoundingSphereState',
-        './CustomDataSource',
-        './GeometryVisualizer',
-        './LabelVisualizer',
-        './ModelVisualizer',
-        './PathVisualizer',
-        './PointVisualizer',
-        './PolylineVisualizer'
-    ], function(
-        ApproximateTerrainHeights,
-        BoundingSphere,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        EventHelper,
-        GroundPolylinePrimitive,
-        GroundPrimitive,
-        OrderedGroundPrimitiveCollection,
-        PrimitiveCollection,
-        BillboardVisualizer,
-        BoundingSphereState,
-        CustomDataSource,
-        GeometryVisualizer,
-        LabelVisualizer,
-        ModelVisualizer,
-        PathVisualizer,
-        PointVisualizer,
-        PolylineVisualizer) {
-    'use strict';
+import ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import EventHelper from '../Core/EventHelper.js';
+import GroundPolylinePrimitive from '../Scene/GroundPolylinePrimitive.js';
+import GroundPrimitive from '../Scene/GroundPrimitive.js';
+import OrderedGroundPrimitiveCollection from '../Scene/OrderedGroundPrimitiveCollection.js';
+import PrimitiveCollection from '../Scene/PrimitiveCollection.js';
+import BillboardVisualizer from './BillboardVisualizer.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import CustomDataSource from './CustomDataSource.js';
+import GeometryVisualizer from './GeometryVisualizer.js';
+import LabelVisualizer from './LabelVisualizer.js';
+import ModelVisualizer from './ModelVisualizer.js';
+import PathVisualizer from './PathVisualizer.js';
+import PointVisualizer from './PointVisualizer.js';
+import PolylineVisualizer from './PolylineVisualizer.js';
 
     /**
      * Visualizes a collection of {@link DataSource} instances.
@@ -441,6 +417,4 @@ define([
      *     return [new Cesium.BillboardVisualizer(scene, dataSource.entities)];
      * }
      */
-
-    return DataSourceDisplay;
-});
+export default DataSourceDisplay;

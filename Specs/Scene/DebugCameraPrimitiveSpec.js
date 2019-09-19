@@ -1,16 +1,8 @@
-define([
-        'Core/Cartesian3',
-        'Core/Color',
-        'Scene/Camera',
-        'Scene/DebugCameraPrimitive',
-        'Specs/createScene'
-    ], function(
-        Cartesian3,
-        Color,
-        Camera,
-        DebugCameraPrimitive,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { DebugCameraPrimitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/DebugCameraPrimitive', function() {
 
@@ -126,4 +118,3 @@ describe('Scene/DebugCameraPrimitive', function() {
         expect(p.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
-});

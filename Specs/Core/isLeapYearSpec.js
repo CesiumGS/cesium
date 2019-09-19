@@ -1,8 +1,4 @@
-define([
-        'Core/isLeapYear'
-    ], function(
-        isLeapYear) {
-        'use strict';
+import { isLeapYear } from '../../Source/Cesium.js';
 
 describe('Core/isLeapYear', function() {
 
@@ -33,5 +29,4 @@ describe('Core/isLeapYear', function() {
             isLeapYear('asd');
         }).toThrowDeveloperError();
     });
-});
 });

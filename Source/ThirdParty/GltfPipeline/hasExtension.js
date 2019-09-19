@@ -1,8 +1,4 @@
-define([
-        '../../Core/defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from '../../Core/defined.js'
 
     /**
      * Checks whether the glTF has the given extension.
@@ -17,5 +13,4 @@ define([
         return defined(gltf.extensionsUsed) && (gltf.extensionsUsed.indexOf(extension) >= 0);
     }
 
-    return hasExtension;
-});
+    export default hasExtension;

@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian3',
-        'Core/EllipsoidGeometry',
-        'Core/Matrix4',
-        'Core/PrimitiveType',
-        'Core/VertexFormat',
-        'Scene/createTangentSpaceDebugPrimitive'
-    ], function(
-        Cartesian3,
-        EllipsoidGeometry,
-        Matrix4,
-        PrimitiveType,
-        VertexFormat,
-        createTangentSpaceDebugPrimitive) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { EllipsoidGeometry } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import { createTangentSpaceDebugPrimitive } from '../../Source/Cesium.js';
 
 describe('Scene/createTangentSpaceDebugPrimitive', function() {
 
@@ -58,5 +49,4 @@ describe('Scene/createTangentSpaceDebugPrimitive', function() {
         }).toThrowDeveloperError();
     });
 
-});
 });

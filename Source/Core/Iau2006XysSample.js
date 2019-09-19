@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     /**
      * An IAU 2006 XYS value sampled at a particular time.
@@ -32,6 +30,4 @@ define(function() {
          */
         this.s = s;
     }
-
-    return Iau2006XysSample;
-});
+export default Iau2006XysSample;

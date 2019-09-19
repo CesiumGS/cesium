@@ -1,14 +1,7 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/defined',
-        '../Core/defineProperties'
-    ], function(
-        Cartesian3,
-        Check,
-        defined,
-        defineProperties) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
 
     /**
      * A Plane in Hessian Normal form to be used with {@link ClippingPlaneCollection}.
@@ -177,6 +170,4 @@ define([
             }
         }
     });
-
-    return ClippingPlane;
-});
+export default ClippingPlane;

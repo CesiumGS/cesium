@@ -1,82 +1,41 @@
-define([
-        'Core/ArcType',
-        'Core/BoundingRectangle',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/Color',
-        'Core/combine',
-        'Core/Ellipsoid',
-        'Core/Event',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'Core/Iso8601',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/NearFarScalar',
-        'Core/PerspectiveFrustum',
-        'Core/Rectangle',
-        'Core/RequestErrorEvent',
-        'Core/Resource',
-        'Core/RuntimeError',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/EntityCollection',
-        'DataSources/ImageMaterialProperty',
-        'DataSources/KmlCamera',
-        'DataSources/KmlDataSource',
-        'DataSources/KmlLookAt',
-        'DataSources/KmlTour',
-        'DataSources/KmlTourFlyTo',
-        'DataSources/KmlTourWait',
-        'Scene/Camera',
-        'Scene/HeightReference',
-        'Scene/HorizontalOrigin',
-        'Scene/LabelStyle',
-        'Scene/SceneMode',
-        'Specs/createCamera',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        ArcType,
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        ClockRange,
-        ClockStep,
-        Color,
-        combine,
-        Ellipsoid,
-        Event,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        Iso8601,
-        JulianDate,
-        CesiumMath,
-        NearFarScalar,
-        PerspectiveFrustum,
-        Rectangle,
-        RequestErrorEvent,
-        Resource,
-        RuntimeError,
-        ColorMaterialProperty,
-        EntityCollection,
-        ImageMaterialProperty,
-        KmlCamera,
-        KmlDataSource,
-        KmlLookAt,
-        KmlTour,
-        KmlTourFlyTo,
-        KmlTourWait,
-        Camera,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        SceneMode,
-        createCamera,
-        pollToPromise,
-        when) {
-        'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ClockRange } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { combine } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { ImageMaterialProperty } from '../../Source/Cesium.js';
+import { KmlCamera } from '../../Source/Cesium.js';
+import { KmlDataSource } from '../../Source/Cesium.js';
+import { KmlLookAt } from '../../Source/Cesium.js';
+import { KmlTour } from '../../Source/Cesium.js';
+import { KmlTourFlyTo } from '../../Source/Cesium.js';
+import { KmlTourWait } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { LabelStyle } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createCamera from '../createCamera.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('DataSources/KmlDataSource', function() {
 
@@ -4544,5 +4503,4 @@ describe('DataSources/KmlDataSource', function() {
             expect(dataSource.entities.values[2].polygon.material.color.getValue()).not.toEqual(dataSource.entities.values[3].polygon.material.color.getValue());
         });
     });
-});
 });

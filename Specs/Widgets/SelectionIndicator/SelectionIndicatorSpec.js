@@ -1,10 +1,5 @@
-define([
-        'Specs/createScene',
-        'Widgets/SelectionIndicator/SelectionIndicator'
-    ], function(
-        createScene,
-        SelectionIndicator) {
-        'use strict';
+import createScene from '../../createScene.js';
+import { SelectionIndicator } from '../../../Source/Cesium.js';
 
 describe('Widgets/SelectionIndicator/SelectionIndicator', function() {
 
@@ -48,4 +43,3 @@ describe('Widgets/SelectionIndicator/SelectionIndicator', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

@@ -1,8 +1,4 @@
-define([
-        'Core/Intersections2D'
-    ], function(
-        Intersections2D) {
-        'use strict';
+import { Intersections2D } from '../../Source/Cesium.js';
 
 describe('Core/Intersections2D', function() {
 
@@ -344,5 +340,4 @@ describe('Core/Intersections2D', function() {
             expect(intersection1).toBeUndefined();
         });
     });
-});
 });

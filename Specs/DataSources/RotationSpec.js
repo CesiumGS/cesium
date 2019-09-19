@@ -1,16 +1,8 @@
-define([
-        'Core/JulianDate',
-        'Core/Math',
-        'DataSources/Rotation',
-        'DataSources/SampledProperty',
-        'Specs/createPackableSpecs'
-    ], function(
-        JulianDate,
-        CesiumMath,
-        Rotation,
-        SampledProperty,
-        createPackableSpecs) {
-        'use strict';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rotation } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('DataSources/Rotation', function() {
 
@@ -31,5 +23,4 @@ describe('DataSources/Rotation', function() {
     });
 
     createPackableSpecs(Rotation, 1, [1]);
-});
 });

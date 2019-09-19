@@ -1,22 +1,11 @@
-define([
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/EllipsoidalOccluder',
-        'Core/IntersectionTests',
-        'Core/Math',
-        'Core/Ray',
-        'Core/Rectangle'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Ellipsoid,
-        EllipsoidalOccluder,
-        IntersectionTests,
-        CesiumMath,
-        Ray,
-        Rectangle) {
-        'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidalOccluder } from '../../Source/Cesium.js';
+import { IntersectionTests } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Ray } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
 
 describe('Core/EllipsoidalOccluder', function() {
 
@@ -296,5 +285,4 @@ describe('Core/EllipsoidalOccluder', function() {
             expect(foundOneNearZero).toBe(true);
         });
     });
-});
 });

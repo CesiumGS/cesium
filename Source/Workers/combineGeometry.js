@@ -1,16 +1,9 @@
-define([
-        '../Scene/PrimitivePipeline',
-        './createTaskProcessorWorker'
-    ], function(
-        PrimitivePipeline,
-        createTaskProcessorWorker) {
-    'use strict';
+import PrimitivePipeline from '../Scene/PrimitivePipeline.js';
+import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     function combineGeometry(packedParameters, transferableObjects) {
         var parameters = PrimitivePipeline.unpackCombineGeometryParameters(packedParameters);
         var results = PrimitivePipeline.combineGeometry(parameters);
         return PrimitivePipeline.packCombineGeometryResults(results, transferableObjects);
     }
-
-    return createTaskProcessorWorker(combineGeometry);
-});
+export default createTaskProcessorWorker(combineGeometry);

@@ -1,14 +1,7 @@
-define([
-        '../Core/defined',
-        '../Core/Ellipsoid',
-        '../Core/Rectangle',
-        '../Core/RectangleGeometry'
-    ], function(
-        defined,
-        Ellipsoid,
-        Rectangle,
-        RectangleGeometry) {
-    'use strict';
+import defined from '../Core/defined.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import Rectangle from '../Core/Rectangle.js';
+import RectangleGeometry from '../Core/RectangleGeometry.js';
 
     function createRectangleGeometry(rectangleGeometry, offset) {
         if (defined(offset)) {
@@ -18,6 +11,4 @@ define([
         rectangleGeometry._rectangle = Rectangle.clone(rectangleGeometry._rectangle);
         return RectangleGeometry.createGeometry(rectangleGeometry);
     }
-
-    return createRectangleGeometry;
-});
+export default createRectangleGeometry;

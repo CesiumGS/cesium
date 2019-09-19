@@ -1,10 +1,5 @@
-define([
-        './barycentricCoordinates',
-        './Cartesian3'
-    ], function(
-        barycentricCoordinates,
-        Cartesian3) {
-    'use strict';
+import barycentricCoordinates from './barycentricCoordinates.js';
+import Cartesian3 from './Cartesian3.js';
 
     var coords = new Cartesian3();
 
@@ -31,6 +26,4 @@ define([
         barycentricCoordinates(point, p0, p1, p2, coords);
         return (coords.x > 0.0) && (coords.y > 0.0) && (coords.z > 0);
     }
-
-    return pointInsideTriangle;
-});
+export default pointInsideTriangle;

@@ -1,16 +1,8 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/getTimestamp',
-        './JobType'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        getTimestamp,
-        JobType) {
-    'use strict';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import getTimestamp from '../Core/getTimestamp.js';
+import JobType from './JobType.js';
 
     function JobTypeBudget(total) {
         /**
@@ -189,6 +181,4 @@ define([
 
         return true;
     };
-
-    return JobScheduler;
-});
+export default JobScheduler;

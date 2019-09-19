@@ -1,22 +1,11 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Color',
-        'Core/Matrix2',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Specs/createContext'
-    ], 'Renderer/Uniform', function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        Matrix2,
-        Matrix3,
-        Matrix4,
-        createContext) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Matrix2 } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
 describe('Core/Cartesian2', function() {
 
@@ -845,4 +834,3 @@ describe('Core/Cartesian2', function() {
         }).contextToRender();
     });
 }, 'WebGL');
-});

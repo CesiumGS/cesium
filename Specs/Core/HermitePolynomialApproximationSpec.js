@@ -1,8 +1,4 @@
-define([
-        'Core/HermitePolynomialApproximation'
-    ], function(
-        HermitePolynomialApproximation) {
-        'use strict';
+import { HermitePolynomialApproximation } from '../../Source/Cesium.js';
 
 describe('Core/HermitePolynomialApproximation', function() {
 
@@ -76,5 +72,4 @@ describe('Core/HermitePolynomialApproximation', function() {
         expect(result).toEqualEpsilon(expectedResult, 1e-8);
     });
 
-});
 });

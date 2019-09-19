@@ -1,28 +1,14 @@
-define([
-        '../Core/AttributeCompression',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/Ellipsoid',
-        '../Core/IndexDatatype',
-        '../Core/Math',
-        '../Core/OrientedBoundingBox',
-        '../Core/Rectangle',
-        './createTaskProcessorWorker'
-    ], function(
-        AttributeCompression,
-        Cartesian3,
-        Cartographic,
-        Color,
-        defined,
-        Ellipsoid,
-        IndexDatatype,
-        CesiumMath,
-        OrientedBoundingBox,
-        Rectangle,
-        createTaskProcessorWorker) {
-    'use strict';
+import AttributeCompression from '../Core/AttributeCompression.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import CesiumMath from '../Core/Math.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import Rectangle from '../Core/Rectangle.js';
+import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     var scratchCenter = new Cartesian3();
     var scratchEllipsoid = new Ellipsoid();
@@ -370,6 +356,4 @@ define([
             packedBuffer : packedBuffer.buffer
         };
     }
-
-    return createTaskProcessorWorker(createVectorTilePolygons);
-});
+export default createTaskProcessorWorker(createVectorTilePolygons);

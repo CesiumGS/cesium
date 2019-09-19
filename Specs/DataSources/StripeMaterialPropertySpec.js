@@ -1,22 +1,11 @@
-define([
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'DataSources/ConstantProperty',
-        'DataSources/StripeMaterialProperty',
-        'DataSources/StripeOrientation',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Specs/testDefinitionChanged'
-    ], function(
-        Color,
-        JulianDate,
-        TimeInterval,
-        ConstantProperty,
-        StripeMaterialProperty,
-        StripeOrientation,
-        TimeIntervalCollectionProperty,
-        testDefinitionChanged) {
-        'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { StripeMaterialProperty } from '../../Source/Cesium.js';
+import { StripeOrientation } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
 
 describe('DataSources/StripeMaterialProperty', function() {
 
@@ -195,5 +184,4 @@ describe('DataSources/StripeMaterialProperty', function() {
         testDefinitionChanged(property, 'offset', 2, 5);
         testDefinitionChanged(property, 'repeat', 3, 4);
     });
-});
 });

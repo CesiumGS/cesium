@@ -95,6 +95,22 @@ var filesToSortRequires = ['Source/**/*.js',
                            '!Apps/Sandcastle/Sandcastle-warn.js',
                            '!Apps/Sandcastle/gallery/gallery-index.js'];
 
+var filesToConvertES6 = ['Source/**/*.js',
+                         'Specs/**/*.js',
+                         '!Source/ThirdParty/**',
+                         '!Source/Cesium.js',
+                         '!Source/main.js',
+                         '!Source/copyrightHeader.js',
+                         '!Source/Shaders/**',
+                         '!Source/Workers/cesiumWorkerBootstrapper.js',
+                         '!Source/Workers/transferTypedArrayTest.js',
+                         '!Specs/karma-main.js',
+                         '!Specs/karma.conf.js',
+                         '!Specs/spec-main.js',
+                         '!Specs/SpecList.js',
+                         '!Specs/TestWorkers/**'
+                        ];
+
 gulp.task('build', function(done) {
     mkdirp.sync('Build');
     glslToJavaScript(minifyShaders, 'Build/minifyShaders.state');
@@ -888,6 +904,137 @@ gulp.task('sortRequires', function() {
                        outputIdentifiers +
                        ') {' +
                        result[6];
+
+            return fsWriteFile(file, contents);
+        });
+    });
+});
+
+gulp.task('convertToModules', function() {
+    var requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
+    var noModulesRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[?)([\S\s]*?)]?([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
+    var splitRegex = /,\s*/;
+
+    var fsReadFile = Promise.promisify(fs.readFile);
+    var fsWriteFile = Promise.promisify(fs.writeFile);
+
+    var files = globby.sync(filesToConvertES6);
+
+    return Promise.map(files, function(file) {
+        return fsReadFile(file).then(function(contents) {
+            contents = contents.toString();
+            if (contents.startsWith('import')) {
+                return;
+            }
+
+            var result = requiresRegex.exec(contents);
+
+            if (result === null) {
+                result = noModulesRegex.exec(contents);
+                if (result === null) {
+                    return;
+                }
+            }
+
+            var names = result[3].split(splitRegex);
+            if (names.length === 1 && names[0].trim() === '') {
+                names.length = 0;
+            }
+
+            var i;
+            for (i = 0; i < names.length; ++i) {
+                if (names[i].indexOf('//') >= 0 || names[i].indexOf('/*') >= 0) {
+                    console.log(file + ' contains comments in the require list.  Skipping so nothing gets broken.');
+                    return;
+                }
+            }
+
+            var identifiers = result[5].split(splitRegex);
+            if (identifiers.length === 1 && identifiers[0].trim() === '') {
+                identifiers.length = 0;
+            }
+
+            for (i = 0; i < identifiers.length; ++i) {
+                if (identifiers[i].indexOf('//') >= 0 || identifiers[i].indexOf('/*') >= 0) {
+                    console.log(file + ' contains comments in the require list.  Skipping so nothing gets broken.');
+                    return;
+                }
+            }
+
+            var requires = [];
+
+            for (i = 0; i < names.length && i < identifiers.length; ++i) {
+                requires.push({
+                    name : names[i].trim(),
+                    identifier : identifiers[i].trim()
+                });
+            }
+
+            // Convert back to separate lists for the names and identifiers, and add
+            // any additional names or identifiers that don't have a corresponding pair.
+            var sortedNames = requires.map(function(item) {
+                return item.name.slice(0, -1) + '.js\'';
+            });
+            for (i = sortedNames.length; i < names.length; ++i) {
+                sortedNames.push(names[i].trim());
+            }
+
+            var sortedIdentifiers = requires.map(function(item) {
+                return item.identifier;
+            });
+            for (i = sortedIdentifiers.length; i < identifiers.length; ++i) {
+                sortedIdentifiers.push(identifiers[i].trim());
+            }
+
+            contents = '';
+            if (sortedNames.length > 0) {
+                for (var q = 0; q < sortedNames.length; q++) {
+                    var modulePath = sortedNames[q];
+                    if (file.startsWith('Specs')) {
+                        modulePath = modulePath.substring(1, modulePath.length - 1);
+                        var sourceDir = path.dirname(file);
+
+                        if (modulePath.startsWith('Specs') || modulePath.startsWith('.')) {
+                            var importPath = modulePath;
+                            if (modulePath.startsWith('Specs')) {
+                                importPath = path.relative(sourceDir, modulePath);
+                                if (importPath[0] !== '.') {
+                                    importPath = './' + importPath;
+                                }
+                            }
+                            modulePath = '\'' + importPath + '\'';
+                            contents += 'import ' + sortedIdentifiers[q] + ' from ' + modulePath + ';' + os.EOL;
+                        } else {
+                            modulePath = '\'' + path.relative(sourceDir, 'Source') + '/Cesium.js' + '\'';
+                            if (sortedIdentifiers[q] === 'CesiumMath') {
+                                contents += 'import { Math as CesiumMath } from ' + modulePath + ';' + os.EOL;
+                            } else {
+                                contents += 'import { ' + sortedIdentifiers[q] + ' } from ' + modulePath + ';' + os.EOL;
+                            }
+                        }
+                    } else {
+                        contents += 'import { ' + sortedIdentifiers[q] + ' } from ' + modulePath + ';' + os.EOL;
+                    }
+                }
+            }
+
+            var code;
+            var codeAndReturn = result[6];
+            if (file.endsWith('Spec.js')) {
+                var indi = codeAndReturn.lastIndexOf('});');
+                code = codeAndReturn.slice(0, indi);
+                code = code.trim().replace("'use strict';" + os.EOL, '');
+                contents += code + os.EOL;
+            } else {
+                var returnIndex = codeAndReturn.lastIndexOf('return');
+
+                code = codeAndReturn.slice(0, returnIndex);
+                code = code.trim().replace("'use strict';" + os.EOL, '');
+                contents += code + os.EOL;
+
+                var returnStatement = codeAndReturn.slice(returnIndex);
+                contents += returnStatement.split(';')[0].replace('return ', 'export default ') + ';' + os.EOL;
+            }
 
             return fsWriteFile(file, contents);
         });

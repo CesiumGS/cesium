@@ -1,24 +1,12 @@
-define([
-        'Core/Cartesian3',
-        'Core/ExtrapolationType',
-        'Core/JulianDate',
-        'Core/LagrangePolynomialApproximation',
-        'Core/LinearApproximation',
-        'Core/ReferenceFrame',
-        'Core/TimeInterval',
-        'DataSources/PositionProperty',
-        'DataSources/SampledPositionProperty'
-    ], function(
-        Cartesian3,
-        ExtrapolationType,
-        JulianDate,
-        LagrangePolynomialApproximation,
-        LinearApproximation,
-        ReferenceFrame,
-        TimeInterval,
-        PositionProperty,
-        SampledPositionProperty) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ExtrapolationType } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { LagrangePolynomialApproximation } from '../../Source/Cesium.js';
+import { LinearApproximation } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { PositionProperty } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
 
 describe('DataSources/SampledPositionProperty', function() {
 
@@ -420,5 +408,4 @@ describe('DataSources/SampledPositionProperty', function() {
         property.backwardExtrapolationDuration = 1.0;
         expect(listener).not.toHaveBeenCalled();
     });
-});
 });

@@ -1,10 +1,5 @@
-define([
-        '../Core/CoplanarPolygonGeometry',
-        '../Core/defined'
-    ], function(
-        CoplanarPolygonGeometry,
-        defined) {
-    'use strict';
+import CoplanarPolygonGeometry from '../Core/CoplanarPolygonGeometry.js';
+import defined from '../Core/defined.js';
 
     function createCoplanarPolygonGeometry(polygonGeometry, offset) {
         if (defined(offset)) {
@@ -12,6 +7,4 @@ define([
         }
         return CoplanarPolygonGeometry.createGeometry(polygonGeometry);
     }
-
-    return createCoplanarPolygonGeometry;
-});
+export default createCoplanarPolygonGeometry;

@@ -1,18 +1,9 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Spline'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Spline) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Spline from './Spline.js';
 
     /**
      * A spline that linearly interpolates over an array of weight values used by morph targets.
@@ -160,6 +151,4 @@ define([
 
         return result;
     };
-
-    return WeightSpline;
-});
+export default WeightSpline;

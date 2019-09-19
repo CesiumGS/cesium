@@ -1,16 +1,8 @@
-define([
-        'Core/EllipsoidTerrainProvider',
-        'Core/FeatureDetection',
-        'Scene/ImageryLayerCollection',
-        'Specs/DomEventSimulator',
-        'Widgets/BaseLayerPicker/BaseLayerPicker'
-    ], function(
-        EllipsoidTerrainProvider,
-        FeatureDetection,
-        ImageryLayerCollection,
-        DomEventSimulator,
-        BaseLayerPicker) {
-        'use strict';
+import { EllipsoidTerrainProvider } from '../../../Source/Cesium.js';
+import { FeatureDetection } from '../../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../../Source/Cesium.js';
+import DomEventSimulator from '../../DomEventSimulator.js';
+import { BaseLayerPicker } from '../../../Source/Cesium.js';
 
 describe('Widgets/BaseLayerPicker/BaseLayerPicker', function() {
 
@@ -88,5 +80,4 @@ describe('Widgets/BaseLayerPicker/BaseLayerPicker', function() {
             });
         }).toThrowDeveloperError();
     });
-});
 });

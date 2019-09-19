@@ -1,12 +1,6 @@
-define([
-        'ThirdParty/knockout',
-        'Widgets/BaseLayerPicker/ProviderViewModel',
-        'Widgets/createCommand'
-    ], function(
-        knockout,
-        ProviderViewModel,
-        createCommand) {
-        'use strict';
+import { knockout } from '../../../Source/Cesium.js';
+import { ProviderViewModel } from '../../../Source/Cesium.js';
+import { createCommand } from '../../../Source/Cesium.js';
 
 describe('Widgets/BaseLayerPicker/ProviderViewModel', function() {
 
@@ -152,5 +146,4 @@ describe('Widgets/BaseLayerPicker/ProviderViewModel', function() {
             }).toThrowDeveloperError();
         });
     });
-});
 });

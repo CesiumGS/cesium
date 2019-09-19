@@ -1,22 +1,11 @@
-define([
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'Core/Quaternion',
-        'Core/TimeInterval',
-        'DataSources/ConstantProperty',
-        'DataSources/NodeTransformationProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Specs/testDefinitionChanged'
-    ], function(
-        Cartesian3,
-        JulianDate,
-        Quaternion,
-        TimeInterval,
-        ConstantProperty,
-        NodeTransformationProperty,
-        TimeIntervalCollectionProperty,
-        testDefinitionChanged) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { NodeTransformationProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
 
 describe('DataSources/NodeTransformationProperty', function() {
 
@@ -149,5 +138,4 @@ describe('DataSources/NodeTransformationProperty', function() {
         testDefinitionChanged(property, 'translation', new Quaternion(0.5, 0.5, 0.5, 0.5), Quaternion.ZERO);
         testDefinitionChanged(property, 'scale', Cartesian3.UNIT_X, Cartesian3.ZERO);
     });
-});
 });

@@ -1,8 +1,4 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from './freezeObject.js';
 
     /**
      * This enumerated type is used in determining to what extent an object, the occludee,
@@ -37,6 +33,4 @@ define([
         */
         FULL : 1
     };
-
-    return freezeObject(Visibility);
-});
+export default freezeObject(Visibility);

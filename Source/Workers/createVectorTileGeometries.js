@@ -1,28 +1,14 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/BoxGeometry',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/CylinderGeometry',
-        '../Core/defined',
-        '../Core/EllipsoidGeometry',
-        '../Core/IndexDatatype',
-        '../Core/Matrix4',
-        '../Scene/Vector3DTileBatch',
-        './createTaskProcessorWorker'
-    ], function(
-        BoundingSphere,
-        BoxGeometry,
-        Cartesian3,
-        Color,
-        CylinderGeometry,
-        defined,
-        EllipsoidGeometry,
-        IndexDatatype,
-        Matrix4,
-        Vector3DTileBatch,
-        createTaskProcessorWorker) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import BoxGeometry from '../Core/BoxGeometry.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import CylinderGeometry from '../Core/CylinderGeometry.js';
+import defined from '../Core/defined.js';
+import EllipsoidGeometry from '../Core/EllipsoidGeometry.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Vector3DTileBatch from '../Scene/Vector3DTileBatch.js';
+import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     var scratchCartesian = new Cartesian3();
 
@@ -322,6 +308,4 @@ define([
             packedBuffer : packedBuffer.buffer
         };
     }
-
-    return createTaskProcessorWorker(createVectorTileGeometries);
-});
+export default createTaskProcessorWorker(createVectorTileGeometries);

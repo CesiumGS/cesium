@@ -1,18 +1,9 @@
-define([
-        '../ThirdParty/when',
-        './CompressedTextureBuffer',
-        './defined',
-        './DeveloperError',
-        './Resource',
-        './TaskProcessor'
-    ], function(
-        when,
-        CompressedTextureBuffer,
-        defined,
-        DeveloperError,
-        Resource,
-        TaskProcessor) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import CompressedTextureBuffer from './CompressedTextureBuffer.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Resource from './Resource.js';
+import TaskProcessor from './TaskProcessor.js';
 
     var transcodeTaskProcessor = new TaskProcessor('transcodeCRNToDXT', Number.POSITIVE_INFINITY);
 
@@ -85,6 +76,4 @@ define([
             return CompressedTextureBuffer.clone(compressedTextureBuffer);
         });
     }
-
-    return loadCRN;
-});
+export default loadCRN;

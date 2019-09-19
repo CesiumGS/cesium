@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/OrthographicFrustum',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        CesiumMath,
-        Matrix4,
-        OrthographicFrustum,
-        createPackableSpecs) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { OrthographicFrustum } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/OrthographicFrustum', function() {
 
@@ -238,5 +228,4 @@ describe('Core/OrthographicFrustum', function() {
         near : 3.0,
         far : 4.0
     }), [1.0, 2.0, 3.0, 4.0]);
-});
 });

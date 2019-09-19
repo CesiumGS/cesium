@@ -1,42 +1,21 @@
-define([
-        '../Core/AxisAlignedBoundingBox',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/Ellipsoid',
-        '../Core/EllipsoidalOccluder',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
-        '../Core/Rectangle',
-        '../Core/RuntimeError',
-        '../Core/TerrainEncoding',
-        '../Core/Transforms',
-        '../Core/WebMercatorProjection',
-        './createTaskProcessorWorker'
-    ], function(
-        AxisAlignedBoundingBox,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        Ellipsoid,
-        EllipsoidalOccluder,
-        CesiumMath,
-        Matrix4,
-        OrientedBoundingBox,
-        Rectangle,
-        RuntimeError,
-        TerrainEncoding,
-        Transforms,
-        WebMercatorProjection,
-        createTaskProcessorWorker) {
-    'use strict';
+import AxisAlignedBoundingBox from '../Core/AxisAlignedBoundingBox.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import Rectangle from '../Core/Rectangle.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import TerrainEncoding from '../Core/TerrainEncoding.js';
+import Transforms from '../Core/Transforms.js';
+import WebMercatorProjection from '../Core/WebMercatorProjection.js';
+import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
     var sizeOfInt32 = Int32Array.BYTES_PER_ELEMENT;
@@ -489,6 +468,4 @@ define([
             skirtOptions.lastBorderPoint = borderPoint;
         }
     }
-
-    return createTaskProcessorWorker(createVerticesFromGoogleEarthEnterpriseBuffer);
-});
+export default createTaskProcessorWorker(createVerticesFromGoogleEarthEnterpriseBuffer);
