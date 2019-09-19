@@ -89,15 +89,6 @@ describe('Scene/Cesium3DTile', function() {
         }
     };
 
-    var tileWithBoundingBox0Volume = {
-        geometricError : 1,
-        refine : 'REPLACE',
-        children : [],
-        boundingVolume: {
-            box : [0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
-        }
-    };
-
     var tileWithContentBoundingBox = {
         geometricError : 1,
         refine : 'REPLACE',
@@ -250,13 +241,30 @@ describe('Scene/Cesium3DTile', function() {
         });
 
         it('does not crash for bounding box with 0 volume', function() {
-            var box = tileWithBoundingBox0Volume.boundingVolume.box;
-            var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox0Volume, undefined);
-            expect(tile.boundingVolume).toBeDefined();
-            var center = new Cartesian3(box[0], box[1], box[2]);
-            var halfAxes = Matrix3.fromArray(box, 3);
-            var obb = new TileOrientedBoundingBox(center, halfAxes);
-            expect(tile.boundingVolume).toEqual(obb);
+            // Create a copy of the tile with bounding box.
+            var tileWithBoundingBox0Volume = JSON.parse(JSON.stringify(tileWithBoundingBox));
+            // Generate all the combinations of missing axes.
+            var boxes = [];
+            for (var x = 0; x < 2; ++x) {
+                for (var y = 0; y < 2; ++y) {
+                    for (var z = 0; z < 2; ++z) {
+                        boxes.push([0.0, 0.0, 0.0, x, 0.0, 0.0, 0.0, y, 0.0, 0.0, 0.0, z]);
+                    }
+                }
+            }
+
+            for (var i = 0; i < boxes.length; ++i) {
+                var box = boxes[i];
+
+                tileWithBoundingBox0Volume.box = box;
+
+                var tile = new Cesium3DTile(mockTileset, '/some_url', tileWithBoundingBox0Volume, undefined);
+                expect(tile.boundingVolume).toBeDefined();
+                var center = new Cartesian3(box[0], box[1], box[2]);
+                var halfAxes = Matrix3.fromArray(box, 3);
+                var obb = new TileOrientedBoundingBox(center, halfAxes);
+                expect(tile.boundingVolume).toEqual(obb);
+            }
         });
 
         it('can have a content oriented bounding box', function() {
