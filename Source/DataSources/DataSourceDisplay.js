@@ -73,6 +73,7 @@ define([
         this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
         this._eventHelper.add(dataSourceCollection.dataSourceRemoved, this._onDataSourceRemoved, this);
         this._eventHelper.add(dataSourceCollection.dataSourceMoved, this._onDataSourceMoved, this);
+        this._eventHelper.add(scene.postRender, this._postRender, this);
 
         this._dataSourceCollection = dataSourceCollection;
         this._scene = scene;
@@ -284,10 +285,8 @@ define([
         return result;
     };
 
-    /**
-     * Updates the credits.
-     */
-    DataSourceDisplay.prototype.updateCredits = function() {
+    DataSourceDisplay.prototype._postRender = function() {
+        // Adds credits for all datasources
         var frameState = this._scene.frameState;
         var dataSources = this._dataSourceCollection;
         var length = dataSources.length;

@@ -1894,7 +1894,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
     Viewer.prototype._postRender = function() {
         updateZoomTarget(this);
         updateTrackedEntity(this);
-        this._dataSourceDisplay.updateCredits();
     };
 
     function updateZoomTarget(viewer) {
