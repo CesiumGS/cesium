@@ -1,5 +1,4 @@
 define([
-        'DataSources/PlaneGeometryUpdater',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/JulianDate',
@@ -8,6 +7,7 @@ define([
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
+        'DataSources/PlaneGeometryUpdater',
         'DataSources/PlaneGraphics',
         'Scene/PrimitiveCollection',
         'Specs/createDynamicGeometryUpdaterSpecs',
@@ -15,7 +15,6 @@ define([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        PlaneGeometryUpdater,
         Cartesian2,
         Cartesian3,
         JulianDate,
@@ -24,6 +23,7 @@ define([
         ConstantPositionProperty,
         ConstantProperty,
         Entity,
+        PlaneGeometryUpdater,
         PlaneGraphics,
         PrimitiveCollection,
         createDynamicGeometryUpdaterSpecs,

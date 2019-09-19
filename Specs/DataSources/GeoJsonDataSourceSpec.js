@@ -1,5 +1,4 @@
 define([
-        'DataSources/GeoJsonDataSource',
         'Core/Cartesian3',
         'Core/Color',
         'Core/Event',
@@ -9,10 +8,10 @@ define([
         'DataSources/CallbackProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
+        'DataSources/GeoJsonDataSource',
         'Scene/HeightReference',
         'ThirdParty/when'
     ], function(
-        GeoJsonDataSource,
         Cartesian3,
         Color,
         Event,
@@ -22,6 +21,7 @@ define([
         CallbackProperty,
         ConstantProperty,
         EntityCollection,
+        GeoJsonDataSource,
         HeightReference,
         when) {
         'use strict';

@@ -1,15 +1,15 @@
 define([
-        'Widgets/BaseLayerPicker/BaseLayerPicker',
         'Core/EllipsoidTerrainProvider',
         'Core/FeatureDetection',
         'Scene/ImageryLayerCollection',
-        'Specs/DomEventSimulator'
+        'Specs/DomEventSimulator',
+        'Widgets/BaseLayerPicker/BaseLayerPicker'
     ], function(
-        BaseLayerPicker,
         EllipsoidTerrainProvider,
         FeatureDetection,
         ImageryLayerCollection,
-        DomEventSimulator) {
+        DomEventSimulator,
+        BaseLayerPicker) {
         'use strict';
 
 describe('Widgets/BaseLayerPicker/BaseLayerPicker', function() {

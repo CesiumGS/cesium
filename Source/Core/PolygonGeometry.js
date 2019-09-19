@@ -910,6 +910,29 @@ define([
         return computeRectangle(polygonHierarchy.positions, ellipsoid, arcType, granularity, result);
     };
 
+    var cartographicScratchArray = [];
+    function cartesian3ToCartographicAsCartesian2(ellipsoid) {
+        return function (positions) {
+            var numberOfPoints = positions.length;
+
+            var i;
+            if (cartographicScratchArray.length < numberOfPoints) {
+                for (i = cartographicScratchArray.length; i < numberOfPoints; i++) {
+                    cartographicScratchArray.push(new Cartographic());
+                }
+            }
+
+            var cartographicPositions = ellipsoid.cartesianArrayToCartographicArray(positions, cartographicScratchArray);
+            var result = [];
+            for (i = 0; i < numberOfPoints; i++) {
+                var cartographicPosition = cartographicPositions[i];
+                result.push(new Cartesian2(cartographicPosition.longitude, cartographicPosition.latitude));
+            }
+
+            return result;
+        };
+    }
+
     /**
      * Computes the geometric representation of a polygon, including its vertices, indices, and a bounding sphere.
      *
@@ -934,7 +957,14 @@ define([
 
         var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
 
-        var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, tangentPlane.projectPointsOntoPlane.bind(tangentPlane), !perPositionHeight, ellipsoid);
+        var results;
+        if (arcType === ArcType.RHUMB) {
+            var projectionFunction = cartesian3ToCartographicAsCartesian2(ellipsoid);
+            results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, projectionFunction, !perPositionHeight, ellipsoid);
+        } else {
+            results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, tangentPlane.projectPointsOntoPlane.bind(tangentPlane), !perPositionHeight, ellipsoid);
+        }
+
         var hierarchy = results.hierarchy;
         var polygons = results.polygons;
 

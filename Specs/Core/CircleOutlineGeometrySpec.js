@@ -1,11 +1,11 @@
 define([
-        'Core/CircleOutlineGeometry',
         'Core/Cartesian3',
+        'Core/CircleOutlineGeometry',
         'Core/Ellipsoid',
         'Specs/createPackableSpecs'
     ], function(
-        CircleOutlineGeometry,
         Cartesian3,
+        CircleOutlineGeometry,
         Ellipsoid,
         createPackableSpecs) {
         'use strict';

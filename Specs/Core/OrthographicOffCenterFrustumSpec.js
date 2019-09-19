@@ -1,17 +1,17 @@
 define([
-        'Core/OrthographicOffCenterFrustum',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Math',
-        'Core/Matrix4'
+        'Core/Matrix4',
+        'Core/OrthographicOffCenterFrustum'
     ], function(
-        OrthographicOffCenterFrustum,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumMath,
-        Matrix4) {
+        Matrix4,
+        OrthographicOffCenterFrustum) {
         'use strict';
 
 describe('Core/OrthographicOffCenterFrustum', function() {

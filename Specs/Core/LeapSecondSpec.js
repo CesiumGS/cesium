@@ -1,9 +1,9 @@
 define([
-        'Core/LeapSecond',
-        'Core/JulianDate'
+        'Core/JulianDate',
+        'Core/LeapSecond'
     ], function(
-        LeapSecond,
-        JulianDate) {
+        JulianDate,
+        LeapSecond) {
         'use strict';
 
 describe('Core/LeapSecond', function() {

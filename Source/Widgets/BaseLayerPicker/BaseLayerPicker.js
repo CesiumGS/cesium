@@ -59,7 +59,7 @@ define([
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
      * map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
-     *          return Cesium.createOpenStreetMapImageryProvider({
+     *          return new Cesium.OpenStreetMapImageryProvider({
      *              url : 'https://a.tile.openstreetmap.org/'
      *          });
      *      }
@@ -80,7 +80,7 @@ define([
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
      *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
      *      creationFunction : function() {
-     *          return Cesium.createTileMapServiceImageryProvider({
+     *          return new Cesium.TileMapServiceImageryProvider({
      *              url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
      *          });
      *      }

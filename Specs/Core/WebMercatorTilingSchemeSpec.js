@@ -1,21 +1,21 @@
 define([
-        'Core/WebMercatorTilingScheme',
         'Core/Cartesian2',
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math',
         'Core/Rectangle',
         'Core/TilingScheme',
-        'Core/WebMercatorProjection'
+        'Core/WebMercatorProjection',
+        'Core/WebMercatorTilingScheme'
     ], function(
-        WebMercatorTilingScheme,
         Cartesian2,
         Cartographic,
         Ellipsoid,
         CesiumMath,
         Rectangle,
         TilingScheme,
-        WebMercatorProjection) {
+        WebMercatorProjection,
+        WebMercatorTilingScheme) {
         'use strict';
 
 describe('Core/WebMercatorTilingScheme', function() {

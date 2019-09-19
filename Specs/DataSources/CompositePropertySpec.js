@@ -1,16 +1,16 @@
 define([
-        'DataSources/CompositeProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
+        'DataSources/CompositeProperty',
         'DataSources/ConstantProperty'
     ], function(
-        CompositeProperty,
         Cartesian3,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
+        CompositeProperty,
         ConstantProperty) {
         'use strict';
 

@@ -920,7 +920,6 @@ define([
         /**
          * Gets the total scale of the label, which is the label's scale multiplied by the computed relative size
          * of the desired font compared to the generated glyph size.
-         * </div>
          * @memberof Label.prototype
          * @type {Number}
          * @default 1.0

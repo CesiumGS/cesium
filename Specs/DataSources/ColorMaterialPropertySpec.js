@@ -1,15 +1,15 @@
 define([
-        'DataSources/ColorMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
+        'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
         'DataSources/TimeIntervalCollectionProperty'
     ], function(
-        ColorMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
+        ColorMaterialProperty,
         ConstantProperty,
         TimeIntervalCollectionProperty) {
         'use strict';

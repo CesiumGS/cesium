@@ -1,15 +1,15 @@
 define([
-        'Scene/TileReplacementQueue',
         'Core/defined',
         'Core/GeographicTilingScheme',
         'Scene/QuadtreeTile',
-        'Scene/QuadtreeTileLoadState'
+        'Scene/QuadtreeTileLoadState',
+        'Scene/TileReplacementQueue'
     ], function(
-        TileReplacementQueue,
         defined,
         GeographicTilingScheme,
         QuadtreeTile,
-        QuadtreeTileLoadState) {
+        QuadtreeTileLoadState,
+        TileReplacementQueue) {
         'use strict';
 
 describe('Scene/TileReplacementQueue', function() {

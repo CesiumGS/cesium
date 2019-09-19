@@ -1,5 +1,4 @@
 define([
-        'Core/GroundPolylineGeometry',
         'Core/ApproximateTerrainHeights',
         'Core/ArcType',
         'Core/arraySlice',
@@ -7,11 +6,11 @@ define([
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/GeographicProjection',
+        'Core/GroundPolylineGeometry',
         'Core/Math',
         'Core/WebMercatorProjection',
         'Specs/createPackableSpecs'
     ], function(
-        GroundPolylineGeometry,
         ApproximateTerrainHeights,
         ArcType,
         arraySlice,
@@ -19,6 +18,7 @@ define([
         Cartographic,
         Ellipsoid,
         GeographicProjection,
+        GroundPolylineGeometry,
         CesiumMath,
         WebMercatorProjection,
         createPackableSpecs) {

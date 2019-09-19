@@ -13,18 +13,18 @@ define([
         '../Core/GeometryInstance',
         '../Core/GeometryOffsetAttribute',
         '../Core/Iso8601',
-        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/Matrix4',
+        '../Core/OffsetGeometryInstanceAttribute',
         '../Core/ShowGeometryInstanceAttribute',
         '../Scene/HeightReference',
         '../Scene/MaterialAppearance',
         '../Scene/PerInstanceColorAppearance',
         '../Scene/Primitive',
         '../Scene/SceneMode',
-        './heightReferenceOnEntityPropertyChanged',
         './ColorMaterialProperty',
         './DynamicGeometryUpdater',
         './GeometryUpdater',
+        './heightReferenceOnEntityPropertyChanged',
         './MaterialProperty',
         './Property'
     ], function(
@@ -42,18 +42,18 @@ define([
         GeometryInstance,
         GeometryOffsetAttribute,
         Iso8601,
-        OffsetGeometryInstanceAttribute,
         Matrix4,
+        OffsetGeometryInstanceAttribute,
         ShowGeometryInstanceAttribute,
         HeightReference,
         MaterialAppearance,
         PerInstanceColorAppearance,
         Primitive,
         SceneMode,
-        heightReferenceOnEntityPropertyChanged,
         ColorMaterialProperty,
         DynamicGeometryUpdater,
         GeometryUpdater,
+        heightReferenceOnEntityPropertyChanged,
         MaterialProperty,
         Property) {
     'use strict';
@@ -70,6 +70,11 @@ define([
         this.id = entity;
         this.vertexFormat = undefined;
         this.radii = undefined;
+        this.innerRadii = undefined;
+        this.minimumClock = undefined;
+        this.maximumClock = undefined;
+        this.minimumCone = undefined;
+        this.maximumCone = undefined;
         this.stackPartitions = undefined;
         this.slicePartitions = undefined;
         this.subdivisions = undefined;
@@ -231,6 +236,11 @@ define([
         var options = this._options;
         options.vertexFormat = this._materialProperty instanceof ColorMaterialProperty ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
         options.radii = ellipsoid.radii.getValue(Iso8601.MINIMUM_VALUE, options.radii);
+        options.innerRadii = Property.getValueOrUndefined(ellipsoid.innerRadii, options.radii);
+        options.minimumClock = Property.getValueOrUndefined(ellipsoid.minimumClock, Iso8601.MINIMUM_VALUE);
+        options.maximumClock = Property.getValueOrUndefined(ellipsoid.maximumClock, Iso8601.MINIMUM_VALUE);
+        options.minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, Iso8601.MINIMUM_VALUE);
+        options.maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, Iso8601.MINIMUM_VALUE);
         options.stackPartitions = Property.getValueOrUndefined(ellipsoid.stackPartitions, Iso8601.MINIMUM_VALUE);
         options.slicePartitions = Property.getValueOrUndefined(ellipsoid.slicePartitions, Iso8601.MINIMUM_VALUE);
         options.subdivisions = Property.getValueOrUndefined(ellipsoid.subdivisions, Iso8601.MINIMUM_VALUE);
@@ -344,6 +354,18 @@ define([
             options.subdivisions = subdivisions;
             options.offsetAttribute = offsetAttribute;
             options.radii = in3D ? unitSphere : radii;
+            var innerRadii = Property.getValueOrDefault(ellipsoid.innerRadii, time, radii, new Cartesian3());
+            if (in3D) {
+               var mag = Cartesian3.magnitude(radii);
+               var innerRadiiUnit = new Cartesian3(innerRadii.x/mag, innerRadii.y/mag, innerRadii.z/mag);
+               options.innerRadii = innerRadiiUnit;
+            } else {
+               options.innerRadii = innerRadii;
+            }
+            options.minimumClock = Property.getValueOrUndefined(ellipsoid.minimumClock, time);
+            options.maximumClock = Property.getValueOrUndefined(ellipsoid.maximumClock, time);
+            options.minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, time);
+            options.maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, time);
 
             var appearance = new MaterialAppearance({
                 material : material,

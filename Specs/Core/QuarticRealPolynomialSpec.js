@@ -1,9 +1,9 @@
 define([
-        'Core/QuarticRealPolynomial',
-        'Core/Math'
+        'Core/Math',
+        'Core/QuarticRealPolynomial'
     ], function(
-        QuarticRealPolynomial,
-        CesiumMath) {
+        CesiumMath,
+        QuarticRealPolynomial) {
         'use strict';
 
 describe('Core/QuarticRealPolynomial', function() {

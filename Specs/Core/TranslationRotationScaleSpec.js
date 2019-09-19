@@ -1,11 +1,11 @@
 define([
-        'Core/TranslationRotationScale',
         'Core/Cartesian3',
-        'Core/Quaternion'
+        'Core/Quaternion',
+        'Core/TranslationRotationScale'
     ], function(
-        TranslationRotationScale,
         Cartesian3,
-        Quaternion) {
+        Quaternion,
+        TranslationRotationScale) {
         'use strict';
 
 describe('Core/TranslationRotationScale', function() {

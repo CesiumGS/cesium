@@ -1,5 +1,4 @@
 define([
-        'DataSources/Entity',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/Matrix3',
@@ -16,6 +15,7 @@ define([
         'DataSources/CylinderGraphics',
         'DataSources/EllipseGraphics',
         'DataSources/EllipsoidGraphics',
+        'DataSources/Entity',
         'DataSources/LabelGraphics',
         'DataSources/ModelGraphics',
         'DataSources/PathGraphics',
@@ -27,7 +27,6 @@ define([
         'DataSources/RectangleGraphics',
         'DataSources/WallGraphics'
     ], function(
-        Entity,
         Cartesian3,
         JulianDate,
         Matrix3,
@@ -44,6 +43,7 @@ define([
         CylinderGraphics,
         EllipseGraphics,
         EllipsoidGraphics,
+        Entity,
         LabelGraphics,
         ModelGraphics,
         PathGraphics,

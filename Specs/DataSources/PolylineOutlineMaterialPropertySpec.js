@@ -1,16 +1,16 @@
 define([
-        'DataSources/PolylineOutlineMaterialProperty',
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'DataSources/ConstantProperty',
+        'DataSources/PolylineOutlineMaterialProperty',
         'DataSources/TimeIntervalCollectionProperty'
     ], function(
-        PolylineOutlineMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
         ConstantProperty,
+        PolylineOutlineMaterialProperty,
         TimeIntervalCollectionProperty) {
         'use strict';
 

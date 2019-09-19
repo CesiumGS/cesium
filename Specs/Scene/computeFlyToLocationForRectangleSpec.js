@@ -1,15 +1,15 @@
 define([
-        'Scene/computeFlyToLocationForRectangle',
         'Core/EllipsoidTerrainProvider',
         'Core/Rectangle',
+        'Scene/computeFlyToLocationForRectangle',
         'Scene/Globe',
         'Scene/SceneMode',
         'Specs/createScene',
         'ThirdParty/when'
     ], function(
-        computeFlyToLocationForRectangle,
         EllipsoidTerrainProvider,
         Rectangle,
+        computeFlyToLocationForRectangle,
         Globe,
         SceneMode,
         createScene,

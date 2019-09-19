@@ -1,6 +1,4 @@
 define([
-        'Scene/SingleTileImageryProvider',
-        'Core/DefaultProxy',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/Rectangle',
@@ -9,11 +7,10 @@ define([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/SingleTileImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        SingleTileImageryProvider,
-        DefaultProxy,
         Ellipsoid,
         GeographicTilingScheme,
         Rectangle,
@@ -22,6 +19,7 @@ define([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
+        SingleTileImageryProvider,
         pollToPromise,
         when) {
         'use strict';

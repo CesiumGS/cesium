@@ -1,5 +1,4 @@
 define([
-        './ImageryProvider',
         '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
@@ -11,9 +10,9 @@ define([
         '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/TileProviderError',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './ImageryProvider'
     ], function(
-        ImageryProvider,
         Credit,
         defaultValue,
         defined,
@@ -25,7 +24,8 @@ define([
         Resource,
         RuntimeError,
         TileProviderError,
-        when) {
+        when,
+        ImageryProvider) {
     'use strict';
 
     /**
@@ -44,8 +44,8 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see OpenStreetMapImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider

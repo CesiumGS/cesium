@@ -1,17 +1,17 @@
 define([
-        'Core/Plane',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Math',
         'Core/Matrix3',
-        'Core/Matrix4'
+        'Core/Matrix4',
+        'Core/Plane'
     ], function(
-        Plane,
         Cartesian3,
         Cartesian4,
         CesiumMath,
         Matrix3,
-        Matrix4) {
+        Matrix4,
+        Plane) {
         'use strict';
 
 describe('Core/Plane', function() {

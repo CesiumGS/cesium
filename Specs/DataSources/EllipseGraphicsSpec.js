@@ -1,19 +1,19 @@
 define([
-        'DataSources/EllipseGraphics',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/EllipseGraphics',
         'Scene/ClassificationType',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        EllipseGraphics,
         Color,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        EllipseGraphics,
         ClassificationType,
         ShadowMode,
         testDefinitionChanged,

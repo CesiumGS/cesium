@@ -1,5 +1,4 @@
 define([
-        'Scene/Camera',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -18,12 +17,12 @@ define([
         'Core/Rectangle',
         'Core/Transforms',
         'Core/WebMercatorProjection',
+        'Scene/Camera',
         'Scene/CameraFlightPath',
         'Scene/MapMode2D',
         'Scene/SceneMode',
         'Scene/TweenCollection'
     ], function(
-        Camera,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -42,6 +41,7 @@ define([
         Rectangle,
         Transforms,
         WebMercatorProjection,
+        Camera,
         CameraFlightPath,
         MapMode2D,
         SceneMode,

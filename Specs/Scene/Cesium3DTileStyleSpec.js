@@ -1,17 +1,17 @@
 define([
-        'Scene/Cesium3DTileStyle',
         'Core/Cartesian2',
         'Core/Cartesian4',
         'Core/Color',
         'Core/Resource',
+        'Scene/Cesium3DTileStyle',
         'Scene/ConditionsExpression',
         'Scene/Expression'
     ], function(
-        Cesium3DTileStyle,
         Cartesian2,
         Cartesian4,
         Color,
         Resource,
+        Cesium3DTileStyle,
         ConditionsExpression,
         Expression) {
         'use strict';

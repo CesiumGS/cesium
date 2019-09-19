@@ -1,13 +1,13 @@
 define([
-        'Scene/Particle',
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Color'
+        'Core/Color',
+        'Scene/Particle'
     ], function(
-        Particle,
         Cartesian2,
         Cartesian3,
-        Color) {
+        Color,
+        Particle) {
         'use strict';
 
 describe('Scene/Particle', function() {

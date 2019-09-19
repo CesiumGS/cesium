@@ -13,7 +13,6 @@ define([
         '../../Core/HeadingPitchRange',
         '../../Core/isArray',
         '../../Core/Matrix4',
-        '../../Core/Rectangle',
         '../../Core/ScreenSpaceEventType',
         '../../DataSources/BoundingSphereState',
         '../../DataSources/ConstantPositionProperty',
@@ -63,7 +62,6 @@ define([
         HeadingPitchRange,
         isArray,
         Matrix4,
-        Rectangle,
         ScreenSpaceEventType,
         BoundingSphereState,
         ConstantPositionProperty,
@@ -327,7 +325,7 @@ define([
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
-     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider({
+     *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
      *         url : 'https://a.tile.openstreetmap.org/'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets

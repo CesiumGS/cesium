@@ -1,11 +1,11 @@
 define([
-        'Scene/BingMapsImageryProvider',
         'Core/appendForwardSlash',
         'Core/defined',
         'Core/queryToObject',
         'Core/RequestScheduler',
         'Core/Resource',
         'Core/WebMercatorTilingScheme',
+        'Scene/BingMapsImageryProvider',
         'Scene/BingMapsStyle',
         'Scene/DiscardEmptyTileImagePolicy',
         'Scene/Imagery',
@@ -16,13 +16,13 @@ define([
         'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
-        BingMapsImageryProvider,
         appendForwardSlash,
         defined,
         queryToObject,
         RequestScheduler,
         Resource,
         WebMercatorTilingScheme,
+        BingMapsImageryProvider,
         BingMapsStyle,
         DiscardEmptyTileImagePolicy,
         Imagery,

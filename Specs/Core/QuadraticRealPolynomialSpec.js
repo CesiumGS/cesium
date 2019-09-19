@@ -1,9 +1,9 @@
 define([
-        'Core/QuadraticRealPolynomial',
-        'Core/Math'
+        'Core/Math',
+        'Core/QuadraticRealPolynomial'
     ], function(
-        QuadraticRealPolynomial,
-        CesiumMath) {
+        CesiumMath,
+        QuadraticRealPolynomial) {
         'use strict';
 
 describe('Core/QuadraticRealPolynomial', function() {

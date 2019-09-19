@@ -1,9 +1,9 @@
 define([
-        'Core/Ray',
-        'Core/Cartesian3'
+        'Core/Cartesian3',
+        'Core/Ray'
     ], function(
-        Ray,
-        Cartesian3) {
+        Cartesian3,
+        Ray) {
         'use strict';
 
 describe('Core/Ray', function() {

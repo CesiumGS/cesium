@@ -1,11 +1,11 @@
 define([
-        'Scene/TweenCollection',
         'Core/Color',
-        'Core/EasingFunction'
+        'Core/EasingFunction',
+        'Scene/TweenCollection'
     ], function(
-        TweenCollection,
         Color,
-        EasingFunction) {
+        EasingFunction,
+        TweenCollection) {
         'use strict';
 
 describe('Scene/TweenCollection', function() {

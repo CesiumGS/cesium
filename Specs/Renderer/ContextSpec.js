@@ -1,17 +1,17 @@
 define([
-        'Renderer/Context',
         'Core/Color',
         'Core/IndexDatatype',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
+        'Renderer/Context',
         'Renderer/ContextLimits',
         'Specs/createContext'
     ], function(
-        Context,
         Color,
         IndexDatatype,
         Buffer,
         BufferUsage,
+        Context,
         ContextLimits,
         createContext) {
         'use strict';

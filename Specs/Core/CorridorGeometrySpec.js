@@ -1,8 +1,8 @@
 define([
-        'Core/CorridorGeometry',
         'Core/arrayFill',
         'Core/Cartesian3',
         'Core/CornerType',
+        'Core/CorridorGeometry',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Core/Math',
@@ -10,10 +10,10 @@ define([
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        CorridorGeometry,
         arrayFill,
         Cartesian3,
         CornerType,
+        CorridorGeometry,
         Ellipsoid,
         GeometryOffsetAttribute,
         CesiumMath,

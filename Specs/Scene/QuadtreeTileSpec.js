@@ -1,15 +1,15 @@
 define([
-        'Scene/QuadtreeTile',
         'Core/GeographicTilingScheme',
         'Core/Math',
         'Core/Rectangle',
-        'Core/WebMercatorTilingScheme'
+        'Core/WebMercatorTilingScheme',
+        'Scene/QuadtreeTile'
     ], function(
-        QuadtreeTile,
         GeographicTilingScheme,
         CesiumMath,
         Rectangle,
-        WebMercatorTilingScheme) {
+        WebMercatorTilingScheme,
+        QuadtreeTile) {
         'use strict';
 
 describe('Scene/QuadtreeTile', function() {

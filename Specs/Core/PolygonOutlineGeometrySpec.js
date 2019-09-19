@@ -1,5 +1,4 @@
 define([
-        'Core/PolygonOutlineGeometry',
         'Core/ArcType',
         'Core/arrayFill',
         'Core/BoundingSphere',
@@ -7,9 +6,9 @@ define([
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Core/Math',
+        'Core/PolygonOutlineGeometry',
         'Specs/createPackableSpecs'
     ], function(
-        PolygonOutlineGeometry,
         ArcType,
         arrayFill,
         BoundingSphere,
@@ -17,6 +16,7 @@ define([
         Ellipsoid,
         GeometryOffsetAttribute,
         CesiumMath,
+        PolygonOutlineGeometry,
         createPackableSpecs) {
         'use strict';
 

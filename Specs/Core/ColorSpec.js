@@ -1,11 +1,11 @@
 define([
-        'Core/Color',
         'Core/Cartesian4',
+        'Core/Color',
         'Core/Math',
         'Specs/createPackableSpecs'
     ], function(
-        Color,
         Cartesian4,
+        Color,
         CesiumMath,
         createPackableSpecs) {
         'use strict';

@@ -1,11 +1,11 @@
 define([
-        'DataSources/ConstantProperty',
         'Core/Cartesian3',
-        'Core/JulianDate'
+        'Core/JulianDate',
+        'DataSources/ConstantProperty'
     ], function(
-        ConstantProperty,
         Cartesian3,
-        JulianDate) {
+        JulianDate,
+        ConstantProperty) {
         'use strict';
 
 describe('DataSources/ConstantProperty', function() {

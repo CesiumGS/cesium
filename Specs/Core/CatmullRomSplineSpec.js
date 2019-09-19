@@ -1,11 +1,11 @@
 define([
-        'Core/CatmullRomSpline',
         'Core/Cartesian3',
+        'Core/CatmullRomSpline',
         'Core/HermiteSpline',
         'Core/Math'
     ], function(
-        CatmullRomSpline,
         Cartesian3,
+        CatmullRomSpline,
         HermiteSpline,
         CesiumMath) {
         'use strict';

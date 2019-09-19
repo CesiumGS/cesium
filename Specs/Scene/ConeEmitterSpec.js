@@ -1,12 +1,12 @@
 define([
-        'Scene/ConeEmitter',
         'Core/Cartesian3',
         'Core/Math',
+        'Scene/ConeEmitter',
         'Scene/Particle'
     ], function(
-        ConeEmitter,
         Cartesian3,
         CesiumMath,
+        ConeEmitter,
         Particle) {
         'use strict';
 

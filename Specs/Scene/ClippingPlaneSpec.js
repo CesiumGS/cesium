@@ -1,17 +1,17 @@
 define([
-        'Scene/ClippingPlane',
         'Core/Cartesian3',
         'Core/Math',
         'Core/Matrix3',
         'Core/Matrix4',
-        'Core/Plane'
+        'Core/Plane',
+        'Scene/ClippingPlane'
     ], function(
-        ClippingPlane,
         Cartesian3,
         CesiumMath,
         Matrix3,
         Matrix4,
-        Plane) {
+        Plane,
+        ClippingPlane) {
         'use strict';
 
 describe('Scene/ClippingPlane', function() {

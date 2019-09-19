@@ -1,11 +1,11 @@
 define([
-        'DataSources/GeometryUpdater',
         'DataSources/Entity',
+        'DataSources/GeometryUpdater',
         'Scene/PrimitiveCollection',
         'Specs/createScene'
     ], function(
-        GeometryUpdater,
         Entity,
+        GeometryUpdater,
         PrimitiveCollection,
         createScene) {
         'use strict';

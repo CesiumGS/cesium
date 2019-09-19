@@ -54,11 +54,11 @@ viewer.camera.flyTo({destination : new Cesium.Rectangle.fromDegrees(-84, 43, -80
 var layers = viewer.imageryLayers;
 layers.removeAll();
 
-var layerLinear = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
+var layerLinear = layers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
     url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
 }));
 
-var layerNearest = layers.addImageryProvider(Cesium.createTileMapServiceImageryProvider({
+var layerNearest = layers.addImageryProvider(new Cesium.TileMapServiceImageryProvider({
     url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
 }));
 

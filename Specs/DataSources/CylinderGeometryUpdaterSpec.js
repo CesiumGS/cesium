@@ -1,5 +1,4 @@
 define([
-        'DataSources/CylinderGeometryUpdater',
         'Core/Cartesian3',
         'Core/Color',
         'Core/GeometryOffsetAttribute',
@@ -8,6 +7,7 @@ define([
         'Core/TimeIntervalCollection',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
+        'DataSources/CylinderGeometryUpdater',
         'DataSources/CylinderGraphics',
         'DataSources/Entity',
         'DataSources/SampledPositionProperty',
@@ -19,7 +19,6 @@ define([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        CylinderGeometryUpdater,
         Cartesian3,
         Color,
         GeometryOffsetAttribute,
@@ -28,6 +27,7 @@ define([
         TimeIntervalCollection,
         ConstantPositionProperty,
         ConstantProperty,
+        CylinderGeometryUpdater,
         CylinderGraphics,
         Entity,
         SampledPositionProperty,

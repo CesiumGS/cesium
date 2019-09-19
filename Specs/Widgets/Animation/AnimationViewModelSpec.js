@@ -1,14 +1,14 @@
 define([
-        'Widgets/Animation/AnimationViewModel',
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/JulianDate',
+        'Widgets/Animation/AnimationViewModel',
         'Widgets/ClockViewModel'
     ], function(
-        AnimationViewModel,
         ClockRange,
         ClockStep,
         JulianDate,
+        AnimationViewModel,
         ClockViewModel) {
         'use strict';
 

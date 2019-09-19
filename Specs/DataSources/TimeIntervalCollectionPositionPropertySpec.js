@@ -1,19 +1,19 @@
 define([
-        'DataSources/TimeIntervalCollectionPositionProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/ReferenceFrame',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DataSources/PositionProperty'
+        'DataSources/PositionProperty',
+        'DataSources/TimeIntervalCollectionPositionProperty'
     ], function(
-        TimeIntervalCollectionPositionProperty,
         Cartesian3,
         JulianDate,
         ReferenceFrame,
         TimeInterval,
         TimeIntervalCollection,
-        PositionProperty) {
+        PositionProperty,
+        TimeIntervalCollectionPositionProperty) {
         'use strict';
 
 describe('DataSources/TimeIntervalCollectionPositionProperty', function() {

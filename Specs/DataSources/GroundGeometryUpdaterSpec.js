@@ -1,20 +1,12 @@
 define([
-        'DataSources/GroundGeometryUpdater',
         'Core/ApproximateTerrainHeights',
-        'Core/Event',
         'Core/GeometryOffsetAttribute',
-        'Core/JulianDate',
-        'Core/Rectangle',
-        'DataSources/ConstantProperty',
+        'DataSources/GroundGeometryUpdater',
         'Scene/HeightReference'
     ], function(
-        GroundGeometryUpdater,
         ApproximateTerrainHeights,
-        Event,
         GeometryOffsetAttribute,
-        JulianDate,
-        Rectangle,
-        ConstantProperty,
+        GroundGeometryUpdater,
         HeightReference) {
         'use strict';
 

@@ -1,5 +1,4 @@
 define([
-        'DataSources/KmlDataSource',
         'Core/ArcType',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
@@ -25,6 +24,7 @@ define([
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
         'DataSources/KmlCamera',
+        'DataSources/KmlDataSource',
         'DataSources/KmlLookAt',
         'DataSources/KmlTour',
         'DataSources/KmlTourFlyTo',
@@ -38,7 +38,6 @@ define([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        KmlDataSource,
         ArcType,
         BoundingRectangle,
         Cartesian2,
@@ -64,6 +63,7 @@ define([
         EntityCollection,
         ImageMaterialProperty,
         KmlCamera,
+        KmlDataSource,
         KmlLookAt,
         KmlTour,
         KmlTourFlyTo,

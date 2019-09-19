@@ -1,17 +1,17 @@
 define([
-        'Scene/createTangentSpaceDebugPrimitive',
         'Core/Cartesian3',
         'Core/EllipsoidGeometry',
         'Core/Matrix4',
         'Core/PrimitiveType',
-        'Core/VertexFormat'
+        'Core/VertexFormat',
+        'Scene/createTangentSpaceDebugPrimitive'
     ], function(
-        createTangentSpaceDebugPrimitive,
         Cartesian3,
         EllipsoidGeometry,
         Matrix4,
         PrimitiveType,
-        VertexFormat) {
+        VertexFormat,
+        createTangentSpaceDebugPrimitive) {
         'use strict';
 
 describe('Scene/createTangentSpaceDebugPrimitive', function() {
