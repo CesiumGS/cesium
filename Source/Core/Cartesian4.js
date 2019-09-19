@@ -809,9 +809,9 @@ define([
     };
 
     /**
-     * Creates a string representing this Cartesian in the format '(x, y)'.
+     * Creates a string representing this Cartesian in the format '(x, y, z, w)'.
      *
-     * @returns {String} A string representing the provided Cartesian in the format '(x, y)'.
+     * @returns {String} A string representing the provided Cartesian in the format '(x, y, z, w)'.
      */
     Cartesian4.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
