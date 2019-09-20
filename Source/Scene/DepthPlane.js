@@ -1,5 +1,4 @@
 define([
-        '../Core/ApproximateTerrainHeights',
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/ComponentDatatype',
@@ -19,7 +18,6 @@ define([
         '../Shaders/DepthPlaneVS',
         './SceneMode'
     ], function(
-        ApproximateTerrainHeights,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
@@ -53,22 +51,14 @@ define([
     }
 
     var depthQuadScratch = FeatureDetection.supportsTypedArrays() ? new Float32Array(12) : [];
-    var scratchRadii = new Cartesian3();
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
     var scratchCartesian3 = new Cartesian3();
     var scratchCartesian4 = new Cartesian3();
 
     function computeDepthQuad(ellipsoid, frameState) {
-        var radii = Cartesian3.clone(ellipsoid.radii, scratchRadii);
+        var radii = ellipsoid.radii;
         var p = frameState.camera.positionWC;
-
-        // This effectively pushes the depth plane farther from the camera so that the depth plane does not render
-        // above primitives in the scene.
-        var radiusOffset = -ApproximateTerrainHeights._defaultMinTerrainHeight;
-        radii.x -= radiusOffset;
-        radii.y -= radiusOffset;
-        radii.z -= radiusOffset;
 
         // Find the corresponding position in the scaled space of the ellipsoid.
         var q = Cartesian3.multiplyComponents(ellipsoid.oneOverRadii, p, scratchCartesian1);
