@@ -206,8 +206,25 @@ describe('Core/PolygonGeometry', function() {
             arcType : ArcType.RHUMB
         }));
 
-        expect(p.attributes.position.values.length).toEqual(15 * 3); // 8 around edge + 7 in the middle
-        expect(p.indices.length).toEqual(20 * 3); //5 squares * 4 triangles per square
+        expect(p.attributes.position.values.length).toEqual(13 * 3); // 8 around edge + 5 in the middle
+        expect(p.indices.length).toEqual(16 * 3); //5 squares * 4 triangles per square
+    });
+
+    it('create geometry creates with rhumb lines around pole', function() {
+        var p = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : Cartesian3.fromDegreesArray([
+                180, -89,
+                -90, -89,
+                0, -89,
+                90, -89
+            ]),
+            granularity : CesiumMath.RADIANS_PER_DEGREE,
+            arcType : ArcType.RHUMB
+        }));
+
+        expect(p.attributes.position.values.length).toEqual(17 * 3);
+        expect(p.indices.length).toEqual(24 * 3);
     });
 
     it('create geometry throws if arcType is STRAIGHT', function() {

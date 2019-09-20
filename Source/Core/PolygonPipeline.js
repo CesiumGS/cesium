@@ -52,7 +52,7 @@ define([
         var length = positions.length;
         var area = 0.0;
 
-        for ( var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
+        for (var i0 = length - 1, i1 = 0; i1 < length; i0 = i1++) {
             var v0 = positions[i0];
             var v1 = positions[i1];
 
@@ -173,8 +173,7 @@ define([
 
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = Cartesian3.add(v0, v1, subdivisionMidScratch);
-                        Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                        mid = Cartesian3.midpoint(v0, v1, subdivisionMidScratch);
                         subdividedPositions.push(mid.x, mid.y, mid.z);
                         i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
@@ -187,8 +186,7 @@ define([
 
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = Cartesian3.add(v1, v2, subdivisionMidScratch);
-                        Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                        mid = Cartesian3.midpoint(v1, v2, subdivisionMidScratch);
                         subdividedPositions.push(mid.x, mid.y, mid.z);
                         i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
@@ -201,8 +199,7 @@ define([
 
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = Cartesian3.add(v2, v0, subdivisionMidScratch);
-                        Cartesian3.multiplyByScalar(mid, 0.5, mid);
+                        mid = Cartesian3.midpoint(v2, v0, subdivisionMidScratch);
                         subdividedPositions.push(mid.x, mid.y, mid.z);
                         i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
@@ -236,6 +233,13 @@ define([
     var subdivisionC2Scratch = new Cartographic();
     var subdivisionCartographicScratch = new Cartographic();
 
+    function getRhumbMidpoint(rhumbLine, ellipsoid, c0, c1) {
+        rhumbLine.setEndPoints(c0, c1);
+        var mid = rhumbLine.interpolateUsingFraction(0.5, subdivisionCartographicScratch);
+        mid.height = (c0.height + c1.height) * 0.5;
+        return ellipsoid.cartographicToCartesian(mid, subdivisionMidScratch);
+    }
+
     /**
      * Subdivides positions on rhumb lines and raises points to the surface of the ellipsoid.
      *
@@ -263,6 +267,11 @@ define([
         // triangles that need (or might need) to be subdivided.
         var triangles = indices.slice(0);
 
+        // Used to make sure shared edges are not split more than once.
+        var edges = {};
+        // Used to only use rhumb subdivision on outer edge of polygon and not in interior mesh triangles
+        var outerEdges = {};
+
         // New positions due to edge splits are appended to the positions list.
         var i;
         var length = positions.length;
@@ -274,18 +283,17 @@ define([
             subdividedPositions[q++] = item.y;
             subdividedPositions[q++] = item.z;
         }
+        outerEdges['0 ' + (length - 1)] = true;
+        for (i = 1; i < length; i++) {
+            outerEdges[i - 1 + ' ' + i] = true;
+        }
 
         var subdividedIndices = [];
 
-        // Used to make sure shared edges are not split more than once.
-        var edges = {};
-
         var radius = ellipsoid.maximumRadius;
         var minDistance = CesiumMath.chordLength(granularity, radius);
-
-        var rhumb0 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
-        var rhumb1 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
-        var rhumb2 = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
+        var minDistanceSqrd = minDistance * minDistance;
+        var rhumbLine = new EllipsoidRhumbLine(undefined, undefined, ellipsoid);
 
         while (triangles.length > 0) {
             var i2 = triangles.pop();
@@ -300,32 +308,40 @@ define([
             var c1 = ellipsoid.cartesianToCartographic(v1, subdivisionC1Scratch);
             var c2 = ellipsoid.cartesianToCartographic(v2, subdivisionC2Scratch);
 
-            rhumb0.setEndPoints(c0, c1);
-            var g0 = rhumb0.surfaceDistance;
-            rhumb1.setEndPoints(c1, c2);
-            var g1 = rhumb1.surfaceDistance;
-            rhumb2.setEndPoints(c2, c0);
-            var g2 = rhumb2.surfaceDistance;
+            var s0 = Cartesian3.multiplyByScalar(Cartesian3.normalize(v0, subdivisionS0Scratch), radius, subdivisionS0Scratch);
+            var s1 = Cartesian3.multiplyByScalar(Cartesian3.normalize(v1, subdivisionS1Scratch), radius, subdivisionS1Scratch);
+            var s2 = Cartesian3.multiplyByScalar(Cartesian3.normalize(v2, subdivisionS2Scratch), radius, subdivisionS2Scratch);
+
+            var g0 = Cartesian3.magnitudeSquared(Cartesian3.subtract(s0, s1, subdivisionMidScratch));
+            var g1 = Cartesian3.magnitudeSquared(Cartesian3.subtract(s1, s2, subdivisionMidScratch));
+            var g2 = Cartesian3.magnitudeSquared(Cartesian3.subtract(s2, s0, subdivisionMidScratch));
 
             var max = Math.max(g0, g1, g2);
             var edge;
-            var mid;
-            var midHeight;
             var midCartesian3;
+            var isOuterEdge;
 
             // if the max length squared of a triangle edge is greater than granularity, subdivide the triangle
-            if (max > minDistance) {
+            if (max > minDistanceSqrd) {
                 if (g0 === max) {
                     edge = Math.min(i0, i1) + ' ' + Math.max(i0, i1);
 
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = rhumb0.interpolateUsingFraction(0.5, subdivisionCartographicScratch);
-                        midHeight = (c0.height + c1.height) * 0.5;
-                        midCartesian3 = Cartesian3.fromRadians(mid.longitude, mid.latitude, midHeight, ellipsoid, subdivisionMidScratch);
+                        isOuterEdge = outerEdges[edge];
+                        if (isOuterEdge) {
+                            midCartesian3 = getRhumbMidpoint(rhumbLine, ellipsoid, c0, c1);
+                        } else {
+                            midCartesian3 = Cartesian3.midpoint(v0, v1, subdivisionMidScratch);
+                        }
+
                         subdividedPositions.push(midCartesian3.x, midCartesian3.y, midCartesian3.z);
                         i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
+                        if (isOuterEdge) {
+                            outerEdges[i0 + ' ' + i] = true;
+                            outerEdges[i1 + ' ' + i] = true;
+                        }
                     }
 
                     triangles.push(i0, i, i2);
@@ -335,27 +351,42 @@ define([
 
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = rhumb1.interpolateUsingFraction(0.5, subdivisionCartographicScratch);
-                        midHeight = (c1.height + c2.height) * 0.5;
-                        midCartesian3 = Cartesian3.fromRadians(mid.longitude, mid.latitude, midHeight, ellipsoid, subdivisionMidScratch);
+                        isOuterEdge = outerEdges[edge];
+                        if (isOuterEdge) {
+                            midCartesian3 = getRhumbMidpoint(rhumbLine, ellipsoid, c1, c2);
+                        } else {
+                            midCartesian3 = Cartesian3.midpoint(v1, v2, subdivisionMidScratch);
+                        }
                         subdividedPositions.push(midCartesian3.x, midCartesian3.y, midCartesian3.z);
                         i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
+                        if (isOuterEdge) {
+                            outerEdges[i1 + ' ' + i] = true;
+                            outerEdges[i2 + ' ' + i] = true;
+                        }
                     }
 
                     triangles.push(i1, i, i0);
                     triangles.push(i, i2, i0);
                 } else if (g2 === max) {
                     edge = Math.min(i2, i0) + ' ' + Math.max(i2, i0);
-
                     i = edges[edge];
                     if (!defined(i)) {
-                        mid = rhumb2.interpolateUsingFraction(0.5, subdivisionCartographicScratch);
-                        midHeight = (c2.height + c0.height) * 0.5;
-                        midCartesian3 = Cartesian3.fromRadians(mid.longitude, mid.latitude, midHeight, ellipsoid, subdivisionMidScratch);
+                        isOuterEdge = outerEdges[edge];
+                        if (isOuterEdge) {
+                            midCartesian3 = getRhumbMidpoint(rhumbLine, ellipsoid, c2, c0);
+                        } else {
+                            midCartesian3 = Cartesian3.midpoint(v2, v0, subdivisionMidScratch);
+                        }
+
                         subdividedPositions.push(midCartesian3.x, midCartesian3.y, midCartesian3.z);
                         i = subdividedPositions.length / 3 - 1;
                         edges[edge] = i;
+
+                        if (isOuterEdge) {
+                            outerEdges[i2 + ' ' + i] = true;
+                            outerEdges[i0 + ' ' + i] = true;
+                        }
                     }
 
                     triangles.push(i2, i, i1);
@@ -402,7 +433,7 @@ define([
         if (defined(positions)) {
             var length = positions.length;
 
-            for ( var i = 0; i < length; i += 3) {
+            for (var i = 0; i < length; i += 3) {
                 Cartesian3.fromArray(positions, i, p);
 
                 if (scaleToSurface) {
