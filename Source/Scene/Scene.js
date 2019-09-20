@@ -2238,9 +2238,12 @@ define([
             executeTranslucentCommands = executeTranslucentCommandsFrontToBack;
         }
 
+        var frustumCommandsList = view.frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
+
         var clearGlobeDepth = environmentState.clearGlobeDepth;
         var useDepthPlane = environmentState.useDepthPlane;
-        var usePrimitiveFramebuffer = clearGlobeDepth && environmentState.useGlobeDepthFramebuffer;
+        var usePrimitiveFramebuffer = (numFrustums > 1) && clearGlobeDepth && environmentState.useGlobeDepthFramebuffer;
         var clearDepth = scene._depthClearCommand;
         var clearStencil = scene._stencilClearCommand;
         var clearClassificationStencil = scene._classificationStencilClearCommand;
@@ -2251,9 +2254,6 @@ define([
 
         // Execute commands in each frustum in back to front order
         var j;
-        var frustumCommandsList = view.frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-
         for (var i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
@@ -3119,10 +3119,11 @@ define([
         var environmentState = scene._environmentState;
         var view = scene._view;
         var globeDepth = view.globeDepth;
+        var numFrustums = view.frustumCommandsList.length;
 
         var useOIT = environmentState.useOIT;
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
-        var usePrimitiveFramebuffer = environmentState.clearGlobeDepth && useGlobeDepthFramebuffer;
+        var usePrimitiveFramebuffer = (numFrustums > 1) && environmentState.clearGlobeDepth && environmentState.useGlobeDepthFramebuffer;
         var usePostProcess = environmentState.usePostProcess;
 
         var defaultFramebuffer = environmentState.originalFramebuffer;
