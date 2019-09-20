@@ -304,7 +304,7 @@ define([
     GlobeSurfaceTile.prototype.processImagery = function(tile, terrainProvider, frameState, skipLoading) {
         var surfaceTile = tile.data;
         var isUpsampledOnly = tile.upsampledFromParent;
-        var isRenderable = tile.renderable;
+        var isAnyTileLoaded = false;
         var isDoneLoading = true;
 
         // Transition imagery states
@@ -337,14 +337,16 @@ define([
             isDoneLoading = isDoneLoading && thisTileDoneLoading;
 
             // The imagery is renderable as soon as we have any renderable imagery for this region.
-            isRenderable = isRenderable && (thisTileDoneLoading || defined(tileImagery.readyImagery));
+            isAnyTileLoaded = isAnyTileLoaded || (thisTileDoneLoading || defined(tileImagery.readyImagery));
 
             isUpsampledOnly = isUpsampledOnly && defined(tileImagery.loadingImagery) &&
                               (tileImagery.loadingImagery.state === ImageryState.FAILED || tileImagery.loadingImagery.state === ImageryState.INVALID);
         }
 
         tile.upsampledFromParent = isUpsampledOnly;
-        tile.renderable = isRenderable;
+
+        // Allow rendering if any available layers are loaded
+        tile.renderable = tile.renderable && (isAnyTileLoaded || isDoneLoading);
 
         return isDoneLoading;
     };
