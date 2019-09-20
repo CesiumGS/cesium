@@ -27,9 +27,7 @@ define([
         './Matrix3',
         './PolygonGeometryLibrary',
         './PolygonPipeline',
-        './PolylinePipeline',
         './Quaternion',
-        './Queue',
         './Rectangle',
         './VertexFormat',
         './WindingOrder'
@@ -62,9 +60,7 @@ define([
         Matrix3,
         PolygonGeometryLibrary,
         PolygonPipeline,
-        PolylinePipeline,
         Quaternion,
-        Queue,
         Rectangle,
         VertexFormat,
         WindingOrder) {
@@ -929,7 +925,7 @@ define([
                 carto = ellipsoid.cartesianToCartographic(positions[i], scratchCarto1);
                 var lon = carto.longitude;
                 if (Math.abs(lon - lastLongitude) > CesiumMath.PI) {
-                    // assume the position crosses the IDL if the degrees change to be more than 180degrees away
+                    // assume the position crosses the IDL if the next adjacent position longitude changes to be more than 180 degrees
                     lon += CesiumMath.TWO_PI;
                 }
                 lastLongitude = lon;
