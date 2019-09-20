@@ -130,6 +130,9 @@ import RuntimeError from './RuntimeError.js';
         if (defined(TaskProcessor._loaderConfig)) {
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
         } else {
+            bootstrapMessage.loaderConfig.paths = {
+                'Workers': buildModuleUrl('Workers/Build')
+            };
             bootstrapMessage.loaderConfig.baseUrl = buildModuleUrl.getCesiumBaseUrl().url;
         }
 
@@ -334,7 +337,7 @@ import RuntimeError from './RuntimeError.js';
     TaskProcessor.taskCompletedEvent = taskCompletedEvent;
 
     // exposed for testing purposes
-    TaskProcessor._defaultWorkerModulePrefix = 'Workers/Build/';
+    TaskProcessor._defaultWorkerModulePrefix = 'Workers/';
     TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
     TaskProcessor._loaderConfig = undefined;
     TaskProcessor._canTransferArrayBuffer = undefined;
