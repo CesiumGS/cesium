@@ -11,7 +11,7 @@ module.exports = function(config) {
 
         // frameworks to use
         // available frameworks: https://npmjs.org/browse/keyword/karma-adapter
-        frameworks : ['jasmine', 'requirejs', 'detectBrowsers'],
+        frameworks : ['jasmine', 'detectBrowsers'],
 
         client: {
             captureConsole: false,
@@ -27,9 +27,9 @@ module.exports = function(config) {
 
         // list of files / patterns to load in the browser
         files : [
-            'Specs/karma-main.js',
-            {pattern : 'Source/**', included : false},
-            {pattern : 'Specs/**', included : false}
+            { pattern: 'Specs/karma-main.js', included: true, type: 'module' },
+            { pattern: 'Source/**', included: false, type: 'module' },
+            { pattern: 'Specs/**', included: true, type: 'module' }
         ],
 
         proxies : {
@@ -37,7 +37,12 @@ module.exports = function(config) {
         },
 
         // list of files to exclude
-        exclude : [],
+        exclude: [
+            'Specs/TestWorkers/**',
+            'Specs/SpecList.js',
+            'Specs/SpecRunner.js',
+            'Specs/spec-main.js'
+        ],
 
         // preprocess matching files before serving them to the browser
         // available preprocessors: https://npmjs.org/browse/keyword/karma-preprocessor

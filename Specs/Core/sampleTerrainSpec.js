@@ -5,7 +5,11 @@ import { sampleTerrain } from '../../Source/Cesium.js';
 
 describe('Core/sampleTerrain', function() {
 
-    var worldTerrain = createWorldTerrain();
+    var worldTerrain;
+    beforeAll(function() {
+        worldTerrain = createWorldTerrain();
+        return worldTerrain.readyPromise;
+    });
 
     it('queries heights', function() {
         var positions = [

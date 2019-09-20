@@ -14,7 +14,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             } else {
                 // Use AMD-style require.
                 // in web workers, require is synchronous
-                require(['./' + moduleName], function(f) {
+                require(['Workers/' + moduleName], function(f) {
                     module = f;
                     moduleCache[module] = f;
                 });

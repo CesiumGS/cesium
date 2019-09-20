@@ -739,13 +739,16 @@ gulp.task('coverage', function(done) {
             suppressSkipped: true
         },
         preprocessors: {
-            'Source/Core/**/*.js': ['coverage'],
-            'Source/DataSources/**/*.js': ['coverage'],
-            'Source/Renderer/**/*.js': ['coverage'],
-            'Source/Scene/**/*.js': ['coverage'],
-            'Source/Shaders/**/*.js': ['coverage'],
-            'Source/Widgets/**/*.js': ['coverage'],
-            'Source/Workers/**/*.js': ['coverage']
+            'Source/Core/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/DataSources/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/Renderer/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/Scene/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/Shaders/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/Widgets/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/Workers/**/*.js': ['karma-coverage-istanbul-instrumenter']
+        },
+        coverageIstanbulInstrumenter: {
+            esModules: true
         },
         reporters: ['spec', 'coverage'],
         coverageReporter: {
@@ -796,9 +799,9 @@ gulp.task('test', function(done) {
     }
 
     var files = [
-        'Specs/karma-main.js',
-        {pattern : 'Source/**', included : false},
-        {pattern : 'Specs/**', included : false}
+        { pattern: 'Specs/karma-main.js', included: true, type: 'module' },
+        { pattern: 'Source/**', included: false, type: 'module' },
+        { pattern: 'Specs/**', included: true, type: 'module' }
     ];
 
     if (release) {
@@ -1324,14 +1327,13 @@ function createCesiumJs() {
 }
 
 function createSpecList() {
-    var specFiles = globby.sync(['Specs/**/*.js', '!Specs/*.js']);
-    var specs = [];
+    var specFiles = globby.sync(['Specs/**/*Spec.js']);
 
+    var contents = '';
     specFiles.forEach(function(file) {
-        specs.push("'" + filePathToModuleId(file) + "'");
+        contents += "import './" + filePathToModuleId(file).replace('Specs/', '') + ".js';\n";
     });
 
-    var contents = '/*eslint-disable no-unused-vars*/\n/*eslint-disable no-implicit-globals*/\nvar specs = [' + specs.join(',') + '];\n';
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
