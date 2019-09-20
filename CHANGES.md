@@ -20,7 +20,6 @@ Change Log
 * Fixed relative-to-center check, `depthFailAppearance` resource freeing for `Primitive` [#8044](https://github.com/AnalyticalGraphicsInc/cesium/pull/8044)
 * Reduces size of approximateTerrainHeights.json by rounding the numbers [#7959](https://github.com/AnalyticalGraphicsInc/cesium/pull/7959)
 * Fixed undefined `quadDetails` error from zooming into the map really close. [#8011](https://github.com/AnalyticalGraphicsInc/cesium/pull/8011)
-* Fixed triangulation bug in polygons using `ArcType.RHUMB`. [#8042](https://github.com/AnalyticalGraphicsInc/cesium/issues/8042)
 * Fixed a bug where extruded polygons would sometimes be missing segments. [#8035](https://github.com/AnalyticalGraphicsInc/cesium/pull/8035)
 * 3D Tiles geometric error now scales with transform. [#8182](https://github.com/AnalyticalGraphicsInc/cesium/pull/8182)
 * Fixed per-feature post processing from sometimes selecting the wrong feature. [#7929](https://github.com/AnalyticalGraphicsInc/cesium/pull/7929)
