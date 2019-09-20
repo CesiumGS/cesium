@@ -32,6 +32,8 @@ var AWS = require('aws-sdk');
 var mime = require('mime');
 var rollup = require('rollup');
 
+var rollupStripPragma = require('./Tools/rollup-plugin-strip-pragma');
+
 var packageJson = require('./package.json');
 var version = packageJson.version;
 if (/\.0$/.test(version)) {
@@ -121,8 +123,13 @@ function createWorkers() {
         '!Source/Workers/transferTypedArrayTest.js'
     ]);
     return rollup.rollup({
-        input: workers
-    }).then(bundle => {
+        input: workers,
+        plugins: [
+            rollupStripPragma({
+                pragmas: [ 'debug' ]
+            })
+        ]
+    }).then(function(bundle) {
         return bundle.write({
             dir: 'Source/Workers/Build',
             format: 'amd'

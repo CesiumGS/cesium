@@ -65,6 +65,7 @@
     "karma-requirejs": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "^0.0.32",
+    "magic-string": "^0.25.3",
     "merge-stream": "^2.0.0",
     "mime": "^2.0.3",
     "mkdirp": "^0.5.1",
@@ -72,6 +73,7 @@
     "request": "^2.79.0",
     "rimraf": "^2.6.1",
     "rollup": "^1.21.4",
+    "rollup-pluginutils": "^2.8.2",
     "stream-to-promise": "^2.2.0",
     "yargs": "^14.0.0"
   },
