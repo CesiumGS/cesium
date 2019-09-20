@@ -1,5 +1,5 @@
 (function() {
-    /*global __karma__,require*/
+    /*global __karma__*/
     'use strict';
 
     var included = '';

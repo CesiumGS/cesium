@@ -53,7 +53,6 @@ define([
         var postMessage;
 
         return function(event) {
-            /*global self*/
             var data = event.data;
 
             var transferableObjects = [];
