@@ -2424,19 +2424,19 @@ describe('Scene/Model', function() {
 
     function checkVertexColors(model) {
         model.zoomTo();
-        // Red
+        // Blue plane
         scene.camera.moveLeft(0.5);
-        expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toEqual(255);
-            expect(rgba[1]).toEqual(0);
-            expect(rgba[2]).toEqual(0);
-        });
-        // Blue
-        scene.camera.moveRight(1.0);
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba[0]).toEqual(0);
             expect(rgba[1]).toEqual(0);
             expect(rgba[2]).toEqual(255);
+        });
+        // Red plane
+        scene.camera.moveRight(1.0);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba[0]).toEqual(255);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
         });
     }
 
