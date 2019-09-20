@@ -142,11 +142,14 @@ define([
          * @readonly
          */
         this.geometricError = header.geometricError;
+        this._geometricError = header.geometricError;
 
-        if (!defined(this.geometricError)) {
-            this.geometricError = defined(parent) ? parent.geometricError : tileset._geometricError;
+        if (!defined(this._geometricError)) {
+            this._geometricError = defined(parent) ? parent.geometricError : tileset._geometricError;
             Cesium3DTile._deprecationWarning('geometricErrorUndefined', 'Required property geometricError is undefined for this tile. Using parent\'s geometric error instead.');
         }
+
+        this.updateGeometricErrorScale();
 
         var refine;
         if (defined(header.refine)) {
@@ -1107,7 +1110,7 @@ define([
 
         // Find the transformed center and halfAxes
         center = Matrix4.multiplyByPoint(transform, center, center);
-        var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
+        var rotationScale = Matrix4.getMatrix3(transform, scratchMatrix);
         halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
 
         if (defined(result)) {
@@ -1131,7 +1134,7 @@ define([
         // This is why the transform is calculated as the difference between the initial transform and the current transform.
         transform = Matrix4.multiplyTransformation(transform, Matrix4.inverseTransformation(initialTransform, scratchTransform), scratchTransform);
         center = Matrix4.multiplyByPoint(transform, center, center);
-        var rotationScale = Matrix4.getRotation(transform, scratchMatrix);
+        var rotationScale = Matrix4.getMatrix3(transform, scratchMatrix);
         halfAxes = Matrix3.multiply(rotationScale, halfAxes, halfAxes);
 
         if (defined(result) && (result instanceof TileOrientedBoundingBox)) {
@@ -1231,10 +1234,18 @@ define([
             this._viewerRequestVolume = this.createBoundingVolume(header.viewerRequestVolume, this.computedTransform, this._viewerRequestVolume);
         }
 
+        this.updateGeometricErrorScale();
+
         // Destroy the debug bounding volumes. They will be generated fresh.
         this._debugBoundingVolume = this._debugBoundingVolume && this._debugBoundingVolume.destroy();
         this._debugContentBoundingVolume = this._debugContentBoundingVolume && this._debugContentBoundingVolume.destroy();
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
+    };
+
+    Cesium3DTile.prototype.updateGeometricErrorScale = function() {
+        var scale = Matrix4.getScale(this.computedTransform, scratchScale);
+        var uniformScale = Cartesian3.maximumComponent(scale);
+        this.geometricError = this._geometricError * uniformScale;
     };
 
     function applyDebugSettings(tile, tileset, frameState) {

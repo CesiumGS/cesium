@@ -1628,6 +1628,11 @@ define([
 
         processPacketData(Boolean, ellipsoid, 'show', ellipsoidData.show, interval, sourceUri, entityCollection);
         processPacketData(Cartesian3, ellipsoid, 'radii', ellipsoidData.radii, interval, sourceUri, entityCollection);
+        processPacketData(Cartesian3, ellipsoid, 'innerRadii', ellipsoidData.innerRadii, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'minimumClock', ellipsoidData.minimumClock, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'maximumClock', ellipsoidData.maximumClock, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'minimumCone', ellipsoidData.minimumCone, interval, sourceUri, entityCollection);
+        processPacketData(Number, ellipsoid, 'maximumCone', ellipsoidData.maximumCone, interval, sourceUri, entityCollection);
         processPacketData(HeightReference, ellipsoid, 'heightReference', ellipsoidData.heightReference, interval, sourceUri, entityCollection);
         processPacketData(Boolean, ellipsoid, 'fill', ellipsoidData.fill, interval, sourceUri, entityCollection);
         processMaterialPacketData(ellipsoid, 'material', ellipsoidData.material, interval, sourceUri, entityCollection);

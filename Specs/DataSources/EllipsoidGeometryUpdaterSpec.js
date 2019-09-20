@@ -4,6 +4,7 @@ define([
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
+        'Core/Math',
         'Core/Quaternion',
         'Core/TimeIntervalCollection',
         'DataSources/ColorMaterialProperty',
@@ -26,6 +27,7 @@ define([
         ColorGeometryInstanceAttribute,
         GeometryOffsetAttribute,
         JulianDate,
+        CesiumMath,
         Quaternion,
         TimeIntervalCollection,
         ColorMaterialProperty,
@@ -137,6 +139,11 @@ describe('DataSources/EllipsoidGeometryUpdater', function() {
     it('Creates geometry with expected properties', function() {
         var options = {
             radii : new Cartesian3(1, 2, 3),
+            innerRadii: new Cartesian3(0.5, 1, 1.5),
+            minimumClock: CesiumMath.toRadians(90.0),
+            maximumClock: CesiumMath.toRadians(270.0),
+            minimumCone: CesiumMath.toRadians(45.0),
+            maximumCone: CesiumMath.toRadians(90.0),
             stackPartitions : 32,
             slicePartitions : 64,
             subdivisions : 15
@@ -151,6 +158,11 @@ describe('DataSources/EllipsoidGeometryUpdater', function() {
         ellipsoid.radii = new ConstantProperty(options.radii);
         ellipsoid.stackPartitions = new ConstantProperty(options.stackPartitions);
         ellipsoid.slicePartitions = new ConstantProperty(options.slicePartitions);
+        ellipsoid.innerRadii = new ConstantProperty(options.innerRadii);
+        ellipsoid.minimumClock = new ConstantProperty(options.minimumClock);
+        ellipsoid.maximumClock = new ConstantProperty(options.maximumClock);
+        ellipsoid.minimumCone = new ConstantProperty(options.minimumCone);
+        ellipsoid.maximumCone = new ConstantProperty(options.maximumCone);
         ellipsoid.subdivisions = new ConstantProperty(options.subdivisions);
         entity.ellipsoid = ellipsoid;
 
@@ -162,6 +174,11 @@ describe('DataSources/EllipsoidGeometryUpdater', function() {
         geometry = instance.geometry;
         expect(geometry._center).toEqual(options.center);
         expect(geometry._radii).toEqual(options.radii);
+        expect(geometry._innerRadii).toEqual(options.innerRadii);
+        expect(geometry._minimumClock).toEqual(options.minimumClock);
+        expect(geometry._maximumClock).toEqual(options.maximumClock);
+        expect(geometry._minimumCone).toEqual(options.minimumCone);
+        expect(geometry._maximumCone).toEqual(options.maximumCone);
         expect(geometry._stackPartitions).toEqual(options.stackPartitions);
         expect(geometry._slicePartitions).toEqual(options.slicePartitions);
         expect(geometry._offsetAttribute).toBeUndefined();
@@ -170,6 +187,11 @@ describe('DataSources/EllipsoidGeometryUpdater', function() {
         geometry = instance.geometry;
         expect(geometry._center).toEqual(options.center);
         expect(geometry._radii).toEqual(options.radii);
+        expect(geometry._innerRadii).toEqual(options.innerRadii);
+        expect(geometry._minimumClock).toEqual(options.minimumClock);
+        expect(geometry._maximumClock).toEqual(options.maximumClock);
+        expect(geometry._minimumCone).toEqual(options.minimumCone);
+        expect(geometry._maximumCone).toEqual(options.maximumCone);
         expect(geometry._stackPartitions).toEqual(options.stackPartitions);
         expect(geometry._slicePartitions).toEqual(options.slicePartitions);
         expect(geometry._subdivisions).toEqual(options.subdivisions);
@@ -308,6 +330,31 @@ describe('DataSources/EllipsoidGeometryUpdater', function() {
         dynamicUpdater.destroy();
         expect(primitives.length).toBe(0);
         updater.destroy();
+    });
+
+    it('Inner radii should be set when not in 3D mode', function() {
+        var ellipsoid = new EllipsoidGraphics();
+        ellipsoid.radii = createDynamicProperty(new Cartesian3(1, 2, 3));
+        ellipsoid.innerRadii = createDynamicProperty(new Cartesian3(0.5, 1, 1.5));
+        // Turns 3d mode path off
+        ellipsoid.heightReference = new ConstantProperty(HeightReference.RELATIVE_TO_GROUND);
+        ellipsoid.material = new ColorMaterialProperty(Color.RED);
+
+        var entity = new Entity();
+        entity.position = createDynamicProperty(Cartesian3.fromDegrees(0, 0, 0));
+        entity.orientation = createDynamicProperty(Quaternion.IDENTITY);
+        entity.ellipsoid = ellipsoid;
+
+        var updater = new EllipsoidGeometryUpdater(entity, scene);
+        var primitives = scene.primitives;
+
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, new PrimitiveCollection());
+        dynamicUpdater.update(time);
+
+        scene.initializeFrame();
+        scene.render();
+
+        expect(dynamicUpdater._options.innerRadii).toEqual(ellipsoid.innerRadii.getValue());
     });
 
     it('dynamic ellipsoid fast path updates attributes', function() {
