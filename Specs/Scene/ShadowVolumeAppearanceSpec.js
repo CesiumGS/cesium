@@ -47,8 +47,10 @@ describe('Scene/ShadowVolumeAppearance', function() {
     var largeTestRectangle = Rectangle.fromDegrees(-45.0, -45.0, 45.0, 45.0);
     var smallTestRectangle = Rectangle.fromDegrees(-0.1, -0.1, 0.1, 0.1);
 
-    var largeRectangleAttributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(largeTestRectangle, [0, 0, 0, 1, 1, 0], unitSphereEllipsoid, projection);
-    var smallRectangleAttributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, [0, 0, 0, 1, 1, 0], unitSphereEllipsoid, projection);
+    var largeRectangleAttributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(largeTestRectangle, [0, 0, 0, 1, 1, 0], unitSphereEllipsoid, projection, true);
+    var smallRectangleAttributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, [0, 0, 0, 1, 1, 0], unitSphereEllipsoid, projection, true);
+    var largeRectangleAttributesBadFloats = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(largeTestRectangle, [0, 0, 0, 1, 1, 0], unitSphereEllipsoid, projection, false);
+    var smallRectangleAttributesBadFloats = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, [0, 0, 0, 1, 1, 0], unitSphereEllipsoid, projection, false);
 
     var perInstanceColorMaterialAppearance = new PerInstanceColorAppearance();
     var flatPerInstanceColorMaterialAppearance = new PerInstanceColorAppearance({
@@ -117,6 +119,12 @@ describe('Scene/ShadowVolumeAppearance', function() {
         expect(value[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON4);
     });
 
+    function checkGeometryInstanceAttributeVec3(attribute) {
+        expect(attribute.componentDatatype).toEqual(ComponentDatatype.FLOAT);
+        expect(attribute.componentsPerAttribute).toEqual(3);
+        expect(attribute.normalize).toEqual(false);
+    }
+
     function clampAndMagnitude(signedVec4Attribute) {
         var signedVec4 = signedVec4Attribute.value;
         var unsigned = signedVec4.slice();
@@ -146,105 +154,190 @@ describe('Scene/ShadowVolumeAppearance', function() {
         return (10000.0 * unsigned[0] + 100.0 * unsigned[1] + unsigned[2] + 0.01 * unsigned[3]) * (signed[0] < 128.0 ? 1.0 : -1.0);
     }
 
-    it('provides attributes for computing texture coordinates using planes in 3D', function() {
-        var attributes = smallRectangleAttributes;
+    describe('floating point textures reliable', function () {
+        it('provides attributes for computing texture coordinates using planes in 3D', function() {
+            var attributes = smallRectangleAttributes;
 
-        var southWest_LOW = [0, 0, 0];
-        southWest_LOW[0] = unpackLowLessThan100k(attributes.southWest_LOW_x);
-        southWest_LOW[1] = unpackLowLessThan100k(attributes.southWest_LOW_y);
-        southWest_LOW[2] = unpackLowLessThan100k(attributes.southWest_LOW_z);
+            var southWest_LOW = attributes.southWest_LOW;
+            var southWest_HIGH = attributes.southWest_HIGH;
+            var eastward = attributes.eastward;
+            var northward = attributes.northward;
 
-        var southWest_HIGH = [0, 0, 0];
-        southWest_HIGH[0] = unpackHighMagLessThan100Million(attributes.southWest_HIGH_x);
-        southWest_HIGH[1] = unpackHighMagLessThan100Million(attributes.southWest_HIGH_y);
-        southWest_HIGH[2] = unpackHighMagLessThan100Million(attributes.southWest_HIGH_z);
+            checkGeometryInstanceAttributeVec3(southWest_LOW);
+            checkGeometryInstanceAttributeVec3(southWest_HIGH);
+            checkGeometryInstanceAttributeVec3(eastward);
+            checkGeometryInstanceAttributeVec3(northward);
 
-        var eastward = [0, 0, 0];
-        eastward[0] = unpackLowLessThan1000k(attributes.eastward_x);
-        eastward[1] = unpackLowLessThan1000k(attributes.eastward_y);
-        eastward[2] = unpackLowLessThan1000k(attributes.eastward_z);
+            // We're using a unit sphere, so expect all HIGH values to be basically 0
+            // and LOW value to be within a small cone around UNIT_X
+            expect(southWest_HIGH.value[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+            expect(southWest_HIGH.value[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+            expect(southWest_HIGH.value[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
 
-         var northward = [0, 0, 0];
-         northward[0] = unpackLowLessThan1000k(attributes.northward_x);
-         northward[1] = unpackLowLessThan1000k(attributes.northward_y);
-         northward[2] = unpackLowLessThan1000k(attributes.northward_z);
+            expect(southWest_LOW.value[0]).toBeGreaterThan(Math.cos(CesiumMath.toRadians(0.2)));
 
-        // We're using a unit sphere, so expect all HIGH values to be basically 0
-        // and LOW value to be within a small cone around UNIT_X
-        expect(southWest_HIGH[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
-        expect(southWest_HIGH[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
-        expect(southWest_HIGH[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+            // Expect eastward and northward to be unit-direction vectors in the ENU coordinate system at the rectangle center
+            var smallRectangleCenter = Cartographic.toCartesian(Rectangle.center(smallTestRectangle), unitSphereEllipsoid);
+            var enuMatrix = Transforms.eastNorthUpToFixedFrame(smallRectangleCenter, unitSphereEllipsoid);
+            var inverseEnu = Matrix4.inverse(enuMatrix, new Matrix4());
 
-        expect(southWest_LOW[0]).toBeGreaterThan(Math.cos(CesiumMath.toRadians(0.2)));
+            var eastwardENU = Matrix4.multiplyByPointAsVector(inverseEnu, Cartesian3.fromArray(eastward.value), new Cartesian3());
+            eastwardENU = Cartesian3.normalize(eastwardENU, eastwardENU);
+            expect(Cartesian3.equalsEpsilon(eastwardENU, Cartesian3.UNIT_X, CesiumMath.EPSILON7)).toBe(true);
 
-        // Expect eastward and northward to be unit-direction vectors in the ENU coordinate system at the rectangle center
-        var smallRectangleCenter = Cartographic.toCartesian(Rectangle.center(smallTestRectangle), unitSphereEllipsoid);
-        var enuMatrix = Transforms.eastNorthUpToFixedFrame(smallRectangleCenter, unitSphereEllipsoid);
-        var inverseEnu = Matrix4.inverse(enuMatrix, new Matrix4());
+            var northwardENU = Matrix4.multiplyByPointAsVector(inverseEnu, Cartesian3.fromArray(northward.value), new Cartesian3());
+            northwardENU = Cartesian3.normalize(northwardENU, northwardENU);
+            expect(Cartesian3.equalsEpsilon(northwardENU, Cartesian3.UNIT_Y, CesiumMath.EPSILON7)).toBe(true);
+        });
 
-        var eastwardENU = Matrix4.multiplyByPointAsVector(inverseEnu, Cartesian3.fromArray(eastward), new Cartesian3());
-        eastwardENU = Cartesian3.normalize(eastwardENU, eastwardENU);
-        expect(Cartesian3.equalsEpsilon(eastwardENU, Cartesian3.UNIT_X, CesiumMath.EPSILON2)).toBe(true);
+        it('provides attributes for computing planes in 2D and Columbus View', function() {
+            var planes2D_HIGH = largeRectangleAttributes.planes2D_HIGH;
+            var planes2D_LOW = largeRectangleAttributes.planes2D_LOW;
 
-        var northwardENU = Matrix4.multiplyByPointAsVector(inverseEnu, Cartesian3.fromArray(northward), new Cartesian3());
-        northwardENU = Cartesian3.normalize(northwardENU, northwardENU);
-        expect(Cartesian3.equalsEpsilon(northwardENU, Cartesian3.UNIT_Y, CesiumMath.EPSILON2)).toBe(true);
+            expect(planes2D_HIGH.componentDatatype).toEqual(ComponentDatatype.FLOAT);
+            expect(planes2D_HIGH.componentsPerAttribute).toEqual(4);
+            expect(planes2D_HIGH.normalize).toEqual(false);
+
+            // Because using a unit sphere expect all HIGH values to be basically 0
+            var highValue = planes2D_HIGH.value;
+            expect(highValue[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+            expect(highValue[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+            expect(highValue[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+            expect(highValue[3]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+
+            expect(planes2D_LOW.componentDatatype).toEqual(ComponentDatatype.FLOAT);
+            expect(planes2D_LOW.componentsPerAttribute).toEqual(4);
+            expect(planes2D_LOW.normalize).toEqual(false);
+
+            var cartographic = Cartographic.fromDegrees(-45, -45, 0.0); // southwest corner
+            var southwestCartesian = projection.project(cartographic);
+            var lowValue = planes2D_LOW.value;
+            expect(lowValue[0]).toEqualEpsilon(southwestCartesian.x, CesiumMath.EPSILON7);
+            expect(lowValue[1]).toEqualEpsilon(southwestCartesian.y, CesiumMath.EPSILON7);
+            expect(lowValue[2]).toEqualEpsilon(-southwestCartesian.y, CesiumMath.EPSILON7);
+            expect(lowValue[3]).toEqualEpsilon(-southwestCartesian.x, CesiumMath.EPSILON7);
+
+            // Small case
+            // Because using a unit sphere expect all HIGH values to be basically 0
+            highValue = smallRectangleAttributes.planes2D_HIGH.value;
+            expect(highValue[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+            expect(highValue[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+            expect(highValue[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+            expect(highValue[3]).toEqualEpsilon(0.0, CesiumMath.EPSILON7);
+
+            cartographic = Cartographic.fromDegrees(-0.1, -0.1, 0.0); // southwest corner
+            southwestCartesian = projection.project(cartographic);
+            lowValue = smallRectangleAttributes.planes2D_LOW.value;
+            expect(lowValue[0]).toEqualEpsilon(southwestCartesian.x, CesiumMath.EPSILON7);
+            expect(lowValue[1]).toEqualEpsilon(southwestCartesian.y, CesiumMath.EPSILON7);
+            expect(lowValue[2]).toEqualEpsilon(-southwestCartesian.y, CesiumMath.EPSILON7);
+            expect(lowValue[3]).toEqualEpsilon(-southwestCartesian.x, CesiumMath.EPSILON7);
+        });
     });
 
-    it('provides attributes for computing planes in 2D and Columbus View', function() {
-        var highValue = [0, 0, 0, 0];
-        highValue[0] = unpackHighMagLessThan100Million(largeRectangleAttributes.planes2D_HIGH_x);
-        highValue[1] = unpackHighMagLessThan100Million(largeRectangleAttributes.planes2D_HIGH_y);
-        highValue[2] = unpackHighMagLessThan100Million(largeRectangleAttributes.planes2D_HIGH_z);
-        highValue[3] = unpackHighMagLessThan100Million(largeRectangleAttributes.planes2D_HIGH_w);
+    describe('floating point textures unreliable', function () {
+        it('provides attributes for computing texture coordinates using planes in 3D', function() {
+            var attributes = smallRectangleAttributesBadFloats;
 
-        var lowValue = [0, 0, 0, 0];
-        lowValue[0] = unpackLowLessThan100k(largeRectangleAttributes.planes2D_LOW_x);
-        lowValue[1] = unpackLowLessThan100k(largeRectangleAttributes.planes2D_LOW_y);
-        lowValue[2] = unpackLowLessThan100k(largeRectangleAttributes.planes2D_LOW_z);
-        lowValue[3] = unpackLowLessThan100k(largeRectangleAttributes.planes2D_LOW_w);
+            var southWest_LOW = [0, 0, 0];
+            southWest_LOW[0] = unpackLowLessThan100k(attributes.southWest_LOW_x);
+            southWest_LOW[1] = unpackLowLessThan100k(attributes.southWest_LOW_y);
+            southWest_LOW[2] = unpackLowLessThan100k(attributes.southWest_LOW_z);
 
-        // Because using a unit sphere expect all HIGH values to be basically 0
-        expect(highValue[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
-        expect(highValue[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
-        expect(highValue[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
-        expect(highValue[3]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+            var southWest_HIGH = [0, 0, 0];
+            southWest_HIGH[0] = unpackHighMagLessThan100Million(attributes.southWest_HIGH_x);
+            southWest_HIGH[1] = unpackHighMagLessThan100Million(attributes.southWest_HIGH_y);
+            southWest_HIGH[2] = unpackHighMagLessThan100Million(attributes.southWest_HIGH_z);
 
-        var cartographic = Cartographic.fromDegrees(-45, -45, 0.0); // southwest corner
-        var southwestCartesian = projection.project(cartographic);
-        expect(lowValue[0]).toEqualEpsilon(southwestCartesian.x, CesiumMath.EPSILON2);
-        expect(lowValue[1]).toEqualEpsilon(southwestCartesian.y, CesiumMath.EPSILON2);
-        expect(lowValue[2]).toEqualEpsilon(-southwestCartesian.y, CesiumMath.EPSILON2);
-        expect(lowValue[3]).toEqualEpsilon(-southwestCartesian.x, CesiumMath.EPSILON2);
+            var eastward = [0, 0, 0];
+            eastward[0] = unpackLowLessThan1000k(attributes.eastward_x);
+            eastward[1] = unpackLowLessThan1000k(attributes.eastward_y);
+            eastward[2] = unpackLowLessThan1000k(attributes.eastward_z);
 
-        // Small case
-        // Because using a unit sphere expect all HIGH values to be basically 0
-        highValue[0] = unpackHighMagLessThan100Million(smallRectangleAttributes.planes2D_HIGH_x);
-        highValue[1] = unpackHighMagLessThan100Million(smallRectangleAttributes.planes2D_HIGH_y);
-        highValue[2] = unpackHighMagLessThan100Million(smallRectangleAttributes.planes2D_HIGH_z);
-        highValue[3] = unpackHighMagLessThan100Million(smallRectangleAttributes.planes2D_HIGH_w);
+            var northward = [0, 0, 0];
+            northward[0] = unpackLowLessThan1000k(attributes.northward_x);
+            northward[1] = unpackLowLessThan1000k(attributes.northward_y);
+            northward[2] = unpackLowLessThan1000k(attributes.northward_z);
 
-        expect(highValue[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
-        expect(highValue[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
-        expect(highValue[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
-        expect(highValue[3]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+            // We're using a unit sphere, so expect all HIGH values to be basically 0
+            // and LOW value to be within a small cone around UNIT_X
+            expect(southWest_HIGH[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+            expect(southWest_HIGH[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+            expect(southWest_HIGH[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
 
-        cartographic = Cartographic.fromDegrees(-0.1, -0.1, 0.0); // southwest corner
-        southwestCartesian = projection.project(cartographic);
-        lowValue[0] = unpackLowLessThan100k(smallRectangleAttributes.planes2D_LOW_x);
-        lowValue[1] = unpackLowLessThan100k(smallRectangleAttributes.planes2D_LOW_y);
-        lowValue[2] = unpackLowLessThan100k(smallRectangleAttributes.planes2D_LOW_z);
-        lowValue[3] = unpackLowLessThan100k(smallRectangleAttributes.planes2D_LOW_w);
+            expect(southWest_LOW[0]).toBeGreaterThan(Math.cos(CesiumMath.toRadians(0.2)));
 
-        expect(lowValue[0]).toEqualEpsilon(southwestCartesian.x, CesiumMath.EPSILON2);
-        expect(lowValue[1]).toEqualEpsilon(southwestCartesian.y, CesiumMath.EPSILON2);
-        expect(lowValue[2]).toEqualEpsilon(-southwestCartesian.y, CesiumMath.EPSILON2);
-        expect(lowValue[3]).toEqualEpsilon(-southwestCartesian.x, CesiumMath.EPSILON2);
+            // Expect eastward and northward to be unit-direction vectors in the ENU coordinate system at the rectangle center
+            var smallRectangleCenter = Cartographic.toCartesian(Rectangle.center(smallTestRectangle), unitSphereEllipsoid);
+            var enuMatrix = Transforms.eastNorthUpToFixedFrame(smallRectangleCenter, unitSphereEllipsoid);
+            var inverseEnu = Matrix4.inverse(enuMatrix, new Matrix4());
+
+            var eastwardENU = Matrix4.multiplyByPointAsVector(inverseEnu, Cartesian3.fromArray(eastward), new Cartesian3());
+            eastwardENU = Cartesian3.normalize(eastwardENU, eastwardENU);
+            expect(Cartesian3.equalsEpsilon(eastwardENU, Cartesian3.UNIT_X, CesiumMath.EPSILON2)).toBe(true);
+
+            var northwardENU = Matrix4.multiplyByPointAsVector(inverseEnu, Cartesian3.fromArray(northward), new Cartesian3());
+            northwardENU = Cartesian3.normalize(northwardENU, northwardENU);
+            expect(Cartesian3.equalsEpsilon(northwardENU, Cartesian3.UNIT_Y, CesiumMath.EPSILON2)).toBe(true);
+        });
+
+        it('provides attributes for computing planes in 2D and Columbus View', function() {
+            var attributes = largeRectangleAttributesBadFloats;
+            var highValue = [0, 0, 0, 0];
+            highValue[0] = unpackHighMagLessThan100Million(attributes.planes2D_HIGH_x);
+            highValue[1] = unpackHighMagLessThan100Million(attributes.planes2D_HIGH_y);
+            highValue[2] = unpackHighMagLessThan100Million(attributes.planes2D_HIGH_z);
+            highValue[3] = unpackHighMagLessThan100Million(attributes.planes2D_HIGH_w);
+
+            var lowValue = [0, 0, 0, 0];
+            lowValue[0] = unpackLowLessThan100k(attributes.planes2D_LOW_x);
+            lowValue[1] = unpackLowLessThan100k(attributes.planes2D_LOW_y);
+            lowValue[2] = unpackLowLessThan100k(attributes.planes2D_LOW_z);
+            lowValue[3] = unpackLowLessThan100k(attributes.planes2D_LOW_w);
+
+            // Because using a unit sphere expect all HIGH values to be basically 0
+            expect(highValue[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+            expect(highValue[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+            expect(highValue[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+            expect(highValue[3]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+
+            var cartographic = Cartographic.fromDegrees(-45, -45, 0.0); // southwest corner
+            var southwestCartesian = projection.project(cartographic);
+            expect(lowValue[0]).toEqualEpsilon(southwestCartesian.x, CesiumMath.EPSILON2);
+            expect(lowValue[1]).toEqualEpsilon(southwestCartesian.y, CesiumMath.EPSILON2);
+            expect(lowValue[2]).toEqualEpsilon(-southwestCartesian.y, CesiumMath.EPSILON2);
+            expect(lowValue[3]).toEqualEpsilon(-southwestCartesian.x, CesiumMath.EPSILON2);
+
+            // Small case
+            attributes = smallRectangleAttributesBadFloats;
+            // Because using a unit sphere expect all HIGH values to be basically 0
+            highValue[0] = unpackHighMagLessThan100Million(attributes.planes2D_HIGH_x);
+            highValue[1] = unpackHighMagLessThan100Million(attributes.planes2D_HIGH_y);
+            highValue[2] = unpackHighMagLessThan100Million(attributes.planes2D_HIGH_z);
+            highValue[3] = unpackHighMagLessThan100Million(attributes.planes2D_HIGH_w);
+
+            expect(highValue[0]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+            expect(highValue[1]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+            expect(highValue[2]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+            expect(highValue[3]).toEqualEpsilon(0.0, CesiumMath.EPSILON2);
+
+            cartographic = Cartographic.fromDegrees(-0.1, -0.1, 0.0); // southwest corner
+            southwestCartesian = projection.project(cartographic);
+            lowValue[0] = unpackLowLessThan100k(attributes.planes2D_LOW_x);
+            lowValue[1] = unpackLowLessThan100k(attributes.planes2D_LOW_y);
+            lowValue[2] = unpackLowLessThan100k(attributes.planes2D_LOW_z);
+            lowValue[3] = unpackLowLessThan100k(attributes.planes2D_LOW_w);
+
+            expect(lowValue[0]).toEqualEpsilon(southwestCartesian.x, CesiumMath.EPSILON2);
+            expect(lowValue[1]).toEqualEpsilon(southwestCartesian.y, CesiumMath.EPSILON2);
+            expect(lowValue[2]).toEqualEpsilon(-southwestCartesian.y, CesiumMath.EPSILON2);
+            expect(lowValue[3]).toEqualEpsilon(-southwestCartesian.x, CesiumMath.EPSILON2);
+        });
     });
 
     it('provides attributes for rotating texture coordinates', function() {
         // 90 degree rotation of a square, so "max" in Y direction is (0,0), "max" in X direction is (1,1)
-        var attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, [1, 0, 0, 0, 1, 1], unitSphereEllipsoid, projection, 0.0);
+        var attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(smallTestRectangle, [1, 0, 0, 0, 1, 1], unitSphereEllipsoid, projection, false, 0.0);
 
         var uMaxVmax = attributes.uMaxVmax;
         var uvMinAndExtents = attributes.uvMinAndExtents;
@@ -273,11 +366,15 @@ describe('Scene/ShadowVolumeAppearance', function() {
     it('checks for spherical extent attributes', function() {
         expect(ShadowVolumeAppearance.hasAttributesForSphericalExtents(smallRectangleAttributes)).toBe(false);
         expect(ShadowVolumeAppearance.hasAttributesForSphericalExtents(largeRectangleAttributes)).toBe(true);
+        expect(ShadowVolumeAppearance.hasAttributesForSphericalExtents(smallRectangleAttributesBadFloats)).toBe(false);
+        expect(ShadowVolumeAppearance.hasAttributesForSphericalExtents(largeRectangleAttributesBadFloats)).toBe(true);
     });
 
     it('checks for planar texture coordinate attributes', function() {
         expect(ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(smallRectangleAttributes)).toBe(true);
         expect(ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(largeRectangleAttributes)).toBe(false);
+        expect(ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(smallRectangleAttributesBadFloats)).toBe(true);
+        expect(ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes(largeRectangleAttributesBadFloats)).toBe(false);
     });
 
     it('checks if a rectangle should use spherical texture coordinates', function() {
@@ -285,9 +382,36 @@ describe('Scene/ShadowVolumeAppearance', function() {
         expect(ShadowVolumeAppearance.shouldUseSphericalCoordinates(largeTestRectangle)).toBe(true);
     });
 
+    it('creates vertex shaders based on whether or not float textures are used for high/low positions', function() {
+        // Check defines
+        var sphericalTexturedAppearanceUnsafe = new ShadowVolumeAppearance(true, false, textureMaterialAppearance, false);
+        var shaderSource = sphericalTexturedAppearanceUnsafe.createVertexShader([], testVs, false, projection);
+        var defines = shaderSource.defines;
+        expect(defines.length).toEqual(3);
+        expect(defines.indexOf('UINT8_PACKING')).not.toEqual(-1);
+
+        // 2D variant
+        shaderSource = sphericalTexturedAppearanceUnsafe.createVertexShader([], testVs, true, projection);
+        defines = shaderSource.defines;
+        expect(defines.length).toEqual(7);
+        expect(defines.indexOf('UINT8_PACKING')).not.toEqual(-1);
+
+        var sphericalTexturedAppearanceSafe = new ShadowVolumeAppearance(true, false, textureMaterialAppearance, true);
+        shaderSource = sphericalTexturedAppearanceSafe.createVertexShader([], testVs, false, projection);
+        defines = shaderSource.defines;
+        expect(defines.length).toEqual(2);
+        expect(defines.indexOf('UINT8_PACKING')).toEqual(-1);
+
+        // 2D variant
+        shaderSource = sphericalTexturedAppearanceSafe.createVertexShader([], testVs, true, projection);
+        defines = shaderSource.defines;
+        expect(defines.length).toEqual(6);
+        expect(defines.indexOf('UINT8_PACKING')).toEqual(-1);
+    });
+
     it('creates vertex shaders for color', function() {
         // Check defines
-        var sphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, textureMaterialAppearance);
+        var sphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, textureMaterialAppearance, true);
         var shaderSource = sphericalTexturedAppearance.createVertexShader([], testVs, false, projection);
         var defines = shaderSource.defines;
         expect(defines.length).toEqual(2);
@@ -307,7 +431,7 @@ describe('Scene/ShadowVolumeAppearance', function() {
         expect(defines.indexOf(westMostYlowDefine)).not.toEqual(-1);
 
         // Unculled color appearance - no texcoords at all
-        var sphericalUnculledColorAppearance = new ShadowVolumeAppearance(false, false, perInstanceColorMaterialAppearance);
+        var sphericalUnculledColorAppearance = new ShadowVolumeAppearance(false, false, perInstanceColorMaterialAppearance, true);
         shaderSource = sphericalUnculledColorAppearance.createVertexShader([], testVs, false, projection);
         defines = shaderSource.defines;
         expect(defines.length).toEqual(1);
@@ -326,7 +450,7 @@ describe('Scene/ShadowVolumeAppearance', function() {
         expect(defines.indexOf('PER_INSTANCE_COLOR')).not.toEqual(-1);
 
         // Planar textured, without culling
-        var planarTexturedAppearance = new ShadowVolumeAppearance(false, true, textureMaterialAppearance);
+        var planarTexturedAppearance = new ShadowVolumeAppearance(false, true, textureMaterialAppearance, true);
         shaderSource = planarTexturedAppearance.createVertexShader([], testVs, false, projection);
         defines = shaderSource.defines;
         expect(defines.indexOf('TEXTURE_COORDINATES')).not.toEqual(-1);
@@ -347,7 +471,7 @@ describe('Scene/ShadowVolumeAppearance', function() {
 
     it('creates vertex shaders for pick', function() {
         // Check defines
-        var sphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, textureMaterialAppearance);
+        var sphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, textureMaterialAppearance, true);
         var shaderSource = sphericalTexturedAppearance.createPickVertexShader([], testVs, false, projection);
         var defines = shaderSource.defines;
         expect(defines.length).toEqual(2);
@@ -367,7 +491,7 @@ describe('Scene/ShadowVolumeAppearance', function() {
         expect(defines.indexOf(westMostYlowDefine)).not.toEqual(-1);
 
         // Unculled color appearance - no texcoords at all
-        var sphericalUnculledColorAppearance = new ShadowVolumeAppearance(false, false, perInstanceColorMaterialAppearance);
+        var sphericalUnculledColorAppearance = new ShadowVolumeAppearance(false, false, perInstanceColorMaterialAppearance, true);
         shaderSource = sphericalUnculledColorAppearance.createPickVertexShader([], testVs, false, projection);
         defines = shaderSource.defines;
         expect(defines.length).toEqual(0);
@@ -384,7 +508,7 @@ describe('Scene/ShadowVolumeAppearance', function() {
         expect(defines.length).toEqual(4);
 
         // Planar textured, without culling
-        var planarTexturedAppearance = new ShadowVolumeAppearance(false, true, textureMaterialAppearance);
+        var planarTexturedAppearance = new ShadowVolumeAppearance(false, true, textureMaterialAppearance, true);
         shaderSource = planarTexturedAppearance.createPickVertexShader([], testVs, false, projection);
         defines = shaderSource.defines;
         expect(defines.length).toEqual(0);
@@ -402,7 +526,7 @@ describe('Scene/ShadowVolumeAppearance', function() {
 
     it('creates fragment shaders for color and pick', function() {
         // Check defines
-        var sphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, textureMaterialAppearance);
+        var sphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, textureMaterialAppearance, true);
         var shaderSource = sphericalTexturedAppearance.createFragmentShader(false);
         var defines = shaderSource.defines;
 
@@ -435,7 +559,7 @@ describe('Scene/ShadowVolumeAppearance', function() {
         expect(defines.length).toEqual(9);
 
         // Culling with planar texture coordinates on a per-color material
-        var planarColorAppearance = new ShadowVolumeAppearance(true, true, perInstanceColorMaterialAppearance);
+        var planarColorAppearance = new ShadowVolumeAppearance(true, true, perInstanceColorMaterialAppearance, true);
         shaderSource = planarColorAppearance.createFragmentShader(false);
         defines = shaderSource.defines;
 
@@ -459,7 +583,7 @@ describe('Scene/ShadowVolumeAppearance', function() {
         expect(defines.length).toEqual(5);
 
         // Flat
-        var flatSphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, flatTextureMaterialAppearance);
+        var flatSphericalTexturedAppearance = new ShadowVolumeAppearance(true, false, flatTextureMaterialAppearance, true);
         shaderSource = flatSphericalTexturedAppearance.createFragmentShader(false);
         defines = shaderSource.defines;
         expect(defines.indexOf('SPHERICAL')).not.toEqual(-1);
@@ -474,7 +598,7 @@ describe('Scene/ShadowVolumeAppearance', function() {
         expect(defines.indexOf('FLAT')).not.toEqual(-1);
         expect(defines.length).toEqual(10);
 
-        var flatSphericalColorAppearance = new ShadowVolumeAppearance(false, false, flatPerInstanceColorMaterialAppearance);
+        var flatSphericalColorAppearance = new ShadowVolumeAppearance(false, false, flatPerInstanceColorMaterialAppearance, true);
         shaderSource = flatSphericalColorAppearance.createFragmentShader(false);
         defines = shaderSource.defines;
         expect(defines.indexOf('SPHERICAL')).not.toEqual(-1);

@@ -25,7 +25,7 @@ varying vec3 v_uMaxAndInverseDistance;
 varying vec3 v_vMaxAndInverseDistance;
 #endif // TEXTURE_COORDINATES
 
-#if defined(TEXTURE_COORDINATES) && !defined(SPHERICAL)
+#if defined(TEXTURE_COORDINATES) && !defined(SPHERICAL) && defined(UINT8_PACKING)
 vec4 clampAndMagnitude(vec4 sd) {
     vec4 d = sd;
     d.x = czm_branchFreeTernary(sd.x < 128.0, d.x, (255.0 - sd.x));
@@ -115,6 +115,7 @@ void main()
     v_uvMinAndSphericalLongitudeRotation.z = czm_batchTable_longitudeRotation(batchId);
 #else // SPHERICAL
 #ifdef COLUMBUS_VIEW_2D
+#ifdef UINT8_PACKING
     vec4 planes2D_high = unpackPlanes2D_HIGH(czm_batchTable_planes2D_HIGH_x(batchId),
         czm_batchTable_planes2D_HIGH_y(batchId),
         czm_batchTable_planes2D_HIGH_z(batchId),
@@ -123,6 +124,10 @@ void main()
         czm_batchTable_planes2D_LOW_y(batchId),
         czm_batchTable_planes2D_LOW_z(batchId),
         czm_batchTable_planes2D_LOW_w(batchId));
+#else // UINT8_PACKING
+    vec4 planes2D_high = czm_batchTable_planes2D_HIGH(batchId);
+    vec4 planes2D_low = czm_batchTable_planes2D_LOW(batchId);
+#endif // UINT8_PACKING
 
     // If the primitive is split across the IDL (planes2D_high.x > planes2D_high.w):
     // - If this vertex is on the east side of the IDL (position3DLow.y > 0.0, comparison with position3DHigh may produce artifacts)
@@ -146,6 +151,7 @@ void main()
     vec3 southEastCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(vec3(0.0, planes2D_high.w, planes2D_high.y), vec3(0.0, planes2D_low.w, planes2D_low.y))).xyz;
 #else // COLUMBUS_VIEW_2D
     // 3D case has smaller "plane extents," so planes encoded as a 64 bit position and 2 vec3s for distances/direction
+#ifdef UINT8_PACKING
     vec3 low = southwest_LOW(czm_batchTable_southWest_LOW_x(batchId), czm_batchTable_southWest_LOW_y(batchId), czm_batchTable_southWest_LOW_z(batchId));
     vec3 high = southwest_HIGH(czm_batchTable_southWest_HIGH_x(batchId), czm_batchTable_southWest_HIGH_y(batchId), czm_batchTable_southWest_HIGH_z(batchId));
     vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(high, low)).xyz;
@@ -158,6 +164,11 @@ void main()
         czm_batchTable_eastward_x(batchId),
         czm_batchTable_eastward_y(batchId),
         czm_batchTable_eastward_z(batchId)) + southWestCorner;
+#else // UINT8_PACKING
+    vec3 southWestCorner = (czm_modelViewRelativeToEye * czm_translateRelativeToEye(czm_batchTable_southWest_HIGH(batchId), czm_batchTable_southWest_LOW(batchId))).xyz;
+    vec3 northWestCorner = czm_normal * czm_batchTable_northward(batchId) + southWestCorner;
+    vec3 southEastCorner = czm_normal * czm_batchTable_eastward(batchId) + southWestCorner;
+#endif // UINT8_PACKING
 #endif // COLUMBUS_VIEW_2D
 
     vec3 eastWard = southEastCorner - southWestCorner;
