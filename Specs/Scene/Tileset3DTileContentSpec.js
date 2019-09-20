@@ -10,7 +10,7 @@ define([
         createScene) {
         'use strict';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/Tileset3DTileContent', function() {
 
     var scene;
     var centerLongitude = -1.31968;

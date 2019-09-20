@@ -16,7 +16,7 @@ define([
         createContext) {
         'use strict';
 
-describe('Core/BoundingRectangle', function() {
+describe('Renderer/Clear', function() {
 
     var context;
 

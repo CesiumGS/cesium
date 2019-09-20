@@ -42,7 +42,7 @@ define([
         createScene) {
         'use strict';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/Batched3DModel3DTileContentClassification', function() {
 
     var scene;
     var modelMatrix;
