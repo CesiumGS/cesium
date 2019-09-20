@@ -1,4 +1,4 @@
-/*global require,Blob,JSHINT */
+/*global JSHINT */
 /*global decodeBase64Data, embedInSandcastleTemplate */
 /*global gallery_demos, has_new_gallery_demos, hello_world_index*/// defined in gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
