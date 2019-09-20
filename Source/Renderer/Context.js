@@ -67,9 +67,6 @@ define([
         UniformState,
         VertexArray) {
     'use strict';
-    /*global WebGLRenderingContext*/
-
-    /*global WebGL2RenderingContext*/
 
     function errorToString(gl, error) {
         var message = 'WebGL Error:  ';
