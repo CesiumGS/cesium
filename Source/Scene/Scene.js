@@ -2466,9 +2466,10 @@ define([
             if (context.depthTexture && scene.useDepthPicking && (environmentState.useGlobeDepthFramebuffer || renderTranslucentDepthForPick)) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var depthStencilTexture = renderTranslucentDepthForPick ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
+                var colorTexture = passState.framebuffer.getColorTexture(0);
                 var pickDepth = getPickDepth(scene, index);
-                pickDepth.update(context, depthStencilTexture);
-                pickDepth.executeCopyDepth(context, passState);
+                pickDepth.update(context, depthStencilTexture, colorTexture);
+                pickDepth.executeCopyDepth(context, passState, usePrimitiveFramebuffer, picking);
             }
 
             if (picking || !usePostProcessSelected) {
