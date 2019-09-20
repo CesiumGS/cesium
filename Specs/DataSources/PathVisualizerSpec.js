@@ -408,6 +408,40 @@ describe('DataSources/PathVisualizer', function() {
         expect(primitive.id).toEqual(testObject);
     });
 
+    it('Visualizer destroys primitives when all items are removed.', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0)];
+        var updateTime = new JulianDate(0.5, 0);
+        var positions = [new Cartesian3(1234, 5678, 9101112), new Cartesian3(5678, 1234, 1101112)];
+
+        var entityCollection = new EntityCollection();
+        visualizer = new PathVisualizer(scene, entityCollection);
+
+        expect(scene.primitives.length).toEqual(0);
+
+        var testObject = entityCollection.getOrCreateEntity('test');
+        var position = new SampledPositionProperty();
+        testObject.position = position;
+        position.addSamples(times, positions);
+
+        var path = testObject.path = new PathGraphics();
+        path.show = new ConstantProperty(true);
+        path.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
+        path.width = new ConstantProperty(12.5);
+        path.outlineColor = new ConstantProperty(new Color(0.1, 0.2, 0.3, 0.4));
+        path.outlineWidth = new ConstantProperty(2.5);
+        path.leadTime = new ConstantProperty(25);
+        path.trailTime = new ConstantProperty(10);
+
+        visualizer.update(updateTime);
+
+        expect(scene.primitives.length).toEqual(1);
+
+        entityCollection.removeAll();
+        visualizer.update(updateTime);
+
+        expect(scene.primitives.length).toEqual(0);
+    });
+
     it('subSample works for constant properties', function() {
         var property = new ConstantPositionProperty(new Cartesian3(1000, 2000, 3000));
         var start = new JulianDate(0, 0);

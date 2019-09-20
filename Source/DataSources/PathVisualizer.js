@@ -425,21 +425,22 @@ define([
         //>>includeEnd('debug');
 
         var updaters = this._updaters;
-        for ( var key in updaters) {
+        for (var key in updaters) {
             if (updaters.hasOwnProperty(key)) {
                 updaters[key].update(time);
             }
         }
 
         var items = this._items.values;
-        
-        if (!items.length && defined(this._updaters) && Object.values(this._updaters).length) {
-            for (let u in this._updaters) {
-                this._scene.primitives.removeAndDestroy(this._updaters[u]._polylineCollection);
-            };
+        if (items.length === 0 && defined(this._updaters) && Object.keys(this._updaters).length > 0) {
+            for (var u in updaters) {
+                if (updaters.hasOwnProperty(u)) {
+                    updaters[u].destroy();
+                }
+            }
             this._updaters = {};
-        };
-        
+        }
+
         for (var i = 0, len = items.length; i < len; i++) {
             var item = items[i];
             var entity = item.entity;
