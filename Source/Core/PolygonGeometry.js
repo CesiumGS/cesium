@@ -27,7 +27,9 @@ define([
         './Matrix3',
         './PolygonGeometryLibrary',
         './PolygonPipeline',
+        './PolylinePipeline',
         './Quaternion',
+        './Queue',
         './Rectangle',
         './VertexFormat',
         './WindingOrder'
@@ -60,7 +62,9 @@ define([
         Matrix3,
         PolygonGeometryLibrary,
         PolygonPipeline,
+        PolylinePipeline,
         Quaternion,
+        Queue,
         Rectangle,
         VertexFormat,
         WindingOrder) {
@@ -68,6 +72,7 @@ define([
 
     var scratchCarto1 = new Cartographic();
     var scratchCarto2 = new Cartographic();
+
     function adjustPosHeightsForNormal(position, p1, p2, ellipsoid) {
         var carto1 = ellipsoid.cartesianToCartographic(position, scratchCarto1);
         var height = carto1.height;
@@ -164,12 +169,12 @@ define([
                 length /= 2;
             }
 
-            for ( var i = 0; i < length; i += 3) {
+            for (var i = 0; i < length; i += 3) {
                 var position = Cartesian3.fromArray(flatPositions, i, appendTextureCoordinatesCartesian3);
 
                 if (vertexFormat.st) {
                     var p = Matrix3.multiplyByVector(textureMatrix, position, scratchPosition);
-                    p = ellipsoid.scaleToGeodeticSurface(p,p);
+                    p = ellipsoid.scaleToGeodeticSurface(p, p);
                     var st = tangentPlane.projectPointOntoPlane(p, appendTextureCoordinatesCartesian2);
                     Cartesian2.subtract(st, origin, st);
 
@@ -242,7 +247,7 @@ define([
                             normals[attrIndex + bottomOffset] = normal.x;
                             normals[attrIndex1 + bottomOffset] = normal.y;
                             normals[attrIndex2 + bottomOffset] = normal.z;
-                        } else if (bottom){
+                        } else if (bottom) {
                             normals[attrIndex + bottomOffset] = -normal.x;
                             normals[attrIndex1 + bottomOffset] = -normal.y;
                             normals[attrIndex2 + bottomOffset] = -normal.z;
@@ -275,7 +280,7 @@ define([
                             tangents[attrIndex2 + bottomOffset] = -tangent.z;
                         }
 
-                        if(top) {
+                        if (top) {
                             if (perPositionHeight) {
                                 tangents[attrIndex] = scratchPerPosTangent.x;
                                 tangents[attrIndex1] = scratchPerPosTangent.y;
@@ -383,6 +388,7 @@ define([
         eastOverIDL : 0.0
     };
     var ellipsoidGeodesic = new EllipsoidGeodesic();
+
     function computeRectangle(positions, ellipsoid, arcType, granularity, result) {
         result = defaultValue(result, new Rectangle());
         if (!defined(positions) || positions.length < 3) {
@@ -445,6 +451,7 @@ define([
     }
 
     var interpolatedCartographicScratch = new Cartographic();
+
     function interpolateAndGrowRectangle(ellipsoidGeodesic, inverseChordLength, result, idlCross) {
         var segmentLength = ellipsoidGeodesic.surfaceDistance;
 
@@ -463,7 +470,7 @@ define([
             result.south = Math.min(result.south, latitude);
             result.north = Math.max(result.north, latitude);
 
-            var lonAdjusted = longitude >= 0 ?  longitude : longitude +  CesiumMath.TWO_PI;
+            var lonAdjusted = longitude >= 0 ? longitude : longitude + CesiumMath.TWO_PI;
             idlCross.westOverIDL = Math.min(idlCross.westOverIDL, lonAdjusted);
             idlCross.eastOverIDL = Math.max(idlCross.eastOverIDL, lonAdjusted);
         }
@@ -910,23 +917,23 @@ define([
         return computeRectangle(polygonHierarchy.positions, ellipsoid, arcType, granularity, result);
     };
 
-    var cartographicScratchArray = [];
     function cartesian3ToCartographicAsCartesian2(ellipsoid) {
-        return function (positions) {
+        return function(positions) {
             var numberOfPoints = positions.length;
+            var result = new Array(numberOfPoints);
+            var carto = ellipsoid.cartesianToCartographic(positions[0], scratchCarto1);
+            var lastLongitude = carto.longitude;
+            result[0] = new Cartesian2(carto.longitude, carto.latitude);
 
-            var i;
-            if (cartographicScratchArray.length < numberOfPoints) {
-                for (i = cartographicScratchArray.length; i < numberOfPoints; i++) {
-                    cartographicScratchArray.push(new Cartographic());
+            for (var i = 1; i < numberOfPoints; i++) {
+                carto = ellipsoid.cartesianToCartographic(positions[i], scratchCarto1);
+                var lon = carto.longitude;
+                if (Math.abs(lon - lastLongitude) > CesiumMath.PI) {
+                    // assume the position crosses the IDL if the degrees change to be more than 180degrees away
+                    lon += CesiumMath.TWO_PI;
                 }
-            }
-
-            var cartographicPositions = ellipsoid.cartesianArrayToCartographicArray(positions, cartographicScratchArray);
-            var result = [];
-            for (i = 0; i < numberOfPoints; i++) {
-                var cartographicPosition = cartographicPositions[i];
-                result.push(new Cartesian2(cartographicPosition.longitude, cartographicPosition.latitude));
+                lastLongitude = lon;
+                result[i] = new Cartesian2(lon, carto.latitude);
             }
 
             return result;
@@ -982,18 +989,18 @@ define([
         var extrude = polygonGeometry._perPositionHeightExtrude || !CesiumMath.equalsEpsilon(height, extrudedHeight, 0, CesiumMath.EPSILON2);
 
         var options = {
-            perPositionHeight: perPositionHeight,
-            vertexFormat: vertexFormat,
-            geometry: undefined,
-            tangentPlane: tangentPlane,
-            boundingRectangle: boundingRectangle,
-            ellipsoid: ellipsoid,
-            stRotation: stRotation,
-            bottom: false,
-            top: true,
-            wall: false,
-            extrude: false,
-            arcType: arcType
+            perPositionHeight : perPositionHeight,
+            vertexFormat : vertexFormat,
+            geometry : undefined,
+            tangentPlane : tangentPlane,
+            boundingRectangle : boundingRectangle,
+            ellipsoid : ellipsoid,
+            stRotation : stRotation,
+            bottom : false,
+            top : true,
+            wall : false,
+            extrude : false,
+            arcType : arcType
         };
 
         var i;
@@ -1028,7 +1035,7 @@ define([
 
                 var walls = splitGeometry.walls;
                 options.wall = true;
-                for ( var k = 0; k < walls.length; k++) {
+                for (var k = 0; k < walls.length; k++) {
                     var wall = walls[k];
                     options.geometry = PolygonGeometryLibrary.scaleToGeodeticHeightExtruded(wall.geometry, height, extrudedHeight, ellipsoid, perPositionHeight);
                     wall.geometry = computeAttributes(options);
@@ -1052,7 +1059,7 @@ define([
                     geometryInstance.geometry.attributes.applyOffset = new GeometryAttribute({
                         componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                         componentsPerAttribute : 1,
-                        values: applyOffset
+                        values : applyOffset
                     });
                 }
 
@@ -1099,7 +1106,7 @@ define([
             extrudedHeight : minHeight,
             height : maxHeight,
             vertexFormat : VertexFormat.POSITION_ONLY,
-            shadowVolume: true,
+            shadowVolume : true,
             arcType : polygonGeometry._arcType
         });
     };
