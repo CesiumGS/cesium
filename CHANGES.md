@@ -24,7 +24,7 @@ Change Log
 * Fixed per-feature post processing from sometimes selecting the wrong feature. [#7929](https://github.com/AnalyticalGraphicsInc/cesium/pull/7929)
 * Fixed labels not showing for individual entities in data sources when clustering is enabled. [#6087](https://github.com/AnalyticalGraphicsInc/cesium/issues/6087)
 * Fixed a crash for 3D Tiles that have zero volume. [#7945](https://github.com/AnalyticalGraphicsInc/cesium/pull/7945)
-
+* `pickPosition` no longer returns incorrect results on the globe when `scene.globe.depthTestAgainstTerrain` is `false`. [#8207](https://github.com/AnalyticalGraphicsInc/cesium/pull/8207)
 
 ### 1.61 - 2019-09-03
 
