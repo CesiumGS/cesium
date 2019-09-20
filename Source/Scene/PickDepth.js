@@ -28,7 +28,10 @@ define([
 
         this._depthTexture = undefined;
         this._textureToCopy = undefined;
+        this._colorTextureMask = undefined;
         this._copyDepthCommand = undefined;
+        this._copyDepthCommandRender = undefined;
+        this._copyDepthCommandPick = undefined;
 
         this._useLogDepth = undefined;
 
@@ -113,32 +116,77 @@ define([
     }
 
     function updateCopyCommands(pickDepth, context, depthTexture, colorTextureMask) {
+        var fs;
         if (!defined(pickDepth._copyDepthCommand)) {
-            var fs =
+            // Passthrough depth copy
+            fs =
                 'uniform sampler2D u_texture;\n' +
-                'uniform sampler2D u_colorTextureMask;\n' +
                 'varying vec2 v_textureCoordinates;\n' +
                 'void main()\n' +
                 '{\n' +
-                '    float pickDepth = texture2D(u_texture, v_textureCoordinates).r;\n' +
-                '    bool noColor = all(equal(texture2D(u_colorTextureMask, v_textureCoordinates), vec4(0.0)));\n' +
-                '    if (noColor)\n' +
-                '    {\n' +
-                '        gl_FragColor = texture2D(czm_globeDepthTexture, v_textureCoordinates);\n' +
-                '    }\n' +
-                '    else\n' +
-                '    {\n' +
-                '        gl_FragColor = czm_packDepth(pickDepth);\n' +
-                '    }\n' +
+                '    gl_FragColor = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
                 '}\n';
             pickDepth._copyDepthCommand = context.createViewportQuadCommand(fs, {
                 renderState : RenderState.fromCache(),
                 uniformMap : {
                     u_texture : function() {
                         return pickDepth._textureToCopy;
+                    }
+                },
+                owner : pickDepth
+            });
+        }
+
+        if (!defined(pickDepth._copyDepthCommandRender)) {
+            // If alpha is less than one, use globe depth instead of scene depth. Globe depth will overwrite areas where
+            // there is translucent geometry or no geometry (like the depth plane).
+            fs =
+                'uniform sampler2D u_texture;\n' +
+                'uniform sampler2D u_colorTextureMask;\n' +
+                'varying vec2 v_textureCoordinates;\n' +
+                'void main()\n' +
+                '{\n' +
+                '    vec4 pickDepth = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
+                '    vec4 globeDepth = texture2D(czm_globeDepthTexture, v_textureCoordinates);\n' +
+                '    bool mask = texture2D(u_colorTextureMask, v_textureCoordinates).a < 1.0;\n' +
+                '    gl_FragColor = czm_branchFreeTernary(mask, globeDepth, pickDepth);\n' +
+                '}\n';
+            pickDepth._copyDepthCommandRender = context.createViewportQuadCommand(fs, {
+                renderState : RenderState.fromCache(),
+                uniformMap : {
+                    u_texture : function() {
+                        return pickDepth._textureToCopy;
                     },
                     u_colorTextureMask : function() {
-                        return colorTextureMask;
+                        return pickDepth._colorTextureMask;
+                    }
+                },
+                owner : pickDepth
+            });
+        }
+
+        if (!defined(pickDepth._copyDepthCommandPick)) {
+            // If color is (0,0,0,0), use globe depth instead of scene depth. Globe depth will overwrite areas where
+            // there is no geometry (like the depth plane).
+            fs =
+                'uniform sampler2D u_texture;\n' +
+                'uniform sampler2D u_colorTextureMask;\n' +
+                'varying vec2 v_textureCoordinates;\n' +
+                'void main()\n' +
+                '{\n' +
+                '    vec4 pickDepth = czm_packDepth(texture2D(u_texture, v_textureCoordinates).r);\n' +
+                '    vec4 globeDepth = texture2D(czm_globeDepthTexture, v_textureCoordinates);\n' +
+                '    bool mask = all(equal(texture2D(u_colorTextureMask, v_textureCoordinates), vec4(0.0)));\n' +
+                '    gl_FragColor = czm_branchFreeTernary(mask, globeDepth, pickDepth);\n' +
+                '}\n';
+            pickDepth._copyDepthCommandPick = context.createViewportQuadCommand(fs, {
+                renderState : RenderState.fromCache(),
+                uniformMap : {
+                    u_texture : function() {
+                        return pickDepth._textureToCopy;
+                    },
+                    u_colorTextureMask : function() {
+                        return pickDepth._colorTextureMask;
                     }
                 },
                 owner : pickDepth
@@ -146,7 +194,10 @@ define([
         }
 
         pickDepth._textureToCopy = depthTexture;
+        pickDepth._colorTextureMask = colorTextureMask;
         pickDepth._copyDepthCommand.framebuffer = pickDepth._framebuffer;
+        pickDepth._copyDepthCommandRender.framebuffer = pickDepth._framebuffer;
+        pickDepth._copyDepthCommandPick.framebuffer = pickDepth._framebuffer;
     }
 
     PickDepth.prototype.executeDebugPickDepth = function(context, passState, useLogDepth) {
@@ -175,8 +226,14 @@ define([
         return Cartesian4.dot(packedDepth, packedDepthScale);
     };
 
-    PickDepth.prototype.executeCopyDepth = function(context, passState) {
-        this._copyDepthCommand.execute(context, passState);
+    PickDepth.prototype.executeCopyDepth = function(context, passState, copyGlobeDepth, picking) {
+        if (!copyGlobeDepth) {
+            this._copyDepthCommand.execute(context, passState);
+        } else if (picking) {
+            this._copyDepthCommandPick.execute(context, passState);
+        } else {
+            this._copyDepthCommandRender.execute(context, passState);
+        }
     };
 
     PickDepth.prototype.isDestroyed = function() {
@@ -188,6 +245,8 @@ define([
         destroyFramebuffers(this);
 
         this._copyDepthCommand.shaderProgram = defined(this._copyDepthCommand.shaderProgram) && this._copyDepthCommand.shaderProgram.destroy();
+        this._copyDepthCommandRender.shaderProgram = defined(this._copyDepthCommandRender.shaderProgram) && this._copyDepthCommandRender.shaderProgram.destroy();
+        this._copyDepthCommandPick.shaderProgram = defined(this._copyDepthCommandPick.shaderProgram) && this._copyDepthCommandPick.shaderProgram.destroy();
 
         return destroyObject(this);
     };

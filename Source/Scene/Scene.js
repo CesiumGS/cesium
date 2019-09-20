@@ -2275,16 +2275,16 @@ define([
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : view.globeDepth;
 
-            var fb;
-            if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                globeDepth.update(context, passState, view.viewport);
-                globeDepth.clear(context, passState, scene._clearColorCommand.color);
-                fb = passState.framebuffer;
+            if (usePrimitiveFramebuffer) {
+                // Render to globe framebuffer in GLOBE pass
                 passState.framebuffer = globeDepth.framebuffer;
             }
 
-            if (usePrimitiveFramebuffer) {
-                // TODO comment
+            var fb;
+            if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
+                globeDepth.update(context, passState, view.viewport, scene._hdr, clearGlobeDepth);
+                globeDepth.clear(context, passState, scene._clearColorCommand.color);
+                fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
             }
 
@@ -2325,7 +2325,7 @@ define([
             }
 
             if (usePrimitiveFramebuffer) {
-                // TODO comment
+                // Render to primitive framebuffer in all other passes
                 passState.framebuffer = globeDepth.primitiveFramebuffer;
             }
 
@@ -2466,9 +2466,10 @@ define([
             if (context.depthTexture && scene.useDepthPicking && (environmentState.useGlobeDepthFramebuffer || renderTranslucentDepthForPick)) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var depthStencilTexture = renderTranslucentDepthForPick ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
+                var colorTexture = passState.framebuffer.getColorTexture(0);
                 var pickDepth = getPickDepth(scene, index);
-                pickDepth.update(context, depthStencilTexture, passState.framebuffer.getColorTexture(0));
-                pickDepth.executeCopyDepth(context, passState);
+                pickDepth.update(context, depthStencilTexture, colorTexture);
+                pickDepth.executeCopyDepth(context, passState, usePrimitiveFramebuffer, picking);
             }
 
             if (picking || !usePostProcessSelected) {
@@ -3047,7 +3048,7 @@ define([
         // Globe depth is copied for the pick pass to support picking batched geometries in GroundPrimitives.
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(view.globeDepth);
         if (useGlobeDepthFramebuffer) {
-            view.globeDepth.update(context, passState, view.viewport, scene._hdr);
+            view.globeDepth.update(context, passState, view.viewport, scene._hdr, environmentState.clearGlobeDepth);
             view.globeDepth.clear(context, passState, clearColor);
         }
 
@@ -3130,7 +3131,7 @@ define([
         var idFramebuffer = view.sceneFramebuffer.getIdFramebuffer();
 
         if (usePrimitiveFramebuffer) {
-            // TODO comment
+            // Merge primitive framebuffer into globe framebuffer
             globeDepth.executeMergeColor(context, passState);
         }
 

@@ -83,6 +83,7 @@ define([
 
         this._useLogDepth = undefined;
         this._useHdr = undefined;
+        this._clearGlobeDepth = undefined;
 
         this._debugGlobeDepthViewportCommand = undefined;
     }
@@ -181,23 +182,9 @@ define([
         });
     }
 
-    function createTextures(globeDepth, context, width, height, hdr) {
+    function createTextures(globeDepth, context, width, height, hdr, clearGlobeDepth) {
         var pixelDatatype = hdr ? (context.halfFloatingPointTexture ? PixelDatatype.HALF_FLOAT : PixelDatatype.FLOAT) : PixelDatatype.UNSIGNED_BYTE;
         globeDepth._globeColorTexture = new Texture({
-            context : context,
-            width : width,
-            height : height,
-            pixelFormat : PixelFormat.RGBA,
-            pixelDatatype : pixelDatatype,
-            sampler : new Sampler({
-                wrapS : TextureWrap.CLAMP_TO_EDGE,
-                wrapT : TextureWrap.CLAMP_TO_EDGE,
-                minificationFilter : TextureMinificationFilter.NEAREST,
-                magnificationFilter : TextureMagnificationFilter.NEAREST
-            })
-        });
-
-        globeDepth._primitiveColorTexture = new Texture({
             context : context,
             width : width,
             height : height,
@@ -232,19 +219,28 @@ define([
                 magnificationFilter : TextureMagnificationFilter.NEAREST
             })
         });
+
+        if (clearGlobeDepth) {
+            globeDepth._primitiveColorTexture = new Texture({
+                context : context,
+                width : width,
+                height : height,
+                pixelFormat : PixelFormat.RGBA,
+                pixelDatatype : pixelDatatype,
+                sampler : new Sampler({
+                    wrapS : TextureWrap.CLAMP_TO_EDGE,
+                    wrapT : TextureWrap.CLAMP_TO_EDGE,
+                    minificationFilter : TextureMinificationFilter.NEAREST,
+                    magnificationFilter : TextureMagnificationFilter.NEAREST
+                })
+            });
+        }
     }
 
-    function createFramebuffers(globeDepth, context) {
+    function createFramebuffers(globeDepth, context, clearGlobeDepth) {
         globeDepth._globeColorFramebuffer = new Framebuffer({
             context : context,
             colorTextures : [globeDepth._globeColorTexture],
-            depthStencilTexture : globeDepth._depthStencilTexture,
-            destroyAttachments : false
-        });
-
-        globeDepth._primitiveColorFramebuffer = new Framebuffer({
-            context : context,
-            colorTextures : [globeDepth._primitiveColorTexture],
             depthStencilTexture : globeDepth._depthStencilTexture,
             destroyAttachments : false
         });
@@ -254,16 +250,26 @@ define([
             colorTextures : [globeDepth._globeDepthTexture],
             destroyAttachments : false
         });
+
+        if (clearGlobeDepth) {
+            globeDepth._primitiveColorFramebuffer = new Framebuffer({
+                context : context,
+                colorTextures : [globeDepth._primitiveColorTexture],
+                depthStencilTexture : globeDepth._depthStencilTexture,
+                destroyAttachments : false
+            });
+        }
     }
 
-    function updateFramebuffers(globeDepth, context, width, height, hdr) {
+    function updateFramebuffers(globeDepth, context, width, height, hdr, clearGlobeDepth) {
         var colorTexture = globeDepth._globeColorTexture;
-        var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height || hdr !== globeDepth._useHdr;
+        var textureChanged = !defined(colorTexture) || colorTexture.width !== width || colorTexture.height !== height ||
+            hdr !== globeDepth._useHdr || clearGlobeDepth !== globeDepth._clearGlobeDepth;
         if (!defined(globeDepth._globeColorFramebuffer) || textureChanged) {
             destroyTextures(globeDepth);
             destroyFramebuffers(globeDepth);
-            createTextures(globeDepth, context, width, height, hdr);
-            createFramebuffers(globeDepth, context);
+            createTextures(globeDepth, context, width, height, hdr, clearGlobeDepth);
+            createFramebuffers(globeDepth, context, clearGlobeDepth);
         }
     }
 
@@ -413,15 +419,16 @@ define([
         executeDebugGlobeDepth(this, context, passState, useLogDepth);
     };
 
-    GlobeDepth.prototype.update = function(context, passState, viewport, hdr) {
+    GlobeDepth.prototype.update = function(context, passState, viewport, hdr, clearGlobeDepth) {
         var width = viewport.width;
         var height = viewport.height;
 
-        updateFramebuffers(this, context, width, height, hdr);
+        updateFramebuffers(this, context, width, height, hdr, clearGlobeDepth);
         updateCopyCommands(this, context, width, height, passState);
         context.uniformState.globeDepthTexture = undefined;
 
         this._useHdr = hdr;
+        this._clearGlobeDepth = clearGlobeDepth;
     };
 
     GlobeDepth.prototype.executeCopyDepth = function(context, passState) {
