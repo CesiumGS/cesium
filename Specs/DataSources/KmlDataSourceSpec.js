@@ -110,7 +110,8 @@ describe('DataSources/KmlDataSource', function() {
         canvas : {
             clientWidth : 512,
             clientHeight : 512
-        }
+        },
+        credit: 'This is my credit'
     };
     options.camera.frustum.fov = CesiumMath.PI_OVER_FOUR;
     options.camera.frustum.aspectRatio = 1.0;
@@ -131,6 +132,7 @@ describe('DataSources/KmlDataSource', function() {
         expect(dataSource.loadingEvent).toBeInstanceOf(Event);
         expect(dataSource.unsupportedNodeEvent).toBeInstanceOf(Event);
         expect(dataSource.show).toBe(true);
+        expect(dataSource.credit).toBeInstanceOf(Credit);
     });
 
     it('setting name raises changed event', function() {

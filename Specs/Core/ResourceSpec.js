@@ -1720,7 +1720,6 @@ describe('Core/Resource', function() {
                 }).then(function(result) {
                     expect(result.type).toEqual('image/png');
 
-                    /*global URL*/
                     var blobUrl = URL.createObjectURL(result);
 
                     return Resource.fetchImage(blobUrl).then(function(image) {

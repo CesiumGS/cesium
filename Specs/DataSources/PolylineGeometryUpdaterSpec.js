@@ -795,6 +795,23 @@ describe('DataSources/PolylineGeometryUpdater', function() {
         expect(scene.groundPrimitives.length).toBe(0);
     });
 
+    it('calls generateCartesianRhumbArc for RHUMB arcType', function() {
+        var entity = createBasicPolyline();
+        entity.polyline.width = createDynamicProperty(1);
+        entity.polyline.arcType = ArcType.RHUMB;
+
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
+        spyOn(PolylinePipeline, 'generateCartesianRhumbArc').and.callThrough();
+        dynamicUpdater.update(time);
+        expect(PolylinePipeline.generateCartesianRhumbArc).toHaveBeenCalled();
+        dynamicUpdater.destroy();
+        updater.destroy();
+
+        expect(scene.primitives.length).toBe(0);
+        expect(scene.groundPrimitives.length).toBe(0);
+    });
+
     it('arcType GEODESIC with undefined globe does not call generateCartesianArc', function() {
         if (!Entity.supportsPolylinesOnTerrain(scene)) {
             return;

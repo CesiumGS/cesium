@@ -2326,6 +2326,16 @@ import WallGraphics from './WallGraphics.js';
             data = Resource.createIfNeeded(data);
             promise = data.fetchBlob();
             sourceUri = defaultValue(sourceUri, data.clone());
+
+            // Add resource credits to our list of credits to display
+            var resourceCredits = dataSource._resourceCredits;
+            var credits = data.credits;
+            if (defined(credits)) {
+                var length = credits.length;
+                for (var i = 0; i < length; i++) {
+                    resourceCredits.push(credits[i]);
+                }
+            }
         } else {
             sourceUri = defaultValue(sourceUri, Resource.DEFAULT.clone());
         }
@@ -2407,6 +2417,7 @@ import WallGraphics from './WallGraphics.js';
      * @param {Camera} options.camera The camera that is used for viewRefreshModes and sending camera properties to network links.
      * @param {Canvas} options.canvas The canvas that is used for sending viewer properties to network links.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see {@link http://www.opengeospatial.org/standards/kml/|Open Geospatial Consortium KML Standard}
      * @see {@link https://developers.google.com/kml/|Google KML Documentation}
@@ -2460,6 +2471,16 @@ import WallGraphics from './WallGraphics.js';
         };
 
         this._ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
+
+        // User specified credit
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
+
+        // Create a list of Credit's from the resource that the user can't remove
+        this._resourceCredits = [];
     }
 
     /**
@@ -2472,6 +2493,7 @@ import WallGraphics from './WallGraphics.js';
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links and other KML network features.
      * @param {Boolean} [options.clampToGround=false] true if we want the geometry features (Polygons, LineStrings and LinearRings) clamped to the ground.
      * @param {Ellipsoid} [options.ellipsoid=Ellipsoid.WGS84] The global ellipsoid used for geographical calculations.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @returns {Promise.<KmlDataSource>} A promise that will resolve to a new KmlDataSource instance once the KML is loaded.
      */
@@ -2612,6 +2634,16 @@ import WallGraphics from './WallGraphics.js';
                 }
                 //>>includeEnd('debug');
                 this._entityCluster = value;
+            }
+        },
+        /**
+         * Gets the credit that will be displayed for the data source
+         * @memberof KmlDataSource.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
             }
         }
     });

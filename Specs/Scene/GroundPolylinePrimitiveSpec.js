@@ -40,6 +40,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
     ]);
 
     var lookPosition = Cartesian3.fromDegrees(0.02, 0.0);
+    var lookPositionOffset = Cartesian3.fromDegrees(0.02, 0.0001);
 
     beforeAll(function() {
         scene = createScene();
@@ -309,7 +310,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         expect(frameState.commandList.length).toEqual(0);
     });
 
-    function verifyGroundPolylinePrimitiveRender(primitive, color) {
+    function verifyGroundPolylinePrimitiveRender(lookPosition, primitive, color) {
         scene.camera.lookAt(lookPosition, Cartesian3.UNIT_Z);
 
         scene.groundPrimitives.add(depthRectanglePrimitive);
@@ -333,7 +334,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
     });
 
     it('renders in Columbus view when scene3DOnly is false', function() {
@@ -348,7 +349,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         });
 
         scene.morphToColumbusView(0);
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
     });
 
     it('renders in 2D when scene3DOnly is false', function() {
@@ -363,7 +364,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         });
 
         scene.morphTo2D(0);
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
     });
 
     it('renders during morph when scene3DOnly is false', function() {
@@ -396,7 +397,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         scene.render();
 
         scene.morphToColumbusView(1);
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
         scene.completeMorph();
     });
 
@@ -439,7 +440,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, [192, 192, 255, 255]);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, [192, 192, 255, 255]);
     });
 
     it('renders bounding volume with debugShowBoundingVolume', function() {
@@ -499,7 +500,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
 
         var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes('polyline on terrain');
         expect(attributes.color).toBeDefined();
@@ -516,7 +517,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
 
         // Remove so it can be re-added, but don't destroy.
         scene.groundPrimitives.destroyPrimitives = false;
@@ -528,7 +529,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         expect(attributes.color).toBeDefined();
         attributes.color = newColor;
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, newColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, newColor);
     });
 
     it('adds width instance attribute', function() {
@@ -542,7 +543,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPositionOffset, groundPolylinePrimitive, polylineColor);
 
         scene.groundPrimitives.destroyPrimitives = false;
         scene.groundPrimitives.removeAll();
@@ -552,7 +553,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         expect(attributes.width).toBeDefined();
         attributes.width = [0];
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, depthColor);
+        verifyGroundPolylinePrimitiveRender(lookPositionOffset, groundPolylinePrimitive, depthColor);
     });
 
     it('modify show instance attribute', function() {
@@ -568,7 +569,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
 
         scene.groundPrimitives.destroyPrimitives = false;
         scene.groundPrimitives.removeAll();
@@ -578,7 +579,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         expect(attributes.show).toBeDefined();
         attributes.show = [0];
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, depthColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, depthColor);
     });
 
     it('renders with distance display condition per instance attribute', function() {
@@ -644,7 +645,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
 
         var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes('polyline on terrain');
         var attributes2 = groundPolylinePrimitive.getGeometryInstanceAttributes('polyline on terrain');
@@ -662,7 +663,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
 
         expect(scene).toPickAndCall(function(result) {
             expect(result.primitive).toEqual(groundPolylinePrimitive);
@@ -682,7 +683,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         });
 
         scene.morphTo2D(0);
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
 
         expect(scene).toPickAndCall(function(result) {
             expect(result.primitive).toEqual(groundPolylinePrimitive);
@@ -702,7 +703,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         });
 
         scene.morphToColumbusView(0);
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
 
         expect(scene).toPickAndCall(function(result) {
             expect(result.primitive).toEqual(groundPolylinePrimitive);
@@ -741,7 +742,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         scene.render();
 
         scene.morphToColumbusView(1);
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
 
         expect(scene).toPickAndCall(function(result) {
             expect(result.primitive).toEqual(groundPolylinePrimitive);
@@ -762,7 +763,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
 
         expect(scene).toPickAndCall(function(result) {
             expect(result.id).toEqual('depth rectangle');
@@ -784,7 +785,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
         });
 
         expect(function() {
-            verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+            verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
         }).toThrowDeveloperError();
     });
 
@@ -799,7 +800,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
 
         var attributes = groundPolylinePrimitive.getGeometryInstanceAttributes('polyline on terrain');
 
@@ -847,7 +848,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             appearance : new PolylineColorAppearance()
         });
 
-        verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+        verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
 
         expect(function() {
             groundPolylinePrimitive.getGeometryInstanceAttributes();
@@ -897,7 +898,7 @@ describe('Scene/GroundPolylinePrimitive', function() {
             }
             return groundPolylinePrimitive.ready;
         }).then(function() {
-            verifyGroundPolylinePrimitiveRender(groundPolylinePrimitive, polylineColor);
+            verifyGroundPolylinePrimitiveRender(lookPosition, groundPolylinePrimitive, polylineColor);
         });
     });
 

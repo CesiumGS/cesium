@@ -46,7 +46,6 @@ import when from '../ThirdParty/when.js';
         var postMessage;
 
         return function(event) {
-            /*global self*/
             var data = event.data;
 
             var transferableObjects = [];

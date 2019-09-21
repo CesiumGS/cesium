@@ -3172,8 +3172,6 @@ import View from './View.js';
         }
         frameState.backgroundColor = backgroundColor;
 
-        frameState.creditDisplay.beginFrame();
-
         scene.fog.update(frameState);
 
         us.update(frameState);
@@ -3219,7 +3217,6 @@ import View from './View.js';
             }
         }
 
-        frameState.creditDisplay.endFrame();
         context.endFrame();
     }
 
@@ -3296,6 +3293,7 @@ import View from './View.js';
 
         if (shouldRender) {
             this._preRender.raiseEvent(this, time);
+            frameState.creditDisplay.beginFrame();
             tryAndCatchError(this, render);
         }
 
@@ -3313,6 +3311,7 @@ import View from './View.js';
 
         if (shouldRender) {
             this._postRender.raiseEvent(this, time);
+            frameState.creditDisplay.endFrame();
         }
     };
 

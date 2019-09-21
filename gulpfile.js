@@ -293,6 +293,13 @@ function generateDocumentation() {
 }
 gulp.task('generateDocumentation', generateDocumentation);
 
+gulp.task('generateDocumentation-watch', function() {
+    return generateDocumentation().done(function() {
+        console.log('Listening for changes in documentation...');
+        return gulp.watch(sourceFiles, gulp.series('generateDocumentation'));
+    });
+});
+
 gulp.task('release', gulp.series('generateStubs', combine, minifyRelease, generateDocumentation));
 
 gulp.task('makeZipFile', gulp.series('release', function() {

@@ -10,8 +10,6 @@
  [jasmine-gem]: http://github.com/pivotal/jasmine-gem
  */
 
-/*global require*/
-
 (function() {
     'use strict';
 
@@ -60,7 +58,7 @@
             Cesium,
             paths) {
 
-        /*global jasmineRequire,jasmine,exports,specs*/
+        /*global jasmineRequire,exports,specs*/
 
         var when = Cesium.when;
 
