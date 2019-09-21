@@ -28,6 +28,7 @@ import CullFace from './CullFace.js';
      * @see DebugAppearance
      * @see PolylineColorAppearance
      * @see PolylineMaterialAppearance
+     * @see PerInstanceColorAppearance
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
      */

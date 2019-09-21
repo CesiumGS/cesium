@@ -87,7 +87,6 @@ import { FeatureDetection } from '../Source/Cesium.js';
         var deltaMode = defaultValue(options.deltaMode, 0);
 
         try {
-            /*global WheelEvent*/
             return new WheelEvent(type, {
                 view : view,
                 detail : detail,

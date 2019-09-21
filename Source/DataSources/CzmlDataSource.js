@@ -2060,11 +2060,28 @@ import WallGraphics from './WallGraphics.js';
         var promise = czml;
         var sourceUri = options.sourceUri;
 
+        // User specified credit
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        dataSource._credit = credit;
+
         // If the czml is a URL
         if (typeof czml === 'string' || (czml instanceof Resource)) {
             czml = Resource.createIfNeeded(czml);
             promise = czml.fetchJson();
             sourceUri = defaultValue(sourceUri, czml.clone());
+
+            // Add resource credits to our list of credits to display
+            var resourceCredits = dataSource._resourceCredits;
+            var credits = czml.credits;
+            if (defined(credits)) {
+                var length = credits.length;
+                for (var i = 0; i < length; i++) {
+                    resourceCredits.push(credits[i]);
+                }
+            }
         }
 
         sourceUri = Resource.createIfNeeded(sourceUri);
@@ -2137,6 +2154,8 @@ import WallGraphics from './WallGraphics.js';
         this._version = undefined;
         this._entityCollection = new EntityCollection(this);
         this._entityCluster = new EntityCluster();
+        this._credit = undefined;
+        this._resourceCredits = [];
     }
 
     /**
@@ -2145,6 +2164,7 @@ import WallGraphics from './WallGraphics.js';
      * @param {Resource|String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {Resource|String} [options.sourceUri] Overrides the url to use for resolving relative links.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to the new instance once the data is processed.
      */
     CzmlDataSource.load = function(czml, options) {
@@ -2256,6 +2276,16 @@ import WallGraphics from './WallGraphics.js';
                 //>>includeEnd('debug');
                 this._entityCluster = value;
             }
+        },
+        /**
+         * Gets the credit that will be displayed for the data source
+         * @memberof CzmlDataSource.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
         }
     });
 
@@ -2305,6 +2335,7 @@ import WallGraphics from './WallGraphics.js';
      * @param {Resource|String|Object} czml A url or CZML object to be processed.
      * @param {Object} [options] An object with the following properties:
      * @param {String} [options.sourceUri] Overrides the url to use for resolving relative links.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      * @returns {Promise.<CzmlDataSource>} A promise that resolves to this instances once the data is processed.
      */
     CzmlDataSource.prototype.load = function(czml, options) {

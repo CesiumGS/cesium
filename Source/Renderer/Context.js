@@ -30,9 +30,6 @@ import Texture from './Texture.js';
 import TextureCache from './TextureCache.js';
 import UniformState from './UniformState.js';
 import VertexArray from './VertexArray.js';
-    /*global WebGLRenderingContext*/
-
-    /*global WebGL2RenderingContext*/
 
     function errorToString(gl, error) {
         var message = 'WebGL Error:  ';

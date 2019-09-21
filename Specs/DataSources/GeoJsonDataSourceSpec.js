@@ -264,6 +264,15 @@ describe('DataSources/GeoJsonDataSource', function() {
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
         expect(dataSource.show).toBe(true);
+        expect(dataSource.credit).toBeUndefined();
+    });
+
+    it('credit gets set from options', function() {
+        return GeoJsonDataSource.load(point, {
+                credit: 'This is my credit'
+            }).then(function(dataSource) {
+                expect(dataSource.credit).toBeInstanceOf(Credit);
+            });
     });
 
     it('setting name raises changed event', function() {
