@@ -28,7 +28,7 @@ define([
         createFrameState) {
         'use strict';
 
-describe('Core/Cartesian2', function() {
+describe('Renderer/AutomaticUniforms', function() {
 
     var context;
 

@@ -16,7 +16,7 @@ define([
         createFrameState) {
         'use strict';
 
-describe('Core/BoundingRectangle', function() {
+describe('Renderer/BuiltinFunctions', function() {
 
     var context;
 
