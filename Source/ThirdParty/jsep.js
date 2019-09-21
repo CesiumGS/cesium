@@ -2,8 +2,7 @@
 //     JSEP may be freely distributed under the MIT License
 //     http://jsep.from.so/
 
-var exports = {};
-var module = { exports: exports };
+var tmp = {};
 
 /*global module: true, exports: true, console: true */
 (function (root) {
@@ -679,6 +678,6 @@ var module = { exports: exports };
 			exports.parse = jsep;
 		}
 	}
-}(this));
+}(tmp));
 
-export default module.exports;
+export default tmp.jsep;

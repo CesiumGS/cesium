@@ -1,3 +1,4 @@
+/* global require */
 import ComponentDatatype from '../Core/ComponentDatatype.js';
 import defined from '../Core/defined.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
