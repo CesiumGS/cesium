@@ -13,7 +13,6 @@
 /Apps
 /Build/Coverage
 /Build/minifyShaders.state
-/Build/Stubs
 /Build/Documentation
 /Cesium-*.zip
 /Documentation
@@ -24,7 +23,6 @@
 /launches
 /server.js
 /Source/copyrightHeader.js
-/Source/main.js
 /Specs
 /ThirdParty
 /Tools

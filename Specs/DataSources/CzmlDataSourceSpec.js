@@ -6,6 +6,7 @@ import { ClockRange } from '../../Source/Cesium.js';
 import { ClockStep } from '../../Source/Cesium.js';
 import { Color } from '../../Source/Cesium.js';
 import { CornerType } from '../../Source/Cesium.js';
+import { Credit } from '../../Source/Cesium.js';
 import { DistanceDisplayCondition } from '../../Source/Cesium.js';
 import { Event } from '../../Source/Cesium.js';
 import { ExtrapolationType } from '../../Source/Cesium.js';

@@ -1,5 +1,6 @@
 import { Cartesian3 } from '../../Source/Cesium.js';
 import { Color } from '../../Source/Cesium.js';
+import { Credit } from '../../Source/Cesium.js';
 import { Event } from '../../Source/Cesium.js';
 import { JulianDate } from '../../Source/Cesium.js';
 import { PolygonHierarchy } from '../../Source/Cesium.js';

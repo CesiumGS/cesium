@@ -1,5 +1,4 @@
-var exports = {};
-var module = { exports: exports };
+var tmp = {};
 
 /*! NoSleep.js v0.9.0 - git.io/vfn01 - Rich Tibbett - MIT license */
 (function webpackUniversalModuleDefinition(root, factory) {
@@ -11,7 +10,7 @@ var module = { exports: exports };
 		exports["NoSleep"] = factory();
 	else
 		root["NoSleep"] = factory();
-})(typeof self !== 'undefined' ? self : this, function() {
+})(tmp, function() {
 return /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
@@ -194,4 +193,4 @@ module.exports = {
 /******/ ]);
 });
 
-export default module.exports;
+export default tmp.NoSleep;

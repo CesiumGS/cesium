@@ -1,5 +1,8 @@
 {
     "extends": "../../.eslintrc.json",
+    "env": {
+        "amd": true
+    },
     "globals": {
         "JSON": true,
         "require": true,
@@ -8,6 +11,7 @@
         "Cesium": true
     },
     "parserOptions": {
+        "ecmaVersion": 5,
         "sourceType": "script"
     },
     "rules": {
