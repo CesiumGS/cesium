@@ -19,5 +19,16 @@
         "no-implicit-globals": "off",
         "no-unused-vars": ["off"],
         "quotes": "off"
-    }
+    },
+    "overrides": [
+        {
+            "files": [
+                "load-cesium-es6.js"
+            ],
+            "parserOptions": {
+                "ecmaVersion": 2015,
+                "sourceType": "module"
+            }
+        }
+    ]
 }

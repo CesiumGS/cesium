@@ -1219,6 +1219,7 @@ function createGalleryList() {
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
 var hello_world_index = ' + helloWorldIndex + ';\n\
+var VERSION = ' + version + ';\n\
 var gallery_demos = [' + demoJSONs.join(', ') + '];\n\
 var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;') + '\n';
 
@@ -1249,15 +1250,16 @@ var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';\n';
 function buildSandcastle() {
     var appStream = gulp.src([
             'Apps/Sandcastle/**',
+            '!Apps/Sandcastle/load-cesium-es6.js',
             '!Apps/Sandcastle/standalone.html',
             '!Apps/Sandcastle/images/**',
             '!Apps/Sandcastle/gallery/**.jpg'
         ])
-        // Replace require Source with pre-built Cesium
-        .pipe(gulpReplace('../../../ThirdParty/requirejs-2.1.20/require.js', '../../../CesiumUnminified/Cesium.js'))
-        // Use unminified cesium instead of source
-        .pipe(gulpReplace('Source/Cesium', 'CesiumUnminified'))
+        // Remove dev-only ES6 module loading for unbuilt Cesium
+        .pipe(gulpReplace('    <script type="module" src="../load-cesium-es6.js"></script>', ''))
+        .pipe(gulpReplace('nomodule', ''))
         // Fix relative paths for new location
+        .pipe(gulpReplace('../../../Build', '../../..'))
         .pipe(gulpReplace('../../Source', '../../../Source'))
         .pipe(gulpReplace('../../ThirdParty', '../../../ThirdParty'))
         .pipe(gulpReplace('../../SampleData', '../../../../Apps/SampleData'))
@@ -1276,8 +1278,9 @@ function buildSandcastle() {
     var standaloneStream = gulp.src([
         'Apps/Sandcastle/standalone.html'
         ])
-        .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.20/require.js', '../../../ThirdParty/requirejs-2.1.20/require.js'))
-        .pipe(gulpReplace('Source/Cesium', 'CesiumUnminified'))
+        .pipe(gulpReplace('    <script type="module" src="load-cesium-es6.js"></script>', ''))
+        .pipe(gulpReplace('nomodule', ''))
+        .pipe(gulpReplace('../../Build', '../..'))
         .pipe(gulp.dest('Build/Apps/Sandcastle'));
 
     return streamToPromise(mergeStream(appStream, imageStream, standaloneStream));
