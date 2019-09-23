@@ -74,6 +74,14 @@ define([
         this.postExecute = options.postExecute;
 
         /**
+         * Function that is called when the command is canceled
+         *
+         * @type {Function}
+         * @default undefined
+         */
+        this.canceled = options.canceled;
+
+        /**
          * Whether the renderer resources will persist beyond this call. If not, they
          * will be destroyed after completion.
          *
