@@ -3105,13 +3105,19 @@ describe('Scene/Model', function() {
         return loadModel(boxPbrUrl).then(function(model) {
             model.show = true;
             model.zoomTo();
-            expect(scene).toRenderAndCall(function(rgba) {
+
+            var sceneArgs = {
+                scene : scene,
+                time : JulianDate.fromDate(new Date('January 1, 2014 23:00:00 UTC'))
+            };
+
+            expect(sceneArgs).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
                 model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-                expect(scene).toRenderAndCall(function(rgba2) {
+                expect(sceneArgs).toRenderAndCall(function(rgba2) {
                     expect(rgba2).not.toEqual(rgba);
                     model.lightColor = new Cartesian3(5.0, 5.0, 5.0);
-                    expect(scene).notToRender(rgba2);
+                    expect(sceneArgs).notToRender(rgba2);
 
                     primitives.remove(model);
                 });
