@@ -176,17 +176,35 @@ define([
         this._subtrees = array;
     };
 
+    // /**
+    //  * Gets the subtree with the specified root key from the cache
+    //  *
+    //  * @param {Cartesian4} subtreeRootKey The tree key of the root of the subtree
+    //  * @returns {SubtreeInfo} The SubtreeInfo whose root matches the key
+    //  * @private
+    //  */
+    // SubtreeInfo.prototype.get = function(subtreeRootKey) {
+    //     // Dig around for it, if not there return undefined
+    //
+    //     return undefined;
+    // };
+
     /**
      * Gets the subtree with the specified root key from the cache
      *
-     * @param {Cartesian4} subtreeRootKey The tree key of the root of the subtree
+     * @param {String} subtreeRootKey The tree key string of the root of the subtree
      * @returns {SubtreeInfo} The SubtreeInfo whose root matches the key
      * @private
      */
-    SubtreeInfo.prototype.get = function(subtreeRootKey) {
+    SubtreeInfo.prototype.get = function(keyString) {
         // Dig around for it, if not there return undefined
+        var map = this._subtreesIndexMap;
+        if (!map.has(key)) {
+            return undefined;
+        }
 
-        return undefined;
+        var i = map.get(key);
+        return this._subtrees[i];
     };
 
 
