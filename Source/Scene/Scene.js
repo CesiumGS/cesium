@@ -566,8 +566,6 @@ define([
         this._debugShowFrustumPlanes = false;
         this._debugFrustumPlanes = undefined;
 
-        this._picking = new Picking(this);
-
         /**
          * When <code>true</code>, enables picking using the depth buffer.
          *
@@ -771,6 +769,7 @@ define([
          */
         this.preloadFlightCullingVolume = undefined;
 
+        this._picking = new Picking(this);
         this._defaultView = new View(this, camera, viewport);
         this._view = this._defaultView;
 
@@ -995,7 +994,7 @@ define([
         },
 
         /**
-         * Gets the camera.
+         * Gets or sets the camera.
          * @memberof Scene.prototype
          *
          * @type {Camera}
@@ -1012,10 +1011,10 @@ define([
         },
 
         /**
-         * Gets the view
+         * Gets or sets the view.
          * @memberof Scene.prototype
          *
-         * @type {Scene}
+         * @type {View}
          * @readonly
          *
          * @private
@@ -1031,10 +1030,10 @@ define([
         },
 
         /**
-         * Gets the default view
+         * Gets the default view.
          * @memberof Scene.prototype
          *
-         * @type {Scene}
+         * @type {View}
          * @readonly
          *
          * @private
@@ -1042,6 +1041,21 @@ define([
         defaultView : {
             get : function() {
                 return this._defaultView;
+            }
+        },
+
+        /**
+         * Gets picking functions and state
+         * @memberof Scene.prototype
+         *
+         * @type {Picking}
+         * @readonly
+         *
+         * @private
+         */
+        picking : {
+            get : function() {
+                return this._picking;
             }
         },
 
@@ -1073,6 +1087,19 @@ define([
             }
         },
 
+        /** Gets the job scheduler
+         * @memberof Scene.prototype
+         * @type {JobScheduler}
+         * @readonly
+         *
+         * @private
+         */
+        jobScheduler : {
+            get: function() {
+                return this._jobScheduler;
+            }
+        },
+
         /**
          * Gets state information about the current scene. If called outside of a primitive's <code>update</code>
          * function, the previous frame's state is returned.
@@ -1086,6 +1113,21 @@ define([
         frameState : {
             get: function() {
                 return this._frameState;
+            }
+        },
+
+        /**
+         * Gets the environment state.
+         * @memberof Scene.prototype
+         *
+         * @type {EnvironmentState}
+         * @readonly
+         *
+         * @private
+         */
+        environmentState : {
+            get: function() {
+                return this._environmentState;
             }
         },
 
@@ -3204,7 +3246,7 @@ define([
             scene.globe.update(frameState);
         }
 
-        scene._picking.pickPositionCacheDirty = true;
+        scene._picking.update();
         frameState.creditDisplay.update();
     }
 
@@ -3304,6 +3346,10 @@ define([
         }
     }
 
+    function updateMostDetailedRayPicks(scene) {
+        return scene._picking.updateMostDetailedRayPicks(scene);
+    }
+
     /**
      * Update and render the scene.
      * @param {JulianDate} [time] The simulation time at which to render.
@@ -3351,9 +3397,7 @@ define([
          * Passes update. Add any passes here
          *
          */
-        tryAndCatchError(this, function(scene) {
-            return scene._picking.updateMostDetailedRayPicks(scene);
-        });
+        tryAndCatchError(this, updateMostDetailedRayPicks);
         tryAndCatchError(this, updatePreloadPass);
         tryAndCatchError(this, updatePreloadFlightPass);
         if (!shouldRender) {

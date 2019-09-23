@@ -58,26 +58,7 @@ define([
         View) {
     'use strict';
 
-    /**
-     * @private
-     */
-    function Picking(scene) {
-        this._mostDetailedRayPicks = [];
-        this._pickRenderStateCache = {};
-        this._pickPositionCache = {};
-        this.pickPositionCacheDirty = false;
-
-        this._pickOffscreenDefaultWidth = 0.1;
-        var pickOffscreenViewport = new BoundingRectangle(0, 0, 1, 1);
-        var pickOffscreenCamera = new Camera(scene);
-        pickOffscreenCamera.frustum = new OrthographicFrustum({
-            width: this._pickOffscreenDefaultWidth,
-            aspectRatio: 1.0,
-            near: 0.1
-        });
-
-        this._pickOffscreenView = new View(scene, pickOffscreenCamera, pickOffscreenViewport);
-    }
+    var offscreenDefaultWidth = 0.1;
 
     var mostDetailedPreloadTilesetPassState = new Cesium3DTilePassState({
         pass : Cesium3DTilePass.MOST_DETAILED_PRELOAD
@@ -90,6 +71,30 @@ define([
     var pickTilesetPassState = new Cesium3DTilePassState({
         pass : Cesium3DTilePass.PICK
     });
+
+    /**
+     * @private
+     */
+    function Picking(scene) {
+        this._mostDetailedRayPicks = [];
+        this.pickRenderStateCache = {};
+        this._pickPositionCache = {};
+        this._pickPositionCacheDirty = false;
+
+        var pickOffscreenViewport = new BoundingRectangle(0, 0, 1, 1);
+        var pickOffscreenCamera = new Camera(scene);
+        pickOffscreenCamera.frustum = new OrthographicFrustum({
+            width: offscreenDefaultWidth,
+            aspectRatio: 1.0,
+            near: 0.1
+        });
+
+        this._pickOffscreenView = new View(scene, pickOffscreenCamera, pickOffscreenViewport);
+    }
+
+    Picking.prototype.update = function() {
+        this._pickPositionCacheDirty = true;
+    };
 
     Picking.prototype.getPickDepth = function(scene, index) {
         var pickDepths = scene.view.pickDepths;
@@ -223,7 +228,7 @@ define([
 
         var drawingBufferPosition = SceneTransforms.transformWindowToDrawingBuffer(scene, windowPosition, scratchPosition);
 
-        scene._jobScheduler.disableThisFrame();
+        scene.jobScheduler.disableThisFrame();
 
         scene.updateFrameState();
         frameState.cullingVolume = getPickCullingVolume(scene, drawingBufferPosition, scratchRectangleWidth, scratchRectangleHeight, viewport);
@@ -253,7 +258,7 @@ define([
         // PERFORMANCE_IDEA: render translucent only and merge with the previous frame
         var context = scene.context;
         var frameState = scene.frameState;
-        var environmentState = scene._environmentState;
+        var environmentState = scene.environmentState;
 
         var view = scene.defaultView;
         scene.view = view;
@@ -304,9 +309,9 @@ define([
 
         var cacheKey = windowPosition.toString();
 
-        if (this.pickPositionCacheDirty){
+        if (this._pickPositionCacheDirty){
             this._pickPositionCache = {};
-            this.pickPositionCacheDirty = false;
+            this._pickPositionCacheDirty = false;
         } else if (this._pickPositionCache.hasOwnProperty(cacheKey)){
             return Cartesian3.clone(this._pickPositionCache[cacheKey], result);
         }
@@ -520,7 +525,7 @@ define([
         camera.up = up;
         camera.right = right;
 
-        camera.frustum.width = defaultValue(width, picking._pickOffscreenDefaultWidth);
+        camera.frustum.width = defaultValue(width, offscreenDefaultWidth);
         return camera.frustum.computeCullingVolume(camera.positionWC, camera.directionWC, camera.upWC);
     }
 
@@ -620,7 +625,7 @@ define([
 
         var passState = view.pickFramebuffer.begin(scratchRectangle, view.viewport);
 
-        scene._jobScheduler.disableThisFrame();
+        scene.jobScheduler.disableThisFrame();
 
         scene.updateFrameState();
         frameState.invertClassification = false;
