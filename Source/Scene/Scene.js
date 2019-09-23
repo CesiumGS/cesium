@@ -271,8 +271,6 @@ define([
         this._primitives = new PrimitiveCollection();
         this._groundPrimitives = new PrimitiveCollection();
 
-        this._mostDetailedRayPicks = [];
-
         this._logDepthBuffer = context.fragmentDepth;
         this._logDepthBufferDirty = true;
 
@@ -310,7 +308,6 @@ define([
         });
 
         this._depthOnlyRenderStateCache = {};
-        this._pickRenderStateCache = {};
 
         this._transitioner = new SceneTransitioner(this);
 
@@ -320,9 +317,6 @@ define([
         this._renderError = new Event();
         this._preRender = new Event();
         this._postRender = new Event();
-
-        this._pickPositionCache = {};
-        this._pickPositionCacheDirty = false;
 
         this._minimumDisableDepthTestDistance = 0.0;
 
@@ -572,6 +566,8 @@ define([
         this._debugShowFrustumPlanes = false;
         this._debugFrustumPlanes = undefined;
 
+        this._picking = new Picking(this);
+
         /**
          * When <code>true</code>, enables picking using the depth buffer.
          *
@@ -761,17 +757,6 @@ define([
             camera.frustum.far = 10000000000.0;
         }
 
-        var pickOffscreenDefaultWidth = 0.1;
-        var pickOffscreenViewport = new BoundingRectangle(0, 0, 1, 1);
-        var pickOffscreenCamera = new Camera(this);
-        pickOffscreenCamera.frustum = new OrthographicFrustum({
-            width: pickOffscreenDefaultWidth,
-            aspectRatio: 1.0,
-            near: 0.1
-        });
-
-        this._pickOffscreenView = new View(this, pickOffscreenCamera, pickOffscreenViewport);
-
         /**
          * The camera view for the scene camera flight destination. Used for preloading flight destination tiles.
          * @type {Camera}
@@ -785,11 +770,6 @@ define([
          * @private
          */
         this.preloadFlightCullingVolume = undefined;
-
-        /**
-         * @private
-         */
-        this.pickOffscreenDefaultWidth = pickOffscreenDefaultWidth;
 
         this._defaultView = new View(this, camera, viewport);
         this._view = this._defaultView;
@@ -1028,6 +1008,40 @@ define([
             set : function(camera) {
                 // For internal use only. Documentation is still @readonly.
                 this._view.camera = camera;
+            }
+        },
+
+        /**
+         * Gets the view
+         * @memberof Scene.prototype
+         *
+         * @type {Scene}
+         * @readonly
+         *
+         * @private
+         */
+        view : {
+            get : function() {
+                return this._view;
+            },
+            set : function(view) {
+                // For internal use only. Documentation is still @readonly.
+                this._view = view;
+            }
+        },
+
+        /**
+         * Gets the default view
+         * @memberof Scene.prototype
+         *
+         * @type {Scene}
+         * @readonly
+         *
+         * @private
+         */
+        defaultView : {
+            get : function() {
+                return this._defaultView;
             }
         },
 
@@ -2416,7 +2430,7 @@ define([
             if (context.depthTexture && scene.useDepthPicking && (environmentState.useGlobeDepthFramebuffer || renderTranslucentDepthForPick)) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var depthStencilTexture = renderTranslucentDepthForPick ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
-                var pickDepth = Picking.getPickDepth(scene, index);
+                var pickDepth = scene._picking.getPickDepth(scene, index);
                 pickDepth.update(context, depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
             }
@@ -3120,7 +3134,7 @@ define([
         }
 
         if (this.debugShowPickDepth && useGlobeDepthFramebuffer) {
-            var pd = Picking.getPickDepth(this, this.debugShowDepthFrustum - 1);
+            var pd = this._picking.getPickDepth(this, this.debugShowDepthFrustum - 1);
             pd.executeDebugPickDepth(context, passState, useLogDepth);
         }
     };
@@ -3190,7 +3204,7 @@ define([
             scene.globe.update(frameState);
         }
 
-        scene._pickPositionCacheDirty = true;
+        scene._picking.pickPositionCacheDirty = true;
         frameState.creditDisplay.update();
     }
 
@@ -3337,7 +3351,9 @@ define([
          * Passes update. Add any passes here
          *
          */
-        tryAndCatchError(this, updateMostDetailedRayPicks);
+        tryAndCatchError(this, function(scene) {
+            return scene._picking.updateMostDetailedRayPicks(scene);
+        });
         tryAndCatchError(this, updatePreloadPass);
         tryAndCatchError(this, updatePreloadFlightPass);
         if (!shouldRender) {
@@ -3420,7 +3436,7 @@ define([
      * @returns {Object} Object containing the picked primitive.
      */
     Scene.prototype.pick = function(windowPosition, width, height) {
-        return Picking.pick(this, windowPosition, width, height);
+        return this._picking.pick(this, windowPosition, width, height);
     };
 
     /**
@@ -3441,7 +3457,7 @@ define([
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
      */
     Scene.prototype.pickPositionWorldCoordinates = function(windowPosition, result) {
-        return Picking.pickPositionWorldCoordinates(this, windowPosition, result);
+        return this._picking.pickPositionWorldCoordinates(this, windowPosition, result);
     };
 
     /**
@@ -3463,7 +3479,7 @@ define([
      * @exception {DeveloperError} Picking from the depth buffer is not supported. Check pickPositionSupported.
      */
     Scene.prototype.pickPosition = function(windowPosition, result) {
-        return Picking.pickPosition(this, windowPosition, result);
+        return this._picking.pickPosition(this, windowPosition, result);
     };
 
     /**
@@ -3486,18 +3502,8 @@ define([
      * @see Scene#pick
      */
     Scene.prototype.drillPick = function(windowPosition, limit, width, height) {
-        return Picking.drillPick(this, windowPosition, limit, width, height);
+        return this._picking.drillPick(this, windowPosition, limit, width, height);
     };
-
-    function updateMostDetailedRayPicks(scene) {
-        // Modifies array during iteration
-        var rayPicks = scene._mostDetailedRayPicks;
-        for (var i = 0; i < rayPicks.length; ++i) {
-            if (Picking.updateMostDetailedRayPick(scene, rayPicks[i])) {
-                rayPicks.splice(i--, 1);
-            }
-        }
-    }
 
     function updatePreloadPass(scene) {
         var frameState = scene._frameState;
@@ -3547,7 +3553,7 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.pickFromRay = function(ray, objectsToExclude, width) {
-        return Picking.pickFromRay(this, ray, objectsToExclude, width);
+        return this._picking.pickFromRay(this, ray, objectsToExclude, width);
     };
 
     /**
@@ -3572,7 +3578,7 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.drillPickFromRay = function(ray, limit, objectsToExclude, width) {
-        return Picking.drillPickFromRay(this, ray, limit, objectsToExclude, width);
+        return this._picking.drillPickFromRay(this, ray, limit, objectsToExclude, width);
     };
 
     /**
@@ -3589,7 +3595,7 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.pickFromRayMostDetailed = function(ray, objectsToExclude, width) {
-        return Picking.pickFromRayMostDetailed(this, ray, objectsToExclude, width);
+        return this._picking.pickFromRayMostDetailed(this, ray, objectsToExclude, width);
     };
 
     /**
@@ -3607,7 +3613,7 @@ define([
      * @exception {DeveloperError} Ray intersections are only supported in 3D mode.
      */
     Scene.prototype.drillPickFromRayMostDetailed = function(ray, limit, objectsToExclude, width) {
-        return Picking.drillPickFromRayMostDetailed(this, ray, limit, objectsToExclude, width);
+        return this._picking.drillPickFromRayMostDetailed(this, ray, limit, objectsToExclude, width);
     };
 
     /**
@@ -3637,7 +3643,7 @@ define([
      * @exception {DeveloperError} sampleHeight requires depth texture support. Check sampleHeightSupported.
      */
     Scene.prototype.sampleHeight = function(position, objectsToExclude, width) {
-        return Picking.sampleHeight(this, position, objectsToExclude, width);
+        return this._picking.sampleHeight(this, position, objectsToExclude, width);
     };
 
     /**
@@ -3668,7 +3674,7 @@ define([
      * @exception {DeveloperError} clampToHeight requires depth texture support. Check clampToHeightSupported.
      */
     Scene.prototype.clampToHeight = function(cartesian, objectsToExclude, width, result) {
-        return Picking.clampToHeight(this, cartesian, objectsToExclude, width, result);
+        return this._picking.clampToHeight(this, cartesian, objectsToExclude, width, result);
     };
 
     /**
@@ -3700,7 +3706,7 @@ define([
      * @exception {DeveloperError} sampleHeightMostDetailed requires depth texture support. Check sampleHeightSupported.
      */
     Scene.prototype.sampleHeightMostDetailed = function(positions, objectsToExclude, width) {
-        return Picking.sampleHeightMostDetailed(this, positions, objectsToExclude, width);
+        return this._picking.sampleHeightMostDetailed(this, positions, objectsToExclude, width);
     };
 
     /**
@@ -3731,7 +3737,7 @@ define([
      * @exception {DeveloperError} clampToHeightMostDetailed requires depth texture support. Check clampToHeightSupported.
      */
     Scene.prototype.clampToHeightMostDetailed = function(cartesians, objectsToExclude, width) {
-        return Picking.clampToHeightMostDetailed(this, cartesians, objectsToExclude, width);
+        return this._picking.clampToHeightMostDetailed(this, cartesians, objectsToExclude, width);
     };
 
     /**
@@ -3858,9 +3864,9 @@ define([
         this._transitioner = this._transitioner && this._transitioner.destroy();
         this._debugFrustumPlanes = this._debugFrustumPlanes && this._debugFrustumPlanes.destroy();
         this._brdfLutGenerator = this._brdfLutGenerator && this._brdfLutGenerator.destroy();
+        this._picking = this._picking && this._picking.destroy();
 
         this._defaultView = this._defaultView && this._defaultView.destroy();
-        this._pickOffscreenView = this._pickOffscreenView && this._pickOffscreenView.destroy();
         this._view = undefined;
 
         if (this._removeCreditContainer) {
