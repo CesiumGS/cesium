@@ -2471,6 +2471,11 @@ define([
                 pickDepth.executeCopyDepth(context, passState);
             }
 
+            if (usePrimitiveFramebuffer) {
+                // Reset framebuffer
+                passState.framebuffer = globeDepth.framebuffer;
+            }
+
             if (picking || !usePostProcessSelected) {
                 continue;
             }
