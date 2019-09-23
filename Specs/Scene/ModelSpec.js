@@ -3112,16 +3112,20 @@ describe('Scene/Model', function() {
             };
 
             expect(sceneArgs).toRenderAndCall(function(rgba) {
-                expect(rgba).not.toEqual([0, 0, 0, 255]);
-                model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-                expect(sceneArgs).toRenderAndCall(function(rgba2) {
-                    expect(rgba2).not.toEqual(rgba);
-                    model.lightColor = new Cartesian3(5.0, 5.0, 5.0);
-                    expect(sceneArgs).notToRender(rgba2);
-
-                    primitives.remove(model);
-                });
+                expect(rgba).toEqualEpsilon([153, 6, 5, 255], 5);
             });
+
+            model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+            expect(sceneArgs).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([85, 6, 5, 255], 5);
+            });
+
+            model.lightColor = new Cartesian3(5.0, 5.0, 5.0);
+            expect(sceneArgs).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([164, 16, 16, 255], 5);
+            });
+
+            primitives.remove(model);
         });
     });
 
