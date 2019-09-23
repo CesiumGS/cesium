@@ -251,7 +251,7 @@ define([
         var contentResource;
         var serverKey;
 
-        var contentSubtree;
+        // var contentSubtree;
         var contentSubtreeState;
         var contentSubtreeResource;
         var serverKeySubtree;
@@ -1537,7 +1537,7 @@ define([
         }
 
         if (!defined(content)) {
-            console.log('no content: ' + tile._contentResource._url)
+            console.log('no content: ' + tile._contentResource._url);
         }
 
         content.update(tileset, frameState);

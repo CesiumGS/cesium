@@ -249,7 +249,6 @@ define([
         153391689   // 10 Levels
     ];
 
-
     function Cesium3DTilesetImplicit(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -264,7 +263,7 @@ define([
 
         // TODO: Cache/Manager class that has some or all of these values as
         // well as any subtree precomputation (array sizes, sse sphere radii, etc)
-        this._available = new Map(); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
+        this._subtreeCache = new Map(); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
         this._tiles = new Map(); // Holds the subtree tiles, Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is an Array of tiles (undefined spots are unavailable)
         // this._subtreeViewer = new ImplicitSubtreeViewer(this); // TODO: Make class with the toroidial multi dimensional array to make iteration easier, needs to update small portions every frame
         // I think there are two portions? ancestor portion 1d array and the normal portion which is a 3d array (fixed sizes on each level?) toroidial array?
@@ -1036,7 +1035,6 @@ define([
 
                 if (hasSubtreeArray) {
                     // TODO: add check to  make sure length correct given subdivision type and subtreeLevels
-                    // that._available = subtreeArrayBuffer.available;
                     var tilingScheme = that._tilingScheme;
                     that._allTilesAdditive = tilingScheme.refine === Cesium3DTileRefine.ADD;
                     // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
@@ -1680,7 +1678,6 @@ define([
         return resource.fetchArrayBuffer();
     };
 
-
     /**
      * Returns an array of the root subtree urls
      */
@@ -1704,7 +1701,6 @@ define([
         return rootSubtreeUrls;
     };
 
-
     /**
      * Marks the tileset's {@link Cesium3DTilesetImplicit#style} as dirty, which forces all
      * features to re-evaluate the style in the next frame each is visible.
@@ -1713,37 +1709,36 @@ define([
         this._styleEngine.makeDirty();
     };
 
-
-    /**
-     * update _available
-     */
-    Cesium3DTilesetImplicit.prototype.updateAvailable = function(available) {
-        // If we don't have one yet just assign and return
-        if (!defined(this._available)) {
-            this._available = available;
-            return;
-        }
-
-        var length = available.length;
-        var tilesetAvailable = this._available;
-        var array = [];
-        var i;
-        for (i = 0; i < length; ++i) {
-            array = available[i];
-
-            if (tilesetAvailable.length < (i + 1)) {
-                // level info doesn't exist yet, make an empty entry
-                tilesetAvailable.push(array);
-                continue;
-            } else if (array.length === 0) {
-                // No addtional info for this level, continue.
-                continue;
-            } else {
-                // Has addtional info, concat.
-                tilesetAvailable[i].concat(array);
-            }
-        }
-    }
+    // /**
+    //  * update _available
+    //  */
+    // Cesium3DTilesetImplicit.prototype.updateAvailable = function(available) {
+    //     // If we don't have one yet just assign and return
+    //     if (!defined(this._available)) {
+    //         this._available = available;
+    //         return;
+    //     }
+    //
+    //     var length = available.length;
+    //     var tilesetAvailable = this._available;
+    //     var array = [];
+    //     var i;
+    //     for (i = 0; i < length; ++i) {
+    //         array = available[i];
+    //
+    //         if (tilesetAvailable.length < (i + 1)) {
+    //             // level info doesn't exist yet, make an empty entry
+    //             tilesetAvailable.push(array);
+    //             continue;
+    //         } else if (array.length === 0) {
+    //             // No addtional info for this level, continue.
+    //             continue;
+    //         } else {
+    //             // Has addtional info, concat.
+    //             tilesetAvailable[i].concat(array);
+    //         }
+    //     }
+    // }
 
     Cesium3DTilesetImplicit.prototype.deriveImplicitBounds = function(rootTile, x, y, z, level) {
         var tilingScheme = this._tilingScheme;
@@ -1816,9 +1811,9 @@ define([
                 boxCenter.y = halfY.y * (2 * y + 1) + minY;
                 boxCenter.z = halfZ.z * (2 * z + 1) + minZ;
             } else {
-                var halfAxesX = new Cartesian3();
-                var halfAxesY = new Cartesian3();
-                var halfAxesZ = new Cartesian3();
+                // var halfAxesX = new Cartesian3();
+                // var halfAxesY = new Cartesian3();
+                // var halfAxesZ = new Cartesian3();
             }
 
             return { box: [
@@ -1838,40 +1833,39 @@ define([
                 halfZ.y,
                 halfZ.z
             ]};
-
-        } else {
-            console.log('no implementation for this bounding box type at the moment');
         }
+
+        console.log('no implementation for this bounding box type at the moment');
 
         return bounds;
     };
 
-    Cesium3DTilesetImplicit.prototype.anyChildrenAvailable = function(parentX, parentY, parentZ, parentLevel) {
-        var isOct = this._isOct;
-        var startX = parentX * 2;
-        var startY = parentY * 2;
-        var startZ = isOct ? parentZ * 2 : 0;
-        var endX = startX + 1;
-        var endY = startY + 1;
-        var endZ = isOct ? startZ + 1 : 0;
-
-        var level = parentLevel + 1;
-        if (level > (this._available.length - 1)) {
-            return false ;
-        }
-
-        for (var z = startZ; z <= endZ; ++z) {
-            for (var x = startX; x <= endX; ++x) {
-                for (var y = startY; y <= endY; ++y) {
-                    if (this.isTileAvailable(x, y, z, level)) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    };
+    // Cesium3DTilesetImplicit.prototype.anyChildrenAvailable = function(parentX, parentY, parentZ, parentLevel) {
+    //     var isOct = this._isOct;
+    //     var startX = parentX * 2;
+    //     var startY = parentY * 2;
+    //     var startZ = isOct ? parentZ * 2 : 0;
+    //     var endX = startX + 1;
+    //     var endY = startY + 1;
+    //     var endZ = isOct ? startZ + 1 : 0;
+    //
+    //     var level = parentLevel + 1;
+    //     if (level > (this._available.length - 1)) {
+    //         return false ;
+    //     }
+    //
+    //     for (var z = startZ; z <= endZ; ++z) {
+    //         for (var x = startX; x <= endX; ++x) {
+    //             for (var y = startY; y <= endY; ++y) {
+    //                 if (this.isTileAvailable(x, y, z, level)) {
+    //                     return true;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //
+    //     return false;
+    // };
 
     Cesium3DTilesetImplicit.prototype.anyChildrenAvailableSubtree = function(parentX, parentY, parentZ, parentLevel) {
         var isOct = this._isOct;
@@ -1918,7 +1912,7 @@ define([
             d: subtreeRootLevel,
             x: x >> subtreeLevel,
             y: y >> subtreeLevel,
-            z: z >> subtreeLevel,
+            z: z >> subtreeLevel
         };
 
         return subtreeRootKey;
@@ -2017,8 +2011,8 @@ define([
      * @private
      */
     Cesium3DTilesetImplicit.prototype.isTileAvailableTreeKey = function(x, y, z, level) {
-        var isOct = this._isOct;
-        var available = this._available;
+        // var isOct = this._isOct;
+        var subtreeCache = this._subtreeCache;
         var result = this.getSubtreeInfoFromTreeKey(x, y, z, level);
 
         // if(packed) {
@@ -2032,7 +2026,7 @@ define([
         // } else {
             var subtreeRootKey = result.subtreeRootKey;
             var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
-            var subtree = available.get(key);
+            var subtree = subtreeCache.get(key);
             var index = result.subtreeIndex;
             var isAvailable = subtree[index] === 0x1;
         // }
@@ -2045,29 +2039,29 @@ define([
         };
     };
 
-    /**
-     * Determine if the tile is available
-     *
-     * @private
-     */
-    Cesium3DTilesetImplicit.prototype.isTileAvailable = function(x, y, z, level) {
-        var isOct = this._isOct;
-        var available = this._available;
-        if (level > available.length - 1) {
-            return false;
-        }
-
-        // Unless these are sorted, you must search all ranges on the level
-        var ranges = available[level];
-        for (var range of ranges) {
-            var containsZ = isOct ? (z >= range.startZ && z <= range.endZ) : true;
-            if (containsZ && x >= range.startX && x <=range.endX && y >= range.startY && y <= range.endY) {
-                return true;
-            }
-        }
-
-        return false;
-    };
+    // /**
+    //  * Determine if the tile is available
+    //  *
+    //  * @private
+    //  */
+    // Cesium3DTilesetImplicit.prototype.isTileAvailable = function(x, y, z, level) {
+    //     var isOct = this._isOct;
+    //     var available = this._available;
+    //     if (level > available.length - 1) {
+    //         return false;
+    //     }
+    //
+    //     // Unless these are sorted, you must search all ranges on the level
+    //     var ranges = available[level];
+    //     for (var range of ranges) {
+    //         var containsZ = isOct ? (z >= range.startZ && z <= range.endZ) : true;
+    //         if (containsZ && x >= range.startX && x <=range.endX && y >= range.startY && y <= range.endY) {
+    //             return true;
+    //         }
+    //     }
+    //
+    //     return false;
+    // };
 
     /**
      * Gets a loop range in x y z that needs to be checked for the given level
@@ -2119,54 +2113,52 @@ define([
         };
     };
 
-
-    /**
-     * Gets a loop range in x y z that needs to be checked for the given level
-     *
-     * @private
-     */
-    Cesium3DTilesetImplicit.prototype.getRangeForLevel = function(level) {
-        var ranges = this._available[level];
-        var minX = Number.MAX_VALUE;
-        var minY = Number.MAX_VALUE;
-        var maxX = 0;
-        var maxY = 0;
-
-        var isOct = this._isOct;
-
-        var minZ = isOct ? Number.MAX_VALUE : 0;
-        var maxZ = 0;
-
-        for (var range of ranges) {
-            minX = Math.min(minX, range.startX);
-            minY = Math.min(minY, range.startY);
-            maxX = Math.max(maxX, range.endX);
-            maxY = Math.max(maxY, range.endY);
-
-            if (isOct) {
-                minZ = Math.min(minZ, range.startZ);
-                maxZ = Math.max(maxZ, range.endZ);
-            }
-        }
-
-        return {
-            startX: minX,
-            startY: minY,
-            startZ: minZ,
-            endX: maxX,
-            endY: maxY,
-            endZ: maxZ
-        };
-    };
+    // /**
+    //  * Gets a loop range in x y z that needs to be checked for the given level
+    //  *
+    //  * @private
+    //  */
+    // Cesium3DTilesetImplicit.prototype.getRangeForLevel = function(level) {
+    //     var ranges = this._available[level];
+    //     var minX = Number.MAX_VALUE;
+    //     var minY = Number.MAX_VALUE;
+    //     var maxX = 0;
+    //     var maxY = 0;
+    //
+    //     var isOct = this._isOct;
+    //
+    //     var minZ = isOct ? Number.MAX_VALUE : 0;
+    //     var maxZ = 0;
+    //
+    //     for (var range of ranges) {
+    //         minX = Math.min(minX, range.startX);
+    //         minY = Math.min(minY, range.startY);
+    //         maxX = Math.max(maxX, range.endX);
+    //         maxY = Math.max(maxY, range.endY);
+    //
+    //         if (isOct) {
+    //             minZ = Math.min(minZ, range.startZ);
+    //             maxZ = Math.max(maxZ, range.endZ);
+    //         }
+    //     }
+    //
+    //     return {
+    //         startX: minX,
+    //         startY: minY,
+    //         startZ: minZ,
+    //         endX: maxX,
+    //         endY: maxY,
+    //         endZ: maxZ
+    //     };
+    // };
 
     Cesium3DTilesetImplicit.prototype.findSubtreeLevelStart = function(subtree) {
         var subtreeLevels = this._tilingScheme.subtreeLevels;
-        var isOct = this._isOct;
+        // var isOct = this._isOct;
         var unpackedSize = this._unpackedSize;
         var unpackedArraySizes = this._unpackedArraySizes;
 
         var i;
-        var availableIdx = 0;
 
         var firstIndex = 0;
         for (i = 0; i < unpackedSize; i++) {
@@ -2183,44 +2175,47 @@ define([
         }
 
         return 0;
-    }
+    };
 
     /**
-     * Updates the _available and _tiles maps from the subtreeArrayBuffer payload
+     * Updates the _subtreeCache and _tiles maps from the subtreeArrayBuffer payload
      *
      * @private
      */
-    Cesium3DTilesetImplicit.prototype.updateAvailableMap = function(subtreeArrayBuffer, keyString) {
+    Cesium3DTilesetImplicit.prototype.updateSubtreeCache = function(subtreeArrayBuffer, subtreeRootKey) {
+        // UNPACK subtreeArrayBuffer payload into a byte array
         var payload = new Uint8Array(subtreeArrayBuffer);
-        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        // var subtreeLevels = this._tilingScheme.subtreeLevels;
         var isOct = this._isOct;
         var packedSize = this._packedSize;
         var unpackedSize = this._unpackedSize;
-        var available = new Uint8Array(unpackedSize);
+        var subtree = new Uint8Array(unpackedSize);
 
         var startIdx = isOct ? 1 : 2;
         var endIdx = packedSize - 1;
         var i, j;
-        var availableIdx = 0;
-        available[availableIdx++] = payload[0];
+        var idx = 0;
+        subtree[idx++] = payload[0];
         if (!isOct) {
             for (i = 0; i < 4; i++) {
-                available[availableIdx++] = (payload[1] >> i) & 1;
+                subtree[idx++] = (payload[1] >> i) & 1;
             }
         }
 
         // iterate through payload update the arrays and then assign to the maps
         for(i = startIdx; i <= endIdx; i++) {
             for (j = 0; j < 8; j++) {
-                available[availableIdx++] = (payload[i] >> j) & 1;
+                subtree[idx++] = (payload[i] >> j) & 1;
             }
         }
 
-        this._available.set(keyString, available);
-    }
+        // Finally, assign to the map
+        var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
+        this._subtreeCache.set(key, subtree);
+    };
 
     /**
-     * Updates the _available arrays as well as updates the metadata view of
+     * Updates the _subtreeCache arrays as well as updates the metadata view of
      * the tileset tree given a layerJson
      *
      * @private
@@ -2239,15 +2234,15 @@ define([
 
         var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
 
-        var available = this._available;
-        if (available.has(key)) {
+        var subtreeCache = this._subtreeCache;
+        if (subtreeCache.has(key)) {
             throw new RuntimeError('DEBUG: Subtree already exists?');
         }
 
-        // create an unpacked uint8array and an array and populate with 1/0;
-        this.updateAvailableMap(subtreeArrayBuffer, key);
+        // Create an unpacked uint8array and an array and populate with 1/0;
+        this.updateSubtreeCache(subtreeArrayBuffer, subtreeRootKey);
 
-        var subtree = this._available.get(key);
+        var subtree = subtreeCache.get(key);
         console.log('subtree Uint8Array unpacked length: ' + subtree.length);
         console.log('subtree key: ' + key);
 
@@ -2299,7 +2294,7 @@ define([
         // TODO: merge with loop version but wait till the other todo's are ironed out
 
         // main layer.json, construct child tiles of contentless root
-        var tilesetRoot = defined(this._root) ? this._root : rootTile
+        var tilesetRoot = defined(this._root) ? this._root : rootTile;
 
         // Init the tiles array
         var tilesArray = [];
@@ -2326,7 +2321,7 @@ define([
         var tilesetLastLevel = tilingScheme.lastLevel;
         var oneBitMode = defined(tilesetLastLevel);
         var contentRootGeometricError = this._geometricErrorContentRoot;
-        var lastSubtreeLevelStartIndex = this._unpackedArraySizes[subtreeLevels0Indexed];
+        // var lastSubtreeLevelStartIndex = this._unpackedArraySizes[subtreeLevels0Indexed];
         var base = isOct ? 2 : 2;
         // This loop is just to create the tiles in the right spots in the _tiles array
         for (subtreeIndex = 0; subtreeIndex < unpackedSize; subtreeIndex++) {
@@ -2369,7 +2364,7 @@ define([
                 subtreeKey: subtreeKey,
                 subtreeIndex: subtreeIndex,
                 subtreeRootKey: subtreeRootKey,
-                refine: tilingScheme.refine,
+                refine: tilingScheme.refine
             };
 
             tile = new Cesium3DTileImplicit(this, resource, tileInfo, undefined);
@@ -2429,7 +2424,7 @@ define([
         // console.log('tile0: ');
         // console.log(tilesArray[0]);
 
-        tiles.set(key, tilesArray)
+        tiles.set(key, tilesArray);
 
         return rootTile;
     };
@@ -2587,7 +2582,8 @@ define([
         var expired = tile.contentExpired;
         var requested = tile.requestContent();
         // TODO: uncommenting this will cause some content on level 1 (1 past root) to become undefined
-        var requstedSubtree = tile.requestSubtreeContent();
+        tile.requestSubtreeContent();
+        // var requstedSubtree = tile.requestSubtreeContent();
 
         if (!requested) {
             ++statistics.numberOfAttemptedRequests;

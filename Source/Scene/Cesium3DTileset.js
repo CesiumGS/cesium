@@ -1964,7 +1964,7 @@ define([
         var dimOnLevel = (1 << subtreeLevel);
         var dimOnLevelSqrd = dimOnLevel * dimOnLevel;
 
-        const key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
+        var key = subtreeRootKey[0] + '/' + subtreeRootKey[1] + '/' + subtreeRootKey[2] + '/' + subtreeRootKey[3];
         var subtree = available.get(key);
 
         var arraySizes = this._arraySizes;
