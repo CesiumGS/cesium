@@ -1,20 +1,19 @@
 define([
-    '../Core/PixelFormat',
-    '../Shaders/CheckFloatTexturePrecisionFS',
-    './ComputeCommand',
-    './ComputeEngine',
-    './Framebuffer',
-    './PixelDatatype',
-    './Texture'
-], function(
-    PixelFormat,
-    CheckFloatTexturePrecisionFS,
-    ComputeCommand,
-    ComputeEngine,
-    Framebuffer,
-    PixelDatatype,
-    Texture
-) {
+        '../Core/PixelFormat',
+        '../Shaders/CheckFloatTexturePrecisionFS',
+        './ComputeCommand',
+        './ComputeEngine',
+        './Framebuffer',
+        './PixelDatatype',
+        './Texture'
+    ], function(
+        PixelFormat,
+        CheckFloatTexturePrecisionFS,
+        ComputeCommand,
+        ComputeEngine,
+        Framebuffer,
+        PixelDatatype,
+        Texture) {
     'use strict';
 
     /**
