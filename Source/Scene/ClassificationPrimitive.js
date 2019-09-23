@@ -578,7 +578,7 @@ define([
         });
         var attributeLocations = classificationPrimitive._primitive._attributeLocations;
 
-        var shadowVolumeAppearance = new ShadowVolumeAppearance(cullFragmentsUsingExtents, planarExtents, classificationPrimitive.appearance);
+        var shadowVolumeAppearance = new ShadowVolumeAppearance(cullFragmentsUsingExtents, planarExtents, classificationPrimitive.appearance, context.floatTextureSixPlaces);
 
         classificationPrimitive._spStencil = ShaderProgram.replaceCache({
             context : context,
