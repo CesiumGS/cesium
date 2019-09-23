@@ -26,7 +26,8 @@ varying vec3 v_vMaxAndInverseDistance;
 #endif // TEXTURE_COORDINATES
 
 #if defined(TEXTURE_COORDINATES) && !defined(SPHERICAL) && defined(UINT8_PACKING)
-vec4 clampAndMagnitude(vec4 sd) {
+vec4 clampAndMagnitude(vec4 sd)
+{
     vec4 d = sd;
     d.x = czm_branchFreeTernary(sd.x < 128.0, d.x, (255.0 - sd.x));
     d.x = floor(0.5 + d.x);
@@ -36,12 +37,14 @@ vec4 clampAndMagnitude(vec4 sd) {
     return d;
 }
 
-float unpackLowLessThan100k(vec4 sd) {
+float unpackLowLessThan100k(vec4 sd)
+{
     vec4 d = clampAndMagnitude(sd);
     return (1000.0 * d.x + 10.0 * d.y + 0.1 * d.z + 0.001 * d.w) * czm_branchFreeTernary(sd.x < 128.0, 1.0, -1.0);
 }
 
-vec3 southwest_LOW(vec4 x, vec4 y, vec4 z) {
+vec3 southwest_LOW(vec4 x, vec4 y, vec4 z)
+{
     vec3 value;
     value.x = unpackLowLessThan100k(x);
     value.y = unpackLowLessThan100k(y);
@@ -49,11 +52,14 @@ vec3 southwest_LOW(vec4 x, vec4 y, vec4 z) {
     return value;
 }
 
-float unpackHighMagLessThan100Million(vec4 sd) {
+float unpackHighMagLessThan100Million(vec4 sd)
+{
     vec4 d = clampAndMagnitude(sd);
     return (1000000.0 * d.x + 10000.0 * d.y + 100.0 * d.z + d.w) * czm_branchFreeTernary(sd.x < 128.0, 1.0, -1.0);
 }
-vec3 southwest_HIGH(vec4 x, vec4 y, vec4 z) {
+
+vec3 southwest_HIGH(vec4 x, vec4 y, vec4 z)
+{
     vec3 value;
     value.x = unpackHighMagLessThan100Million(x);
     value.y = unpackHighMagLessThan100Million(y);
@@ -62,7 +68,8 @@ vec3 southwest_HIGH(vec4 x, vec4 y, vec4 z) {
 }
 
 #ifdef COLUMBUS_VIEW_2D
-vec4 unpackPlanes2D_HIGH(vec4 x, vec4 y, vec4 z, vec4 w) {
+vec4 unpackPlanes2D_HIGH(vec4 x, vec4 y, vec4 z, vec4 w)
+{
     vec4 value;
     value.x = unpackHighMagLessThan100Million(x);
     value.y = unpackHighMagLessThan100Million(y);
@@ -71,7 +78,8 @@ vec4 unpackPlanes2D_HIGH(vec4 x, vec4 y, vec4 z, vec4 w) {
     return value;
 }
 
-vec4 unpackPlanes2D_LOW(vec4 x, vec4 y, vec4 z, vec4 w) {
+vec4 unpackPlanes2D_LOW(vec4 x, vec4 y, vec4 z, vec4 w)
+{
     vec4 value;
     value.x = unpackLowLessThan100k(x);
     value.y = unpackLowLessThan100k(y);
@@ -81,12 +89,14 @@ vec4 unpackPlanes2D_LOW(vec4 x, vec4 y, vec4 z, vec4 w) {
 }
 
 #else
-float unpackLowLessThan1000k(vec4 sd) {
+float unpackLowLessThan1000k(vec4 sd)
+{
     vec4 d = clampAndMagnitude(sd);
     return (10000.0 * d.x + 100.0 * d.y + d.z + 0.01 * d.w) * czm_branchFreeTernary(sd.x < 128.0, 1.0, -1.0);
 }
 
-vec3 unpackExtent(vec4 x, vec4 y, vec4 z) {
+vec3 unpackExtent(vec4 x, vec4 y, vec4 z)
+{
     vec3 value;
     value.x = unpackLowLessThan1000k(x);
     value.y = unpackLowLessThan1000k(y);

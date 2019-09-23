@@ -21,7 +21,7 @@ define([
      * Checks if the context's floating point textures support 6 decimal places of precision.
      *
      * @param {Context} context A context wrapping a gl implementation.
-     * @returns {Boolean} whether or not the context's floating point textures support 6 decimal places of precision
+     * @returns {Boolean} Whether or not the context's floating point textures support 6 decimal places of precision
      *
      * @private
      */

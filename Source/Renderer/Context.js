@@ -591,7 +591,7 @@ define([
         },
 
         /**
-         * <code>true</code> returns if the context's floating point textures support 6 decimal places of precision.
+         * Returns <code>true</code> if the context's floating point textures support 6 decimal places of precision.
          * @memberof Context.prototype
          * @type {Boolean}
          * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
