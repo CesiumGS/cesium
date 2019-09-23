@@ -983,6 +983,10 @@ define([
                         that._finalizeReprojectTexture(context, outputTexture);
                         imagery.state = ImageryState.READY;
                         imagery.releaseReference();
+                    },
+                    canceled : function() {
+                        imagery.state = ImageryState.TEXTURE_LOADED;
+                        imagery.releaseReference();
                     }
                 });
                 this._reprojectComputeCommands.push(computeCommand);
@@ -1017,6 +1021,11 @@ define([
      * @private
      */
     ImageryLayer.prototype.cancelReprojections = function() {
+        this._reprojectComputeCommands.forEach(function(command) {
+            if (command.canceled) {
+                command.canceled();
+            }
+        });
         this._reprojectComputeCommands.length = 0;
     };
 
