@@ -1901,22 +1901,22 @@ define([
         return anyChildrenAvailable ? (parent.geometricError / Math.sqrt(xTiles * yTiles)) : 0;
     };
 
-    Cesium3DTilesetImplicit.prototype.getSubtreeRootKey = function(x, y, z, level) {
-        // Given the xyz level find the nearest subtree root key
-        var subtreeLevels = this._tilingScheme.subtreeLevels;
-        var subtreeLevels0Indexed = subtreeLevels -  1;
-        var subtreeRootLevel = Math.floor(level / subtreeLevels0Indexed);
-        subtreeRootLevel -= (level % subtreeLevels === 0) ? 1 : 0; // Because there is overlap between subtree roots and their parents last level, take the previous subtree when on the overlap level
-        var subtreeLevel = level - subtreeRootLevel;
-        var subtreeRootKey = {
-            d: subtreeRootLevel,
-            x: x >> subtreeLevel,
-            y: y >> subtreeLevel,
-            z: z >> subtreeLevel
-        };
-
-        return subtreeRootKey;
-    };
+    // Cesium3DTilesetImplicit.prototype.getSubtreeRootKey = function(x, y, z, level) {
+    //     // Given the xyz level find the nearest subtree root key
+    //     var subtreeLevels = this._tilingScheme.subtreeLevels;
+    //     var subtreeLevels0Indexed = subtreeLevels -  1;
+    //     var subtreeRootLevel = Math.floor(level / subtreeLevels0Indexed);
+    //     subtreeRootLevel -= (level % subtreeLevels === 0) ? 1 : 0; // Because there is overlap between subtree roots and their parents last level, take the previous subtree when on the overlap level
+    //     var subtreeLevel = level - subtreeRootLevel;
+    //     var subtreeRootKey = {
+    //         d: subtreeRootLevel,
+    //         x: x >> subtreeLevel,
+    //         y: y >> subtreeLevel,
+    //         z: z >> subtreeLevel
+    //     };
+    //
+    //     return subtreeRootKey;
+    // };
 
     Cesium3DTilesetImplicit.prototype.getSubtreeInfoFromSubtreeIndexAndRootKey = function(subtreeIndex, subtreeRootKey) {
         var arraySizes = this._unpackedArraySizes;
@@ -2183,7 +2183,7 @@ define([
      * @private
      */
     Cesium3DTilesetImplicit.prototype.updateSubtreeCache = function(subtreeArrayBuffer, subtreeRootKey) {
-        // UNPACK subtreeArrayBuffer payload into a byte array
+        // Unpack subtreeArrayBuffer payload into a byte array
         var payload = new Uint8Array(subtreeArrayBuffer);
         // var subtreeLevels = this._tilingScheme.subtreeLevels;
         var isOct = this._isOct;
