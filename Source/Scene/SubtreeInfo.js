@@ -3,23 +3,15 @@ define([
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
-        '../Core/deprecationWarning',
         '../Core/destroyObject',
-        '../Core/JulianDate',
-        '../Core/Math',
-        '../Core/RuntimeError',
-        '../ThirdParty/when'
+        '../Core/DeveloperError'
     ], function(
         Cartesian4,
         defaultValue,
         defined,
         defineProperties,
-        deprecationWarning,
         destroyObject,
-        JulianDate,
-        CesiumMath,
-        RuntimeError,
-        when) {
+        DeveloperError) {
     'use strict';
 
     /**
@@ -37,7 +29,12 @@ define([
         this._subtreeRootKeyString = subtreeRootKey.w + '/' +  subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
         this._subtreesIndexMap = undefined;
         this._subtrees = undefined;
-        init();
+
+        if (!defined(this._subtree)) {
+            this.initRoot();
+        } else {
+            this.init();
+        }
 
         // /**
         //  * When <code>true</code>, the tile has no content.
@@ -68,9 +65,6 @@ define([
         //  */
         // this.expireDuration = expireDuration;
     }
-
-    // This can be overridden for testing purposes
-    SubtreeInfo._deprecationWarning = deprecationWarning;
 
     defineProperties(SubtreeInfo.prototype, {
         // /**
@@ -107,6 +101,36 @@ define([
      * @param {Cartesian4} subtreeRootKey The tree key of the root of the subtree
      * @private
      */
+    SubtreeInfo.prototype.initRoot = function() {
+        // Early exit if subtree last level matches tree last level
+        var tileset = this._tileset;
+        var tilingScheme = tileset._tilingScheme;
+        var roots = tilingScheme.roots;
+
+        var nextIdx = 0;
+        var array = [];
+        var map = new Map();
+        var i, keyString, treeKey;
+        var rootsLength = roots.length;
+        for (i = 0; i < rootsLength; i++) {
+            array.push(undefined); // alloc enough slots for all the roots
+            treeKey = roots[i];
+            keyString = treeKey.w + '/' + treeKey.x + '/' + treeKey.y + '/' + treeKey.z;
+            map.set(keyString, nextIdx++);
+        }
+
+        this._subtreesIndexMap = map;
+        this._subtrees = array;
+        this._subtreeLastLevel0Indexed = roots[0][0];
+    };
+
+    /**
+     * Adds the subtree to the subtree cache
+     *
+     * @param {UintArray8} subtree The subtree byte array to add
+     * @param {Cartesian4} subtreeRootKey The tree key of the root of the subtree
+     * @private
+     */
     SubtreeInfo.prototype.init = function() {
         // Early exit if subtree last level matches tree last level
         var subtreeRootKey = this._subtreeRootKey;
@@ -117,6 +141,14 @@ define([
         var subtreeLastTreeLevel1Indexed = subtreeRootKey.w + subtreeLevels;
         if (subtreeLastTreeLevel1Indexed === lastTreeLevel1Indexed) {
             // No subtrees beyond us
+            this._subtreeLastLevel0Indexed = subtreeRootKey.w;
+            return;
+        }
+
+        var subtree = this._subtree;
+        if (subtree[0] === 1 && subtree[1] === 0) {
+            // Empty subtree
+            this._subtreeLastLevel0Indexed = subtreeRootKey.w;
             return;
         }
 
@@ -128,8 +160,7 @@ define([
         var nextIdx = 0;
         var array = [];
         var map = new Map();
-        var i, result, keyString, subtreeIndex, treeKey,
-        var subtree = this._subtree;
+        var i, result, keyString, subtreeIndex, treeKey;
         for (i = 0; i < numTilesOnLastLevel; i++) {
             subtreeIndex = i + lastLevelOffset;
             if (subtree[i + lastLevelOffset] === 1) {
@@ -158,9 +189,9 @@ define([
     SubtreeInfo.prototype.findParent = function(subtreeRootKey, subtreeRootKeyString) {
         var tileset = this._tileset;
         var subtreeLastLevel0Indexed = this._subtreeLastLevel0Indexed;
+
         if (subtreeLastLevel0Indexed === -1) {
-            // usually indicates a last subtree, shouldn't occur.
-            throw new DeveloperError('Asking for subtree beyond a final subtree.');
+            throw new DeveloperError('Unit subtree in subtreeInfo.');
         }
 
         if (subtreeLastLevel0Indexed === subtreeRootKey.w) {
@@ -180,9 +211,8 @@ define([
             resultRootKey = result.subtreeRootKey;
         }
 
-        var map = this._subtreesIndexMap;
         var resultRootKeyString = resultRootKey.w + '/' + resultRootKey.x + '/' + resultRootKey.y + '/' + resultRootKey.z;
-        var ancestor = map.get(resultRootKeyString);
+        var ancestor = this._subtreesIndexMap.get(resultRootKeyString);
 
         // if it is undefined return undefined, else recurse
         if (!defined(ancestor)) {

@@ -48,6 +48,7 @@ define([
         './SceneMode',
         './ShadowMode',
         './StencilConstants',
+        './SubtreeInfo',
         './TileBoundingRegion',
         './TileBoundingSphere',
         './TileOrientedBoundingBox'
@@ -101,6 +102,7 @@ define([
         SceneMode,
         ShadowMode,
         StencilConstants,
+        SubtreeInfo,
         TileBoundingRegion,
         TileBoundingSphere,
         TileOrientedBoundingBox) {
@@ -264,6 +266,8 @@ define([
         // TODO: Cache/Manager class that has some or all of these values as
         // well as any subtree precomputation (array sizes, sse sphere radii, etc)
         this._subtreeCache = new Map(); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
+        // this._subtreeCache = undefined; // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
+        // TODO: this probably needs to get subsumed by subtreeInfo
         this._tiles = new Map(); // Holds the subtree tiles, Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is an Array of tiles (undefined spots are unavailable)
         // this._subtreeViewer = new ImplicitSubtreeViewer(this); // TODO: Make class with the toroidial multi dimensional array to make iteration easier, needs to update small portions every frame
         // I think there are two portions? ancestor portion 1d array and the normal portion which is a 3d array (fixed sizes on each level?) toroidial array?
@@ -1046,6 +1050,7 @@ define([
                     //     refine: tilingScheme.refine,
                     // };
 
+                    // that._subtreeCache = new SubtreeInfo(that);
                     that._root = that.updateTilesetFromSubtree(resource, subtreeArrayBuffer, rootKey);
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
@@ -1867,34 +1872,34 @@ define([
     //     return false;
     // };
 
-    Cesium3DTilesetImplicit.prototype.anyChildrenAvailableSubtree = function(parentX, parentY, parentZ, parentLevel) {
-        var isOct = this._isOct;
-        var startX = parentX * 2;
-        var startY = parentY * 2;
-        var startZ = isOct ? parentZ * 2 : 0;
-        var endX = startX + 1;
-        var endY = startY + 1;
-        var endZ = isOct ? startZ + 1 : 0;
-
-        var level = parentLevel + 1;
-        // if (level > (this._available.length - 1)) {
-        //     return false ;
-        // }
-
-        var result;
-        for (var z = startZ; z <= endZ; ++z) {
-            for (var x = startX; x <= endX; ++x) {
-                for (var y = startY; y <= endY; ++y) {
-                    result = this.isTileAvailableTreeKey(x, y, z, level);
-                    if (result.isAvailable) {
-                        return true;
-                    }
-                }
-            }
-        }
-
-        return false;
-    };
+    // Cesium3DTilesetImplicit.prototype.anyChildrenAvailableSubtree = function(parentX, parentY, parentZ, parentLevel) {
+    //     var isOct = this._isOct;
+    //     var startX = parentX * 2;
+    //     var startY = parentY * 2;
+    //     var startZ = isOct ? parentZ * 2 : 0;
+    //     var endX = startX + 1;
+    //     var endY = startY + 1;
+    //     var endZ = isOct ? startZ + 1 : 0;
+    //
+    //     var level = parentLevel + 1;
+    //     // if (level > (this._available.length - 1)) {
+    //     //     return false ;
+    //     // }
+    //
+    //     var result;
+    //     for (var z = startZ; z <= endZ; ++z) {
+    //         for (var x = startX; x <= endX; ++x) {
+    //             for (var y = startY; y <= endY; ++y) {
+    //                 result = this.isTileAvailableTreeKey(x, y, z, level);
+    //                 if (result.isAvailable) {
+    //                     return true;
+    //                 }
+    //             }
+    //         }
+    //     }
+    //
+    //     return false;
+    // };
 
     // Cesium3DTilesetImplicit.prototype.derivedImplicitGeometricError = function(parent, x, y, z, xTiles, yTiles) {
     //     var anyChildrenAvailable = !defined(parent.treeKey) ? true : this.anyChildrenAvailableSubtree(x, y, z, parent.treeKey.w + 1); // parent key depth + 1 is this tiles depth, we want to see if this tile has any children for seting gError to 0
@@ -2004,39 +2009,39 @@ define([
         };
     };
 
-    /**
-     * Determine if the tile's tree based x,y,z,d is available.
-     *
-     * @private
-     */
-    Cesium3DTilesetImplicit.prototype.isTileAvailableTreeKey = function(x, y, z, level) {
-        // var isOct = this._isOct;
-        var subtreeCache = this._subtreeCache;
-        var result = this.getSubtreeInfoFromTreeKey(x, y, z, level);
-
-        // if(packed) {
-        //     // Which byte is holding this tile's bit
-        //     var indexOffsetToByteOnLevel = tileIndexOnLevel >> 3;
-        //     // which bit in the byte is holding this tile's availability
-        //     var bitInByte = tileIndexOnLevel & 0b111; // modulo 8
-        //     var index = indexOffsetToFirstByteOnLevel + indexOffsetToByteOnLevel;
-        //     var bitMask = (1 << bitInByte);
-        //     isAvailable = (subtree[index] & bitMask) === bitMask;
-        // } else {
-            var subtreeRootKey = result.subtreeRootKey;
-            var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
-            var subtree = subtreeCache.get(key);
-            var index = result.subtreeIndex;
-            var isAvailable = subtree[index] === 0x1;
-        // }
-
-        return {
-            isAvailable: isAvailable,
-            subtreeRootKey: subtreeRootKey,
-            subtreeKey: result.subtreeKey,
-            subtreeIndex: index
-        };
-    };
+    // /**
+    //  * Determine if the tile's tree based x,y,z,d is available.
+    //  *
+    //  * @private
+    //  */
+    // Cesium3DTilesetImplicit.prototype.isTileAvailableTreeKey = function(x, y, z, level) {
+    //     // var isOct = this._isOct;
+    //     var subtreeCache = this._subtreeCache;
+    //     var result = this.getSubtreeInfoFromTreeKey(x, y, z, level);
+    //
+    //     // if(packed) {
+    //     //     // Which byte is holding this tile's bit
+    //     //     var indexOffsetToByteOnLevel = tileIndexOnLevel >> 3;
+    //     //     // which bit in the byte is holding this tile's availability
+    //     //     var bitInByte = tileIndexOnLevel & 0b111; // modulo 8
+    //     //     var index = indexOffsetToFirstByteOnLevel + indexOffsetToByteOnLevel;
+    //     //     var bitMask = (1 << bitInByte);
+    //     //     isAvailable = (subtree[index] & bitMask) === bitMask;
+    //     // } else {
+    //         var subtreeRootKey = result.subtreeRootKey;
+    //         var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
+    //         var subtree = subtreeCache.get(key);
+    //         var index = result.subtreeIndex;
+    //         var isAvailable = subtree[index] === 0x1;
+    //     // }
+    //
+    //     return {
+    //         isAvailable: isAvailable,
+    //         subtreeRootKey: subtreeRootKey,
+    //         subtreeKey: result.subtreeKey,
+    //         subtreeIndex: index
+    //     };
+    // };
 
     // /**
     //  * Determine if the tile is available
