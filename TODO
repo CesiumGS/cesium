@@ -5,42 +5,12 @@ of the subtree
     I don't think you absolutely need 0 sse in the leaves, since there're examples working
 
 
-[x] External tilesets
-   leaf tile holds a subtree resource, makes a request for the subtree when the tile request goes out as well
-   THIS IS ASYNC AND WILL BE BAD WHEN DOING JUST ARRAYS SINCE YOU NEED TO MUTEX ALL ACCESS TO THE MAP
-   (or push the tile arrays onto a queue(that has to be mutexed) and updte the map at the top of the frame from this queue)
-   WITH TREES YOU DON"T SINCE EXTENDING THE TREE IS AN ISOLATED EDIT
-   in fact there already seems to be some inconsistant load results with the pointcloud, maybe due to race condition
-   also the pointcloud makes little sense (lod does really line up with the bounds)
-
-    _available:
-    subtreeInfo {
-        subtree: subtree,
-        numTilesOnLastLevel: numTilesOnLastLevel,
-        childrenIndexMap: new Map(numTilesOnLastLevel), // subtreeKey -> lastLevelTiles index
-        lastLevelTiles: new Array[numTilesOnLastLevel]
-    }
-
-   and make subtree requests higher priority (add a digit)
-   so a tile can have a _request and a _requestSubtree
-
-   [ ] The subtree might need 2 bits per tile (at least on the last level) to signal an external subtree
-   request is needed, otherwise you'll get a bunch of 404 noise in the console
-   could specify a maxDepth in the tileset.json and any tile in the last level must have an external tileset
-   unless its at the maxdepth
-
-   [] Get rid of subtree member vars in tile that aren't really needed
-
+[ ] The pointcloud makes little sense (lod does really line up with the bounds)
+[ ] script to convert pointcloud tileset to implicit tileset?
 
 [ ] Try to traverse the subtree arrays in tree style (is this a waste of time?)
     NOTE: Not sure about storing subtree refs (don't store for now)
     subtree ref / chilren subtree ref
 
 [ ] toroidial subtree viewer? it's camera relative, right?
-[ ] cone tracing?
-[ ] look at the sse calculation and see if theres a good way to pre-calc the sse spheres and sphere deltas
 [ ] incrementally move components to array style
-[ ] try to go full bresenham
-
-[ ] 4 para patent brainstorm write ups for traversal(cone trace?), ray trace,
-    give me highest lods in this bounds, and whatever else
