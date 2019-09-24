@@ -24,19 +24,22 @@
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <script type="text/javascript">
 /*global pako */
-if (window.location.hash.indexOf('#c=') === 0) {
-    var base64String = window.location.hash.substr(3);
-    var data = window.decodeBase64Data(base64String, pako);
-    //Handle case where demo is in a sub-directory by modifying
-    //the HTML to add a base href.
-    document.head.innerHTML = document.head.innerHTML + '<base href="' + data.baseHref + '" />';
-    window.sandcastleData = data;
-}
+    var base64String;
+    var data;
+
+    if (window.location.hash.indexOf('#c=') === 0) {
+        base64String = window.location.hash.substr(3);
+        data = window.decodeBase64Data(base64String, pako);
+        //Handle case where demo is in a sub-directory by modifying
+        //the HTML to add a base href.
+        document.head.innerHTML = document.head.innerHTML + '<base href="' + data.baseHref + '" />';
+        window.sandcastleData = data;
+    }
 
     var code;
     if (window.sandcastleData) {
-        var base64String = window.location.hash.substr(3);
-        var data = window.sandcastleData;
+        base64String = window.location.hash.substr(3);
+        data = window.sandcastleData;
         var html = data.html;
         code = data.code;
         var isIE11 = !!window.MSInputMethodContext && !!document.documentMode;

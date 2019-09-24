@@ -93,7 +93,7 @@
     "coverage": "gulp coverage",
     "generateDocumentation": "gulp generateDocumentation",
     "generateDocumentation-watch": "gulp generateDocumentation-watch",
-    "eslint": "eslint \"./**/*.js\" --cache --quiet",
+    "eslint": "eslint \"./**/*.js\" \"./**/*.html\" --cache --quiet",
     "makeZipFile": "gulp makeZipFile",
     "minify": "gulp minify",
     "minifyRelease": "gulp minifyRelease",

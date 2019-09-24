@@ -4,7 +4,7 @@ import * as Cesium from "../../../Source/Cesium.js";
 window.Cesium = Cesium;
 
 // Since ES6 modues have no gauranteed load order,
-// onlycall startup if it's already defined but hasn't been called yet
+// only call startup if it's already defined but hasn't been called yet
 if (!window.startupCalled && typeof window.startup === 'function') {
     window.startup(Cesium);
 }

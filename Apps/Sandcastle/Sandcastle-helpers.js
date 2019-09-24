@@ -11,7 +11,7 @@
            '    Sandcastle.finishedLoading();\n' +
            '}\n' +
            'if (typeof Cesium !== \'undefined\') {\n' +
-           '    startupCalled = true;\n' +
+           '    window.startupCalled = true;\n' +
            '    startup(Cesium);\n' +
            '}\n';
     };
