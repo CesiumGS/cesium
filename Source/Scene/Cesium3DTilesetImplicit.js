@@ -2351,7 +2351,8 @@ define([
             y = treeKey.y;
             z = treeKey.z;
 
-            uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+            // uri = isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+            uri = isOct ? level + '/' + x + '/'+ y + '/' + z : level + '/' + x + '/' + y;
 
             subtreeKey = result.subtreeKey;
             onLastSubtreeLevel = subtreeKey.w === subtreeLevels0Indexed;
