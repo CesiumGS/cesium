@@ -2,11 +2,14 @@ import Cartesian4 from '../Core/Cartesian4.js';
 import defined from '../Core/defined.js';
 import destroyObject from '../Core/destroyObject.js';
 import PixelFormat from '../Core/PixelFormat.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
 import Framebuffer from '../Renderer/Framebuffer.js';
 import PixelDatatype from '../Renderer/PixelDatatype.js';
 import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
 import ShaderSource from '../Renderer/ShaderSource.js';
 import Texture from '../Renderer/Texture.js';
+import DepthFunction from './DepthFunction.js';
 
     /**
      * @private
@@ -17,6 +20,7 @@ import Texture from '../Renderer/Texture.js';
         this._depthTexture = undefined;
         this._textureToCopy = undefined;
         this._copyDepthCommand = undefined;
+        this._copyDepthPlaneCommand = undefined;
 
         this._useLogDepth = undefined;
 
@@ -152,6 +156,68 @@ import Texture from '../Renderer/Texture.js';
 
     PickDepth.prototype.executeCopyDepth = function(context, passState) {
         this._copyDepthCommand.execute(context, passState);
+    };
+
+    PickDepth.prototype.executeDepthPlaneCopy = function(context, passState, depthPlane) {
+        var renderState = RenderState.fromCache({
+            cull : {
+                enabled : true
+            },
+            depthTest : {
+                enabled : true,
+                func : DepthFunction.EQUAL
+            },
+            depthMask : false
+        });
+
+        var originalCommand = depthPlane._command; // TODO
+        var originalShaderProgram = originalCommand.shaderProgram;
+        var attributeLocations = originalShaderProgram._attributeLocations;
+        var vs = originalShaderProgram.vertexShaderSource.clone();
+        var fs = originalShaderProgram.fragmentShaderSource.clone();
+
+        var i;
+        var sources = fs.sources;
+        var length = sources.length;
+        for (i = 0; i < length; ++i) {
+            sources[i] = ShaderSource.replaceMain(sources[i], 'czm_pick_depth_main');
+        }
+
+        // TODO - recompute shader if the shader program changed (i.e. log depth was toggled)
+
+        var newMain =
+            '\n\n' +
+            'void main() \n' +
+            '{ \n' +
+            '    czm_pick_depth_main(); \n' +
+            '    vec2 textureCoordinates = gl_FragCoord.xy / czm_viewport.zw; \n' +
+            '    gl_FragColor = texture2D(czm_globeDepthTexture, textureCoordinates); \n' +
+            '} \n';
+
+        sources.push(newMain);
+
+        // TODO : use replaceCache
+        var shaderProgram = ShaderProgram.fromCache({
+            context : context,
+            vertexShaderSource : vs,
+            fragmentShaderSource : fs,
+            attributeLocations : attributeLocations
+        });
+
+        var framebuffer = new Framebuffer({
+            context : context,
+            colorTextures : [this._depthTexture],
+            depthStencilTexture : this._textureToCopy,
+            destroyAttachments : false
+        });
+
+        var command = DrawCommand.shallowClone(originalCommand);
+        command.renderState = renderState;
+        command.shaderProgram = shaderProgram;
+        command.owner = this;
+        command.framebuffer = framebuffer;
+
+        command.execute(context, passState);
     };
 
     PickDepth.prototype.isDestroyed = function() {
