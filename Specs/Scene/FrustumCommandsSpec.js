@@ -6,7 +6,7 @@ define([
         FrustumCommands) {
         'use strict';
 
-describe('Renderer/Pass', function() {
+describe('Scene/FrustumCommands', function() {
 
     it('constructs without arguments', function() {
         var frustum = new FrustumCommands();

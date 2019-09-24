@@ -16,7 +16,7 @@ define([
         WebMercatorProjection) {
         'use strict';
 
-describe('Core/HeightmapTessellator', function() {
+describe('Scene/HeightmapTessellator', function() {
 
     it('throws when heightmap is not provided', function() {
         expect(function() {

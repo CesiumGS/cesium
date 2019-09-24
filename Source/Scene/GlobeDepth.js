@@ -487,7 +487,7 @@ define([
             clear.execute(context, passState);
         }
         clear = this._clearPrimitiveColorCommand;
-        if (defined(clear)) {
+        if (defined(clear) && defined(this._primitiveColorFramebuffer)) {
             clear.execute(context, passState);
         }
     };

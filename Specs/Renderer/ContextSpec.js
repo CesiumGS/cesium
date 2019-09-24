@@ -173,6 +173,10 @@ describe('Renderer/Context', function() {
         expect(context.floatingPointTexture).toBeDefined();
     });
 
+    it('gets whether the texture float has 6 places of precision', function() {
+        expect(context.floatTextureSixPlaces).toBeDefined();
+    });
+
     it('gets texture filter anisotropic extension', function() {
         expect(context.textureFilterAnisotropic).toBeDefined();
     });

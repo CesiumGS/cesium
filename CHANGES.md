@@ -20,7 +20,6 @@ Change Log
 * Fixed relative-to-center check, `depthFailAppearance` resource freeing for `Primitive` [#8044](https://github.com/AnalyticalGraphicsInc/cesium/pull/8044)
 * Reduces size of approximateTerrainHeights.json by rounding the numbers [#7959](https://github.com/AnalyticalGraphicsInc/cesium/pull/7959)
 * Fixed undefined `quadDetails` error from zooming into the map really close. [#8011](https://github.com/AnalyticalGraphicsInc/cesium/pull/8011)
-* Fixed triangulation bug in polygons using `ArcType.RHUMB`. [#8042](https://github.com/AnalyticalGraphicsInc/cesium/issues/8042)
 * Fixed a bug where extruded polygons would sometimes be missing segments. [#8035](https://github.com/AnalyticalGraphicsInc/cesium/pull/8035)
 * 3D Tiles geometric error now scales with transform. [#8182](https://github.com/AnalyticalGraphicsInc/cesium/pull/8182)
 * Fixed per-feature post processing from sometimes selecting the wrong feature. [#7929](https://github.com/AnalyticalGraphicsInc/cesium/pull/7929)
@@ -28,8 +27,11 @@ Change Log
 * Fixed a crash for 3D Tiles that have zero volume. [#7945](https://github.com/AnalyticalGraphicsInc/cesium/pull/7945)
 * `pickPosition` no longer returns incorrect results on the globe when `scene.globe.depthTestAgainstTerrain` is `false`. [#8207](https://github.com/AnalyticalGraphicsInc/cesium/pull/8207)
 * Fixed seam artifacts when log depth is disabled, `scene.globe.depthTestAgainstTerrain` is false, and primitives are under the globe. [#8205](https://github.com/AnalyticalGraphicsInc/cesium/pull/8205)
+* Spread out KMl loading across multiple frames to prevent freezing. [#8195](https://github.com/AnalyticalGraphicsInc/cesium/pull/8195)
 * Fixed a bug where dynamic polylines did not use the given arcType. [#8191](https://github.com/AnalyticalGraphicsInc/cesium/issues/8191)
+* Fixed an issue where polygons, corridors, rectangles, and ellipses on terrain would not render on some mobile devices. [#6739](https://github.com/AnalyticalGraphicsInc/cesium/issues/6739)
 * Fixed a bug where GlobeSurfaceTile would not render the tile until all layers completed loading causing globe to appear to hang. [#7974](https://github.com/AnalyticalGraphicsInc/cesium/issues/7974)
+* Fixed alpha equation for `BlendingState.ALPHA_BLEND` and `BlendingState.ADDITIVE_BLEND`. [#8202](https://github.com/AnalyticalGraphicsInc/cesium/pull/8202)
 
 ### 1.61 - 2019-09-03
 
