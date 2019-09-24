@@ -79,7 +79,7 @@ describe('Scene/Sun', function() {
 
         viewSun(scene.camera, scene.context.uniformState);
         scene.frameState.passes.render = false;
-        var command = scene.sun.update(scene.frameState, scene._view.passState);
+        var command = scene.sun.update(scene.frameState, scene.view.passState);
         expect(command).not.toBeDefined();
     });
 

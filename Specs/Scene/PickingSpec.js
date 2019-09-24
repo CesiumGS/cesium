@@ -25,7 +25,7 @@ import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
 import { when } from '../../Source/Cesium.js';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/Pick', function() {
 
     // It's not easily possible to mock the most detailed pick functions
     // so don't run those tests when using the WebGL stub

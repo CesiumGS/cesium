@@ -155,6 +155,150 @@ import WallGraphics from './WallGraphics.js';
     var BILLBOARD_FAR_DISTANCE = 1.6093e+7;
     var BILLBOARD_FAR_RATIO = 0.1;
 
+    var kmlNamespaces = [null, undefined, 'http://www.opengis.net/kml/2.2', 'http://earth.google.com/kml/2.2', 'http://earth.google.com/kml/2.1', 'http://earth.google.com/kml/2.0'];
+    var gxNamespaces = ['http://www.google.com/kml/ext/2.2'];
+    var atomNamespaces = ['http://www.w3.org/2005/Atom'];
+    var namespaces = {
+        kml : kmlNamespaces,
+        gx : gxNamespaces,
+        atom : atomNamespaces,
+        kmlgx : kmlNamespaces.concat(gxNamespaces)
+    };
+
+    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
+    var featureTypes = {
+        Document : processDocument,
+        Folder : processFolder,
+        Placemark : processPlacemark,
+        NetworkLink : processNetworkLink,
+        GroundOverlay : processGroundOverlay,
+        PhotoOverlay : processUnsupportedFeature,
+        ScreenOverlay : processUnsupportedFeature,
+        Tour : processTour
+    };
+
+    function DeferredLoading(dataSource) {
+        this._dataSource = dataSource;
+        this._deferred = when.defer();
+        this._stack = [];
+        this._promises = [];
+        this._timeoutSet = false;
+        this._used = false;
+
+        this._started = 0;
+        this._timeThreshold = 1000; // Initial load is 1 second
+    }
+
+    defineProperties(DeferredLoading.prototype, {
+        dataSource : {
+            get : function() {
+                return this._dataSource;
+            }
+        }
+    });
+
+    DeferredLoading.prototype.addNodes = function(nodes, processingData) {
+        this._stack.push({
+            nodes: nodes,
+            index: 0,
+            processingData: processingData
+        });
+        this._used = true;
+    };
+
+    DeferredLoading.prototype.addPromise = function(promise) {
+        this._promises.push(promise);
+    };
+
+    DeferredLoading.prototype.wait = function() {
+        // Case where we had a non-document/folder as the root
+        var deferred = this._deferred;
+        if (!this._used) {
+            deferred.resolve();
+        }
+
+        return when.join(deferred.promise, when.all(this._promises));
+    };
+
+    DeferredLoading.prototype.process = function() {
+        var isFirstCall = (this._stack.length === 1);
+        if (isFirstCall) {
+            this._started = KmlDataSource._getTimestamp();
+        }
+
+        return this._process(isFirstCall);
+    };
+
+    DeferredLoading.prototype._giveUpTime = function() {
+        if (this._timeoutSet) {
+            // Timeout was already set so just return
+            return;
+        }
+
+        this._timeoutSet = true;
+        this._timeThreshold = 50; // After the first load lower threshold to 0.5 seconds
+        var that = this;
+        setTimeout(function() {
+            that._timeoutSet = false;
+            that._started = KmlDataSource._getTimestamp();
+            that._process(true);
+        }, 0);
+    };
+
+    DeferredLoading.prototype._nextNode = function() {
+        var stack = this._stack;
+        var top = stack[stack.length-1];
+        var index = top.index;
+        var nodes = top.nodes;
+        if (index === nodes.length) {
+            return;
+        }
+        ++top.index;
+
+        return nodes[index];
+    };
+
+    DeferredLoading.prototype._pop = function() {
+        var stack = this._stack;
+        stack.pop();
+
+        // Return false if we are done
+        if (stack.length === 0) {
+            this._deferred.resolve();
+            return false;
+        }
+
+        return true;
+    };
+
+    DeferredLoading.prototype._process = function(isFirstCall) {
+        var dataSource = this.dataSource;
+        var processingData = this._stack[this._stack.length-1].processingData;
+
+        var child = this._nextNode();
+        while(defined(child)) {
+            var featureProcessor = featureTypes[child.localName];
+            if(defined(featureProcessor) &&
+               ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
+                featureProcessor(dataSource, child, processingData, this);
+
+                // Give up time and continue loading later
+                if (this._timeoutSet || (KmlDataSource._getTimestamp() > (this._started + this._timeThreshold))) {
+                    this._giveUpTime();
+                    return;
+                }
+            }
+
+            child = this._nextNode();
+        }
+
+        // If we are a recursive call from a subfolder, just return so the parent folder can continue processing
+        // If we aren't then make another call to processNodes because there is stuff still left in the queue
+        if (this._pop() && isFirstCall) {
+            this._process(true);
+        }
+    };
+
     function isZipFile(blob) {
         var magicBlob = blob.slice(0, Math.min(4, blob.size));
         var deferred = when.defer();
@@ -347,16 +491,6 @@ import WallGraphics from './WallGraphics.js';
         }
         return result;
     }
-
-    var kmlNamespaces = [null, undefined, 'http://www.opengis.net/kml/2.2', 'http://earth.google.com/kml/2.2', 'http://earth.google.com/kml/2.1', 'http://earth.google.com/kml/2.0'];
-    var gxNamespaces = ['http://www.google.com/kml/ext/2.2'];
-    var atomNamespaces = ['http://www.w3.org/2005/Atom'];
-    var namespaces = {
-        kml : kmlNamespaces,
-        gx : gxNamespaces,
-        atom : atomNamespaces,
-        kmlgx : kmlNamespaces.concat(gxNamespaces)
-    };
 
     function queryNumericAttribute(node, attributeName) {
         if (!defined(node)) {
@@ -1590,10 +1724,15 @@ import WallGraphics from './WallGraphics.js';
         entity.description = tmp;
     }
 
-    function processFeature(dataSource, parent, featureNode, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
-        var entity = createEntity(featureNode, entityCollection, context);
+    function processFeature(dataSource, featureNode, processingData) {
+        var entityCollection = processingData.entityCollection;
+        var parent = processingData.parentEntity;
+        var sourceResource = processingData.sourceResource;
+        var uriResolver = processingData.uriResolver;
+
+        var entity = createEntity(featureNode, entityCollection, processingData.context);
         var kmlData = entity.kml;
-        var styleEntity = computeFinalStyle(dataSource, featureNode, styleCollection, sourceResource, uriResolver);
+        var styleEntity = computeFinalStyle(dataSource, featureNode, processingData.styleCollection, sourceResource, uriResolver);
 
         var name = queryStringValue(featureNode, 'name', namespaces.kml);
         entity.name = name;
@@ -1655,45 +1794,20 @@ import WallGraphics from './WallGraphics.js';
         };
     }
 
-    // Ensure Specs/Data/KML/unsupported.kml is kept up to date with these supported types
-    var featureTypes = {
-        Document : processDocument,
-        Folder : processFolder,
-        Placemark : processPlacemark,
-        NetworkLink : processNetworkLink,
-        GroundOverlay : processGroundOverlay,
-        PhotoOverlay : processUnsupportedFeature,
-        ScreenOverlay : processUnsupportedFeature,
-        Tour : processTour
-    };
-
-    function processDocument(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
-        var featureTypeNames = Object.keys(featureTypes);
-        var featureTypeNamesLength = featureTypeNames.length;
-
-        for (var i = 0; i < featureTypeNamesLength; i++) {
-            var featureName = featureTypeNames[i];
-            var processFeatureNode = featureTypes[featureName];
-
-            var childNodes = node.childNodes;
-            var length = childNodes.length;
-            for (var q = 0; q < length; q++) {
-                var child = childNodes[q];
-                if (child.localName === featureName &&
-                    ((namespaces.kml.indexOf(child.namespaceURI) !== -1) || (namespaces.gx.indexOf(child.namespaceURI) !== -1))) {
-                    processFeatureNode(dataSource, parent, child, entityCollection, styleCollection, sourceResource, uriResolver, promises, context);
-                }
-            }
-        }
+    function processDocument(dataSource, node, processingData, deferredLoading) {
+        deferredLoading.addNodes(node.childNodes, processingData);
+        deferredLoading.process();
     }
 
-    function processFolder(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context);
-        processDocument(dataSource, r.entity, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context);
+    function processFolder(dataSource, node, processingData, deferredLoading) {
+        var r = processFeature(dataSource, node, processingData);
+        var newProcessingData = clone(processingData);
+        newProcessingData.parentEntity = r.entity;
+        processDocument(dataSource, node, newProcessingData, deferredLoading);
     }
 
-    function processPlacemark(dataSource, parent, placemark, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
-        var r = processFeature(dataSource, parent, placemark, entityCollection, styleCollection, sourceResource, uriResolver, promises, context);
+    function processPlacemark(dataSource, placemark, processingData, deferredLoading) {
+        var r = processFeature(dataSource, placemark, processingData);
         var entity = r.entity;
         var styleEntity = r.styleEntity;
 
@@ -1705,7 +1819,7 @@ import WallGraphics from './WallGraphics.js';
             if (defined(geometryProcessor)) {
                 // pass the placemark entity id as a context for case of defining multiple child entities together to handle case
                 // where some malformed kmls reuse the same id across placemarks, which works in GE, but is not technically to spec.
-                geometryProcessor(dataSource, entityCollection, childNode, entity, styleEntity, entity.id);
+                geometryProcessor(dataSource, processingData.entityCollection, childNode, entity, styleEntity, entity.id);
                 hasGeometry = true;
             }
         }
@@ -1724,7 +1838,7 @@ import WallGraphics from './WallGraphics.js';
         TourControl: processTourUnsupportedNode
     };
 
-    function processTour(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
+    function processTour(dataSource, node, processingData, deferredLoading) {
         var name = queryStringValue(node, 'name', namespaces.kml);
         var id = queryStringAttribute(node, 'id');
         var tour = new KmlTour(name, id);
@@ -1816,8 +1930,8 @@ import WallGraphics from './WallGraphics.js';
         }
     }
 
-    function processGroundOverlay(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
-        var r = processFeature(dataSource, parent, groundOverlay, entityCollection, styleCollection, sourceResource, uriResolver, promises, context);
+    function processGroundOverlay(dataSource, groundOverlay, processingData, deferredLoading) {
+        var r = processFeature(dataSource, groundOverlay, processingData);
         var entity = r.entity;
 
         var geometry;
@@ -1868,7 +1982,7 @@ import WallGraphics from './WallGraphics.js';
         }
 
         var iconNode = queryFirstNode(groundOverlay, 'Icon', namespaces.kml);
-        var href = getIconHref(iconNode, dataSource, sourceResource, uriResolver, true);
+        var href = getIconHref(iconNode, dataSource, processingData.sourceResource, processingData.uriResolver, true);
         if (defined(href)) {
             if (isLatLonQuad) {
                 oneTimeWarning('kml-gx:LatLonQuad', 'KML - gx:LatLonQuad Icon does not support texture projection.');
@@ -1914,8 +2028,9 @@ import WallGraphics from './WallGraphics.js';
         }
     }
 
-    function processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
-        dataSource._unsupportedNode.raiseEvent(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver);
+    function processUnsupportedFeature(dataSource, node, processingData, deferredLoading) {
+        dataSource._unsupportedNode.raiseEvent(dataSource, processingData.parentEntity, node, processingData.entityCollection,
+            processingData.styleCollection, processingData.sourceResource, processingData.uriResolver);
         oneTimeWarning('kml-unsupportedFeature-' + node.nodeName, 'KML - Unsupported feature: ' + node.nodeName);
     }
 
@@ -2072,9 +2187,12 @@ import WallGraphics from './WallGraphics.js';
         resource.setQueryParameters(queryToObject(queryString));
     }
 
-    function processNetworkLink(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
-        var r = processFeature(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context);
+    function processNetworkLink(dataSource, node, processingData, deferredLoading) {
+        var r = processFeature(dataSource, node, processingData);
         var networkEntity = r.entity;
+
+        var sourceResource = processingData.sourceResource;
+        var uriResolver = processingData.uriResolver;
 
         var link = queryFirstNode(node, 'Link', namespaces.kml);
 
@@ -2087,7 +2205,7 @@ import WallGraphics from './WallGraphics.js';
             var viewBoundScale;
             if (defined(href)) {
                 var newSourceUri = href;
-                href = resolveHref(href, sourceResource, uriResolver);
+                href = resolveHref(href, sourceResource, processingData.uriResolver);
 
                 // We need to pass in the original path if resolveHref returns a data uri because the network link
                 //  references a document in a KMZ archive
@@ -2207,24 +2325,23 @@ import WallGraphics from './WallGraphics.js';
                     dataSource._error.raiseEvent(dataSource, error);
                 });
 
-                promises.push(promise);
+                deferredLoading.addPromise(promise);
             }
         }
     }
 
-    function processFeatureNode(dataSource, node, parent, entityCollection, styleCollection, sourceResource, uriResolver, promises, context) {
+    function processFeatureNode(dataSource, node, processingData, deferredLoading) {
         var featureProcessor = featureTypes[node.localName];
         if (defined(featureProcessor)) {
-            featureProcessor(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context);
-        } else {
-            processUnsupportedFeature(dataSource, parent, node, entityCollection, styleCollection, sourceResource, uriResolver, promises, context);
+            return featureProcessor(dataSource, node, processingData, deferredLoading);
         }
+
+        return processUnsupportedFeature(dataSource, node, processingData, deferredLoading);
     }
 
     function loadKml(dataSource, entityCollection, kml, sourceResource, uriResolver, context) {
         entityCollection.removeAll();
 
-        var promises = [];
         var documentElement = kml.documentElement;
         var document = documentElement.localName === 'Document' ? documentElement : queryFirstNode(documentElement, 'Document', namespaces.kml);
         var name = queryStringValue(document, 'name', namespaces.kml);
@@ -2237,6 +2354,7 @@ import WallGraphics from './WallGraphics.js';
             dataSource._name = name;
         }
 
+        var deferredLoading = new KmlDataSource._DeferredLoading(dataSource);
         var styleCollection = new EntityCollection(dataSource);
         return when.all(processStyles(dataSource, kml, styleCollection, sourceResource, false, uriResolver)).then(function() {
             var element = kml.documentElement;
@@ -2250,13 +2368,24 @@ import WallGraphics from './WallGraphics.js';
                     }
                 }
             }
+
+            var processingData = {
+                parentEntity: undefined,
+                entityCollection: entityCollection,
+                styleCollection: styleCollection,
+                sourceResource: sourceResource,
+                uriResolver: uriResolver,
+                context: context
+            };
+
             entityCollection.suspendEvents();
-            processFeatureNode(dataSource, element, undefined, entityCollection, styleCollection, sourceResource, uriResolver, promises, context);
+            processFeatureNode(dataSource, element, processingData, deferredLoading);
             entityCollection.resumeEvents();
 
-            return when.all(promises).then(function() {
-                return kml.documentElement;
-            });
+            return deferredLoading.wait()
+                .then(function() {
+                    return kml.documentElement;
+                });
         });
     }
 
@@ -3091,4 +3220,9 @@ import WallGraphics from './WallGraphics.js';
          */
         this.extendedData = undefined;
     }
+
+    // For testing
+    KmlDataSource._DeferredLoading = DeferredLoading;
+    KmlDataSource._getTimestamp = getTimestamp;
+
 export default KmlDataSource;

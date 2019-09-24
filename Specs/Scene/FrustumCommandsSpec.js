@@ -1,7 +1,7 @@
 import { Pass } from '../../Source/Cesium.js';
 import { FrustumCommands } from '../../Source/Cesium.js';
 
-describe('Renderer/Pass', function() {
+describe('Scene/FrustumCommands', function() {
 
     it('constructs without arguments', function() {
         var frustum = new FrustumCommands();

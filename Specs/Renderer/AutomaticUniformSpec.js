@@ -12,7 +12,7 @@ import createCamera from '../createCamera.js';
 import createContext from '../createContext.js';
 import createFrameState from '../createFrameState.js';
 
-describe('Core/Cartesian2', function() {
+describe('Renderer/AutomaticUniforms', function() {
 
     var context;
 

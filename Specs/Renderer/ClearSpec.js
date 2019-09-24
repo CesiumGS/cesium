@@ -6,7 +6,7 @@ import { RenderState } from '../../Source/Cesium.js';
 import { Texture } from '../../Source/Cesium.js';
 import createContext from '../createContext.js';
 
-describe('Core/BoundingRectangle', function() {
+describe('Renderer/Clear', function() {
 
     var context;
 

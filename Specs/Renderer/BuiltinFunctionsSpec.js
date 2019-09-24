@@ -6,7 +6,7 @@ import createCamera from '../createCamera.js';
 import createContext from '../createContext.js';
 import createFrameState from '../createFrameState.js';
 
-describe('Core/BoundingRectangle', function() {
+describe('Renderer/BuiltinFunctions', function() {
 
     var context;
 

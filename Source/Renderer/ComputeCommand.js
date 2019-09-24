@@ -102,7 +102,7 @@ import Pass from './Pass.js';
     /**
      * Executes the compute command.
      *
-     * @param {Context} computeEngine The context that processes the compute command.
+     * @param {ComputeEngine} computeEngine The context that processes the compute command.
      */
     ComputeCommand.prototype.execute = function(computeEngine) {
         computeEngine.execute(this);

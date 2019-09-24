@@ -25,7 +25,7 @@ import { TextureAtlas } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import { when } from '../../Source/Cesium.js';
 
-describe('Core/BoundingSphere', function() {
+describe('Scene/Multifrustum', function() {
 
     var scene;
     var context;

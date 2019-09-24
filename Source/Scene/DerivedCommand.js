@@ -275,7 +275,7 @@ import ShaderSource from '../Renderer/ShaderSource.js';
     }
 
     function getPickRenderState(scene, renderState) {
-        var cache = scene._pickRenderStateCache;
+        var cache = scene.picking.pickRenderStateCache;
         var pickState = cache[renderState.id];
         if (!defined(pickState)) {
             var rs = RenderState.getState(renderState);
