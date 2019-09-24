@@ -5,8 +5,12 @@ of the subtree
     I don't think you absolutely need 0 sse in the leaves, since there're examples working
 
 
-[ ] Try to traverse the subtree array data structures in tree style (is this a waste of time?)
-    * Get some indexing down?, verify the structures are getting setup properly?
+[ ] Box array traversal
+    [ ] precompute 1D array of influence radii
+    [ ] don't do culling, just take tiles within range for each level (start with root)
+    [ ] toroidial array stack (or whatever), just setup the root level
+    and look down at teh tileset, the idx should update properly as if the root box
+    was part of a continuous grid.
 
 [ ] script to convert pointcloud tileset to implicit tileset?
 [ ] The pointcloud makes little sense (content doesn't line up with the bounds (in the z direction))
