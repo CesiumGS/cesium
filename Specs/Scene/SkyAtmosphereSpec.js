@@ -82,7 +82,7 @@ describe('Scene/SkyAtmosphere', function() {
         var s = new SkyAtmosphere();
 
         scene.skyAtmosphere = s;
-        scene._environmentState.isReadyForAtmosphere = true;
+        scene.environmentState.isReadyForAtmosphere = true;
 
         scene.camera.setView({
             destination : Cartesian3.fromDegrees(-75.5847, 40.0397, 1000.0),

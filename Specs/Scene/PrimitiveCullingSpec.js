@@ -21,7 +21,7 @@ import { SceneMode } from '../../Source/Cesium.js';
 import { VerticalOrigin } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/PrimitiveCulling', function() {
 
     var scene;
     var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0);

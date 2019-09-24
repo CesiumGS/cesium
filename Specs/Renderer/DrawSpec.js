@@ -16,7 +16,7 @@ import { VertexArray } from '../../Source/Cesium.js';
 import { BlendingState } from '../../Source/Cesium.js';
 import createContext from '../createContext.js';
 
-describe('Core/BoundingRectangle', function() {
+describe('Renderer/Draw', function() {
 
     var context;
     var sp;

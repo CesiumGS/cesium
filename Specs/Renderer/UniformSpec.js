@@ -7,7 +7,7 @@ import { Matrix3 } from '../../Source/Cesium.js';
 import { Matrix4 } from '../../Source/Cesium.js';
 import createContext from '../createContext.js';
 
-describe('Core/Cartesian2', function() {
+describe('Renderer/Uniform', function() {
 
     var context;
 

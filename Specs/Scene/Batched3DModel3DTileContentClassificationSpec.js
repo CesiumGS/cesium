@@ -19,7 +19,7 @@ import { StencilConstants } from '../../Source/Cesium.js';
 import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
 import createScene from '../createScene.js';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/Batched3DModel3DTileContentClassification', function() {
 
     var scene;
     var modelMatrix;

@@ -9,7 +9,7 @@ import { Model } from '../../Source/Cesium.js';
 import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
 import createScene from '../createScene.js';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/Instanced3DModel3DTileContent', function() {
 
     var scene;
     var centerLongitude = -1.31968;

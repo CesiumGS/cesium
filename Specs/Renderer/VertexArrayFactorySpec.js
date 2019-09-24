@@ -11,7 +11,7 @@ import { ShaderProgram } from '../../Source/Cesium.js';
 import { VertexArray } from '../../Source/Cesium.js';
 import createContext from '../createContext.js';
 
-describe('Core/ComponentDatatype', function() {
+describe('Renderer/VertexArrayFactory', function() {
 
     var context;
     var va;

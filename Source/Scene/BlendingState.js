@@ -34,7 +34,7 @@ import BlendFunction from './BlendFunction.js';
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
             functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-            functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+            functionSourceAlpha : BlendFunction.ONE,
             functionDestinationRgb : BlendFunction.ONE_MINUS_SOURCE_ALPHA,
             functionDestinationAlpha : BlendFunction.ONE_MINUS_SOURCE_ALPHA
         }),
@@ -66,7 +66,7 @@ import BlendFunction from './BlendFunction.js';
             equationRgb : BlendEquation.ADD,
             equationAlpha : BlendEquation.ADD,
             functionSourceRgb : BlendFunction.SOURCE_ALPHA,
-            functionSourceAlpha : BlendFunction.SOURCE_ALPHA,
+            functionSourceAlpha : BlendFunction.ONE,
             functionDestinationRgb : BlendFunction.ONE,
             functionDestinationAlpha : BlendFunction.ONE
         })

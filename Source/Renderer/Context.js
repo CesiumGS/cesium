@@ -1,4 +1,4 @@
-import Check from '../Core/Check.js';
+t Check from '../Core/Check.js';
 import clone from '../Core/clone.js';
 import Color from '../Core/Color.js';
 import ComponentDatatype from '../Core/ComponentDatatype.js';
@@ -410,6 +410,8 @@ import VertexArray from './VertexArray.js';
         this.cache = {};
 
         RenderState.apply(gl, rs, ps);
+
+        this._floatTexSixPlaces = checkFloatTexturePrecision(this);
     }
 
     var defaultFramebufferMarker = {};
@@ -548,6 +550,18 @@ import VertexArray from './VertexArray.js';
         floatingPointTexture : {
             get : function() {
                 return this._webgl2 || this._textureFloat;
+            }
+        },
+
+        /**
+         * Returns <code>true</code> if the context's floating point textures support 6 decimal places of precision.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
+         */
+        floatTextureSixPlaces : {
+            get : function() {
+                return this._floatTexSixPlaces;
             }
         },
 

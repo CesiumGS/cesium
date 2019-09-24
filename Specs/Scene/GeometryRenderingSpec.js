@@ -41,7 +41,7 @@ import { SceneMode } from '../../Source/Cesium.js';
 import createScene from '../createScene.js';
 import pollToPromise from '../pollToPromise.js';
 
-describe('Core/ArcType', function() {
+describe('Scene/GeometryRenderingSpec', function() {
 
     var scene;
     var ellipsoid;
