@@ -5,6 +5,7 @@ define([
         dijit,
         dojo) {
     'use strict';
+    /* global Cesium */
 
     var defined = Cesium.defined;
     var Clock = Cesium.Clock;

@@ -1,10 +1,10 @@
-import { PixelFormat } from '../Core/PixelFormat.js';
-import { CheckFloatTexturePrecisionFS } from '../Shaders/CheckFloatTexturePrecisionFS.js';
-import { ComputeCommand } from './ComputeCommand.js';
-import { ComputeEngine } from './ComputeEngine.js';
-import { Framebuffer } from './Framebuffer.js';
-import { PixelDatatype } from './PixelDatatype.js';
-import { Texture } from './Texture.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import CheckFloatTexturePrecisionFS from '../Shaders/CheckFloatTexturePrecisionFS.js';
+import ComputeCommand from './ComputeCommand.js';
+import ComputeEngine from './ComputeEngine.js';
+import Framebuffer from './Framebuffer.js';
+import PixelDatatype from './PixelDatatype.js';
+import Texture from './Texture.js';
 
     /**
      * Checks if the context's floating point textures support 6 decimal places of precision.
