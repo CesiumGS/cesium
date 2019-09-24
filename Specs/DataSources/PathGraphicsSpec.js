@@ -1,15 +1,15 @@
 define([
-        'DataSources/PathGraphics',
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty'
+        'DataSources/ConstantProperty',
+        'DataSources/PathGraphics'
     ], function(
-        PathGraphics,
         Color,
         DistanceDisplayCondition,
         ColorMaterialProperty,
-        ConstantProperty) {
+        ConstantProperty,
+        PathGraphics) {
         'use strict';
 
 describe('DataSources/PathGraphics', function() {

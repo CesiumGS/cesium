@@ -1,10 +1,10 @@
 define([
-        'Core/isCrossOriginUrl',
         'Core/getAbsoluteUri',
+        'Core/isCrossOriginUrl',
         'ThirdParty/Uri'
     ], function(
-        isCrossOriginUrl,
         getAbsoluteUri,
+        isCrossOriginUrl,
         Uri) {
         'use strict';
 

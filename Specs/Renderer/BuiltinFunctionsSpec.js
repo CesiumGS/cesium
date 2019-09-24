@@ -3,7 +3,6 @@ define([
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/EncodedCartesian3',
-        'Core/Math',
         'Specs/createCamera',
         'Specs/createContext',
         'Specs/createFrameState'
@@ -12,13 +11,12 @@ define([
         Cartesian3,
         Cartesian4,
         EncodedCartesian3,
-        CesiumMath,
         createCamera,
         createContext,
         createFrameState) {
         'use strict';
 
-describe('Core/BoundingRectangle', function() {
+describe('Renderer/BuiltinFunctions', function() {
 
     var context;
 

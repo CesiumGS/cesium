@@ -14,13 +14,11 @@ define([
         'Core/RectangleGeometry',
         'Core/ShowGeometryInstanceAttribute',
         'Core/Transforms',
-        'Scene/Cesium3DTileset',
         'Scene/Cesium3DTileStyle',
         'Scene/EllipsoidSurfaceAppearance',
         'Scene/Globe',
         'Scene/PointPrimitiveCollection',
         'Scene/Primitive',
-        'Scene/Scene',
         'Scene/SceneMode',
         'Specs/Cesium3DTilesTester',
         'Specs/createCanvas',
@@ -43,13 +41,11 @@ define([
         RectangleGeometry,
         ShowGeometryInstanceAttribute,
         Transforms,
-        Cesium3DTileset,
         Cesium3DTileStyle,
         EllipsoidSurfaceAppearance,
         Globe,
         PointPrimitiveCollection,
         Primitive,
-        Scene,
         SceneMode,
         Cesium3DTilesTester,
         createCanvas,
@@ -58,7 +54,7 @@ define([
         when) {
         'use strict';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/Pick', function() {
 
     // It's not easily possible to mock the most detailed pick functions
     // so don't run those tests when using the WebGL stub

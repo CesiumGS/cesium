@@ -1,16 +1,16 @@
 define([
-        'Core/TimeIntervalCollection',
         'Core/defaultValue',
         'Core/Iso8601',
         'Core/JulianDate',
         'Core/TimeInterval',
+        'Core/TimeIntervalCollection',
         'Core/TimeStandard'
     ], function(
-        TimeIntervalCollection,
         defaultValue,
         Iso8601,
         JulianDate,
         TimeInterval,
+        TimeIntervalCollection,
         TimeStandard) {
         'use strict';
 

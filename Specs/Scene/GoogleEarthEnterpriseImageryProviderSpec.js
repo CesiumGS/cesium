@@ -1,7 +1,5 @@
 define([
-        'Scene/GoogleEarthEnterpriseImageryProvider',
         'Core/decodeGoogleEarthEnterpriseData',
-        'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/defined',
         'Core/GeographicTilingScheme',
@@ -11,6 +9,7 @@ define([
         'Core/RequestScheduler',
         'Core/Resource',
         'Scene/DiscardMissingTileImagePolicy',
+        'Scene/GoogleEarthEnterpriseImageryProvider',
         'Scene/Imagery',
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
@@ -19,9 +18,7 @@ define([
         'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
-        GoogleEarthEnterpriseImageryProvider,
         decodeGoogleEarthEnterpriseData,
-        DefaultProxy,
         defaultValue,
         defined,
         GeographicTilingScheme,
@@ -31,6 +28,7 @@ define([
         RequestScheduler,
         Resource,
         DiscardMissingTileImagePolicy,
+        GoogleEarthEnterpriseImageryProvider,
         Imagery,
         ImageryLayer,
         ImageryProvider,

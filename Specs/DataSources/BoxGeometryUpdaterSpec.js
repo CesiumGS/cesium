@@ -1,10 +1,10 @@
 define([
-        'DataSources/BoxGeometryUpdater',
         'Core/Cartesian3',
         'Core/Color',
         'Core/GeometryOffsetAttribute',
         'Core/JulianDate',
         'Core/TimeIntervalCollection',
+        'DataSources/BoxGeometryUpdater',
         'DataSources/BoxGraphics',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
@@ -16,12 +16,12 @@ define([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        BoxGeometryUpdater,
         Cartesian3,
         Color,
         GeometryOffsetAttribute,
         JulianDate,
         TimeIntervalCollection,
+        BoxGeometryUpdater,
         BoxGraphics,
         ConstantPositionProperty,
         ConstantProperty,

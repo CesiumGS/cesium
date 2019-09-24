@@ -1,16 +1,16 @@
 define([
-        'Scene/Sun',
         'Core/BoundingSphere',
         'Core/Color',
         'Core/Math',
         'Scene/SceneMode',
+        'Scene/Sun',
         'Specs/createScene'
     ], function(
-        Sun,
         BoundingSphere,
         Color,
         CesiumMath,
         SceneMode,
+        Sun,
         createScene) {
         'use strict';
 
@@ -88,7 +88,7 @@ describe('Scene/Sun', function() {
 
         viewSun(scene.camera, scene.context.uniformState);
         scene.frameState.passes.render = false;
-        var command = scene.sun.update(scene.frameState, scene._view.passState);
+        var command = scene.sun.update(scene.frameState, scene.view.passState);
         expect(command).not.toBeDefined();
     });
 

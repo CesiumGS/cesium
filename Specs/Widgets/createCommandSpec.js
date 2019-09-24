@@ -1,11 +1,11 @@
 define([
-        'Widgets/createCommand',
         'Specs/getArguments',
-        'ThirdParty/knockout'
+        'ThirdParty/knockout',
+        'Widgets/createCommand'
     ], function(
-        createCommand,
         getArguments,
-        knockout) {
+        knockout,
+        createCommand) {
         'use strict';
 
 describe('Widgets/createCommand', function() {

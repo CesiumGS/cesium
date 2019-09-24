@@ -297,7 +297,7 @@ define([
                 if (this._inverseTransposeModelDirty) {
                     this._inverseTransposeModelDirty = false;
 
-                    Matrix4.getRotation(this.inverseModel, m);
+                    Matrix4.getMatrix3(this.inverseModel, m);
                     Matrix3.transpose(m, m);
                 }
 
@@ -979,7 +979,7 @@ define([
 
     function setView(uniformState, matrix) {
         Matrix4.clone(matrix, uniformState._view);
-        Matrix4.getRotation(matrix, uniformState._viewRotation);
+        Matrix4.getMatrix3(matrix, uniformState._viewRotation);
 
         uniformState._view3DDirty = true;
         uniformState._inverseView3DDirty = true;
@@ -1001,7 +1001,7 @@ define([
 
     function setInverseView(uniformState, matrix) {
         Matrix4.clone(matrix, uniformState._inverseView);
-        Matrix4.getRotation(matrix, uniformState._inverseViewRotation);
+        Matrix4.getMatrix3(matrix, uniformState._inverseViewRotation);
     }
 
     function setProjection(uniformState, matrix) {
@@ -1314,7 +1314,8 @@ define([
             uniformState._normalDirty = false;
 
             var m = uniformState._normal;
-            Matrix4.getRotation(uniformState.inverseModelView, m);
+            Matrix4.getMatrix3(uniformState.inverseModelView, m);
+            Matrix3.getRotation(m, m);
             Matrix3.transpose(m, m);
         }
     }
@@ -1324,7 +1325,8 @@ define([
             uniformState._normal3DDirty = false;
 
             var m = uniformState._normal3D;
-            Matrix4.getRotation(uniformState.inverseModelView3D, m);
+            Matrix4.getMatrix3(uniformState.inverseModelView3D, m);
+            Matrix3.getRotation(m, m);
             Matrix3.transpose(m, m);
         }
     }
@@ -1332,16 +1334,16 @@ define([
     function cleanInverseNormal(uniformState) {
         if (uniformState._inverseNormalDirty) {
             uniformState._inverseNormalDirty = false;
-
-            Matrix4.getRotation(uniformState.inverseModelView, uniformState._inverseNormal);
+            Matrix4.getMatrix3(uniformState.inverseModelView, uniformState._inverseNormal);
+            Matrix3.getRotation(uniformState._inverseNormal, uniformState._inverseNormal);
         }
     }
 
     function cleanInverseNormal3D(uniformState) {
         if (uniformState._inverseNormal3DDirty) {
             uniformState._inverseNormal3DDirty = false;
-
-            Matrix4.getRotation(uniformState.inverseModelView3D, uniformState._inverseNormal3D);
+            Matrix4.getMatrix3(uniformState.inverseModelView3D, uniformState._inverseNormal3D);
+            Matrix3.getRotation(uniformState._inverseNormal3D, uniformState._inverseNormal3D);
         }
     }
 
@@ -1444,7 +1446,7 @@ define([
             } else {
                 view2Dto3D(that._cameraPosition, that._cameraDirection, that._cameraRight, that._cameraUp, that._frustum2DWidth, that._mode, that._mapProjection, that._view3D);
             }
-            Matrix4.getRotation(that._view3D, that._viewRotation3D);
+            Matrix4.getMatrix3(that._view3D, that._viewRotation3D);
             that._view3DDirty = false;
         }
     }
@@ -1452,7 +1454,7 @@ define([
     function updateInverseView3D(that){
         if (that._inverseView3DDirty) {
             Matrix4.inverseTransformation(that.view3D, that._inverseView3D);
-            Matrix4.getRotation(that._inverseView3D, that._inverseViewRotation3D);
+            Matrix4.getMatrix3(that._inverseView3D, that._inverseViewRotation3D);
             that._inverseView3DDirty = false;
         }
     }

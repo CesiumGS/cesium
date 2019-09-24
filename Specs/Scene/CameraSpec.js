@@ -1,5 +1,4 @@
 define([
-        'Scene/Camera',
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -18,12 +17,12 @@ define([
         'Core/Rectangle',
         'Core/Transforms',
         'Core/WebMercatorProjection',
+        'Scene/Camera',
         'Scene/CameraFlightPath',
         'Scene/MapMode2D',
         'Scene/SceneMode',
         'Scene/TweenCollection'
     ], function(
-        Camera,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -42,6 +41,7 @@ define([
         Rectangle,
         Transforms,
         WebMercatorProjection,
+        Camera,
         CameraFlightPath,
         MapMode2D,
         SceneMode,
@@ -208,7 +208,7 @@ describe('Scene/Camera', function() {
 
         var ellipsoid = Ellipsoid.WGS84;
         var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid);
-        var transform = Matrix4.getRotation(toFixedFrame, new Matrix3());
+        var transform = Matrix4.getMatrix3(toFixedFrame, new Matrix3());
         Matrix3.transpose(transform, transform);
 
         var right = Matrix3.multiplyByVector(transform, camera.right, new Cartesian3());
@@ -477,7 +477,7 @@ describe('Scene/Camera', function() {
         camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
 
         var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid);
-        var transform = Matrix4.getRotation(toFixedFrame, new Matrix3());
+        var transform = Matrix4.getMatrix3(toFixedFrame, new Matrix3());
         Matrix3.transpose(transform, transform);
 
         var right = Matrix3.multiplyByVector(transform, camera.right, new Cartesian3());

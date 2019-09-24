@@ -1,24 +1,22 @@
 define([
-        'Core/Resource',
         'Core/DefaultProxy',
         'Core/defaultValue',
         'Core/queryToObject',
         'Core/Request',
         'Core/RequestErrorEvent',
         'Core/RequestScheduler',
-        'Core/TrustedServers',
+        'Core/Resource',
         'Specs/createCanvas',
         'ThirdParty/Uri',
         'ThirdParty/when'
     ], function(
-        Resource,
         DefaultProxy,
         defaultValue,
         queryToObject,
         Request,
         RequestErrorEvent,
         RequestScheduler,
-        TrustedServers,
+        Resource,
         createCanvas,
         Uri,
         when) {
@@ -1735,7 +1733,6 @@ describe('Core/Resource', function() {
                 }).then(function(result) {
                     expect(result.type).toEqual('image/png');
 
-                    /*global URL*/
                     var blobUrl = URL.createObjectURL(result);
 
                     return Resource.fetchImage(blobUrl).then(function(image) {

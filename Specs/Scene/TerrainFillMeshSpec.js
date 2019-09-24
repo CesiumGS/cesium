@@ -1,5 +1,4 @@
 define([
-        'Scene/TerrainFillMesh',
         '../MockTerrainProvider',
         '../TerrainTileProcessor',
         'Core/Cartesian2',
@@ -13,10 +12,10 @@ define([
         'Scene/ImageryLayerCollection',
         'Scene/QuadtreePrimitive',
         'Scene/SceneMode',
+        'Scene/TerrainFillMesh',
         'Scene/TileBoundingRegion',
         'Scene/TileSelectionResult'
     ], function(
-        TerrainFillMesh,
         MockTerrainProvider,
         TerrainTileProcessor,
         Cartesian2,
@@ -30,6 +29,7 @@ define([
         ImageryLayerCollection,
         QuadtreePrimitive,
         SceneMode,
+        TerrainFillMesh,
         TileBoundingRegion,
         TileSelectionResult) {
         'use strict';

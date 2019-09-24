@@ -1,9 +1,9 @@
 define([
-        'DataSources/CallbackProperty',
-        'Core/JulianDate'
+        'Core/JulianDate',
+        'DataSources/CallbackProperty'
     ], function(
-        CallbackProperty,
-        JulianDate) {
+        JulianDate,
+        CallbackProperty) {
         'use strict';
 
 describe('DataSources/CallbackProperty', function() {

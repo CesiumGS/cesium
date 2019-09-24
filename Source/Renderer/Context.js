@@ -18,6 +18,7 @@ define([
         '../Core/WebGLConstants',
         '../Shaders/ViewportQuadVS',
         './BufferUsage',
+        './checkFloatTexturePrecision',
         './ClearCommand',
         './ContextLimits',
         './CubeMap',
@@ -51,6 +52,7 @@ define([
         WebGLConstants,
         ViewportQuadVS,
         BufferUsage,
+        checkFloatTexturePrecision,
         ClearCommand,
         ContextLimits,
         CubeMap,
@@ -65,9 +67,6 @@ define([
         UniformState,
         VertexArray) {
     'use strict';
-    /*global WebGLRenderingContext*/
-
-    /*global WebGL2RenderingContext*/
 
     function errorToString(gl, error) {
         var message = 'WebGL Error:  ';
@@ -448,6 +447,8 @@ define([
         this.cache = {};
 
         RenderState.apply(gl, rs, ps);
+
+        this._floatTexSixPlaces = checkFloatTexturePrecision(this);
     }
 
     var defaultFramebufferMarker = {};
@@ -586,6 +587,18 @@ define([
         floatingPointTexture : {
             get : function() {
                 return this._webgl2 || this._textureFloat;
+            }
+        },
+
+        /**
+         * Returns <code>true</code> if the context's floating point textures support 6 decimal places of precision.
+         * @memberof Context.prototype
+         * @type {Boolean}
+         * @see {@link https://www.khronos.org/registry/webgl/extensions/OES_texture_float/}
+         */
+        floatTextureSixPlaces : {
+            get : function() {
+                return this._floatTexSixPlaces;
             }
         },
 

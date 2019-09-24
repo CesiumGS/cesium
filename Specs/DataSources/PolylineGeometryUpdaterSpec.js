@@ -1,5 +1,4 @@
 define([
-        'DataSources/PolylineGeometryUpdater',
         'Core/ApproximateTerrainHeights',
         'Core/ArcType',
         'Core/BoundingSphere',
@@ -21,6 +20,7 @@ define([
         'DataSources/ConstantProperty',
         'DataSources/Entity',
         'DataSources/GridMaterialProperty',
+        'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
         'DataSources/PropertyArray',
         'DataSources/SampledPositionProperty',
@@ -33,7 +33,6 @@ define([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        PolylineGeometryUpdater,
         ApproximateTerrainHeights,
         ArcType,
         BoundingSphere,
@@ -55,6 +54,7 @@ define([
         ConstantProperty,
         Entity,
         GridMaterialProperty,
+        PolylineGeometryUpdater,
         PolylineGraphics,
         PropertyArray,
         SampledPositionProperty,
@@ -824,6 +824,23 @@ describe('DataSources/PolylineGeometryUpdater', function() {
             dynamicUpdater.getBoundingSphere(undefined);
         }).toThrowDeveloperError();
 
+        dynamicUpdater.destroy();
+        updater.destroy();
+
+        expect(scene.primitives.length).toBe(0);
+        expect(scene.groundPrimitives.length).toBe(0);
+    });
+
+    it('calls generateCartesianRhumbArc for RHUMB arcType', function() {
+        var entity = createBasicPolyline();
+        entity.polyline.width = createDynamicProperty(1);
+        entity.polyline.arcType = ArcType.RHUMB;
+
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
+        spyOn(PolylinePipeline, 'generateCartesianRhumbArc').and.callThrough();
+        dynamicUpdater.update(time);
+        expect(PolylinePipeline.generateCartesianRhumbArc).toHaveBeenCalled();
         dynamicUpdater.destroy();
         updater.destroy();
 

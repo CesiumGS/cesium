@@ -1,5 +1,4 @@
 define([
-        'Core/Transforms',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -14,9 +13,9 @@ define([
         'Core/Matrix4',
         'Core/Quaternion',
         'Core/Resource',
-        'Core/TimeInterval'
+        'Core/TimeInterval',
+        'Core/Transforms'
     ], function(
-        Transforms,
         Cartesian2,
         Cartesian3,
         Cartesian4,
@@ -31,7 +30,8 @@ define([
         Matrix4,
         Quaternion,
         Resource,
-        TimeInterval) {
+        TimeInterval,
+        Transforms) {
         'use strict';
 
 describe('Core/Transforms', function() {
@@ -548,7 +548,7 @@ describe('Core/Transforms', function() {
         var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
+        var expected = Matrix4.getMatrix3(transform, new Matrix3());
 
         var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, Transforms.eastNorthUpToFixedFrame);
         var actual = Matrix3.fromQuaternion(quaternion);
@@ -563,7 +563,7 @@ describe('Core/Transforms', function() {
         var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
+        var expected = Matrix4.getMatrix3(transform, new Matrix3());
 
         var result = new Quaternion();
         var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, Transforms.eastNorthUpToFixedFrame, result);
@@ -580,7 +580,7 @@ describe('Core/Transforms', function() {
         var hpr = new HeadingPitchRoll(heading, pitch, roll);
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
+        var expected = Matrix4.getMatrix3(transform, new Matrix3());
 
         var result = new Quaternion();
         var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, undefined, result);
@@ -598,7 +598,7 @@ describe('Core/Transforms', function() {
         var fixedFrameTransform = Transforms.localFrameToFixedFrameGenerator('west','south');
 
         var transform = Transforms.headingPitchRollToFixedFrame(origin, hpr, Ellipsoid.UNIT_SPHERE, fixedFrameTransform);
-        var expected = Matrix4.getRotation(transform, new Matrix3());
+        var expected = Matrix4.getMatrix3(transform, new Matrix3());
 
         var result = new Quaternion();
         var quaternion = Transforms.headingPitchRollQuaternion(origin, hpr, Ellipsoid.UNIT_SPHERE, fixedFrameTransform, result);
@@ -1075,13 +1075,13 @@ describe('Core/Transforms', function() {
         var modelMatrix = Transforms.headingPitchRollToFixedFrame(origin, hpr, ellipsoid);
         var modelMatrix2D = Transforms.basisTo2D(projection, modelMatrix, new Matrix4());
 
-        var rotation2D = Matrix4.getRotation(modelMatrix2D, new Matrix3());
+        var rotation2D = Matrix4.getMatrix3(modelMatrix2D, new Matrix3());
 
         var enu = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid);
         var enuInverse = Matrix4.inverseTransformation(enu, enu);
 
         var hprPlusTranslate = Matrix4.multiply(enuInverse, modelMatrix, new Matrix4());
-        var hpr2 = Matrix4.getRotation(hprPlusTranslate, new Matrix3());
+        var hpr2 = Matrix4.getMatrix3(hprPlusTranslate, new Matrix3());
 
         var row0 = Matrix3.getRow(hpr2, 0, new Cartesian3());
         var row1 = Matrix3.getRow(hpr2, 1, new Cartesian3());
@@ -1104,8 +1104,8 @@ describe('Core/Transforms', function() {
         var expected = Matrix4.fromTranslation(origin);
         Transforms.basisTo2D(projection, expected, expected);
 
-        var actualRotation = Matrix4.getRotation(actual, new Matrix3());
-        var expectedRotation = Matrix4.getRotation(expected, new Matrix3());
+        var actualRotation = Matrix4.getMatrix3(actual, new Matrix3());
+        var expectedRotation = Matrix4.getMatrix3(expected, new Matrix3());
         expect(actualRotation).toEqualEpsilon(expectedRotation, CesiumMath.EPSILON14);
 
         var fromENU = Transforms.eastNorthUpToFixedFrame(origin, ellipsoid, new Matrix4());

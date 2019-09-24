@@ -1,10 +1,10 @@
 define([
-        'Renderer/DrawCommand',
         'Core/PrimitiveType',
+        'Renderer/DrawCommand',
         'Renderer/Pass'
     ], function(
-        DrawCommand,
         PrimitiveType,
+        DrawCommand,
         Pass) {
         'use strict';
 

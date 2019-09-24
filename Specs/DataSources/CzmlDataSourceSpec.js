@@ -1,5 +1,4 @@
 define([
-        'DataSources/CzmlDataSource',
         'Core/ArcType',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
@@ -8,6 +7,7 @@ define([
         'Core/ClockStep',
         'Core/Color',
         'Core/CornerType',
+        'Core/Credit',
         'Core/DistanceDisplayCondition',
         'Core/Event',
         'Core/ExtrapolationType',
@@ -31,6 +31,7 @@ define([
         'DataSources/CompositeProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
+        'DataSources/CzmlDataSource',
         'DataSources/EntityCollection',
         'DataSources/ReferenceProperty',
         'DataSources/SampledPositionProperty',
@@ -47,7 +48,6 @@ define([
         'Scene/VerticalOrigin',
         'ThirdParty/when'
     ], function(
-        CzmlDataSource,
         ArcType,
         BoundingRectangle,
         Cartesian2,
@@ -56,6 +56,7 @@ define([
         ClockStep,
         Color,
         CornerType,
+        Credit,
         DistanceDisplayCondition,
         Event,
         ExtrapolationType,
@@ -79,6 +80,7 @@ define([
         CompositeProperty,
         ConstantPositionProperty,
         ConstantProperty,
+        CzmlDataSource,
         EntityCollection,
         ReferenceProperty,
         SampledPositionProperty,
@@ -213,6 +215,7 @@ describe('DataSources/CzmlDataSource', function() {
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
         expect(dataSource.show).toEqual(true);
+        expect(dataSource.credit).toBeUndefined();
     });
 
     it('show sets underlying entity collection show.', function() {
@@ -239,6 +242,14 @@ describe('DataSources/CzmlDataSource', function() {
         }).then(function(dataSource) {
             expect(dataSource.name).toEqual('simple.czml');
         });
+    });
+
+    it('credit gets set from options', function() {
+        return CzmlDataSource.load(nameCzml, {
+                credit: 'This is my credit'
+            }).then(function(dataSource) {
+                expect(dataSource.credit).toBeInstanceOf(Credit);
+            });
     });
 
     it('does not overwrite existing name if CZML name is undefined', function() {

@@ -1,18 +1,18 @@
 define([
-        'Core/PerspectiveFrustum',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Math',
         'Core/Matrix4',
+        'Core/PerspectiveFrustum',
         'Specs/createPackableSpecs'
     ], function(
-        PerspectiveFrustum,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumMath,
         Matrix4,
+        PerspectiveFrustum,
         createPackableSpecs) {
         'use strict';
 

@@ -1,32 +1,22 @@
 define([
         'Core/Cartesian3',
-        'Core/Color',
-        'Core/defined',
         'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
         'Core/Math',
         'Core/PerspectiveFrustum',
-        'Core/Transforms',
-        'Scene/PointCloud3DTileContent',
         'Scene/PointCloudEyeDomeLighting',
         'Specs/Cesium3DTilesTester',
         'Specs/createScene'
     ], 'Scene/PointCloudEyeDomeLighting', function(
         Cartesian3,
-        Color,
-        defined,
         HeadingPitchRange,
-        HeadingPitchRoll,
         CesiumMath,
         PerspectiveFrustum,
-        Transforms,
-        PointCloud3DTileContent,
         PointCloudEyeDomeLighting,
         Cesium3DTilesTester,
         createScene) {
         'use strict';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/PointCloudEyeDomeLighting', function() {
 
     var scene;
     var centerLongitude = -1.31968;

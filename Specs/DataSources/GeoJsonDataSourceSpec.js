@@ -1,7 +1,7 @@
 define([
-        'DataSources/GeoJsonDataSource',
         'Core/Cartesian3',
         'Core/Color',
+        'Core/Credit',
         'Core/Event',
         'Core/JulianDate',
         'Core/PolygonHierarchy',
@@ -9,12 +9,13 @@ define([
         'DataSources/CallbackProperty',
         'DataSources/ConstantProperty',
         'DataSources/EntityCollection',
+        'DataSources/GeoJsonDataSource',
         'Scene/HeightReference',
         'ThirdParty/when'
     ], function(
-        GeoJsonDataSource,
         Cartesian3,
         Color,
+        Credit,
         Event,
         JulianDate,
         PolygonHierarchy,
@@ -22,6 +23,7 @@ define([
         CallbackProperty,
         ConstantProperty,
         EntityCollection,
+        GeoJsonDataSource,
         HeightReference,
         when) {
         'use strict';
@@ -279,6 +281,15 @@ describe('DataSources/GeoJsonDataSource', function() {
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
         expect(dataSource.show).toBe(true);
+        expect(dataSource.credit).toBeUndefined();
+    });
+
+    it('credit gets set from options', function() {
+        return GeoJsonDataSource.load(point, {
+                credit: 'This is my credit'
+            }).then(function(dataSource) {
+                expect(dataSource.credit).toBeInstanceOf(Credit);
+            });
     });
 
     it('setting name raises changed event', function() {

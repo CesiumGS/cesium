@@ -257,13 +257,12 @@ define([
         context.lineWidth = 2;
         context.strokeRect(1, 1, 255, 255);
 
-        var label = 'L' + level + 'X' + x + 'Y' + y;
         context.font = 'bold 25px Arial';
         context.textAlign = 'center';
-        context.fillStyle = 'black';
-        context.fillText(label, 127, 127);
         context.fillStyle = cssColor;
-        context.fillText(label, 124, 124);
+        context.fillText('L: ' + level, 124, 86);
+        context.fillText('X: ' + x, 124, 136);
+        context.fillText('Y: ' + y, 124, 186);
 
         return canvas;
     };

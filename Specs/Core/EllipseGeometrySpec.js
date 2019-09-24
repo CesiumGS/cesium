@@ -1,7 +1,7 @@
 define([
-        'Core/EllipseGeometry',
         'Core/arrayFill',
         'Core/Cartesian3',
+        'Core/EllipseGeometry',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Core/Math',
@@ -9,9 +9,9 @@ define([
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        EllipseGeometry,
         arrayFill,
         Cartesian3,
+        EllipseGeometry,
         Ellipsoid,
         GeometryOffsetAttribute,
         CesiumMath,

@@ -23,6 +23,7 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
+var gulpJsonTransform = require('gulp-json-transform');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var Karma = require('karma');
@@ -130,6 +131,27 @@ gulp.task('requirejs', function(done) {
     requirejs.optimize(config, function() {
         done();
     }, done);
+});
+
+// optimizeApproximateTerrainHeights can be used to regenerate the approximateTerrainHeights
+// file from an overly precise terrain heights file to reduce bandwidth
+// the approximate terrain heights are only used when the terrain provider does not have this
+// information and not a high level of precision is required
+gulp.task('optimizeApproximateTerrainHeights', function() {
+    var argv = yargs.usage('Usage: optimizeApproximateTerrainHeights -p [degree of precision]').argv;
+    var precision = typeof argv.p !== undefined ? argv.p : 1;
+    precision = Math.pow(10, precision);
+    return gulp.src('Source/Assets/approximateTerrainHeightsPrecise.json')
+        .pipe(gulpJsonTransform(function(data, file) {
+            Object.entries(data).forEach(function(entry) {
+                var values = entry[1];
+                data[entry[0]] = [Math.floor(values[0] * precision) / precision,
+                                  Math.ceil(values[1] * precision) / precision ];
+            });
+            return data;
+        }))
+        .pipe(gulpRename('approximateTerrainHeights.json'))
+        .pipe(gulp.dest('Source/Assets/'));
 });
 
 function cloc() {
@@ -254,6 +276,13 @@ function generateDocumentation() {
     });
 }
 gulp.task('generateDocumentation', generateDocumentation);
+
+gulp.task('generateDocumentation-watch', function() {
+    return generateDocumentation().done(function() {
+        console.log('Listening for changes in documentation...');
+        return gulp.watch(sourceFiles, gulp.series('generateDocumentation'));
+    });
+});
 
 gulp.task('release', gulp.series('generateStubs', combine, minifyRelease, generateDocumentation));
 
@@ -766,7 +795,7 @@ gulp.task('test', function(done) {
 
 gulp.task('sortRequires', function() {
     var noModulesRegex = /[\s\S]*?define\(function\(\)/;
-    var requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
+    var requiresRegex = /([\s\S]*?(define|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
     var splitRegex = /,\s*/;
 
     var fsReadFile = Promise.promisify(fs.readFile);
@@ -784,13 +813,6 @@ gulp.task('sortRequires', function() {
                     console.log(file + ' does not have the expected syntax.');
                 }
                 return;
-            }
-
-            // In specs, the first require is significant,
-            // unless the spec is given an explicit name.
-            var preserveFirst = false;
-            if (result[2] === 'defineSuite' && result[4] === ', function') {
-                preserveFirst = true;
             }
 
             var names = result[3].split(splitRegex);
@@ -820,7 +842,7 @@ gulp.task('sortRequires', function() {
 
             var requires = [];
 
-            for (i = preserveFirst ? 1 : 0; i < names.length && i < identifiers.length; ++i) {
+            for (i = 0; i < names.length && i < identifiers.length; ++i) {
                 requires.push({
                     name : names[i].trim(),
                     identifier : identifiers[i].trim()
@@ -837,13 +859,6 @@ gulp.task('sortRequires', function() {
                 }
                 return 0;
             });
-
-            if (preserveFirst) {
-                requires.splice(0, 0, {
-                    name : names[0].trim(),
-                    identifier : identifiers[0].trim()
-                });
-            }
 
             // Convert back to separate lists for the names and identifiers, and add
             // any additional names or identifiers that don't have a corresponding pair.

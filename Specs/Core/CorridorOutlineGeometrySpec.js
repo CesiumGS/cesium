@@ -1,16 +1,16 @@
 define([
-        'Core/CorridorOutlineGeometry',
         'Core/arrayFill',
         'Core/Cartesian3',
         'Core/CornerType',
+        'Core/CorridorOutlineGeometry',
         'Core/Ellipsoid',
         'Core/GeometryOffsetAttribute',
         'Specs/createPackableSpecs'
     ], function(
-        CorridorOutlineGeometry,
         arrayFill,
         Cartesian3,
         CornerType,
+        CorridorOutlineGeometry,
         Ellipsoid,
         GeometryOffsetAttribute,
         createPackableSpecs) {

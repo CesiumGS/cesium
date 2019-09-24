@@ -935,6 +935,7 @@ define([
         var tangentPlane = EllipsoidTangentPlane.fromPoints(outerPositions, ellipsoid);
 
         var results = PolygonGeometryLibrary.polygonsFromHierarchy(polygonHierarchy, tangentPlane.projectPointsOntoPlane.bind(tangentPlane), !perPositionHeight, ellipsoid);
+
         var hierarchy = results.hierarchy;
         var polygons = results.polygons;
 

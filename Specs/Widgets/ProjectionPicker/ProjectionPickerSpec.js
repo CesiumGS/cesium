@@ -1,13 +1,13 @@
 define([
-        'Widgets/ProjectionPicker/ProjectionPicker',
         'Core/FeatureDetection',
         'Specs/createScene',
-        'Specs/DomEventSimulator'
+        'Specs/DomEventSimulator',
+        'Widgets/ProjectionPicker/ProjectionPicker'
     ], function(
-        ProjectionPicker,
         FeatureDetection,
         createScene,
-        DomEventSimulator) {
+        DomEventSimulator,
+        ProjectionPicker) {
         'use strict';
 
 describe('Widgets/ProjectionPicker/ProjectionPicker', function() {

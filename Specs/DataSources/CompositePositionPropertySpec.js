@@ -1,19 +1,19 @@
 define([
-        'DataSources/CompositePositionProperty',
         'Core/Cartesian3',
         'Core/JulianDate',
         'Core/ReferenceFrame',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
+        'DataSources/CompositePositionProperty',
         'DataSources/ConstantPositionProperty',
         'DataSources/PositionProperty'
     ], function(
-        CompositePositionProperty,
         Cartesian3,
         JulianDate,
         ReferenceFrame,
         TimeInterval,
         TimeIntervalCollection,
+        CompositePositionProperty,
         ConstantPositionProperty,
         PositionProperty) {
         'use strict';

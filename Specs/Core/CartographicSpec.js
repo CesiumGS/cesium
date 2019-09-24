@@ -1,11 +1,11 @@
 define([
-        'Core/Cartographic',
         'Core/Cartesian3',
+        'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/Math'
     ], function(
-        Cartographic,
         Cartesian3,
+        Cartographic,
         Ellipsoid,
         CesiumMath) {
         'use strict';

@@ -730,10 +730,11 @@ define([
                     var boundingRectangle = getRectangle(frameState, geometry);
                     var textureCoordinateRotationPoints = geometry.textureCoordinateRotationPoints;
 
+                    var useFloatBatchTable = frameState.context.floatTextureSixPlaces;
                     if (usePlanarExtents) {
-                        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, frameState.mapProjection, this._maxHeight);
+                        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, frameState.mapProjection, useFloatBatchTable, this._maxHeight);
                     } else {
-                        attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, frameState.mapProjection);
+                        attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, frameState.mapProjection, useFloatBatchTable);
                     }
 
                     var instanceAttributes = instance.attributes;

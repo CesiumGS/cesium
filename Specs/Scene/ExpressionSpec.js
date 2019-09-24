@@ -1,18 +1,18 @@
 define([
-        'Scene/Expression',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/Color',
         'Core/Math',
+        'Scene/Expression',
         'Scene/ExpressionNodeType'
     ], function(
-        Expression,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         Color,
         CesiumMath,
+        Expression,
         ExpressionNodeType) {
         'use strict';
 

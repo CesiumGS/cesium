@@ -1,5 +1,4 @@
 define([
-        'DataSources/ReferenceProperty',
         'Core/Cartesian3',
         'Core/Color',
         'Core/JulianDate',
@@ -9,9 +8,9 @@ define([
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/Entity',
-        'DataSources/EntityCollection'
+        'DataSources/EntityCollection',
+        'DataSources/ReferenceProperty'
     ], function(
-        ReferenceProperty,
         Cartesian3,
         Color,
         JulianDate,
@@ -21,7 +20,8 @@ define([
         ConstantPositionProperty,
         ConstantProperty,
         Entity,
-        EntityCollection) {
+        EntityCollection,
+        ReferenceProperty) {
         'use strict';
 
 describe('DataSources/ReferenceProperty', function() {

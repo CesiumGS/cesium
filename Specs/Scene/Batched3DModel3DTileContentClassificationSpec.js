@@ -11,10 +11,8 @@ define([
         'Core/Matrix4',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Core/Transforms',
         'Renderer/Pass',
         'Renderer/RenderState',
-        'Scene/Batched3DModel3DTileContent',
         'Scene/ClassificationType',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
@@ -34,10 +32,8 @@ define([
         Matrix4,
         Rectangle,
         RectangleGeometry,
-        Transforms,
         Pass,
         RenderState,
-        Batched3DModel3DTileContent,
         ClassificationType,
         PerInstanceColorAppearance,
         Primitive,
@@ -46,7 +42,7 @@ define([
         createScene) {
         'use strict';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/Batched3DModel3DTileContentClassification', function() {
 
     var scene;
     var modelMatrix;

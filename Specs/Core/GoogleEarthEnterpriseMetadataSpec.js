@@ -1,18 +1,16 @@
 define([
-        'Core/GoogleEarthEnterpriseMetadata',
         'Core/decodeGoogleEarthEnterpriseData',
-        'Core/DefaultProxy',
         'Core/defaultValue',
+        'Core/GoogleEarthEnterpriseMetadata',
         'Core/GoogleEarthEnterpriseTileInformation',
         'Core/Math',
         'Core/Request',
         'Core/Resource',
         'ThirdParty/when'
     ], function(
-        GoogleEarthEnterpriseMetadata,
         decodeGoogleEarthEnterpriseData,
-        DefaultProxy,
         defaultValue,
+        GoogleEarthEnterpriseMetadata,
         GoogleEarthEnterpriseTileInformation,
         CesiumMath,
         Request,

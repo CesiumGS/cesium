@@ -1,5 +1,4 @@
 define([
-        'DataSources/ModelGraphics',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Color',
@@ -7,6 +6,7 @@ define([
         'Core/JulianDate',
         'Core/Quaternion',
         'DataSources/ConstantProperty',
+        'DataSources/ModelGraphics',
         'DataSources/NodeTransformationProperty',
         'DataSources/PropertyBag',
         'Scene/ClippingPlaneCollection',
@@ -14,7 +14,6 @@ define([
         'Scene/HeightReference',
         'Scene/ShadowMode'
     ], function(
-        ModelGraphics,
         Cartesian2,
         Cartesian3,
         Color,
@@ -22,6 +21,7 @@ define([
         JulianDate,
         Quaternion,
         ConstantProperty,
+        ModelGraphics,
         NodeTransformationProperty,
         PropertyBag,
         ClippingPlaneCollection,

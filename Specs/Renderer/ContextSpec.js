@@ -1,17 +1,17 @@
 define([
-        'Renderer/Context',
         'Core/Color',
         'Core/IndexDatatype',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
+        'Renderer/Context',
         'Renderer/ContextLimits',
         'Specs/createContext'
     ], function(
-        Context,
         Color,
         IndexDatatype,
         Buffer,
         BufferUsage,
+        Context,
         ContextLimits,
         createContext) {
         'use strict';
@@ -171,6 +171,10 @@ describe('Renderer/Context', function() {
 
     it('gets the texture float extension', function() {
         expect(context.floatingPointTexture).toBeDefined();
+    });
+
+    it('gets whether the texture float has 6 places of precision', function() {
+        expect(context.floatTextureSixPlaces).toBeDefined();
     });
 
     it('gets texture filter anisotropic extension', function() {

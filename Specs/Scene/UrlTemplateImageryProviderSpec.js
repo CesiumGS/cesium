@@ -1,6 +1,4 @@
 define([
-        'Scene/UrlTemplateImageryProvider',
-        'Core/DefaultProxy',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/Math',
@@ -14,11 +12,10 @@ define([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/UrlTemplateImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        UrlTemplateImageryProvider,
-        DefaultProxy,
         Ellipsoid,
         GeographicTilingScheme,
         CesiumMath,
@@ -32,6 +29,7 @@ define([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
+        UrlTemplateImageryProvider,
         pollToPromise,
         when) {
         'use strict';

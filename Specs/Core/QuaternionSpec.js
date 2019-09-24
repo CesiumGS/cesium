@@ -1,16 +1,16 @@
 define([
-        'Core/Quaternion',
         'Core/Cartesian3',
         'Core/HeadingPitchRoll',
         'Core/Math',
         'Core/Matrix3',
+        'Core/Quaternion',
         'Specs/createPackableSpecs'
     ], function(
-        Quaternion,
         Cartesian3,
         HeadingPitchRoll,
         CesiumMath,
         Matrix3,
+        Quaternion,
         createPackableSpecs) {
         'use strict';
 

@@ -1,6 +1,36 @@
 Change Log
 ==========
 
+### 1.62 - 2019-10-01
+
+##### Deprecated :hourglass_flowing_sand:
+* `createTileMapServiceImageryProvider` and `createOpenStreetMapImageryProvider` have been deprecated and will be removed in Cesium 1.65.  Instead, pass the same options to `new TileMapServiceImageryProvider` and `new OpenStreetMapImageryProvider` respectively.
+* The function `Matrix4.getRotation` has been deprecated and renamed to `Matrix4.getMatrix3`. `Matrix4.getRotation` will be removed in version 1.65.
+
+##### Additions :tada:
+* Added `Matrix3.getRotation` to get the rotational component of a matrix with scaling removed. [#8182](https://github.com/AnalyticalGraphicsInc/cesium/pull/8182)
+* Added ability to create partial ellipsoids using both the Entity API and CZML. New ellipsoid geometry properties: `innerRadii`, `minimumClock`, `maximumClock`, `minimumCone`, and `maximumCone`. This affects both `EllipsoidGeometry` and `EllipsoidOutlineGeometry`. See the updated [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Partial%20Ellipsoids.html&label=Geometries). [#5995](https://github.com/AnalyticalGraphicsInc/cesium/pull/5995)
+* Added `TileMapResourceImageryProvider` and `OpenStreetMapImageryProvider` classes to improve API consistency: [#4812](https://github.com/AnalyticalGraphicsInc/cesium/issues/4812)
+* Added `credit` parameter to `CzmlDataSource`, `GeoJsonDataSource`, `KmlDataSource` and `Model`. [#8173](https://github.com/AnalyticalGraphicsInc/cesium/pull/8173)
+
+##### Fixes :wrench:
+* `Camera.flyTo` flies to the correct location in 2D when the destination crosses the international date line [#7909](https://github.com/AnalyticalGraphicsInc/cesium/pull/7909)
+* Fixed 3D tiles style coloring when multiple tilesets are in the scene [#8051](https://github.com/AnalyticalGraphicsInc/cesium/pull/8051)
+* Improved display of tile coordinates for `TileCoordinatesImageryProvider` [#8131](https://github.com/AnalyticalGraphicsInc/cesium/pull/8131)
+* Fixed relative-to-center check, `depthFailAppearance` resource freeing for `Primitive` [#8044](https://github.com/AnalyticalGraphicsInc/cesium/pull/8044)
+* Reduces size of approximateTerrainHeights.json by rounding the numbers [#7959](https://github.com/AnalyticalGraphicsInc/cesium/pull/7959)
+* Fixed undefined `quadDetails` error from zooming into the map really close. [#8011](https://github.com/AnalyticalGraphicsInc/cesium/pull/8011)
+* Fixed a bug where extruded polygons would sometimes be missing segments. [#8035](https://github.com/AnalyticalGraphicsInc/cesium/pull/8035)
+* 3D Tiles geometric error now scales with transform. [#8182](https://github.com/AnalyticalGraphicsInc/cesium/pull/8182)
+* Fixed per-feature post processing from sometimes selecting the wrong feature. [#7929](https://github.com/AnalyticalGraphicsInc/cesium/pull/7929)
+* Fixed labels not showing for individual entities in data sources when clustering is enabled. [#6087](https://github.com/AnalyticalGraphicsInc/cesium/issues/6087)
+* Fixed a crash for 3D Tiles that have zero volume. [#7945](https://github.com/AnalyticalGraphicsInc/cesium/pull/7945)
+* Spread out KMl loading across multiple frames to prevent freezing. [#8195](https://github.com/AnalyticalGraphicsInc/cesium/pull/8195)
+* Fixed a bug where dynamic polylines did not use the given arcType. [#8191](https://github.com/AnalyticalGraphicsInc/cesium/issues/8191)
+* Fixed an issue where polygons, corridors, rectangles, and ellipses on terrain would not render on some mobile devices. [#6739](https://github.com/AnalyticalGraphicsInc/cesium/issues/6739)
+* Fixed a bug where GlobeSurfaceTile would not render the tile until all layers completed loading causing globe to appear to hang. [#7974](https://github.com/AnalyticalGraphicsInc/cesium/issues/7974)
+* Fixed alpha equation for `BlendingState.ALPHA_BLEND` and `BlendingState.ADDITIVE_BLEND`. [#8202](https://github.com/AnalyticalGraphicsInc/cesium/pull/8202)
+
 ### 1.61 - 2019-09-03
 
 ##### Additions :tada:

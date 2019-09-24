@@ -1,11 +1,11 @@
 define([
-        'Renderer/Renderbuffer',
         'Renderer/ContextLimits',
+        'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
         'Specs/createContext'
     ], function(
-        Renderbuffer,
         ContextLimits,
+        Renderbuffer,
         RenderbufferFormat,
         createContext) {
         'use strict';

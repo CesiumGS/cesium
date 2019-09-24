@@ -1,12 +1,12 @@
 define([
-        'Core/PinBuilder',
         'Core/buildModuleUrl',
         'Core/Color',
+        'Core/PinBuilder',
         'ThirdParty/when'
     ], function(
-        PinBuilder,
         buildModuleUrl,
         Color,
+        PinBuilder,
         when) {
         'use strict';
 
