@@ -635,7 +635,7 @@ define([
         if (mostDetailed) {
             frameState.tilesetPassState = mostDetailedPickTilesetPassState;
         } else {
-            frameState.tilesetPassState = picking._pickTilesetPassState;
+            frameState.tilesetPassState = pickTilesetPassState;
         }
 
         uniformState.update(frameState);
