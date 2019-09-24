@@ -1896,10 +1896,10 @@ define([
         return false;
     };
 
-    Cesium3DTilesetImplicit.prototype.derivedImplicitGeometricError = function(parent, x, y, z, xTiles, yTiles) {
-        var anyChildrenAvailable = !defined(parent.treeKey) ? true : this.anyChildrenAvailableSubtree(x, y, z, parent.treeKey.w + 1); // parent key depth + 1 is this tiles depth, we want to see if this tile has any children for seting gError to 0
-        return anyChildrenAvailable ? (parent.geometricError / Math.sqrt(xTiles * yTiles)) : 0;
-    };
+    // Cesium3DTilesetImplicit.prototype.derivedImplicitGeometricError = function(parent, x, y, z, xTiles, yTiles) {
+    //     var anyChildrenAvailable = !defined(parent.treeKey) ? true : this.anyChildrenAvailableSubtree(x, y, z, parent.treeKey.w + 1); // parent key depth + 1 is this tiles depth, we want to see if this tile has any children for seting gError to 0
+    //     return anyChildrenAvailable ? (parent.geometricError / Math.sqrt(xTiles * yTiles)) : 0;
+    // };
 
     // Cesium3DTilesetImplicit.prototype.getSubtreeRootKey = function(x, y, z, level) {
     //     // Given the xyz level find the nearest subtree root key
@@ -1914,7 +1914,6 @@ define([
     //         y: y >> subtreeLevel,
     //         z: z >> subtreeLevel
     //     };
-    //
     //     return subtreeRootKey;
     // };
 

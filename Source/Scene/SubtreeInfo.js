@@ -154,7 +154,10 @@ define([
      * @private
      */
     SubtreeInfo.prototype.findParent = function(subtreeRootKey, subtreeRootKeyString) {
-        if (this._lastLevel ===)
+        if ((this._subtreeRootKey.w + this._tileset._tilingScheme.subtreeLevels - 1) === subtreeRootKey.w) {
+            return this;
+        }
+        // Find the closests key that subtreeRootkey resolves to on this subtrees last level
     };
 
     /**
@@ -172,12 +175,20 @@ define([
         }
 
         var parentMap = parent._subtreesIndexMap;
+        if (!defined(parentMap)) {
+            throw new DeveloperError('parent subtree index map is undefined');
+        }
+
         if (!parentMap.has(subtreeRootKeyString)) {
             throw new DeveloperError('No key found for subtree in parent map.');
         }
 
         var i = parentMap.get(subtreeRootKeyString);
         var parentSubtrees = parent._subtrees;
+        if (!defined(parentSubtrees)) {
+            throw new DeveloperError('parent SubtreeInfo array is undefined');
+        }
+
         if (defined(parentSubtrees[i])) {
             throw new DeveloperError('Subtree info for parent already exists.');
         }
@@ -203,12 +214,12 @@ define([
         }
 
         var parentMap = parent._subtreesIndexMap;
-        if (!parentMap.has(subtreeRootKeyString)) {
+        var parentSubtrees = parent._subtrees;
+        if (!defined(parentMap) || !parentMap.has(subtreeRootKeyString) || !defined(parentSubtrees)) {
             return undefined;
         }
 
         var i = parentMap.get(subtreeRootKeyString);
-        var parentSubtrees = parent._subtrees;
         return parentSubtrees[i];
     };
 
