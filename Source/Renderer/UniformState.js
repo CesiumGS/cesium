@@ -1119,8 +1119,7 @@ define([
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
 
-        var canvas = frameState.context._canvas;
-        this._resolutionScale = canvas.width / canvas.clientWidth;
+        this._resolutionScale = frameState.resolutionScale;
 
         var camera = frameState.camera;
         this.updateCamera(camera);
