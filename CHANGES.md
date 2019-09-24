@@ -26,6 +26,7 @@ Change Log
 * Fixed labels not showing for individual entities in data sources when clustering is enabled. [#6087](https://github.com/AnalyticalGraphicsInc/cesium/issues/6087)
 * Fixed a crash for 3D Tiles that have zero volume. [#7945](https://github.com/AnalyticalGraphicsInc/cesium/pull/7945)
 * Fixed seam artifacts when log depth is disabled, `scene.globe.depthTestAgainstTerrain` is false, and primitives are under the globe. [#8205](https://github.com/AnalyticalGraphicsInc/cesium/pull/8205)
+* Spread out KMl loading across multiple frames to prevent freezing. [#8195](https://github.com/AnalyticalGraphicsInc/cesium/pull/8195)
 * Fixed a bug where dynamic polylines did not use the given arcType. [#8191](https://github.com/AnalyticalGraphicsInc/cesium/issues/8191)
 * Fixed an issue where polygons, corridors, rectangles, and ellipses on terrain would not render on some mobile devices. [#6739](https://github.com/AnalyticalGraphicsInc/cesium/issues/6739)
 * Fixed a bug where GlobeSurfaceTile would not render the tile until all layers completed loading causing globe to appear to hang. [#7974](https://github.com/AnalyticalGraphicsInc/cesium/issues/7974)
