@@ -2232,7 +2232,7 @@ define([
             throw new RuntimeError('DBUG: Subtree ArrayBuffer is empty?');
         }
 
-        console.log('ArrayBuffer length: ' + subtreeArrayBuffer.byteLength);
+        // console.log('ArrayBuffer length: ' + subtreeArrayBuffer.byteLength);
 
         var isOct = this._isOct;
 
@@ -2250,8 +2250,8 @@ define([
         // var subtree = subtreeCache.get(key);
         var subtreeInfo = subtreeCache.get(subtreeRootKey, key);
         var subtree = subtreeInfo._subtree;
-        console.log('subtree Uint8Array unpacked length: ' + subtree.length);
-        console.log('subtree key: ' + key);
+        // console.log('subtree Uint8Array unpacked length: ' + subtree.length);
+        // console.log('subtree key: ' + key);
 
         var statistics = this._statistics;
         var hasParent = defined(parentTile);
@@ -2295,8 +2295,8 @@ define([
         }
 
         var level = this._startLevel;
-        console.log('first level in tileset: ' + level);
-        console.log('first level subtree: ' + subtreeLevelStart);
+        // console.log('first level in tileset: ' + level);
+        // console.log('first level subtree: ' + subtreeLevelStart);
 
         // TODO: merge with loop version but wait till the other todo's are ironed out
 
