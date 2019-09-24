@@ -32,6 +32,7 @@ define([
         this._tileset = tileset;
         this._subtree = subtree;
         this._subtreeRootKey = subtreeRootKey;
+        this._subtreeLastLevel0Indexed = -1;
         // uri is isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
         this._subtreeRootKeyString = subtreeRootKey.w + '/' +  subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
         this._subtreesIndexMap = undefined;
@@ -144,6 +145,7 @@ define([
 
         this._subtreesIndexMap = map;
         this._subtrees = array;
+        this._subtreeLastLevel0Indexed = this._subtreeRootKey.w + tilingScheme.subtreeLevels - 1;
     };
 
     /**
@@ -154,10 +156,39 @@ define([
      * @private
      */
     SubtreeInfo.prototype.findParent = function(subtreeRootKey, subtreeRootKeyString) {
-        if ((this._subtreeRootKey.w + this._tileset._tilingScheme.subtreeLevels - 1) === subtreeRootKey.w) {
+        var tileset = this._tileset;
+        var subtreeLastLevel0Indexed = this._subtreeLastLevel0Indexed;
+        if (subtreeLastLevel0Indexed === -1) {
+            return undefined;
+        }
+
+        if (subtreeLastLevel0Indexed === subtreeRootKey.w) {
             return this;
         }
-        // Find the closests key that subtreeRootkey resolves to on this subtrees last level
+
+        // Find the treekey on this subtrees lastlevel that subtreeRootkey resolves to on this subtrees last level
+        var result = tileset.getSubtreeInfoFromTreeKey(subtreeRootKey.x, subtreeRootKey.y, subtreeRootKey.z, subtreeRootKey.w);
+        var resultRootKey = result.subtreeRootKey;
+        while(resultRootKey.w !== subtreeLastLevel0Indexed) {
+            result = tileset.getSubtreeInfoFromTreeKey(
+                resultRootKey.x,
+                resultRootKey.y,
+                resultRootKey.z,
+                resultRootKey.w
+            );
+            resultRootKey = result.subtreeRootKey;
+        }
+
+        var map = this._subtreesIndexMap;
+        var resultRootKeyString = resultRootKey.w + '/' + resultRootKey.x + '/' + resultRootKey.y + '/' + resultRootKey.z;
+        var ancestor = map.get(resultRootKeyString);
+
+        // if it is undefined return undefined, else recurse
+        if (!defined(ancestor)) {
+            return undefined;
+        }
+
+        ancestor.findParent(subtreeRootKey, subtreeRootKeyString);
     };
 
     /**
