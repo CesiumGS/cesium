@@ -1190,7 +1190,7 @@ define([
          *
          * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {Number}
-         * @default 0.1
+         * @default 0.2
          */
         luminanceAtZenith : {
             get : function() {
