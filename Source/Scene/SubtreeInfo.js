@@ -23,10 +23,13 @@ define([
     function SubtreeInfo(tileset, subtree, subtreeRootKey) {
         this._tileset = tileset;
         this._subtree = subtree;
-        this._subtreeRootKey = subtreeRootKey;
+        this._tiles = undefined;
         this._subtreeLastTreeLevel0Indexed = -1;
         // uri is isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
+        // TODO: not needed
         this._subtreeRootKeyString = undefined;
+        // TODO: not needed
+        this._subtreeRootKey = subtreeRootKey;
         this._subtreesIndexMap = undefined;
         this._subtrees = undefined;
 
@@ -139,6 +142,15 @@ define([
         var tilingScheme = tileset._tilingScheme;
         var subtreeLevels = tilingScheme.subtreeLevels;
         var lastTreeLevel0Indexed = tilingScheme.lastLevel;
+
+        var sizesArray = tileset._unpackedArraySizes;
+        var subtreeSize = sizesArray[subtreeLevels];
+        var tilesArray = [];
+        for (i = 0; i < subtreeSize; i++) {
+            tilesArray.push(undefined);
+        }
+        this._tiles = tilesArray;
+
         var subtreeLastTreeLevel0Indexed = subtreeRootKey.w + subtreeLevels - 1;
         if (subtreeLastTreeLevel0Indexed === lastTreeLevel0Indexed) {
             // No subtrees beyond us
@@ -154,9 +166,8 @@ define([
         }
 
         var lastLevelOffsetIndex = subtreeLevels - 1;
-        var sizesArray = tileset._unpackedArraySizes;
         var lastLevelOffset = sizesArray[lastLevelOffsetIndex];
-        var numTilesOnLastLevel = sizesArray[subtreeLevels] - lastLevelOffset;
+        var numTilesOnLastLevel = subtreeSize - lastLevelOffset;
 
         var nextIdx = 0;
         var array = [];

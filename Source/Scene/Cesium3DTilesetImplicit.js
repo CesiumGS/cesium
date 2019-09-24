@@ -268,7 +268,7 @@ define([
         // this._subtreeCache = new Map(); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
         this._subtreeCache = undefined; // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
         // TODO: this probably needs to get subsumed by subtreeInfo
-        this._tiles = new Map(); // Holds the subtree tiles, Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is an Array of tiles (undefined spots are unavailable)
+        // this._tiles = new Map(); // Holds the subtree tiles, Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is an Array of tiles (undefined spots are unavailable)
         // this._subtreeViewer = new ImplicitSubtreeViewer(this); // TODO: Make class with the toroidial multi dimensional array to make iteration easier, needs to update small portions every frame
         // I think there are two portions? ancestor portion 1d array and the normal portion which is a 3d array (fixed sizes on each level?) toroidial array?
         // what happens when sse changes? re-init the fixed size arrays? prevent going below some value in tileset (during the set)?
@@ -2304,12 +2304,13 @@ define([
         var tilesetRoot = defined(this._root) ? this._root : rootTile;
 
         // Init the tiles array
-        var tilesArray = [];
         var unpackedSize = this._unpackedSize;
-        var i;
-        for (i = 0; i < unpackedSize; i++) {
-            tilesArray.push(undefined);
-        }
+        var tilesArray = subtreeInfo._tiles;
+        // var tilesArray = [];
+        // var i;
+        // for (i = 0; i < unpackedSize; i++) {
+        //     tilesArray.push(undefined);
+        // }
 
         // just loop for 0..unpackedSize-1
         // get the treeKey and subtreeKey from subtreeIndex
@@ -2388,7 +2389,7 @@ define([
         }
 
         // Update the parent <--> child links
-        var childTile;
+        var childTile, i;
         var childrenLength = isOct ? 8 : 4;
         var childSubtreeIndices, childSubtreeIndex;
         for (subtreeIndex = 0; subtreeIndex < unpackedSize; subtreeIndex++) {
@@ -2420,10 +2421,10 @@ define([
             }
         }
 
-        var tiles = this._tiles;
-        if (tiles.has(key)) {
-            throw new RuntimeError('DEBUG: Subtree already exists?');
-        }
+        // var tiles = this._tiles;
+        // if (tiles.has(key)) {
+        //     throw new RuntimeError('DEBUG: Subtree already exists?');
+        // }
 
         // console.log('rootTile: ');
         console.log(rootTile);
@@ -2431,7 +2432,7 @@ define([
         // console.log('tile0: ');
         // console.log(tilesArray[0]);
 
-        tiles.set(key, tilesArray);
+        // tiles.set(key, tilesArray);
 
         return rootTile;
     };
