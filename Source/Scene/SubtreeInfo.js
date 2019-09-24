@@ -159,7 +159,8 @@ define([
         var tileset = this._tileset;
         var subtreeLastLevel0Indexed = this._subtreeLastLevel0Indexed;
         if (subtreeLastLevel0Indexed === -1) {
-            return undefined;
+            // usually indicates a last subtree, shouldn't occur.
+            throw new DeveloperError('Asking for subtree beyond a final subtree.');
         }
 
         if (subtreeLastLevel0Indexed === subtreeRootKey.w) {
