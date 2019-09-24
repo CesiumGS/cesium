@@ -22,16 +22,15 @@ define([
      */
     function SubtreeInfo(tileset, subtree, subtreeRootKey) {
         this._tileset = tileset;
-        this._subtree = subtree;
-        this._tiles = undefined;
+        this._subtree = subtree; // uin8array of 1 or 0 at each index
+        this._tiles = undefined; // similiar to _subtree but undefined or instanceof implicit tile at each index
+        this._subtreesMap = undefined;
         this._subtreeLastTreeLevel0Indexed = -1;
+
         // uri is isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
-        // TODO: not needed
+        // TODO: keys not needed
         this._subtreeRootKeyString = undefined;
-        // TODO: not needed
         this._subtreeRootKey = subtreeRootKey;
-        this._subtreesIndexMap = undefined;
-        this._subtrees = undefined;
 
         if (!defined(this._subtree)) {
             this.initRoot();
@@ -97,6 +96,7 @@ define([
 
     // var scratchCartesian = new Cartesian4();
 
+
     /**
      * Adds the subtree to the subtree cache
      *
@@ -110,20 +110,16 @@ define([
         var tilingScheme = tileset._tilingScheme;
         var roots = tilingScheme.roots;
 
-        var nextIdx = 0;
-        var array = [];
         var map = new Map();
         var i, keyString, treeKey;
         var rootsLength = roots.length;
         for (i = 0; i < rootsLength; i++) {
-            array.push(undefined); // alloc enough slots for all the roots
             treeKey = roots[i];
             keyString = treeKey[0] + '/' + treeKey[1] + '/' + treeKey[2] + '/' + treeKey[3];
-            map.set(keyString, nextIdx++);
+            map.set(keyString, undefined);
         }
 
-        this._subtreesIndexMap = map;
-        this._subtrees = array;
+        this._subtreesMap = map;
         this._subtreeLastTreeLevel0Indexed = roots[0][0];
     };
 
@@ -169,25 +165,21 @@ define([
         var lastLevelOffset = sizesArray[lastLevelOffsetIndex];
         var numTilesOnLastLevel = subtreeSize - lastLevelOffset;
 
-        var nextIdx = 0;
-        var array = [];
         var map = new Map();
         var i, result, keyString, subtreeIndex, treeKey;
         for (i = 0; i < numTilesOnLastLevel; i++) {
             subtreeIndex = i + lastLevelOffset;
             if (subtree[i + lastLevelOffset] === 1) {
-                array.push(undefined); // alloc enough slots for all the subtrees
                 // TODO: migrate the subtree related key/index conversions here?
                 // Convert index to key string, add key to map
                 result = tileset.getSubtreeInfoFromSubtreeIndexAndRootKey(subtreeIndex, subtreeRootKey);
                 treeKey = result.treeKey;
                 keyString = treeKey.w + '/' + treeKey.x + '/' + treeKey.y + '/' + treeKey.z;
-                map.set(keyString, nextIdx++);
+                map.set(keyString, undefined);
             }
         }
 
-        this._subtreesIndexMap = map;
-        this._subtrees = array;
+        this._subtreesMap = map;
         this._subtreeLastTreeLevel0Indexed = subtreeLastTreeLevel0Indexed;
     };
 
@@ -208,17 +200,9 @@ define([
 
         var index;
         if (subtreeLastLevel0Indexed === subtreeRootKey.w) {
-            if (!this._subtreesIndexMap.has(subtreeRootKeyString)) {
+            if (!this._subtreesMap.has(subtreeRootKeyString)) {
                 throw new DeveloperError('Unit subtree in subtreeInfo.');
             }
-
-            // // Root
-            // if (!defined(this._subtreeRootKeyString)) {
-            //     index = this._subtreesIndexMap.get(subtreeRootKeyString);
-            //     return this._subtrees[index];
-            // }
-            // index = this._subtreesIndexMap.get(subtreeRootKeyString);
-            // return this._subtrees[index];
 
             return this;
         }
@@ -238,13 +222,12 @@ define([
 
         var resultRootKeyString = resultRootKey.w + '/' + resultRootKey.x + '/' + resultRootKey.y + '/' + resultRootKey.z;
 
-        var map = this._subtreesIndexMap;
+        var map = this._subtreesMap;
         if (!map.has(resultRootKeyString)) {
             throw new DeveloperError('No key in subtreeInfo index map');
         }
 
-        index = map.get(resultRootKeyString);
-        var ancestor = this._subtrees[index];
+        var ancestor = map.get(resultRootKeyString);
 
         // if it is undefined return undefined, else recurse
         if (!defined(ancestor)) {
@@ -268,28 +251,18 @@ define([
             throw new DeveloperError('No parent subtree found in subtree cache.');
         }
 
-        var parentMap = parent._subtreesIndexMap;
+        var parentMap = parent._subtreesMap;
         if (!defined(parentMap)) {
             throw new DeveloperError('parent subtree index map is undefined');
         }
 
-        if (!parentMap.has(subtreeRootKeyString)) {
-            throw new DeveloperError('No key found for subtree in parent map.');
-        }
-
-        var i = parentMap.get(subtreeRootKeyString);
-        var parentSubtrees = parent._subtrees;
-        if (!defined(parentSubtrees)) {
-            throw new DeveloperError('parent SubtreeInfo array is undefined');
-        }
-
-        if (defined(parentSubtrees[i])) {
-            throw new DeveloperError('Subtree info for parent already exists.');
+        if (defined(parentMap.get(subtreeRootKeyString))) {
+            throw new DeveloperError('subtreeInfo already exists in map');
         }
 
         var subtreeInfo = new SubtreeInfo(this._tileset, subtree, subtreeRootKey);
 
-        parentSubtrees[i] = subtreeInfo;
+        parentMap.set(subtreeRootKeyString, subtreeInfo);
 
         return subtreeInfo;
     };
@@ -307,29 +280,12 @@ define([
             return undefined;
         }
 
-        var parentMap = parent._subtreesIndexMap;
-        var parentSubtrees = parent._subtrees;
-        if (!defined(parentMap) || !parentMap.has(subtreeRootKeyString) || !defined(parentSubtrees)) {
+        var parentMap = parent._subtreesMap;
+        if (!defined(parentMap)) {
             return undefined;
         }
 
-        var i = parentMap.get(subtreeRootKeyString);
-        return parentSubtrees[i];
-    };
-
-    /**
-     * Gets the subtree with the specified root key from the cache
-     *
-     * @param {String} subtreeRootKey The tree key string of the root of the subtree
-     * @returns {SubtreeInfo} The SubtreeInfo whose root matches the key
-     * @private
-     */
-    SubtreeInfo.prototype.getSubtreeArray = function(subtreeRootKey, subtreeRootKeyString) {
-        var parent = this.get(subtreeRootKey, subtreeRootKeyString);
-        if (!defined(parent)) {
-            return undefined;
-        }
-        return parent._subtree;
+        return parentMap.get(subtreeRootKeyString);
     };
 
     /**
