@@ -311,7 +311,7 @@ define([
         }
 
         this._timeoutSet = true;
-        this._timeThreshold = 100; // After the first load lower threshold to 0.1 seconds
+        this._timeThreshold = 50; // After the first load lower threshold to 0.5 seconds
         var that = this;
         setTimeout(function() {
             that._timeoutSet = false;
