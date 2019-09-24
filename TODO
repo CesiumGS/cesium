@@ -16,5 +16,6 @@ of the subtree
 [ ] The pointcloud makes little sense (content doesn't line up with the bounds (in the z direction))
 
 
+
 [ ] toroidial subtree viewer? it's camera relative, right?
 [ ] incrementally move components to array style
