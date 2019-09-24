@@ -2470,12 +2470,23 @@ define([
             commands.length = frustumCommands.indices[Pass.TRANSLUCENT];
             executeTranslucentCommands(scene, executeCommand, passState, commands, invertClassification);
 
+            // Reset frustum
+            if (index !== 0 && scene.mode !== SceneMode.SCENE2D) {
+                // Reset frustum
+                frustum.near = frustumCommands.near * scene.opaqueFrustumNearOffset;
+                us.updateFrustum(frustum);
+            }
+
             if (context.depthTexture && scene.useDepthPicking && (environmentState.useGlobeDepthFramebuffer || renderTranslucentDepthForPick)) {
                 // PERFORMANCE_IDEA: Use MRT to avoid the extra copy.
                 var depthStencilTexture = renderTranslucentDepthForPick ? passState.framebuffer.depthStencilTexture : globeDepth.framebuffer.depthStencilTexture;
                 var pickDepth = scene._picking.getPickDepth(scene, index);
                 pickDepth.update(context, depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
+
+                if (useDepthPlane && environmentState.useGlobeDepthFramebuffer) {
+                    pickDepth.executeDepthPlaneCopy(context, passState, depthPlane);
+                }
             }
 
             if (picking || !usePostProcessSelected) {
@@ -2484,11 +2495,6 @@ define([
 
             var originalFramebuffer = passState.framebuffer;
             passState.framebuffer = view.sceneFramebuffer.getIdFramebuffer();
-
-            // reset frustum
-            frustum.near = index !== 0 ? frustumCommands.near * scene.opaqueFrustumNearOffset : frustumCommands.near;
-            frustum.far = frustumCommands.far;
-            us.updateFrustum(frustum);
 
             us.updatePass(Pass.GLOBE);
             commands = frustumCommands.commands[Pass.GLOBE];
