@@ -24,9 +24,9 @@ define([
         this._tileset = tileset;
         this._subtree = subtree;
         this._subtreeRootKey = subtreeRootKey;
-        this._subtreeLastLevel0Indexed = -1;
+        this._subtreeLastTreeLevel0Indexed = -1;
         // uri is isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
-        this._subtreeRootKeyString = subtreeRootKey.w + '/' +  subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
+        this._subtreeRootKeyString = undefined;
         this._subtreesIndexMap = undefined;
         this._subtrees = undefined;
 
@@ -115,13 +115,13 @@ define([
         for (i = 0; i < rootsLength; i++) {
             array.push(undefined); // alloc enough slots for all the roots
             treeKey = roots[i];
-            keyString = treeKey.w + '/' + treeKey.x + '/' + treeKey.y + '/' + treeKey.z;
+            keyString = treeKey[0] + '/' + treeKey[1] + '/' + treeKey[2] + '/' + treeKey[3];
             map.set(keyString, nextIdx++);
         }
 
         this._subtreesIndexMap = map;
         this._subtrees = array;
-        this._subtreeLastLevel0Indexed = roots[0][0];
+        this._subtreeLastTreeLevel0Indexed = roots[0][0];
     };
 
     /**
@@ -134,21 +134,22 @@ define([
     SubtreeInfo.prototype.init = function() {
         // Early exit if subtree last level matches tree last level
         var subtreeRootKey = this._subtreeRootKey;
+        this._subtreeRootKeyString = subtreeRootKey.w + '/' +  subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
         var tileset = this._tileset;
         var tilingScheme = tileset._tilingScheme;
         var subtreeLevels = tilingScheme.subtreeLevels;
-        var lastTreeLevel1Indexed = tilingScheme.lastLevel;
-        var subtreeLastTreeLevel1Indexed = subtreeRootKey.w + subtreeLevels;
-        if (subtreeLastTreeLevel1Indexed === lastTreeLevel1Indexed) {
+        var lastTreeLevel0Indexed = tilingScheme.lastLevel;
+        var subtreeLastTreeLevel0Indexed = subtreeRootKey.w + subtreeLevels - 1;
+        if (subtreeLastTreeLevel0Indexed === lastTreeLevel0Indexed) {
             // No subtrees beyond us
-            this._subtreeLastLevel0Indexed = subtreeRootKey.w;
+            this._subtreeLastTreeLevel0Indexed = subtreeRootKey.w;
             return;
         }
 
         var subtree = this._subtree;
         if (subtree[0] === 1 && subtree[1] === 0) {
             // Empty subtree
-            this._subtreeLastLevel0Indexed = subtreeRootKey.w;
+            this._subtreeLastTreeLevel0Indexed = subtreeRootKey.w;
             return;
         }
 
@@ -176,7 +177,7 @@ define([
 
         this._subtreesIndexMap = map;
         this._subtrees = array;
-        this._subtreeLastLevel0Indexed = this._subtreeRootKey.w + tilingScheme.subtreeLevels - 1;
+        this._subtreeLastTreeLevel0Indexed = subtreeLastTreeLevel0Indexed;
     };
 
     /**
@@ -188,13 +189,26 @@ define([
      */
     SubtreeInfo.prototype.findParent = function(subtreeRootKey, subtreeRootKeyString) {
         var tileset = this._tileset;
-        var subtreeLastLevel0Indexed = this._subtreeLastLevel0Indexed;
+        var subtreeLastLevel0Indexed = this._subtreeLastTreeLevel0Indexed;
 
         if (subtreeLastLevel0Indexed === -1) {
             throw new DeveloperError('Unit subtree in subtreeInfo.');
         }
 
+        var index;
         if (subtreeLastLevel0Indexed === subtreeRootKey.w) {
+            if (!this._subtreesIndexMap.has(subtreeRootKeyString)) {
+                throw new DeveloperError('Unit subtree in subtreeInfo.');
+            }
+
+            // // Root
+            // if (!defined(this._subtreeRootKeyString)) {
+            //     index = this._subtreesIndexMap.get(subtreeRootKeyString);
+            //     return this._subtrees[index];
+            // }
+            // index = this._subtreesIndexMap.get(subtreeRootKeyString);
+            // return this._subtrees[index];
+
             return this;
         }
 
@@ -212,14 +226,21 @@ define([
         }
 
         var resultRootKeyString = resultRootKey.w + '/' + resultRootKey.x + '/' + resultRootKey.y + '/' + resultRootKey.z;
-        var ancestor = this._subtreesIndexMap.get(resultRootKeyString);
+
+        var map = this._subtreesIndexMap;
+        if (!map.has(resultRootKeyString)) {
+            throw new DeveloperError('No key in subtreeInfo index map');
+        }
+
+        index = map.get(resultRootKeyString);
+        var ancestor = this._subtrees[index];
 
         // if it is undefined return undefined, else recurse
         if (!defined(ancestor)) {
             return undefined;
         }
 
-        ancestor.findParent(subtreeRootKey, subtreeRootKeyString);
+        return ancestor.findParent(subtreeRootKey, subtreeRootKeyString);
     };
 
     /**
@@ -283,6 +304,33 @@ define([
 
         var i = parentMap.get(subtreeRootKeyString);
         return parentSubtrees[i];
+    };
+
+    /**
+     * Gets the subtree with the specified root key from the cache
+     *
+     * @param {String} subtreeRootKey The tree key string of the root of the subtree
+     * @returns {SubtreeInfo} The SubtreeInfo whose root matches the key
+     * @private
+     */
+    SubtreeInfo.prototype.getSubtreeArray = function(subtreeRootKey, subtreeRootKeyString) {
+        var parent = this.get(subtreeRootKey, subtreeRootKeyString);
+        if (!defined(parent)) {
+            return undefined;
+        }
+        return parent._subtree;
+    };
+
+    /**
+     * Gets the subtree with the specified root key from the cache
+     *
+     * @param {String} subtreeRootKey The tree key string of the root of the subtree
+     * @returns {SubtreeInfo} The SubtreeInfo whose root matches the key
+     * @private
+     */
+    SubtreeInfo.prototype.has = function(subtreeRootKey, subtreeRootKeyString) {
+        var parent = this.get(subtreeRootKey, subtreeRootKeyString);
+        return defined(parent);
     };
 
     /**

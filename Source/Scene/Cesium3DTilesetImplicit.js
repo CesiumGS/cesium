@@ -265,8 +265,8 @@ define([
 
         // TODO: Cache/Manager class that has some or all of these values as
         // well as any subtree precomputation (array sizes, sse sphere radii, etc)
-        this._subtreeCache = new Map(); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
-        // this._subtreeCache = undefined; // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
+        // this._subtreeCache = new Map(); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
+        this._subtreeCache = undefined; // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
         // TODO: this probably needs to get subsumed by subtreeInfo
         this._tiles = new Map(); // Holds the subtree tiles, Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is an Array of tiles (undefined spots are unavailable)
         // this._subtreeViewer = new ImplicitSubtreeViewer(this); // TODO: Make class with the toroidial multi dimensional array to make iteration easier, needs to update small portions every frame
@@ -1050,7 +1050,7 @@ define([
                     //     refine: tilingScheme.refine,
                     // };
 
-                    // that._subtreeCache = new SubtreeInfo(that);
+                    that._subtreeCache = new SubtreeInfo(that);
                     that._root = that.updateTilesetFromSubtree(resource, subtreeArrayBuffer, rootKey);
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
@@ -2072,50 +2072,50 @@ define([
      *
      * @private
      */
-    Cesium3DTilesetImplicit.prototype.getTreeRangeForLevel = function(key, level) {
-        var subtreeLevelInTree = key.w;
-        var levelDiff = level - subtreeLevelInTree;
-        if (levelDiff < 0) {
-            throw new RuntimeError('Cannot query a tree range for a level of above the subtree');
-        }
-        if (levelDiff > this._tilingScheme.subtreeLevels) {
-            throw new RuntimeError('Cannot query a tree range for a level of below the subtree');
-        }
-
-        var isOct = this._isOct;
-
-        var subtreeRootX = key.x;
-        var subtreeRootY = key.y;
-        var subtreeRootZ = isOct ? key.z : 0;
-
-        // The dim for each direction on this level in teh subtree
-        var subteeLevelDim = (1 << levelDiff);
-        // Once we have max index, use to get to min index
-        // var toMinIndex = subteeLevelDim - 1;
-        // var maxX = (subtreeRootX << levelDiff);
-        // var maxY = (subtreeRootY << levelDiff);
-        // var minX = maxX - toMinIndex;
-        // var minY = maxY - toMinIndex;
-        // var maxZ = (subtreeRootZ << levelDiff);
-        // var minZ = isOct ? (maxZ - toMinIndex) : 0;
-
-        var toMaxIndex = subteeLevelDim - 1;
-        var minX = (subtreeRootX << levelDiff);
-        var minY = (subtreeRootY << levelDiff);
-        var minZ = (subtreeRootZ << levelDiff);
-        var maxX = minX + toMaxIndex;
-        var maxY = minY + toMaxIndex;
-        var maxZ = isOct ? (minZ + toMaxIndex) : 0;
-
-        return {
-            startX: minX,
-            startY: minY,
-            startZ: minZ,
-            endX: maxX,
-            endY: maxY,
-            endZ: maxZ
-        };
-    };
+    // Cesium3DTilesetImplicit.prototype.getTreeRangeForLevel = function(key, level) {
+    //     var subtreeLevelInTree = key.w;
+    //     var levelDiff = level - subtreeLevelInTree;
+    //     if (levelDiff < 0) {
+    //         throw new RuntimeError('Cannot query a tree range for a level of above the subtree');
+    //     }
+    //     if (levelDiff > this._tilingScheme.subtreeLevels) {
+    //         throw new RuntimeError('Cannot query a tree range for a level of below the subtree');
+    //     }
+    //
+    //     var isOct = this._isOct;
+    //
+    //     var subtreeRootX = key.x;
+    //     var subtreeRootY = key.y;
+    //     var subtreeRootZ = isOct ? key.z : 0;
+    //
+    //     // The dim for each direction on this level in teh subtree
+    //     var subteeLevelDim = (1 << levelDiff);
+    //     // Once we have max index, use to get to min index
+    //     // var toMinIndex = subteeLevelDim - 1;
+    //     // var maxX = (subtreeRootX << levelDiff);
+    //     // var maxY = (subtreeRootY << levelDiff);
+    //     // var minX = maxX - toMinIndex;
+    //     // var minY = maxY - toMinIndex;
+    //     // var maxZ = (subtreeRootZ << levelDiff);
+    //     // var minZ = isOct ? (maxZ - toMinIndex) : 0;
+    //
+    //     var toMaxIndex = subteeLevelDim - 1;
+    //     var minX = (subtreeRootX << levelDiff);
+    //     var minY = (subtreeRootY << levelDiff);
+    //     var minZ = (subtreeRootZ << levelDiff);
+    //     var maxX = minX + toMaxIndex;
+    //     var maxY = minY + toMaxIndex;
+    //     var maxZ = isOct ? (minZ + toMaxIndex) : 0;
+    //
+    //     return {
+    //         startX: minX,
+    //         startY: minY,
+    //         startZ: minZ,
+    //         endX: maxX,
+    //         endY: maxY,
+    //         endZ: maxZ
+    //     };
+    // };
 
     // /**
     //  * Gets a loop range in x y z that needs to be checked for the given level
@@ -2214,8 +2214,8 @@ define([
         }
 
         // Finally, assign to the map
-        var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
-        this._subtreeCache.set(key, subtree);
+        // var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
+        this._subtreeCache.set(subtree, subtreeRootKey);
     };
 
     /**
@@ -2239,14 +2239,17 @@ define([
         var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
 
         var subtreeCache = this._subtreeCache;
-        if (subtreeCache.has(key)) {
+        // if (subtreeCache.has(key)) {
+        if (subtreeCache.has(subtreeRootKey, key)) {
             throw new RuntimeError('DEBUG: Subtree already exists?');
         }
 
         // Create an unpacked uint8array and an array and populate with 1/0;
         this.updateSubtreeCache(subtreeArrayBuffer, subtreeRootKey);
 
-        var subtree = subtreeCache.get(key);
+        // var subtree = subtreeCache.get(key);
+        var subtreeInfo = subtreeCache.get(subtreeRootKey, key);
+        var subtree = subtreeInfo._subtree;
         console.log('subtree Uint8Array unpacked length: ' + subtree.length);
         console.log('subtree key: ' + key);
 
