@@ -34,7 +34,7 @@ var scene = viewer.scene;
 var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-105.0, 45.0, 20.0);
 
 var enu = Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid);
-var rotation = Cesium.Matrix4.getRotation(enu, new Cesium.Matrix3());
+var rotation = Cesium.Matrix4.getMatrix3(enu, new Cesium.Matrix3());
 Cesium.Matrix3.multiply(rotation, Cesium.Matrix3.fromRotationX(-Cesium.Math.PI_OVER_TWO), rotation);
 var orientation = Cesium.Quaternion.fromRotationMatrix(rotation);
 

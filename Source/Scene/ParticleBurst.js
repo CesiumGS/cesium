@@ -21,7 +21,7 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         /**
-         * The time in seconds after the eginning of the particle system's lifetime that the burst will occur.
+         * The time in seconds after the beginning of the particle system's lifetime that the burst will occur.
          * @type {Number}
          * @default 0.0
          */

@@ -712,7 +712,11 @@ define([
             generateCartesianArcOptions.positions = positions;
             generateCartesianArcOptions.granularity = Property.getValueOrUndefined(polyline._granularity, time);
             generateCartesianArcOptions.height = PolylinePipeline.extractHeights(positions, globe.ellipsoid);
-            positions = PolylinePipeline.generateCartesianArc(generateCartesianArcOptions);
+            if (arcType === ArcType.GEODESIC) {
+                positions = PolylinePipeline.generateCartesianArc(generateCartesianArcOptions);
+            } else {
+                positions = PolylinePipeline.generateCartesianRhumbArc(generateCartesianArcOptions);
+            }
         }
 
         line.show = true;

@@ -26,7 +26,7 @@ define([
         createContext) {
         'use strict';
 
-describe('Core/ComponentDatatype', function() {
+describe('Renderer/VertexArrayFactory', function() {
 
     var context;
     var va;

@@ -16,7 +16,7 @@ define([
         createScene) {
         'use strict';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/PointCloudEyeDomeLighting', function() {
 
     var scene;
     var centerLongitude = -1.31968;

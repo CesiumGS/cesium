@@ -61,7 +61,7 @@ define([
      *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 20.0, 10.0, 30.0)
      *   }),
      *   attributes : {
-     *     color : new Cesium.Color(1.0, 0.0, 0.0, 0.5)
+     *     color : new Cesium.ColorGeometryInstanceAttribute(1.0, 0.0, 0.0, 0.5)
      *   }
      * });
      *
@@ -70,7 +70,7 @@ define([
      *     rectangle : Cesium.Rectangle.fromDegrees(0.0, 40.0, 10.0, 50.0)
      *   }),
      *   attributes : {
-     *     color : new Cesium.Color(0.0, 0.0, 1.0, 0.5)
+     *     color : new Cesium.ColorGeometryInstanceAttribute(0.0, 0.0, 1.0, 0.5)
      *   }
      * });
      *
@@ -242,7 +242,7 @@ define([
 
     /**
      * The {@link VertexFormat} that all {@link PerInstanceColorAppearance} instances
-     * are compatible with.  This requires only <code>position</code> and <code>st</code>
+     * are compatible with.  This requires only <code>position</code> and <code>normal</code>
      * attributes.
      *
      * @type VertexFormat
@@ -253,7 +253,7 @@ define([
 
     /**
      * The {@link VertexFormat} that all {@link PerInstanceColorAppearance} instances
-     * are compatible with when {@link PerInstanceColorAppearance#flat} is <code>false</code>.
+     * are compatible with when {@link PerInstanceColorAppearance#flat} is <code>true</code>.
      * This requires only a <code>position</code> attribute.
      *
      * @type VertexFormat

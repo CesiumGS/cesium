@@ -86,7 +86,7 @@ define([
         pollToPromise) {
         'use strict';
 
-describe('Core/ArcType', function() {
+describe('Scene/GeometryRenderingSpec', function() {
 
     var scene;
     var ellipsoid;

@@ -9,7 +9,6 @@ define([
         Matrix4,
         WebGLConstants) {
     'use strict';
-    /*global WebGLRenderingContext*/
 
     var viewerPositionWCScratch = new Cartesian3();
 

@@ -3283,8 +3283,6 @@ define([
         }
         frameState.backgroundColor = backgroundColor;
 
-        frameState.creditDisplay.beginFrame();
-
         scene.fog.update(frameState);
 
         us.update(frameState);
@@ -3330,7 +3328,6 @@ define([
             }
         }
 
-        frameState.creditDisplay.endFrame();
         context.endFrame();
     }
 
@@ -3408,6 +3405,7 @@ define([
 
         if (shouldRender) {
             this._preRender.raiseEvent(this, time);
+            frameState.creditDisplay.beginFrame();
             tryAndCatchError(this, render);
         }
 
@@ -3425,6 +3423,7 @@ define([
 
         if (shouldRender) {
             this._postRender.raiseEvent(this, time);
+            frameState.creditDisplay.endFrame();
         }
     };
 

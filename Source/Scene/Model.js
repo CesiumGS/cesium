@@ -9,6 +9,7 @@ define([
         '../Core/Color',
         '../Core/combine',
         '../Core/createGuid',
+        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -87,6 +88,7 @@ define([
         Color,
         combine,
         createGuid,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
@@ -286,7 +288,7 @@ define([
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
+     * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
@@ -301,6 +303,7 @@ define([
      * @param {Number} [options.luminanceAtZenith=0.5] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see Model.fromGltf
      *
@@ -355,6 +358,16 @@ define([
 
         var basePath = defaultValue(options.basePath, '');
         this._resource = Resource.createIfNeeded(basePath);
+
+        // User specified credit
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
+
+        // Create a list of Credit's so they can be added from the Resource later
+        this._resourceCredits = [];
 
         /**
          * Determines if the model primitive will be shown.
@@ -515,8 +528,7 @@ define([
          *
          * @default Color.WHITE
          */
-        this.color = defaultValue(options.color, Color.WHITE);
-        this._color = new Color();
+        this.color = Color.clone(defaultValue(options.color, Color.WHITE));
         this._colorPreviousAlpha = 1.0;
 
         /**
@@ -1246,6 +1258,16 @@ define([
                 this._shouldUpdateSpecularMapAtlas = this._shouldUpdateSpecularMapAtlas || value !== this._specularEnvironmentMaps;
                 this._specularEnvironmentMaps = value;
             }
+        },
+        /**
+         * Gets the credit that will be displayed for the model
+         * @memberof Model.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
         }
     });
 
@@ -1333,7 +1355,7 @@ define([
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
+     * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
@@ -1343,6 +1365,7 @@ define([
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+     * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
      *
      * @returns {Model} The newly created model.
      *
@@ -1432,6 +1455,15 @@ define([
                     // Load text (JSON) glTF
                     var json = getStringFromTypedArray(array);
                     cachedGltf.makeReady(JSON.parse(json));
+                }
+
+                var resourceCredits = model._resourceCredits;
+                var credits = modelResource.credits;
+                if (defined(credits)) {
+                    var length = credits.length;
+                    for (var i = 0; i < length; i++) {
+                        resourceCredits.push(credits[i]);
+                    }
                 }
             }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', modelResource.url));
         } else if (!cachedGltf.ready) {
@@ -3160,7 +3192,7 @@ define([
             var mInverseTranspose = new Matrix3();
             return function() {
                 Matrix4.inverse(runtimeNode.computedMatrix, mInverse);
-                Matrix4.getRotation(mInverse, mInverseTranspose);
+                Matrix4.getMatrix3(mInverse, mInverseTranspose);
                 return Matrix3.transpose(mInverseTranspose, mInverseTranspose);
             };
         },
@@ -3171,7 +3203,7 @@ define([
             return function() {
                 Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mv);
                 Matrix4.inverse(mv, mvInverse);
-                Matrix4.getRotation(mvInverse, mvInverseTranspose);
+                Matrix4.getMatrix3(mvInverse, mvInverseTranspose);
                 return Matrix3.transpose(mvInverseTranspose, mvInverseTranspose);
             };
         },
@@ -4949,6 +4981,17 @@ define([
                     }
                 }
             }
+        }
+
+        var credit = this._credit;
+        if (defined(credit)) {
+            frameState.creditDisplay.addCredit(credit);
+        }
+
+        var resourceCredits = this._resourceCredits;
+        var creditCount = resourceCredits.length;
+        for (var c = 0; c < creditCount; c++) {
+            frameState.creditDisplay.addCredit(resourceCredits[c]);
         }
     };
 

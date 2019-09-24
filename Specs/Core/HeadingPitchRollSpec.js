@@ -9,9 +9,6 @@ define([
         'use strict';
 
 describe('Core/HeadingPitchRoll', function() {
-
-    /*global it,expect*/
-
     var deg2rad = CesiumMath.RADIANS_PER_DEGREE;
 
     it('construct with default values', function() {
