@@ -5,12 +5,12 @@ of the subtree
     I don't think you absolutely need 0 sse in the leaves, since there're examples working
 
 
-[ ] The pointcloud makes little sense (lod does really line up with the bounds)
-[ ] script to convert pointcloud tileset to implicit tileset?
+[ ] Try to traverse the subtree array data structures in tree style (is this a waste of time?)
+    * Get some indexing down?, verify the structures are getting setup properly?
 
-[ ] Try to traverse the subtree arrays in tree style (is this a waste of time?)
-    NOTE: Not sure about storing subtree refs (don't store for now)
-    subtree ref / chilren subtree ref
+[ ] script to convert pointcloud tileset to implicit tileset?
+[ ] The pointcloud makes little sense (content doesn't line up with the bounds (in the z direction))
+
 
 [ ] toroidial subtree viewer? it's camera relative, right?
 [ ] incrementally move components to array style
