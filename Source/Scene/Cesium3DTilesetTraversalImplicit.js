@@ -64,6 +64,8 @@ define([
 
         var root = tileset.root;
         updateTile(tileset, root, frameState);
+        tileset.updateLODDistances(frameState);
+        tileset.updateTraversalInfo(frameState);
 
         // The root tile is not visible
         if (!isVisible(root)) {

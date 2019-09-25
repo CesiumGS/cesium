@@ -1694,7 +1694,7 @@ define([
         // find the distnace to the tileset contentless root
         // use that that determine maximumTreversalDepth (the first index in _lodDistances that fails)
 
-        var distance = this._root.distanceToTile(frameState);
+        var distance = this._root._distanceToCamera;
 
         var length = this._lodDistances.length;
         var lodDistances = this._lodDistances;
@@ -1708,7 +1708,7 @@ define([
             }
         }
 
-        if (Math.abs(rootDistance - this._root._distanceToCamera) > CesiumMath.EPSILON2) {
+        if (Math.abs(rootDistance - distance) > CesiumMath.EPSILON2) {
             console.log('root dist ' + distance);
             console.log('max lvl ' + this._maximumTraversalLevel);
             rootDistance = distance;
@@ -3106,8 +3106,6 @@ define([
 
         // Update any tracked min max values
         resetMinimumMaximum(tileset);
-        tileset.updateLODDistances(frameState);
-        tileset.updateTraversalInfo(frameState);
 
         var traversal = tileset._traversals[passOptions.traversal];
         var ready = traversal.selectTiles(tileset, frameState);
