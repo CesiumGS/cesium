@@ -1242,7 +1242,7 @@ function createGalleryList() {
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
 var hello_world_index = ' + helloWorldIndex + ';\n\
-var VERSION = ' + version + ';\n\
+var VERSION = \'' + version + '\';\n\
 var gallery_demos = [' + demoJSONs.join(', ') + '];\n\
 var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;') + '\n';
 
