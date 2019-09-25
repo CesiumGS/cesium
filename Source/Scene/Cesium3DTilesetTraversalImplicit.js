@@ -36,20 +36,6 @@ define([
         stackMaximumLength : 0
     };
 
-    // var descendantTraversal = {
-    //     stack : new ManagedArray(),
-    //     stackMaximumLength : 0
-    // };
-    //
-    // var selectionTraversal = {
-    //     stack : new ManagedArray(),
-    //     stackMaximumLength : 0,
-    //     ancestorStack : new ManagedArray(),
-    //     ancestorStackMaximumLength : 0
-    // };
-    //
-    // var descendantSelectionDepth = 2;
-
     Cesium3DTilesetTraversalImplicit.selectTiles = function(tileset, frameState) {
         tileset._requestedTiles.length = 0;
 
@@ -77,19 +63,10 @@ define([
             return;
         }
 
-        // if (!skipLevelOfDetail(tileset)) {
-            executeBaseTraversal(tileset, root, frameState);
-        // } else if (tileset.immediatelyLoadDesiredLevelOfDetail) {
-        //     executeSkipTraversal(tileset, root, frameState);
-        // } else {
-        //     executeBaseAndSkipTraversal(tileset, root, frameState);
-        // }
+        executeBaseTraversal(tileset, root, frameState);
 
         traversal.stack.trim(traversal.stackMaximumLength);
         emptyTraversal.stack.trim(emptyTraversal.stackMaximumLength);
-        // descendantTraversal.stack.trim(descendantTraversal.stackMaximumLength);
-        // selectionTraversal.stack.trim(selectionTraversal.stackMaximumLength);
-        // selectionTraversal.ancestorStack.trim(selectionTraversal.ancestorStackMaximumLength);
 
         // Update the priority for any requests found during traversal
         // Update after traversal so that min and max values can be used to normalize priority values
@@ -104,24 +81,6 @@ define([
         var baseScreenSpaceError = tileset._maximumScreenSpaceError;
         var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
         executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState);
-    }
-
-    // function executeSkipTraversal(tileset, root, frameState) {
-    //     var baseScreenSpaceError = Number.MAX_VALUE;
-    //     var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
-    //     executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState);
-    //     traverseAndSelect(tileset, root, frameState);
-    // }
-    //
-    // function executeBaseAndSkipTraversal(tileset, root, frameState) {
-    //     var baseScreenSpaceError = Math.max(tileset.baseScreenSpaceError, tileset.maximumScreenSpaceError);
-    //     var maximumScreenSpaceError = tileset.maximumScreenSpaceError;
-    //     executeTraversal(tileset, root, baseScreenSpaceError, maximumScreenSpaceError, frameState);
-    //     traverseAndSelect(tileset, root, frameState);
-    // }
-
-    function skipLevelOfDetail(tileset) {
-        return tileset._skipLevelOfDetail;
     }
 
     function addEmptyTile(tileset, tile) {
@@ -170,24 +129,10 @@ define([
     }
 
     function selectDesiredTile(tileset, tile, frameState) {
-        // if (!skipLevelOfDetail(tileset)) {
-            if (tile.contentAvailable) {
-                // The tile can be selected right away and does not require traverseAndSelect
-                selectTile(tileset, tile, frameState);
-            }
-        //     return;
-        // }
-        //
-        // // If this tile is not loaded attempt to select its ancestor instead
-        // var loadedTile = tile.contentAvailable ? tile : tile._ancestorWithContentAvailable;
-        // if (defined(loadedTile)) {
-        //     // Tiles will actually be selected in traverseAndSelect
-        //     loadedTile._shouldSelect = true;
-        // } else {
-        //     // If no ancestors are ready traverse down and select tiles to minimize empty regions.
-        //     // This happens often for immediatelyLoadDesiredLevelOfDetail where parent tiles are not necessarily loaded before zooming out.
-        //     selectDescendants(tileset, tile, frameState);
-        // }
+        if (tile.contentAvailable) {
+            // The tile can be selected right away and does not require traverseAndSelect
+            selectTile(tileset, tile, frameState);
+        }
     }
 
     function visitTile(tileset, tile, frameState) {
@@ -299,36 +244,28 @@ define([
             return;
         }
 
+        // Very much needed for additive
         if (meetsScreenSpaceErrorEarly(tileset, tile, frameState)) {
             tile._visible = false;
             return;
         }
 
-        // Optimization - if none of the tile's children are visible then this tile isn't visible
-        var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        var useOptimization = tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
-        if (replace && useOptimization && hasChildren) {
-            if (!anyChildrenVisible(tileset, tile, frameState)) {
-                ++tileset._statistics.numberOfTilesCulledWithChildrenUnion;
-                tile._visible = false;
-                return;
-            }
-        }
+        // // Optimization - if none of the tile's children are visible then this tile isn't visible
+        // var replace = tile.refine === Cesium3DTileRefine.REPLACE;
+        // var useOptimization = tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
+        // if (replace && useOptimization && hasChildren) {
+        //     if (!anyChildrenVisible(tileset, tile, frameState)) {
+        //         ++tileset._statistics.numberOfTilesCulledWithChildrenUnion;
+        //         tile._visible = false;
+        //         return;
+        //     }
+        // }
     }
 
     function updateTile(tileset, tile, frameState) {
         // Reset some of the tile's flags and re-evaluate visibility
         updateTileVisibility(tileset, tile, frameState);
-        tile.updateExpiration();
-
-        // // Request priority
-        // tile._wasMinPriorityChild = false;
-        // tile._priorityHolder = tile;
-        // updateMinimumMaximumPriority(tileset, tile);
-
-        // SkipLOD
-        tile._shouldSelect = false;
-        tile._finalResolution = true;
+        // tile.updateExpiration();
     }
 
     function updateTileAncestorContentLinks(tile, frameState) {
@@ -353,15 +290,6 @@ define([
     function hasUnloadedContent(tile) {
         return !hasEmptyContent(tile) && tile.contentUnloaded;
     }
-
-    // function reachedSkippingThreshold(tileset, tile) {
-    //     var ancestor = tile._ancestorWithContent;
-    //     return !tileset.immediatelyLoadDesiredLevelOfDetail &&
-    //            (tile._priorityProgressiveResolutionScreenSpaceErrorLeaf ||
-    //            (defined(ancestor) &&
-    //            (tile._screenSpaceError < (ancestor._screenSpaceError / tileset.skipScreenSpaceErrorFactor)) &&
-    //            (tile._depth > (ancestor._depth + tileset.skipLevels))));
-    // }
 
     function sortChildrenByDistanceToCamera(a, b) {
         // Sort by farthest child first since this is going on a stack
@@ -393,27 +321,15 @@ define([
 
         var anyChildrenVisible = false;
 
-        // // Determining min child
-        // var minIndex = -1;
-        // var minimumPriority = Number.MAX_VALUE;
-
         var child;
         for (i = 0; i < length; ++i) {
             child = children[i];
             if (isVisible(child)) {
                 stack.push(child);
-                // if (child._foveatedFactor < minimumPriority) {
-                //     minIndex = i;
-                //     minimumPriority = child._foveatedFactor;
-                // }
                 anyChildrenVisible = true;
             } else if (checkRefines || tileset.loadSiblings) {
                 // Keep non-visible children loaded since they are still needed before the parent can refine.
                 // Or loadSiblings is true so always load tiles regardless of visibility.
-                // if (child._foveatedFactor < minimumPriority) {
-                //     minIndex = i;
-                //     minimumPriority = child._foveatedFactor;
-                // }
                 loadTile(tileset, child, frameState);
                 touchTile(tileset, child, frameState);
             }
@@ -434,41 +350,8 @@ define([
             refines = false;
         }
 
-        // if (minIndex !== -1 && !skipLevelOfDetail(tileset) && replace) {
-        //     // An ancestor will hold the _foveatedFactor and _distanceToCamera for descendants between itself and its highest priority descendant. Siblings of a min children along the way use this ancestor as their priority holder as well.
-        //     // Priority of all tiles that refer to the _foveatedFactor and _distanceToCamera stored in the common ancestor will be differentiated based on their _depth.
-        //     var minPriorityChild = children[minIndex];
-        //     minPriorityChild._wasMinPriorityChild = true;
-        //     var priorityHolder = (tile._wasMinPriorityChild || tile === tileset.root) && minimumPriority <= tile._priorityHolder._foveatedFactor ? tile._priorityHolder : tile; // This is where priority dependency chains are wired up or started anew.
-        //     priorityHolder._foveatedFactor = Math.min(minPriorityChild._foveatedFactor, priorityHolder._foveatedFactor);
-        //     priorityHolder._distanceToCamera = Math.min(minPriorityChild._distanceToCamera, priorityHolder._distanceToCamera);
-        //
-        //     for (i = 0; i < length; ++i) {
-        //         child = children[i];
-        //         child._priorityHolder = priorityHolder;
-        //     }
-        // }
-
         return refines;
     }
-
-    // function inBaseTraversal(tileset, tile, baseScreenSpaceError) {
-    //     if (!skipLevelOfDetail(tileset)) {
-    //         return true;
-    //     }
-    //     if (tileset.immediatelyLoadDesiredLevelOfDetail) {
-    //         return false;
-    //     }
-    //     if (!defined(tile._ancestorWithContent)) {
-    //         // Include root or near-root tiles in the base traversal so there is something to select up to
-    //         return true;
-    //     }
-    //     if (tile._screenSpaceError === 0.0) {
-    //         // If a leaf, use parent's SSE
-    //         return tile.parent._screenSpaceError > baseScreenSpaceError;
-    //     }
-    //     return tile._screenSpaceError > baseScreenSpaceError;
-    // }
 
     function canTraverse(tileset, tile) {
         if (tile.children.length === 0) {
@@ -525,23 +408,10 @@ define([
                 selectDesiredTile(tileset, tile, frameState);
                 loadTile(tileset, tile, frameState);
             } else if (replace) {
-                // if (baseTraversal) {
-                    // Always load tiles in the base traversal
-                    // Select tiles that can't refine further
-
-                    loadTile(tileset, tile, frameState);
-                    if (stoppedRefining) {
-                        selectDesiredTile(tileset, tile, frameState);
-                    }
-
-                // } else if (stoppedRefining) {
-                //     // In skip traversal, load and select tiles that can't refine further
-                //     selectDesiredTile(tileset, tile, frameState);
-                //     loadTile(tileset, tile, frameState);
-                // } else if (reachedSkippingThreshold(tileset, tile)) {
-                //     // In skip traversal, load tiles that aren't skipped. In practice roughly half the tiles stay unloaded.
-                //     loadTile(tileset, tile, frameState);
-                // }
+                loadTile(tileset, tile, frameState);
+                if (stoppedRefining) {
+                    selectDesiredTile(tileset, tile, frameState);
+                }
             }
 
             visitTile(tileset, tile, frameState);
