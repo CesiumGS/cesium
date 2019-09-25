@@ -33,7 +33,6 @@
     "esm": "^3.2.25"
   },
   "devDependencies": {
-    "almond": "^0.3.3",
     "aws-sdk": "^2.531.0",
     "bluebird": "^3.4.6",
     "cloc": "^2.3.3",
