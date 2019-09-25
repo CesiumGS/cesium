@@ -279,14 +279,19 @@ define([
         this._lodDistances = [];
 
         // Children have use their parents sphere radius
-        // WHEN ADD: number indicates content level (0 being content root) that needs to start being checked for requests and rendering
+        // WHEN ADD: this var indicates content level (0 being content root) that can be accessed. The grid can start at the content root.
         // the sphere radius to use at each content level is _lodDistances[contentLevel] so the radius at the conent level of _maximumTraversalLevel is
-        // _lodDistances[_maximumTraversalLevel]
-        // any tile picked by by this sphere on this level is requeseted/rendered
-        // WHEN REPLACE: number indicates content level (0 being content root) that needs to start being checked for requests and rendering
-        // the sphere radius to use at each content level is _lodDistances[contentLevel] so the radius at the conent level of _maximumTraversalLevel is
-        // _lodDistances[_maximumTraversalLevel]
-        // any tile picked by by this sphere on this level is requeseted/rendered
+        // _lodDistances[_maximumTraversalLevel], if the sphere check touches the tile on the corresponding level
+        // it can be requested and rendered (assuming it is not culled)
+        // WHEN REPLACE: this var indicates content level that can be accessed... but only through the parents.
+        // the grid will need to start at tilesetroot. the indices determined
+        // here will need to be converted to child indices for requests/rendering
+        // can traverse content levels up to _maximumTraversalLevel - 1, i.e. the last parent level but
+        // the sphere radius used at each parent level is _lodDistances[child's content level]
+        // Ex: if tileset contentless root is within _lodDistances[_startLevel] it loads the tileset contentless root's children
+        // in this case of REPLACE the radius test is checkif if the parent tile (the tile we are testing) should load all of its children (the radius we are using)
+        // the children do not have to be within this radius. these children must be loaded but don't have to be rendered if they are culled by the planes
+        // So ADD request/render tiles are the same but REPLACE has separate indices for request and render, request being a superset or looser than render.
         this._maximumTraversalLevel = 0;
 
         this._packedArraySizes = undefined;
@@ -1694,15 +1699,16 @@ define([
         var length = this._lodDistances.length;
         var lodDistances = this._lodDistances;
         this._maximumTraversalLevel = length - 1;
+        var tilesetStartLevel = this._startLevel;
         var i;
-        for (i = 0; i < length; i++) {
+        for (i = tilesetStartLevel; i < length; i++) {
             if (lodDistances[i] < distance) {
                 this._maximumTraversalLevel = i - 1;
                 break;
             }
         }
 
-        if (rootDistance !== this._root._distanceToCamera) {
+        if (Math.abs(rootDistance - this._root._distanceToCamera) > CesiumMath.EPSILON2) {
             console.log('root dist ' + distance);
             console.log('max lvl ' + this._maximumTraversalLevel);
             rootDistance = distance;
@@ -1727,8 +1733,10 @@ define([
         // var startingGError = this._geometricErrorContentRoot;
         var startingGError = this._geometricError;
         var base = this.getGeomtricErrorBase();
-        for (i = 0; i < length; i++) {
-            gErrorOnLevel = startingGError / Math.pow(base, i);
+        var tilesetStartLevel = this._startLevel;
+        // var useChildSphere = this._allTilesAdditive ? 0 : 1; // ad to pow exponent
+        for (i = tilesetStartLevel; i < length; i++) {
+            gErrorOnLevel = startingGError / Math.pow(base, i - tilesetStartLevel);
             lodDistance = gErrorOnLevel * factor;
             lodDistances[i] = lodDistance;
         }
@@ -1750,12 +1758,13 @@ define([
         // TODO: when to update this based on camera, context, and  max gerror changes?
         var lodDistances = this._lodDistances;
         var tilingScheme = this._tilingScheme;
-        // +2 to get the content levels + the contentless tileset root, so each index tells you if you should load that levels children
+        // +2 to get the the contentless tileset root as well as all the content levels (the other +1), though may not need
         // 0 being the contentless tileset root, 1 being the root nodes
-        var length = this._startLevel + tilingScheme.lastLevel + 2;
+        // var length = tilingScheme.lastLevel - this._startLevel + 2;
+        var length = tilingScheme.lastLevel + 1;
         var i;
         for (i = 0; i < length; i++) {
-            lodDistances.push(0);
+            lodDistances.push(-1);
         }
     };
 
@@ -2254,10 +2263,10 @@ define([
             this._startLevel = subtreeRootKey.w + subtreeLevelStart;
             this.initLODDistances();
             // console.log('first level subtree: ' + subtreeLevelStart);
+            // console.log('first level tree: ' + this._startLevel);
         }
 
         var level = this._startLevel;
-        // console.log('first level in tileset: ' + level);
 
         // TODO: merge with loop version but wait till the other todo's are ironed out
 
