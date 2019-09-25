@@ -650,10 +650,17 @@ describe('Widgets/Viewer/Viewer', function() {
         window.devicePixelRatio = 2.0;
 
         viewer = createViewer(container, {
-            useBrowserRecommendedResolution : true
+            useDefaultRenderLoop : false
         });
 
-        viewer.render();
+        viewer.resolutionScale = 0.5;
+
+        viewer.useBrowserRecommendedResolution = true;
+        viewer.resize();
+        expect(viewer.scene.pixelRatio).toEqual(0.5);
+
+        viewer.useBrowserRecommendedResolution = false;
+        viewer.resize();
         expect(viewer.scene.pixelRatio).toEqual(1.0);
 
         window.devicePixelRatio = oldDevicePixelRatio;

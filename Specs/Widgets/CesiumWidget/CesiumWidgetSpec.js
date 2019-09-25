@@ -281,6 +281,27 @@ describe('Widgets/CesiumWidget/CesiumWidget', function() {
         expect(widget.useBrowserRecommendedResolution).toBe(true);
     });
 
+    it('useBrowserRecommendedResolution ignores devicePixelRatio', function() {
+        var oldDevicePixelRatio = window.devicePixelRatio;
+        window.devicePixelRatio = 2.0;
+
+        widget = createCesiumWidget(container, {
+            useDefaultRenderLoop : false
+        });
+
+        widget.resolutionScale = 0.5;
+
+        widget.useBrowserRecommendedResolution = true;
+        widget.resize();
+        expect(widget.scene.pixelRatio).toEqual(0.5);
+
+        widget.useBrowserRecommendedResolution = false;
+        widget.resize();
+        expect(widget.scene.pixelRatio).toEqual(1.0);
+
+        window.devicePixelRatio = oldDevicePixelRatio;
+    });
+
     it('throws if resolutionScale is less than 0', function() {
         widget = createCesiumWidget(container);
         expect(function() {
