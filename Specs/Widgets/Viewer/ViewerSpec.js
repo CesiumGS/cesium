@@ -41,8 +41,9 @@ define([
         'Widgets/NavigationHelpButton/NavigationHelpButton',
         'Widgets/SceneModePicker/SceneModePicker',
         'Widgets/SelectionIndicator/SelectionIndicator',
-        'Widgets/Timeline/Timeline'
-    ], 'Widgets/Viewer/Viewer', function(
+        'Widgets/Timeline/Timeline',
+        'Widgets/Viewer/Viewer'
+    ], function(
         BoundingSphere,
         Cartesian3,
         CartographicGeocoderService,
@@ -88,7 +89,7 @@ define([
         Timeline) {
         'use strict';
 
-describe('Core/BoundingSphere', function() {
+describe('Widgets/Viewer/Viewer', function() {
 
     var testProvider = {
         isReady : function() {
@@ -642,6 +643,20 @@ describe('Core/BoundingSphere', function() {
         });
 
         expect(viewer.useBrowserRecommendedResolution).toBe(true);
+    });
+
+    it('useBrowserRecommendedResolution ignores devicePixelRatio', function() {
+        var oldDevicePixelRatio = window.devicePixelRatio;
+        window.devicePixelRatio = 2.0;
+
+        viewer = createViewer(container, {
+            useBrowserRecommendedResolution : true
+        });
+
+        viewer.render();
+        expect(viewer.scene.pixelRatio).toEqual(1.0);
+
+        window.devicePixelRatio = oldDevicePixelRatio;
     });
 
     it('constructor throws with undefined container', function() {
