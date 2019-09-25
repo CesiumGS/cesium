@@ -1196,6 +1196,27 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         },
 
         /**
+        * Boolean flag indicating if the browser's recommended resolution is used.
+        * If true, the browser's device pixel ratio is ignored and 1.0 is used instead,
+        * effectively rendering based on CSS pixels instead of device pixels. This can improve
+        * performance on less powerful devices that have high pixel density. When false, rendering
+        * will be in device pixels. The resolutionScale property will still take effect whether
+        * this flag is true or false.
+        * @memberof Viewer.prototype
+        *
+        * @type {Boolean}
+        * @default false
+        */
+        useBrowserRecommendedResolution : {
+            get : function() {
+                return this._cesiumWidget.useBrowserRecommendedResolution;
+            },
+            set : function(value) {
+                this._cesiumWidget.useBrowserRecommendedResolution = value;
+            }
+        },
+
+        /**
          * Gets or sets whether or not data sources can temporarily pause
          * animation in order to avoid showing an incomplete picture to the user.
          * For example, if asynchronous primitives are being processed in the
