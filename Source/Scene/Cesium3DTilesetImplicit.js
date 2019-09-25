@@ -345,8 +345,8 @@ define([
 
         this._requestedTilesInFlight = [];
 
-        this._maximumPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE, reverseScreenSpaceError: -Number.MAX_VALUE };
-        this._minimumPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, reverseScreenSpaceError: Number.MAX_VALUE };
+        // this._maximumPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE, reverseScreenSpaceError: -Number.MAX_VALUE };
+        // this._minimumPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, reverseScreenSpaceError: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTilePropertyName);
 
         this._traversals = [
@@ -3075,14 +3075,14 @@ define([
 
     function resetMinimumMaximum(tileset) {
         tileset._heatmap.resetMinimumMaximum();
-        tileset._minimumPriority.depth = Number.MAX_VALUE;
-        tileset._maximumPriority.depth = -Number.MAX_VALUE;
-        tileset._minimumPriority.foveatedFactor = Number.MAX_VALUE;
-        tileset._maximumPriority.foveatedFactor = -Number.MAX_VALUE;
-        tileset._minimumPriority.distance = Number.MAX_VALUE;
-        tileset._maximumPriority.distance = -Number.MAX_VALUE;
-        tileset._minimumPriority.reverseScreenSpaceError = Number.MAX_VALUE;
-        tileset._maximumPriority.reverseScreenSpaceError = -Number.MAX_VALUE;
+        // tileset._minimumPriority.depth = Number.MAX_VALUE;
+        // tileset._maximumPriority.depth = -Number.MAX_VALUE;
+        // tileset._minimumPriority.foveatedFactor = Number.MAX_VALUE;
+        // tileset._maximumPriority.foveatedFactor = -Number.MAX_VALUE;
+        // tileset._minimumPriority.distance = Number.MAX_VALUE;
+        // tileset._maximumPriority.distance = -Number.MAX_VALUE;
+        // tileset._minimumPriority.reverseScreenSpaceError = Number.MAX_VALUE;
+        // tileset._maximumPriority.reverseScreenSpaceError = -Number.MAX_VALUE;
     }
 
     ///////////////////////////////////////////////////////////////////////////

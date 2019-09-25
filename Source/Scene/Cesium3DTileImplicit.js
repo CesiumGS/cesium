@@ -401,7 +401,7 @@ define([
          *
          * @private
          */
-        this.priorityDeferred = false;
+        // this.priorityDeferred = false;
 
         // Members that are updated every frame for tree traversal and rendering optimizations:
         this._distanceToCamera = 0.0;
@@ -435,12 +435,12 @@ define([
         this._debugColorizeTiles = false;
 
         this._priority = 0.0; // The priority used for request sorting
-        this._priorityHolder = this; // Reference to the ancestor up the tree that holds the _foveatedFactor and _distanceToCamera for all tiles in the refinement chain.
-        this._priorityProgressiveResolution = false;
-        this._priorityProgressiveResolutionScreenSpaceErrorLeaf = false;
-        this._priorityReverseScreenSpaceError = 0.0;
-        this._foveatedFactor = 0.0;
-        this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
+        // this._priorityHolder = this; // Reference to the ancestor up the tree that holds the _foveatedFactor and _distanceToCamera for all tiles in the refinement chain.
+        // this._priorityProgressiveResolution = false;
+        // this._priorityProgressiveResolutionScreenSpaceErrorLeaf = false;
+        // this._priorityReverseScreenSpaceError = 0.0;
+        // this._foveatedFactor = 0.0;
+        // this._wasMinPriorityChild = false; // Needed for knowing when to continue a refinement chain. Gets reset in updateTile in traversal and gets set in updateAndPushChildren in traversal.
 
         this._loadTimestamp = new JulianDate();
 
@@ -713,64 +713,64 @@ define([
     });
 
     var scratchCartesian = new Cartesian3();
-    function isPriorityDeferred(tile, frameState) {
-        var tileset = tile._tileset;
-
-        // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
-        var camera = frameState.camera;
-        var boundingSphere = tile.boundingSphere;
-        var radius = boundingSphere.radius;
-        var scaledCameraDirection = Cartesian3.multiplyByScalar(camera.directionWC, tile._centerZDepth, scratchCartesian);
-        var closestPointOnLine = Cartesian3.add(camera.positionWC, scaledCameraDirection, scratchCartesian);
-        // The distance from the camera's view direction to the tile.
-        var toLine = Cartesian3.subtract(closestPointOnLine, boundingSphere.center, scratchCartesian);
-        var distanceToCenterLine = Cartesian3.magnitude(toLine);
-        var notTouchingSphere = distanceToCenterLine > radius;
-
-        // If camera's direction vector is inside the bounding sphere then consider
-        // this tile right along the line of sight and set _foveatedFactor to 0.
-        // Otherwise,_foveatedFactor is one minus the dot product of the camera's direction
-        // and the vector between the camera and the point on the bounding sphere closest to the view line.
-        if (notTouchingSphere) {
-            var toLineNormalized = Cartesian3.normalize(toLine, scratchCartesian);
-            var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalized, radius, scratchCartesian);
-            var closestOnSphere = Cartesian3.add(boundingSphere.center, scaledToLine, scratchCartesian);
-            var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, camera.positionWC, scratchCartesian);
-            var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
-            tile._foveatedFactor = 1.0 - Math.abs(Cartesian3.dot(camera.directionWC, toClosestOnSphereNormalize));
-        } else {
-            tile._foveatedFactor = 0.0;
-        }
-
-        // Skip this feature if: non-skipLevelOfDetail and replace refine, if the foveated settings are turned off, if tile is progressive resolution and replace refine and skipLevelOfDetail (will help get rid of ancestor artifacts faster)
-        // Or if the tile is a preload of any kind
-        var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        var skipLevelOfDetail = tileset._skipLevelOfDetail;
-        if ((replace && !skipLevelOfDetail) ||
-            !tileset.foveatedScreenSpaceError ||
-            tileset.foveatedConeSize === 1.0 ||
-            (tile._priorityProgressiveResolution && replace && skipLevelOfDetail) ||
-            tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ||
-            tileset._pass === Cesium3DTilePass.PRELOAD) {
-            return false;
-        }
-
-        var maximumFovatedFactor = 1.0 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60. NOTE very hard to defer vertically foveated tiles since max is based on fovy (which is fov). Lowering the 0.5 to a smaller fraction of the screen height will start to defer vertically foveated tiles.
-        var foveatedConeFactor = tileset.foveatedConeSize * maximumFovatedFactor;
-
-        // If it's inside the user-defined view cone, then it should not be deferred.
-        if (tile._foveatedFactor <= foveatedConeFactor) {
-            return false;
-        }
-
-        // Relax SSE based on how big the angle is between the tile and the edge of the foveated cone.
-        var range = maximumFovatedFactor - foveatedConeFactor;
-        var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0.0, 1.0);
-        var sseRelaxation = tileset.foveatedInterpolationCallback(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
-        var sse = tile._screenSpaceError === 0.0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
-
-        return (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
-    }
+    // function isPriorityDeferred(tile, frameState) {
+    //     var tileset = tile._tileset;
+    //
+    //     // If closest point on line is inside the sphere then set foveatedFactor to 0. Otherwise, the dot product is with the line from camera to the point on the sphere that is closest to the line.
+    //     var camera = frameState.camera;
+    //     var boundingSphere = tile.boundingSphere;
+    //     var radius = boundingSphere.radius;
+    //     var scaledCameraDirection = Cartesian3.multiplyByScalar(camera.directionWC, tile._centerZDepth, scratchCartesian);
+    //     var closestPointOnLine = Cartesian3.add(camera.positionWC, scaledCameraDirection, scratchCartesian);
+    //     // The distance from the camera's view direction to the tile.
+    //     var toLine = Cartesian3.subtract(closestPointOnLine, boundingSphere.center, scratchCartesian);
+    //     var distanceToCenterLine = Cartesian3.magnitude(toLine);
+    //     var notTouchingSphere = distanceToCenterLine > radius;
+    //
+    //     // If camera's direction vector is inside the bounding sphere then consider
+    //     // this tile right along the line of sight and set _foveatedFactor to 0.
+    //     // Otherwise,_foveatedFactor is one minus the dot product of the camera's direction
+    //     // and the vector between the camera and the point on the bounding sphere closest to the view line.
+    //     if (notTouchingSphere) {
+    //         var toLineNormalized = Cartesian3.normalize(toLine, scratchCartesian);
+    //         var scaledToLine = Cartesian3.multiplyByScalar(toLineNormalized, radius, scratchCartesian);
+    //         var closestOnSphere = Cartesian3.add(boundingSphere.center, scaledToLine, scratchCartesian);
+    //         var toClosestOnSphere = Cartesian3.subtract(closestOnSphere, camera.positionWC, scratchCartesian);
+    //         var toClosestOnSphereNormalize = Cartesian3.normalize(toClosestOnSphere, scratchCartesian);
+    //         tile._foveatedFactor = 1.0 - Math.abs(Cartesian3.dot(camera.directionWC, toClosestOnSphereNormalize));
+    //     } else {
+    //         tile._foveatedFactor = 0.0;
+    //     }
+    //
+    //     // Skip this feature if: non-skipLevelOfDetail and replace refine, if the foveated settings are turned off, if tile is progressive resolution and replace refine and skipLevelOfDetail (will help get rid of ancestor artifacts faster)
+    //     // Or if the tile is a preload of any kind
+    //     var replace = tile.refine === Cesium3DTileRefine.REPLACE;
+    //     var skipLevelOfDetail = tileset._skipLevelOfDetail;
+    //     if ((replace && !skipLevelOfDetail) ||
+    //         !tileset.foveatedScreenSpaceError ||
+    //         tileset.foveatedConeSize === 1.0 ||
+    //         (tile._priorityProgressiveResolution && replace && skipLevelOfDetail) ||
+    //         tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ||
+    //         tileset._pass === Cesium3DTilePass.PRELOAD) {
+    //         return false;
+    //     }
+    //
+    //     var maximumFovatedFactor = 1.0 - Math.cos(camera.frustum.fov * 0.5); // 0.14 for fov = 60. NOTE very hard to defer vertically foveated tiles since max is based on fovy (which is fov). Lowering the 0.5 to a smaller fraction of the screen height will start to defer vertically foveated tiles.
+    //     var foveatedConeFactor = tileset.foveatedConeSize * maximumFovatedFactor;
+    //
+    //     // If it's inside the user-defined view cone, then it should not be deferred.
+    //     if (tile._foveatedFactor <= foveatedConeFactor) {
+    //         return false;
+    //     }
+    //
+    //     // Relax SSE based on how big the angle is between the tile and the edge of the foveated cone.
+    //     var range = maximumFovatedFactor - foveatedConeFactor;
+    //     var normalizedFoveatedFactor = CesiumMath.clamp((tile._foveatedFactor - foveatedConeFactor) / range, 0.0, 1.0);
+    //     var sseRelaxation = tileset.foveatedInterpolationCallback(tileset.foveatedMinimumScreenSpaceErrorRelaxation, tileset.maximumScreenSpaceError, normalizedFoveatedFactor);
+    //     var sse = tile._screenSpaceError === 0.0 && defined(tile.parent) ? tile.parent._screenSpaceError * 0.5 : tile._screenSpaceError;
+    //
+    //     return (tileset.maximumScreenSpaceError - sseRelaxation) <= sse;
+    // }
 
     // /**
     //  * Setup transforms when doing deferred tile linking during subtree init
@@ -844,30 +844,30 @@ define([
         return error;
     };
 
-    function isPriorityProgressiveResolution(tileset, tile) {
-        if (tileset.progressiveResolutionHeightFraction <= 0.0 || tileset.progressiveResolutionHeightFraction > 0.5) {
-            return false;
-        }
+    // function isPriorityProgressiveResolution(tileset, tile) {
+    //     if (tileset.progressiveResolutionHeightFraction <= 0.0 || tileset.progressiveResolutionHeightFraction > 0.5) {
+    //         return false;
+    //     }
+    //
+    //     var isProgressiveResolutionTile = tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError; // Mark non-SSE leaves
+    //     tile._priorityProgressiveResolutionScreenSpaceErrorLeaf = false; // Needed for skipLOD
+    //     var parent = tile.parent;
+    //     var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
+    //     var tilePasses = tile._screenSpaceErrorProgressiveResolution <= maximumScreenSpaceError;
+    //     var parentFails = defined(parent) && parent._screenSpaceErrorProgressiveResolution > maximumScreenSpaceError;
+    //     if (tilePasses && parentFails) { // A progressive resolution SSE leaf, promote its priority as well
+    //         tile._priorityProgressiveResolutionScreenSpaceErrorLeaf = true;
+    //         isProgressiveResolutionTile = true;
+    //     }
+    //     return isProgressiveResolutionTile;
+    // }
 
-        var isProgressiveResolutionTile = tile._screenSpaceErrorProgressiveResolution > tileset._maximumScreenSpaceError; // Mark non-SSE leaves
-        tile._priorityProgressiveResolutionScreenSpaceErrorLeaf = false; // Needed for skipLOD
-        var parent = tile.parent;
-        var maximumScreenSpaceError = tileset._maximumScreenSpaceError;
-        var tilePasses = tile._screenSpaceErrorProgressiveResolution <= maximumScreenSpaceError;
-        var parentFails = defined(parent) && parent._screenSpaceErrorProgressiveResolution > maximumScreenSpaceError;
-        if (tilePasses && parentFails) { // A progressive resolution SSE leaf, promote its priority as well
-            tile._priorityProgressiveResolutionScreenSpaceErrorLeaf = true;
-            isProgressiveResolutionTile = true;
-        }
-        return isProgressiveResolutionTile;
-    }
-
-    function getPriorityReverseScreenSpaceError(tileset, tile) {
-        var parent = tile.parent;
-        var useParentScreenSpaceError = defined(parent) && (!tileset._skipLevelOfDetail || (tile._screenSpaceError === 0.0) || parent.hasTilesetContent);
-        var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
-        return tileset.root._screenSpaceError - screenSpaceError;
-    }
+    // function getPriorityReverseScreenSpaceError(tileset, tile) {
+    //     var parent = tile.parent;
+    //     var useParentScreenSpaceError = defined(parent) && (!tileset._skipLevelOfDetail || (tile._screenSpaceError === 0.0) || parent.hasTilesetContent);
+    //     var screenSpaceError = useParentScreenSpaceError ? parent._screenSpaceError : tile._screenSpaceError;
+    //     return tileset.root._screenSpaceError - screenSpaceError;
+    // }
 
     /**
      * Update the tile's visibility.
@@ -887,9 +887,9 @@ define([
         this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
         this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
         this._inRequestVolume = this.insideViewerRequestVolume(frameState);
-        this._priorityReverseScreenSpaceError = getPriorityReverseScreenSpaceError(tileset, this);
-        this._priorityProgressiveResolution = isPriorityProgressiveResolution(tileset, this);
-        this.priorityDeferred = isPriorityDeferred(this, frameState);
+        // this._priorityReverseScreenSpaceError = getPriorityReverseScreenSpaceError(tileset, this);
+        // this._priorityProgressiveResolution = isPriorityProgressiveResolution(tileset, this);
+        // this.priorityDeferred = isPriorityDeferred(this, frameState);
     };
 
     /**
