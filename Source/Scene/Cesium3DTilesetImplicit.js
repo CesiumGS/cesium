@@ -1665,6 +1665,18 @@ define([
         }
     });
 
+    var rootDistance = -1;
+    Cesium3DTilesetImplicit.prototype.updateTraversalInfo = function(frameState) {
+        // find the distnace to the tileset contentless root
+        // use that that determine maximumTreversalDepth (the first index in _lodDistances that fails)
+
+
+        // if (rootDistance !== this._root._distanceToCamera) {
+        //     console.log('root dist ' + + this._root._distanceToCamera);
+        //     rootDistance = this._root._distanceToCamera;
+        // }
+    };
+
     /**
      * Updates the _lodDistances array with LOD sphere radii from the camera to
      * pull in tiles on different levels of the tree
@@ -1672,7 +1684,6 @@ define([
      * @private
      */
     var lodDistancesAreInit = false;
-    var rootDistance = -1;
     Cesium3DTilesetImplicit.prototype.updateLODDistances = function(frameState) {
         // TODO: when to update this based on camera, context, and  max gerror changes?
         var lodDistances = this._lodDistances;
@@ -1696,11 +1707,6 @@ define([
             }
             lodDistancesAreInit = true;
         }
-
-        // if (rootDistance !== this._root._distanceToCamera) {
-        //     console.log('root dist ' + + this._root._distanceToCamera);
-        //     rootDistance = this._root._distanceToCamera;
-        // }
     };
 
     /**
@@ -3060,6 +3066,7 @@ define([
         // Update any tracked min max values
         resetMinimumMaximum(tileset);
         tileset.updateLODDistances(frameState);
+        tileset.updateTraversalInfo(frameState);
 
         var traversal = tileset._traversals[passOptions.traversal];
         var ready = traversal.selectTiles(tileset, frameState);
