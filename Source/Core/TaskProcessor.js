@@ -125,7 +125,7 @@ import RuntimeError from './RuntimeError.js';
         var bootstrapMessage = {
             loaderConfig: {
                 paths: {
-                    'Workers': buildModuleUrl('Workers/Build')
+                    'Workers': buildModuleUrl('Workers')
                 },
                 baseUrl: buildModuleUrl.getCesiumBaseUrl().url
             },

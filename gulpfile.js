@@ -61,20 +61,22 @@ if (!concurrency) {
 var sourceFiles = ['Source/**/*.js',
                    '!Source/*.js',
                    '!Source/Workers/**',
+                   '!Source/WorkersES6/**',
+                   'Source/WorkersES6/createTaskProcessorWorker.js',
                    '!Source/ThirdParty/Workers/**',
                    '!Source/ThirdParty/google-earth-dbroot-parser.js',
                    '!Source/ThirdParty/pako_inflate.js',
-                   '!Source/ThirdParty/crunch.js',
-                   'Source/Workers/createTaskProcessorWorker.js'];
+                   '!Source/ThirdParty/crunch.js'];
 
 var buildFiles = ['Source/**/*.js',
                   '!Specs/SpecList.js',
                   'Source/Shaders/**/*.glsl'];
 
 var filesToClean = ['Source/Cesium.js',
-                    'Build',
                     'Source/Shaders/**/*.js',
-                    'Source/Workers/Build',
+                    'Source/Workers/**',
+                    '!Source/Workers/cesiumWorkerBootstrapper.js',
+                    '!Source/Workers/transferTypedArrayTest.js',
                     'Source/ThirdParty/Shaders/*.js',
                     'Specs/SpecList.js',
                     'Apps/Sandcastle/jsHintOptions.js',
@@ -99,19 +101,33 @@ var filesToConvertES6 = ['Source/**/*.js',
                         ];
 
 function createWorkers() {
-    rimraf.sync('Source/Workers/Build');
-    var workers = globby.sync([
+    rimraf.sync('Build/createWorkers');
+
+    globby.sync([
         'Source/Workers/**',
         '!Source/Workers/cesiumWorkerBootstrapper.js',
         '!Source/Workers/transferTypedArrayTest.js'
+    ]).forEach(function(file) {
+        rimraf.sync(file);
+    });
+
+    var workers = globby.sync([
+        'Source/WorkersES6/**'
     ]);
+
     return rollup.rollup({
         input: workers
     }).then(function(bundle) {
         return bundle.write({
-            dir: 'Source/Workers/Build',
+            dir: 'Build/createWorkers',
             format: 'amd'
         });
+    }).then(function(){
+        return streamToPromise(
+            gulp.src('Build/createWorkers/**').pipe(gulp.dest('Source/Workers'))
+        );
+    }).then(function() {
+        rimraf.sync('Build/createWorkers');
     });
 }
 
@@ -136,7 +152,8 @@ gulp.task('buildApps', function() {
 });
 
 gulp.task('clean', function(done) {
-    filesToClean.forEach(function(file) {
+    rimraf.sync('Build');
+    globby.sync(filesToClean).forEach(function(file) {
         rimraf.sync(file);
     });
     done();
@@ -955,10 +972,7 @@ function combineWorkers(debug, optimizer, combineOutput) {
             }, {concurrency : concurrency});
         })
         .then(function() {
-            return globby(['Source/Workers/*.js',
-                           '!Source/Workers/cesiumWorkerBootstrapper.js',
-                           '!Source/Workers/transferTypedArrayTest.js',
-                           '!Source/Workers/createTaskProcessorWorker.js']);
+            return globby(['Source/WorkersES6/*.js']);
         })
         .then(function(files) {
             var plugins = [];
@@ -973,7 +987,8 @@ function combineWorkers(debug, optimizer, combineOutput) {
             }
 
             return rollup.rollup({
-                input: files
+                input: files,
+                plugins: plugins
             }).then(function(bundle) {
                 return bundle.write({
                     dir: path.join(combineOutput, 'Workers'),
@@ -1017,7 +1032,6 @@ function combineJavaScript(options) {
         //copy to build folder with copyright header added at the top
         var stream = gulp.src([combineOutput + '/**'])
             .pipe(gulpInsert.prepend(copyrightHeader))
-            .pipe(gulpReplace('Workers/Build', 'Workers'))
             .pipe(gulp.dest(outputDirectory));
 
         promises.push(streamToPromise(stream));
@@ -1324,7 +1338,6 @@ function buildCesiumViewer() {
         var stream = mergeStream(
             gulp.src('Build/Apps/CesiumViewer/CesiumViewer.js')
                 .pipe(gulpInsert.prepend(copyrightHeader))
-                .pipe(gulpReplace('Workers/Build', 'Workers'))
                 .pipe(gulp.dest(cesiumViewerOutputDirectory)),
 
             gulp.src('Apps/CesiumViewer/CesiumViewer.css')
