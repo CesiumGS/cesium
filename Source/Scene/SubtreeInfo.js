@@ -27,7 +27,6 @@ define([
         this._subtreesMap = undefined;
         this._subtreeLastTreeLevel0Indexed = -1;
 
-        // uri is isOct ? level + '/' + z + '/'+ x + '/' + y : level + '/' + x + '/' + y;
         // TODO: keys not needed
         this._subtreeRootKeyString = undefined;
         this._subtreeRootKey = subtreeRootKey;

@@ -6,9 +6,9 @@ of the subtree
 
 
 [ ] Box array traversal
-    [ ] precompute 1D array of influence radii
-    [ ] don't do culling, just take tiles within range for each level (start with root)
-    [ ] toroidial array stack (or whatever), just setup the root level
+    [ ] Precompute 1D array of influence radii
+    [ ] Don't do culling, just take tiles within range for each level (start with root)
+    [ ] Toroidial array stack (or whatever), just setup the root level
     and look down at teh tileset, the idx should update properly as if the root box
     was part of a continuous grid.
 

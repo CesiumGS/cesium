@@ -266,13 +266,17 @@ define([
         // TODO: Cache/Manager class that has some or all of these values as
         // well as any subtree precomputation (array sizes, sse sphere radii, etc)
         // this._subtreeCache = new Map(); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
-        this._subtreeCache = undefined; // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
-        // TODO: this probably needs to get subsumed by subtreeInfo
         // this._tiles = new Map(); // Holds the subtree tiles, Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is an Array of tiles (undefined spots are unavailable)
+        this._subtreeCache = undefined; // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
         // this._subtreeViewer = new ImplicitSubtreeViewer(this); // TODO: Make class with the toroidial multi dimensional array to make iteration easier, needs to update small portions every frame
         // I think there are two portions? ancestor portion 1d array and the normal portion which is a 3d array (fixed sizes on each level?) toroidial array?
         // what happens when sse changes? re-init the fixed size arrays? prevent going below some value in tileset (during the set)?
-        //
+
+        // 1D array of LOD sphere radii. index 0 is the contentless tileset root, 1 is the content roots, so this array 1indexed array as opposed to 0indexed.
+        // if the camera is within that distance you can process that 1indexed level.
+        // for replacement refinement, tiles touched by this sphere on that level means that their children are required
+        // addative can start from index 1 and it can just take the tile it touches on that level since it doesn't have the requirement of all children tiles loaded
+        this._lodDistances = [];
         this._packedArraySizes = undefined;
         this._unpackedArraySizes = undefined;
         this._packedSize = 0;
@@ -1662,6 +1666,62 @@ define([
     });
 
     /**
+     * Updates the _lodDistances array with LOD sphere radii from the camera to
+     * pull in tiles on different levels of the tree
+     *
+     * @private
+     */
+    var lodDistancesAreInit = false;
+    var rootDistance = -1;
+    Cesium3DTilesetImplicit.prototype.updateLODDistances = function(frameState) {
+        // TODO: when to update this based on camera, context, and  max gerror changes?
+        var lodDistances = this._lodDistances;
+        var levelsInTree = lodDistances.length;
+        var height = frameState.context.drawingBufferHeight;
+        var sseDenominator = frameState.camera.frustum.sseDenominator;
+        var factor = height / (this._maximumScreenSpaceError * sseDenominator);
+        var i, lodDistance, gErrorOnLevel;
+        // var startingGError = this._geometricErrorContentRoot;
+        var startingGError = this._geometricError;
+        var base = this.getGeomtricErrorBase();
+        for (i = 0; i < levelsInTree; i++) {
+            gErrorOnLevel = startingGError / Math.pow(base, i);
+            lodDistance = gErrorOnLevel * factor;
+            lodDistances[i] = lodDistance;
+        }
+
+        if (!lodDistancesAreInit) {
+            for (i = 0; i < levelsInTree; i++) {
+                console.log('lodDistance ' + i + ' ' + lodDistances[i]);
+            }
+            lodDistancesAreInit = true;
+        }
+
+        // if (rootDistance !== this._root._distanceToCamera) {
+        //     console.log('root dist ' + + this._root._distanceToCamera);
+        //     rootDistance = this._root._distanceToCamera;
+        // }
+    };
+
+    /**
+     * Inits the _lodDistances array so that it's the proper size
+     *
+     * @private
+     */
+    Cesium3DTilesetImplicit.prototype.initLODDistances = function() {
+        // TODO: when to update this based on camera, context, and  max gerror changes?
+        var lodDistances = this._lodDistances;
+        var tilingScheme = this._tilingScheme;
+        // +2 to get the content levels + the contentless tileset root, so each index tells you if you should load that levels children
+        // 0 being the contentless tileset root, 1 being the root nodes
+        var levelsInTree = this._startLevel + tilingScheme.lastLevel + 2;
+        var i;
+        for (i = 0; i < levelsInTree; i++) {
+            lodDistances.push(0);
+        }
+    };
+
+    /**
      * Provides a hook to override the method used to request the tileset json
      * useful when fetching tilesets from remote servers
      * @param {Resource|String} tilesetUrl The url of the json file to be fetched
@@ -2009,153 +2069,11 @@ define([
         };
     };
 
-    // /**
-    //  * Determine if the tile's tree based x,y,z,d is available.
-    //  *
-    //  * @private
-    //  */
-    // Cesium3DTilesetImplicit.prototype.isTileAvailableTreeKey = function(x, y, z, level) {
-    //     // var isOct = this._isOct;
-    //     var subtreeCache = this._subtreeCache;
-    //     var result = this.getSubtreeInfoFromTreeKey(x, y, z, level);
-    //
-    //     // if(packed) {
-    //     //     // Which byte is holding this tile's bit
-    //     //     var indexOffsetToByteOnLevel = tileIndexOnLevel >> 3;
-    //     //     // which bit in the byte is holding this tile's availability
-    //     //     var bitInByte = tileIndexOnLevel & 0b111; // modulo 8
-    //     //     var index = indexOffsetToFirstByteOnLevel + indexOffsetToByteOnLevel;
-    //     //     var bitMask = (1 << bitInByte);
-    //     //     isAvailable = (subtree[index] & bitMask) === bitMask;
-    //     // } else {
-    //         var subtreeRootKey = result.subtreeRootKey;
-    //         var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
-    //         var subtree = subtreeCache.get(key);
-    //         var index = result.subtreeIndex;
-    //         var isAvailable = subtree[index] === 0x1;
-    //     // }
-    //
-    //     return {
-    //         isAvailable: isAvailable,
-    //         subtreeRootKey: subtreeRootKey,
-    //         subtreeKey: result.subtreeKey,
-    //         subtreeIndex: index
-    //     };
-    // };
-
-    // /**
-    //  * Determine if the tile is available
-    //  *
-    //  * @private
-    //  */
-    // Cesium3DTilesetImplicit.prototype.isTileAvailable = function(x, y, z, level) {
-    //     var isOct = this._isOct;
-    //     var available = this._available;
-    //     if (level > available.length - 1) {
-    //         return false;
-    //     }
-    //
-    //     // Unless these are sorted, you must search all ranges on the level
-    //     var ranges = available[level];
-    //     for (var range of ranges) {
-    //         var containsZ = isOct ? (z >= range.startZ && z <= range.endZ) : true;
-    //         if (containsZ && x >= range.startX && x <=range.endX && y >= range.startY && y <= range.endY) {
-    //             return true;
-    //         }
-    //     }
-    //
-    //     return false;
-    // };
-
     /**
-     * Gets a loop range in x y z that needs to be checked for the given level
+     * Finds the start level in the tree
      *
      * @private
      */
-    // Cesium3DTilesetImplicit.prototype.getTreeRangeForLevel = function(key, level) {
-    //     var subtreeLevelInTree = key.w;
-    //     var levelDiff = level - subtreeLevelInTree;
-    //     if (levelDiff < 0) {
-    //         throw new RuntimeError('Cannot query a tree range for a level of above the subtree');
-    //     }
-    //     if (levelDiff > this._tilingScheme.subtreeLevels) {
-    //         throw new RuntimeError('Cannot query a tree range for a level of below the subtree');
-    //     }
-    //
-    //     var isOct = this._isOct;
-    //
-    //     var subtreeRootX = key.x;
-    //     var subtreeRootY = key.y;
-    //     var subtreeRootZ = isOct ? key.z : 0;
-    //
-    //     // The dim for each direction on this level in teh subtree
-    //     var subteeLevelDim = (1 << levelDiff);
-    //     // Once we have max index, use to get to min index
-    //     // var toMinIndex = subteeLevelDim - 1;
-    //     // var maxX = (subtreeRootX << levelDiff);
-    //     // var maxY = (subtreeRootY << levelDiff);
-    //     // var minX = maxX - toMinIndex;
-    //     // var minY = maxY - toMinIndex;
-    //     // var maxZ = (subtreeRootZ << levelDiff);
-    //     // var minZ = isOct ? (maxZ - toMinIndex) : 0;
-    //
-    //     var toMaxIndex = subteeLevelDim - 1;
-    //     var minX = (subtreeRootX << levelDiff);
-    //     var minY = (subtreeRootY << levelDiff);
-    //     var minZ = (subtreeRootZ << levelDiff);
-    //     var maxX = minX + toMaxIndex;
-    //     var maxY = minY + toMaxIndex;
-    //     var maxZ = isOct ? (minZ + toMaxIndex) : 0;
-    //
-    //     return {
-    //         startX: minX,
-    //         startY: minY,
-    //         startZ: minZ,
-    //         endX: maxX,
-    //         endY: maxY,
-    //         endZ: maxZ
-    //     };
-    // };
-
-    // /**
-    //  * Gets a loop range in x y z that needs to be checked for the given level
-    //  *
-    //  * @private
-    //  */
-    // Cesium3DTilesetImplicit.prototype.getRangeForLevel = function(level) {
-    //     var ranges = this._available[level];
-    //     var minX = Number.MAX_VALUE;
-    //     var minY = Number.MAX_VALUE;
-    //     var maxX = 0;
-    //     var maxY = 0;
-    //
-    //     var isOct = this._isOct;
-    //
-    //     var minZ = isOct ? Number.MAX_VALUE : 0;
-    //     var maxZ = 0;
-    //
-    //     for (var range of ranges) {
-    //         minX = Math.min(minX, range.startX);
-    //         minY = Math.min(minY, range.startY);
-    //         maxX = Math.max(maxX, range.endX);
-    //         maxY = Math.max(maxY, range.endY);
-    //
-    //         if (isOct) {
-    //             minZ = Math.min(minZ, range.startZ);
-    //             maxZ = Math.max(maxZ, range.endZ);
-    //         }
-    //     }
-    //
-    //     return {
-    //         startX: minX,
-    //         startY: minY,
-    //         startZ: minZ,
-    //         endX: maxX,
-    //         endY: maxY,
-    //         endZ: maxZ
-    //     };
-    // };
-
     Cesium3DTilesetImplicit.prototype.findSubtreeLevelStart = function(subtree) {
         var subtreeLevels = this._tilingScheme.subtreeLevels;
         // var isOct = this._isOct;
@@ -2216,6 +2134,10 @@ define([
         // Finally, assign to the map
         // var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
         this._subtreeCache.set(subtree, subtreeRootKey);
+    };
+
+    Cesium3DTilesetImplicit.prototype.getGeomtricErrorBase = function() {
+        return this._isOct ? 2 : 2;
     };
 
     /**
@@ -2281,7 +2203,6 @@ define([
 
         var rootTile = hasParent ? parentTile : new Cesium3DTileImplicit(this, resource, rootInfo, undefined);
         // var rootTile = new Cesium3DTileImplicit(this, resource, rootInfo, parentTile);
-        var subtreeLevelStart = this.findSubtreeLevelStart(subtree);
 
         // If there is a parentTile, add the root of the currently loading tileset
         // to parentTile's children, and update its _depth.
@@ -2291,12 +2212,14 @@ define([
         // } else {
         // }
         if (!hasParent) {
+            var subtreeLevelStart = this.findSubtreeLevelStart(subtree);
             this._startLevel = subtreeRootKey.w + subtreeLevelStart;
+            this.initLODDistances();
+            // console.log('first level subtree: ' + subtreeLevelStart);
         }
 
         var level = this._startLevel;
         // console.log('first level in tileset: ' + level);
-        // console.log('first level subtree: ' + subtreeLevelStart);
 
         // TODO: merge with loop version but wait till the other todo's are ironed out
 
@@ -2330,7 +2253,7 @@ define([
         var oneBitMode = defined(tilesetLastLevel);
         var contentRootGeometricError = this._geometricErrorContentRoot;
         // var lastSubtreeLevelStartIndex = this._unpackedArraySizes[subtreeLevels0Indexed];
-        var base = isOct ? 2 : 2;
+        var base = this.getGeomtricErrorBase();
         // This loop is just to create the tiles in the right spots in the _tiles array
         for (subtreeIndex = 0; subtreeIndex < unpackedSize; subtreeIndex++) {
             if (subtree[subtreeIndex] === 0) {
@@ -2359,7 +2282,7 @@ define([
             hasSubtree = onLastSubtreeLevel && ((oneBitMode && level !== tilesetLastLevel) || (!oneBitMode && twoBitModeHasExtSub));
             uriSubtree = hasSubtree ? this._availabilityFolder + uri : undefined;
             levelDiff = level - tilesetStartLevel;
-            gerrorDenom = isOct ? Math.pow(base, levelDiff) : Math.pow(base, levelDiff);
+            gerrorDenom = Math.pow(base, levelDiff);
             tileInfo = {
                 boundingVolume: this.deriveImplicitBounds(tilesetRoot, x, y, z, level),
                 // geometricError: this.derivedImplicitGeometricError(tile, x, y, z, xTiles, yTiles),
@@ -2427,8 +2350,7 @@ define([
         //     throw new RuntimeError('DEBUG: Subtree already exists?');
         // }
 
-        // console.log('rootTile: ');
-        console.log(rootTile);
+        // console.log(rootTile);
         // console.log();
         // console.log('tile0: ');
         // console.log(tilesArray[0]);
@@ -3137,6 +3059,7 @@ define([
 
         // Update any tracked min max values
         resetMinimumMaximum(tileset);
+        tileset.updateLODDistances(frameState);
 
         var traversal = tileset._traversals[passOptions.traversal];
         var ready = traversal.selectTiles(tileset, frameState);
