@@ -1,23 +1,5 @@
 'use strict';
-/**
- * Inspired from rollup-plugin-replace https://github.com/rollup/rollup-plugin-replace/blob/master/src/index.js
- * and
- * strip-pragma-loader https://github.com/AnalyticalGraphicsInc/strip-pragma-loader/blob/master/index.js
- *
- * Usage:
- *
- * const rollup = require('rollup');
- * const rollupStripPragma = require('./rollup-plugin-strip-pragma');
- * const bundle = await rollup.rollup({
- *     input: .....,
- *     plugins: [
- *         rollupStripPragma({
- *             include: '*', // optional
- *             pragmas: [ 'debug', .... ]
- *         })
- *     ]
- * });
- */
+
 const MagicString = require('magic-string');
 const { createFilter } = require('rollup-pluginutils');
 

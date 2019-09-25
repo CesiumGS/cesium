@@ -5,8 +5,8 @@
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
   "author": {
-    "name": "Analytical Graphics, Inc.",
-    "url": "http://www.agi.com"
+    "name": "Cesium GS, Inc.",
+    "url": "https://cesium.com"
   },
   "contributors": [
     {
@@ -66,7 +66,6 @@
     "karma-longest-reporter": "^1.1.0",
     "karma-safari-launcher": "^1.0.0",
     "karma-spec-reporter": "^0.0.32",
-    "magic-string": "^0.25.3",
     "merge-stream": "^2.0.0",
     "mime": "^2.0.3",
     "mkdirp": "^0.5.1",
@@ -74,8 +73,8 @@
     "request": "^2.79.0",
     "rimraf": "^3.0.0",
     "rollup": "^1.21.4",
+    "rollup-plugin-strip-pragma": "^1.0.0",
     "rollup-plugin-uglify": "^6.0.3",
-    "rollup-pluginutils": "^2.8.2",
     "stream-to-promise": "^2.2.0",
     "yargs": "^14.0.0"
   },
