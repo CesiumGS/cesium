@@ -1,24 +1,18 @@
-/* global require */
 import { FeatureDetection } from '../../Source/Cesium.js';
 import { TaskProcessor } from '../../Source/Cesium.js';
 import absolutize from '../absolutize.js';
 import { when } from '../../Source/Cesium.js';
 
-xdescribe('Core/TaskProcessor', function() {
+describe('Core/TaskProcessor', function() {
 
     var taskProcessor;
 
     beforeEach(function() {
-        TaskProcessor._workerModulePrefix = '../Specs/TestWorkers/';
-
-        TaskProcessor._loaderConfig = {
-            baseUrl : absolutize(require.toUrl('Source'))
-        };
+        TaskProcessor._workerModulePrefix = absolutize('../Specs/TestWorkers/');
     });
 
     afterEach(function() {
         TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
-        TaskProcessor._loaderConfig = undefined;
 
         if (taskProcessor && !taskProcessor.isDestroyed()) {
             taskProcessor = taskProcessor.destroy();
@@ -26,7 +20,7 @@ xdescribe('Core/TaskProcessor', function() {
     });
 
     it('works with a simple worker', function() {
-        taskProcessor = new TaskProcessor('returnParameters');
+        taskProcessor = new TaskProcessor('returnParameters.js');
 
         var parameters = {
             prop : 'blah',
@@ -41,7 +35,7 @@ xdescribe('Core/TaskProcessor', function() {
     });
 
     it('can be destroyed', function() {
-        taskProcessor = new TaskProcessor('returnParameters');
+        taskProcessor = new TaskProcessor('returnParameters.js');
 
         expect(taskProcessor.isDestroyed()).toEqual(false);
 
@@ -51,7 +45,7 @@ xdescribe('Core/TaskProcessor', function() {
     });
 
     it('can transfer array buffer', function() {
-        taskProcessor = new TaskProcessor('returnByteLength');
+        taskProcessor = new TaskProcessor('returnByteLength.js');
 
         var byteLength = 100;
         var parameters = new ArrayBuffer(byteLength);
@@ -73,7 +67,7 @@ xdescribe('Core/TaskProcessor', function() {
     });
 
     it('can transfer array buffer back from worker', function() {
-        taskProcessor = new TaskProcessor('transferArrayBuffer');
+        taskProcessor = new TaskProcessor('transferArrayBuffer.js');
 
         var byteLength = 100;
         var parameters = {
@@ -87,7 +81,7 @@ xdescribe('Core/TaskProcessor', function() {
     });
 
     it('rejects promise if worker throws', function() {
-        taskProcessor = new TaskProcessor('throwError');
+        taskProcessor = new TaskProcessor('throwError.js');
 
         var message = 'foo';
         var parameters = {
@@ -102,7 +96,7 @@ xdescribe('Core/TaskProcessor', function() {
     });
 
     it('rejects promise if worker returns a non-clonable result', function() {
-        taskProcessor = new TaskProcessor('returnNonCloneable');
+        taskProcessor = new TaskProcessor('returnNonCloneable.js');
 
         var message = 'foo';
         var parameters = {
@@ -117,7 +111,7 @@ xdescribe('Core/TaskProcessor', function() {
     });
 
     it('successful task raises the taskCompletedEvent', function() {
-        taskProcessor = new TaskProcessor('returnParameters');
+        taskProcessor = new TaskProcessor('returnParameters.js');
 
         var parameters = {
             prop : 'blah',
@@ -138,7 +132,7 @@ xdescribe('Core/TaskProcessor', function() {
     });
 
     it('unsuccessful task raises the taskCompletedEvent with error', function() {
-        taskProcessor = new TaskProcessor('returnNonCloneable');
+        taskProcessor = new TaskProcessor('returnNonCloneable.js');
 
         var message = 'foo';
         var parameters = {
@@ -162,8 +156,8 @@ xdescribe('Core/TaskProcessor', function() {
     });
 
     it('can load and compile web assembly module', function() {
-        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
-        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+        var binaryUrl = absolutize('../Specs/TestWorkers/TestWasm/testWasm.wasm');
+        taskProcessor = new TaskProcessor('returnWasmConfig.js', 5);
         var promise = taskProcessor.initWebAssemblyModule({
             modulePath : 'TestWasm/testWasmWrapper',
             wasmBinaryFile : binaryUrl,
@@ -180,8 +174,8 @@ xdescribe('Core/TaskProcessor', function() {
     });
 
     it('uses a backup module if web assembly is not supported', function() {
-        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
-        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+        var binaryUrl = absolutize('../Specs/TestWorkers/TestWasm/testWasm.wasm');
+        taskProcessor = new TaskProcessor('returnWasmConfig.js', 5);
 
         spyOn(FeatureDetection, 'supportsWebAssembly').and.returnValue(false);
 
@@ -199,8 +193,8 @@ xdescribe('Core/TaskProcessor', function() {
     });
 
     it('throws runtime error if web assembly is not supported and no backup is provided', function() {
-        var binaryUrl = absolutize(require.toUrl('../TestWorkers/TestWasm/testWasm.wasm'));
-        taskProcessor = new TaskProcessor('returnWasmConfig', 5);
+        var binaryUrl = absolutize('../Specs/TestWorkers/TestWasm/testWasm.wasm');
+        taskProcessor = new TaskProcessor('returnWasmConfig.js', 5);
 
         spyOn(FeatureDetection, 'supportsWebAssembly').and.returnValue(false);
 

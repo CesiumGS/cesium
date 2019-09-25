@@ -16,13 +16,6 @@ import ShaderSource from '../Renderer/ShaderSource.js';
 import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
 import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
 
-    var projectionExtentDefines = {
-        eastMostYhighDefine : '',
-        eastMostYlowDefine : '',
-        westMostYhighDefine : '',
-        westMostYlowDefine : ''
-    };
-
     /**
      * Creates shaders for a ClassificationPrimitive to use a given Appearance, as well as for picking.
      *
@@ -39,6 +32,13 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         Check.typeOf.object('appearance', appearance);
         Check.typeOf.bool('useFloatBatchTable', useFloatBatchTable);
         //>>includeEnd('debug');
+
+        this._projectionExtentDefines = {
+            eastMostYhighDefine : '',
+            eastMostYlowDefine : '',
+            westMostYhighDefine : '',
+            westMostYlowDefine : ''
+        };
 
         this._useFloatBatchTable = useFloatBatchTable;
 
@@ -184,7 +184,7 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         Check.typeOf.bool('columbusView2D', columbusView2D);
         Check.defined('mapProjection', mapProjection);
         //>>includeEnd('debug');
-        return createShadowVolumeAppearanceVS(this._colorShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, this._appearance, mapProjection, this._useFloatBatchTable);
+        return createShadowVolumeAppearanceVS(this._colorShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, this._appearance, mapProjection, this._useFloatBatchTable, this._projectionExtentDefines);
     };
 
     /**
@@ -203,7 +203,7 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         Check.typeOf.bool('columbusView2D', columbusView2D);
         Check.defined('mapProjection', mapProjection);
         //>>includeEnd('debug');
-        return createShadowVolumeAppearanceVS(this._pickShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, undefined, mapProjection, this._useFloatBatchTable);
+        return createShadowVolumeAppearanceVS(this._pickShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, undefined, mapProjection, this._useFloatBatchTable, this._projectionExtentDefines);
     };
 
     var longitudeExtentsCartesianScratch = new Cartesian3();
@@ -212,7 +212,7 @@ import ShadowVolumeAppearanceFS from '../Shaders/ShadowVolumeAppearanceFS.js';
         high : 0.0,
         low : 0.0
     };
-    function createShadowVolumeAppearanceVS(shaderDependencies, planarExtents, columbusView2D, defines, vertexShaderSource, appearance, mapProjection, useFloatBatchTable) {
+    function createShadowVolumeAppearanceVS(shaderDependencies, planarExtents, columbusView2D, defines, vertexShaderSource, appearance, mapProjection, useFloatBatchTable, projectionExtentDefines) {
         var allDefines = defines.slice();
 
         if (projectionExtentDefines.eastMostYhighDefine === '') {

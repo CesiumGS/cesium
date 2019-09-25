@@ -36,6 +36,7 @@ describe('Scene/BingMapsImageryProvider', function() {
         Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
         Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;
         Resource._Implementations.loadWithXhr = Resource._DefaultImplementations.loadWithXhr;
+        Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
     });
 
     it('tileXYToQuadKey works for examples in Bing Maps documentation', function() {

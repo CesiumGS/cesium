@@ -29,16 +29,24 @@ module.exports = function(config) {
         files : [
             { pattern: 'Specs/karma-main.js', included: true, type: 'module' },
             { pattern: 'Source/**', included: false, type: 'module' },
-            { pattern: 'Specs/**', included: true, type: 'module' }
+            { pattern: 'Specs/*.js', included: true, type: 'module' },
+            { pattern: 'Specs/Core/**', included: true, type: 'module' },
+            { pattern: 'Specs/Data/**', included: false },
+            { pattern: 'Specs/DataSources/**', included: true, type: 'module' },
+            { pattern: 'Specs/Renderer/**', included: true, type: 'module' },
+            { pattern: 'Specs/Scene/**', included: true, type: 'module' },
+            { pattern: 'Specs/ThirdParty/**', included: true, type: 'module' },
+            { pattern: 'Specs/Widgets/**', included: true, type: 'module' },
+            { pattern: 'Specs/TestWorkers/**', included: false }
         ],
 
         proxies : {
-            '/Data' : '/base/Specs/Data'
+            '/Data' : '/base/Specs/Data',
+            '/Specs/TestWorkers' : '/base/Specs/TestWorkers'
         },
 
         // list of files to exclude
         exclude: [
-            'Specs/TestWorkers/**',
             'Specs/SpecList.js',
             'Specs/SpecRunner.js',
             'Specs/spec-main.js'

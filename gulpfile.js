@@ -80,7 +80,8 @@ var filesToClean = ['Source/Cesium.js',
                     'Apps/Sandcastle/jsHintOptions.js',
                     'Apps/Sandcastle/gallery/gallery-index.js',
                     'Apps/Sandcastle/templates/bucket.css',
-                    'Cesium-*.zip'];
+                    'Cesium-*.zip',
+                    'cesium-*.tgz'];
 
 var filesToConvertES6 = ['Source/**/*.js',
                          'Specs/**/*.js',
@@ -736,7 +737,15 @@ gulp.task('test', function(done) {
     var files = [
         { pattern: 'Specs/karma-main.js', included: true, type: 'module' },
         { pattern: 'Source/**', included: false, type: 'module' },
-        { pattern: 'Specs/**', included: true, type: 'module' }
+        { pattern: 'Specs/*.js', included: true, type: 'module' },
+        { pattern: 'Specs/Core/**', included: true, type: 'module' },
+        { pattern: 'Specs/Data/**', included: false },
+        { pattern: 'Specs/DataSources/**', included: true, type: 'module' },
+        { pattern: 'Specs/Renderer/**', included: true, type: 'module' },
+        { pattern: 'Specs/Scene/**', included: true, type: 'module' },
+        { pattern: 'Specs/ThirdParty/**', included: true, type: 'module' },
+        { pattern: 'Specs/Widgets/**', included: true, type: 'module' },
+        { pattern: 'Specs/TestWorkers/**', included: false }
     ];
 
     if (release) {
