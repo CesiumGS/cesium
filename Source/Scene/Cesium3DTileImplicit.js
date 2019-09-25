@@ -1610,61 +1610,62 @@ define([
      * @private
      */
     Cesium3DTileImplicit.prototype.updatePriority = function() {
-        var tileset = this.tileset;
-        var preferLeaves = tileset.preferLeaves;
-        var minimumPriority = tileset._minimumPriority;
-        var maximumPriority = tileset._maximumPriority;
-
-        // Combine priority systems together by mapping them into a base 10 number where each priority controls a specific set of digits in the number.
-        // For number priorities, map them to a 0.xxxxx number then left shift it up into a set number of digits before the decimal point. Chop of the fractional part then left shift again into the position it needs to go.
-        // For blending number priorities, normalize them to 0-1 and interpolate to get a combined 0-1 number, then proceed as normal.
-        // Booleans can just be 0 or 10^leftshift.
-        // Think of digits as penalties since smaller numbers are higher priority. If a tile has some large quantity or has a flag raised it's (usually) penalized for it, expressed as a higher number for the digit.
-        // Priority number format: preloadFlightDigits(1) | foveatedDeferDigits(1) | foveatedDigits(4) | preloadProgressiveResolutionDigits(1) | preferredSortingDigits(4) . depthDigits(the decimal digits)
-        // Certain flags like preferLeaves will flip / turn off certain digits to get desired load order.
-
-        // Setup leftShifts, digit counts, and scales (for booleans)
-        var digitsForANumber = 4;
-        var digitsForABoolean = 1;
-
-        var preferredSortingLeftShift = 0;
-        var preferredSortingDigitsCount = digitsForANumber;
-
-        var foveatedLeftShift = preferredSortingLeftShift + preferredSortingDigitsCount;
-        var foveatedDigitsCount = digitsForANumber;
-
-        var preloadProgressiveResolutionLeftShift = foveatedLeftShift + foveatedDigitsCount;
-        var preloadProgressiveResolutionDigitsCount = digitsForABoolean;
-        var preloadProgressiveResolutionScale = Math.pow(10, preloadProgressiveResolutionLeftShift);
-
-        var foveatedDeferLeftShift = preloadProgressiveResolutionLeftShift + preloadProgressiveResolutionDigitsCount;
-        var foveatedDeferDigitsCount = digitsForABoolean;
-        var foveatedDeferScale = Math.pow(10, foveatedDeferLeftShift);
-
-        var preloadFlightLeftShift = foveatedDeferLeftShift + foveatedDeferDigitsCount;
-        var preloadFlightScale = Math.pow(10, preloadFlightLeftShift);
-
-        // Compute the digits for each priority
-        var depthDigits = priorityNormalizeAndClamp(this._depth, minimumPriority.depth, maximumPriority.depth);
-        depthDigits = preferLeaves ? 1.0 - depthDigits : depthDigits;
-
-        // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
-        var useDistance = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
-        var normalizedPreferredSorting = useDistance ? priorityNormalizeAndClamp(this._priorityHolder._distanceToCamera, minimumPriority.distance, maximumPriority.distance) :
-                                                       priorityNormalizeAndClamp(this._priorityReverseScreenSpaceError, minimumPriority.reverseScreenSpaceError, maximumPriority.reverseScreenSpaceError);
-        var preferredSortingDigits = isolateDigits(normalizedPreferredSorting, preferredSortingDigitsCount, preferredSortingLeftShift);
-
-        var preloadProgressiveResolutionDigits = this._priorityProgressiveResolution ? 0 : preloadProgressiveResolutionScale;
-
-        var normalizedFoveatedFactor = priorityNormalizeAndClamp(this._priorityHolder._foveatedFactor, minimumPriority.foveatedFactor, maximumPriority.foveatedFactor);
-        var foveatedDigits = isolateDigits(normalizedFoveatedFactor, foveatedDigitsCount, foveatedLeftShift);
-
-        var foveatedDeferDigits = this.priorityDeferred ? foveatedDeferScale : 0;
-
-        var preloadFlightDigits = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale;
-
-        // Get the final base 10 number
-        this._priority = depthDigits + preferredSortingDigits + preloadProgressiveResolutionDigits + foveatedDigits + foveatedDeferDigits + preloadFlightDigits;
+        // var tileset = this.tileset;
+        // var preferLeaves = tileset.preferLeaves;
+        // var minimumPriority = tileset._minimumPriority;
+        // var maximumPriority = tileset._maximumPriority;
+        //
+        // // Combine priority systems together by mapping them into a base 10 number where each priority controls a specific set of digits in the number.
+        // // For number priorities, map them to a 0.xxxxx number then left shift it up into a set number of digits before the decimal point. Chop of the fractional part then left shift again into the position it needs to go.
+        // // For blending number priorities, normalize them to 0-1 and interpolate to get a combined 0-1 number, then proceed as normal.
+        // // Booleans can just be 0 or 10^leftshift.
+        // // Think of digits as penalties since smaller numbers are higher priority. If a tile has some large quantity or has a flag raised it's (usually) penalized for it, expressed as a higher number for the digit.
+        // // Priority number format: preloadFlightDigits(1) | foveatedDeferDigits(1) | foveatedDigits(4) | preloadProgressiveResolutionDigits(1) | preferredSortingDigits(4) . depthDigits(the decimal digits)
+        // // Certain flags like preferLeaves will flip / turn off certain digits to get desired load order.
+        //
+        // // Setup leftShifts, digit counts, and scales (for booleans)
+        // var digitsForANumber = 4;
+        // var digitsForABoolean = 1;
+        //
+        // var preferredSortingLeftShift = 0;
+        // var preferredSortingDigitsCount = digitsForANumber;
+        //
+        // var foveatedLeftShift = preferredSortingLeftShift + preferredSortingDigitsCount;
+        // var foveatedDigitsCount = digitsForANumber;
+        //
+        // var preloadProgressiveResolutionLeftShift = foveatedLeftShift + foveatedDigitsCount;
+        // var preloadProgressiveResolutionDigitsCount = digitsForABoolean;
+        // var preloadProgressiveResolutionScale = Math.pow(10, preloadProgressiveResolutionLeftShift);
+        //
+        // var foveatedDeferLeftShift = preloadProgressiveResolutionLeftShift + preloadProgressiveResolutionDigitsCount;
+        // var foveatedDeferDigitsCount = digitsForABoolean;
+        // var foveatedDeferScale = Math.pow(10, foveatedDeferLeftShift);
+        //
+        // var preloadFlightLeftShift = foveatedDeferLeftShift + foveatedDeferDigitsCount;
+        // var preloadFlightScale = Math.pow(10, preloadFlightLeftShift);
+        //
+        // // Compute the digits for each priority
+        // var depthDigits = priorityNormalizeAndClamp(this._depth, minimumPriority.depth, maximumPriority.depth);
+        // depthDigits = preferLeaves ? 1.0 - depthDigits : depthDigits;
+        //
+        // // Map 0-1 then convert to digit. Include a distance sort when doing non-skipLOD and replacement refinement, helps things like non-skipLOD photogrammetry
+        // var useDistance = !tileset._skipLevelOfDetail && this.refine === Cesium3DTileRefine.REPLACE;
+        // var normalizedPreferredSorting = useDistance ? priorityNormalizeAndClamp(this._priorityHolder._distanceToCamera, minimumPriority.distance, maximumPriority.distance) :
+        //                                                priorityNormalizeAndClamp(this._priorityReverseScreenSpaceError, minimumPriority.reverseScreenSpaceError, maximumPriority.reverseScreenSpaceError);
+        // var preferredSortingDigits = isolateDigits(normalizedPreferredSorting, preferredSortingDigitsCount, preferredSortingLeftShift);
+        //
+        // var preloadProgressiveResolutionDigits = this._priorityProgressiveResolution ? 0 : preloadProgressiveResolutionScale;
+        //
+        // var normalizedFoveatedFactor = priorityNormalizeAndClamp(this._priorityHolder._foveatedFactor, minimumPriority.foveatedFactor, maximumPriority.foveatedFactor);
+        // var foveatedDigits = isolateDigits(normalizedFoveatedFactor, foveatedDigitsCount, foveatedLeftShift);
+        //
+        // var foveatedDeferDigits = this.priorityDeferred ? foveatedDeferScale : 0;
+        //
+        // var preloadFlightDigits = tileset._pass === Cesium3DTilePass.PRELOAD_FLIGHT ? 0 : preloadFlightScale;
+        //
+        // // Get the final base 10 number
+        // this._priority = depthDigits + preferredSortingDigits + preloadProgressiveResolutionDigits + foveatedDigits + foveatedDeferDigits + preloadFlightDigits;
+        this._priority = this._depth;
     };
 
     /**
