@@ -10,7 +10,12 @@
  [jasmine-gem]: http://github.com/pivotal/jasmine-gem
  */
 
+// Use a pragma so we can remove this code when building specs for running in ES5
+
+//>>includeStart('debug', pragmas.debug);
 import * as Cesium from '../Source/Cesium.js';
+//>>includeEnd('debug');
+
 import addDefaultMatchers from './addDefaultMatchers.js';
 import equalsMethodEqualityTester from './equalsMethodEqualityTester.js';
 
@@ -22,7 +27,6 @@ import equalsMethodEqualityTester from './equalsMethodEqualityTester.js';
             return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
         }
 
-        var built = getQueryParameter('built');
         var release = getQueryParameter('release');
 
         /*global jasmineRequire,jasmine,exports,specs*/
@@ -314,6 +318,8 @@ import equalsMethodEqualityTester from './equalsMethodEqualityTester.js';
         env.beforeEach(function() { addDefaultMatchers(!release).call(env); });
         env.beforeEach(function() { env.addCustomEqualityTester(equalsMethodEqualityTester); });
 
+        //>>includeStart('debug', pragmas.debug);
         import('./SpecList.js').then(function() {
             env.execute();
         })
+        //>>includeEnd('debug');
