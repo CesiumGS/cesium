@@ -4,6 +4,7 @@ import { Cartesian4 } from '../../Source/Cesium.js';
 import { CesiumTerrainProvider } from '../../Source/Cesium.js';
 import { Color } from '../../Source/Cesium.js';
 import { combine } from '../../Source/Cesium.js';
+import { Credit } from '../../Source/Cesium.js';
 import { defaultValue } from '../../Source/Cesium.js';
 import { defined } from '../../Source/Cesium.js';
 import { defineProperties } from '../../Source/Cesium.js';
