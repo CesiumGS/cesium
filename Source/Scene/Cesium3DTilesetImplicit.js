@@ -277,6 +277,18 @@ define([
         // for replacement refinement, tiles touched by this sphere on that level means that their children are required
         // addative can start from index 1 and it can just take the tile it touches on that level since it doesn't have the requirement of all children tiles loaded
         this._lodDistances = [];
+
+        // Children have use their parents sphere radius
+        // WHEN ADD: number indicates content level (0 being content root) that needs to start being checked for requests and rendering
+        // the sphere radius to use at each content level is _lodDistances[contentLevel] so the radius at the conent level of _maximumTraversalLevel is
+        // _lodDistances[_maximumTraversalLevel]
+        // any tile picked by by this sphere on this level is requeseted/rendered
+        // WHEN REPLACE: number indicates content level (0 being content root) that needs to start being checked for requests and rendering
+        // the sphere radius to use at each content level is _lodDistances[contentLevel] so the radius at the conent level of _maximumTraversalLevel is
+        // _lodDistances[_maximumTraversalLevel]
+        // any tile picked by by this sphere on this level is requeseted/rendered
+        this._maximumTraversalLevel = 0;
+
         this._packedArraySizes = undefined;
         this._unpackedArraySizes = undefined;
         this._packedSize = 0;
@@ -1044,6 +1056,8 @@ define([
                 if (hasSubtreeArray) {
                     // TODO: add check to  make sure length correct given subdivision type and subtreeLevels
                     var tilingScheme = that._tilingScheme;
+                    //TODO: REMOVE, JUST TESTING SOMETHING
+                    // tilingScheme.refine = Cesium3DTileRefine.REPLACE;
                     that._allTilesAdditive = tilingScheme.refine === Cesium3DTileRefine.ADD;
                     // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
                     // Get the basePath relative to the external tileset.
@@ -1666,15 +1680,33 @@ define([
     });
 
     var rootDistance = -1;
+    /**
+     * Updates the _maximumTraversalLevel
+     *
+     * @private
+     */
     Cesium3DTilesetImplicit.prototype.updateTraversalInfo = function(frameState) {
         // find the distnace to the tileset contentless root
         // use that that determine maximumTreversalDepth (the first index in _lodDistances that fails)
 
+        var distance = this._root.distanceToTile(frameState);
 
-        // if (rootDistance !== this._root._distanceToCamera) {
-        //     console.log('root dist ' + + this._root._distanceToCamera);
-        //     rootDistance = this._root._distanceToCamera;
-        // }
+        var length = this._lodDistances.length;
+        var lodDistances = this._lodDistances;
+        this._maximumTraversalLevel = length - 1;
+        var i;
+        for (i = 0; i < length; i++) {
+            if (lodDistances[i] < distance) {
+                this._maximumTraversalLevel = i - 1;
+                break;
+            }
+        }
+
+        if (rootDistance !== this._root._distanceToCamera) {
+            console.log('root dist ' + distance);
+            console.log('max lvl ' + this._maximumTraversalLevel);
+            rootDistance = distance;
+        }
     };
 
     /**
@@ -1687,7 +1719,7 @@ define([
     Cesium3DTilesetImplicit.prototype.updateLODDistances = function(frameState) {
         // TODO: when to update this based on camera, context, and  max gerror changes?
         var lodDistances = this._lodDistances;
-        var levelsInTree = lodDistances.length;
+        var length = lodDistances.length;
         var height = frameState.context.drawingBufferHeight;
         var sseDenominator = frameState.camera.frustum.sseDenominator;
         var factor = height / (this._maximumScreenSpaceError * sseDenominator);
@@ -1695,14 +1727,14 @@ define([
         // var startingGError = this._geometricErrorContentRoot;
         var startingGError = this._geometricError;
         var base = this.getGeomtricErrorBase();
-        for (i = 0; i < levelsInTree; i++) {
+        for (i = 0; i < length; i++) {
             gErrorOnLevel = startingGError / Math.pow(base, i);
             lodDistance = gErrorOnLevel * factor;
             lodDistances[i] = lodDistance;
         }
 
         if (!lodDistancesAreInit) {
-            for (i = 0; i < levelsInTree; i++) {
+            for (i = 0; i < length; i++) {
                 console.log('lodDistance ' + i + ' ' + lodDistances[i]);
             }
             lodDistancesAreInit = true;
@@ -1720,9 +1752,9 @@ define([
         var tilingScheme = this._tilingScheme;
         // +2 to get the content levels + the contentless tileset root, so each index tells you if you should load that levels children
         // 0 being the contentless tileset root, 1 being the root nodes
-        var levelsInTree = this._startLevel + tilingScheme.lastLevel + 2;
+        var length = this._startLevel + tilingScheme.lastLevel + 2;
         var i;
-        for (i = 0; i < levelsInTree; i++) {
+        for (i = 0; i < length; i++) {
             lodDistances.push(0);
         }
     };
