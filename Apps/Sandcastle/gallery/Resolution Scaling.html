@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
-    <meta name="description" content="Set a custom resolution scale or use browser recommended resolution.">
+    <meta name="description" content="Set a custom resolution scale and/or toggle the browser's recommended resolution.">
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
@@ -24,10 +24,10 @@
         <td><input type="checkbox" data-bind="checked: useBrowserRecommendedResolution"></td>
     </tr>
     <tr>
-        <td data-bind="style: { color: useBrowserRecommendedResolution ? 'gray' : ''}">Custom Resolution Scale</td>
+        <td>Resolution Scale</td>
         <td>
-            <input type="range" min="0.1" max="2.0" step="0.1" data-bind="value: customResolutionScale, enable: !useBrowserRecommendedResolution, valueUpdate: 'input'">
-            <input type="text" size="5" data-bind="value: customResolutionScale, enable: !useBrowserRecommendedResolution">
+            <input type="range" min="0.1" max="2.0" step="0.1" data-bind="value: resolutionScale, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: resolutionScale">
         </td>
     </tr>
 </tbody></table>
@@ -40,7 +40,7 @@ var viewer = new Cesium.Viewer('cesiumContainer');
 
 var viewModel = {
     useBrowserRecommendedResolution : false,
-    customResolutionScale : 0.25
+    resolutionScale : 0.25
 };
 
 Cesium.knockout.track(viewModel);
@@ -53,14 +53,12 @@ for (var name in viewModel) {
 }
 
 function update() {
-    if (viewModel.useBrowserRecommendedResolution) {
-        viewer.resolutionScale = 1.0 / window.devicePixelRatio;
-    } else {
-        var resolutionScale = Number(viewModel.customResolutionScale);
-        resolutionScale = !isNaN(resolutionScale) ? resolutionScale : 1.0;
-        resolutionScale = Cesium.Math.clamp(resolutionScale, 0.1, 2.0);
-        viewer.resolutionScale = resolutionScale;
-    }
+    viewer.useBrowserRecommendedResolution = viewModel.useBrowserRecommendedResolution;
+
+    var resolutionScale = Number(viewModel.resolutionScale);
+    resolutionScale = !isNaN(resolutionScale) ? resolutionScale : 1.0;
+    resolutionScale = Cesium.Math.clamp(resolutionScale, 0.1, 2.0);
+    viewer.resolutionScale = resolutionScale;
 }
 update();
 //Sandcastle_End
