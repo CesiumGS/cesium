@@ -636,6 +636,14 @@ describe('Core/BoundingSphere', function() {
         }).toThrowDeveloperError();
     });
 
+    it('can enable useBrowserRecommendedResolution', function() {
+        viewer = createViewer(container, {
+            useBrowserRecommendedResolution : true
+        });
+
+        expect(viewer.useBrowserRecommendedResolution).toBe(true);
+    });
+
     it('constructor throws with undefined container', function() {
         expect(function() {
             return createViewer(undefined);

@@ -282,7 +282,7 @@ define([
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
-     * @param {Boolean} [options.useBrowserRecommendedResolution=false] If true, ignore the browser's device pixel ratio.
+     * @param {Boolean} [options.useBrowserRecommendedResolution=false] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
@@ -1202,7 +1202,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         * If true, the browser's device pixel ratio is ignored and 1.0 is used instead,
         * effectively rendering based on CSS pixels instead of device pixels. This can improve
         * performance on less powerful devices that have high pixel density. When false, rendering
-        * will be in device pixels. The resolutionScale property will still take effect whether
+        * will be in device pixels. {@link Viewer#resolutionScale} will still take effect whether
         * this flag is true or false.
         * @memberof Viewer.prototype
         *

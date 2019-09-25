@@ -273,6 +273,14 @@ describe('Widgets/CesiumWidget/CesiumWidget', function() {
         expect(widget.resolutionScale).toBe(0.5);
     });
 
+    it('can enable useBrowserRecommendedResolution', function() {
+        widget = createCesiumWidget(container, {
+            useBrowserRecommendedResolution : true
+        });
+
+        expect(widget.useBrowserRecommendedResolution).toBe(true);
+    });
+
     it('throws if resolutionScale is less than 0', function() {
         widget = createCesiumWidget(container);
         expect(function() {
