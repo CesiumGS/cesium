@@ -160,6 +160,7 @@ define([
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
+     * @param {Boolean} [options.useBrowserRecommendedResolution=false] If true, ignore the browser's device pixel ratio.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {Element|String} [options.creditContainer] The DOM element or ID that will contain the {@link CreditDisplay}.  If not specified, the credits are added
      *        to the bottom of the widget itself.
@@ -243,6 +244,8 @@ define([
 
         var showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
 
+        var useBrowserRecommendedResolution = defaultValue(options.useBrowserRecommendedResolution, false);
+
         this._element = element;
         this._container = container;
         this._canvas = canvas;
@@ -256,7 +259,7 @@ define([
         this._renderLoopRunning = false;
         this._showRenderLoopErrors = showRenderLoopErrors;
         this._resolutionScale = 1.0;
-        this._useBrowserRecommendedResolution = false;
+        this._useBrowserRecommendedResolution = useBrowserRecommendedResolution;
         this._forceResize = false;
         this._clock = defined(options.clock) ? options.clock : new Clock();
 

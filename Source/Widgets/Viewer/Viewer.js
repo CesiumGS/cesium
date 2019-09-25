@@ -282,6 +282,7 @@ define([
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
+     * @param {Boolean} [options.useBrowserRecommendedResolution=false] If true, ignore the browser's device pixel ratio.
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
@@ -428,6 +429,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             useDefaultRenderLoop : options.useDefaultRenderLoop,
             targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors,
+            useBrowserRecommendedResolution : options.useBrowserRecommendedResolution,
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer,
             creditViewport : options.creditViewport,
             scene3DOnly : scene3DOnly,
