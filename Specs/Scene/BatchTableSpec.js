@@ -1,20 +1,12 @@
-defineSuite([
-        'Scene/BatchTable',
-        'Core/Cartesian4',
-        'Core/ComponentDatatype',
-        'Core/Math',
-        'Renderer/PixelDatatype',
-        'Renderer/Texture',
-        'Specs/createScene'
-    ], function(
-        BatchTable,
-        Cartesian4,
-        ComponentDatatype,
-        CesiumMath,
-        PixelDatatype,
-        Texture,
-        createScene) {
-    'use strict';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PixelDatatype } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import { BatchTable } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/BatchTable', function() {
 
     var unsignedByteAttributes = [{
         functionName : 'batchTable_getShow',

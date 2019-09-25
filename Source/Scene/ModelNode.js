@@ -1,10 +1,5 @@
-define([
-        '../Core/defineProperties',
-        '../Core/Matrix4'
-    ], function(
-        defineProperties,
-        Matrix4) {
-    'use strict';
+import defineProperties from '../Core/defineProperties.js';
+import Matrix4 from '../Core/Matrix4.js';
 
     /**
      * A model node with a transform for user-defined animations.  A glTF asset can
@@ -137,6 +132,4 @@ define([
         // to keep the matrix in-sync during a glTF animation.
         Matrix4.clone(matrix, this._matrix);
     };
-
-    return ModelNode;
-});
+export default ModelNode;

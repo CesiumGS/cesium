@@ -1,32 +1,18 @@
-defineSuite([
-        'Scene/PrimitiveCollection',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/GeometryInstance',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Scene/HorizontalOrigin',
-        'Scene/LabelCollection',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
-        'Scene/VerticalOrigin',
-        'Specs/createScene'
-    ], function(
-        PrimitiveCollection,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        defined,
-        GeometryInstance,
-        Rectangle,
-        RectangleGeometry,
-        HorizontalOrigin,
-        LabelCollection,
-        PerInstanceColorAppearance,
-        Primitive,
-        VerticalOrigin,
-        createScene) {
-    'use strict';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { LabelCollection } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/PrimitiveCollection', function() {
 
     var scene;
     var context;

@@ -1,16 +1,8 @@
-define([
-        '../Core/decodeGoogleEarthEnterpriseData',
-        '../Core/GoogleEarthEnterpriseTileInformation',
-        '../Core/RuntimeError',
-        '../ThirdParty/pako_inflate',
-        './createTaskProcessorWorker'
-    ], function(
-        decodeGoogleEarthEnterpriseData,
-        GoogleEarthEnterpriseTileInformation,
-        RuntimeError,
-        pako,
-        createTaskProcessorWorker) {
-    'use strict';
+import decodeGoogleEarthEnterpriseData from '../Core/decodeGoogleEarthEnterpriseData.js';
+import GoogleEarthEnterpriseTileInformation from '../Core/GoogleEarthEnterpriseTileInformation.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import pako from '../ThirdParty/pako_inflate.js';
+import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     // Datatype sizes
     var sizeOfUint16 = Uint16Array.BYTES_PER_ELEMENT;
@@ -249,6 +241,4 @@ define([
 
         return uncompressedPacket;
     }
-
-    return createTaskProcessorWorker(decodeGoogleEarthEnterprisePacket);
-});
+export default createTaskProcessorWorker(decodeGoogleEarthEnterprisePacket);

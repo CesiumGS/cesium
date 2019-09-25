@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/RuntimeError'
-    ], function(
-        RuntimeError) {
-    'use strict';
+import { RuntimeError } from '../../Source/Cesium.js';
+
+describe('Core/RuntimeError', function() {
 
     var name = 'RuntimeError';
     var testMessage = 'Testing';

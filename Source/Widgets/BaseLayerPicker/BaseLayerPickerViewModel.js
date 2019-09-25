@@ -1,22 +1,11 @@
-define([
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/DeveloperError',
-        '../../Core/EllipsoidTerrainProvider',
-        '../../Core/isArray',
-        '../../ThirdParty/knockout',
-        '../createCommand'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        EllipsoidTerrainProvider,
-        isArray,
-        knockout,
-        createCommand) {
-    'use strict';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import EllipsoidTerrainProvider from '../../Core/EllipsoidTerrainProvider.js';
+import isArray from '../../Core/isArray.js';
+import knockout from '../../ThirdParty/knockout.js';
+import createCommand from '../createCommand.js';
 
     /**
      * The view model for {@link BaseLayerPicker}.
@@ -285,6 +274,4 @@ define([
             }
         }
     });
-
-    return BaseLayerPickerViewModel;
-});
+export default BaseLayerPickerViewModel;

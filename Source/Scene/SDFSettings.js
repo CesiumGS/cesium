@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Settings for the generation of signed distance field glyphs
@@ -42,6 +38,4 @@ define([
          */
         CUTOFF: 0.25
     };
-
-    return freezeObject(SDFSettings);
-});
+export default freezeObject(SDFSettings);

@@ -1,6 +1,3 @@
-define([
-    ], function() {
-    'use strict';
 
     /**
      * Indicates what happened the last time this tile was visited for selection.
@@ -81,6 +78,4 @@ define([
             return value | 4;
         }
     };
-
-    return TileSelectionResult;
-});
+export default TileSelectionResult;

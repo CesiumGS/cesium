@@ -1,166 +1,79 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/Check',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/FeatureDetection',
-        '../Core/getAbsoluteUri',
-        '../Core/getMagic',
-        '../Core/getStringFromTypedArray',
-        '../Core/IndexDatatype',
-        '../Core/isArray',
-        '../Core/loadCRN',
-        '../Core/loadImageFromTypedArray',
-        '../Core/loadKTX',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/PixelFormat',
-        '../Core/PrimitiveType',
-        '../Core/Quaternion',
-        '../Core/Resource',
-        '../Core/Transforms',
-        '../Core/WebGLConstants',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Renderer/VertexArray',
-        '../ThirdParty/GltfPipeline/addDefaults',
-        '../ThirdParty/GltfPipeline/addPipelineExtras',
-        '../ThirdParty/GltfPipeline/ForEach',
-        '../ThirdParty/GltfPipeline/getAccessorByteStride',
-        '../ThirdParty/GltfPipeline/hasExtension',
-        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
-        '../ThirdParty/GltfPipeline/parseGlb',
-        '../ThirdParty/GltfPipeline/removePipelineExtras',
-        '../ThirdParty/GltfPipeline/updateVersion',
-        '../ThirdParty/when',
-        './Axis',
-        './BlendingState',
-        './ClippingPlaneCollection',
-        './ColorBlendMode',
-        './DracoLoader',
-        './getClipAndStyleCode',
-        './getClippingFunction',
-        './HeightReference',
-        './JobType',
-        './ModelAnimationCache',
-        './ModelAnimationCollection',
-        './ModelLoadResources',
-        './ModelMaterial',
-        './ModelMesh',
-        './ModelNode',
-        './ModelUtility',
-        './OctahedralProjectedCubeMap',
-        './processModelMaterialsCommon',
-        './processPbrMaterials',
-        './SceneMode',
-        './ShadowMode'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        Check,
-        clone,
-        Color,
-        combine,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        DistanceDisplayCondition,
-        FeatureDetection,
-        getAbsoluteUri,
-        getMagic,
-        getStringFromTypedArray,
-        IndexDatatype,
-        isArray,
-        loadCRN,
-        loadImageFromTypedArray,
-        loadKTX,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        PixelFormat,
-        PrimitiveType,
-        Quaternion,
-        Resource,
-        Transforms,
-        WebGLConstants,
-        Buffer,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        Sampler,
-        ShaderProgram,
-        ShaderSource,
-        Texture,
-        TextureMinificationFilter,
-        TextureWrap,
-        VertexArray,
-        addDefaults,
-        addPipelineExtras,
-        ForEach,
-        getAccessorByteStride,
-        hasExtension,
-        numberOfComponentsForType,
-        parseGlb,
-        removePipelineExtras,
-        updateVersion,
-        when,
-        Axis,
-        BlendingState,
-        ClippingPlaneCollection,
-        ColorBlendMode,
-        DracoLoader,
-        getClipAndStyleCode,
-        getClippingFunction,
-        HeightReference,
-        JobType,
-        ModelAnimationCache,
-        ModelAnimationCollection,
-        ModelLoadResources,
-        ModelMaterial,
-        ModelMesh,
-        ModelNode,
-        ModelUtility,
-        OctahedralProjectedCubeMap,
-        processModelMaterialsCommon,
-        processPbrMaterials,
-        SceneMode,
-        ShadowMode) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import Check from '../Core/Check.js';
+import clone from '../Core/clone.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import getAbsoluteUri from '../Core/getAbsoluteUri.js';
+import getMagic from '../Core/getMagic.js';
+import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import isArray from '../Core/isArray.js';
+import loadCRN from '../Core/loadCRN.js';
+import loadImageFromTypedArray from '../Core/loadImageFromTypedArray.js';
+import loadKTX from '../Core/loadKTX.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import Quaternion from '../Core/Quaternion.js';
+import Resource from '../Core/Resource.js';
+import Transforms from '../Core/Transforms.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import addDefaults from '../ThirdParty/GltfPipeline/addDefaults.js';
+import addPipelineExtras from '../ThirdParty/GltfPipeline/addPipelineExtras.js';
+import ForEach from '../ThirdParty/GltfPipeline/ForEach.js';
+import getAccessorByteStride from '../ThirdParty/GltfPipeline/getAccessorByteStride.js';
+import hasExtension from '../ThirdParty/GltfPipeline/hasExtension.js';
+import numberOfComponentsForType from '../ThirdParty/GltfPipeline/numberOfComponentsForType.js';
+import parseGlb from '../ThirdParty/GltfPipeline/parseGlb.js';
+import updateVersion from '../ThirdParty/GltfPipeline/updateVersion.js';
+import when from '../ThirdParty/when.js';
+import Axis from './Axis.js';
+import BlendingState from './BlendingState.js';
+import ClippingPlaneCollection from './ClippingPlaneCollection.js';
+import ColorBlendMode from './ColorBlendMode.js';
+import DracoLoader from './DracoLoader.js';
+import getClipAndStyleCode from './getClipAndStyleCode.js';
+import getClippingFunction from './getClippingFunction.js';
+import HeightReference from './HeightReference.js';
+import JobType from './JobType.js';
+import ModelAnimationCache from './ModelAnimationCache.js';
+import ModelAnimationCollection from './ModelAnimationCollection.js';
+import ModelLoadResources from './ModelLoadResources.js';
+import ModelMaterial from './ModelMaterial.js';
+import ModelMesh from './ModelMesh.js';
+import ModelNode from './ModelNode.js';
+import ModelUtility from './ModelUtility.js';
+import OctahedralProjectedCubeMap from './OctahedralProjectedCubeMap.js';
+import processModelMaterialsCommon from './processModelMaterialsCommon.js';
+import processPbrMaterials from './processPbrMaterials.js';
+import SceneMode from './SceneMode.js';
+import ShadowMode from './ShadowMode.js';
 
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
@@ -286,7 +199,7 @@ define([
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
+     * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
@@ -301,6 +214,7 @@ define([
      * @param {Number} [options.luminanceAtZenith=0.5] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @see Model.fromGltf
      *
@@ -355,6 +269,16 @@ define([
 
         var basePath = defaultValue(options.basePath, '');
         this._resource = Resource.createIfNeeded(basePath);
+
+        // User specified credit
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
+
+        // Create a list of Credit's so they can be added from the Resource later
+        this._resourceCredits = [];
 
         /**
          * Determines if the model primitive will be shown.
@@ -515,8 +439,7 @@ define([
          *
          * @default Color.WHITE
          */
-        this.color = defaultValue(options.color, Color.WHITE);
-        this._color = new Color();
+        this.color = Color.clone(defaultValue(options.color, Color.WHITE));
         this._colorPreviousAlpha = 1.0;
 
         /**
@@ -1246,6 +1169,16 @@ define([
                 this._shouldUpdateSpecularMapAtlas = this._shouldUpdateSpecularMapAtlas || value !== this._specularEnvironmentMaps;
                 this._specularEnvironmentMaps = value;
             }
+        },
+        /**
+         * Gets the credit that will be displayed for the model
+         * @memberof Model.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
         }
     });
 
@@ -1333,7 +1266,7 @@ define([
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
      * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
-     * @param {HeightReference} [options.heightReference] Determines how the model is drawn relative to terrain.
+     * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
      * @param {DistanceDisplayCondition} [options.distanceDisplayCondition] The condition specifying at what distance from the camera that this model will be displayed.
      * @param {Color} [options.color=Color.WHITE] A color that blends with the model's rendered color.
@@ -1343,6 +1276,7 @@ define([
      * @param {Number} [options.silhouetteSize=0.0] The size of the silhouette in pixels.
      * @param {ClippingPlaneCollection} [options.clippingPlanes] The {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      * @param {Boolean} [options.dequantizeInShader=true] Determines if a {@link https://github.com/google/draco|Draco} encoded model is dequantized on the GPU. This decreases total memory usage for encoded models.
+     * @param {Credit|String} [options.credit] A credit for the model, which is displayed on the canvas.
      *
      * @returns {Model} The newly created model.
      *
@@ -1432,6 +1366,15 @@ define([
                     // Load text (JSON) glTF
                     var json = getStringFromTypedArray(array);
                     cachedGltf.makeReady(JSON.parse(json));
+                }
+
+                var resourceCredits = model._resourceCredits;
+                var credits = modelResource.credits;
+                if (defined(credits)) {
+                    var length = credits.length;
+                    for (var i = 0; i < length; i++) {
+                        resourceCredits.push(credits[i]);
+                    }
                 }
             }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', modelResource.url));
         } else if (!cachedGltf.ready) {
@@ -3196,7 +3139,7 @@ define([
             var mInverseTranspose = new Matrix3();
             return function() {
                 Matrix4.inverse(runtimeNode.computedMatrix, mInverse);
-                Matrix4.getRotation(mInverse, mInverseTranspose);
+                Matrix4.getMatrix3(mInverse, mInverseTranspose);
                 return Matrix3.transpose(mInverseTranspose, mInverseTranspose);
             };
         },
@@ -3207,7 +3150,7 @@ define([
             return function() {
                 Matrix4.multiplyTransformation(uniformState.view, runtimeNode.computedMatrix, mv);
                 Matrix4.inverse(mv, mvInverse);
-                Matrix4.getRotation(mvInverse, mvInverseTranspose);
+                Matrix4.getMatrix3(mvInverse, mvInverseTranspose);
                 return Matrix3.transpose(mvInverseTranspose, mvInverseTranspose);
             };
         },
@@ -4986,6 +4929,17 @@ define([
                 }
             }
         }
+
+        var credit = this._credit;
+        if (defined(credit)) {
+            frameState.creditDisplay.addCredit(credit);
+        }
+
+        var resourceCredits = this._resourceCredits;
+        var creditCount = resourceCredits.length;
+        for (var c = 0; c < creditCount; c++) {
+            frameState.creditDisplay.addCredit(resourceCredits[c]);
+        }
     };
 
     function destroyIfNotCached(rendererResources, cachedRendererResources) {
@@ -5148,6 +5102,4 @@ define([
     // exposed for testing
     Model._getClippingFunction = getClippingFunction;
     Model._modifyShaderForColor = modifyShaderForColor;
-
-    return Model;
-});
+export default Model;

@@ -1,16 +1,9 @@
-defineSuite([
-        'Core/TaskProcessor',
-        'require',
-        'Core/FeatureDetection',
-        'ThirdParty/when',
-        'Specs/absolutize'
-    ], function(
-        TaskProcessor,
-        require,
-        FeatureDetection,
-        when,
-        absolutize) {
-    'use strict';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { TaskProcessor } from '../../Source/Cesium.js';
+import absolutize from '../absolutize.js';
+import { when } from '../../Source/Cesium.js';
+
+xdescribe('Core/TaskProcessor', function() {
 
     var taskProcessor;
 

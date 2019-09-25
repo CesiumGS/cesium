@@ -1,8 +1,4 @@
-define([
-        './WebGLConstants'
-    ], function(
-        WebGLConstants) {
-    'use strict';
+import WebGLConstants from './WebGLConstants.js';
 
     function webGLConstantToGlslType(webGLValue) {
         switch (webGLValue) {
@@ -26,5 +22,4 @@ define([
                 return 'bool';
         }
     }
-    return webGLConstantToGlslType;
-});
+export default webGLConstantToGlslType;

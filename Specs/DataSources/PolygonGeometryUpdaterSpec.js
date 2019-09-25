@@ -1,64 +1,33 @@
-defineSuite([
-        'DataSources/PolygonGeometryUpdater',
-        'Core/ApproximateTerrainHeights',
-        'Core/ArcType',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/CoplanarPolygonGeometry',
-        'Core/CoplanarPolygonOutlineGeometry',
-        'Core/PolygonGeometry',
-        'Core/PolygonOutlineGeometry',
-        'Core/PolygonHierarchy',
-        'Core/TimeIntervalCollection',
-        'DataSources/ConstantProperty',
-        'DataSources/Entity',
-        'DataSources/PolygonGraphics',
-        'DataSources/PropertyArray',
-        'DataSources/SampledPositionProperty',
-        'DataSources/SampledProperty',
-        'Scene/GroundPrimitive',
-        'Scene/HeightReference',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
-        'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterGroundGeometrySpecs',
-        'Specs/createGeometryUpdaterSpecs',
-        'Specs/createScene'
-    ], function(
-        PolygonGeometryUpdater,
-        ApproximateTerrainHeights,
-        ArcType,
-        Cartesian3,
-        Color,
-        Ellipsoid,
-        GeometryOffsetAttribute,
-        JulianDate,
-        CesiumMath,
-        CoplanarPolygonGeometry,
-        CoplanarPolygonOutlineGeometry,
-        PolygonGeometry,
-        PolygonOutlineGeometry,
-        PolygonHierarchy,
-        TimeIntervalCollection,
-        ConstantProperty,
-        Entity,
-        PolygonGraphics,
-        PropertyArray,
-        SampledPositionProperty,
-        SampledProperty,
-        GroundPrimitive,
-        HeightReference,
-        PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
-        createDynamicProperty,
-        createGeometryUpdaterGroundGeometrySpecs,
-        createGeometryUpdaterSpecs,
-        createScene) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { ArcType } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { CoplanarPolygonGeometry } from '../../Source/Cesium.js';
+import { CoplanarPolygonOutlineGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PolygonGeometry } from '../../Source/Cesium.js';
+import { PolygonHierarchy } from '../../Source/Cesium.js';
+import { PolygonOutlineGeometry } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { PolygonGeometryUpdater } from '../../Source/Cesium.js';
+import { PolygonGraphics } from '../../Source/Cesium.js';
+import { PropertyArray } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { GroundPrimitive } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createDynamicGeometryUpdaterSpecs from '../createDynamicGeometryUpdaterSpecs.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createGeometryUpdaterGroundGeometrySpecs from '../createGeometryUpdaterGroundGeometrySpecs.js';
+import createGeometryUpdaterSpecs from '../createGeometryUpdaterSpecs.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/PolygonGeometryUpdater', function() {
 
     var scene;
     var time;

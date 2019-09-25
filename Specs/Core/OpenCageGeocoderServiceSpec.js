@@ -1,16 +1,8 @@
-defineSuite([
-        'Core/OpenCageGeocoderService',
-        'Core/GeocodeType',
-        'Core/Cartesian3',
-        'Core/Resource',
-        'ThirdParty/when'
-    ], function(
-        OpenCageGeocoderService,
-        GeocodeType,
-        Cartesian3,
-        Resource,
-        when) {
-    'use strict';
+import { OpenCageGeocoderService } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/OpenCageGeocoderService', function() {
 
     var endpoint = 'https://api.opencagedata.com/geocode/v1/';
     var apiKey = 'c2a490d593b14612aefa6ec2e6b77c47';

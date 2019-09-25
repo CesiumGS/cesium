@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/RequestErrorEvent'
-    ], function(
-        RequestErrorEvent) {
-    'use strict';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+
+describe('Core/RequestErrorEvent', function() {
 
     it('parses response headers provided as a string', function() {
         var event = new RequestErrorEvent(404, 'foo', 'This-is-a-test: first\r\nAnother: second value!');

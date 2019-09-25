@@ -246,16 +246,16 @@ var i = 0.0;
 ```
 * :speedboat: Avoid redundant nested property access.  This
 ```javascript
-scene._state.isSkyAtmosphereVisible = true
-scene._state.isSunVisible = true;
-scene._state.isMoonVisible = false;
+scene.environmentState.isSkyAtmosphereVisible = true
+scene.environmentState.isSunVisible = true;
+scene.environmentState.isMoonVisible = false;
 ```
 is better written as
 ```javascript
-var state = scene._state;
-state.isSkyAtmosphereVisible = true
-state.isSunVisible = true;
-state.isMoonVisible = false;
+var environmentState = scene.environmentState;
+environmentState.isSkyAtmosphereVisible = true
+environmentState.isSunVisible = true;
+environmentState.isMoonVisible = false;
 ```
 * Do not create a local variable that is used only once unless it significantly improves readability, e.g.,
 ```javascript

@@ -1,22 +1,11 @@
-define([
-        '../Core/Clock',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/JulianDate',
-        './createRawPropertyDescriptor'
-    ], function(
-        Clock,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        JulianDate,
-        createRawPropertyDescriptor) {
-    'use strict';
+import Clock from '../Core/Clock.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import JulianDate from '../Core/JulianDate.js';
+import createRawPropertyDescriptor from './createRawPropertyDescriptor.js';
 
     /**
      * Represents desired clock settings for a particular {@link DataSource}.  These settings may be applied
@@ -172,6 +161,4 @@ define([
         result.clockStep = defaultValue(this.clockStep, result.clockStep);
         return result;
     };
-
-    return DataSourceClock;
-});
+export default DataSourceClock;

@@ -1,28 +1,16 @@
-defineSuite([
-        'Core/GroundPolylineGeometry',
-        'Core/ApproximateTerrainHeights',
-        'Core/ArcType',
-        'Core/arraySlice',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/Math',
-        'Core/WebMercatorProjection',
-        'Specs/createPackableSpecs'
-    ], function(
-        GroundPolylineGeometry,
-        ApproximateTerrainHeights,
-        ArcType,
-        arraySlice,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        GeographicProjection,
-        CesiumMath,
-        WebMercatorProjection,
-        createPackableSpecs) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { ArcType } from '../../Source/Cesium.js';
+import { arraySlice } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { GroundPolylineGeometry } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/GroundPolylineGeometry', function() {
 
     beforeAll(function() {
         return ApproximateTerrainHeights.initialize();

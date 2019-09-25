@@ -1,24 +1,14 @@
-defineSuite([
-        'Scene/EllipsoidSurfaceAppearance',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/GeometryInstance',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Scene/Appearance',
-        'Scene/Material',
-        'Scene/Primitive',
-        'Specs/createScene'
-    ], function(
-        EllipsoidSurfaceAppearance,
-        ColorGeometryInstanceAttribute,
-        GeometryInstance,
-        Rectangle,
-        RectangleGeometry,
-        Appearance,
-        Material,
-        Primitive,
-        createScene) {
-    'use strict';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { Appearance } from '../../Source/Cesium.js';
+import { EllipsoidSurfaceAppearance } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/EllipsoidSurfaceAppearance', function() {
 
     var scene;
     var rectangle;

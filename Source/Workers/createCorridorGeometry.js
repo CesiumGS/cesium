@@ -1,12 +1,6 @@
-define([
-        '../Core/CorridorGeometry',
-        '../Core/defined',
-        '../Core/Ellipsoid'
-    ], function(
-        CorridorGeometry,
-        defined,
-        Ellipsoid) {
-    'use strict';
+import CorridorGeometry from '../Core/CorridorGeometry.js';
+import defined from '../Core/defined.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
 
     function createCorridorGeometry(corridorGeometry, offset) {
         if (defined(offset)) {
@@ -15,6 +9,4 @@ define([
         corridorGeometry._ellipsoid = Ellipsoid.clone(corridorGeometry._ellipsoid);
         return CorridorGeometry.createGeometry(corridorGeometry);
     }
-
-    return createCorridorGeometry;
-});
+export default createCorridorGeometry;

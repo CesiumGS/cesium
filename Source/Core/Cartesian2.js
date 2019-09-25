@@ -1,18 +1,9 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './freezeObject',
-        './Math'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
 
     /**
      * A 2D Cartesian point.
@@ -741,6 +732,4 @@ define([
     Cartesian2.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ')';
     };
-
-    return Cartesian2;
-});
+export default Cartesian2;

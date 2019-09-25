@@ -1,22 +1,13 @@
-defineSuite([
-        'Scene/TileOrientedBoundingBox',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/Intersect',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Plane',
-        'Specs/createFrameState'
-    ], function(
-        TileOrientedBoundingBox,
-        Cartesian3,
-        Color,
-        Intersect,
-        CesiumMath,
-        Matrix3,
-        Plane,
-        createFrameState) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Plane } from '../../Source/Cesium.js';
+import { TileOrientedBoundingBox } from '../../Source/Cesium.js';
+import createFrameState from '../createFrameState.js';
+
+describe('Scene/TileOrientedBoundingBox', function() {
 
     var center = new Cartesian3(0.0, 0.0, 0.0);
     var halfAxes = Matrix3.fromScale(new Cartesian3(0.5, 0.5, 0.5), new Matrix3());

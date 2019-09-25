@@ -1,12 +1,6 @@
-define([
-        './Check',
-        './defined',
-        './defineProperties'
-    ], function(
-        Check,
-        defined,
-        defineProperties) {
-    'use strict';
+import Check from './Check.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
 
     /**
      * A generic utility class for managing subscribers for a particular event.
@@ -166,6 +160,4 @@ define([
      * A function that removes a listener.
      * @callback Event~RemoveCallback
      */
-
-    return Event;
-});
+export default Event;

@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Describes how the map will operate in 2D.
@@ -26,6 +22,4 @@ define([
          */
         INFINITE_SCROLL : 1
     };
-
-    return freezeObject(MapMode2D);
-});
+export default freezeObject(MapMode2D);

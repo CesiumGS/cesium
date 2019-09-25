@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     /**
      * A set of Earth Orientation Parameters (EOP) sampled at a time.
@@ -46,6 +44,4 @@ define(function() {
          */
         this.ut1MinusUtc = ut1MinusUtc;
     }
-
-    return EarthOrientationParametersSample;
-});
+export default EarthOrientationParametersSample;

@@ -1,8 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from './defined.js';
 
     /**
      * Freezes an object, using Object.freeze if available, otherwise returns
@@ -19,6 +15,4 @@ define([
             return o;
         };
     }
-
-    return freezeObject;
-});
+export default freezeObject;

@@ -1,60 +1,32 @@
-defineSuite([
-        'Scene/GroundPrimitive',
-        'Core/ApproximateTerrainHeights',
-        'Core/arraySlice',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/destroyObject',
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        'Core/Ellipsoid',
-        'Core/GeometryInstance',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/PolygonGeometry',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/ShowGeometryInstanceAttribute',
-        'Renderer/Pass',
-        'Renderer/RenderState',
-        'Scene/ClassificationType',
-        'Scene/EllipsoidSurfaceAppearance',
-        'Scene/InvertClassification',
-        'Scene/Material',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
-        'Scene/StencilConstants',
-        'Specs/createCanvas',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        GroundPrimitive,
-        ApproximateTerrainHeights,
-        arraySlice,
-        Color,
-        ColorGeometryInstanceAttribute,
-        destroyObject,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        Ellipsoid,
-        GeometryInstance,
-        HeadingPitchRange,
-        CesiumMath,
-        PolygonGeometry,
-        Rectangle,
-        RectangleGeometry,
-        ShowGeometryInstanceAttribute,
-        Pass,
-        RenderState,
-        ClassificationType,
-        EllipsoidSurfaceAppearance,
-        InvertClassification,
-        Material,
-        PerInstanceColorAppearance,
-        Primitive,
-        StencilConstants,
-        createCanvas,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { arraySlice } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { destroyObject } from '../../Source/Cesium.js';
+import { DistanceDisplayConditionGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PolygonGeometry } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { ShowGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { EllipsoidSurfaceAppearance } from '../../Source/Cesium.js';
+import { GroundPrimitive } from '../../Source/Cesium.js';
+import { InvertClassification } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { StencilConstants } from '../../Source/Cesium.js';
+import createCanvas from '../createCanvas.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/GroundPrimitive', function() {
 
     var scene;
     var context;

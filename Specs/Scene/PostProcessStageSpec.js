@@ -1,36 +1,20 @@
-defineSuite([
-        'Scene/PostProcessStage',
-        'Core/BoundingRectangle',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defined',
-        'Core/HeadingPitchRange',
-        'Core/Matrix4',
-        'Core/PixelFormat',
-        'Core/Transforms',
-        'Renderer/PixelDatatype',
-        'Scene/Model',
-        'Scene/PostProcessStageSampleMode',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        PostProcessStage,
-        BoundingRectangle,
-        Cartesian3,
-        Color,
-        defined,
-        HeadingPitchRange,
-        Matrix4,
-        PixelFormat,
-        Transforms,
-        PixelDatatype,
-        Model,
-        PostProcessStageSampleMode,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { PixelDatatype } from '../../Source/Cesium.js';
+import { Model } from '../../Source/Cesium.js';
+import { PostProcessStage } from '../../Source/Cesium.js';
+import { PostProcessStageSampleMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/PostProcessStage', function() {
 
     var scene;
 

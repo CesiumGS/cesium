@@ -1,62 +1,31 @@
-defineSuite([
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Color',
-        'Core/Ellipsoid',
-        'Core/FeatureDetection',
-        'Core/GeometryInstance',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/OrthographicFrustum',
-        'Core/PerspectiveFrustum',
-        'Core/Ray',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/ShowGeometryInstanceAttribute',
-        'Core/Transforms',
-        'Scene/Cesium3DTileset',
-        'Scene/Cesium3DTileStyle',
-        'Scene/EllipsoidSurfaceAppearance',
-        'Scene/Globe',
-        'Scene/PointPrimitiveCollection',
-        'Scene/Primitive',
-        'Scene/Scene',
-        'Scene/SceneMode',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createCanvas',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], 'Scene/Pick', function(
-        Cartesian3,
-        Cartographic,
-        Color,
-        Ellipsoid,
-        FeatureDetection,
-        GeometryInstance,
-        CesiumMath,
-        Matrix4,
-        OrthographicFrustum,
-        PerspectiveFrustum,
-        Ray,
-        Rectangle,
-        RectangleGeometry,
-        ShowGeometryInstanceAttribute,
-        Transforms,
-        Cesium3DTileset,
-        Cesium3DTileStyle,
-        EllipsoidSurfaceAppearance,
-        Globe,
-        PointPrimitiveCollection,
-        Primitive,
-        Scene,
-        SceneMode,
-        Cesium3DTilesTester,
-        createCanvas,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { OrthographicFrustum } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { Ray } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { ShowGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../Source/Cesium.js';
+import { EllipsoidSurfaceAppearance } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { PointPrimitiveCollection } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createCanvas from '../createCanvas.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/Pick', function() {
 
     // It's not easily possible to mock the most detailed pick functions
     // so don't run those tests when using the WebGL stub

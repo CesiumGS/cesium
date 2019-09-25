@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import { DeveloperError } from '../../Source/Cesium.js';
+
+describe('Core/DeveloperError', function() {
 
     var name = 'DeveloperError';
     var testMessage = 'Testing';

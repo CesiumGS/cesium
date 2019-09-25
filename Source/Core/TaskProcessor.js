@@ -1,32 +1,14 @@
-define([
-        '../ThirdParty/when',
-        './buildModuleUrl',
-        './defaultValue',
-        './defined',
-        './destroyObject',
-        './DeveloperError',
-        './Event',
-        './FeatureDetection',
-        './getAbsoluteUri',
-        './isCrossOriginUrl',
-        './Resource',
-        './RuntimeError',
-        'require'
-    ], function(
-        when,
-        buildModuleUrl,
-        defaultValue,
-        defined,
-        destroyObject,
-        DeveloperError,
-        Event,
-        FeatureDetection,
-        getAbsoluteUri,
-        isCrossOriginUrl,
-        Resource,
-        RuntimeError,
-        require) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import buildModuleUrl from './buildModuleUrl.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import destroyObject from './destroyObject.js';
+import DeveloperError from './DeveloperError.js';
+import Event from './Event.js';
+import FeatureDetection from './FeatureDetection.js';
+import isCrossOriginUrl from './isCrossOriginUrl.js';
+import Resource from './Resource.js';
+import RuntimeError from './RuntimeError.js';
 
     function canTransferArrayBuffer() {
         if (!defined(TaskProcessor._canTransferArrayBuffer)) {
@@ -370,6 +352,4 @@ define([
     TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
     TaskProcessor._loaderConfig = undefined;
     TaskProcessor._canTransferArrayBuffer = undefined;
-
-    return TaskProcessor;
-});
+export default TaskProcessor;

@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * A tonemapping algorithm when rendering with high dynamic range.
@@ -53,6 +49,4 @@ define([
                    tonemapper === Tonemapper.ACES;
         }
     };
-
-    return freezeObject(Tonemapper);
-});
+export default freezeObject(Tonemapper);

@@ -1,36 +1,17 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Renderer/ClearCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Renderbuffer',
-        '../Renderer/RenderbufferFormat',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap'
-    ], function(
-        Color,
-        defined,
-        destroyObject,
-        PixelFormat,
-        ClearCommand,
-        Framebuffer,
-        PixelDatatype,
-        Renderbuffer,
-        RenderbufferFormat,
-        RenderState,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import Renderbuffer from '../Renderer/Renderbuffer.js';
+import RenderbufferFormat from '../Renderer/RenderbufferFormat.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
 
     /**
      * @private
@@ -203,6 +184,4 @@ define([
         destroyResources(this);
         return destroyObject(this);
     };
-
-    return SceneFramebuffer;
-});
+export default SceneFramebuffer;

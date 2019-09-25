@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/defaultValue'
-    ], function(
-        defaultValue) {
-    'use strict';
+import { defaultValue } from '../../Source/Cesium.js';
+
+describe('Core/defaultValue', function() {
 
     it('Works with first parameter undefined', function() {
         expect(defaultValue(undefined, 5)).toEqual(5);

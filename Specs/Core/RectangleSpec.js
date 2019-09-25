@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/Rectangle',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Specs/createPackableSpecs'
-    ], function(
-        Rectangle,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        CesiumMath,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/Rectangle', function() {
 
     var west = -0.9;
     var south = 0.5;

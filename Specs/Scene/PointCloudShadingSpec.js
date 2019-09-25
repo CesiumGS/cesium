@@ -1,10 +1,7 @@
-defineSuite([
-        'Scene/PointCloudShading',
-        'Specs/createScene'
-    ], function(
-        PointCloudShading,
-        createScene) {
-    'use strict';
+import { PointCloudShading } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/PointCloudShading', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var pointCloudShading = new PointCloudShading();

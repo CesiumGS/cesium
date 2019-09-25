@@ -1,8 +1,4 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from './freezeObject.js';
 
     /**
      * This enumerated type is used in determining where, relative to the frustum, an
@@ -37,6 +33,4 @@ define([
          */
         INSIDE : 1
     };
-
-    return freezeObject(Intersect);
-});
+export default freezeObject(Intersect);

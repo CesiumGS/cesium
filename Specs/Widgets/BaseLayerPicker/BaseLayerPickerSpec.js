@@ -1,16 +1,10 @@
-defineSuite([
-        'Widgets/BaseLayerPicker/BaseLayerPicker',
-        'Core/EllipsoidTerrainProvider',
-        'Core/FeatureDetection',
-        'Scene/ImageryLayerCollection',
-        'Specs/DomEventSimulator'
-    ], function(
-        BaseLayerPicker,
-        EllipsoidTerrainProvider,
-        FeatureDetection,
-        ImageryLayerCollection,
-        DomEventSimulator) {
-    'use strict';
+import { EllipsoidTerrainProvider } from '../../../Source/Cesium.js';
+import { FeatureDetection } from '../../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../../Source/Cesium.js';
+import DomEventSimulator from '../../DomEventSimulator.js';
+import { BaseLayerPicker } from '../../../Source/Cesium.js';
+
+describe('Widgets/BaseLayerPicker/BaseLayerPicker', function() {
 
     function MockGlobe(){
         this.imageryLayers = new ImageryLayerCollection();

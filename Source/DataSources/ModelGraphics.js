@@ -1,22 +1,11 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './NodeTransformationProperty',
-        './PropertyBag'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createPropertyDescriptor,
-        NodeTransformationProperty,
-        PropertyBag) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import NodeTransformationProperty from './NodeTransformationProperty.js';
+import PropertyBag from './PropertyBag.js';
 
     function createNodeTransformationProperty(value) {
         return new NodeTransformationProperty(value);
@@ -406,6 +395,4 @@ define([
             }
         }
     };
-
-    return ModelGraphics;
-});
+export default ModelGraphics;

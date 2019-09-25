@@ -1,12 +1,6 @@
-define([
-        '../ThirdParty/Uri',
-        './defined',
-        './DeveloperError'
-    ], function(
-        Uri,
-        defined,
-        DeveloperError) {
-    'use strict';
+import Uri from '../ThirdParty/Uri.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Given a URI, returns the last segment of the URI, removing any path or query information.
@@ -35,6 +29,4 @@ define([
         }
         return path;
     }
-
-    return getFilenameFromUri;
-});
+export default getFilenameFromUri;

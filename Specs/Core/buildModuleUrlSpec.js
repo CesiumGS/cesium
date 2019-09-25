@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/buildModuleUrl',
-        'Core/Resource',
-        'ThirdParty/Uri'
-    ], function(
-        buildModuleUrl,
-        Resource,
-        Uri) {
-    'use strict';
+import { buildModuleUrl } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Uri } from '../../Source/Cesium.js';
+
+describe('Core/buildModuleUrl', function() {
 
     it('produces an absolute URL for a module', function() {
         var url = buildModuleUrl('Workers/transferTypedArrayTest.js');

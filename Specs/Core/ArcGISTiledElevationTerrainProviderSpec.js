@@ -1,30 +1,17 @@
-defineSuite([
-    'Core/ArcGISTiledElevationTerrainProvider',
-    'Core/DefaultProxy',
-    'Core/GeographicTilingScheme',
-    'Core/HeightmapTerrainData',
-    'Core/Math',
-    'Core/Request',
-    'Core/RequestScheduler',
-    'Core/Resource',
-    'Core/RuntimeError',
-    'Core/TerrainProvider',
-    'Core/WebMercatorTilingScheme',
-    'Specs/pollToPromise'
-], function(
-    ArcGISTiledElevationTerrainProvider,
-    DefaultProxy,
-    GeographicTilingScheme,
-    HeightmapTerrainData,
-    CesiumMath,
-    Request,
-    RequestScheduler,
-    Resource,
-    RuntimeError,
-    TerrainProvider,
-    WebMercatorTilingScheme,
-    pollToPromise) {
-'use strict';
+import { ArcGISTiledElevationTerrainProvider } from '../../Source/Cesium.js';
+import { DefaultProxy } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { HeightmapTerrainData } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { TerrainProvider } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Core/ArcGISTiledElevationTerrainProvider', function() {
 
 var lercTileUrl = 'Data/Images/Red16x16.png';
 var availability;

@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/clone'
-    ], function(
-        clone) {
-    'use strict';
+import { clone } from '../../Source/Cesium.js';
+
+describe('Core/clone', function() {
 
     it('can make shallow clones', function() {
         var obj = {

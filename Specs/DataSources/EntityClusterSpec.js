@@ -1,32 +1,18 @@
-defineSuite([
-        'DataSources/EntityCluster',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/defineProperties',
-        'Core/Ellipsoid',
-        'Core/Event',
-        'Core/JulianDate',
-        'DataSources/CustomDataSource',
-        'DataSources/DataSourceDisplay',
-        'DataSources/Entity',
-        'Scene/SceneTransforms',
-        'Specs/createCanvas',
-        'Specs/createScene'
-    ], function(
-        EntityCluster,
-        Cartesian2,
-        Cartesian3,
-        defineProperties,
-        Ellipsoid,
-        Event,
-        JulianDate,
-        CustomDataSource,
-        DataSourceDisplay,
-        Entity,
-        SceneTransforms,
-        createCanvas,
-        createScene) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { defineProperties } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { CustomDataSource } from '../../Source/Cesium.js';
+import { DataSourceDisplay } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { EntityCluster } from '../../Source/Cesium.js';
+import { SceneTransforms } from '../../Source/Cesium.js';
+import createCanvas from '../createCanvas.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/EntityCluster', function() {
 
     var scene;
     var cluster;

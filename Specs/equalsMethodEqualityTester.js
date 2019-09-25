@@ -1,10 +1,6 @@
-define([
-        'Core/defined'
-    ], function(
-        defined) {
-    'use strict';
+import { defined } from '../Source/Cesium.js';
 
-    return function(a, b) {
+    function equalsMethodEqualityTester(a, b) {
         var to_run;
         // if either a or b have an equals method, call it.
         if (a !== null && defined(a)) {
@@ -33,5 +29,5 @@ define([
 
         // fall back to default equality checks.
         return undefined;
-    };
-});
+    }
+export default equalsMethodEqualityTester;

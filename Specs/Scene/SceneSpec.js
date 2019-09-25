@@ -1,94 +1,49 @@
-defineSuite([
-        'Scene/Scene',
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/CesiumTerrainProvider',
-        'Core/Color',
-        'Core/defined',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/GeometryInstance',
-        'Core/HeadingPitchRoll',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/PerspectiveFrustum',
-        'Core/PixelFormat',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/RequestScheduler',
-        'Core/RuntimeError',
-        'Core/TaskProcessor',
-        'Core/WebGLConstants',
-        'Core/WebMercatorProjection',
-        'Renderer/DrawCommand',
-        'Renderer/Framebuffer',
-        'Renderer/Pass',
-        'Renderer/PixelDatatype',
-        'Renderer/RenderState',
-        'Renderer/ShaderProgram',
-        'Renderer/ShaderSource',
-        'Renderer/Texture',
-        'Scene/Camera',
-        'Scene/EllipsoidSurfaceAppearance',
-        'Scene/FrameState',
-        'Scene/Globe',
-        'Scene/Material',
-        'Scene/Primitive',
-        'Scene/PrimitiveCollection',
-        'Scene/SceneTransforms',
-        'Scene/ScreenSpaceCameraController',
-        'Scene/TweenCollection',
-        'Specs/createCanvas',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'Specs/render'
-    ], function(
-        Scene,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        CesiumTerrainProvider,
-        Color,
-        defined,
-        Ellipsoid,
-        GeographicProjection,
-        GeometryInstance,
-        HeadingPitchRoll,
-        JulianDate,
-        CesiumMath,
-        PerspectiveFrustum,
-        PixelFormat,
-        Rectangle,
-        RectangleGeometry,
-        RequestScheduler,
-        RuntimeError,
-        TaskProcessor,
-        WebGLConstants,
-        WebMercatorProjection,
-        DrawCommand,
-        Framebuffer,
-        Pass,
-        PixelDatatype,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        Texture,
-        Camera,
-        EllipsoidSurfaceAppearance,
-        FrameState,
-        Globe,
-        Material,
-        Primitive,
-        PrimitiveCollection,
-        SceneTransforms,
-        ScreenSpaceCameraController,
-        TweenCollection,
-        createCanvas,
-        createScene,
-        pollToPromise,
-        render) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CesiumTerrainProvider } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { TaskProcessor } from '../../Source/Cesium.js';
+import { WebGLConstants } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { DrawCommand } from '../../Source/Cesium.js';
+import { Framebuffer } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { PixelDatatype } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { ShaderProgram } from '../../Source/Cesium.js';
+import { ShaderSource } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { EllipsoidSurfaceAppearance } from '../../Source/Cesium.js';
+import { FrameState } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import { Scene } from '../../Source/Cesium.js';
+import { SceneTransforms } from '../../Source/Cesium.js';
+import { ScreenSpaceCameraController } from '../../Source/Cesium.js';
+import { TweenCollection } from '../../Source/Cesium.js';
+import createCanvas from '../createCanvas.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import render from '../render.js';
+
+describe('Scene/Scene', function() {
 
     var scene;
     var simpleShaderProgram;

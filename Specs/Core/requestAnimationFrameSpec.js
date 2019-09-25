@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/requestAnimationFrame',
-        'Core/cancelAnimationFrame',
-        'ThirdParty/when'
-    ], function(
-        requestAnimationFrame,
-        cancelAnimationFrame,
-        when) {
-    'use strict';
+import { cancelAnimationFrame } from '../../Source/Cesium.js';
+import { requestAnimationFrame } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/requestAnimationFrame', function() {
 
     it('calls the callback', function() {
         var deferred = when.defer();

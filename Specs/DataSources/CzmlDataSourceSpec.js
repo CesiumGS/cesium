@@ -1,100 +1,52 @@
-defineSuite([
-        'DataSources/CzmlDataSource',
-        'Core/ArcType',
-        'Core/BoundingRectangle',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/Color',
-        'Core/CornerType',
-        'Core/DistanceDisplayCondition',
-        'Core/Event',
-        'Core/ExtrapolationType',
-        'Core/Iso8601',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/NearFarScalar',
-        'Core/PolygonHierarchy',
-        'Core/Quaternion',
-        'Core/Rectangle',
-        'Core/ReferenceFrame',
-        'Core/Resource',
-        'Core/RuntimeError',
-        'Core/Spherical',
-        'Core/TimeInterval',
-        'Core/Transforms',
-        'Core/TranslationRotationScale',
-        'DataSources/CompositeEntityCollection',
-        'DataSources/CompositeMaterialProperty',
-        'DataSources/CompositePositionProperty',
-        'DataSources/CompositeProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EntityCollection',
-        'DataSources/ReferenceProperty',
-        'DataSources/SampledPositionProperty',
-        'DataSources/SampledProperty',
-        'DataSources/StripeOrientation',
-        'DataSources/TimeIntervalCollectionPositionProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/ClassificationType',
-        'Scene/ColorBlendMode',
-        'Scene/HeightReference',
-        'Scene/HorizontalOrigin',
-        'Scene/LabelStyle',
-        'Scene/ShadowMode',
-        'Scene/VerticalOrigin',
-        'ThirdParty/when'
-    ], function(
-        CzmlDataSource,
-        ArcType,
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        ClockRange,
-        ClockStep,
-        Color,
-        CornerType,
-        DistanceDisplayCondition,
-        Event,
-        ExtrapolationType,
-        Iso8601,
-        JulianDate,
-        CesiumMath,
-        NearFarScalar,
-        PolygonHierarchy,
-        Quaternion,
-        Rectangle,
-        ReferenceFrame,
-        Resource,
-        RuntimeError,
-        Spherical,
-        TimeInterval,
-        Transforms,
-        TranslationRotationScale,
-        CompositeEntityCollection,
-        CompositeMaterialProperty,
-        CompositePositionProperty,
-        CompositeProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EntityCollection,
-        ReferenceProperty,
-        SampledPositionProperty,
-        SampledProperty,
-        StripeOrientation,
-        TimeIntervalCollectionPositionProperty,
-        TimeIntervalCollectionProperty,
-        ClassificationType,
-        ColorBlendMode,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        ShadowMode,
-        VerticalOrigin,
-        when) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ClockRange } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { CornerType } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { ExtrapolationType } from '../../Source/Cesium.js';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { PolygonHierarchy } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { Spherical } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { TranslationRotationScale } from '../../Source/Cesium.js';
+import { CompositeEntityCollection } from '../../Source/Cesium.js';
+import { CompositeMaterialProperty } from '../../Source/Cesium.js';
+import { CompositePositionProperty } from '../../Source/Cesium.js';
+import { CompositeProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { CzmlDataSource } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { ReferenceProperty } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { StripeOrientation } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionPositionProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { ColorBlendMode } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { LabelStyle } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('DataSources/CzmlDataSource', function() {
 
     function makeDocument(packet) {
         var documentPacket = {
@@ -211,6 +163,7 @@ defineSuite([
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
         expect(dataSource.show).toEqual(true);
+        expect(dataSource.credit).toBeUndefined();
     });
 
     it('show sets underlying entity collection show.', function() {
@@ -237,6 +190,14 @@ defineSuite([
         }).then(function(dataSource) {
             expect(dataSource.name).toEqual('simple.czml');
         });
+    });
+
+    it('credit gets set from options', function() {
+        return CzmlDataSource.load(nameCzml, {
+                credit: 'This is my credit'
+            }).then(function(dataSource) {
+                expect(dataSource.credit).toBeInstanceOf(Credit);
+            });
     });
 
     it('does not overwrite existing name if CZML name is undefined', function() {

@@ -1,32 +1,18 @@
-defineSuite([
-        'Widgets/CesiumInspector/CesiumInspectorViewModel',
-        'Core/defined',
-        'Core/GeometryInstance',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/WebMercatorTilingScheme',
-        'Scene/EllipsoidSurfaceAppearance',
-        'Scene/Globe',
-        'Scene/GlobeSurfaceTile',
-        'Scene/Primitive',
-        'Scene/QuadtreeTile',
-        'Specs/createScene'
-    ], function(
-        CesiumInspectorViewModel,
-        defined,
-        GeometryInstance,
-        CesiumMath,
-        Rectangle,
-        RectangleGeometry,
-        WebMercatorTilingScheme,
-        EllipsoidSurfaceAppearance,
-        Globe,
-        GlobeSurfaceTile,
-        Primitive,
-        QuadtreeTile,
-        createScene) {
-    'use strict';
+import { defined } from '../../../Source/Cesium.js';
+import { GeometryInstance } from '../../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../../Source/Cesium.js';
+import { Rectangle } from '../../../Source/Cesium.js';
+import { RectangleGeometry } from '../../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../../Source/Cesium.js';
+import { EllipsoidSurfaceAppearance } from '../../../Source/Cesium.js';
+import { Globe } from '../../../Source/Cesium.js';
+import { GlobeSurfaceTile } from '../../../Source/Cesium.js';
+import { Primitive } from '../../../Source/Cesium.js';
+import { QuadtreeTile } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
+import { CesiumInspectorViewModel } from '../../../Source/Cesium.js';
+
+describe('Widgets/CesiumInspector/CesiumInspectorViewModel', function() {
 
     var scene;
     var performanceContainer;

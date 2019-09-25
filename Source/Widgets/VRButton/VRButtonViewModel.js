@@ -1,30 +1,15 @@
-define([
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/EventHelper',
-        '../../Core/Fullscreen',
-        '../../Core/OrthographicFrustum',
-        '../../ThirdParty/knockout',
-        '../../ThirdParty/NoSleep',
-        '../createCommand',
-        '../getElement'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        EventHelper,
-        Fullscreen,
-        OrthographicFrustum,
-        knockout,
-        NoSleep,
-        createCommand,
-        getElement) {
-    'use strict';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import EventHelper from '../../Core/EventHelper.js';
+import Fullscreen from '../../Core/Fullscreen.js';
+import OrthographicFrustum from '../../Core/OrthographicFrustum.js';
+import knockout from '../../ThirdParty/knockout.js';
+import NoSleep from '../../ThirdParty/NoSleep.js';
+import createCommand from '../createCommand.js';
+import getElement from '../getElement.js';
 
     function lockScreen(orientation) {
         var locked = false;
@@ -236,6 +221,4 @@ define([
         document.removeEventListener(Fullscreen.changeEventName, this._callback);
         destroyObject(this);
     };
-
-    return VRButtonViewModel;
-});
+export default VRButtonViewModel;

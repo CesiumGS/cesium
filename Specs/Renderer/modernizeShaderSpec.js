@@ -1,8 +1,6 @@
-defineSuite([
-        'Renderer/modernizeShader'
-    ], function(
-        modernizeShader) {
-    'use strict';
+import { modernizeShader } from '../../Source/Cesium.js';
+
+describe('Renderer/modernizeShader', function() {
 
     it('adds version string', function() {
         var simple =

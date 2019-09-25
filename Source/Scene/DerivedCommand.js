@@ -1,16 +1,7 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Renderer/DrawCommand',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderSource'
-    ], function(
-        defaultValue,
-        defined,
-        DrawCommand,
-        RenderState,
-        ShaderSource) {
-    'use strict';
+import defined from '../Core/defined.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
 
     /**
      * @private
@@ -284,7 +275,7 @@ define([
     }
 
     function getPickRenderState(scene, renderState) {
-        var cache = scene._pickRenderStateCache;
+        var cache = scene.picking.pickRenderStateCache;
         var pickState = cache[renderState.id];
         if (!defined(pickState)) {
             var rs = RenderState.getState(renderState);
@@ -373,6 +364,4 @@ define([
 
         return result;
     };
-
-    return DerivedCommand;
-});
+export default DerivedCommand;

@@ -1,34 +1,15 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defined',
-        '../Core/DistanceDisplayCondition',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Core/RectangleCollisionChecker',
-        '../Scene/ClassificationType',
-        '../Scene/GroundPrimitive',
-        '../Scene/ShadowVolumeAppearance',
-        './BoundingSphereState',
-        './ColorMaterialProperty',
-        './MaterialProperty',
-        './Property'
-    ], function(
-        AssociativeArray,
-        ColorGeometryInstanceAttribute,
-        defined,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        ShowGeometryInstanceAttribute,
-        RectangleCollisionChecker,
-        ClassificationType,
-        GroundPrimitive,
-        ShadowVolumeAppearance,
-        BoundingSphereState,
-        ColorMaterialProperty,
-        MaterialProperty,
-        Property) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import defined from '../Core/defined.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import RectangleCollisionChecker from '../Core/RectangleCollisionChecker.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import GroundPrimitive from '../Scene/GroundPrimitive.js';
+import ShadowVolumeAppearance from '../Scene/ShadowVolumeAppearance.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import MaterialProperty from './MaterialProperty.js';
+import Property from './Property.js';
 
     var distanceDisplayConditionScratch = new DistanceDisplayCondition();
     var defaultDistanceDisplayCondition = new DistanceDisplayCondition();
@@ -360,6 +341,4 @@ define([
         }
         this._items.length = 0;
     };
-
-    return StaticGroundGeometryPerMaterialBatch;
-});
+export default StaticGroundGeometryPerMaterialBatch;

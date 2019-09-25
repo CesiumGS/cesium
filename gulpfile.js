@@ -23,6 +23,7 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
+var gulpJsonTransform = require('gulp-json-transform');
 var Promise = require('bluebird');
 var requirejs = require('requirejs');
 var Karma = require('karma');
@@ -94,6 +95,22 @@ var filesToSortRequires = ['Source/**/*.js',
                            '!Apps/Sandcastle/Sandcastle-warn.js',
                            '!Apps/Sandcastle/gallery/gallery-index.js'];
 
+var filesToConvertES6 = ['Source/**/*.js',
+                         'Specs/**/*.js',
+                         '!Source/ThirdParty/**',
+                         '!Source/Cesium.js',
+                         '!Source/main.js',
+                         '!Source/copyrightHeader.js',
+                         '!Source/Shaders/**',
+                         '!Source/Workers/cesiumWorkerBootstrapper.js',
+                         '!Source/Workers/transferTypedArrayTest.js',
+                         '!Specs/karma-main.js',
+                         '!Specs/karma.conf.js',
+                         '!Specs/spec-main.js',
+                         '!Specs/SpecList.js',
+                         '!Specs/TestWorkers/**'
+                        ];
+
 gulp.task('build', function(done) {
     mkdirp.sync('Build');
     glslToJavaScript(minifyShaders, 'Build/minifyShaders.state');
@@ -130,6 +147,27 @@ gulp.task('requirejs', function(done) {
     requirejs.optimize(config, function() {
         done();
     }, done);
+});
+
+// optimizeApproximateTerrainHeights can be used to regenerate the approximateTerrainHeights
+// file from an overly precise terrain heights file to reduce bandwidth
+// the approximate terrain heights are only used when the terrain provider does not have this
+// information and not a high level of precision is required
+gulp.task('optimizeApproximateTerrainHeights', function() {
+    var argv = yargs.usage('Usage: optimizeApproximateTerrainHeights -p [degree of precision]').argv;
+    var precision = typeof argv.p !== undefined ? argv.p : 1;
+    precision = Math.pow(10, precision);
+    return gulp.src('Source/Assets/approximateTerrainHeightsPrecise.json')
+        .pipe(gulpJsonTransform(function(data, file) {
+            Object.entries(data).forEach(function(entry) {
+                var values = entry[1];
+                data[entry[0]] = [Math.floor(values[0] * precision) / precision,
+                                  Math.ceil(values[1] * precision) / precision ];
+            });
+            return data;
+        }))
+        .pipe(gulpRename('approximateTerrainHeights.json'))
+        .pipe(gulp.dest('Source/Assets/'));
 });
 
 function cloc() {
@@ -254,6 +292,13 @@ function generateDocumentation() {
     });
 }
 gulp.task('generateDocumentation', generateDocumentation);
+
+gulp.task('generateDocumentation-watch', function() {
+    return generateDocumentation().done(function() {
+        console.log('Listening for changes in documentation...');
+        return gulp.watch(sourceFiles, gulp.series('generateDocumentation'));
+    });
+});
 
 gulp.task('release', gulp.series('generateStubs', combine, minifyRelease, generateDocumentation));
 
@@ -766,7 +811,7 @@ gulp.task('test', function(done) {
 
 gulp.task('sortRequires', function() {
     var noModulesRegex = /[\s\S]*?define\(function\(\)/;
-    var requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
+    var requiresRegex = /([\s\S]*?(define|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
     var splitRegex = /,\s*/;
 
     var fsReadFile = Promise.promisify(fs.readFile);
@@ -784,13 +829,6 @@ gulp.task('sortRequires', function() {
                     console.log(file + ' does not have the expected syntax.');
                 }
                 return;
-            }
-
-            // In specs, the first require is significant,
-            // unless the spec is given an explicit name.
-            var preserveFirst = false;
-            if (result[2] === 'defineSuite' && result[4] === ', function') {
-                preserveFirst = true;
             }
 
             var names = result[3].split(splitRegex);
@@ -820,7 +858,7 @@ gulp.task('sortRequires', function() {
 
             var requires = [];
 
-            for (i = preserveFirst ? 1 : 0; i < names.length && i < identifiers.length; ++i) {
+            for (i = 0; i < names.length && i < identifiers.length; ++i) {
                 requires.push({
                     name : names[i].trim(),
                     identifier : identifiers[i].trim()
@@ -837,13 +875,6 @@ gulp.task('sortRequires', function() {
                 }
                 return 0;
             });
-
-            if (preserveFirst) {
-                requires.splice(0, 0, {
-                    name : names[0].trim(),
-                    identifier : identifiers[0].trim()
-                });
-            }
 
             // Convert back to separate lists for the names and identifiers, and add
             // any additional names or identifiers that don't have a corresponding pair.
@@ -880,6 +911,137 @@ gulp.task('sortRequires', function() {
                        outputIdentifiers +
                        ') {' +
                        result[6];
+
+            return fsWriteFile(file, contents);
+        });
+    });
+});
+
+gulp.task('convertToModules', function() {
+    var requiresRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
+    var noModulesRegex = /([\s\S]*?(define|defineSuite|require)\((?:{[\s\S]*}, )?\[?)([\S\s]*?)]?([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
+    var splitRegex = /,\s*/;
+
+    var fsReadFile = Promise.promisify(fs.readFile);
+    var fsWriteFile = Promise.promisify(fs.writeFile);
+
+    var files = globby.sync(filesToConvertES6);
+
+    return Promise.map(files, function(file) {
+        return fsReadFile(file).then(function(contents) {
+            contents = contents.toString();
+            if (contents.startsWith('import')) {
+                return;
+            }
+
+            var result = requiresRegex.exec(contents);
+
+            if (result === null) {
+                result = noModulesRegex.exec(contents);
+                if (result === null) {
+                    return;
+                }
+            }
+
+            var names = result[3].split(splitRegex);
+            if (names.length === 1 && names[0].trim() === '') {
+                names.length = 0;
+            }
+
+            var i;
+            for (i = 0; i < names.length; ++i) {
+                if (names[i].indexOf('//') >= 0 || names[i].indexOf('/*') >= 0) {
+                    console.log(file + ' contains comments in the require list.  Skipping so nothing gets broken.');
+                    return;
+                }
+            }
+
+            var identifiers = result[5].split(splitRegex);
+            if (identifiers.length === 1 && identifiers[0].trim() === '') {
+                identifiers.length = 0;
+            }
+
+            for (i = 0; i < identifiers.length; ++i) {
+                if (identifiers[i].indexOf('//') >= 0 || identifiers[i].indexOf('/*') >= 0) {
+                    console.log(file + ' contains comments in the require list.  Skipping so nothing gets broken.');
+                    return;
+                }
+            }
+
+            var requires = [];
+
+            for (i = 0; i < names.length && i < identifiers.length; ++i) {
+                requires.push({
+                    name : names[i].trim(),
+                    identifier : identifiers[i].trim()
+                });
+            }
+
+            // Convert back to separate lists for the names and identifiers, and add
+            // any additional names or identifiers that don't have a corresponding pair.
+            var sortedNames = requires.map(function(item) {
+                return item.name.slice(0, -1) + '.js\'';
+            });
+            for (i = sortedNames.length; i < names.length; ++i) {
+                sortedNames.push(names[i].trim());
+            }
+
+            var sortedIdentifiers = requires.map(function(item) {
+                return item.identifier;
+            });
+            for (i = sortedIdentifiers.length; i < identifiers.length; ++i) {
+                sortedIdentifiers.push(identifiers[i].trim());
+            }
+
+            contents = '';
+            if (sortedNames.length > 0) {
+                for (var q = 0; q < sortedNames.length; q++) {
+                    var modulePath = sortedNames[q];
+                    if (file.startsWith('Specs')) {
+                        modulePath = modulePath.substring(1, modulePath.length - 1);
+                        var sourceDir = path.dirname(file);
+
+                        if (modulePath.startsWith('Specs') || modulePath.startsWith('.')) {
+                            var importPath = modulePath;
+                            if (modulePath.startsWith('Specs')) {
+                                importPath = path.relative(sourceDir, modulePath);
+                                if (importPath[0] !== '.') {
+                                    importPath = './' + importPath;
+                                }
+                            }
+                            modulePath = '\'' + importPath + '\'';
+                            contents += 'import ' + sortedIdentifiers[q] + ' from ' + modulePath + ';' + os.EOL;
+                        } else {
+                            modulePath = '\'' + path.relative(sourceDir, 'Source') + '/Cesium.js' + '\'';
+                            if (sortedIdentifiers[q] === 'CesiumMath') {
+                                contents += 'import { Math as CesiumMath } from ' + modulePath + ';' + os.EOL;
+                            } else {
+                                contents += 'import { ' + sortedIdentifiers[q] + ' } from ' + modulePath + ';' + os.EOL;
+                            }
+                        }
+                    } else {
+                        contents += 'import { ' + sortedIdentifiers[q] + ' } from ' + modulePath + ';' + os.EOL;
+                    }
+                }
+            }
+
+            var code;
+            var codeAndReturn = result[6];
+            if (file.endsWith('Spec.js')) {
+                var indi = codeAndReturn.lastIndexOf('});');
+                code = codeAndReturn.slice(0, indi);
+                code = code.trim().replace("'use strict';" + os.EOL, '');
+                contents += code + os.EOL;
+            } else {
+                var returnIndex = codeAndReturn.lastIndexOf('return');
+
+                code = codeAndReturn.slice(0, returnIndex);
+                code = code.trim().replace("'use strict';" + os.EOL, '');
+                contents += code + os.EOL;
+
+                var returnStatement = codeAndReturn.slice(returnIndex);
+                contents += returnStatement.split(';')[0].replace('return ', 'export default ') + ';' + os.EOL;
+            }
 
             return fsWriteFile(file, contents);
         });

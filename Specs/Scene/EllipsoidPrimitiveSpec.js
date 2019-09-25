@@ -1,18 +1,11 @@
-defineSuite([
-        'Scene/EllipsoidPrimitive',
-        'Core/Cartesian3',
-        'Core/defined',
-        'Core/Matrix4',
-        'Scene/Material',
-        'Specs/createScene'
-    ], function(
-        EllipsoidPrimitive,
-        Cartesian3,
-        defined,
-        Matrix4,
-        Material,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { EllipsoidPrimitive } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/EllipsoidPrimitive', function() {
 
     var scene;
     var ellipsoid;

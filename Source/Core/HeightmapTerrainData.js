@@ -1,40 +1,20 @@
-define([
-        '../ThirdParty/when',
-        './BoundingSphere',
-        './Cartesian3',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './GeographicProjection',
-        './HeightmapEncoding',
-        './HeightmapTessellator',
-        './OrientedBoundingBox',
-        './Math',
-        './Rectangle',
-        './TaskProcessor',
-        './TerrainEncoding',
-        './TerrainMesh',
-        './TerrainProvider'
-    ], function(
-        when,
-        BoundingSphere,
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        GeographicProjection,
-        HeightmapEncoding,
-        HeightmapTessellator,
-        OrientedBoundingBox,
-        CesiumMath,
-        Rectangle,
-        TaskProcessor,
-        TerrainEncoding,
-        TerrainMesh,
-        TerrainProvider) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import GeographicProjection from './GeographicProjection.js';
+import HeightmapEncoding from './HeightmapEncoding.js';
+import HeightmapTessellator from './HeightmapTessellator.js';
+import CesiumMath from './Math.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import Rectangle from './Rectangle.js';
+import TaskProcessor from './TaskProcessor.js';
+import TerrainEncoding from './TerrainEncoding.js';
+import TerrainMesh from './TerrainMesh.js';
+import TerrainProvider from './TerrainProvider.js';
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a heightmap.  A heightmap
@@ -668,6 +648,4 @@ define([
         }
         heights[index + i] = height;
     }
-
-    return HeightmapTerrainData;
-});
+export default HeightmapTerrainData;

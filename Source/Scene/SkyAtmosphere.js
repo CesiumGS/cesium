@@ -1,52 +1,26 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/Ellipsoid',
-        '../Core/EllipsoidGeometry',
-        '../Core/GeometryPipeline',
-        '../Core/Math',
-        '../Core/VertexFormat',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArray',
-        '../Shaders/SkyAtmosphereFS',
-        '../Shaders/SkyAtmosphereVS',
-        './BlendingState',
-        './CullFace',
-        './ImagerySplitDirection',
-        './SceneMode'
-    ], function(
-        Cartesian3,
-        Cartesian4,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        Ellipsoid,
-        EllipsoidGeometry,
-        GeometryPipeline,
-        CesiumMath,
-        VertexFormat,
-        BufferUsage,
-        DrawCommand,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArray,
-        SkyAtmosphereFS,
-        SkyAtmosphereVS,
-        BlendingState,
-        CullFace,
-        ImagerySplitDirection,
-        SceneMode) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import EllipsoidGeometry from '../Core/EllipsoidGeometry.js';
+import GeometryPipeline from '../Core/GeometryPipeline.js';
+import CesiumMath from '../Core/Math.js';
+import VertexFormat from '../Core/VertexFormat.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import RenderState from '../Renderer/RenderState.js';
+import ImagerySplitDirection from './ImagerySplitDirection.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import SkyAtmosphereFS from '../Shaders/SkyAtmosphereFS.js';
+import SkyAtmosphereVS from '../Shaders/SkyAtmosphereVS.js';
+import BlendingState from './BlendingState.js';
+import CullFace from './CullFace.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * An atmosphere drawn around the limb of the provided ellipsoid.  Based on
@@ -350,6 +324,4 @@ define([
         this._spSkyFromAtmosphereColorCorrect = this._spSkyFromAtmosphereColorCorrect && this._spSkyFromAtmosphereColorCorrect.destroy();
         return destroyObject(this);
     };
-
-    return SkyAtmosphere;
-});
+export default SkyAtmosphere;

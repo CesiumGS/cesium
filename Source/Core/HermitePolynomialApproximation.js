@@ -1,14 +1,7 @@
-define([
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Math'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        CesiumMath) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     var factorial = CesiumMath.factorial;
 
@@ -290,6 +283,4 @@ define([
 
         return highestNonZero;
     }
-
-    return HermitePolynomialApproximation;
-});
+export default HermitePolynomialApproximation;

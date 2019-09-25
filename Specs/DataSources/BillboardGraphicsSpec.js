@@ -1,26 +1,15 @@
-defineSuite([
-        'DataSources/BillboardGraphics',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/NearFarScalar',
-        'DataSources/ConstantProperty',
-        'Scene/HeightReference',
-        'Scene/HorizontalOrigin',
-        'Scene/VerticalOrigin'
-    ], function(
-        BillboardGraphics,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        NearFarScalar,
-        ConstantProperty,
-        HeightReference,
-        HorizontalOrigin,
-        VerticalOrigin) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { BillboardGraphics } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+
+describe('DataSources/BillboardGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {

@@ -1,18 +1,8 @@
-define([
-        '../ThirdParty/when',
-        './Check',
-        './defined',
-        './defaultValue',
-        './FeatureDetection',
-        './Resource'
-    ], function(
-        when,
-        Check,
-        defined,
-        defaultValue,
-        FeatureDetection,
-        Resource) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Resource from './Resource.js';
 
     /**
      * @private
@@ -64,6 +54,4 @@ define([
                 return when.reject(error);
             });
     }
-
-    return loadImageFromTypedArray;
-});
+export default loadImageFromTypedArray;

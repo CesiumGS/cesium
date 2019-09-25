@@ -1,30 +1,15 @@
-define([
-    '../Core/Cartesian3',
-    '../Core/Cartographic',
-    '../Core/Check',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/destroyObject',
-    '../Core/Event',
-    '../Core/Iso8601',
-    '../Core/Math',
-    '../Scene/HeightReference',
-    '../Scene/SceneMode',
-    './Property'
-], function(
-    Cartesian3,
-    Cartographic,
-    Check,
-    defined,
-    defineProperties,
-    destroyObject,
-    Event,
-    Iso8601,
-    CesiumMath,
-    HeightReference,
-    SceneMode,
-    Property) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Check from '../Core/Check.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import Event from '../Core/Event.js';
+import Iso8601 from '../Core/Iso8601.js';
+import CesiumMath from '../Core/Math.js';
+import HeightReference from '../Scene/HeightReference.js';
+import SceneMode from '../Scene/SceneMode.js';
+import Property from './Property.js';
 
     var scratchPosition = new Cartesian3();
     var scratchCarto = new Cartographic();
@@ -203,6 +188,4 @@ define([
      * @param {Cartesian3} result The result position
      * @returns {Cartesian3} The position at which to do the terrain height check
      */
-
-    return TerrainOffsetProperty;
-});
+export default TerrainOffsetProperty;

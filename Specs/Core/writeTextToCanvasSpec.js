@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/writeTextToCanvas',
-        'Core/Color'
-    ], function(
-        writeTextToCanvas,
-        Color) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { writeTextToCanvas } from '../../Source/Cesium.js';
+
+describe('Core/writeTextToCanvas', function() {
 
     it('returns undefined when text is blank', function() {
         var canvas = writeTextToCanvas('');

@@ -1,46 +1,25 @@
-defineSuite([
-        'DataSources/PointVisualizer',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defined',
-        'Core/defineProperties',
-        'Core/DistanceDisplayCondition',
-        'Core/Ellipsoid',
-        'Core/Event',
-        'Core/JulianDate',
-        'Core/NearFarScalar',
-        'DataSources/BoundingSphereState',
-        'DataSources/ConstantProperty',
-        'DataSources/EntityCluster',
-        'DataSources/EntityCollection',
-        'DataSources/PointGraphics',
-        'Scene/BillboardCollection',
-        'Scene/HeightReference',
-        'Scene/PointPrimitiveCollection',
-        'Specs/createScene'
-    ], function(
-        PointVisualizer,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        defined,
-        defineProperties,
-        DistanceDisplayCondition,
-        Ellipsoid,
-        Event,
-        JulianDate,
-        NearFarScalar,
-        BoundingSphereState,
-        ConstantProperty,
-        EntityCluster,
-        EntityCollection,
-        PointGraphics,
-        BillboardCollection,
-        HeightReference,
-        PointPrimitiveCollection,
-        createScene) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { defineProperties } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { BoundingSphereState } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EntityCluster } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { PointGraphics } from '../../Source/Cesium.js';
+import { PointVisualizer } from '../../Source/Cesium.js';
+import { BillboardCollection } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { PointPrimitiveCollection } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/PointVisualizer', function() {
 
     var scene;
     var entityCluster;

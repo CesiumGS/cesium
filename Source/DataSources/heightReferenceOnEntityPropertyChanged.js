@@ -1,16 +1,7 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        './CallbackProperty',
-        './GeometryUpdater',
-        './TerrainOffsetProperty'
-    ], function(
-        defaultValue,
-        defined,
-        CallbackProperty,
-        GeometryUpdater,
-        TerrainOffsetProperty) {
-    'use strict';
+import defined from '../Core/defined.js';
+import CallbackProperty from './CallbackProperty.js';
+import GeometryUpdater from './GeometryUpdater.js';
+import TerrainOffsetProperty from './TerrainOffsetProperty.js';
 
     function heightReferenceOnEntityPropertyChanged(entity, propertyName, newValue, oldValue) {
         GeometryUpdater.prototype._onEntityPropertyChanged.call(this, entity, propertyName, newValue, oldValue);
@@ -35,6 +26,4 @@ define([
             this._terrainOffsetProperty = new TerrainOffsetProperty(this._scene, centerPosition, heightReferenceProperty);
         }
     }
-
-    return heightReferenceOnEntityPropertyChanged;
-});
+export default heightReferenceOnEntityPropertyChanged;

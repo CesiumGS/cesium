@@ -1,14 +1,7 @@
-define([
-        '../ThirdParty/when',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/formatError'
-    ], function(
-        when,
-        defaultValue,
-        defined,
-        formatError) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import formatError from '../Core/formatError.js';
+import when from '../ThirdParty/when.js';
 
     // createXXXGeometry functions may return Geometry or a Promise that resolves to Geometry
     // if the function requires access to ApproximateTerrainHeights.
@@ -53,7 +46,6 @@ define([
         var postMessage;
 
         return function(event) {
-            /*global self*/
             var data = event.data;
 
             var transferableObjects = [];
@@ -131,6 +123,4 @@ define([
      *
      * @param {Object} event The onmessage event object.
      */
-
-    return createTaskProcessorWorker;
-});
+export default createTaskProcessorWorker;

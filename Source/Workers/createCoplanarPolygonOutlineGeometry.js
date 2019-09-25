@@ -1,12 +1,6 @@
-define([
-    '../Core/defined',
-    '../Core/CoplanarPolygonOutlineGeometry',
-    '../Core/Ellipsoid'
-], function(
-    defined,
-    CoplanarPolygonOutlineGeometry,
-    Ellipsoid) {
-    'use strict';
+import CoplanarPolygonOutlineGeometry from '../Core/CoplanarPolygonOutlineGeometry.js';
+import defined from '../Core/defined.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
 
     function createCoplanarPolygonOutlineGeometry(polygonGeometry, offset) {
         if (defined(offset)) {
@@ -15,6 +9,4 @@ define([
         polygonGeometry._ellipsoid = Ellipsoid.clone(polygonGeometry._ellipsoid);
         return CoplanarPolygonOutlineGeometry.createGeometry(polygonGeometry);
     }
-
-    return createCoplanarPolygonOutlineGeometry;
-});
+export default createCoplanarPolygonOutlineGeometry;

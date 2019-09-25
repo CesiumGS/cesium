@@ -1,60 +1,30 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/HeadingPitchRoll',
-        '../Core/IntersectionTests',
-        '../Core/isArray',
-        '../Core/KeyboardEventModifier',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/OrthographicFrustum',
-        '../Core/Plane',
-        '../Core/Quaternion',
-        '../Core/Ray',
-        '../Core/Transforms',
-        './CameraEventAggregator',
-        './CameraEventType',
-        './MapMode2D',
-        './SceneMode',
-        './SceneTransforms',
-        './TweenCollection'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        defaultValue,
-        defined,
-        destroyObject,
-        DeveloperError,
-        Ellipsoid,
-        HeadingPitchRoll,
-        IntersectionTests,
-        isArray,
-        KeyboardEventModifier,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        OrthographicFrustum,
-        Plane,
-        Quaternion,
-        Ray,
-        Transforms,
-        CameraEventAggregator,
-        CameraEventType,
-        MapMode2D,
-        SceneMode,
-        SceneTransforms,
-        TweenCollection) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import HeadingPitchRoll from '../Core/HeadingPitchRoll.js';
+import IntersectionTests from '../Core/IntersectionTests.js';
+import isArray from '../Core/isArray.js';
+import KeyboardEventModifier from '../Core/KeyboardEventModifier.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import Plane from '../Core/Plane.js';
+import Quaternion from '../Core/Quaternion.js';
+import Ray from '../Core/Ray.js';
+import Transforms from '../Core/Transforms.js';
+import CameraEventAggregator from './CameraEventAggregator.js';
+import CameraEventType from './CameraEventType.js';
+import MapMode2D from './MapMode2D.js';
+import SceneMode from './SceneMode.js';
+import SceneTransforms from './SceneTransforms.js';
+import TweenCollection from './TweenCollection.js';
 
     /**
      * Modifies the camera position and orientation based on mouse input to a canvas.
@@ -2017,6 +1987,4 @@ define([
         this._aggregator = this._aggregator && this._aggregator.destroy();
         return destroyObject(this);
     };
-
-    return ScreenSpaceCameraController;
-});
+export default ScreenSpaceCameraController;

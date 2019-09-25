@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        require.config({
-            baseUrl : '../../../Source',
-            waitSeconds : 60
-        });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -34,7 +29,7 @@ var scene = viewer.scene;
 var positionOnEllipsoid = Cesium.Cartesian3.fromDegrees(-105.0, 45.0, 20.0);
 
 var enu = Cesium.Transforms.eastNorthUpToFixedFrame(positionOnEllipsoid);
-var rotation = Cesium.Matrix4.getRotation(enu, new Cesium.Matrix3());
+var rotation = Cesium.Matrix4.getMatrix3(enu, new Cesium.Matrix3());
 Cesium.Matrix3.multiply(rotation, Cesium.Matrix3.fromRotationX(-Cesium.Math.PI_OVER_TWO), rotation);
 var orientation = Cesium.Quaternion.fromRotationMatrix(rotation);
 
@@ -92,9 +87,8 @@ frustumPrimitive.readyPromise.then(function(primitive) {
 Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
-startup(Cesium);
-} else if (typeof require === 'function') {
-require(['Cesium'], startup);
+    window.startupCalled = true;
+    startup(Cesium);
 }
 </script>
 </body>

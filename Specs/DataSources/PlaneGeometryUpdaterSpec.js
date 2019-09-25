@@ -1,36 +1,20 @@
-defineSuite([
-        'DataSources/PlaneGeometryUpdater',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'Core/Plane',
-        'Core/TimeIntervalCollection',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/Entity',
-        'DataSources/PlaneGraphics',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
-        'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterSpecs',
-        'Specs/createScene'
-    ], function(
-        PlaneGeometryUpdater,
-        Cartesian2,
-        Cartesian3,
-        JulianDate,
-        Plane,
-        TimeIntervalCollection,
-        ConstantPositionProperty,
-        ConstantProperty,
-        Entity,
-        PlaneGraphics,
-        PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
-        createDynamicProperty,
-        createGeometryUpdaterSpecs,
-        createScene) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Plane } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { PlaneGeometryUpdater } from '../../Source/Cesium.js';
+import { PlaneGraphics } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createDynamicGeometryUpdaterSpecs from '../createDynamicGeometryUpdaterSpecs.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createGeometryUpdaterSpecs from '../createGeometryUpdaterSpecs.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/PlaneGeometryUpdater', function() {
 
     var scene;
 

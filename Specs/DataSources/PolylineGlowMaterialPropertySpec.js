@@ -1,20 +1,12 @@
-defineSuite([
-        'DataSources/PolylineGlowMaterialProperty',
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'DataSources/ConstantProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Specs/testDefinitionChanged'
-    ], function(
-        PolylineGlowMaterialProperty,
-        Color,
-        JulianDate,
-        TimeInterval,
-        ConstantProperty,
-        TimeIntervalCollectionProperty,
-        testDefinitionChanged) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { PolylineGlowMaterialProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
+
+describe('DataSources/PolylineGlowMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new PolylineGlowMaterialProperty();

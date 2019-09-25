@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Defines how per-feature colors set from the Cesium API or declarative styling blend with the source colors from
@@ -55,6 +51,4 @@ define([
          */
         MIX : 2
     };
-
-    return freezeObject(Cesium3DTileColorBlendMode);
-});
+export default freezeObject(Cesium3DTileColorBlendMode);

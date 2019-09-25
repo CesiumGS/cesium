@@ -1,8 +1,4 @@
-define([
-        './SceneMode'
-    ], function(
-        SceneMode) {
-    'use strict';
+import SceneMode from './SceneMode.js';
 
     /**
      * State information about the current frame.  An instance of this class
@@ -402,6 +398,4 @@ define([
      *
      * @callback FrameState~AfterRenderCallback
      */
-
-    return FrameState;
-});
+export default FrameState;

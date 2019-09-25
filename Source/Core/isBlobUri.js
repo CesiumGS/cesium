@@ -1,8 +1,4 @@
-define([
-        './Check'
-    ], function(
-        Check) {
-    'use strict';
+import Check from './Check.js';
 
     var blobUriRegex = /^blob:/i;
 
@@ -23,6 +19,4 @@ define([
 
         return blobUriRegex.test(uri);
     }
-
-    return isBlobUri;
-});
+export default isBlobUri;

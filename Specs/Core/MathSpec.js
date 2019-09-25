@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/Math'
-    ], function(
-        CesiumMath) {
-    'use strict';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+
+describe('Core/Math', function() {
 
     it('sign of -2', function() {
         expect(CesiumMath.sign(-2)).toEqual(-1);

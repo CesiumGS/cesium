@@ -1,82 +1,37 @@
-define([
-        '../Core/arraySlice',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/FeatureDetection',
-        '../Core/IndexDatatype',
-        '../Core/Matrix4',
-        '../Core/PrimitiveType',
-        '../Core/RuntimeError',
-        '../Core/Transforms',
-        '../Core/WebGLConstants',
-        '../ThirdParty/GltfPipeline/addDefaults',
-        '../ThirdParty/GltfPipeline/ForEach',
-        '../ThirdParty/GltfPipeline/getAccessorByteStride',
-        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
-        '../ThirdParty/GltfPipeline/parseGlb',
-        '../ThirdParty/GltfPipeline/updateVersion',
-        '../ThirdParty/when',
-        './Axis',
-        './ClassificationType',
-        './ModelLoadResources',
-        './ModelUtility',
-        './processModelMaterialsCommon',
-        './processPbrMaterials',
-        './SceneMode',
-        './Vector3DTileBatch',
-        './Vector3DTilePrimitive'
-    ], function(
-        arraySlice,
-        BoundingSphere,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        combine,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        FeatureDetection,
-        IndexDatatype,
-        Matrix4,
-        PrimitiveType,
-        RuntimeError,
-        Transforms,
-        WebGLConstants,
-        addDefaults,
-        ForEach,
-        getAccessorByteStride,
-        numberOfComponentsForType,
-        parseGlb,
-        updateVersion,
-        when,
-        Axis,
-        ClassificationType,
-        ModelLoadResources,
-        ModelUtility,
-        processModelMaterialsCommon,
-        processPbrMaterials,
-        SceneMode,
-        Vector3DTileBatch,
-        Vector3DTilePrimitive) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import arraySlice from '../Core/arraySlice.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Transforms from '../Core/Transforms.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import addDefaults from '../ThirdParty/GltfPipeline/addDefaults.js';
+import ForEach from '../ThirdParty/GltfPipeline/ForEach.js';
+import getAccessorByteStride from '../ThirdParty/GltfPipeline/getAccessorByteStride.js';
+import numberOfComponentsForType from '../ThirdParty/GltfPipeline/numberOfComponentsForType.js';
+import parseGlb from '../ThirdParty/GltfPipeline/parseGlb.js';
+import updateVersion from '../ThirdParty/GltfPipeline/updateVersion.js';
+import when from '../ThirdParty/when.js';
+import Axis from './Axis.js';
+import ModelLoadResources from './ModelLoadResources.js';
+import ModelUtility from './ModelUtility.js';
+import processModelMaterialsCommon from './processModelMaterialsCommon.js';
+import processPbrMaterials from './processPbrMaterials.js';
+import SceneMode from './SceneMode.js';
+import Vector3DTileBatch from './Vector3DTileBatch.js';
+import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
 
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
@@ -1078,6 +1033,4 @@ define([
         this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
-
-    return ClassificationModel;
-});
+export default ClassificationModel;

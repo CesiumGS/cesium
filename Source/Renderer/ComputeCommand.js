@@ -1,10 +1,5 @@
-define([
-        '../Core/defaultValue',
-        './Pass'
-    ], function(
-        defaultValue,
-        Pass) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import Pass from './Pass.js';
 
     /**
      * Represents a command to the renderer for GPU Compute (using old-school GPGPU).
@@ -107,11 +102,9 @@ define([
     /**
      * Executes the compute command.
      *
-     * @param {Context} computeEngine The context that processes the compute command.
+     * @param {ComputeEngine} computeEngine The context that processes the compute command.
      */
     ComputeCommand.prototype.execute = function(computeEngine) {
         computeEngine.execute(this);
     };
-
-    return ComputeCommand;
-});
+export default ComputeCommand;

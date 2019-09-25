@@ -1,18 +1,9 @@
-define([
-        '../Core/CompressedTextureBuffer',
-        '../Core/defined',
-        '../Core/PixelFormat',
-        '../Core/RuntimeError',
-        '../ThirdParty/crunch',
-        './createTaskProcessorWorker'
-    ], function(
-        CompressedTextureBuffer,
-        defined,
-        PixelFormat,
-        RuntimeError,
-        crunch,
-        createTaskProcessorWorker) {
-    'use strict';
+import CompressedTextureBuffer from '../Core/CompressedTextureBuffer.js';
+import defined from '../Core/defined.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import crunch from '../ThirdParty/crunch.js';
+import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     // Modified from texture-tester
     // See:
@@ -142,6 +133,4 @@ define([
         transferableObjects.push(level0DXTData.buffer);
         return new CompressedTextureBuffer(format, width, height, level0DXTData);
     }
-
-    return createTaskProcessorWorker(transcodeCRNToDXT);
-});
+export default createTaskProcessorWorker(transcodeCRNToDXT);

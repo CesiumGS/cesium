@@ -1,20 +1,10 @@
-define([
-        '../Core/clone',
-        '../Core/combine',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        './BlendingState',
-        './CullFace'
-    ], function(
-        clone,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        BlendingState,
-        CullFace) {
-    'use strict';
+import clone from '../Core/clone.js';
+import combine from '../Core/combine.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import BlendingState from './BlendingState.js';
+import CullFace from './CullFace.js';
 
     /**
      * An appearance defines the full GLSL vertex and fragment shaders and the
@@ -38,6 +28,7 @@ define([
      * @see DebugAppearance
      * @see PolylineColorAppearance
      * @see PolylineMaterialAppearance
+     * @see PerInstanceColorAppearance
      *
      * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Geometry%20and%20Appearances.html|Geometry and Appearances Demo}
      */
@@ -209,6 +200,4 @@ define([
 
         return rs;
     };
-
-    return Appearance;
-});
+export default Appearance;

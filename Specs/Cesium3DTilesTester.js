@@ -1,26 +1,13 @@
-define([
-        'Core/arrayFill',
-        'Core/Color',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/JulianDate',
-        'Core/Resource',
-        'Scene/Cesium3DTileContentFactory',
-        'Scene/Cesium3DTileset',
-        'Scene/TileBoundingSphere',
-        'Specs/pollToPromise'
-    ], function(
-        arrayFill,
-        Color,
-        defaultValue,
-        defined,
-        JulianDate,
-        Resource,
-        Cesium3DTileContentFactory,
-        Cesium3DTileset,
-        TileBoundingSphere,
-        pollToPromise) {
-    'use strict';
+import { arrayFill } from '../Source/Cesium.js';
+import { Color } from '../Source/Cesium.js';
+import { defaultValue } from '../Source/Cesium.js';
+import { defined } from '../Source/Cesium.js';
+import { JulianDate } from '../Source/Cesium.js';
+import { Resource } from '../Source/Cesium.js';
+import { Cesium3DTileContentFactory } from '../Source/Cesium.js';
+import { Cesium3DTileset } from '../Source/Cesium.js';
+import { TileBoundingSphere } from '../Source/Cesium.js';
+import pollToPromise from './pollToPromise.js';
 
     var mockTile = {
         contentBoundingVolume : new TileBoundingSphere(),
@@ -466,6 +453,4 @@ define([
 
         return buffer;
     };
-
-    return Cesium3DTilesTester;
-});
+export default Cesium3DTilesTester;
