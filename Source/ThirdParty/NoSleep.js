@@ -2,13 +2,13 @@ var tmp = {};
 
 /*! NoSleep.js v0.9.0 - git.io/vfn01 - Rich Tibbett - MIT license */
 (function webpackUniversalModuleDefinition(root, factory) {
-	if(typeof exports === 'object' && typeof module === 'object')
-		module.exports = factory();
-	else if(typeof define === 'function' && define.amd)
-		define([], factory);
-	else if(typeof exports === 'object')
-		exports["NoSleep"] = factory();
-	else
+	// if(typeof exports === 'object' && typeof module === 'object')
+	// 	module.exports = factory();
+	// else if(typeof define === 'function' && define.amd)
+	// 	define([], factory);
+	// else if(typeof exports === 'object')
+	// 	exports["NoSleep"] = factory();
+	// else
 		root["NoSleep"] = factory();
 })(tmp, function() {
 return /******/ (function(modules) { // webpackBootstrap
