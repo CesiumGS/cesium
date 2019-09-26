@@ -378,7 +378,7 @@ define([
                     hasCustomOrientation = true;
                 } else if (eastNorthUp) {
                     Transforms.eastNorthUpToFixedFrame(instancePosition, Ellipsoid.WGS84, instanceTransform);
-                    Matrix4.getRotation(instanceTransform, instanceRotation);
+                    Matrix4.getMatrix3(instanceTransform, instanceRotation);
                 } else {
                     Matrix3.clone(Matrix3.IDENTITY, instanceRotation);
                 }

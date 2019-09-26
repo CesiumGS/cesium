@@ -1023,6 +1023,27 @@ define([
         return result;
     };
 
+    var UNIT = new Cartesian3(1, 1, 1);
+
+    /**
+     * Extracts the rotation assuming the matrix is an affine transformation.
+     *
+     * @param {Matrix3} matrix The matrix.
+     * @param {Matrix3} result The object onto which to store the result.
+     * @returns {Matrix3} The modified result parameter
+     */
+    Matrix3.getRotation = function(matrix, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('matrix', matrix);
+        Check.typeOf.object('result', result);
+        //>>includeEnd('debug');
+
+        var inverseScale = Cartesian3.divideComponents(UNIT, Matrix3.getScale(matrix, scratchScale), scratchScale);
+        result = Matrix3.multiplyByScale(matrix, inverseScale, result);
+
+        return result;
+    };
+
     function computeFrobeniusNorm(matrix) {
         var norm = 0.0;
         for (var i = 0; i < 9; ++i) {
