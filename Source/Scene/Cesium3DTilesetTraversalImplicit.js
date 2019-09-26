@@ -58,10 +58,21 @@ define([
             return;
         }
 
-        // The tileset doesn't meet the SSE requirement, therefore the tree does not need to be rendered
-        if (root.getScreenSpaceError(frameState, true) <= tileset._maximumScreenSpaceError) {
+        // Determine how far down we should go
+        // ADD: _maximumTraversalLevel is the max content level we can explicitly check, starting at content root
+        // REPLACE: _maximumTraversalLevel - 1 is the max content level we can explicitly check, starting at tileset root
+
+        var isAdd = tileset._allTilesAdditive;
+        var tilesetStartLevel = tileset._startLevel;
+        var maxConentCheckLevel = isAdd ? tileset._maximumTraversalLevel : tileset._maximumTraversalLevel - 1;
+        var contentRootAccessible = isAdd ? tilesetStartLevel <= maxConentCheckLevel : tilesetStartLevel - 1 <= maxConentCheckLevel;
+        if (!contentRootAccessible) {
             return;
         }
+        // The tileset doesn't meet the SSE requirement, therefore the tree does not need to be rendered
+        // if (root.getScreenSpaceError(frameState, true) <= tileset._maximumScreenSpaceError) {
+        //     return;
+        // }
 
         executeBaseTraversal(tileset, root, frameState);
 
@@ -104,29 +115,29 @@ define([
         }
     }
 
-    function selectDescendants(tileset, root, frameState) {
-        var stack = descendantTraversal.stack;
-        stack.push(root);
-        while (stack.length > 0) {
-            descendantTraversal.stackMaximumLength = Math.max(descendantTraversal.stackMaximumLength, stack.length);
-            var tile = stack.pop();
-            var children = tile.children;
-            var childrenLength = children.length;
-            for (var i = 0; i < childrenLength; ++i) {
-                var child = children[i];
-                if (isVisible(child)) {
-                    if (child.contentAvailable) {
-                        updateTile(tileset, child, frameState);
-                        touchTile(tileset, child, frameState);
-                        selectTile(tileset, child, frameState);
-                    } else if (child._depth - root._depth < descendantSelectionDepth) {
-                        // Continue traversing, but not too far
-                        stack.push(child);
-                    }
-                }
-            }
-        }
-    }
+    // function selectDescendants(tileset, root, frameState) {
+    //     var stack = descendantTraversal.stack;
+    //     stack.push(root);
+    //     while (stack.length > 0) {
+    //         descendantTraversal.stackMaximumLength = Math.max(descendantTraversal.stackMaximumLength, stack.length);
+    //         var tile = stack.pop();
+    //         var children = tile.children;
+    //         var childrenLength = children.length;
+    //         for (var i = 0; i < childrenLength; ++i) {
+    //             var child = children[i];
+    //             if (isVisible(child)) {
+    //                 if (child.contentAvailable) {
+    //                     updateTile(tileset, child, frameState);
+    //                     touchTile(tileset, child, frameState);
+    //                     selectTile(tileset, child, frameState);
+    //                 } else if (child._depth - root._depth < descendantSelectionDepth) {
+    //                     // Continue traversing, but not too far
+    //                     stack.push(child);
+    //                 }
+    //             }
+    //         }
+    //     }
+    // }
 
     function selectDesiredTile(tileset, tile, frameState) {
         if (tile.contentAvailable) {
@@ -204,17 +215,17 @@ define([
         tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
     }
 
-    function anyChildrenVisible(tileset, tile, frameState) {
-        var anyVisible = false;
-        var children = tile.children;
-        var length = children.length;
-        for (var i = 0; i < length; ++i) {
-            var child = children[i];
-            updateVisibility(tileset, child, frameState);
-            anyVisible = anyVisible || isVisible(child);
-        }
-        return anyVisible;
-    }
+    // function anyChildrenVisible(tileset, tile, frameState) {
+    //     var anyVisible = false;
+    //     var children = tile.children;
+    //     var length = children.length;
+    //     for (var i = 0; i < length; ++i) {
+    //         var child = children[i];
+    //         updateVisibility(tileset, child, frameState);
+    //         anyVisible = anyVisible || isVisible(child);
+    //     }
+    //     return anyVisible;
+    // }
 
     function meetsScreenSpaceErrorEarly(tileset, tile, frameState) {
         var parent = tile.parent;
@@ -239,7 +250,8 @@ define([
             // The root tile may be culled by the children bounds optimization in which
             // case this tile should also be culled.
             var child = tile.children[0];
-            updateTileVisibility(tileset, child, frameState);
+            // updateTileVisibility(tileset, child, frameState);
+            updateVisibility(tileset, child, frameState);
             tile._visible = child._visible;
             return;
         }
@@ -249,23 +261,11 @@ define([
             tile._visible = false;
             return;
         }
-
-        // // Optimization - if none of the tile's children are visible then this tile isn't visible
-        // var replace = tile.refine === Cesium3DTileRefine.REPLACE;
-        // var useOptimization = tile._optimChildrenWithinParent === Cesium3DTileOptimizationHint.USE_OPTIMIZATION;
-        // if (replace && useOptimization && hasChildren) {
-        //     if (!anyChildrenVisible(tileset, tile, frameState)) {
-        //         ++tileset._statistics.numberOfTilesCulledWithChildrenUnion;
-        //         tile._visible = false;
-        //         return;
-        //     }
-        // }
     }
 
     function updateTile(tileset, tile, frameState) {
         // Reset some of the tile's flags and re-evaluate visibility
         updateTileVisibility(tileset, tile, frameState);
-        // tile.updateExpiration();
     }
 
     function updateTileAncestorContentLinks(tile, frameState) {
@@ -319,14 +319,14 @@ define([
         var checkRefines = replace && !hasEmptyContent(tile);
         var refines = true;
 
-        var anyChildrenVisible = false;
+        var hasVisibleChild = false;
 
         var child;
         for (i = 0; i < length; ++i) {
             child = children[i];
             if (isVisible(child)) {
                 stack.push(child);
-                anyChildrenVisible = true;
+                hasVisibleChild = true;
             } else if (checkRefines || tileset.loadSiblings) {
                 // Keep non-visible children loaded since they are still needed before the parent can refine.
                 // Or loadSiblings is true so always load tiles regardless of visibility.
@@ -346,7 +346,7 @@ define([
             }
         }
 
-        if (!anyChildrenVisible) {
+        if (!hasVisibleChild) {
             refines = false;
         }
 

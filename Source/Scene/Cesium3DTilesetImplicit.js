@@ -1008,6 +1008,8 @@ define([
                 var asset = tilesetJson.asset;
                 that._asset = asset;
                 that._tilingScheme = tilesetJson.tilingScheme;
+                var tilingScheme = that._tilingScheme;
+                that._allTilesAdditive = tilingScheme.refine === 'ADD' || tilingScheme.refine === 'add';
                 that._properties = tilesetJson.properties;
                 that._geometricError = tilesetJson.geometricError * 2;
                 that._geometricErrorContentRoot = tilesetJson.geometricError;
@@ -1060,10 +1062,7 @@ define([
 
                 if (hasSubtreeArray) {
                     // TODO: add check to  make sure length correct given subdivision type and subtreeLevels
-                    var tilingScheme = that._tilingScheme;
-                    //TODO: REMOVE, JUST TESTING SOMETHING
-                    // tilingScheme.refine = Cesium3DTileRefine.REPLACE;
-                    that._allTilesAdditive = tilingScheme.refine === Cesium3DTileRefine.ADD;
+                    // var tilingScheme = that._tilingScheme;
                     // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
                     // Get the basePath relative to the external tileset.
                     // var rootInfo = {

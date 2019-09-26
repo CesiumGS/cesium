@@ -712,7 +712,7 @@ define([
         }
     });
 
-    var scratchCartesian = new Cartesian3();
+    // var scratchCartesian = new Cartesian3();
     // function isPriorityDeferred(tile, frameState) {
     //     var tileset = tile._tileset;
     //
@@ -1595,15 +1595,15 @@ define([
         frameState.commandList = savedCommandList;
     };
 
-    function isolateDigits(normalizedValue, numberOfDigits, leftShift) {
-        var scaled = normalizedValue * Math.pow(10, numberOfDigits);
-        var integer = parseInt(scaled);
-        return integer * Math.pow(10, leftShift);
-    }
+    // function isolateDigits(normalizedValue, numberOfDigits, leftShift) {
+    //     var scaled = normalizedValue * Math.pow(10, numberOfDigits);
+    //     var integer = parseInt(scaled);
+    //     return integer * Math.pow(10, leftShift);
+    // }
 
-    function priorityNormalizeAndClamp(value, minimum, maximum) {
-        return Math.max(CesiumMath.normalize(value, minimum, maximum) - CesiumMath.EPSILON7, 0.0); // Subtract epsilon since we only want decimal digits present in the output.
-    }
+    // function priorityNormalizeAndClamp(value, minimum, maximum) {
+    //     return Math.max(CesiumMath.normalize(value, minimum, maximum) - CesiumMath.EPSILON7, 0.0); // Subtract epsilon since we only want decimal digits present in the output.
+    // }
 
     /**
      * Sets the priority of the tile based on distance and depth
