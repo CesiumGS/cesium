@@ -265,9 +265,9 @@ define([
 
         // TODO: Cache/Manager class that has some or all of these values as
         // well as any subtree precomputation (array sizes, sse sphere radii, etc)
-        // this._subtreeCache = new Map(); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
+        // this._subtreeInfo = new Map(); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
         // this._tiles = new Map(); // Holds the subtree tiles, Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is an Array of tiles (undefined spots are unavailable)
-        this._subtreeCache = undefined; // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
+        this._subtreeInfo = undefined; // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
         // this._subtreeViewer = new ImplicitSubtreeViewer(this); // TODO: Make class with the toroidial multi dimensional array to make iteration easier, needs to update small portions every frame
         // I think there are two portions? ancestor portion 1d array and the normal portion which is a 3d array (fixed sizes on each level?) toroidial array?
         // what happens when sse changes? re-init the fixed size arrays? prevent going below some value in tileset (during the set)?
@@ -1072,7 +1072,7 @@ define([
                     //     refine: tilingScheme.refine,
                     // };
 
-                    that._subtreeCache = new SubtreeInfo(that);
+                    that._subtreeInfo = new SubtreeInfo(that);
                     that._root = that.updateTilesetFromSubtree(resource, subtreeArrayBuffer, rootKey);
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
@@ -2147,7 +2147,7 @@ define([
     };
 
     /**
-     * Updates the _subtreeCache and _tiles maps from the subtreeArrayBuffer payload
+     * Updates the _subtreeInfo and _tiles maps from the subtreeArrayBuffer payload
      *
      * @private
      */
@@ -2180,7 +2180,7 @@ define([
 
         // Finally, assign to the map
         // var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
-        this._subtreeCache.set(subtree, subtreeRootKey);
+        this._subtreeInfo.set(subtree, subtreeRootKey);
     };
 
     Cesium3DTilesetImplicit.prototype.getGeomtricErrorBase = function() {
@@ -2188,7 +2188,7 @@ define([
     };
 
     /**
-     * Updates the _subtreeCache arrays as well as updates the metadata view of
+     * Updates the _subtreeInfo arrays as well as updates the metadata view of
      * the tileset tree given a layerJson
      *
      * @private
@@ -2207,7 +2207,7 @@ define([
 
         var key = subtreeRootKey.w + '/' + subtreeRootKey.x + '/' + subtreeRootKey.y + '/' + subtreeRootKey.z;
 
-        var subtreeCache = this._subtreeCache;
+        var subtreeCache = this._subtreeInfo;
         // if (subtreeCache.has(key)) {
         if (subtreeCache.has(subtreeRootKey, key)) {
             throw new RuntimeError('DEBUG: Subtree already exists?');

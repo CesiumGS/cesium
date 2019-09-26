@@ -151,12 +151,18 @@ define([
      */
     SubtreeInfo.prototype.subtreesInRange = function(startLevel, endLevel) {
         var subtreesInRange = [];
-
         var stack = [];
-        stack.push(this);
 
         var current;
-        var children, key, child;
+        var children, key, value, child;
+        children = this._subtreesMap;
+        for ([key, child] of children) {
+            if (!defined(child)) {
+                continue;
+            }
+            stack.push(child);
+        }
+
         while(stack.length > 0) {
             current = stack.pop();
             if (!current.inRange(startLevel, endLevel)) {
@@ -170,9 +176,11 @@ define([
             }
 
             children = current._subtreesMap;
-            for (key in children){
-                child = children[key];
-                stack.push(child[0]);
+            for ([key, child] of children) {
+                if (!defined(child)) {
+                    continue;
+                }
+                stack.push(child);
             }
         }
 

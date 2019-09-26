@@ -345,7 +345,7 @@ define([
         // For now maybe: ask tileset.subtreeInfo for an array of subtreeInfo's
         // for all the levels we have to process, then on each level we get a
         // subset from this list for subtrees at the tree level we are processing
-        // var allSubtrees = tileset.subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck); // TODO: Maybe later update this to take min max x, y ,z?
+        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck); // TODO: Maybe later update this to take min max x, y ,z?
         var contentLevel;
         for (contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
 
