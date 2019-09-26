@@ -189,7 +189,7 @@ describe('Scene/BingMapsImageryProvider', function() {
             var url = request.url;
             if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
+                Resource._DefaultImplementations.createImage(request, crossOrigin, deferred, true, true);
             } else {
                 if (defined(expectedUrl)) {
                     var uri = new Uri(url);
@@ -207,7 +207,7 @@ describe('Scene/BingMapsImageryProvider', function() {
                     }
                 }
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             }
         };
 
@@ -512,10 +512,10 @@ describe('Scene/BingMapsImageryProvider', function() {
             var url = request.url;
             if (/^blob:/.test(url)) {
                 // load blob url normally
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(request, crossOrigin, deferred);
             } else if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {

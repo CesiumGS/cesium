@@ -6,6 +6,7 @@ define([
         'Core/GoogleEarthEnterpriseMetadata',
         'Core/GoogleEarthEnterpriseTileInformation',
         'Core/Rectangle',
+        'Core/Request',
         'Core/RequestScheduler',
         'Core/Resource',
         'Scene/DiscardMissingTileImagePolicy',
@@ -25,6 +26,7 @@ define([
         GoogleEarthEnterpriseMetadata,
         GoogleEarthEnterpriseTileInformation,
         Rectangle,
+        Request,
         RequestScheduler,
         Resource,
         DiscardMissingTileImagePolicy,
@@ -94,7 +96,7 @@ describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
             var url = request.url;
             if (/^blob:/.test(url) || supportsImageBitmapOptions) {
                 // load blob url normally
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
+                Resource._DefaultImplementations.createImage(request, crossOrigin, deferred, true, true);
             } else {
                 if (proxy) {
                     var uri = new Uri(url);
@@ -104,7 +106,7 @@ describe('Scene/GoogleEarthEnterpriseImageryProvider', function() {
                     expect(url).toEqual(expectedUrl);
                 }
                 // Just return any old image.
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             }
         };
 

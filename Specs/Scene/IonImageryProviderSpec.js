@@ -270,7 +270,7 @@ describe('Scene/IonImageryProvider', function() {
     });
 
     it('createImageryProvider works with SINGLE_TILE', function() {
-        spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+        spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
             deferred.resolve({});
         });
 

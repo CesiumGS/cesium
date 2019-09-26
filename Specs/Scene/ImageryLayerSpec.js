@@ -1,6 +1,7 @@
 define([
         'Core/EllipsoidTerrainProvider',
         'Core/Rectangle',
+        'Core/Request',
         'Core/RequestScheduler',
         'Core/Resource',
         'Renderer/ComputeEngine',
@@ -24,6 +25,7 @@ define([
     ], function(
         EllipsoidTerrainProvider,
         Rectangle,
+        Request,
         RequestScheduler,
         Resource,
         ComputeEngine,
@@ -83,7 +85,7 @@ describe('Scene/ImageryLayer', function() {
 
     it('discards tiles when the ImageryProviders discard policy says to do so', function() {
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -147,7 +149,7 @@ describe('Scene/ImageryLayer', function() {
         };
 
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
         };
 
         Resource._Implementations.loadWithXhr = function(url, responseType, method, data, headers, deferred, overrideMimeType) {
@@ -288,7 +290,7 @@ describe('Scene/ImageryLayer', function() {
 
     it('assigns texture property when reprojection is skipped because the tile is very small', function() {
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
-            Resource._DefaultImplementations.createImage('Data/Images/Red256x256.png', crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red256x256.png'}), crossOrigin, deferred);
         };
 
         var provider = new UrlTemplateImageryProvider({

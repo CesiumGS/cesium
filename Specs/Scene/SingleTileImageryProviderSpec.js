@@ -2,6 +2,7 @@ define([
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/Rectangle',
+        'Core/Request',
         'Core/Resource',
         'Scene/Imagery',
         'Scene/ImageryLayer',
@@ -14,6 +15,7 @@ define([
         Ellipsoid,
         GeographicTilingScheme,
         Rectangle,
+        Request,
         Resource,
         Imagery,
         ImageryLayer,
@@ -135,9 +137,10 @@ describe('Scene/SingleTileImageryProvider', function() {
     it('requests the single image immediately upon construction', function() {
         var imageUrl = 'Data/Images/Red16x16.png';
 
-        spyOn(Resource._Implementations, 'createImage').and.callFake(function(url, crossOrigin, deferred) {
+        spyOn(Resource._Implementations, 'createImage').and.callFake(function(request, crossOrigin, deferred) {
+            var url = request.url;
             expect(url).toEqual(imageUrl);
-            Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+            Resource._DefaultImplementations.createImage(request, crossOrigin, deferred);
         });
 
         var provider = new SingleTileImageryProvider({
@@ -197,7 +200,7 @@ describe('Scene/SingleTileImageryProvider', function() {
         Resource._Implementations.createImage = function(request, crossOrigin, deferred) {
             if (tries === 2) {
                 // Succeed after 2 tries
-                Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
+                Resource._DefaultImplementations.createImage(new Request({url: 'Data/Images/Red16x16.png'}), crossOrigin, deferred);
             } else {
                 // fail
                 setTimeout(function() {
