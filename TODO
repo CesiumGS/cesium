@@ -8,7 +8,7 @@ of the subtree
 [ ] Box array traversal
     [x] Precompute 1D array of influence radii
     [x] need the maxTraversalDepth, derived from root camera distance
-    [ ] brute additive traversal
+    [x] brute additive traversal
     [ ] brute replacement traversal
     [ ] Toroidial array stack (or whatever), just setup the root level
     and look down at teh tileset, the idx should update properly as if the root box
