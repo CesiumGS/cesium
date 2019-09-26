@@ -1690,9 +1690,10 @@ define([
      * @private
      */
     Cesium3DTilesetImplicit.prototype.updateTraversalInfo = function(frameState) {
-        // find the distnace to the tileset contentless root
-        // use that that determine maximumTreversalDepth (the first index in _lodDistances that fails)
+        // Update all the LOD distnaces
+        this.updateLODDistances(frameState);
 
+        // Find the distnace to the tileset contentless root and use that that determine maximumTreversalDepth
         var distance = this._root._distanceToCamera;
 
         var length = this._lodDistances.length;

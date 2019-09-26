@@ -121,6 +121,65 @@ define([
     };
 
     /**
+     * Given an inclusive level range, return if subtree levels overlap that range.
+     *
+     * @param {Number} startLevel The min level in the range we care about,
+     * @param {Number} endLevel The max level in the range we care about,
+     * @returns {Boolean} True if overlaps range, false otherwise.
+     * @private
+     */
+    SubtreeInfo.prototype.inRange = function(startLevel, endLevel) {
+        var subtreeStartLevel = this._subtreeRootKey.w;
+        var subtreeEndLevel = this._subtreeLastTreeLevel0Indexed;
+        return (subtreeStartLevel >= startLevel && subtreeStartLevel <= endLevel) ||
+               (subtreeEndLevel >= startLevel && subtreeEndLevel <= endLevel);
+
+    };
+
+    SubtreeInfo.prototype.hasSubtrees = function() {
+        return defined(this._subtreesMap); // this._subtreeLastTreeLevel0Indexed !== this._subtreeRootKey.w;
+    };
+
+    /**
+     * Given an inclusive level range, get all the available subtreeInfos that overlap this range.
+     * Does not include dud subtrees, i.e. subtrees that only have a root (unless it is the  root subtree).
+     *
+     * @param {Number} startLevel The min level in the range we care about,
+     * @param {Number} endLevel The max level in the range we care about,
+     * @returns {Array} An array of subtreeInfo's
+     * @private
+     */
+    SubtreeInfo.prototype.subtreesInRange = function(startLevel, endLevel) {
+        var subtreesInRange = [];
+
+        var stack = [];
+        stack.push(this);
+
+        var current;
+        var children, key, child;
+        while(stack.length > 0) {
+            current = stack.pop();
+            if (!current.inRange(startLevel, endLevel)) {
+                continue;
+            }
+
+            subtreesInRange.push(current);
+
+            if (current._subtreeLastTreeLevel0Indexed > endLevel || !current.hasSubtrees()) {
+                continue;
+            }
+
+            children = current._subtreesMap;
+            for (key in children){
+                child = children[key];
+                stack.push(child[0]);
+            }
+        }
+
+        return subtreesInRange;
+    };
+
+    /**
      * Adds the subtree to the subtree cache
      *
      * @param {UintArray8} subtree The subtree byte array to add
@@ -204,7 +263,7 @@ define([
             return this;
         }
 
-        // Find the treekey on this subtrees lastlevel that subtreeRootkey resolves to on this subtrees last level
+        // Find the treekey on this subtrees lastlevel that subtreeRootKey resolves to on this subtrees last level
         var result = tileset.getSubtreeInfoFromTreeKey(subtreeRootKey.x, subtreeRootKey.y, subtreeRootKey.z, subtreeRootKey.w);
         var resultRootKey = result.subtreeRootKey;
         while(resultRootKey.w !== subtreeLastLevel0Indexed) {
