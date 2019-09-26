@@ -152,6 +152,26 @@ define([
         };
     };
 
+    SubtreeInfo.subtreesContainingLevel = function(subtrees, level, contentStartLevel) {
+        var subset = [];
+        var i, subtree;
+        var length = subtrees.length;
+        for (i = 0; i < length; i++) {
+            subtree = subtrees[i];
+
+            if (!subtree.inRange(level, level)) {
+                continue;
+            }
+
+            if (level !== contentStartLevel && level === subtree._subtreeRootKey.w) {
+                continue;
+            }
+
+            subset.push(subtree);
+        }
+        return subset;
+    };
+
     /**
      * Given an inclusive level range, get all the available subtreeInfos that overlap this range.
      * Does not include dud subtrees, i.e. subtrees that only have a root (unless it is the  root subtree).

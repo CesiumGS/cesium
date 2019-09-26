@@ -5,7 +5,8 @@ define([
         '../Core/ManagedArray',
         '../Core/Math',
         './Cesium3DTileOptimizationHint',
-        './Cesium3DTileRefine'
+        './Cesium3DTileRefine',
+        './SubtreeInfo',
     ], function(
         Cartesian3,
         defined,
@@ -13,7 +14,8 @@ define([
         ManagedArray,
         CesiumMath,
         Cesium3DTileOptimizationHint,
-        Cesium3DTileRefine) {
+        Cesium3DTileRefine,
+        SubtreeInfo) {
     'use strict';
 
     /**
@@ -286,8 +288,8 @@ define([
             return;
         }
 
-        // if (!isAdd) {
-        if (true) {
+        // if (true) {
+        if (!isAdd) {
             var stack = traversal.stack;
             stack.push(tilesetRoot);
 
@@ -350,42 +352,45 @@ define([
             return;
         }
 
-        var contentLevel, subtreesForThisLevel, length, i, subtree, subtreeLevel, indexRange;
-        for (contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
-            subtreesForThisLevel = subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
+        var i, j;
+        var lodDistances = tileset._lodDistances;
+        for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
+            var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
 
-            length = subtreesForThisLevel.length;
+            var length = subtreesForThisLevel.length;
 
             if (length === 0) {
                 break;
             }
 
+            var distanceForLevel = lodDistances[contentLevel];
+
             for (i = 0; i < length; i++) {
-                subtree = subtreesForThisLevel[i];
-                indexRange = subtree.indexRangeForLevel(contentLevel);
+                var subtree = subtreesForThisLevel[i];
+                var indexRange = subtree.indexRangeForLevel(contentLevel);
+                var begin = indexRange.begin;
+                var end = indexRange.end;
+                var tiles = subtree._tiles;
+                for (j = begin; j < end; j++) {
+                    var currentTile = tiles[j];
 
+                    if (!defined(currentTile)) {
+                        continue;
+                    }
+
+                    updateTile(tileset, currentTile, frameState);
+
+                    if (!isVisible(currentTile) || currentTile._distanceToCamera > distanceForLevel) {
+                        continue;
+                    }
+
+                    loadTile(tileset, currentTile, frameState);
+                    selectDesiredTile(tileset, currentTile, frameState);
+                    visitTile(tileset, currentTile, frameState);
+                    touchTile(tileset, currentTile, frameState);
+                }
             }
         }
-    }
-
-    function subtreesContainingLevel(subtrees, level, contentStartLevel) {
-        var subset = [];
-        var i, subtree;
-        var length = subtrees.length;
-        for (i = 0; i < length; i++) {
-            subtree = subtrees[i];
-
-            if (!subtree.inRange(level, level)) {
-                continue;
-            }
-
-            if (level !== contentStartLevel && level === subtree._subtreeRootKey.w) {
-                continue;
-            }
-
-            subset.push(subtree);
-        }
-        return subset;
     }
 
     function executeEmptyTraversal(tileset, root, frameState) {
