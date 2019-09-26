@@ -378,7 +378,7 @@ define([
                         continue;
                     }
 
-                    updateTile(tileset, currentTile, frameState);
+                    updateVisibility(tileset, currentTile, frameState);
 
                     if (!isVisible(currentTile) || currentTile._distanceToCamera > distanceForLevel) {
                         continue;
