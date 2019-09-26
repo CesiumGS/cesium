@@ -1,4 +1,3 @@
-/*global document,window,define*/
 define([
         'Core/Clock',
         'Core/ClockRange',

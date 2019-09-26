@@ -54,7 +54,7 @@ define([
         when) {
         'use strict';
 
-describe('Core/BoundingSphere', function() {
+describe('Scene/Multifrustum', function() {
 
     var scene;
     var context;

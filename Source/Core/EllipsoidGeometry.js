@@ -317,8 +317,8 @@ define([
 
         var vertexCount = numThetas * numPhis * vertexMultiplier;
         var positions = new Float64Array(vertexCount * 3);
-        var isInner = new Array(vertexCount).fill(false);
-        var negateNormal = new Array(vertexCount).fill(false);
+        var isInner = arrayFill(new Array(vertexCount), false);
+        var negateNormal = arrayFill(new Array(vertexCount), false);
 
         // Multiply by 6 because there are two triangles per sector
         var indexCount = slicePartitions * stackPartitions * vertexMultiplier;
