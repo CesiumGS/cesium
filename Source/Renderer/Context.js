@@ -17,6 +17,7 @@ import RuntimeError from '../Core/RuntimeError.js';
 import WebGLConstants from '../Core/WebGLConstants.js';
 import ViewportQuadVS from '../Shaders/ViewportQuadVS.js';
 import BufferUsage from './BufferUsage.js';
+import checkFloatTexturePrecision from './checkFloatTexturePrecision.js';
 import ClearCommand from './ClearCommand.js';
 import ContextLimits from './ContextLimits.js';
 import CubeMap from './CubeMap.js';

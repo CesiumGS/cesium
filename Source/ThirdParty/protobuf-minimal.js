@@ -1,3 +1,4 @@
+var tmp = {};
 /*!
  * protobuf.js v6.7.0 (c) 2016, Daniel Wirtz
  * Compiled Wed, 22 Mar 2017 17:30:26 UTC
@@ -2461,5 +2462,7 @@ BufferWriter.prototype.string = function write_string_buffer(value) {
 
 },{"13":13,"14":14}]},{},[7])
 
-})(typeof window==="object"&&window||typeof self==="object"&&self||this);
+})(tmp);
 //# sourceMappingURL=protobuf.js.map
+
+export default tmp.protobuf;

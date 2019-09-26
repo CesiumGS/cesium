@@ -1,3 +1,4 @@
+/* global require */
 import defined from '../Core/defined.js';
 import PrimitivePipeline from '../Scene/PrimitivePipeline.js';
 import when from '../ThirdParty/when.js';
@@ -5,7 +6,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     var moduleCache = {};
 
-    var reqWithContext = require.context('./', false, /create.+Geometry/);
+    var reqWithContext = require.context('./Workers', false, /create.+Geometry/);
 
     function getModule(moduleName) {
         var module = moduleCache[moduleName];
@@ -16,7 +17,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             } else {
                 // Use AMD-style require.
                 // in web workers, require is synchronous
-                reqWithContext(['./' + moduleName], function(f) {
+                reqWithContext(['./Workers/' + moduleName], function(f) {
                     module = f;
                     moduleCache[module] = f;
                 });

@@ -1,5 +1,5 @@
 /**
- This is a version of Jasmine's boot.js modified to work with specs defined with AMD.  The original comments from boot.js follow.
+ This is a version of Jasmine's boot.js modified to work with specs defined with ES6.  The original comments from boot.js follow.
 
  Starting with version 2.0, this file "boots" Jasmine, performing all of the necessary initialization before executing the loaded environment and all of a project's specs. This file should be loaded after `jasmine.js` and `jasmine_html.js`, but before any project source files or spec files are loaded. Thus this file can also be used to customize Jasmine for a project.
 
@@ -10,63 +10,24 @@
  [jasmine-gem]: http://github.com/pivotal/jasmine-gem
  */
 
-(function() {
-    'use strict';
+import * as Cesium from '../Source/Cesium.js';
+import addDefaultMatchers from './addDefaultMatchers.js';
+import equalsMethodEqualityTester from './equalsMethodEqualityTester.js';
 
-    // set this for uniform test resolution across devices
-    window.devicePixelRatio = 1;
+        // set this for uniform test resolution across devices
+        window.devicePixelRatio = 1;
 
-    function getQueryParameter(name) {
-        var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
-        return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
-    }
+        function getQueryParameter(name) {
+            var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+            return match && decodeURIComponent(match[1].replace(/\+/g, ' '));
+        }
 
-    var built = getQueryParameter('built');
-    var release = getQueryParameter('release');
+        var built = getQueryParameter('built');
+        var release = getQueryParameter('release');
 
-    var toRequire = ['Cesium'];
-
-    if (built) {
-        require.config({
-            waitSeconds: 30,
-            baseUrl: getQueryParameter('baseUrl') || '../Build/Cesium',
-            paths: {
-                'Stubs': '../Stubs',
-                'Specs': '../../Specs',
-                'Source' : '../../Source'
-            },
-            shim: {
-                'Cesium': {
-                    exports: 'Cesium'
-                }
-            }
-        });
-
-        toRequire.push('./Stubs/paths');
-    } else {
-        require.config({
-            waitSeconds: 30,
-            baseUrl: getQueryParameter('baseUrl') || '../Source',
-            paths: {
-                'Specs': '../Specs',
-                'Source' : '.'
-            }
-        });
-    }
-
-    require(toRequire, function(
-            Cesium,
-            paths) {
-
-        /*global jasmineRequire,exports,specs*/
+        /*global jasmineRequire,jasmine,exports,specs*/
 
         var when = Cesium.when;
-
-        if (typeof paths !== 'undefined') {
-            require.config({
-                paths : paths
-            });
-        }
 
         /**
          * ## Require &amp; Instantiate
@@ -344,17 +305,15 @@
          *
          * Load the modules via AMD, and then run all of the loaded specs. This includes initializing the `HtmlReporter` instance and then executing the loaded Jasmine environment.
          */
-        var modules = ['Specs/addDefaultMatchers', 'Specs/equalsMethodEqualityTester'].concat(specs);
-        require(modules, function(addDefaultMatchers, equalsMethodEqualityTester) {
-            jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 
-            htmlReporter.initialize();
+        jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 
-            var release = getQueryParameter('release');
-            env.beforeEach(function() { addDefaultMatchers(!release).call(env); });
-            env.beforeEach(function() { env.addCustomEqualityTester(equalsMethodEqualityTester); });
+        htmlReporter.initialize();
 
+        var release = getQueryParameter('release');
+        env.beforeEach(function() { addDefaultMatchers(!release).call(env); });
+        env.beforeEach(function() { env.addCustomEqualityTester(equalsMethodEqualityTester); });
+
+        import('./SpecList.js').then(function() {
             env.execute();
-        });
-    });
-})();
+        })

@@ -8,6 +8,7 @@ import clone from '../Core/clone.js';
 import Color from '../Core/Color.js';
 import combine from '../Core/combine.js';
 import createGuid from '../Core/createGuid.js';
+import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';

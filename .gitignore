@@ -15,12 +15,10 @@ Thumbs.db
 
 /Source/Cesium.js
 
-/Source/Shaders/*.js
-/Source/Shaders/*/*.js
-/Source/Shaders/*/*/*.js
-/Source/ThirdParty/Shaders/*.js
-
 /Specs/SpecList.js
+/Source/Shaders/**/*.js
+/Source/ThirdParty/Shaders/**/*.js
+/Source/Workers/Build
 
 /node_modules
 npm-debug.log

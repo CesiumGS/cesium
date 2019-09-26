@@ -1,3 +1,4 @@
+/* global require */
 import { FeatureDetection } from '../../Source/Cesium.js';
 import { TaskProcessor } from '../../Source/Cesium.js';
 import absolutize from '../absolutize.js';

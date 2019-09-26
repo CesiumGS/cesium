@@ -2,6 +2,7 @@ import ArcType from '../Core/ArcType.js';
 import Cartesian3 from '../Core/Cartesian3.js';
 import Color from '../Core/Color.js';
 import createGuid from '../Core/createGuid.js';
+import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';

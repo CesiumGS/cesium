@@ -6,8 +6,10 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Cartographic from '../Core/Cartographic.js';
 import ClockRange from '../Core/ClockRange.js';
 import ClockStep from '../Core/ClockStep.js';
+import clone from '../Core/clone.js';
 import Color from '../Core/Color.js';
 import createGuid from '../Core/createGuid.js';
+import Credit from '../Core/Credit.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
@@ -16,6 +18,7 @@ import Ellipsoid from '../Core/Ellipsoid.js';
 import Event from '../Core/Event.js';
 import getExtensionFromUri from '../Core/getExtensionFromUri.js';
 import getFilenameFromUri from '../Core/getFilenameFromUri.js';
+import getTimestamp from '../Core/getTimestamp.js';
 import HeadingPitchRange from '../Core/HeadingPitchRange.js';
 import HeadingPitchRoll from '../Core/HeadingPitchRoll.js';
 import Iso8601 from '../Core/Iso8601.js';
@@ -137,9 +140,8 @@ import WallGraphics from './WallGraphics.js';
 
     var autolinker = new Autolinker({
         stripPrefix : false,
-        twitter : false,
         email : false,
-        replaceFn : function(linker, match) {
+        replaceFn : function(match) {
             if (!match.protocolUrlMatch) {
                 //Prevent matching of non-explicit urls.
                 //i.e. foo.id won't match but http://foo.id will

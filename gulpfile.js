@@ -12,6 +12,7 @@ var request = require('request');
 
 var globby = require('globby');
 var gulpTap = require('gulp-tap');
+var gulpUglify = require('gulp-uglify');
 var open = require('open');
 var rimraf = require('rimraf');
 var glslStripComments = require('glsl-strip-comments');
@@ -25,11 +26,15 @@ var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
 var gulpJsonTransform = require('gulp-json-transform');
 var Promise = require('bluebird');
-var requirejs = require('requirejs');
 var Karma = require('karma');
 var yargs = require('yargs');
 var AWS = require('aws-sdk');
 var mime = require('mime');
+var rollup = require('rollup');
+var cleanCSS = require('gulp-clean-css');
+
+var rollupStripPragma = require('./Tools/rollup-plugin-strip-pragma');
+var rollupPluginUglify = require('rollup-plugin-uglify');
 
 var packageJson = require('./package.json');
 var version = packageJson.version;
@@ -62,13 +67,14 @@ var sourceFiles = ['Source/**/*.js',
                    '!Source/ThirdParty/crunch.js',
                    'Source/Workers/createTaskProcessorWorker.js'];
 
-var buildFiles = ['Specs/**/*.js',
+var buildFiles = ['Source/**/*.js',
                   '!Specs/SpecList.js',
                   'Source/Shaders/**/*.glsl'];
 
 var filesToClean = ['Source/Cesium.js',
                     'Build',
                     'Source/Shaders/**/*.js',
+                    'Source/Workers/Build',
                     'Source/ThirdParty/Shaders/*.js',
                     'Specs/SpecList.js',
                     'Apps/Sandcastle/jsHintOptions.js',
@@ -76,30 +82,10 @@ var filesToClean = ['Source/Cesium.js',
                     'Apps/Sandcastle/templates/bucket.css',
                     'Cesium-*.zip'];
 
-var filesToSortRequires = ['Source/**/*.js',
-                           '!Source/Shaders/**',
-                           '!Source/ThirdParty/**',
-                           '!Source/Workers/cesiumWorkerBootstrapper.js',
-                           '!Source/copyrightHeader.js',
-                           '!Source/Workers/transferTypedArrayTest.js',
-                           'Apps/**/*.js',
-                           '!Apps/Sandcastle/ThirdParty/**',
-                           '!Apps/Sandcastle/jsHintOptions.js',
-                           'Specs/**/*.js',
-                           '!Specs/spec-main.js',
-                           '!Specs/SpecRunner.js',
-                           '!Specs/SpecList.js',
-                           '!Specs/karma.conf.js',
-                           '!Apps/Sandcastle/Sandcastle-client.js',
-                           '!Apps/Sandcastle/Sandcastle-header.js',
-                           '!Apps/Sandcastle/Sandcastle-warn.js',
-                           '!Apps/Sandcastle/gallery/gallery-index.js'];
-
 var filesToConvertES6 = ['Source/**/*.js',
                          'Specs/**/*.js',
                          '!Source/ThirdParty/**',
                          '!Source/Cesium.js',
-                         '!Source/main.js',
                          '!Source/copyrightHeader.js',
                          '!Source/Shaders/**',
                          '!Source/Workers/cesiumWorkerBootstrapper.js',
@@ -111,13 +97,30 @@ var filesToConvertES6 = ['Source/**/*.js',
                          '!Specs/TestWorkers/**'
                         ];
 
-gulp.task('build', function(done) {
+function createWorkers() {
+    rimraf.sync('Source/Workers/Build');
+    var workers = globby.sync([
+        'Source/Workers/**',
+        '!Source/Workers/cesiumWorkerBootstrapper.js',
+        '!Source/Workers/transferTypedArrayTest.js'
+    ]);
+    return rollup.rollup({
+        input: workers
+    }).then(function(bundle) {
+        return bundle.write({
+            dir: 'Source/Workers/Build',
+            format: 'amd'
+        });
+    });
+}
+
+gulp.task('build', function() {
     mkdirp.sync('Build');
     glslToJavaScript(minifyShaders, 'Build/minifyShaders.state');
     createCesiumJs();
     createSpecList();
     createJsHintOptions();
-    createGalleryList(done);
+    return Promise.join(createWorkers(), createGalleryList());
 });
 
 gulp.task('build-watch', function() {
@@ -136,17 +139,6 @@ gulp.task('clean', function(done) {
         rimraf.sync(file);
     });
     done();
-});
-
-gulp.task('requirejs', function(done) {
-    var config = JSON.parse(Buffer.from(process.argv[3].substring(2), 'base64').toString('utf8'));
-
-    // Disable module load timeout
-    config.waitSeconds = 0;
-
-    requirejs.optimize(config, function() {
-        done();
-    }, done);
 });
 
 // optimizeApproximateTerrainHeights can be used to regenerate the approximateTerrainHeights
@@ -210,43 +202,6 @@ function cloc() {
 
 gulp.task('cloc', gulp.series('clean', cloc));
 
-function generateStubs(done) {
-    mkdirp.sync(path.join('Build', 'Stubs'));
-
-    var contents = '\
-/*global define,Cesium*/\n\
-(function() {\n\
-\'use strict\';\n';
-    var modulePathMappings = [];
-
-    globby.sync(sourceFiles).forEach(function(file) {
-        file = path.relative('Source', file);
-        var moduleId = filePathToModuleId(file);
-
-        contents += '\
-define(\'' + moduleId + '\', function() {\n\
-    return Cesium[\'' + path.basename(file, path.extname(file)) + '\'];\n\
-});\n\n';
-
-        modulePathMappings.push('        \'' + moduleId + '\' : \'../Stubs/Cesium\'');
-    });
-
-    contents += '})();\n';
-
-    var paths = '\
-define(function() {\n\
-    \'use strict\';\n\
-    return {\n' + modulePathMappings.join(',\n') + '\n\
-    };\n\
-});';
-
-    fs.writeFileSync(path.join('Build', 'Stubs', 'Cesium.js'), contents);
-    fs.writeFileSync(path.join('Build', 'Stubs', 'paths.js'), paths);
-    done();
-}
-
-gulp.task('generateStubs', gulp.series('build', generateStubs));
-
 function combine() {
     var outputDirectory = path.join('Build', 'CesiumUnminified');
     return combineJavaScript({
@@ -256,7 +211,7 @@ function combine() {
     });
 }
 
-gulp.task('combine', gulp.series('generateStubs', combine));
+gulp.task('combine', gulp.series('build', combine));
 gulp.task('default', gulp.series('combine'));
 
 function combineRelease() {
@@ -268,7 +223,7 @@ function combineRelease() {
     });
 }
 
-gulp.task('combineRelease', gulp.series('generateStubs', combineRelease));
+gulp.task('combineRelease', gulp.series('build', combineRelease));
 
 //Builds the documentation
 function generateDocumentation() {
@@ -300,7 +255,7 @@ gulp.task('generateDocumentation-watch', function() {
     });
 });
 
-gulp.task('release', gulp.series('generateStubs', combine, minifyRelease, generateDocumentation));
+gulp.task('release', gulp.series('build', combine, minifyRelease, generateDocumentation));
 
 gulp.task('makeZipFile', gulp.series('release', function() {
     //For now we regenerate the JS glsl to force it to be unminified in the release zip
@@ -349,7 +304,7 @@ gulp.task('makeZipFile', gulp.series('release', function() {
         .pipe(gulp.dest('.'));
 }));
 
-gulp.task('minify', gulp.series('generateStubs', function() {
+gulp.task('minify', gulp.series('build', function() {
     return combineJavaScript({
         removePragmas : false,
         optimizer : 'uglify2',
@@ -365,7 +320,7 @@ function minifyRelease() {
     });
 }
 
-gulp.task('minifyRelease', gulp.series('generateStubs', minifyRelease));
+gulp.task('minifyRelease', gulp.series('build', minifyRelease));
 
 function isTravisPullRequest() {
     return process.env.TRAVIS_PULL_REQUEST !== undefined && process.env.TRAVIS_PULL_REQUEST !== 'false';
@@ -719,13 +674,16 @@ gulp.task('coverage', function(done) {
             suppressSkipped: true
         },
         preprocessors: {
-            'Source/Core/**/*.js': ['coverage'],
-            'Source/DataSources/**/*.js': ['coverage'],
-            'Source/Renderer/**/*.js': ['coverage'],
-            'Source/Scene/**/*.js': ['coverage'],
-            'Source/Shaders/**/*.js': ['coverage'],
-            'Source/Widgets/**/*.js': ['coverage'],
-            'Source/Workers/**/*.js': ['coverage']
+            'Source/Core/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/DataSources/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/Renderer/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/Scene/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/Shaders/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/Widgets/**/*.js': ['karma-coverage-istanbul-instrumenter'],
+            'Source/Workers/**/*.js': ['karma-coverage-istanbul-instrumenter']
+        },
+        coverageIstanbulInstrumenter: {
+            esModules: true
         },
         reporters: ['spec', 'coverage'],
         coverageReporter: {
@@ -776,9 +734,9 @@ gulp.task('test', function(done) {
     }
 
     var files = [
-        'Specs/karma-main.js',
-        {pattern : 'Source/**', included : false},
-        {pattern : 'Specs/**', included : false}
+        { pattern: 'Specs/karma-main.js', included: true, type: 'module' },
+        { pattern: 'Source/**', included: false, type: 'module' },
+        { pattern: 'Specs/**', included: true, type: 'module' }
     ];
 
     if (release) {
@@ -807,114 +765,6 @@ gulp.task('test', function(done) {
         return done(failTaskOnError ? e : undefined);
     });
     karma.start();
-});
-
-gulp.task('sortRequires', function() {
-    var noModulesRegex = /[\s\S]*?define\(function\(\)/;
-    var requiresRegex = /([\s\S]*?(define|require)\((?:{[\s\S]*}, )?\[)([\S\s]*?)]([\s\S]*?function\s*)\(([\S\s]*?)\) {([\s\S]*)/;
-    var splitRegex = /,\s*/;
-
-    var fsReadFile = Promise.promisify(fs.readFile);
-    var fsWriteFile = Promise.promisify(fs.writeFile);
-
-    var files = globby.sync(filesToSortRequires);
-    return Promise.map(files, function(file) {
-
-        return fsReadFile(file).then(function(contents) {
-
-            var result = requiresRegex.exec(contents);
-
-            if (result === null) {
-                if (!noModulesRegex.test(contents)) {
-                    console.log(file + ' does not have the expected syntax.');
-                }
-                return;
-            }
-
-            var names = result[3].split(splitRegex);
-            if (names.length === 1 && names[0].trim() === '') {
-                names.length = 0;
-            }
-
-            var i;
-            for (i = 0; i < names.length; ++i) {
-                if (names[i].indexOf('//') >= 0 || names[i].indexOf('/*') >= 0) {
-                    console.log(file + ' contains comments in the require list.  Skipping so nothing gets broken.');
-                    return;
-                }
-            }
-
-            var identifiers = result[5].split(splitRegex);
-            if (identifiers.length === 1 && identifiers[0].trim() === '') {
-                identifiers.length = 0;
-            }
-
-            for (i = 0; i < identifiers.length; ++i) {
-                if (identifiers[i].indexOf('//') >= 0 || identifiers[i].indexOf('/*') >= 0) {
-                    console.log(file + ' contains comments in the require list.  Skipping so nothing gets broken.');
-                    return;
-                }
-            }
-
-            var requires = [];
-
-            for (i = 0; i < names.length && i < identifiers.length; ++i) {
-                requires.push({
-                    name : names[i].trim(),
-                    identifier : identifiers[i].trim()
-                });
-            }
-
-            requires.sort(function(a, b) {
-                var aName = a.name.toLowerCase();
-                var bName = b.name.toLowerCase();
-                if (aName < bName) {
-                    return -1;
-                } else if (aName > bName) {
-                    return 1;
-                }
-                return 0;
-            });
-
-            // Convert back to separate lists for the names and identifiers, and add
-            // any additional names or identifiers that don't have a corresponding pair.
-            var sortedNames = requires.map(function(item) {
-                return item.name;
-            });
-            for (i = sortedNames.length; i < names.length; ++i) {
-                sortedNames.push(names[i].trim());
-            }
-
-            var sortedIdentifiers = requires.map(function(item) {
-                return item.identifier;
-            });
-            for (i = sortedIdentifiers.length; i < identifiers.length; ++i) {
-                sortedIdentifiers.push(identifiers[i].trim());
-            }
-
-            var outputNames = ']';
-            if (sortedNames.length > 0) {
-                outputNames = os.EOL + '        ' +
-                              sortedNames.join(',' + os.EOL + '        ') +
-                              os.EOL + '    ]';
-            }
-
-            var outputIdentifiers = '(';
-            if (sortedIdentifiers.length > 0) {
-                outputIdentifiers = '(' + os.EOL + '        ' +
-                                    sortedIdentifiers.join(',' + os.EOL + '        ');
-            }
-
-            contents = result[1] +
-                       outputNames +
-                       result[4].replace(/^[,\s]+/, ', ').trim() +
-                       outputIdentifiers +
-                       ') {' +
-                       result[6];
-
-            return fsWriteFile(file, contents);
-        });
-    });
 });
 
 gulp.task('convertToModules', function() {
@@ -1049,19 +899,26 @@ gulp.task('convertToModules', function() {
 });
 
 function combineCesium(debug, optimizer, combineOutput) {
-    return requirejsOptimize('Cesium.js', {
-        wrap : true,
-        useStrict : true,
-        optimize : optimizer,
-        optimizeCss : 'standard',
-        pragmas : {
-            debug : debug
-        },
-        baseUrl : 'Source',
-        skipModuleInsertion : true,
-        name : removeExtension(path.relative('Source', require.resolve('almond'))),
-        include : 'main',
-        out : path.join(combineOutput, 'Cesium.js')
+    var plugins = [];
+
+    if (!debug) {
+        plugins.push(rollupStripPragma({
+            pragmas: ['debug']
+        }));
+    }
+    if (optimizer === 'uglify2') {
+        plugins.push(rollupPluginUglify.uglify());
+    }
+
+    return rollup.rollup({
+        input: 'Source/Cesium.js',
+        plugins: plugins
+    }).then(function(bundle) {
+        return bundle.write({
+            format: 'umd',
+            name: 'Cesium',
+            file: path.join(combineOutput, 'Cesium.js')
+        });
     });
 }
 
@@ -1083,64 +940,47 @@ function combineWorkers(debug, optimizer, combineOutput) {
         })
         .then(function(files) {
             return Promise.map(files, function(file) {
-                return requirejsOptimize(file, {
-                    wrap : false,
-                    useStrict : true,
-                    optimize : optimizer,
-                    optimizeCss : 'standard',
-                    pragmas : {
-                        debug : debug
-                    },
-                    baseUrl : 'Source',
-                    skipModuleInsertion : true,
-                    include : filePathToModuleId(path.relative('Source', file)),
-                    out : path.join(combineOutput, path.relative('Source', file))
-                });
+                return streamToPromise(gulp.src(file)
+                    .pipe(gulpUglify())
+                    .pipe(gulp.dest(path.dirname(path.join(combineOutput, path.relative('Source', file))))));
             }, {concurrency : concurrency});
         })
         .then(function() {
             return globby(['Source/Workers/*.js',
                            '!Source/Workers/cesiumWorkerBootstrapper.js',
                            '!Source/Workers/transferTypedArrayTest.js',
-                           '!Source/Workers/createTaskProcessorWorker.js',
-                           '!Source/ThirdParty/Workers/*.js']);
+                           '!Source/Workers/createTaskProcessorWorker.js']);
         })
         .then(function(files) {
-            return Promise.map(files, function(file) {
-                return requirejsOptimize(file, {
-                    wrap : true,
-                    useStrict : true,
-                    optimize : optimizer,
-                    optimizeCss : 'standard',
-                    pragmas : {
-                        debug : debug
-                    },
-                    baseUrl : 'Source',
-                    include : filePathToModuleId(path.relative('Source', file)),
-                    out : path.join(combineOutput, path.relative('Source', file))
+            var plugins = [];
+
+            if (!debug) {
+                plugins.push(rollupStripPragma({
+                    pragmas: ['debug']
+                }));
+            }
+            if (optimizer === 'uglify2') {
+                plugins.push(rollupPluginUglify.uglify());
+            }
+
+            return rollup.rollup({
+                input: files
+            }).then(function(bundle) {
+                return bundle.write({
+                    dir: path.join(combineOutput, 'Workers'),
+                    format: 'amd'
                 });
-            }, {concurrency : concurrency});
+            });
         });
 }
 
 function minifyCSS(outputDirectory) {
-    return globby('Source/**/*.css').then(function(files) {
-        return Promise.map(files, function(file) {
-            return requirejsOptimize(file, {
-                wrap : true,
-                useStrict : true,
-                optimizeCss : 'standard',
-                pragmas : {
-                    debug : true
-                },
-                cssIn : file,
-                out : path.join(outputDirectory, path.relative('Source', file))
-            });
-        }, {concurrency : concurrency});
-    });
+    streamToPromise(
+        gulp.src('Source/**/*.css')
+            .pipe(cleanCSS())
+            .pipe(gulp.dest(outputDirectory))
+    );
 }
-
-var gulpUglify = require('gulp-uglify');
 
 function minifyModules(outputDirectory) {
     return streamToPromise(gulp.src('Source/ThirdParty/google-earth-dbroot-parser.js')
@@ -1168,12 +1008,12 @@ function combineJavaScript(options) {
         //copy to build folder with copyright header added at the top
         var stream = gulp.src([combineOutput + '/**'])
             .pipe(gulpInsert.prepend(copyrightHeader))
+            .pipe(gulpReplace('Workers/Build', 'Workers'))
             .pipe(gulp.dest(outputDirectory));
 
         promises.push(streamToPromise(stream));
 
         var everythingElse = ['Source/**', '!**/*.js', '!**/*.glsl'];
-
         if (optimizer === 'uglify2') {
             promises.push(minifyCSS(outputDirectory));
             everythingElse.push('!**/*.css');
@@ -1250,10 +1090,7 @@ function glslToJavaScript(minify, minifyStateFilePath) {
         contents = contents.split('"').join('\\"').replace(/\n/gm, '\\n\\\n');
         contents = copyrightComments + '\
 //This file is automatically rebuilt by the Cesium build process.\n\
-define(function() {\n\
-    \'use strict\';\n\
-    return "' + contents + '";\n\
-});';
+export default "' + contents + '";\n';
 
         fs.writeFileSync(jsFile, contents);
     });
@@ -1264,95 +1101,60 @@ define(function() {\n\
     });
 
     var generateBuiltinContents = function(contents, builtins, path) {
-        var amdPath = contents.amdPath;
-        var amdClassName = contents.amdClassName;
-        var builtinLookup = contents.builtinLookup;
         for (var i = 0; i < builtins.length; i++) {
             var builtin = builtins[i];
-            amdPath = amdPath + ',\n        \'./' + path + '/' + builtin + '\'';
-            amdClassName = amdClassName + ',\n        ' + 'czm_' + builtin;
-            builtinLookup = builtinLookup + ',\n        ' + 'czm_' + builtin + ' : ' + 'czm_' + builtin;
+            contents.imports.push('import czm_' + builtin + ' from \'./' + path + '/' + builtin + '.js\'');
+            contents.builtinLookup.push('czm_' + builtin + ' : ' + 'czm_' + builtin);
         }
-        contents.amdPath = amdPath;
-        contents.amdClassName = amdClassName;
-        contents.builtinLookup = builtinLookup;
     };
 
-//generate the JS file for Built-in GLSL Functions, Structs, and Constants
-    var contents = {amdPath : '', amdClassName : '', builtinLookup : ''};
+    //generate the JS file for Built-in GLSL Functions, Structs, and Constants
+    var contents = {
+        imports : [],
+        builtinLookup: []
+    };
     generateBuiltinContents(contents, builtinConstants, 'Constants');
     generateBuiltinContents(contents, builtinStructs, 'Structs');
     generateBuiltinContents(contents, builtinFunctions, 'Functions');
 
-    contents.amdPath = contents.amdPath.replace(',\n', '');
-    contents.amdClassName = contents.amdClassName.replace(',\n', '');
-    contents.builtinLookup = contents.builtinLookup.replace(',\n', '');
-
-    var fileContents = '\
-//This file is automatically rebuilt by the Cesium build process.\n\
-define([\n' +
-                       contents.amdPath +
-                       '\n    ], function(\n' +
-                       contents.amdClassName +
-                       ') {\n\
-                           \'use strict\';\n\
-                           return {\n' + contents.builtinLookup + '};\n\
-});';
+    var fileContents = '//This file is automatically rebuilt by the Cesium build process.\n' +
+        contents.imports.join('\n') +
+        '\n\nexport default {\n    ' + contents.builtinLookup.join(',\n    ') + '\n};\n';
 
     fs.writeFileSync(path.join('Source', 'Shaders', 'Builtin', 'CzmBuiltins.js'), fileContents);
 }
 
 function createCesiumJs() {
-    var moduleIds = [];
-    var parameters = [];
-    var assignments = [];
-
-    var nonIdentifierRegexp = /[^0-9a-zA-Z_$]/g;
-
+    var contents = `export var VERSION = '${version}';\n`;
     globby.sync(sourceFiles).forEach(function(file) {
         file = path.relative('Source', file);
+
         var moduleId = file;
         moduleId = filePathToModuleId(moduleId);
 
-        var assignmentName = "['" + path.basename(file, path.extname(file)) + "']";
+        var assignmentName = path.basename(file, path.extname(file));
         if (moduleId.indexOf('Shaders/') === 0) {
-            assignmentName = '._shaders' + assignmentName;
+            assignmentName = '_shaders' + assignmentName;
         }
-
-        var parameterName = moduleId.replace(nonIdentifierRegexp, '_');
-
-        moduleIds.push("'./" + moduleId + "'");
-        parameters.push(parameterName);
-        assignments.push('Cesium' + assignmentName + ' = ' + parameterName + ';');
+        assignmentName = assignmentName.replace(/(\.|-)/g, '_');
+        contents += 'export { default as ' + assignmentName + " } from './" + moduleId + ".js';" + os.EOL;
     });
-
-    var contents = '\
-define([' + moduleIds.join(', ') + '], function(' + parameters.join(', ') + ') {\n\
-  \'use strict\';\n\
-  var Cesium = {\n\
-    VERSION : \'' + version + '\',\n\
-    _shaders : {}\n\
-  };\n\
-  ' + assignments.join('\n  ') + '\n\
-  return Cesium;\n\
-});\n';
 
     fs.writeFileSync('Source/Cesium.js', contents);
 }
 
 function createSpecList() {
-    var specFiles = globby.sync(['Specs/**/*.js', '!Specs/*.js']);
-    var specs = [];
+    var specFiles = globby.sync(['Specs/**/*Spec.js']);
 
+    var contents = '';
     specFiles.forEach(function(file) {
-        specs.push("'" + filePathToModuleId(file) + "'");
+        contents += "import './" + filePathToModuleId(file).replace('Specs/', '') + ".js';\n";
     });
 
-    var contents = '/*eslint-disable no-unused-vars*/\n/*eslint-disable no-implicit-globals*/\nvar specs = [' + specs.join(',') + '];\n';
     fs.writeFileSync(path.join('Specs', 'SpecList.js'), contents);
 }
 
-function createGalleryList(done) {
+function createGalleryList() {
     var demoObjects = [];
     var demoJSONs = [];
     var output = path.join('Apps', 'Sandcastle', 'gallery', 'gallery-index.js');
@@ -1417,29 +1219,18 @@ function createGalleryList(done) {
     var contents = '\
 // This file is automatically rebuilt by the Cesium build process.\n\
 var hello_world_index = ' + helloWorldIndex + ';\n\
+var VERSION = ' + version + ';\n\
 var gallery_demos = [' + demoJSONs.join(', ') + '];\n\
 var has_new_gallery_demos = ' + (newDemos.length > 0 ? 'true;' : 'false;') + '\n';
 
     fs.writeFileSync(output, contents);
 
     // Compile CSS for Sandcastle
-    var outputFile = path.join('Apps', 'Sandcastle', 'templates', 'bucket.css');
-
-    requirejs.optimize({
-        cssIn : path.join('Apps', 'Sandcastle', 'templates', 'bucketRaw.css'),
-        out : outputFile,
-        waitSeconds : 0
-    }, function() {
-        var data = fs.readFileSync(outputFile); //read existing contents into data
-        var fd = fs.openSync(outputFile, 'w+');
-        var buffer = Buffer.from('/* This file is automatically rebuilt by the Cesium build process. */\n');
-
-        fs.writeSync(fd, buffer, 0, buffer.length, 0); //write new data
-        fs.writeSync(fd, data, 0, data.length, buffer.length); //append old data
-
-        fs.close(fd);
-        done();
-    }, done);
+    return streamToPromise(gulp.src(path.join('Apps', 'Sandcastle', 'templates', 'bucketRaw.css'))
+        .pipe(cleanCSS())
+        .pipe(gulpRename('bucket.css'))
+        .pipe(gulpInsert.prepend('/* This file is automatically rebuilt by the Cesium build process. */\n'))
+        .pipe(gulp.dest(path.join('Apps', 'Sandcastle', 'templates'))));
 }
 
 function createJsHintOptions() {
@@ -1459,15 +1250,16 @@ var sandcastleJsHintOptions = ' + JSON.stringify(primary, null, 4) + ';\n';
 function buildSandcastle() {
     var appStream = gulp.src([
             'Apps/Sandcastle/**',
+            '!Apps/Sandcastle/load-cesium-es6.js',
             '!Apps/Sandcastle/standalone.html',
             '!Apps/Sandcastle/images/**',
             '!Apps/Sandcastle/gallery/**.jpg'
         ])
-        // Replace require Source with pre-built Cesium
-        .pipe(gulpReplace('../../../ThirdParty/requirejs-2.1.20/require.js', '../../../CesiumUnminified/Cesium.js'))
-        // Use unminified cesium instead of source
-        .pipe(gulpReplace('Source/Cesium', 'CesiumUnminified'))
+        // Remove dev-only ES6 module loading for unbuilt Cesium
+        .pipe(gulpReplace('    <script type="module" src="../load-cesium-es6.js"></script>', ''))
+        .pipe(gulpReplace('nomodule', ''))
         // Fix relative paths for new location
+        .pipe(gulpReplace('../../../Build', '../../..'))
         .pipe(gulpReplace('../../Source', '../../../Source'))
         .pipe(gulpReplace('../../ThirdParty', '../../../ThirdParty'))
         .pipe(gulpReplace('../../SampleData', '../../../../Apps/SampleData'))
@@ -1486,8 +1278,9 @@ function buildSandcastle() {
     var standaloneStream = gulp.src([
         'Apps/Sandcastle/standalone.html'
         ])
-        .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.20/require.js', '../../../ThirdParty/requirejs-2.1.20/require.js'))
-        .pipe(gulpReplace('Source/Cesium', 'CesiumUnminified'))
+        .pipe(gulpReplace('    <script type="module" src="load-cesium-es6.js"></script>', ''))
+        .pipe(gulpReplace('nomodule', ''))
+        .pipe(gulpReplace('../../Build', '../..'))
         .pipe(gulp.dest('Build/Apps/Sandcastle'));
 
     return streamToPromise(mergeStream(appStream, imageStream, standaloneStream));
@@ -1495,57 +1288,49 @@ function buildSandcastle() {
 
 function buildCesiumViewer() {
     var cesiumViewerOutputDirectory = 'Build/Apps/CesiumViewer';
-    var cesiumViewerStartup = path.join(cesiumViewerOutputDirectory, 'CesiumViewerStartup.js');
-    var cesiumViewerCss = path.join(cesiumViewerOutputDirectory, 'CesiumViewer.css');
     mkdirp.sync(cesiumViewerOutputDirectory);
 
     var promise = Promise.join(
-        requirejsOptimize('CesiumViewer', {
-            wrap : true,
-            useStrict : true,
-            optimizeCss : 'standard',
-            pragmas : {
-                debug : false
+        rollup.rollup({
+            input: 'Apps/CesiumViewer/CesiumViewer.js',
+            treeshake: {
+                moduleSideEffects: false
             },
-            optimize : 'uglify2',
-            mainConfigFile : 'Apps/CesiumViewer/CesiumViewerStartup.js',
-            name : 'CesiumViewerStartup',
-            out : cesiumViewerStartup
-        }),
-        requirejsOptimize('CesiumViewer CSS', {
-            wrap : true,
-            useStrict : true,
-            optimizeCss : 'standard',
-            pragmas : {
-                debug : false
-            },
-            cssIn : 'Apps/CesiumViewer/CesiumViewer.css',
-            out : cesiumViewerCss
+            plugins: [
+                rollupStripPragma({
+                    pragmas: ['debug']
+                }),
+                rollupPluginUglify.uglify()
+            ]
+        }).then(function(bundle) {
+            return bundle.write({
+                file: 'Build/Apps/CesiumViewer/CesiumViewer.js',
+                format: 'iife'
+            });
         })
     );
 
     promise = promise.then(function() {
         var copyrightHeader = fs.readFileSync(path.join('Source', 'copyrightHeader.js'));
-
         var stream = mergeStream(
-            gulp.src(cesiumViewerStartup)
+            gulp.src('Build/Apps/CesiumViewer/CesiumViewer.js')
                 .pipe(gulpInsert.prepend(copyrightHeader))
+                .pipe(gulpReplace('Workers/Build', 'Workers'))
+                .pipe(gulp.dest(cesiumViewerOutputDirectory)),
+
+            gulp.src('Apps/CesiumViewer/CesiumViewer.css')
+                .pipe(cleanCSS())
                 .pipe(gulpReplace('../../Source', '.'))
-                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.20', '.')),
+                .pipe(gulp.dest(cesiumViewerOutputDirectory)),
 
-            gulp.src(cesiumViewerCss)
-                .pipe(gulpReplace('../../Source', '.')),
-
-            gulp.src(['Apps/CesiumViewer/index.html'])
-                .pipe(gulpReplace('../../ThirdParty/requirejs-2.1.20', '.')),
+            gulp.src('Apps/CesiumViewer/index.html')
+                .pipe(gulpReplace('type="module"', ''))
+                .pipe(gulp.dest(cesiumViewerOutputDirectory)),
 
             gulp.src(['Apps/CesiumViewer/**',
                       '!Apps/CesiumViewer/index.html',
                       '!Apps/CesiumViewer/**/*.js',
                       '!Apps/CesiumViewer/**/*.css']),
-
-            gulp.src(['ThirdParty/requirejs-2.1.20/require.min.js'])
-                .pipe(gulpRename('require.js')),
 
             gulp.src(['Build/Cesium/Assets/**',
                       'Build/Cesium/Workers/**',
@@ -1572,30 +1357,6 @@ function buildCesiumViewer() {
 
 function filePathToModuleId(moduleId) {
     return moduleId.substring(0, moduleId.lastIndexOf('.')).replace(/\\/g, '/');
-}
-
-function removeExtension(p) {
-    return p.slice(0, -path.extname(p).length);
-}
-
-function requirejsOptimize(name, config) {
-    if (verbose) {
-        console.log('Building ' + name);
-    }
-    return new Promise(function(resolve, reject) {
-        var cmd = 'npm run requirejs -- --' + Buffer.from(JSON.stringify(config)).toString('base64') + ' --silent';
-        child_process.exec(cmd, function(e) {
-            if (e) {
-                console.log('Error ' + name);
-                reject(e);
-                return;
-            }
-            if (verbose) {
-                console.log('Finished ' + name);
-            }
-            resolve();
-        });
-    });
 }
 
 // TerriajS-specific tasks.

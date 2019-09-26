@@ -7,6 +7,7 @@ import ClockRange from '../Core/ClockRange.js';
 import ClockStep from '../Core/ClockStep.js';
 import Color from '../Core/Color.js';
 import CornerType from '../Core/CornerType.js';
+import Credit from '../Core/Credit.js';
 import createGuid from '../Core/createGuid.js';
 import defaultValue from '../Core/defaultValue.js';
 import defined from '../Core/defined.js';

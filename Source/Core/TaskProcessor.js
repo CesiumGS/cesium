@@ -124,11 +124,9 @@ import RuntimeError from './RuntimeError.js';
         if (defined(TaskProcessor._loaderConfig)) {
             bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
         } else {
-            if (!(typeof self.define !== 'undefined' && defined(define.amd) && !define.amd.toUrlUndefined && defined(require.toUrl))) {
-                bootstrapMessage.loaderConfig.paths = {
-                    'Workers': buildModuleUrl('Workers')
-                };
-            }
+            bootstrapMessage.loaderConfig.paths = {
+                'Workers': buildModuleUrl('Workers/Build')
+            };
             bootstrapMessage.loaderConfig.baseUrl = buildModuleUrl.getCesiumBaseUrl().url;
         }
 
