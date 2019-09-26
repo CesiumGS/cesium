@@ -346,10 +346,46 @@ define([
         // for all the levels we have to process, then on each level we get a
         // subset from this list for subtrees at the tree level we are processing
         var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck); // TODO: Maybe later update this to take min max x, y ,z?
-        var contentLevel;
-        for (contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
-
+        if (allSubtrees.length === 0) {
+            return;
         }
+
+        var contentLevel, subtreesForThisLevel, length, i, subtree, subtreeLevel, indexRange;
+        for (contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
+            subtreesForThisLevel = subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
+
+            length = subtreesForThisLevel.length;
+
+            if (length === 0) {
+                break;
+            }
+
+            for (i = 0; i < length; i++) {
+                subtree = subtreesForThisLevel[i];
+                indexRange = subtree.indexRangeForLevel(contentLevel);
+
+            }
+        }
+    }
+
+    function subtreesContainingLevel(subtrees, level, contentStartLevel) {
+        var subset = [];
+        var i, subtree;
+        var length = subtrees.length;
+        for (i = 0; i < length; i++) {
+            subtree = subtrees[i];
+
+            if (!subtree.inRange(level, level)) {
+                continue;
+            }
+
+            if (level !== contentStartLevel && level === subtree._subtreeRootKey.w) {
+                continue;
+            }
+
+            subset.push(subtree);
+        }
+        return subset;
     }
 
     function executeEmptyTraversal(tileset, root, frameState) {

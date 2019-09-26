@@ -130,7 +130,8 @@ define([
      */
     SubtreeInfo.prototype.inRange = function(startLevel, endLevel) {
         var subtreeStartLevel = this._subtreeRootKey.w;
-        var subtreeEndLevel = this._subtreeLastTreeLevel0Indexed;
+        var subtreeLevels = this._tileset._tilingScheme.subtreeLevels;
+        var subtreeEndLevel = subtreeStartLevel + subtreeLevels - 1;
         return (subtreeStartLevel >= startLevel && subtreeStartLevel <= endLevel) ||
                (subtreeEndLevel >= startLevel && subtreeEndLevel <= endLevel);
 
@@ -138,6 +139,17 @@ define([
 
     SubtreeInfo.prototype.hasSubtrees = function() {
         return defined(this._subtreesMap); // this._subtreeLastTreeLevel0Indexed !== this._subtreeRootKey.w;
+    };
+
+    SubtreeInfo.prototype.indexRangeForLevel = function(treeLevel) {
+        var subtreeLevel = treeLevel - this._subtreeRootKey.w;
+        var sizesArray = this._tileset._unpackedArraySizes;
+        var levelOffset = sizesArray[subtreeLevel];
+        var nextLevelOffset = sizesArray[subtreeLevel + 1];
+        return {
+            begin: levelOffset,
+            end: nextLevelOffset
+        };
     };
 
     /**
@@ -152,9 +164,11 @@ define([
     SubtreeInfo.prototype.subtreesInRange = function(startLevel, endLevel) {
         var subtreesInRange = [];
         var stack = [];
+        var contentStartLevel = this._tileset._startLevel;
 
         var current;
         var children, key, value, child;
+        // Root holds SubtreeInfo's with actual content so push those first then iterate
         children = this._subtreesMap;
         for ([key, child] of children) {
             if (!defined(child)) {
@@ -166,6 +180,10 @@ define([
         while(stack.length > 0) {
             current = stack.pop();
             if (!current.inRange(startLevel, endLevel)) {
+                continue;
+            }
+
+            if (endLevel !== contentStartLevel && endLevel === current._subtreeRootKey.w) {
                 continue;
             }
 
