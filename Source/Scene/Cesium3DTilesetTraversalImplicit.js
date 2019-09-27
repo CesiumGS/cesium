@@ -6,7 +6,7 @@ define([
         '../Core/Math',
         './Cesium3DTileOptimizationHint',
         './Cesium3DTileRefine',
-        './SubtreeInfo',
+        './SubtreeInfo'
     ], function(
         Cartesian3,
         defined,
@@ -179,7 +179,6 @@ define([
         updateTileVisibility(tileset, tile, frameState);
     }
 
-
     function hasEmptyContent(tile) {
         return tile.hasEmptyContent || tile.hasTilesetContent;
     }
@@ -332,7 +331,6 @@ define([
             }
         }
 
-
         // if (!isAdd) {
         //     // Must request all content roots for REPLACE refinement, so it's slightly different than the main loop
         //     // Access through the tileset's subtreeInfo database, add accessor functions for pulling all subtrees for a given level
@@ -358,7 +356,6 @@ define([
             var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
 
             var length = subtreesForThisLevel.length;
-
             if (length === 0) {
                 break;
             }
