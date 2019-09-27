@@ -377,6 +377,7 @@ define([
             return;
         }
 
+        var finalRefinementIndices = [];
         for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
             var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
 
@@ -410,7 +411,7 @@ define([
                     // Replacement is child based
                     children = tile.children;
                     childrenLength = children.length;
-                    var notInBlockedRefinementRegion = true;
+                    var notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
                     var visibleChildrenReady = childrenLength > 0 ? true : false;
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
@@ -430,7 +431,7 @@ define([
                     if (notInBlockedRefinementRegion) {
                         if (!visibleChildrenReady) {
                             selectDesiredTile(tileset, tile, frameState);
-                            // TODO: Add tree index indicating blocked refinement region
+                            finalRefinementIndices.push(tile.treeKey);
                         } else {
                             selectVisibleChildren(tileset, tile, frameState);
                         }
@@ -438,6 +439,20 @@ define([
                 } // for j
             } // for i
         } // for contentLevel
+    }
+
+    function inBlockedRefinementRegion(keys, treeKey) {
+        var length = keys.length;
+        for (var i = 0; i < length; i++) {
+            var key = keys[i];
+            // Traversal is level by level so we can early return
+            if (key.w >= treeKey.w) {
+                return false;
+            } else if (SubtreeInfo.isDescendant(key, treeKey)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function selectVisibleChildren(tileset, tile, frameState) {

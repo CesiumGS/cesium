@@ -152,6 +152,34 @@ define([
         };
     };
 
+    /**
+     * Given ancestor and descendant tree keys, determine if the descenand is in
+     * face a descendant of the ancestor key.
+     *
+     * @param {Cartesian4} level the tree level for which to filter.
+     * @param {Cartesian4} contentStartLevel where the content root starts in the tileset. Needed for a check.
+     * @returns {Boolean} True if the descenant key is a descendant of the ancestor key
+     */
+    SubtreeInfo.isDescendant = function(ancestorTreeIndex, descendantTreeIndex) {
+        var levelDiff = descendantTreeIndex.w - ancestorTreeIndex.w;
+        if (levelDiff < 0) {
+            return false;
+        }
+
+        return ancestorTreeIndex.x === (descendantTreeIndex.x >> levelDiff) &&
+               ancestorTreeIndex.y === (descendantTreeIndex.y >> levelDiff) &&
+               ancestorTreeIndex.z === (descendantTreeIndex.z >> levelDiff);
+    };
+
+    /**
+     * Given an tree level, return the subset of subtrees in subtrees that overlap this level.
+     * Does not include dud subtrees, i.e. subtrees that only have a root (unless it is the  root subtree).
+     *
+     * @param {Array} subtrees An array of subtreeInfo
+     * @param {Number} level the tree level for which to filter.
+     * @param {Number} contentStartLevel where the content root starts in the tileset. Needed for a check.
+     * @returns {Array} An subset array of the param subtrees
+     */
     SubtreeInfo.subtreesContainingLevel = function(subtrees, level, contentStartLevel) {
         var subset = [];
         var i, subtree;
@@ -163,6 +191,8 @@ define([
                 continue;
             }
 
+            // Don't take if level is the same as rootkey since the parent subtree will suffice
+            // If the parent is not subtrees the child won't be either.
             if (level !== contentStartLevel && level === subtree._subtreeRootKey.w) {
                 continue;
             }
