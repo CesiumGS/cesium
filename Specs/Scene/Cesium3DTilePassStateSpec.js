@@ -1,10 +1,12 @@
-defineSuite([
-        'Scene/Cesium3DTilePassState',
-        'Scene/Cesium3DTilePass'
+define([
+        'Scene/Cesium3DTilePass',
+        'Scene/Cesium3DTilePassState'
     ], function(
-        Cesium3DTilePassState,
-        Cesium3DTilePass) {
-    'use strict';
+        Cesium3DTilePass,
+        Cesium3DTilePassState) {
+        'use strict';
+
+describe('Scene/Cesium3DTilePassState', function() {
 
     it('sets default values', function() {
         var passState = new Cesium3DTilePassState({
@@ -44,4 +46,5 @@ defineSuite([
             return new Cesium3DTilePassState({});
         }).toThrowDeveloperError();
     });
+});
 });

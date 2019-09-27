@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Clock',
         'Core/ClockRange',
         'Core/ClockStep',
@@ -10,7 +10,9 @@ defineSuite([
         ClockStep,
         defined,
         JulianDate) {
-    'use strict';
+        'use strict';
+
+describe('Core/Clock', function() {
 
     it('sets default parameters when constructed', function() {
         var clock = new Clock();
@@ -603,4 +605,5 @@ defineSuite([
             expect(time1).toEqual(JulianDate.addSeconds(JulianDate.fromDate(baseDate), 1.0, new JulianDate()));
         });
     });
+});
 });

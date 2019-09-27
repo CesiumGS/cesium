@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Widgets/FullscreenButton/FullscreenButton'
     ], function(
         FullscreenButton) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/FullscreenButton/FullscreenButton', function() {
 
     it('constructor sets default values', function() {
         var fullscreenButton = new FullscreenButton(document.body);
@@ -42,4 +44,5 @@ defineSuite([
             return new FullscreenButton('testElement');
         }).toThrowDeveloperError();
     });
+});
 });

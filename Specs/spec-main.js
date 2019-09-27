@@ -10,10 +10,11 @@
  [jasmine-gem]: http://github.com/pivotal/jasmine-gem
  */
 
-/*global define,require*/
-
 (function() {
     'use strict';
+
+    // set this for uniform test resolution across devices
+    window.devicePixelRatio = 1;
 
     function getQueryParameter(name) {
         var match = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
@@ -57,7 +58,7 @@
             Cesium,
             paths) {
 
-        /*global jasmineRequire,jasmine,exports,specs*/
+        /*global jasmineRequire,exports,specs*/
 
         var when = Cesium.when;
 
@@ -75,25 +76,6 @@
         window.jasmine = jasmineRequire.core(jasmineRequire);
 
         window.specsUsingRelease = release;
-
-        window.defineSuite = function(deps, name, suite, categories) {
-            /*global define,describe*/
-            if (typeof suite === 'object' || typeof suite === 'string') {
-                categories = suite;
-            }
-
-            if (typeof name === 'function') {
-                suite = name;
-                name = deps[0];
-            }
-
-            define(deps, function() {
-                var args = arguments;
-                describe(name, function() {
-                    suite.apply(null, args);
-                }, categories);
-            });
-        };
 
         /**
          * Since this is being run in a browser and the results should populate to an HTML page, require the HTML-specific Jasmine code, injecting the same reference.
@@ -364,7 +346,7 @@
          */
         var modules = ['Specs/addDefaultMatchers', 'Specs/equalsMethodEqualityTester'].concat(specs);
         require(modules, function(addDefaultMatchers, equalsMethodEqualityTester) {
-            jasmine.DEFAULT_TIMEOUT_INTERVAL = 6000;
+            jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 
             htmlReporter.initialize();
 

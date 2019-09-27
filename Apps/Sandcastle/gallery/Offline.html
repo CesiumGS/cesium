@@ -33,7 +33,7 @@ function startup(Cesium) {
 // https://github.com/AnalyticalGraphicsInc/cesium/wiki/Offline-Guide
 
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    imageryProvider : Cesium.createTileMapServiceImageryProvider({
+    imageryProvider : new Cesium.TileMapServiceImageryProvider({
         url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
     }),
     baseLayerPicker : false,

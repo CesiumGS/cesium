@@ -1,16 +1,18 @@
-defineSuite([
-        'Core/PolylinePipeline',
+define([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Core/PolylinePipeline',
         'Core/Transforms'
     ], function(
-        PolylinePipeline,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        PolylinePipeline,
         Transforms) {
-    'use strict';
+        'use strict';
+
+describe('Core/PolylinePipeline', function() {
 
     it('wrapLongitude', function() {
         var positions = Cartesian3.fromDegreesArray([
@@ -165,4 +167,5 @@ defineSuite([
         expect(newPositions.length).toEqual(3);
         expect(newPositions).toEqual([0,0,1]);
     });
+});
 });

@@ -1,10 +1,12 @@
-defineSuite([
-        'Scene/Cesium3DTileFeatureTable',
-        'Core/ComponentDatatype'
+define([
+        'Core/ComponentDatatype',
+        'Scene/Cesium3DTileFeatureTable'
     ], function(
-        Cesium3DTileFeatureTable,
-        ComponentDatatype) {
-    'use strict';
+        ComponentDatatype,
+        Cesium3DTileFeatureTable) {
+        'use strict';
+
+describe('Scene/Cesium3DTileFeatureTable', function() {
 
     it('loads from JSON', function() {
         var featureTable = new Cesium3DTileFeatureTable({
@@ -33,4 +35,5 @@ defineSuite([
         var properties = featureTable.getPropertyArray('TEST', ComponentDatatype.UNSIGNED_BYTE, 2);
         expect(properties).toEqual([0, 1, 2, 3, 4, 5]);
     });
+});
 });

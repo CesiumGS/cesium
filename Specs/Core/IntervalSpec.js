@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/Interval'
     ], function(
         Interval) {
-    'use strict';
+        'use strict';
+
+describe('Core/Interval', function() {
 
     it('constructs without arguments', function() {
         var interval = new Interval();
@@ -17,4 +19,5 @@ defineSuite([
         expect(interval.start).toEqual(start);
         expect(interval.stop).toEqual(stop);
     });
+});
 });

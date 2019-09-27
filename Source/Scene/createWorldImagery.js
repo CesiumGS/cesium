@@ -1,11 +1,11 @@
 define([
-    './IonImageryProvider',
-    './IonWorldImageryStyle',
-    '../Core/defaultValue'
-], function(
-    IonImageryProvider,
-    IonWorldImageryStyle,
-    defaultValue) {
+        '../Core/defaultValue',
+        './IonImageryProvider',
+        './IonWorldImageryStyle'
+    ], function(
+        defaultValue,
+        IonImageryProvider,
+        IonWorldImageryStyle) {
 'use strict';
 
     /**

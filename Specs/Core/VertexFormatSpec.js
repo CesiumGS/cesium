@@ -1,10 +1,12 @@
-defineSuite([
+define([
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/VertexFormat', function() {
 
     it('clone', function() {
         var vertexFormat = new VertexFormat({
@@ -28,4 +30,5 @@ defineSuite([
     });
 
     createPackableSpecs(VertexFormat, VertexFormat.POSITION_AND_NORMAL, [1.0, 1.0, 0.0, 0.0, 0.0, 0.0]);
+});
 });

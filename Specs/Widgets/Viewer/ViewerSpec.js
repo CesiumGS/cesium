@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/CartographicGeocoderService',
@@ -13,7 +13,6 @@ defineSuite([
         'Core/Matrix4',
         'Core/TimeIntervalCollection',
         'Core/WebMercatorProjection',
-        'DataSources/BoundingSphereState',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/DataSourceClock',
@@ -42,8 +41,9 @@ defineSuite([
         'Widgets/NavigationHelpButton/NavigationHelpButton',
         'Widgets/SceneModePicker/SceneModePicker',
         'Widgets/SelectionIndicator/SelectionIndicator',
-        'Widgets/Timeline/Timeline'
-    ], 'Widgets/Viewer/Viewer', function(
+        'Widgets/Timeline/Timeline',
+        'Widgets/Viewer/Viewer'
+    ], function(
         BoundingSphere,
         Cartesian3,
         CartographicGeocoderService,
@@ -58,7 +58,6 @@ defineSuite([
         Matrix4,
         TimeIntervalCollection,
         WebMercatorProjection,
-        BoundingSphereState,
         ConstantPositionProperty,
         ConstantProperty,
         DataSourceClock,
@@ -88,7 +87,9 @@ defineSuite([
         SceneModePicker,
         SelectionIndicator,
         Timeline) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/Viewer/Viewer', function() {
 
     var testProvider = {
         isReady : function() {
@@ -634,6 +635,35 @@ defineSuite([
         expect(function() {
             viewer.resolutionScale = -1;
         }).toThrowDeveloperError();
+    });
+
+    it('can enable useBrowserRecommendedResolution', function() {
+        viewer = createViewer(container, {
+            useBrowserRecommendedResolution : true
+        });
+
+        expect(viewer.useBrowserRecommendedResolution).toBe(true);
+    });
+
+    it('useBrowserRecommendedResolution ignores devicePixelRatio', function() {
+        var oldDevicePixelRatio = window.devicePixelRatio;
+        window.devicePixelRatio = 2.0;
+
+        viewer = createViewer(container, {
+            useDefaultRenderLoop : false
+        });
+
+        viewer.resolutionScale = 0.5;
+
+        viewer.useBrowserRecommendedResolution = true;
+        viewer.resize();
+        expect(viewer.scene.pixelRatio).toEqual(0.5);
+
+        viewer.useBrowserRecommendedResolution = false;
+        viewer.resize();
+        expect(viewer.scene.pixelRatio).toEqual(1.0);
+
+        window.devicePixelRatio = oldDevicePixelRatio;
     });
 
     it('constructor throws with undefined container', function() {
@@ -1637,3 +1667,4 @@ defineSuite([
         expect(postMixinDataSource.entities.collectionChanged._listeners.length).not.toEqual(postMixinListenerCount);
     });
 }, 'WebGL');
+});

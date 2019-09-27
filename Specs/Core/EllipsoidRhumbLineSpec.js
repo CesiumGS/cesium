@@ -1,16 +1,18 @@
-defineSuite([
-        'Core/EllipsoidRhumbLine',
+define([
         'Core/Cartographic',
         'Core/Ellipsoid',
         'Core/EllipsoidGeodesic',
+        'Core/EllipsoidRhumbLine',
         'Core/Math'
     ], function(
-        EllipsoidRhumbLine,
         Cartographic,
         Ellipsoid,
         EllipsoidGeodesic,
+        EllipsoidRhumbLine,
         CesiumMath) {
-    'use strict';
+        'use strict';
+
+describe('Core/EllipsoidRhumbLine', function() {
 
     var oneDegree = CesiumMath.RADIANS_PER_DEGREE;
     var fifteenDegrees = Math.PI / 12;
@@ -649,4 +651,5 @@ defineSuite([
         var midpointUsingIntersection = rhumb.findIntersectionWithLatitude(midpointUsingInterpolation.latitude);
         expect(Cartographic.equalsEpsilon(midpointUsingInterpolation, midpointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
     });
+});
 });

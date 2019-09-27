@@ -9,7 +9,6 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Math',
         '../Core/PixelFormat',
         '../Core/Resource',
         '../Renderer/PassState',
@@ -34,7 +33,6 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        CesiumMath,
         PixelFormat,
         Resource,
         PassState,
@@ -556,7 +554,7 @@ define([
                 '    vec4 id = texture2D(czm_idTexture, v_textureCoordinates + offset); \n' +
                 '    for (int i = 0; i < ' + width + '; ++i) \n' +
                 '    { \n' +
-                '        vec4 selectedId = texture2D(czm_selectedIdTexture, vec2(float(i) * czm_selectedIdTextureStep, 0.5)); \n' +
+                '        vec4 selectedId = texture2D(czm_selectedIdTexture, vec2((float(i) + 0.5) * czm_selectedIdTextureStep, 0.5)); \n' +
                 '        if (all(equal(id, selectedId))) \n' +
                 '        { \n' +
                 '            return true; \n' +

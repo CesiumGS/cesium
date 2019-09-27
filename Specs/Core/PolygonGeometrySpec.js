@@ -1,5 +1,4 @@
-defineSuite([
-        'Core/PolygonGeometry',
+define([
         'Core/ArcType',
         'Core/arrayFill',
         'Core/BoundingSphere',
@@ -9,11 +8,11 @@ defineSuite([
         'Core/GeometryOffsetAttribute',
         'Core/GeometryPipeline',
         'Core/Math',
+        'Core/PolygonGeometry',
         'Core/Rectangle',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        PolygonGeometry,
         ArcType,
         arrayFill,
         BoundingSphere,
@@ -23,10 +22,13 @@ defineSuite([
         GeometryOffsetAttribute,
         GeometryPipeline,
         CesiumMath,
+        PolygonGeometry,
         Rectangle,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/PolygonGeometry', function() {
 
     it('throws without hierarchy', function() {
         expect(function() {
@@ -1037,6 +1039,44 @@ defineSuite([
         expect(geometry.attributes.normal).toBeUndefined();
     });
 
+    it('does not include indices for extruded walls that are too small', function() {
+        var positions = Cartesian3.fromDegreesArray([
+            7.757161063097392, 48.568676799636634,
+            7.753968290229146, 48.571796467099077,
+            7.755340073906587, 48.571948854067948,
+            7.756263393414589, 48.571947951609708,
+            7.756894446412183, 48.569396703043992
+        ]);
+
+        var pRhumb = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : positions,
+            extrudedHeight: 1000,
+            closeTop: false,
+            closeBottom: false,
+            arcType: ArcType.RHUMB
+        }));
+
+        var numVertices = 20;
+        var numTriangles = 10; //5 wall segments, 2 triangles each wall
+        expect(pRhumb.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(pRhumb.indices.length).toEqual(numTriangles * 3);
+
+        var pGeodesic = PolygonGeometry.createGeometry(PolygonGeometry.fromPositions({
+            vertexFormat : VertexFormat.POSITION_ONLY,
+            positions : positions,
+            extrudedHeight: 1000,
+            closeTop: false,
+            closeBottom: false,
+            arcType: ArcType.GEODESIC
+        }));
+
+        numVertices = 20;
+        numTriangles = 10;
+        expect(pGeodesic.attributes.position.values.length).toEqual(numVertices * 3);
+        expect(pGeodesic.indices.length).toEqual(numTriangles * 3);
+    });
+
     it('computing rectangle property', function() {
         var p = new PolygonGeometry({
             vertexFormat : VertexFormat.POSITION_AND_ST,
@@ -1281,4 +1321,5 @@ defineSuite([
     packedInstance.push(1.0, 0.0, 0.0, 0.0, 0.0, 0.0);
     packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 0.0, 1.0, 0, 1, 0, -1, ArcType.GEODESIC, 54);
     createPackableSpecs(PolygonGeometry, polygon, packedInstance);
+});
 });

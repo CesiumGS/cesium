@@ -240,7 +240,7 @@ define([
      * Creates and adds a polyline with the specified initial properties to the collection.
      * The added polyline is returned so it can be modified or removed from the collection later.
      *
-     * @param {Object}[polyline] A template describing the polyline's properties as shown in Example 1.
+     * @param {Object}[options] A template describing the polyline's properties as shown in Example 1.
      * @returns {Polyline} The polyline that was added to the collection.
      *
      * @performance After calling <code>add</code>, {@link PolylineCollection#update} is called and
@@ -264,8 +264,8 @@ define([
      * @see PolylineCollection#removeAll
      * @see PolylineCollection#update
      */
-    PolylineCollection.prototype.add = function(polyline) {
-        var p = new Polyline(polyline, this);
+    PolylineCollection.prototype.add = function(options) {
+        var p = new Polyline(options, this);
         p._index = this._polylines.length;
         this._polylines.push(p);
         this._createVertexArray = true;

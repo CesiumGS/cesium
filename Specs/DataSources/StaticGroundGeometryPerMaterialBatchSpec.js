@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/StaticGroundGeometryPerMaterialBatch',
+define([
         'Core/ApproximateTerrainHeights',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -9,26 +8,19 @@ defineSuite([
         'Core/Math',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
         'DataSources/EllipseGeometryUpdater',
         'DataSources/EllipseGraphics',
         'DataSources/Entity',
         'DataSources/GridMaterialProperty',
-        'DataSources/PolylineArrowMaterialProperty',
-        'DataSources/PolylineGeometryUpdater',
-        'DataSources/PolylineGraphics',
+        'DataSources/StaticGroundGeometryPerMaterialBatch',
         'DataSources/TimeIntervalCollectionProperty',
         'Scene/ClassificationType',
         'Scene/GroundPrimitive',
         'Scene/MaterialAppearance',
-        'Scene/PolylineColorAppearance',
-        'Scene/PolylineMaterialAppearance',
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        StaticGroundGeometryPerMaterialBatch,
         ApproximateTerrainHeights,
         Cartesian2,
         Cartesian3,
@@ -38,25 +30,21 @@ defineSuite([
         CesiumMath,
         TimeInterval,
         TimeIntervalCollection,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
         ConstantProperty,
         EllipseGeometryUpdater,
         EllipseGraphics,
         Entity,
         GridMaterialProperty,
-        PolylineArrowMaterialProperty,
-        PolylineGeometryUpdater,
-        PolylineGraphics,
+        StaticGroundGeometryPerMaterialBatch,
         TimeIntervalCollectionProperty,
         ClassificationType,
         GroundPrimitive,
         MaterialAppearance,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/StaticGroundGeometryPerMaterialBatch', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -469,4 +457,5 @@ defineSuite([
                 batch.removeAllPrimitives();
             });
     });
+});
 });

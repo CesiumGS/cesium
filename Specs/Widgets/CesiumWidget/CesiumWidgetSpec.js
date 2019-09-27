@@ -1,5 +1,4 @@
-defineSuite([
-        'Widgets/CesiumWidget/CesiumWidget',
+define([
         'Core/Clock',
         'Core/defaultValue',
         'Core/EllipsoidTerrainProvider',
@@ -13,9 +12,9 @@ defineSuite([
         'Scene/TileCoordinatesImageryProvider',
         'Specs/DomEventSimulator',
         'Specs/getWebGLStub',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'Widgets/CesiumWidget/CesiumWidget'
     ], function(
-        CesiumWidget,
         Clock,
         defaultValue,
         EllipsoidTerrainProvider,
@@ -29,8 +28,11 @@ defineSuite([
         TileCoordinatesImageryProvider,
         DomEventSimulator,
         getWebGLStub,
-        pollToPromise) {
-    'use strict';
+        pollToPromise,
+        CesiumWidget) {
+        'use strict';
+
+describe('Widgets/CesiumWidget/CesiumWidget', function() {
 
     var container;
     var widget;
@@ -271,6 +273,35 @@ defineSuite([
         expect(widget.resolutionScale).toBe(0.5);
     });
 
+    it('can enable useBrowserRecommendedResolution', function() {
+        widget = createCesiumWidget(container, {
+            useBrowserRecommendedResolution : true
+        });
+
+        expect(widget.useBrowserRecommendedResolution).toBe(true);
+    });
+
+    it('useBrowserRecommendedResolution ignores devicePixelRatio', function() {
+        var oldDevicePixelRatio = window.devicePixelRatio;
+        window.devicePixelRatio = 2.0;
+
+        widget = createCesiumWidget(container, {
+            useDefaultRenderLoop : false
+        });
+
+        widget.resolutionScale = 0.5;
+
+        widget.useBrowserRecommendedResolution = true;
+        widget.resize();
+        expect(widget.scene.pixelRatio).toEqual(0.5);
+
+        widget.useBrowserRecommendedResolution = false;
+        widget.resize();
+        expect(widget.scene.pixelRatio).toEqual(1.0);
+
+        window.devicePixelRatio = oldDevicePixelRatio;
+    });
+
     it('throws if resolutionScale is less than 0', function() {
         widget = createCesiumWidget(container);
         expect(function() {
@@ -365,3 +396,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

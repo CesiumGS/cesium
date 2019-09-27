@@ -1,20 +1,22 @@
-defineSuite([
-        'Core/Occluder',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Core/Occluder',
         'Core/Rectangle',
         'Core/Visibility'
     ], function(
-        Occluder,
         BoundingSphere,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        Occluder,
         Rectangle,
         Visibility) {
-    'use strict';
+        'use strict';
+
+describe('Core/Occluder', function() {
 
     it('throws an exception during construction (1 of 3)', function() {
         expect(function() {
@@ -309,4 +311,5 @@ defineSuite([
         expect(occluder1.position).toEqual(occluder0.position);
         expect(occluder1.radius).toEqual(occluder0.radius);
     });
+});
 });

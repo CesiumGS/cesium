@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Set a custom resolution scale and/or toggle the browser's recommended resolution.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
+    <script type="text/javascript">
+        if(typeof require === 'function') {
+            require.config({
+                baseUrl : '../../../Source',
+                waitSeconds : 120
+            });
+        }
+    </script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar">
+<table><tbody>
+    <tr>
+        <td>Use Browser Recommended Resolution</td>
+        <td><input type="checkbox" data-bind="checked: useBrowserRecommendedResolution"></td>
+    </tr>
+    <tr>
+        <td>Resolution Scale</td>
+        <td>
+            <input type="range" min="0.1" max="2.0" step="0.1" data-bind="value: resolutionScale, valueUpdate: 'input'">
+            <input type="text" size="5" data-bind="value: resolutionScale">
+        </td>
+    </tr>
+</tbody></table>
+</div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+var viewModel = {
+    useBrowserRecommendedResolution : false,
+    resolutionScale : 0.25
+};
+
+Cesium.knockout.track(viewModel);
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+for (var name in viewModel) {
+    if (viewModel.hasOwnProperty(name)) {
+        Cesium.knockout.getObservable(viewModel, name).subscribe(update);
+    }
+}
+
+function update() {
+    viewer.useBrowserRecommendedResolution = viewModel.useBrowserRecommendedResolution;
+
+    var resolutionScale = Number(viewModel.resolutionScale);
+    resolutionScale = !isNaN(resolutionScale) ? resolutionScale : 1.0;
+    resolutionScale = Cesium.Math.clamp(resolutionScale, 0.1, 2.0);
+    viewer.resolutionScale = resolutionScale;
+}
+update();
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    startup(Cesium);
+} else if (typeof require === 'function') {
+    require(['Cesium'], startup);
+}
+</script>
+</body>
+</html>

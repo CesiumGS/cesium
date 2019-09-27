@@ -1,11 +1,11 @@
-defineSuite([
-        'Scene/Model',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
         'Core/CesiumTerrainProvider',
         'Core/Color',
         'Core/combine',
+        'Core/Credit',
         'Core/defaultValue',
         'Core/defined',
         'Core/defineProperties',
@@ -32,18 +32,19 @@ defineSuite([
         'Scene/ColorBlendMode',
         'Scene/DracoLoader',
         'Scene/HeightReference',
+        'Scene/Model',
         'Scene/ModelAnimationLoop',
         'Specs/createScene',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        Model,
         Cartesian2,
         Cartesian3,
         Cartesian4,
         CesiumTerrainProvider,
         Color,
         combine,
+        Credit,
         defaultValue,
         defined,
         defineProperties,
@@ -70,11 +71,14 @@ defineSuite([
         ColorBlendMode,
         DracoLoader,
         HeightReference,
+        Model,
         ModelAnimationLoop,
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Model', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxNoTechniqueUrl = './Data/Models/Box/CesiumBoxTest-NoTechnique.gltf';
@@ -294,6 +298,7 @@ defineSuite([
         expect(texturedBoxModel.color).toEqual(Color.WHITE);
         expect(texturedBoxModel.colorBlendMode).toEqual(ColorBlendMode.HIGHLIGHT);
         expect(texturedBoxModel.colorBlendAmount).toEqual(0.5);
+        expect(texturedBoxModel.credit).toBeUndefined();
     });
 
     it('preserves query string in url', function() {
@@ -331,6 +336,15 @@ defineSuite([
         });
         expect(model._resource).toEqual(basePath);
         expect(Resource._Implementations.loadWithXhr.calls.argsFor(0)[0]).toEqual(url.url);
+    });
+
+    it('fromGltf takes a credit', function() {
+        var url = texturedBoxBasePathUrl;
+        var model = Model.fromGltf({
+            url: url,
+            credit: 'This is my model credit'
+        });
+        expect(model.credit).toBeInstanceOf(Credit);
     });
 
     it('renders', function() {
@@ -1026,7 +1040,7 @@ defineSuite([
                 scene : scene,
                 time : JulianDate.fromDate(new Date('January 1, 2014 12:00:00 UTC'))
             }).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([193, 17, 16, 255], 5); // Red
+                expect(rgba).toEqualEpsilon([174, 6, 5, 255], 5); // Red
             });
 
             primitives.remove(m);
@@ -2422,27 +2436,19 @@ defineSuite([
 
     function checkVertexColors(model) {
         model.zoomTo();
-        scene.camera.moveUp(0.1);
-        // Red
+        // Blue plane
         scene.camera.moveLeft(0.5);
         expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeGreaterThan(20);
-            expect(rgba[1]).toBeLessThan(20);
-            expect(rgba[2]).toBeLessThan(20);
+            expect(rgba[0]).toEqual(0);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(255);
         });
-        // Green
-        scene.camera.moveRight(0.5);
+        // Red plane
+        scene.camera.moveRight(1.0);
         expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeLessThan(20);
-            expect(rgba[1]).toBeGreaterThan(20);
-            expect(rgba[2]).toBeLessThan(20);
-        });
-        // Blue
-        scene.camera.moveRight(0.5);
-        expect(scene).toRenderAndCall(function(rgba) {
-            expect(rgba[0]).toBeLessThan(20);
-            expect(rgba[1]).toBeLessThan(20);
-            expect(rgba[2]).toBeGreaterThan(20);
+            expect(rgba[0]).toEqual(255);
+            expect(rgba[1]).toEqual(0);
+            expect(rgba[2]).toEqual(0);
         });
     }
 
@@ -3099,17 +3105,27 @@ defineSuite([
         return loadModel(boxPbrUrl).then(function(model) {
             model.show = true;
             model.zoomTo();
-            expect(scene).toRenderAndCall(function(rgba) {
-                expect(rgba).not.toEqual([0, 0, 0, 255]);
-                model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
-                expect(scene).toRenderAndCall(function(rgba2) {
-                    expect(rgba2).not.toEqual(rgba);
-                    model.lightColor = new Cartesian3(5.0, 5.0, 5.0);
-                    expect(scene).notToRender(rgba2);
 
-                    primitives.remove(model);
-                });
+            var sceneArgs = {
+                scene : scene,
+                time : JulianDate.fromDate(new Date('January 1, 2014 23:00:00 UTC'))
+            };
+
+            expect(sceneArgs).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([153, 6, 5, 255], 5);
             });
+
+            model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
+            expect(sceneArgs).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([85, 6, 5, 255], 5);
+            });
+
+            model.lightColor = new Cartesian3(5.0, 5.0, 5.0);
+            expect(sceneArgs).toRenderAndCall(function(rgba) {
+                expect(rgba).toEqualEpsilon([164, 16, 16, 255], 5);
+            });
+
+            primitives.remove(model);
         });
     });
 
@@ -3541,3 +3557,4 @@ defineSuite([
         });
     });
 }, 'WebGL');
+});

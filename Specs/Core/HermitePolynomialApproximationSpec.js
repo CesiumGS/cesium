@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/HermitePolynomialApproximation'
     ], function(
         HermitePolynomialApproximation) {
-    'use strict';
+        'use strict';
+
+describe('Core/HermitePolynomialApproximation', function() {
 
     //The results of these specs were validated against STK Components
     //an aerospace SDK available from Analytical Graphics. www.agi.com/components/
@@ -74,4 +76,5 @@ defineSuite([
         expect(result).toEqualEpsilon(expectedResult, 1e-8);
     });
 
+});
 });

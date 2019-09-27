@@ -655,7 +655,7 @@ define([
         result.notYetRenderableCount = southwest.notYetRenderableCount + southeast.notYetRenderableCount + northwest.notYetRenderableCount + northeast.notYetRenderableCount;
     };
 
-    var traversalQuadsByLevel = new Array(30); // level 30 tiles are ~2cm wide at the equator, should be good enough.
+    var traversalQuadsByLevel = new Array(31); // level 30 tiles are ~2cm wide at the equator, should be good enough.
     for (var i = 0; i < traversalQuadsByLevel.length; ++i) {
         traversalQuadsByLevel[i] = new TraversalQuadDetails();
     }
@@ -994,8 +994,10 @@ define([
         var error = (maxGeometricError * height) / (distance * sseDenominator);
 
         if (frameState.fog.enabled) {
-            error = error - CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
+            error -= CesiumMath.fog(distance, frameState.fog.density) * frameState.fog.sse;
         }
+
+        error /= frameState.pixelRatio;
 
         return error;
     }
@@ -1016,8 +1018,10 @@ define([
         var error = maxGeometricError / pixelSize;
 
         if (frameState.fog.enabled && frameState.mode !== SceneMode.SCENE2D) {
-            error = error - CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
+            error -= CesiumMath.fog(tile._distance, frameState.fog.density) * frameState.fog.sse;
         }
+
+        error /= frameState.pixelRatio;
 
         return error;
     }

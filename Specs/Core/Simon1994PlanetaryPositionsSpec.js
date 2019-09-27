@@ -1,20 +1,22 @@
-defineSuite([
-        'Core/Simon1994PlanetaryPositions',
+define([
         'Core/defined',
         'Core/JulianDate',
         'Core/Math',
         'Core/Matrix3',
+        'Core/Simon1994PlanetaryPositions',
         'Core/TimeStandard',
         'Core/Transforms'
     ], function(
-        PlanetaryPositions,
         defined,
         JulianDate,
         CesiumMath,
         Matrix3,
+        PlanetaryPositions,
         TimeStandard,
         Transforms) {
-    'use strict';
+        'use strict';
+
+describe('Core/Simon1994PlanetaryPositions', function() {
 
     // Values for the X Y and Z were found using the STK Components GeometryTransformer on the position of the
     // sun center of mass point and the earth J2000 reference frame.
@@ -108,4 +110,5 @@ defineSuite([
         PlanetaryPositions.computeSunPositionInEarthInertialFrame(undefined);
     });
 
+});
 });

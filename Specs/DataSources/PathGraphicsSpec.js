@@ -1,16 +1,18 @@
-defineSuite([
-        'DataSources/PathGraphics',
+define([
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty'
+        'DataSources/ConstantProperty',
+        'DataSources/PathGraphics'
     ], function(
-        PathGraphics,
         Color,
         DistanceDisplayCondition,
         ColorMaterialProperty,
-        ConstantProperty) {
-    'use strict';
+        ConstantProperty,
+        PathGraphics) {
+        'use strict';
+
+describe('DataSources/PathGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -125,4 +127,5 @@ defineSuite([
             target.merge(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

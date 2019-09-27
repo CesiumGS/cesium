@@ -1,14 +1,16 @@
-defineSuite([
-        'Renderer/Buffer',
+define([
         'Core/IndexDatatype',
+        'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Specs/createContext'
     ], function(
-        Buffer,
         IndexDatatype,
+        Buffer,
         BufferUsage,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Buffer', function() {
 
     createBufferSpecs({});
     var c = createContext({ requestWebgl2 : true });
@@ -703,3 +705,4 @@ defineSuite([
         });
     }
 }, 'WebGL');
+});

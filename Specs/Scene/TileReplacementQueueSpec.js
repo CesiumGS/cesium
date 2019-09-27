@@ -1,16 +1,18 @@
-defineSuite([
-        'Scene/TileReplacementQueue',
+define([
         'Core/defined',
         'Core/GeographicTilingScheme',
         'Scene/QuadtreeTile',
-        'Scene/QuadtreeTileLoadState'
+        'Scene/QuadtreeTileLoadState',
+        'Scene/TileReplacementQueue'
     ], function(
-        TileReplacementQueue,
         defined,
         GeographicTilingScheme,
         QuadtreeTile,
-        QuadtreeTileLoadState) {
-    'use strict';
+        QuadtreeTileLoadState,
+        TileReplacementQueue) {
+        'use strict';
+
+describe('Scene/TileReplacementQueue', function() {
 
     function Tile(num, loadedState, upsampledState) {
         this._num = num;
@@ -173,4 +175,5 @@ defineSuite([
             expect(queue.count).toEqual(3);
         });
     });
+});
 });

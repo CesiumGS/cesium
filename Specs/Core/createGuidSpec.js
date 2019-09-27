@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/createGuid'
     ], function(
         createGuid) {
-    'use strict';
+        'use strict';
+
+describe('Core/createGuid', function() {
 
     it('creates GUIDs', function() {
         var isGuidRegex = /^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}$/;
@@ -27,4 +29,5 @@ defineSuite([
         expect(isGuidRegex.test(guid3)).toEqual(true);
         expect(guid3.length).toEqual(36);
     });
+});
 });

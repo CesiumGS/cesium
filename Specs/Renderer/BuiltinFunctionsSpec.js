@@ -1,8 +1,7 @@
-defineSuite([
+define([
         'Core/BoundingRectangle',
         'Core/Cartesian3',
         'Core/Cartesian4',
-        'Core/Math',
         'Core/EncodedCartesian3',
         'Specs/createCamera',
         'Specs/createContext',
@@ -11,12 +10,13 @@ defineSuite([
         BoundingRectangle,
         Cartesian3,
         Cartesian4,
-        CesiumMath,
         EncodedCartesian3,
         createCamera,
         createContext,
         createFrameState) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/BuiltinFunctions', function() {
 
     var context;
 
@@ -529,3 +529,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

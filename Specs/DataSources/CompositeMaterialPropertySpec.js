@@ -1,20 +1,22 @@
-defineSuite([
-        'DataSources/CompositeMaterialProperty',
+define([
         'Core/Color',
         'Core/JulianDate',
         'Core/TimeInterval',
         'Core/TimeIntervalCollection',
         'DataSources/ColorMaterialProperty',
+        'DataSources/CompositeMaterialProperty',
         'DataSources/GridMaterialProperty'
     ], function(
-        CompositeMaterialProperty,
         Color,
         JulianDate,
         TimeInterval,
         TimeIntervalCollection,
         ColorMaterialProperty,
+        CompositeMaterialProperty,
         GridMaterialProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CompositeMaterialProperty', function() {
 
     it('default constructor has expected values', function() {
         var property = new CompositeMaterialProperty();
@@ -184,4 +186,5 @@ defineSuite([
             property.getType(undefined);
         }).toThrowDeveloperError();
     });
+});
 });

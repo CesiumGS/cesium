@@ -1,6 +1,4 @@
-defineSuite([
-        'Scene/SingleTileImageryProvider',
-        'Core/DefaultProxy',
+define([
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/Rectangle',
@@ -9,11 +7,10 @@ defineSuite([
         'Scene/ImageryLayer',
         'Scene/ImageryProvider',
         'Scene/ImageryState',
+        'Scene/SingleTileImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        SingleTileImageryProvider,
-        DefaultProxy,
         Ellipsoid,
         GeographicTilingScheme,
         Rectangle,
@@ -22,9 +19,12 @@ defineSuite([
         ImageryLayer,
         ImageryProvider,
         ImageryState,
+        SingleTileImageryProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/SingleTileImageryProvider', function() {
 
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
@@ -222,4 +222,5 @@ defineSuite([
             });
         });
     });
+});
 });

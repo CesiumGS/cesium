@@ -1,20 +1,22 @@
-defineSuite([
-        'Core/FrustumGeometry',
+define([
         'Core/Cartesian3',
+        'Core/FrustumGeometry',
         'Core/Math',
         'Core/PerspectiveFrustum',
         'Core/Quaternion',
         'Core/VertexFormat',
         'Specs/createPackableSpecs'
     ], function(
-        FrustumGeometry,
         Cartesian3,
+        FrustumGeometry,
         CesiumMath,
         PerspectiveFrustum,
         Quaternion,
         VertexFormat,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/FrustumGeometry', function() {
 
     it('constructor throws without options', function() {
         expect(function() {
@@ -90,4 +92,5 @@ defineSuite([
         orientation : Quaternion.IDENTITY,
         vertexFormat : VertexFormat.POSITION_ONLY
     }), [0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
+});
 });

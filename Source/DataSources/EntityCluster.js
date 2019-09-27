@@ -116,8 +116,8 @@ define([
 
         expandBoundingBox(result, pixelRange);
 
-        if (entityCluster._clusterLabels && !defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id) && defined(item.id._label)) {
-            var labelIndex = entityCluster._collectionIndicesByEntity[item.id];
+        if (entityCluster._clusterLabels && !defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id.id) && defined(item.id._label)) {
+            var labelIndex = entityCluster._collectionIndicesByEntity[item.id.id].labelIndex;
             var label = entityCluster._labelCollection.get(labelIndex);
             var labelBBox = Label.getScreenSpaceBoundingBox(label, coord, labelBoundingBoxScratch);
             expandBoundingBox(labelBBox, pixelRange);
@@ -130,8 +130,8 @@ define([
     function addNonClusteredItem(item, entityCluster) {
         item.clusterShow = true;
 
-        if (!defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id) && defined(item.id._label)) {
-            var labelIndex = entityCluster._collectionIndicesByEntity[item.id];
+        if (!defined(item._labelCollection) && defined(item.id) && hasLabelIndex(entityCluster, item.id.id) && defined(item.id._label)) {
+            var labelIndex = entityCluster._collectionIndicesByEntity[item.id.id].labelIndex;
             var label = entityCluster._labelCollection.get(labelIndex);
             label.clusterShow = true;
         }

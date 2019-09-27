@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Cartesian3',
         'Core/Cartographic',
         'Core/Color',
@@ -11,10 +11,8 @@ defineSuite([
         'Core/Matrix4',
         'Core/Rectangle',
         'Core/RectangleGeometry',
-        'Core/Transforms',
         'Renderer/Pass',
         'Renderer/RenderState',
-        'Scene/Batched3DModel3DTileContent',
         'Scene/ClassificationType',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
@@ -34,17 +32,17 @@ defineSuite([
         Matrix4,
         Rectangle,
         RectangleGeometry,
-        Transforms,
         Pass,
         RenderState,
-        Batched3DModel3DTileContent,
         ClassificationType,
         PerInstanceColorAppearance,
         Primitive,
         StencilConstants,
         Cesium3DTilesTester,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Batched3DModel3DTileContentClassification', function() {
 
     var scene;
     var modelMatrix;
@@ -229,3 +227,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

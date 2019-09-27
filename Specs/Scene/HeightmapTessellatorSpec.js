@@ -1,20 +1,22 @@
-defineSuite([
-        'Core/HeightmapTessellator',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Ellipsoid',
+        'Core/HeightmapTessellator',
         'Core/Math',
         'Core/Rectangle',
         'Core/WebMercatorProjection'
     ], function(
-        HeightmapTessellator,
         Cartesian2,
         Cartesian3,
         Ellipsoid,
+        HeightmapTessellator,
         CesiumMath,
         Rectangle,
         WebMercatorProjection) {
-    'use strict';
+        'use strict';
+
+describe('Scene/HeightmapTessellator', function() {
 
     it('throws when heightmap is not provided', function() {
         expect(function() {
@@ -439,4 +441,5 @@ defineSuite([
             }
         }
     });
+});
 });

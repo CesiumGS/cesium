@@ -1,29 +1,29 @@
 define([
-    '../Core/Cartesian3',
-    '../Core/Cartographic',
-    '../Core/Check',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/destroyObject',
-    '../Core/Event',
-    '../Core/Iso8601',
-    '../Core/Math',
-    '../Scene/HeightReference',
-    '../Scene/SceneMode',
-    './Property'
-], function(
-    Cartesian3,
-    Cartographic,
-    Check,
-    defined,
-    defineProperties,
-    destroyObject,
-    Event,
-    Iso8601,
-    CesiumMath,
-    HeightReference,
-    SceneMode,
-    Property) {
+        '../Core/Cartesian3',
+        '../Core/Cartographic',
+        '../Core/Check',
+        '../Core/defined',
+        '../Core/defineProperties',
+        '../Core/destroyObject',
+        '../Core/Event',
+        '../Core/Iso8601',
+        '../Core/Math',
+        '../Scene/HeightReference',
+        '../Scene/SceneMode',
+        './Property'
+    ], function(
+        Cartesian3,
+        Cartographic,
+        Check,
+        defined,
+        defineProperties,
+        destroyObject,
+        Event,
+        Iso8601,
+        CesiumMath,
+        HeightReference,
+        SceneMode,
+        Property) {
     'use strict';
 
     var scratchPosition = new Cartesian3();

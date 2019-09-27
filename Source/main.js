@@ -1,4 +1,3 @@
-/*global require*/
 // require in the complete Cesium object and reassign it globally.
 // This is meant for use with the Almond loader.
 require([
@@ -6,7 +5,7 @@ require([
     ], function(
         Cesium) {
     'use strict';
-    /*global self,module*/
+    /*global module*/
     if (typeof window !== 'undefined') {
         window.Cesium = Cesium;
     } else if (typeof self !== 'undefined') {

@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/KmlDataSource',
+define([
         'Core/ArcType',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
@@ -8,6 +7,7 @@ defineSuite([
         'Core/ClockStep',
         'Core/Color',
         'Core/combine',
+        'Core/Credit',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/HeadingPitchRange',
@@ -25,6 +25,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
         'DataSources/KmlCamera',
+        'DataSources/KmlDataSource',
         'DataSources/KmlLookAt',
         'DataSources/KmlTour',
         'DataSources/KmlTourFlyTo',
@@ -38,7 +39,6 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        KmlDataSource,
         ArcType,
         BoundingRectangle,
         Cartesian2,
@@ -47,6 +47,7 @@ defineSuite([
         ClockStep,
         Color,
         combine,
+        Credit,
         Ellipsoid,
         Event,
         HeadingPitchRange,
@@ -64,6 +65,7 @@ defineSuite([
         EntityCollection,
         ImageMaterialProperty,
         KmlCamera,
+        KmlDataSource,
         KmlLookAt,
         KmlTour,
         KmlTourFlyTo,
@@ -76,7 +78,9 @@ defineSuite([
         createCamera,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/KmlDataSource', function() {
 
     var parser = new DOMParser();
 
@@ -149,7 +153,8 @@ defineSuite([
         canvas : {
             clientWidth : 512,
             clientHeight : 512
-        }
+        },
+        credit: 'This is my credit'
     };
     options.camera.frustum.fov = CesiumMath.PI_OVER_FOUR;
     options.camera.frustum.aspectRatio = 1.0;
@@ -170,6 +175,7 @@ defineSuite([
         expect(dataSource.loadingEvent).toBeInstanceOf(Event);
         expect(dataSource.unsupportedNodeEvent).toBeInstanceOf(Event);
         expect(dataSource.show).toBe(true);
+        expect(dataSource.credit).toBeInstanceOf(Credit);
     });
 
     it('setting name raises changed event', function() {
@@ -271,6 +277,52 @@ defineSuite([
         return dataSource.load(resource).then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
+    it('load does deferred loading', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <Placemark id="Bob">\
+            </Placemark>\
+            <Placemark id="Bob2">\
+            </Placemark>\
+        </Document>';
+
+        jasmine.clock().install();
+        jasmine.clock().mockDate(new Date());
+
+        // Jasmine doesn't mock performance.now(), so force Date.now()
+        spyOn(KmlDataSource, '_getTimestamp').and.callFake(function() {
+            return Date.now();
+        });
+
+        var OrigDeferredLoading = KmlDataSource._DeferredLoading;
+        var deferredLoading;
+        spyOn(KmlDataSource, '_DeferredLoading').and.callFake(function(datasource) {
+            deferredLoading = new OrigDeferredLoading(datasource);
+
+            var process = deferredLoading._process.bind(deferredLoading);
+            spyOn(deferredLoading, '_process').and.callFake(function(isFirst) {
+                jasmine.clock().tick(1001); // Step over a second everytime, so we only process 1 feature
+                return process(isFirst);
+            });
+
+            var giveUpTime = deferredLoading._giveUpTime.bind(deferredLoading);
+            spyOn(deferredLoading, '_giveUpTime').and.callFake(function() {
+                giveUpTime();
+                jasmine.clock().tick(1); // Fire the setTimeout callback
+            });
+
+            return deferredLoading;
+        });
+
+        var dataSource = new KmlDataSource(options);
+        return dataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(source) {
+            expect(deferredLoading._process.calls.count()).toEqual(3); // Document and 2 placemarks
+
+            jasmine.clock().uninstall();
         });
     });
 
@@ -4542,4 +4594,5 @@ defineSuite([
             expect(dataSource.entities.values[2].polygon.material.color.getValue()).not.toEqual(dataSource.entities.values[3].polygon.material.color.getValue());
         });
     });
+});
 });

@@ -144,7 +144,7 @@ define([
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
      * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade models.
-     * @param {Number} [options.luminanceAtZenith=0.5] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+     * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
      * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
@@ -716,10 +716,10 @@ define([
          *
          * @type Number
          *
-         * @default 0.5
+         * @default 0.2
          *
          */
-        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.5);
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.2);
 
         /**
          * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
@@ -1498,6 +1498,8 @@ define([
          * Cesium adds lighting from the earth, sky, atmosphere, and star skybox. This cartesian is used to scale the final
          * diffuse and specular lighting contribution from those sources to the final color. A value of 0.0 will disable those light sources.
          *
+         * @memberof Cesium3DTileset.prototype
+         *
          * @type {Cartesian2}
          * @default Cartesian2(1.0, 1.0)
          */
@@ -1558,8 +1560,6 @@ define([
             // Append the tileset version to the resource
             this._basePath += '?v=' + tilesetVersion;
             resource.setQueryParameters({ v: tilesetVersion });
-        } else {
-            delete resource.queryParameters.v;
         }
 
         // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
@@ -2277,7 +2277,7 @@ define([
         var pass = tilesetPassState.pass;
         if ((pass === Cesium3DTilePass.PRELOAD && (!this.preloadWhenHidden || this.show)) ||
             (pass === Cesium3DTilePass.PRELOAD_FLIGHT && (!this.preloadFlightDestinations || (!this.show && !this.preloadWhenHidden))) ||
-            (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK && !this.cullRequestsWhileMoving && this.foveatedTimeDelay <= 0)) {
+            (pass === Cesium3DTilePass.REQUEST_RENDER_MODE_DEFER_CHECK && ((!this.cullRequestsWhileMoving && this.foveatedTimeDelay <= 0) || !this.show))) {
             return;
         }
 
