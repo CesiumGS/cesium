@@ -343,7 +343,7 @@ define([
         var onlyContentRootTiles = lastContentLevelToCheck < contentStartLevel;
         var lodDistances = tileset._lodDistances;
         var tilesetRoot = tileset.root;
-        var distanceForLevel = lodDistances[0];
+        var distanceForLevel = lodDistances[contentStartLevel];
 
         var children = tilesetRoot.children;
         var childrenLength = children.length;
@@ -387,8 +387,8 @@ define([
                 break;
             }
 
-            var distanceForLevel = lodDistances[contentLevel + 1];
             var distanceForParent = lodDistances[contentLevel];
+            distanceForLevel = lodDistances[contentLevel + 1];
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
@@ -409,13 +409,15 @@ define([
                     }
 
                     var notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
-                    if (tile._distanceToCamera > distanceForLevel &&
-                        tile._distanceToCamera <= distanceForParent &&
-                        contentLevel !== contentStartLevel &&
-                        notInBlockedRefinementRegion) {
-                        // TODO: This might be ok to call load vist touch select and
-                        // get rid of the content level check and root content loop above
-                        selectDesiredTile(tileset, tile, frameState);
+                    if (tile._distanceToCamera > distanceForLevel) {
+                        if ((tile.parent._distanceToCamera <= distanceForParent) &&
+                            contentLevel !== contentStartLevel &&
+                            notInBlockedRefinementRegion) {
+                            // TODO: This might be ok to call load vist touch select and
+                            // get rid of the content level check and root content loop above
+                            selectDesiredTile(tileset, tile, frameState);
+                            finalRefinementIndices.push(tile.treeKey);
+                        }
                         continue;
                     }
 

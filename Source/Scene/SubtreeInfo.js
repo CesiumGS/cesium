@@ -132,8 +132,10 @@ define([
         var subtreeStartLevel = this._subtreeRootKey.w;
         var subtreeLevels = this._tileset._tilingScheme.subtreeLevels;
         var subtreeEndLevel = subtreeStartLevel + subtreeLevels - 1;
-        return (subtreeStartLevel >= startLevel && subtreeStartLevel <= endLevel) ||
-               (subtreeEndLevel >= startLevel && subtreeEndLevel <= endLevel);
+        // return (subtreeStartLevel >= startLevel && subtreeStartLevel <= endLevel) ||
+        //        (subtreeEndLevel >= startLevel && subtreeEndLevel <= endLevel);
+        var noOverlap = subtreeStartLevel > endLevel || subtreeEndLevel < startLevel;
+        return !noOverlap;
 
     };
 
