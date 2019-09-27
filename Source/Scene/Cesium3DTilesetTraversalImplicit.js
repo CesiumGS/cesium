@@ -287,7 +287,6 @@ define([
             return;
         }
 
-        // if (true) {
         if (!isAdd) {
             var stack = traversal.stack;
             stack.push(tilesetRoot);
@@ -331,62 +330,10 @@ define([
             }
         }
 
-        // if (!isAdd) {
-        //     // Must request all content roots for REPLACE refinement, so it's slightly different than the main loop
-        //     // Access through the tileset's subtreeInfo database, add accessor functions for pulling all subtrees for a given level
-        //     // You then loop over all tiles on the subtree level that we care about.
-        //     // 1. call updateTile, if not vis continue to next tile, otherwise call loadTile
-        //     // TODO: I think REPLACE refine might be best with stack or double buffer stack
-        // }
-
-        // ADD: On every level in the loop:
-        // 1. updateTile
-        // 2. if visible and within the Camear distance for the level, loadTile and selectDesiredTile
-        // For now maybe: ask tileset.subtreeInfo for an array of subtreeInfo's
-        // for all the levels we have to process, then on each level we get a
-        // subset from this list for subtrees at the tree level we are processing
-        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck); // TODO: Maybe later update this to take min max x, y ,z?
-        if (allSubtrees.length === 0) {
-            return;
-        }
-
-        var i, j;
-        var lodDistances = tileset._lodDistances;
-        for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
-            var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
-
-            var length = subtreesForThisLevel.length;
-            if (length === 0) {
-                break;
-            }
-
-            var distanceForLevel = lodDistances[contentLevel];
-
-            for (i = 0; i < length; i++) {
-                var subtree = subtreesForThisLevel[i];
-                var indexRange = subtree.indexRangeForLevel(contentLevel);
-                var begin = indexRange.begin;
-                var end = indexRange.end;
-                var tiles = subtree._tiles;
-                for (j = begin; j < end; j++) {
-                    var currentTile = tiles[j];
-
-                    if (!defined(currentTile)) {
-                        continue;
-                    }
-
-                    updateVisibility(tileset, currentTile, frameState);
-
-                    if (!isVisible(currentTile) || currentTile._distanceToCamera > distanceForLevel) {
-                        continue;
-                    }
-
-                    loadTile(tileset, currentTile, frameState);
-                    selectDesiredTile(tileset, currentTile, frameState);
-                    visitTile(tileset, currentTile, frameState);
-                    touchTile(tileset, currentTile, frameState);
-                }
-            }
+        if (isAdd) {
+            additiveTraversal(tileset, frameState);
+        } else {
+            replacementTraversal();
         }
     }
 
@@ -428,6 +375,66 @@ define([
         }
 
         return allDescendantsLoaded;
+    }
+
+    function replacementTraversal(tileset, frameState) {
+            // Must request all content roots for REPLACE refinement, so it's slightly different than the main loop
+            // Access through the tileset's subtreeInfo database, add accessor functions for pulling all subtrees for a given level
+            // You then loop over all tiles on the subtree level that we care about.
+            // 1. call updateTile, if not vis continue to next tile, otherwise call loadTile
+            // TODO: I think REPLACE refine might be best with stack or double buffer stack
+    }
+
+    function additiveTraversal(tileset, frameState) {
+        // ADD: On every level in the loop:
+        // 1. updateTile
+        // 2. if visible and within the Camear distance for the level, loadTile and selectDesiredTile
+        var contentStartLevel = tileset._startLevel;
+        var lastContentLevelToCheck = tileset._maximumTraversalLevel;
+        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck); // TODO: Maybe later update this to take min max x, y ,z?
+        if (allSubtrees.length === 0) {
+            return;
+        }
+
+        var lodDistances = tileset._lodDistances;
+
+        var i, j;
+        for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
+            var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
+
+            var length = subtreesForThisLevel.length;
+            if (length === 0) {
+                break;
+            }
+
+            var distanceForLevel = lodDistances[contentLevel];
+
+            for (i = 0; i < length; i++) {
+                var subtree = subtreesForThisLevel[i];
+                var indexRange = subtree.indexRangeForLevel(contentLevel);
+                var begin = indexRange.begin;
+                var end = indexRange.end;
+                var tiles = subtree._tiles;
+                for (j = begin; j < end; j++) {
+                    var tile = tiles[j];
+
+                    if (!defined(tile)) {
+                        continue;
+                    }
+
+                    updateVisibility(tileset, tile, frameState);
+
+                    if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
+                        continue;
+                    }
+
+                    loadTile(tileset, tile, frameState);
+                    selectDesiredTile(tileset, tile, frameState);
+                    visitTile(tileset, tile, frameState);
+                    touchTile(tileset, tile, frameState);
+                } // for j
+            } // for i
+        } // for contentLevel
     }
 
     return Cesium3DTilesetTraversalImplicit;
