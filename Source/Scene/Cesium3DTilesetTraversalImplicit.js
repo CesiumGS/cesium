@@ -404,16 +404,18 @@ define([
                     }
 
                     updateVisibility(tileset, tile, frameState);
+                    if (!isVisible(tile))  {
+                        continue;
+                    }
 
                     var notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
-                    if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
+                    if (tile._distanceToCamera > distanceForLevel &&
+                        tile._distanceToCamera <= distanceForParent &&
+                        contentLevel !== contentStartLevel &&
+                        notInBlockedRefinementRegion) {
                         // TODO: This might be ok to call load vist touch select and
                         // get rid of the content level check and root content loop above
-                        if (tile._distanceToCamera <= distanceForParent &&
-                            contentLevel !== contentStartLevel &&
-                            notInBlockedRefinementRegion) {
-                            selectDesiredTile(tileset, tile, frameState);
-                        }
+                        selectDesiredTile(tileset, tile, frameState);
                         continue;
                     }
 
