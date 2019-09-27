@@ -113,7 +113,7 @@ import RuntimeError from './RuntimeError.js';
 
 
     function createWorker(processor) {
-        var worker = require('worker-loader?name=cesiumWorkers.js!../Workers/bootstrapper/cesiumWorkerBootstrapper')();
+        var worker = require('worker-loader?name=cesiumWorkers.js!../Workers/cesiumWorkerBootstrapper')();
         worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
         var bootstrapMessage = {

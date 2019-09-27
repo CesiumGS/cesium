@@ -6,7 +6,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
 
     var moduleCache = {};
 
-    var reqWithContext = require.context('./Workers', false, /create.+Geometry/);
+    var reqWithContext = require.context('./', false, /create.+Geometry/);
 
     function getModule(moduleName) {
         var module = moduleCache[moduleName];
