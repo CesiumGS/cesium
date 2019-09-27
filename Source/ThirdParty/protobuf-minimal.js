@@ -22,16 +22,17 @@ var tmp = {};
     // Expose globally
     var protobuf = global.protobuf = $require(entries[0]);
 
-    // Be nice to AMD
-    if (typeof define === "function" && define.amd)
-        define([], function() {
-            protobuf.configure();
-            return protobuf;
-        });
+    // Commented out to avoid polluing the global scope in Node.js
+    // // Be nice to AMD
+    // if (typeof define === "function" && define.amd)
+    //     define([], function() {
+    //         protobuf.configure();
+    //         return protobuf;
+    //     });
 
-    // Be nice to CommonJS
-    if (typeof module === "object" && module && module.exports)
-        module.exports = protobuf;
+    // // Be nice to CommonJS
+    // if (typeof module === "object" && module && module.exports)
+    //     module.exports = protobuf;
 
 })/* end of prelude */({1:[function(require,module,exports){
 "use strict";

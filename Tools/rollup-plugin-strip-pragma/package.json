@@ -1,7 +1,7 @@
 {
-  "name": "eslint-config-cesium",
-  "version": "7.0.0",
-  "description": "ESLint shareable configs for Cesium",
+  "name": "rollup-plugin-strip-pragma",
+  "version": "1.0.0",
+  "description": "A Rollup plugin to strip requirejs build pragmas from your code.",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",
   "author": {
@@ -15,10 +15,11 @@
     }
   ],
   "keywords": [
-    "eslint",
+    "rollup",
     "cesium"
   ],
-  "peerDependencies": {
-    "eslint": ">= 5"
+  "dependencies": {
+    "magic-string": "^0.25.3",
+    "rollup-pluginutils": "^2.8.2"
   }
 }

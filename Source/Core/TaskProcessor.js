@@ -117,21 +117,16 @@ import RuntimeError from './RuntimeError.js';
         worker.postMessage = defaultValue(worker.webkitPostMessage, worker.postMessage);
 
         var bootstrapMessage = {
-            loaderConfig : {},
-            workerModule : TaskProcessor._workerModulePrefix + processor._workerName
+            loaderConfig: {
+                paths: {
+                    'Workers': buildModuleUrl('Workers')
+                },
+                baseUrl: buildModuleUrl.getCesiumBaseUrl().url
+            },
+            workerModule: TaskProcessor._workerModulePrefix + processor._workerName
         };
 
-        if (defined(TaskProcessor._loaderConfig)) {
-            bootstrapMessage.loaderConfig = TaskProcessor._loaderConfig;
-        } else {
-            bootstrapMessage.loaderConfig.paths = {
-                'Workers': buildModuleUrl('Workers/Build')
-            };
-            bootstrapMessage.loaderConfig.baseUrl = buildModuleUrl.getCesiumBaseUrl().url;
-        }
-
         worker.postMessage(bootstrapMessage);
-
         worker.onmessage = function(event) {
             completeTask(processor, event.data);
         };
@@ -348,6 +343,5 @@ import RuntimeError from './RuntimeError.js';
     // exposed for testing purposes
     TaskProcessor._defaultWorkerModulePrefix = 'Workers/';
     TaskProcessor._workerModulePrefix = TaskProcessor._defaultWorkerModulePrefix;
-    TaskProcessor._loaderConfig = undefined;
     TaskProcessor._canTransferArrayBuffer = undefined;
 export default TaskProcessor;

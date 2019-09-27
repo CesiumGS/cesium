@@ -42,7 +42,7 @@ import { SceneModePicker } from '../../../Source/Cesium.js';
 import { SelectionIndicator } from '../../../Source/Cesium.js';
 import { Timeline } from '../../../Source/Cesium.js';
 
-describe('Core/BoundingSphere', function() {
+describe('Widgets/Viewer/Viewer', function() {
 
     var testProvider = {
         isReady : function() {
@@ -588,6 +588,35 @@ describe('Core/BoundingSphere', function() {
         expect(function() {
             viewer.resolutionScale = -1;
         }).toThrowDeveloperError();
+    });
+
+    it('can enable useBrowserRecommendedResolution', function() {
+        viewer = createViewer(container, {
+            useBrowserRecommendedResolution : true
+        });
+
+        expect(viewer.useBrowserRecommendedResolution).toBe(true);
+    });
+
+    it('useBrowserRecommendedResolution ignores devicePixelRatio', function() {
+        var oldDevicePixelRatio = window.devicePixelRatio;
+        window.devicePixelRatio = 2.0;
+
+        viewer = createViewer(container, {
+            useDefaultRenderLoop : false
+        });
+
+        viewer.resolutionScale = 0.5;
+
+        viewer.useBrowserRecommendedResolution = true;
+        viewer.resize();
+        expect(viewer.scene.pixelRatio).toEqual(0.5);
+
+        viewer.useBrowserRecommendedResolution = false;
+        viewer.resize();
+        expect(viewer.scene.pixelRatio).toEqual(1.0);
+
+        window.devicePixelRatio = oldDevicePixelRatio;
     });
 
     it('constructor throws with undefined container', function() {

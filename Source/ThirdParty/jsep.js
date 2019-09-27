@@ -658,26 +658,7 @@ var tmp = {};
 		return this;
 	};
 
-	// In desktop environments, have a way to restore the old value for `jsep`
-	if (typeof exports === 'undefined') {
-		var old_jsep = root.jsep;
-		// The star of the show! It's a function!
-		root.jsep = jsep;
-		// And a courteous function willing to move out of the way for other similarly-named objects!
-		jsep.noConflict = function() {
-			if(root.jsep === jsep) {
-				root.jsep = old_jsep;
-			}
-			return jsep;
-		};
-	} else {
-		// In Node.JS environments
-		if (typeof module !== 'undefined' && module.exports) {
-			exports = module.exports = jsep;
-		} else {
-			exports.parse = jsep;
-		}
-	}
+    root.jsep = jsep;
 }(tmp));
 
 export default tmp.jsep;

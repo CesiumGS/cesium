@@ -1,7 +1,6 @@
 Change Log
 ==========
 
-<<<<<<< HEAD
 ### TerriaJS-only
 
 * Added `fetchXHR` method to `Resource` for fetching a resource and returning the raw XHR data.
@@ -14,7 +13,7 @@ Change Log
 * Fixed a bug where Cesium would draw parent content whenever a child tile had no content.
 * Added the ability to enable/disable shadows on an Instanced 3D Model tileset.
 * Added support for the `TERRIA_solid_outlines` extension to glTF.
-=======
+
 ### 1.62 - 2019-10-01
 
 ##### Deprecated :hourglass_flowing_sand:
@@ -26,6 +25,7 @@ Change Log
 * Added ability to create partial ellipsoids using both the Entity API and CZML. New ellipsoid geometry properties: `innerRadii`, `minimumClock`, `maximumClock`, `minimumCone`, and `maximumCone`. This affects both `EllipsoidGeometry` and `EllipsoidOutlineGeometry`. See the updated [Sandcastle example](https://cesiumjs.org/Cesium/Apps/Sandcastle/?src=Partial%20Ellipsoids.html&label=Geometries). [#5995](https://github.com/AnalyticalGraphicsInc/cesium/pull/5995)
 * Added `TileMapResourceImageryProvider` and `OpenStreetMapImageryProvider` classes to improve API consistency: [#4812](https://github.com/AnalyticalGraphicsInc/cesium/issues/4812)
 * Added `credit` parameter to `CzmlDataSource`, `GeoJsonDataSource`, `KmlDataSource` and `Model`. [#8173](https://github.com/AnalyticalGraphicsInc/cesium/pull/8173)
+* Added `useBrowserRecommendedResolution` flag to `Viewer` and `CesiumWidget`. When true, Cesium renders at CSS pixel resolution instead of native device resolution. This replaces the workaround in the 1.61 change list. [8215](https://github.com/AnalyticalGraphicsInc/cesium/issues/8215)
 
 ##### Fixes :wrench:
 * `Camera.flyTo` flies to the correct location in 2D when the destination crosses the international date line [#7909](https://github.com/AnalyticalGraphicsInc/cesium/pull/7909)
@@ -44,7 +44,8 @@ Change Log
 * Fixed an issue where polygons, corridors, rectangles, and ellipses on terrain would not render on some mobile devices. [#6739](https://github.com/AnalyticalGraphicsInc/cesium/issues/6739)
 * Fixed a bug where GlobeSurfaceTile would not render the tile until all layers completed loading causing globe to appear to hang. [#7974](https://github.com/AnalyticalGraphicsInc/cesium/issues/7974)
 * Fixed alpha equation for `BlendingState.ALPHA_BLEND` and `BlendingState.ADDITIVE_BLEND`. [#8202](https://github.com/AnalyticalGraphicsInc/cesium/pull/8202)
->>>>>>> upstream/es6-staging
+* Fixed atmosphere brightness when High Dynamic Range is disabled. [#8149](https://github.com/AnalyticalGraphicsInc/cesium/issues/8149)
+* Fixed brightness levels for procedural Image Based Lighting. [#7803](https://github.com/AnalyticalGraphicsInc/cesium/issues/7803)
 
 ### 1.61 - 2019-09-03
 
@@ -62,7 +63,6 @@ Change Log
 * Fix negative altitude altitude handling in `GoogleEarthEnterpriseTerrainProvider`. [#8109](https://github.com/AnalyticalGraphicsInc/cesium/pull/8109)
 * Fixed issue where KTX or CRN files would not be properly identified. [#7979](https://github.com/AnalyticalGraphicsInc/cesium/issues/7979)
 * Fixed multiple globe materials making the globe darker. [#7726](https://github.com/AnalyticalGraphicsInc/cesium/issues/7726)
-* Fixed atmosphere brightness when High Dynamic Range is disabled. [#8149](https://github.com/AnalyticalGraphicsInc/cesium/issues/8149)
 
 
 ### 1.60 - 2019-08-01

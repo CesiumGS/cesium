@@ -4,8 +4,7 @@ Build/**
 Documentation/**
 Source/Shaders/**
 Source/ThirdParty/**
-Source/Workers/cesiumWorkerBootstrapper.js
-Source/Workers/Build/**
+Source/Workers/**
 ThirdParty/**
 Tools/**
 Apps/Sandcastle/jsHintOptions.js
