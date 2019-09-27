@@ -287,7 +287,8 @@ define([
             return;
         }
 
-        if (!isAdd) {
+        // if (!isAdd) {
+        if (false) {
             var stack = traversal.stack;
             stack.push(tilesetRoot);
 
@@ -333,56 +334,92 @@ define([
         if (isAdd) {
             additiveTraversal(tileset, frameState);
         } else {
-            replacementTraversal();
+            replacementTraversal(tileset, frameState);
         }
-    }
-
-    function executeEmptyTraversal(tileset, root, frameState) {
-        // Depth-first traversal that checks if all nearest descendants with content are loaded. Ignores visibility.
-        var allDescendantsLoaded = true;
-        var stack = emptyTraversal.stack;
-        stack.push(root);
-
-        while (stack.length > 0) {
-            emptyTraversal.stackMaximumLength = Math.max(emptyTraversal.stackMaximumLength, stack.length);
-
-            var tile = stack.pop();
-            var children = tile.children;
-            var childrenLength = children.length;
-
-            // Only traverse if the tile is empty - traversal stop at descendants with content
-            var traverse = hasEmptyContent(tile) && canTraverse(tileset, tile);
-
-            // Traversal stops but the tile does not have content yet.
-            // There will be holes if the parent tries to refine to its children, so don't refine.
-            if (!traverse && !tile.contentAvailable) {
-                allDescendantsLoaded = false;
-            }
-
-            updateTile(tileset, tile, frameState);
-            if (!isVisible(tile)) {
-                // Load tiles that aren't visible since they are still needed for the parent to refine
-                loadTile(tileset, tile, frameState);
-                touchTile(tileset, tile, frameState);
-            }
-
-            if (traverse) {
-                for (var i = 0; i < childrenLength; ++i) {
-                    var child = children[i];
-                    stack.push(child);
-                }
-            }
-        }
-
-        return allDescendantsLoaded;
     }
 
     function replacementTraversal(tileset, frameState) {
-            // Must request all content roots for REPLACE refinement, so it's slightly different than the main loop
-            // Access through the tileset's subtreeInfo database, add accessor functions for pulling all subtrees for a given level
-            // You then loop over all tiles on the subtree level that we care about.
-            // 1. call updateTile, if not vis continue to next tile, otherwise call loadTile
-            // TODO: I think REPLACE refine might be best with stack or double buffer stack
+        // Must request all content roots for REPLACE refinement, so it's slightly different than the main loop
+        // Access through the tileset's subtreeInfo database, add accessor functions for pulling all subtrees for a given level
+        // You then loop over all tiles on the subtree level that we care about.
+        // 1. call updateTile, if not vis continue to next tile, otherwise call loadTile
+        // TODO: I think REPLACE refine might be best with stack or double buffer stack?
+        // Just make the requests, let priority handle the ordering / shoving onto requeset queue
+        // Selection is what cares about blocked indices
+
+        var lodDistances = tileset._lodDistances;
+        var tilesetRoot = tileset.root;
+        var children = tilesetRoot.children;
+        var length = children.length;
+        var distanceForLevel = lodDistances[0];
+        var onlyContentRootTiles = lastContentLevelToCheck < contentStartLevel;
+        for (var i = 0; i < length; ++i) {
+            var tile = children[i];
+            updateVisibility(tileset, tile, frameState);
+            if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
+                continue;
+            }
+
+            loadTile(tileset, tile, frameState);
+            if (onlyContentRootTiles) {
+                selectDesiredTile(tileset, tile, frameState);
+            }
+            visitTile(tileset, tile, frameState);
+            touchTile(tileset, tile, frameState);
+        }
+
+        var contentStartLevel = tileset._startLevel;
+        var lastContentLevelToCheck = tileset._maximumTraversalLevel - 1;
+
+        // This is possible for the replacement case since lastContentLevelToCheck is defined in terms of the last parent level
+        // to check, which could be the contentless tileset root.
+        if (onlyContentRootTiles) {
+            return;
+        }
+
+        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck); // TODO: Maybe later update this to take min max x, y ,z?
+        if (allSubtrees.length === 0) {
+            return;
+        }
+
+        // var i, j;
+        // for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
+        //     var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
+        //
+        //     var length = subtreesForThisLevel.length;
+        //     if (length === 0) {
+        //         break;
+        //     }
+        //
+        //     var distanceForLevel = lodDistances[contentLevel];
+        //
+        //     for (i = 0; i < length; i++) {
+        //         var subtree = subtreesForThisLevel[i];
+        //         var indexRange = subtree.indexRangeForLevel(contentLevel);
+        //         var begin = indexRange.begin;
+        //         var end = indexRange.end;
+        //         var tiles = subtree._tiles;
+        //         for (j = begin; j < end; j++) {
+        //             var tile = tiles[j];
+        //
+        //             if (!defined(tile)) {
+        //                 continue;
+        //             }
+        //
+        //             updateVisibility(tileset, tile, frameState);
+        //
+        //             if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
+        //                 continue;
+        //             }
+        //
+        //             loadTile(tileset, tile, frameState);
+        //             selectDesiredTile(tileset, tile, frameState);
+        //             visitTile(tileset, tile, frameState);
+        //             touchTile(tileset, tile, frameState);
+        //         } // for j
+        //     } // for i
+        // } // for contentLevel
+
     }
 
     function additiveTraversal(tileset, frameState) {
@@ -435,6 +472,46 @@ define([
                 } // for j
             } // for i
         } // for contentLevel
+    }
+
+    function executeEmptyTraversal(tileset, root, frameState) {
+        // Depth-first traversal that checks if all nearest descendants with content are loaded. Ignores visibility.
+        var allDescendantsLoaded = true;
+        var stack = emptyTraversal.stack;
+        stack.push(root);
+
+        while (stack.length > 0) {
+            emptyTraversal.stackMaximumLength = Math.max(emptyTraversal.stackMaximumLength, stack.length);
+
+            var tile = stack.pop();
+            var children = tile.children;
+            var childrenLength = children.length;
+
+            // Only traverse if the tile is empty - traversal stop at descendants with content
+            var traverse = hasEmptyContent(tile) && canTraverse(tileset, tile);
+
+            // Traversal stops but the tile does not have content yet.
+            // There will be holes if the parent tries to refine to its children, so don't refine.
+            if (!traverse && !tile.contentAvailable) {
+                allDescendantsLoaded = false;
+            }
+
+            updateTile(tileset, tile, frameState);
+            if (!isVisible(tile)) {
+                // Load tiles that aren't visible since they are still needed for the parent to refine
+                loadTile(tileset, tile, frameState);
+                touchTile(tileset, tile, frameState);
+            }
+
+            if (traverse) {
+                for (var i = 0; i < childrenLength; ++i) {
+                    var child = children[i];
+                    stack.push(child);
+                }
+            }
+        }
+
+        return allDescendantsLoaded;
     }
 
     return Cesium3DTilesetTraversalImplicit;
