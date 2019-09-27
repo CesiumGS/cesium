@@ -388,6 +388,7 @@ define([
             }
 
             var distanceForLevel = lodDistances[contentLevel + 1];
+            var distanceForParent = lodDistances[contentLevel];
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
@@ -404,14 +405,21 @@ define([
 
                     updateVisibility(tileset, tile, frameState);
 
+                    var notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
                     if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
+                        // TODO: This might be ok to call load vist touch select and
+                        // get rid of the content level check and root content loop above
+                        if (tile._distanceToCamera <= distanceForParent &&
+                            contentLevel !== contentStartLevel &&
+                            notInBlockedRefinementRegion) {
+                            selectDesiredTile(tileset, tile, frameState);
+                        }
                         continue;
                     }
 
                     // Replacement is child based
                     children = tile.children;
                     childrenLength = children.length;
-                    var notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
                     var visibleChildrenReady = childrenLength > 0 ? true : false;
                     for (k = 0; k < childrenLength; ++k) {
                         child = children[k];
@@ -432,7 +440,10 @@ define([
                         if (!visibleChildrenReady) {
                             selectDesiredTile(tileset, tile, frameState);
                             finalRefinementIndices.push(tile.treeKey);
-                        } else {
+                        } else if (contentLevel === lastContentLevelToCheck) {
+                            // can only call this on children that pass their
+                            // parents radius check but fail their own (or are
+                            // on the last level)
                             selectVisibleChildren(tileset, tile, frameState);
                         }
                     }
