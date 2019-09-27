@@ -271,21 +271,6 @@ define([
         tileset.updateTraversalInfo(frameState);
 
         var isAdd = tileset._allTilesAdditive;
-        var contentStartLevel = tileset._startLevel;
-
-        var lastContentLevelToCheck;
-        var contentRootAccessible;
-        if (isAdd) {
-            lastContentLevelToCheck = tileset._maximumTraversalLevel;
-            contentRootAccessible = contentStartLevel <= lastContentLevelToCheck;
-        } else {
-            lastContentLevelToCheck = tileset._maximumTraversalLevel - 1;
-            contentRootAccessible = contentStartLevel - 1 <= lastContentLevelToCheck;
-        }
-
-        if (!contentRootAccessible) {
-            return;
-        }
 
         // if (!isAdd) {
         if (false) {
@@ -347,79 +332,121 @@ define([
         // Just make the requests, let priority handle the ordering / shoving onto requeset queue
         // Selection is what cares about blocked indices
 
-        var lodDistances = tileset._lodDistances;
-        var tilesetRoot = tileset.root;
-        var children = tilesetRoot.children;
-        var length = children.length;
-        var distanceForLevel = lodDistances[0];
-        var onlyContentRootTiles = lastContentLevelToCheck < contentStartLevel;
-        for (var i = 0; i < length; ++i) {
-            var tile = children[i];
-            updateVisibility(tileset, tile, frameState);
-            if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
-                continue;
-            }
-
-            loadTile(tileset, tile, frameState);
-            if (onlyContentRootTiles) {
-                selectDesiredTile(tileset, tile, frameState);
-            }
-            visitTile(tileset, tile, frameState);
-            touchTile(tileset, tile, frameState);
-        }
-
         var contentStartLevel = tileset._startLevel;
         var lastContentLevelToCheck = tileset._maximumTraversalLevel - 1;
 
-        // This is possible for the replacement case since lastContentLevelToCheck is defined in terms of the last parent level
-        // to check, which could be the contentless tileset root.
+        var contentRootAccessible = contentStartLevel - 1 <= lastContentLevelToCheck;
+        if (!contentRootAccessible) {
+            return;
+        }
+
+        var onlyContentRootTiles = lastContentLevelToCheck < contentStartLevel;
+        var lodDistances = tileset._lodDistances;
+        var tilesetRoot = tileset.root;
+        var distanceForLevel = lodDistances[0];
+
+        var children = tilesetRoot.children;
+        var childrenLength = children.length;
+        var child;
+        var i, j, k;
+        for (i = 0; i < childrenLength; ++i) {
+            child = children[i];
+            updateVisibility(tileset, child, frameState);
+            if (!isVisible(child) || child._distanceToCamera > distanceForLevel) {
+                continue;
+            }
+
+            loadTile(tileset, child, frameState);
+            if (onlyContentRootTiles) {
+                selectDesiredTile(tileset, child, frameState);
+            }
+            visitTile(tileset, child, frameState);
+            touchTile(tileset, child, frameState);
+        }
+
+
+        // This is possible for the replacement case since lastContentLevelToCheck is defined in terms of
+        // the last parent level to check, which could be the contentless tileset root.
         if (onlyContentRootTiles) {
             return;
         }
 
         var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck); // TODO: Maybe later update this to take min max x, y ,z?
         if (allSubtrees.length === 0) {
+            // None available yet
             return;
         }
 
-        // var i, j;
-        // for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
-        //     var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
-        //
-        //     var length = subtreesForThisLevel.length;
-        //     if (length === 0) {
-        //         break;
-        //     }
-        //
-        //     var distanceForLevel = lodDistances[contentLevel];
-        //
-        //     for (i = 0; i < length; i++) {
-        //         var subtree = subtreesForThisLevel[i];
-        //         var indexRange = subtree.indexRangeForLevel(contentLevel);
-        //         var begin = indexRange.begin;
-        //         var end = indexRange.end;
-        //         var tiles = subtree._tiles;
-        //         for (j = begin; j < end; j++) {
-        //             var tile = tiles[j];
-        //
-        //             if (!defined(tile)) {
-        //                 continue;
-        //             }
-        //
-        //             updateVisibility(tileset, tile, frameState);
-        //
-        //             if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
-        //                 continue;
-        //             }
-        //
-        //             loadTile(tileset, tile, frameState);
-        //             selectDesiredTile(tileset, tile, frameState);
-        //             visitTile(tileset, tile, frameState);
-        //             touchTile(tileset, tile, frameState);
-        //         } // for j
-        //     } // for i
-        // } // for contentLevel
+        for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
+            var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
 
+            length = subtreesForThisLevel.length;
+            if (length === 0) {
+                // None available yet
+                break;
+            }
+
+            var distanceForLevel = lodDistances[contentLevel + 1];
+
+            for (i = 0; i < length; i++) {
+                var subtree = subtreesForThisLevel[i];
+                var indexRange = subtree.indexRangeForLevel(contentLevel);
+                var begin = indexRange.begin;
+                var end = indexRange.end;
+                var tiles = subtree._tiles;
+                for (j = begin; j < end; j++) {
+                    var tile = tiles[j];
+
+                    if (!defined(tile)) {
+                        continue;
+                    }
+
+                    updateVisibility(tileset, tile, frameState);
+
+                    if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
+                        continue;
+                    }
+
+                    // Replacement is child based
+                    children = tile.children;
+                    childrenLength = children.length;
+                    var notInBlockedRefinementRegion = true;
+                    var visibleChildrenReady = childrenLength > 0 ? true : false;
+                    for (k = 0; k < childrenLength; ++k) {
+                        child = children[k];
+
+                        if (notInBlockedRefinementRegion) {
+                            updateVisibility(tileset, child, frameState);
+                            if (isVisible(child) && (!child.contentAvailable && !child.hasEmptyContent)) {
+                                visibleChildrenReady = false;
+                            }
+                        }
+
+                        loadTile(tileset, child, frameState);
+                        visitTile(tileset, child, frameState);
+                        touchTile(tileset, child, frameState);
+                    }
+
+                    if (notInBlockedRefinementRegion) {
+                        if (!visibleChildrenReady) {
+                            selectDesiredTile(tileset, tile, frameState);
+                            // TODO: Add tree index indicating blocked refinement region
+                        } else {
+                            selectVisibleChildren(tileset, tile, frameState);
+                        }
+                    }
+                } // for j
+            } // for i
+        } // for contentLevel
+    }
+
+    function selectVisibleChildren(tileset, tile, frameState) {
+        // Replacement is child based
+        var children = tile.children;
+        var childrenLength = children.length;
+        for (var k = 0; k < childrenLength; ++k) {
+            selectDesiredTile(tileset, children[k], frameState);
+        }
     }
 
     function additiveTraversal(tileset, frameState) {
@@ -428,8 +455,14 @@ define([
         // 2. if visible and within the Camear distance for the level, loadTile and selectDesiredTile
         var contentStartLevel = tileset._startLevel;
         var lastContentLevelToCheck = tileset._maximumTraversalLevel;
+        var contentRootAccessible = contentStartLevel <= lastContentLevelToCheck;
+        if (!contentRootAccessible) {
+            return;
+        }
+
         var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck); // TODO: Maybe later update this to take min max x, y ,z?
         if (allSubtrees.length === 0) {
+            // None available yet
             return;
         }
 
@@ -441,6 +474,7 @@ define([
 
             var length = subtreesForThisLevel.length;
             if (length === 0) {
+                // None available yet
                 break;
             }
 
