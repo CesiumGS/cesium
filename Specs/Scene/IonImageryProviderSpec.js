@@ -62,13 +62,14 @@ describe('Scene/IonImageryProvider', function() {
             attributions: []
         });
 
-        return provider.readyPromise
+        provider.readyPromise
             .then(function() {
                 fail('should not be called');
             })
             .catch(function(error) {
                 expect(error).toBeInstanceOf(RuntimeError);
                 expect(provider.ready).toBe(false);
+                done();
             });
     });
 
@@ -80,13 +81,14 @@ describe('Scene/IonImageryProvider', function() {
             attributions: []
         });
 
-        return provider.readyPromise
+        provider.readyPromise
             .then(function() {
                 fail('should not be called');
             })
             .catch(function(error) {
                 expect(error).toBeInstanceOf(RuntimeError);
                 expect(provider.ready).toBe(false);
+                done();
             });
     });
 

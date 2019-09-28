@@ -1142,7 +1142,7 @@ import ShadowMode from './ShadowMode.js';
 
             primitive._state = PrimitiveState.CREATING;
 
-            Promise.all(promises, function(results) {
+            Promise.all(promises).then(function(results) {
                 primitive._createGeometryResults = results;
                 primitive._state = PrimitiveState.CREATED;
             }).catch(function(error) {

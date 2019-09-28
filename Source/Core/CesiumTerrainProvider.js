@@ -351,7 +351,7 @@ import TileProviderError from './TileProviderError.js';
         }
 
         function requestLayerJson() {
-            when(layerJsonResource.fetchJson())
+            layerJsonResource.fetchJson()
                 .then(metadataSuccess)
                 .catch(metadataFailure);
         }

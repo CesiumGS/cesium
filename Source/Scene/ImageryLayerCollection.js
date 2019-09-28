@@ -419,7 +419,7 @@ import ImageryLayer from './ImageryLayer.js';
             return undefined;
         }
 
-        return Promise.all(promises, function(results) {
+        return Promise.all(promises).then(function(results) {
             var features = [];
 
             for (var resultIndex = 0; resultIndex < results.length; ++resultIndex) {

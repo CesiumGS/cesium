@@ -8,7 +8,7 @@ var when = function(promiseOrValue, onFulfilled, onRejected) {
         return result;
     }).catch(function(e) {
         if (onRejected) {
-            onRejected(e);
+            return onRejected(e);
         }
     });
 }

@@ -71,7 +71,7 @@ import CubeMap from './CubeMap.js';
             Resource.createIfNeeded(urls.negativeZ).fetchImage(flipOptions)
         ];
 
-        return Promise.all(facePromises, function(images) {
+        return Promise.all(facePromises).then(function(images) {
             return new CubeMap({
                 context : context,
                 source : {

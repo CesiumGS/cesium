@@ -53,7 +53,7 @@ describe('Scene/BillboardCollection', function() {
             }),
             Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(result) {
                 largeBlueImage = result;
-            }])
+            })]
         );
     });
 

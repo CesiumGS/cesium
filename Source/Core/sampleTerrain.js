@@ -88,7 +88,7 @@ import Check from './Check.js';
             tilePromises.push(tilePromise);
         }
 
-        return Promise.all(tilePromises, function() {
+        return Promise.all(tilePromises).then(function() {
             return positions;
         });
     }
