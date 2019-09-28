@@ -970,7 +970,7 @@ gulp.task('convertToModules', function() {
                             }
                         }
                     } else {
-                        contents += 'import { ' + sortedIdentifiers[q] + ' } from ' + modulePath + ';' + os.EOL;
+                        contents += 'import ' + sortedIdentifiers[q] + ' from ' + modulePath + ';' + os.EOL;
                     }
                 }
             }
