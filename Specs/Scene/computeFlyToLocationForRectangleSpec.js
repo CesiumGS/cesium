@@ -50,7 +50,7 @@ describe('Scene/computeFlyToLocationForRectangle', function() {
         sampledResults[2].height = -123;
         sampledResults[3].height = maxHeight;
 
-        spyOn(computeFlyToLocationForRectangle, '_sampleTerrainMostDetailed').and.returnValue(when.resolve(sampledResults));
+        spyOn(computeFlyToLocationForRectangle, '_sampleTerrainMostDetailed').and.returnValue(Promise.resolve(sampledResults));
 
         // Basically do the computation ourselves with our known values;
         var expectedResult;

@@ -55,8 +55,8 @@ describe('Scene/PostProcessStageLibrary', function() {
             return model.ready;
         }, { timeout: 10000 }).then(function() {
             return model;
-        }).otherwise(function() {
-            return when.reject(model);
+        }).catch(function() {
+            return Promise.reject(model);
         });
     }
 

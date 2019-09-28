@@ -89,7 +89,7 @@ import Expression from './Expression.js';
             var resource = Resource.createIfNeeded(style);
             promise = resource.fetchJson(style);
         } else {
-            promise = when.resolve(style);
+            promise = Promise.resolve(style);
         }
 
         var that = this;

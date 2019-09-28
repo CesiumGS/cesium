@@ -21,7 +21,7 @@ describe('DataSources/DataSourceDisplay', function() {
         scene = createScene();
         dataSourceCollection = new DataSourceCollection();
 
-        return when.join(GroundPrimitive.initializeTerrainHeights(), GroundPolylinePrimitive.initializeTerrainHeights());
+        return Promise.all([GroundPrimitive.initializeTerrainHeights(), GroundPolylinePrimitive.initializeTerrainHeights()]);
     });
 
     afterAll(function() {

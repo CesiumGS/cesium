@@ -75,9 +75,9 @@ import sampleTerrain from './sampleTerrain.js';
                     atLevel.push(position);
                 }
 
-                return when.all(promises)
+                return Promise.all(promises)
                     .then(function() {
-                        return when.all(byLevel.map(function(positionsAtLevel, index) {
+                        return Promise.all(byLevel.map(function(positionsAtLevel, index) {
                             if (defined(positionsAtLevel)) {
                                 return sampleTerrain(terrainProvider, index, positionsAtLevel);
                             }

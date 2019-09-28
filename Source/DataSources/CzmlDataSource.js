@@ -2091,11 +2091,11 @@ import WallGraphics from './WallGraphics.js';
 
         return when(promise, function(czml) {
             return loadCzml(dataSource, czml, sourceUri, clear);
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             DataSource.setLoading(dataSource, false);
             dataSource._error.raiseEvent(dataSource, error);
             console.log(error);
-            return when.reject(error);
+            return Promise.reject(error);
         });
     }
 

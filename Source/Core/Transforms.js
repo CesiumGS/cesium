@@ -537,7 +537,7 @@ import TimeConstants from './TimeConstants.js';
         var xysPromise = Transforms.iau2006XysData.preload(startDayTT, startSecondTT, stopDayTT, stopSecondTT);
         var eopPromise = Transforms.earthOrientationParameters.getPromiseToLoad();
 
-        return when.all([xysPromise, eopPromise]);
+        return Promise.all([xysPromise, eopPromise]);
     };
 
     /**

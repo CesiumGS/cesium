@@ -50,7 +50,7 @@ import WebGLConstants from './WebGLConstants.js';
      *     var format = ktxData.internalFormat;
      *     var arrayBufferView = ktxData.bufferView;
      *     // use the data to create a texture
-     * }).otherwise(function(error) {
+     * }).catch(function(error) {
      *     // an error occurred
      * });
      *
@@ -65,7 +65,7 @@ import WebGLConstants from './WebGLConstants.js';
 
         var loadPromise;
         if (resourceOrUrlOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(resourceOrUrlOrBuffer)) {
-            loadPromise = when.resolve(resourceOrUrlOrBuffer);
+            loadPromise = Promise.resolve(resourceOrUrlOrBuffer);
         } else {
             var resource = Resource.createIfNeeded(resourceOrUrlOrBuffer);
             loadPromise = resource.fetchArrayBuffer();

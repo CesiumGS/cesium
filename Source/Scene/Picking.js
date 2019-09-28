@@ -561,7 +561,7 @@ import  View from './View.js';
         var tilesets = [];
         getTilesets(scene.primitives, objectsToExclude, tilesets);
         if (tilesets.length === 0) {
-            return when.resolve(callback());
+            return Promise.resolve(callback());
         }
 
         var rayPick = new MostDetailedRayPick(ray, width, tilesets);
@@ -671,7 +671,7 @@ import  View from './View.js';
                 deferred.resolve(result);
                 removeCallback();
             });
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             deferred.reject(error);
         });
         return deferred.promise;
@@ -838,7 +838,7 @@ import  View from './View.js';
         for (var i = 0; i < length; ++i) {
             promises[i] = sampleHeightMostDetailed(this, scene, positions[i], objectsToExclude, width);
         }
-        return deferPromiseUntilPostRender(scene, when.all(promises).then(function(heights) {
+        return deferPromiseUntilPostRender(scene, Promise.all(promises).then(function(heights) {
             var length = heights.length;
             for (var i = 0; i < length; ++i) {
                 positions[i].height = heights[i];
@@ -864,7 +864,7 @@ import  View from './View.js';
         for (var i = 0; i < length; ++i) {
             promises[i] = clampToHeightMostDetailed(this, scene, cartesians[i], objectsToExclude, width, cartesians[i]);
         }
-        return deferPromiseUntilPostRender(scene, when.all(promises).then(function(clampedCartesians) {
+        return deferPromiseUntilPostRender(scene, Promise.all(promises).then(function(clampedCartesians) {
             var length = clampedCartesians.length;
             for (var i = 0; i < length; ++i) {
                 cartesians[i] = clampedCartesians[i];

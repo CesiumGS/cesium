@@ -503,7 +503,7 @@ import Vector3DTilePolylines from './Vector3DTilePolylines.js';
             var polylinePromise = defined(this._polylines) ? this._polylines.readyPromise : undefined;
 
             var that = this;
-            this._contentReadyPromise = when.all([pointsPromise, polygonPromise, polylinePromise]).then(function() {
+            this._contentReadyPromise = Promise.all([pointsPromise, polygonPromise, polylinePromise]).then(function() {
                 that._readyPromise.resolve(that);
             });
         }

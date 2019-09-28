@@ -1092,7 +1092,7 @@ import VerticalOrigin from './VerticalOrigin.js';
             that._image = undefined;
             that._imageIndexPromise = undefined;
             makeDirty(that, IMAGE_INDEX_INDEX);
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             console.error('Error loading image for billboard: ' + error);
             that._imageIndexPromise = undefined;
         });

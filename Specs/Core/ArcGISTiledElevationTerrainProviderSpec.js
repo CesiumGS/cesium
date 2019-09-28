@@ -343,7 +343,7 @@ it('raises an error if the SRS is not supported', function() {
 
     return terrainProvider.readyPromise
         .then(fail)
-        .otherwise(function(error) {
+        .catch(function(error) {
             expect(error).toBeInstanceOf(RuntimeError);
         });
 });
@@ -359,7 +359,7 @@ it('raises an error if tileInfo missing', function() {
 
     return terrainProvider.readyPromise
         .then(fail)
-        .otherwise(function(error) {
+        .catch(function(error) {
             expect(error).toBeInstanceOf(RuntimeError);
         });
 });

@@ -102,7 +102,7 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
                 that._requestMetadata();
             })
-            .otherwise(function(e) {
+            .catch(function(e) {
                 deferred.reject(e);
             });
     }
@@ -114,7 +114,7 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
     TileMapServiceImageryProvider.prototype._requestMetadata = function() {
         // Try to load remaining parameters from XML
-        this._xmlResource.fetchXML().then(this._metadataSuccess).otherwise(this._metadataFailure);
+        this._xmlResource.fetchXML().then(this._metadataSuccess).catch(this._metadataFailure);
     };
 
     TileMapServiceImageryProvider.prototype._metadataSuccess = function(xml) {

@@ -128,7 +128,7 @@ model.readyPromise.then(function(model) {
     });
     viewModel.selectedArticulation = viewModel.articulations[0];
 
-}).otherwise(function(error){
+}).catch(function(error){
     console.error(error);
 });
 

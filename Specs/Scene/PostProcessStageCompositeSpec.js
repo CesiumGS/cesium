@@ -190,10 +190,10 @@ describe('Scene/PostProcessStageComposite', function() {
             return stage.ready;
         }).then(function() {
             expect(s).toRender([bgColor, bgColor, bgColor, 255]);
-        }).always(function(e) {
+        }).finally(function(e) {
             s.destroyForSpecs();
             if (e) {
-                return when.reject(e);
+                return Promise.reject(e);
             }
         });
     });

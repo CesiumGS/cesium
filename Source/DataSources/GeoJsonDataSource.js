@@ -283,7 +283,7 @@ import PolylineGraphics from './PolylineGraphics.js';
 
         var promise = when(canvasOrPromise).then(function(image) {
             billboard.image = new ConstantProperty(image);
-        }).otherwise(function() {
+        }).catch(function() {
             billboard.image = new ConstantProperty(dataSource._pinBuilder.fromColor(color, size));
         });
 
@@ -840,11 +840,11 @@ import PolylineGraphics from './PolylineGraphics.js';
         var that = this;
         return when(promise, function(geoJson) {
             return load(that, geoJson, options, sourceUri);
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             console.log(error);
-            return when.reject(error);
+            return Promise.reject(error);
         });
     };
 
@@ -909,7 +909,7 @@ import PolylineGraphics from './PolylineGraphics.js';
                 typeHandler(that, geoJson, geoJson, crsFunction, options);
             }
 
-            return when.all(that._promises, function() {
+            return Promise.all(that._promises, function() {
                 that._promises.length = 0;
                 DataSource.setLoading(that, false);
                 return that;

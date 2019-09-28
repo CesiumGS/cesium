@@ -400,7 +400,7 @@ import ShadowMode from './ShadowMode.js';
                     pickIdLoaded : getPickIdLoaded
                 });
                 return frame.pointCloud.readyPromise;
-            }).otherwise(handleFrameFailure(that, uri));
+            }).catch(handleFrameFailure(that, uri));
         }
         return frame;
     }

@@ -202,7 +202,7 @@ describe('Scene/Cesium3DTileset', function() {
         var tileset = scene.primitives.add(new Cesium3DTileset(options));
         return tileset.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(tileset.ready).toEqual(false);
         });
     });
@@ -218,7 +218,7 @@ describe('Scene/Cesium3DTileset', function() {
 
         Cesium3DTileset.loadJson(uri).then(function(result) {
             expect(result).toEqual(tilesetJson);
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             fail('should not fail');
         });
     });
@@ -243,7 +243,7 @@ describe('Scene/Cesium3DTileset', function() {
 
         return tileset.readyPromise.then(function() {
             expect(tileset.ready).toEqual(true);
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             fail('should not fail');
         });
     });
@@ -255,12 +255,12 @@ describe('Scene/Cesium3DTileset', function() {
 
         // setup tileset with invalid url (overridden loadJson should replace invalid url with correct url)
         var tileset = new Cesium3DTileset({
-            url : when.resolve(resource)
+            url : Promise.resolve(resource)
         });
 
         return tileset.readyPromise.then(function() {
             expect(tileset.ready).toEqual(true);
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             fail('should not fail');
         });
     });
@@ -277,7 +277,7 @@ describe('Scene/Cesium3DTileset', function() {
 
         return tileset.readyPromise.then(function() {
             expect(tileset.ready).toEqual(true);
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             fail('should not fail');
         });
     });
@@ -295,7 +295,7 @@ describe('Scene/Cesium3DTileset', function() {
         var tileset = scene.primitives.add(new Cesium3DTileset(options));
         return tileset.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(tileset.ready).toEqual(false);
         });
     });
@@ -452,7 +452,7 @@ describe('Scene/Cesium3DTileset', function() {
             var root = tileset.root;
             return root.contentReadyPromise.then(function() {
                 fail('should not resolve');
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 expect(error.message).toBe('Invalid tile content.');
                 expect(root._contentState).toEqual(Cesium3DTileContentState.FAILED);
             });
@@ -472,7 +472,7 @@ describe('Scene/Cesium3DTileset', function() {
             var root = tileset.root;
             return root.contentReadyPromise.then(function() {
                 fail('should not resolve');
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 expect(root._contentState).toEqual(Cesium3DTileContentState.FAILED);
                 var statistics = tileset.statistics;
                 expect(statistics.numberOfAttemptedRequests).toBe(0);
@@ -498,7 +498,7 @@ describe('Scene/Cesium3DTileset', function() {
             var root = tileset.root;
             return root.contentReadyPromise.then(function() {
                 fail('should not resolve');
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 expect(root._contentState).toEqual(Cesium3DTileContentState.FAILED);
                 var statistics = tileset.statistics;
                 expect(statistics.numberOfAttemptedRequests).toBe(0);
@@ -1862,7 +1862,7 @@ describe('Scene/Cesium3DTileset', function() {
 
             return root.contentReadyPromise.then(function(root) {
                 fail('should not resolve');
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 // Expect the root to not have added any children from the external tileset JSON file
                 expect(root.children.length).toEqual(0);
             });
@@ -1880,7 +1880,7 @@ describe('Scene/Cesium3DTileset', function() {
 
             return root.contentReadyPromise.then(function(content) {
                 fail('should not resolve');
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 expect(root._contentState).toBe(Cesium3DTileContentState.FAILED);
             });
         });
@@ -2153,7 +2153,7 @@ describe('Scene/Cesium3DTileset', function() {
                     expect(rgba[2]).toEqual(0);
                     expect(rgba[3]).toEqual(255);
                 });
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 expect(error).not.toBeDefined();
             });
         });

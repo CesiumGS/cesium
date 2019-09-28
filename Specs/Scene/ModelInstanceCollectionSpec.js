@@ -266,7 +266,7 @@ describe('Scene/ModelInstanceCollection', function() {
 
         return collection.readyPromise.then(function(collection) {
             fail('should not resolve');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(collection.ready).toEqual(false);
         });
     });
@@ -442,7 +442,7 @@ describe('Scene/ModelInstanceCollection', function() {
             collections.push(collection);
         }));
 
-        return when.all(promises).then(function() {
+        return Promise.all(promises).then(function() {
             var resourcesFirst = collections[0]._model._rendererResources;
             var resourcesSecond = collections[1]._model._rendererResources;
             var name;

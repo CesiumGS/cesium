@@ -884,7 +884,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 that._contentState = Cesium3DTileContentState.READY;
                 that._contentReadyPromise.resolve(content);
             });
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             if (request.state === RequestState.CANCELLED) {
                 // Cancelled due to low priority - try again later.
                 that._contentState = contentState;

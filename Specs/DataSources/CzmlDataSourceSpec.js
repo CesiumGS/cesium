@@ -133,13 +133,13 @@ describe('DataSources/CzmlDataSource', function() {
     var vehicleUrl = 'Data/CZML/Vehicle.czml';
 
     beforeAll(function() {
-        return when.join(
+        return Promise.all([
             Resource.fetchJson(simpleUrl).then(function(result) {
                 simple = result;
             }),
             Resource.fetchJson(vehicleUrl).then(function(result) {
                 vehicle = result;
-            }));
+            })]);
     });
 
     function arraySubset(array, startIndex, count) {
@@ -414,7 +414,7 @@ describe('DataSources/CzmlDataSource', function() {
         // Blue.png is not JSON
         return dataSource.load('Data/Images/Blue.png').then(function() {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
         });
     });
@@ -428,7 +428,7 @@ describe('DataSources/CzmlDataSource', function() {
         // Blue.png is not JSON
         return dataSource.process('Data/Images/Blue.png').then(function() {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
         });
     });
@@ -4951,7 +4951,7 @@ describe('DataSources/CzmlDataSource', function() {
             id : 'document'
         }).then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toBeInstanceOf(RuntimeError);
             expect(error.message).toEqual('CZML version information invalid.  It is expected to be a property on the document object in the <Major>.<Minor> version format.');
         });
@@ -4962,7 +4962,7 @@ describe('DataSources/CzmlDataSource', function() {
             id : 'someId'
         }).then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toBeInstanceOf(RuntimeError);
             expect(error.message).toEqual('The first CZML packet is required to be the document object.');
         });
@@ -4973,7 +4973,7 @@ describe('DataSources/CzmlDataSource', function() {
             id : 'document'
         }).then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toBeInstanceOf(RuntimeError);
             expect(error.message).toContain('CZML version information invalid.  It is expected to be a property on the document object in the <Major>.<Minor> version format.');
         });

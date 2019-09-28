@@ -83,7 +83,7 @@ import Resource from '../Core/Resource.js';
             preferBlob : true,
             preferImageBitmap : true,
             flipY : true
-        }).then(success).otherwise(failure);
+        }).then(success).catch(failure);
     }
 
     /**

@@ -13,7 +13,7 @@ import when from '../ThirdParty/when.js';
             resultOrPromise = workerFunction(parameters, transferableObjects);
             return resultOrPromise; // errors handled by Promise
         } catch (e) {
-            return when.reject(e);
+            return Promise.reject(e);
         }
     }
 
@@ -59,7 +59,7 @@ import when from '../ThirdParty/when.js';
                 .then(function(result) {
                     responseMessage.result = result;
                 })
-                .otherwise(function(e) {
+                .catch(function(e) {
                     if (e instanceof Error) {
                         // Errors can't be posted in a message, copy the properties
                         responseMessage.error = {
@@ -71,7 +71,7 @@ import when from '../ThirdParty/when.js';
                         responseMessage.error = e;
                     }
                 })
-                .always(function() {
+                .finally(function() {
                     if (!defined(postMessage)) {
                         postMessage = defaultValue(self.webkitPostMessage, self.postMessage);
                     }

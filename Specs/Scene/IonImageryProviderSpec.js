@@ -31,7 +31,7 @@ describe('Scene/IonImageryProvider', function() {
         var endpointResource = IonResource._createEndpointResource(assetId, options);
         spyOn(IonResource, '_createEndpointResource').and.returnValue(endpointResource);
 
-        spyOn(endpointResource, 'fetchJson').and.returnValue(when.resolve(endpointData));
+        spyOn(endpointResource, 'fetchJson').and.returnValue(Promise.resolve(endpointData));
 
         var provider = new IonImageryProvider(options);
 
@@ -66,7 +66,7 @@ describe('Scene/IonImageryProvider', function() {
             .then(function() {
                 fail('should not be called');
             })
-            .otherwise(function(error) {
+            .catch(function(error) {
                 expect(error).toBeInstanceOf(RuntimeError);
                 expect(provider.ready).toBe(false);
             });
@@ -84,7 +84,7 @@ describe('Scene/IonImageryProvider', function() {
             .then(function() {
                 fail('should not be called');
             })
-            .otherwise(function(error) {
+            .catch(function(error) {
                 expect(error).toBeInstanceOf(RuntimeError);
                 expect(provider.ready).toBe(false);
             });
@@ -112,7 +112,7 @@ describe('Scene/IonImageryProvider', function() {
         var options = { assetId: assetId, accessToken: 'token', server: 'http://test.invalid' };
         var endpointResource = IonResource._createEndpointResource(assetId, options);
         spyOn(IonResource, '_createEndpointResource').and.returnValue(endpointResource);
-        spyOn(endpointResource, 'fetchJson').and.returnValue(when.resolve(endpointData));
+        spyOn(endpointResource, 'fetchJson').and.returnValue(Promise.resolve(endpointData));
 
         expect(endpointResource.fetchJson.calls.count()).toBe(0);
         var provider = new IonImageryProvider(options);
@@ -153,7 +153,7 @@ describe('Scene/IonImageryProvider', function() {
 
                 var image = new Image();
                 var request = {};
-                spyOn(internalProvider, 'requestImage').and.returnValue(when.resolve(image));
+                spyOn(internalProvider, 'requestImage').and.returnValue(Promise.resolve(image));
                 return provider.requestImage(1, 2, 3, request).then(function(result) {
                     expect(internalProvider.requestImage).toHaveBeenCalledWith(1, 2, 3, request);
                     expect(result).toBe(image);
@@ -161,7 +161,7 @@ describe('Scene/IonImageryProvider', function() {
             })
             .then(function() {
                 var info = {};
-                spyOn(internalProvider, 'pickFeatures').and.returnValue(when.resolve(info));
+                spyOn(internalProvider, 'pickFeatures').and.returnValue(Promise.resolve(info));
                 return provider.pickFeatures(1, 2, 3, 4, 5).then(function(result) {
                     expect(internalProvider.pickFeatures).toHaveBeenCalledWith(1, 2, 3, 4, 5);
                     expect(result).toBe(info);

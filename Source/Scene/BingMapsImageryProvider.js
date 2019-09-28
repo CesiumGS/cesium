@@ -194,12 +194,12 @@ import ImageryProvider from './ImageryProvider.js';
         function requestMetadata() {
             var promise = metadataResource.fetchJsonp('jsonp');
             BingMapsImageryProvider._metadataCache[cacheKey] = promise;
-            promise.then(metadataSuccess).otherwise(metadataFailure);
+            promise.then(metadataSuccess).catch(metadataFailure);
         }
 
         var promise = BingMapsImageryProvider._metadataCache[cacheKey];
         if (defined(promise)) {
-            promise.then(metadataSuccess).otherwise(metadataFailure);
+            promise.then(metadataSuccess).catch(metadataFailure);
         } else {
             requestMetadata();
         }
@@ -521,14 +521,14 @@ import ImageryProvider from './ImageryProvider.js';
         var promise = ImageryProvider.loadImage(this, buildImageResource(this, x, y, level, request));
 
         if (defined(promise)) {
-            return promise.otherwise(function(error) {
+            return promise.catch(function(error) {
                 // One cause of an error here is that the image we tried to load was zero-length.
                 // This isn't actually a problem, since it indicates that there is no tile.
                 // So, in that case we return the EMPTY_IMAGE sentinel value for later discarding.
                 if (defined(error.blob) && error.blob.size === 0) {
                     return DiscardEmptyTilePolicy.EMPTY_IMAGE;
                 }
-                return when.reject(error);
+                return Promise.reject(error);
             });
         }
 

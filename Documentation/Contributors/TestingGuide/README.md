@@ -596,7 +596,7 @@ beforeAll(function() {
         cesiumAirModel = model;
     }));
 
-    return when.all(modelPromises);
+    return Promise.all(modelPromises);
 });
 ```
 Given a model's url, `loadModel` (detailed below) returns a promise that resolves when a model is loaded.  Here, `beforeAll` is used to ensure that two models, stored in suite-scoped variables, `texturedBoxModel` and `cesiumAirModel`, are loaded before any tests are run.
@@ -650,7 +650,7 @@ it('rejects readyPromise on error', function() {
 
     return provider.readyPromise.then(function () {
         fail('should not resolve');
-    }).otherwise(function (e) {
+    }).catch(function (e) {
         expect(e.message).toContain(baseUrl);
         expect(provider.ready).toBe(false);
     });

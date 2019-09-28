@@ -1142,10 +1142,10 @@ import ShadowMode from './ShadowMode.js';
 
             primitive._state = PrimitiveState.CREATING;
 
-            when.all(promises, function(results) {
+            Promise.all(promises, function(results) {
                 primitive._createGeometryResults = results;
                 primitive._state = PrimitiveState.CREATED;
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 setReady(primitive, frameState, PrimitiveState.FAILED, error);
             });
         } else if (primitive._state === PrimitiveState.CREATED) {
@@ -1187,7 +1187,7 @@ import ShadowMode from './ShadowMode.js';
                 } else {
                     setReady(primitive, frameState, PrimitiveState.FAILED, undefined);
                 }
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 setReady(primitive, frameState, PrimitiveState.FAILED, error);
             });
         }

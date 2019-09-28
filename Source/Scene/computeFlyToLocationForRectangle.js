@@ -29,7 +29,7 @@ import SceneMode from './SceneMode.js';
         }
 
         if (!defined(terrainProvider)) {
-            return when.resolve(positionWithoutTerrain);
+            return Promise.resolve(positionWithoutTerrain);
         }
 
         return terrainProvider.readyPromise.then(function() {

@@ -148,7 +148,7 @@ describe('Core/GoogleEarthEnterpriseTerrainData', function() {
                 var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
                 var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
                 var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
-                return when.join(swPromise, sePromise, nwPromise, nePromise);
+                return Promise.all([swPromise, sePromise, nwPromise, nePromise]);
             }).then(function(upsampleResults) {
                 expect(upsampleResults.length).toBe(4);
 

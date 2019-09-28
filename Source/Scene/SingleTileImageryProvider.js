@@ -98,7 +98,7 @@ import ImageryProvider from './ImageryProvider.js';
             ImageryProvider
                 .loadImage(null, resource)
                 .then(success)
-                .otherwise(failure);
+                .catch(failure);
         }
 
         doRequest();

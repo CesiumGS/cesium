@@ -23,7 +23,7 @@ describe('Widgets/Geocoder/GeocoderViewModel', function() {
     var customGeocoderOptions = {
         autoComplete: true,
         geocode: function (input) {
-            return when.resolve(geocoderResults1);
+            return Promise.resolve(geocoderResults1);
         }
     };
 
@@ -37,14 +37,14 @@ describe('Widgets/Geocoder/GeocoderViewModel', function() {
     var customGeocoderOptions2 = {
         autoComplete: true,
         geocode: function (input) {
-            return when.resolve(geocoderResults2);
+            return Promise.resolve(geocoderResults2);
         }
     };
 
     var noResultsGeocoder = {
         autoComplete: true,
         geocode: function (input) {
-            return when.resolve([]);
+            return Promise.resolve([]);
         }
     };
 

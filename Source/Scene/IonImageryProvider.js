@@ -148,7 +148,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
         this._readyPromise = promise
             .then(function(endpoint) {
                 if (endpoint.type !== 'IMAGERY') {
-                    return when.reject(new RuntimeError('Cesium ion asset ' + assetId + ' is not an imagery asset.'));
+                    return Promise.reject(new RuntimeError('Cesium ion asset ' + assetId + ' is not an imagery asset.'));
                 }
 
                 var imageryProvider;
@@ -161,7 +161,7 @@ import WebMapTileServiceImageryProvider from './WebMapTileServiceImageryProvider
                     var factory = ImageryProviderMapping[externalType];
 
                     if (!defined(factory)) {
-                        return when.reject(new RuntimeError('Unrecognized Cesium ion imagery type: ' + externalType));
+                        return Promise.reject(new RuntimeError('Unrecognized Cesium ion imagery type: ' + externalType));
                     }
                     imageryProvider = factory(endpoint.options);
                 }

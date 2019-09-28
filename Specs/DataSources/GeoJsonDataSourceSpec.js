@@ -1097,7 +1097,7 @@ describe('DataSources/GeoJsonDataSource', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(featureUnknownGeometry).then(function() {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
         });
     });
 
@@ -1105,7 +1105,7 @@ describe('DataSources/GeoJsonDataSource', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(featureUndefinedGeometry).then(function() {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
         });
     });
 
@@ -1113,7 +1113,7 @@ describe('DataSources/GeoJsonDataSource', function() {
         var dataSource = new GeoJsonDataSource();
         return dataSource.load(geometryCollectionUnknownType).then(function() {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
         });
     });
 
@@ -1127,7 +1127,7 @@ describe('DataSources/GeoJsonDataSource', function() {
     it('rejects unknown geometry', function() {
         return GeoJsonDataSource.load(unknownGeometry).then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toBeInstanceOf(RuntimeError);
             expect(error.message).toContain('Unsupported GeoJSON object type: TimeyWimey');
         });
@@ -1136,7 +1136,7 @@ describe('DataSources/GeoJsonDataSource', function() {
     it('rejects invalid url', function() {
         return GeoJsonDataSource.load('invalid.geojson').then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error.statusCode).toBe(404);
         });
     });
@@ -1165,7 +1165,7 @@ describe('DataSources/GeoJsonDataSource', function() {
 
         return GeoJsonDataSource.load(featureWithUnknownCrsType).then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toBeInstanceOf(RuntimeError);
             expect(error.message).toContain('Unknown crs type: potato');
         });
@@ -1182,7 +1182,7 @@ describe('DataSources/GeoJsonDataSource', function() {
 
         return GeoJsonDataSource.load(featureWithUndefinedCrsProperty).then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toBeInstanceOf(RuntimeError);
             expect(error.message).toContain('crs.properties is undefined.');
         });
@@ -1202,7 +1202,7 @@ describe('DataSources/GeoJsonDataSource', function() {
 
         return GeoJsonDataSource.load(featureWithUnknownCrsType).then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toBeInstanceOf(RuntimeError);
             expect(error.message).toContain('Unknown crs name: failMe');
         });
@@ -1223,7 +1223,7 @@ describe('DataSources/GeoJsonDataSource', function() {
 
         return GeoJsonDataSource.load(featureWithUnknownCrsType).then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toBeInstanceOf(RuntimeError);
             expect(error.message).toContain('Unable to resolve crs link: {"href":"failMe","type":"failMeTwice"}');
         });
@@ -1237,7 +1237,7 @@ describe('DataSources/GeoJsonDataSource', function() {
         // Blue.png is not JSON
         return dataSource.load('Data/Images/Blue.png').then(function() {
             fail('should not be called');
-        }).otherwise(function() {
+        }).catch(function() {
             expect(spy).toHaveBeenCalledWith(dataSource, jasmine.any(Error));
         });
     });

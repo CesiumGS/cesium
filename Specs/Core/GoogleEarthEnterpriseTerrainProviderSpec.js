@@ -179,7 +179,7 @@ describe('Core/GoogleEarthEnterpriseTerrainProvider', function() {
             .then(function() {
                 fail('Server does not have terrain, so we shouldn\'t resolve.');
             })
-            .otherwise(function() {
+            .catch(function() {
                 expect(terrainProvider.ready).toBe(false);
             });
     });
@@ -307,8 +307,8 @@ describe('Core/GoogleEarthEnterpriseTerrainProvider', function() {
                     }
 
                     // Parsing terrain will fail, so just eat the errors and request the tile again
-                    return when.all(promises)
-                        .otherwise(function() {
+                    return Promise.all(promises)
+                        .catch(function() {
                             loadRealTile = true;
                             return terrainProvider.requestTileGeometry(1, 2, 3);
                         });

@@ -43,7 +43,7 @@ describe('Scene/Multifrustum', function() {
         logDepth = scene.logarithmicDepthBuffer;
         scene.destroyForSpecs();
 
-        return when.join(
+        return Promise.all([
             Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
                 greenImage = image;
             }),
@@ -52,7 +52,7 @@ describe('Scene/Multifrustum', function() {
             }),
             Resource.fetchImage('./Data/Images/White.png').then(function(image) {
                 whiteImage = image;
-            }));
+            })]);
     });
 
     beforeEach(function() {

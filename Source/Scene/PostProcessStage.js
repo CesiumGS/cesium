@@ -656,7 +656,7 @@ import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
 
         if (promises.length > 0) {
             stage._ready = false;
-            stage._texturePromise = when.all(promises).then(function() {
+            stage._texturePromise = Promise.all(promises).then(function() {
                 stage._ready = true;
                 stage._texturePromise = undefined;
             });

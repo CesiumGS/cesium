@@ -133,7 +133,7 @@ describe('Scene/ShadowMap', function() {
         primitiveFloor = createPrimitive(floorTransform, 2.0, Color.RED);
         primitiveFloorRTC = createPrimitiveRTC(floorTransform, 2.0, Color.RED);
 
-        return when.all(modelPromises);
+        return Promise.all(modelPromises);
     });
 
     function createPrimitive(transform, size, color) {

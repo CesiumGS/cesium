@@ -76,7 +76,7 @@ describe('Renderer/Texture', function() {
             greenETC1Image = image;
         }));
 
-        return when.all(promises);
+        return Promise.all(promises);
     });
 
     afterAll(function() {

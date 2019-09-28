@@ -114,12 +114,12 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
                     tilingSchemeOptions.rectangleNortheastInMeters = new Cartesian2(extent.xmax, extent.ymax);
                     that._tilingScheme = new WebMercatorTilingScheme(tilingSchemeOptions);
                 } else {
-                    return when.reject(new RuntimeError('Invalid spatial reference'));
+                    return Promise.reject(new RuntimeError('Invalid spatial reference'));
                 }
 
                 var tileInfo = metadata.tileInfo;
                 if (!defined(tileInfo)) {
-                    return when.reject(new RuntimeError('tileInfo is required'));
+                    return Promise.reject(new RuntimeError('tileInfo is required'));
                 }
 
                 that._width = tileInfo.rows + 1;
@@ -151,10 +151,10 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
 
                 return true;
             })
-            .otherwise(function(error) {
+            .catch(function(error) {
                 var message = 'An error occurred while accessing ' + that._resource.url + '.';
                 TileProviderError.handleError(undefined, that, that._errorEvent, message);
-                return when.reject(error);
+                return Promise.reject(error);
             });
 
         this._errorEvent = new Event();
@@ -284,7 +284,7 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
         });
 
         var hasAvailability = this._hasAvailability;
-        var availabilityPromise = when.resolve(true);
+        var availabilityPromise = Promise.resolve(true);
         var availabilityRequest;
         if (hasAvailability && !defined(isTileAvailable(this, level + 1, x * 2, y * 2))) {
             // We need to load child availability
@@ -301,7 +301,7 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
 
         var that = this;
         var tilesAvailable = this._tilesAvailable;
-        return when.join(promise, availabilityPromise)
+        return Promise.all([promise, availabilityPromise])
             .then(function(result) {
                 return new HeightmapTerrainData({
                     buffer: result[0],
@@ -312,19 +312,19 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
                     encoding: that._encoding
                 });
             })
-            .otherwise(function(error) {
+            .catch(function(error) {
                 if (defined(availabilityRequest) && (availabilityRequest.state === RequestState.CANCELLED)) {
                     request.cancel();
 
                     // Don't reject the promise till the request is actually cancelled
                     // Otherwise it will think the request failed, but it didn't.
                     return request.deferred.promise
-                        .always(function() {
+                        .finally(function() {
                             request.state = RequestState.CANCELLED;
-                            return when.reject(error);
+                            return Promise.reject(error);
                         });
                 }
-                return when.reject(error);
+                return Promise.reject(error);
             });
     };
 
@@ -583,7 +583,7 @@ import WebMercatorTilingScheme from './WebMercatorTilingScheme.js';
         };
 
         promise = promise
-            .always(function(result) {
+            .finally(function(result) {
                 delete availableCache[url];
 
                 return result;

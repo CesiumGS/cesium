@@ -157,7 +157,7 @@ import pollToPromise from './pollToPromise.js';
 
         return content.readyPromise.then(function(content) {
             fail('should not resolve');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toBeDefined();
         });
     };

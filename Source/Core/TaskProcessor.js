@@ -154,7 +154,7 @@ import RuntimeError from './RuntimeError.js';
             }
 
             config.modulePath = buildModuleUrl(wasmOptions.fallbackModulePath);
-            return when.resolve(config);
+            return Promise.resolve(config);
         }
 
         config.modulePath = buildModuleUrl(wasmOptions.modulePath);

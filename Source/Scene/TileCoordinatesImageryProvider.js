@@ -31,7 +31,7 @@ import when from '../ThirdParty/when.js';
         this._errorEvent = new Event();
         this._tileWidth = defaultValue(options.tileWidth, 256);
         this._tileHeight = defaultValue(options.tileHeight, 256);
-        this._readyPromise = when.resolve(true);
+        this._readyPromise = Promise.resolve(true);
     }
 
     defineProperties(TileCoordinatesImageryProvider.prototype, {

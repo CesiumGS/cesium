@@ -225,7 +225,7 @@ import RuntimeError from './RuntimeError.js';
         // We only want to retry in the case of invalid credentials (401) or image
         // requests(since Image failures can not provide a status code)
         if (!defined(error) || (error.statusCode !== 401 && !(error.target instanceof Image))) {
-            return when.resolve(false);
+            return Promise.resolve(false);
         }
 
         // We use a shared pending promise for all derived assets, since they share
@@ -238,7 +238,7 @@ import RuntimeError from './RuntimeError.js';
                     ionRoot._ionEndpoint = newEndpoint;
                     return newEndpoint;
                 })
-                .always(function(newEndpoint) {
+                .finally(function(newEndpoint) {
                     // Pass or fail, we're done with this promise, the next failure should use a new one.
                     ionRoot._pendingPromise = undefined;
                     return newEndpoint;

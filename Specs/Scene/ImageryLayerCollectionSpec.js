@@ -526,7 +526,7 @@ describe('Scene/ImageryLayerCollection', function() {
                     if (level !== 1 || (x === 0 && y === 0)) {
                         return ImageryProvider.loadImage(this, 'Data/Images/Blue.png');
                     }
-                    return when.reject();
+                    return Promise.reject();
                 }
             };
 

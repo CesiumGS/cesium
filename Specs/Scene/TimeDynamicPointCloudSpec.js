@@ -698,7 +698,7 @@ describe('Scene/TimeDynamicPointCloud', function() {
         });
         return loadFrame(pointCloud).then(function() {
             var decoder = DracoLoader._getDecoderTaskProcessor();
-            spyOn(decoder, 'scheduleTask').and.returnValue(when.reject({message : 'my error'}));
+            spyOn(decoder, 'scheduleTask').and.returnValue(Promise.reject({message : 'my error'}));
             var spyUpdate = jasmine.createSpy('listener');
             pointCloud.frameFailed.addEventListener(spyUpdate);
             goToFrame(1);
@@ -708,7 +708,7 @@ describe('Scene/TimeDynamicPointCloud', function() {
             return pollToPromise(function() {
                 var contents = pointCloud._frames[1].pointCloud;
                 if (defined(contents) && !defined(failedPromise)) {
-                    failedPromise = contents.readyPromise.otherwise(function() {
+                    failedPromise = contents.readyPromise.catch(function() {
                         frameFailed = true;
                     });
                 }

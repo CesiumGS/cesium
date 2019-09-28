@@ -29,7 +29,7 @@ import CubeMap from './CubeMap.js';
      *     negativeZ : 'skybox_nz.png'
      * }).then(function(cubeMap) {
      *     // use the cubemap
-     * }).otherwise(function(error) {
+     * }).catch(function(error) {
      *     // an error occurred
      * });
      *
@@ -71,7 +71,7 @@ import CubeMap from './CubeMap.js';
             Resource.createIfNeeded(urls.negativeZ).fetchImage(flipOptions)
         ];
 
-        return when.all(facePromises, function(images) {
+        return Promise.all(facePromises, function(images) {
             return new CubeMap({
                 context : context,
                 source : {

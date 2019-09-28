@@ -48,7 +48,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
 
     it('resolves readyPromise when promise url is used', function() {
         var provider = new TileMapServiceImageryProvider({
-            url : when.resolve('made/up/tms/server/')
+            url : Promise.resolve('made/up/tms/server/')
         });
 
         return provider.readyPromise.then(function(result) {
@@ -75,11 +75,11 @@ describe('Scene/TileMapServiceImageryProvider', function() {
     it('rejects readyPromise if options.url rejects', function() {
         var error = new Error();
         var provider = new TileMapServiceImageryProvider({
-            url : when.reject(error)
+            url : Promise.reject(error)
         });
         return provider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function(result) {
+        }).catch(function(result) {
             expect(result).toBe(error);
             expect(provider.ready).toBe(false);
         });
@@ -115,7 +115,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
 
         return provider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function(e) {
+        }).catch(function(e) {
             expect(provider.ready).toBe(false);
             expect(e.message).toContain('unsupported profile');
         });
@@ -150,7 +150,7 @@ describe('Scene/TileMapServiceImageryProvider', function() {
 
         return provider.readyPromise.then(function() {
             fail('should not resolve');
-        }).otherwise(function(e) {
+        }).catch(function(e) {
             expect(provider.ready).toBe(false);
             expect(e.message).toContain('expected tilesets or bbox attributes');
         });

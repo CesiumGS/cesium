@@ -29,7 +29,7 @@ import TaskProcessor from './TaskProcessor.js';
      *     var format = textureData.internalFormat;
      *     var arrayBufferView = textureData.bufferView;
      *     // use the data to create a texture
-     * }).otherwise(function(error) {
+     * }).catch(function(error) {
      *     // an error occurred
      * });
      *
@@ -46,7 +46,7 @@ import TaskProcessor from './TaskProcessor.js';
 
         var loadPromise;
         if (resourceOrUrlOrBuffer instanceof ArrayBuffer || ArrayBuffer.isView(resourceOrUrlOrBuffer)) {
-            loadPromise = when.resolve(resourceOrUrlOrBuffer);
+            loadPromise = Promise.resolve(resourceOrUrlOrBuffer);
         } else {
             var resource = Resource.createIfNeeded(resourceOrUrlOrBuffer);
             loadPromise = resource.fetchArrayBuffer();

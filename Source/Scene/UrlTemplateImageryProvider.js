@@ -188,7 +188,7 @@ import ImageryProvider from './ImageryProvider.js';
         if (!defined(options)) {
           throw new DeveloperError('options is required.');
         }
-        if (!when.isPromise(options) && !defined(options.url)) {
+        if (!(options instanceof Promise) && !defined(options.url)) {
           throw new DeveloperError('options is required.');
         }
         //>>includeEnd('debug');
@@ -684,15 +684,15 @@ import ImageryProvider from './ImageryProvider.js';
             ++formatIndex;
 
             if (format.type === 'json') {
-                return resource.fetchJson().then(format.callback).otherwise(doRequest);
+                return resource.fetchJson().then(format.callback).catch(doRequest);
             } else if (format.type === 'xml') {
-                return resource.fetchXML().then(format.callback).otherwise(doRequest);
+                return resource.fetchXML().then(format.callback).catch(doRequest);
             } else if (format.type === 'text' || format.type === 'html') {
-                return resource.fetchText().then(format.callback).otherwise(doRequest);
+                return resource.fetchText().then(format.callback).catch(doRequest);
             }
             return resource.fetch({
                 responseType: format.format
-            }).then(handleResponse.bind(undefined, format)).otherwise(doRequest);
+            }).then(handleResponse.bind(undefined, format)).catch(doRequest);
         }
 
         return doRequest();

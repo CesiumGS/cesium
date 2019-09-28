@@ -195,7 +195,7 @@ import when from '../ThirdParty/when.js';
      */
     DracoLoader.decodeModel = function(model, context) {
         if (!DracoLoader.hasExtension(model)) {
-            return when.resolve();
+            return Promise.resolve();
         }
 
         var loadResources = model._loadResources;
@@ -220,7 +220,7 @@ import when from '../ThirdParty/when.js';
 
         if (loadResources.primitivesToDecode.length === 0) {
             // No more tasks to schedule
-            return when.resolve();
+            return Promise.resolve();
         }
 
         var decoderTaskProcessor = DracoLoader._getDecoderTaskProcessor();
@@ -232,7 +232,7 @@ import when from '../ThirdParty/when.js';
             promise = scheduleDecodingTask(decoderTaskProcessor, model, loadResources, context);
         }
 
-        return when.all(decodingPromises);
+        return Promise.all(decodingPromises);
     };
 
     /**

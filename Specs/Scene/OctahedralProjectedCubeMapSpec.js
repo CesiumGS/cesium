@@ -186,7 +186,7 @@ describe('Scene/OctahedralProjectedCubeMap', function() {
             expect(projection2.ready).toEqual(true);
             expect(projection.texture).toEqual(projection2.texture);
             projection2.destroy();
-        }).always(function() {
+        }).finally(function() {
             projection.destroy();
         });
     });

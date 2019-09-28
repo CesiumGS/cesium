@@ -41,7 +41,7 @@ describe('Scene/BillboardCollection', function() {
         context = scene.context;
         camera = scene.camera;
 
-        return when.join(
+        return Promise.all([
             Resource.fetchImage('./Data/Images/Green2x2.png').then(function(result) {
                 greenImage = result;
             }),
@@ -53,7 +53,7 @@ describe('Scene/BillboardCollection', function() {
             }),
             Resource.fetchImage('./Data/Images/Blue10x10.png').then(function(result) {
                 largeBlueImage = result;
-            })
+            }])
         );
     });
 

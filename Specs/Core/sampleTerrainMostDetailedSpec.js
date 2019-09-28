@@ -38,7 +38,7 @@ describe('Core/sampleTerrainMostDetailed', function() {
 
         return sampleTerrainMostDetailed(terrainProvider, positions).then(function() {
             fail('the promise should not resolve');
-        }).otherwise(function() {
+        }).catch(function() {
         });
     });
 

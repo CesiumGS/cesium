@@ -48,9 +48,9 @@ import Check from './Check.js';
                     displayName: query,
                     destination: Cartesian3.fromDegrees(longitude, latitude, height)
                 };
-                return when.resolve([result]);
+                return Promise.resolve([result]);
             }
         }
-        return when.resolve([]);
+        return Promise.resolve([]);
     };
 export default CartographicGeocoderService;

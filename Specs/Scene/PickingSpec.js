@@ -1389,7 +1389,7 @@ describe('Scene/Pick', function() {
                 var promise2 = pickFromRayMostDetailed(primitiveRay, [], 1.0).then(function(result) {
                     expect(result).toBeDefined();
                 });
-                return when.all([promise1, promise2]);
+                return Promise.all([promise1, promise2]);
             });
         });
 
@@ -1692,7 +1692,7 @@ describe('Scene/Pick', function() {
                 var promise2 = drillPickFromRayMostDetailed(primitiveRay, 1, [], 1.0).then(function(result) {
                     expect(result.length).toBe(1);
                 });
-                return when.all([promise1, promise2]);
+                return Promise.all([promise1, promise2]);
             });
         });
 
@@ -1900,7 +1900,7 @@ describe('Scene/Pick', function() {
                 var promise2 = sampleHeightMostDetailed(cartographics2, [], 1.0).then(function(updatedCartographics2) {
                     expect(updatedCartographics2[0].height).toBeDefined();
                 });
-                return when.all([promise1, promise2]);
+                return Promise.all([promise1, promise2]);
             });
         });
 
@@ -2163,7 +2163,7 @@ describe('Scene/Pick', function() {
                 var promise2 = clampToHeightMostDetailed(cartesians2, [], 1.0).then(function(clampedCartesians2) {
                     expect(clampedCartesians2[0]).toBeDefined();
                 });
-                return when.all([promise1, promise2]);
+                return Promise.all([promise1, promise2]);
             });
         });
 

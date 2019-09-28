@@ -127,16 +127,16 @@ import when from '../ThirdParty/when.js';
                 if (!metadata.imageryPresent) {
                     var e = new RuntimeError('The server ' + metadata.url + ' doesn\'t have imagery');
                     metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
-                    return when.reject(e);
+                    return Promise.reject(e);
                 }
 
                 TileProviderError.handleSuccess(metadataError);
                 that._ready = result;
                 return result;
             })
-            .otherwise(function(e) {
+            .catch(function(e) {
                 metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
-                return when.reject(e);
+                return Promise.reject(e);
             });
     }
 

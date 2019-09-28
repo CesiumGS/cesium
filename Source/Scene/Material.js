@@ -852,7 +852,7 @@ import when from '../ThirdParty/when.js';
                     Resource.createIfNeeded(uniformValue.negativeZ).fetchImage()
                 ];
 
-                when.all(promises).then(function(images) {
+                Promise.all(promises).then(function(images) {
                     material._loadedCubeMaps.push({
                         id : uniformId,
                         images : images

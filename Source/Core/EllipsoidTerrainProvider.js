@@ -40,7 +40,7 @@ import TerrainProvider from './TerrainProvider.js';
         this._levelZeroMaximumGeometricError = TerrainProvider.getEstimatedLevelZeroGeometricErrorForAHeightmap(this._tilingScheme.ellipsoid, 64, this._tilingScheme.getNumberOfXTilesAtLevel(0));
 
         this._errorEvent = new Event();
-        this._readyPromise = when.resolve(true);
+        this._readyPromise = Promise.resolve(true);
     }
 
     defineProperties(EllipsoidTerrainProvider.prototype, {
@@ -148,7 +148,7 @@ import TerrainProvider from './TerrainProvider.js';
     EllipsoidTerrainProvider.prototype.requestTileGeometry = function(x, y, level, request) {
         var width = 16;
         var height = 16;
-        return when.resolve(new HeightmapTerrainData({
+        return Promise.resolve(new HeightmapTerrainData({
             buffer : new Uint8Array(width * height),
             width : width,
             height : height

@@ -69,7 +69,7 @@ var hospitalPin = Cesium.when(pinBuilder.fromMakiIconId('hospital', Cesium.Color
 });
 
 //Since some of the pins are created asynchronously, wait for them all to load before zooming/
-Cesium.when.all([bluePin, questionPin, groceryPin, hospitalPin], function(pins){
+Promise.all([bluePin, questionPin, groceryPin, hospitalPin], function(pins){
     viewer.zoomTo(pins);
 });
 

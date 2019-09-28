@@ -784,7 +784,7 @@ import ShadowMode from './ShadowMode.js';
          *   model.activeAnimations.addAll({
          *     multiplier : 0.5
          *   });
-         * }).otherwise(function(error){
+         * }).catch(function(error){
          *   window.alert(error);
          * });
          *
@@ -1377,7 +1377,7 @@ import ShadowMode from './ShadowMode.js';
                         resourceCredits.push(credits[i]);
                     }
                 }
-            }).otherwise(ModelUtility.getFailedLoadFunction(model, 'model', modelResource.url));
+            }).catch(ModelUtility.getFailedLoadFunction(model, 'model', modelResource.url));
         } else if (!cachedGltf.ready) {
             // Cache hit but the fetchArrayBuffer() or fetchText() request is still pending
             ++cachedGltf.count;
@@ -1707,7 +1707,7 @@ import ShadowMode from './ShadowMode.js';
 
                 shaderResource.fetchText()
                     .then(shaderLoad(model, shader.type, id))
-                    .otherwise(ModelUtility.getFailedLoadFunction(model, 'shader', shaderResource.url));
+                    .catch(ModelUtility.getFailedLoadFunction(model, 'shader', shaderResource.url));
             }
         });
     }
@@ -1860,7 +1860,7 @@ import ShadowMode from './ShadowMode.js';
                 } else {
                     promise = imageResource.fetchImage();
                 }
-                promise.then(imageLoad(model, id, imageId)).otherwise(ModelUtility.getFailedLoadFunction(model, 'image', imageResource.url));
+                promise.then(imageLoad(model, id, imageId)).catch(ModelUtility.getFailedLoadFunction(model, 'image', imageResource.url));
             }
         });
     }
@@ -2472,10 +2472,10 @@ import ShadowMode from './ShadowMode.js';
             var onerror = ModelUtility.getFailedLoadFunction(model, 'image', 'id: ' + gltfTexture.id + ', bufferView: ' + gltfTexture.bufferView);
 
             if (gltfTexture.mimeType === 'image/ktx') {
-                loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
+                loadKTX(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).catch(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else if (gltfTexture.mimeType === 'image/crn') {
-                loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).otherwise(onerror);
+                loadCRN(loadResources.getBuffer(bufferView)).then(imageLoad(model, gltfTexture.id, imageId)).catch(onerror);
                 ++model._loadResources.pendingTextureLoads;
             } else {
                 var onload = getOnImageCreatedFromTypedArray(loadResources, gltfTexture);
@@ -2484,7 +2484,7 @@ import ShadowMode from './ShadowMode.js';
                     format: gltfTexture.mimeType,
                     flipY: false
                 })
-                    .then(onload).otherwise(onerror);
+                    .then(onload).catch(onerror);
                 ++loadResources.pendingBufferViewToImage;
             }
         }
@@ -4636,7 +4636,7 @@ import ShadowMode from './ShadowMode.js';
 
                 if (!loadResources.finishedDecoding()) {
                     DracoLoader.decodeModel(this, context)
-                        .otherwise(ModelUtility.getFailedLoadFunction(this, 'model', this.basePath));
+                        .catch(ModelUtility.getFailedLoadFunction(this, 'model', this.basePath));
                 }
 
                 if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {

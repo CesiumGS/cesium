@@ -865,7 +865,7 @@ import ShadowMode from './ShadowMode.js';
             this._instancingSupported = context.instancedArrays;
             createModel(this, context);
             var that = this;
-            this._model.readyPromise.otherwise(function(error) {
+            this._model.readyPromise.catch(function(error) {
                 that._state = LoadState.FAILED;
                 that._readyPromise.reject(error);
             });

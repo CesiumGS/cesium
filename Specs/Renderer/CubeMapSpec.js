@@ -89,7 +89,7 @@ describe('Renderer/CubeMap', function() {
             red16x16Image = result;
         }));
 
-        return when.all(promises);
+        return Promise.all(promises);
     });
 
     afterAll(function() {

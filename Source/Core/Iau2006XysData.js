@@ -110,7 +110,7 @@ import TimeStandard from './TimeStandard.js';
             promises.push(requestXysChunk(this, i));
         }
 
-        return when.all(promises);
+        return Promise.all(promises);
     };
 
     /**

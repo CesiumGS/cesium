@@ -29,7 +29,7 @@ describe('Scene/TextureAtlas', function() {
     beforeAll(function() {
         scene = createScene();
 
-        return when.join(
+        return Promise.all([
             Resource.fetchImage('./Data/Images/Green.png').then(function(image) {
                 greenImage = image;
                 greenGuid = createGuid();
@@ -53,7 +53,7 @@ describe('Scene/TextureAtlas', function() {
             Resource.fetchImage('./Data/Images/Green4x4.png').then(function(image) {
                 bigGreenImage = image;
                 bigGreenGuid = createGuid();
-            }));
+            })]);
     });
 
     afterAll(function() {
@@ -221,7 +221,7 @@ describe('Scene/TextureAtlas', function() {
         promises.push(atlas.addImage(greenGuid, greenImage));
         promises.push(atlas.addImage(blueGuid, blueImage));
 
-        return when.all(promises, function(indices) {
+        return Promise.all(promises, function(indices) {
             var greenIndex = indices[0];
             var blueIndex = indices[1];
 
@@ -258,7 +258,7 @@ describe('Scene/TextureAtlas', function() {
         promises.push(atlas.addImage(greenGuid, greenImage));
         promises.push(atlas.addImage(blueGuid, blueImage));
 
-        return when.all(promises, function(indices) {
+        return Promise.all(promises, function(indices) {
             var greenIndex = indices[0];
             var blueIndex = indices[1];
 
@@ -284,7 +284,7 @@ describe('Scene/TextureAtlas', function() {
         promises.push(atlas.addImage(bigRedGuid, bigRedImage));
         promises.push(atlas.addImage(bigBlueGuid, bigBlueImage));
 
-        return when.all(promises, function(indices) {
+        return Promise.all(promises, function(indices) {
             var greenIndex = indices.shift();
             var blueIndex = indices.shift();
             var bigRedIndex = indices.shift();
@@ -317,7 +317,7 @@ describe('Scene/TextureAtlas', function() {
         promises.push(atlas.addImage(bigRedGuid, bigRedImage));
         promises.push(atlas.addImage(bigBlueGuid, bigBlueImage));
 
-        return when.all(promises, function(indices) {
+        return Promise.all(promises, function(indices) {
             var greenIndex = indices.shift();
             var blueIndex = indices.shift();
             var bigRedIndex = indices.shift();
@@ -371,7 +371,7 @@ describe('Scene/TextureAtlas', function() {
         promises.push(atlas.addImage(bigRedGuid, bigRedImage));
         promises.push(atlas.addImage(bigBlueGuid, bigBlueImage));
 
-        return when.all(promises, function(indices) {
+        return Promise.all(promises, function(indices) {
             var greenIndex = indices.shift();
             var blueIndex = indices.shift();
             var bigRedIndex = indices.shift();
@@ -524,7 +524,7 @@ describe('Scene/TextureAtlas', function() {
         var greenPromise = atlas.addImage(greenGuid, greenImage);
         var bluePromise = atlas.addImage(blueGuid, blueImage);
 
-        return when.all([greenPromise, bluePromise], function(indices) {
+        return Promise.all([greenPromise, bluePromise], function(indices) {
             var greenIndex = indices.shift();
             var blueIndex = indices.shift();
 
@@ -560,7 +560,7 @@ describe('Scene/TextureAtlas', function() {
         var greenPromise = atlas.addImage(greenGuid, greenImage);
         var bluePromise = atlas.addImage(blueGuid, blueImage);
 
-        return when.all([greenPromise, bluePromise], function(indices) {
+        return Promise.all([greenPromise, bluePromise], function(indices) {
             var greenIndex = indices.shift();
             var blueIndex = indices.shift();
 
@@ -626,7 +626,7 @@ describe('Scene/TextureAtlas', function() {
         var bigGreenPromise = atlas.addImage(bigGreenGuid, bigGreenImage);
         var bigRedPromise = atlas.addImage(bigRedGuid, bigRedImage);
 
-        return when.all([bluePromise, bigGreenPromise, bigRedPromise], function(indices) {
+        return Promise.all([bluePromise, bigGreenPromise, bigRedPromise], function(indices) {
             var blueIndex = indices.shift();
             var bigGreenIndex = indices.shift();
             var bigRedIndex = indices.shift();
@@ -687,7 +687,7 @@ describe('Scene/TextureAtlas', function() {
         var promise3 = atlas.addSubRegion(greenGuid, new BoundingRectangle(0.5, 0.0, 0.5, 0.5));
         var promise4 = atlas.addSubRegion(greenGuid, new BoundingRectangle(0.5, 0.5, 0.5, 0.5));
 
-        return when.all([promise1, promise2, promise3, promise4], function(indices) {
+        return Promise.all([promise1, promise2, promise3, promise4], function(indices) {
             var index1 = indices.shift();
             var index2 = indices.shift();
             var index3 = indices.shift();
@@ -735,7 +735,7 @@ describe('Scene/TextureAtlas', function() {
         var promise3 = atlas.addSubRegion(greenGuid, new BoundingRectangle(0.5, 0.0, 0.5, 0.5));
         var promise4 = atlas.addSubRegion(greenGuid, new BoundingRectangle(0.5, 0.5, 0.5, 0.5));
 
-        return when.all([promise1, promise2, promise3, promise4], function(indices) {
+        return Promise.all([promise1, promise2, promise3, promise4], function(indices) {
             var index1 = indices.shift();
             var index2 = indices.shift();
             var index3 = indices.shift();
@@ -793,7 +793,7 @@ describe('Scene/TextureAtlas', function() {
             return blueImage;
         });
 
-        return when.all([greenPromise, bluePromise], function(results) {
+        return Promise.all([greenPromise, bluePromise], function(results) {
             var greenIndex = results[0];
             var blueIndex = results[1];
 

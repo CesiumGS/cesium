@@ -873,7 +873,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 }
                 that._clippingPlanesOriginMatrix = Matrix4.clone(that._initialClippingPlanesOriginMatrix);
                 that._readyPromise.resolve(that);
-            }).otherwise(function(error) {
+            }).catch(function(error) {
                 that._readyPromise.reject(error);
             });
     }
@@ -1651,7 +1651,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         tileset._requestedTilesInFlight.push(tile);
 
         tile.contentReadyToProcessPromise.then(addToProcessingQueue(tileset, tile));
-        tile.contentReadyPromise.then(handleTileSuccess(tileset, tile)).otherwise(handleTileFailure(tileset, tile));
+        tile.contentReadyPromise.then(handleTileSuccess(tileset, tile)).catch(handleTileFailure(tileset, tile));
     }
 
     function sortRequestByPriority(a, b) {

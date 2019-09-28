@@ -42,7 +42,7 @@ describe('Core/OpenCageGeocoderService', function() {
                 }
             }]
         };
-        spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve(data));
+        spyOn(Resource.prototype, 'fetchJson').and.returnValue(Promise.resolve(data));
 
         return service.geocode(query)
             .then(function(results) {
@@ -57,7 +57,7 @@ describe('Core/OpenCageGeocoderService', function() {
 
         var query = '';
         var data = { results: [] };
-        spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve(data));
+        spyOn(Resource.prototype, 'fetchJson').and.returnValue(Promise.resolve(data));
 
         return service.geocode(query)
             .then(function(results) {

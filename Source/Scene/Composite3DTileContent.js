@@ -201,9 +201,9 @@ import when from '../ThirdParty/when.js';
             byteOffset += tileByteLength;
         }
 
-        when.all(contentPromises).then(function() {
+        Promise.all(contentPromises).then(function() {
             content._readyPromise.resolve(content);
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             content._readyPromise.reject(error);
         });
     }

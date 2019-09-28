@@ -128,7 +128,7 @@ describe('Core/CesiumTerrainProvider', function() {
 
     it('resolves readyPromise when url promise is used', function() {
         var provider = new CesiumTerrainProvider({
-            url : when.resolve('made/up/url')
+            url : Promise.resolve('made/up/url')
         });
 
         return provider.readyPromise.then(function (result) {
@@ -155,13 +155,13 @@ describe('Core/CesiumTerrainProvider', function() {
     it('rejects readyPromise when url rejects', function() {
         var error = new Error();
         var provider = new CesiumTerrainProvider({
-            url: when.reject(error)
+            url: Promise.reject(error)
         });
         return provider.readyPromise
             .then(function() {
                 fail('should not resolve');
             })
-            .otherwise(function(result) {
+            .catch(function(result) {
                 expect(result).toBe(error);
                 expect(provider.ready).toBe(false);
             });

@@ -180,7 +180,7 @@ function loadStHelens() {
         var radius = boundingSphere.radius;
         viewer.camera.viewBoundingSphere(boundingSphere, new Cesium.HeadingPitchRange(0.5, -0.2, radius * 4.0));
         viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
-    }).otherwise(function(error) {
+    }).catch(function(error) {
         throw(error);
     });
 }

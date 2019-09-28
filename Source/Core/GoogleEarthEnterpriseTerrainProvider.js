@@ -139,16 +139,16 @@ import TileProviderError from './TileProviderError.js';
                 if (!metadata.terrainPresent) {
                     var e = new RuntimeError('The server ' + metadata.url + ' doesn\'t have terrain');
                     metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
-                    return when.reject(e);
+                    return Promise.reject(e);
                 }
 
                 TileProviderError.handleSuccess(metadataError);
                 that._ready = result;
                 return result;
             })
-            .otherwise(function(e) {
+            .catch(function(e) {
                 metadataError = TileProviderError.handleError(metadataError, that, that._errorEvent, e.message, undefined, undefined, undefined, e);
-                return when.reject(e);
+                return Promise.reject(e);
             });
     }
 
@@ -337,7 +337,7 @@ import TileProviderError from './TileProviderError.js';
 
         // Check if this tile is even possibly available
         if (!defined(info)) {
-            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
+            return Promise.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
 
         var terrainState = info.terrainState;
@@ -350,7 +350,7 @@ import TileProviderError from './TileProviderError.js';
         var buffer = terrainCache.get(quadKey);
         if (defined(buffer)) {
             var credit = metadata.providers[info.terrainProvider];
-            return when.resolve(new GoogleEarthEnterpriseTerrainData({
+            return Promise.resolve(new GoogleEarthEnterpriseTerrainData({
                 buffer : buffer,
                 childTileMask : computeChildMask(quadKey, info, metadata),
                 credits : defined(credit) ? [credit] : undefined,
@@ -365,14 +365,14 @@ import TileProviderError from './TileProviderError.js';
         // We have a tile, check to see if no ancestors have terrain or that we know for sure it doesn't
         if (!info.ancestorHasTerrain) {
             // We haven't reached a level with terrain, so return the ellipsoid
-            return when.resolve(new HeightmapTerrainData({
+            return Promise.resolve(new HeightmapTerrainData({
                 buffer : new Uint8Array(16 * 16),
                 width : 16,
                 height : 16
             }));
         } else if (terrainState === TerrainState.NONE) {
             // Already have info and there isn't any terrain here
-            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
+            return Promise.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
 
         // Figure out where we are getting the terrain and what version
@@ -403,7 +403,7 @@ import TileProviderError from './TileProviderError.js';
 
         // We can't figure out where to get the terrain
         if (terrainVersion < 0) {
-            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
+            return Promise.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
 
         // Load that terrain
@@ -453,7 +453,7 @@ import TileProviderError from './TileProviderError.js';
                             });
                     }
 
-                    return when.reject(new RuntimeError('Failed to load terrain.'));
+                    return Promise.reject(new RuntimeError('Failed to load terrain.'));
                 });
 
             terrainPromises[q] = sharedPromise; // Store promise without delete from terrainPromises
@@ -461,7 +461,7 @@ import TileProviderError from './TileProviderError.js';
 
             // Set promise so we remove from terrainPromises just one time
             sharedPromise = sharedPromise
-                .always(function() {
+                .finally(function() {
                     delete terrainPromises[q];
                     delete terrainRequests[q];
                 });
@@ -481,15 +481,15 @@ import TileProviderError from './TileProviderError.js';
                     });
                 }
 
-                return when.reject(new RuntimeError('Failed to load terrain.'));
+                return Promise.reject(new RuntimeError('Failed to load terrain.'));
             })
-            .otherwise(function(error) {
+            .catch(function(error) {
                 if (sharedRequest.state === RequestState.CANCELLED) {
                     request.state = sharedRequest.state;
-                    return when.reject(error);
+                    return Promise.reject(error);
                 }
                 info.terrainState = TerrainState.NONE;
-                return when.reject(error);
+                return Promise.reject(error);
             });
     };
 

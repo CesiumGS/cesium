@@ -88,7 +88,7 @@ describe('Core/QuantizedMeshTerrainData', function() {
                  var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
                  var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
                  var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
-                 return when.join(swPromise, sePromise, nwPromise, nePromise);
+                 return Promise.all([swPromise, sePromise, nwPromise, nePromise]);
              }).then(function(upsampleResults) {
                  expect(upsampleResults.length).toBe(4);
 
@@ -167,7 +167,7 @@ describe('Core/QuantizedMeshTerrainData', function() {
                  var sePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
                  var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 1, 1);
                  var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 1, 1);
-                 return when.join(swPromise, sePromise, nwPromise, nePromise);
+                 return Promise.all([swPromise, sePromise, nwPromise, nePromise]);
              }).then(function(upsampleResults) {
                  expect(upsampleResults.length).toBe(4);
 
@@ -296,7 +296,7 @@ describe('Core/QuantizedMeshTerrainData', function() {
              return when(data.createMesh(tilingScheme, 0, 0, 0, 1)).then(function() {
                  var nwPromise = data.upsample(tilingScheme, 0, 0, 0, 0, 0, 1);
                  var nePromise = data.upsample(tilingScheme, 0, 0, 0, 1, 0, 1);
-                 return when.join(nwPromise, nePromise);
+                 return Promise.all([nwPromise, nePromise]);
              }).then(function(upsampleResults){
                  expect(upsampleResults.length).toBe(2);
                  var uBuffer, vBuffer;

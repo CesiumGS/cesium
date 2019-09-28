@@ -121,7 +121,7 @@ import ScaledPositionProperty from './ScaledPositionProperty.js';
         defineProperties(ExternalFileHandler.prototype, {
             promise : {
                 get : function() {
-                    return when.all(this._promises);
+                    return Promise.all(this._promises);
                 }
             },
             files : {

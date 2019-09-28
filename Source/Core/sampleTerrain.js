@@ -84,11 +84,11 @@ import Check from './Check.js';
             var requestPromise = tileRequest.terrainProvider.requestTileGeometry(tileRequest.x, tileRequest.y, tileRequest.level);
             var tilePromise = requestPromise
                 .then(createInterpolateFunction(tileRequest))
-                .otherwise(createMarkFailedFunction(tileRequest));
+                .catch(createMarkFailedFunction(tileRequest));
             tilePromises.push(tilePromise);
         }
 
-        return when.all(tilePromises, function() {
+        return Promise.all(tilePromises, function() {
             return positions;
         });
     }

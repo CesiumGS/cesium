@@ -63,7 +63,7 @@ describe('Core/IonResource', function() {
         var options = {};
         var resourceEndpoint = IonResource._createEndpointResource(tilesAssetId, options);
         spyOn(IonResource, '_createEndpointResource').and.returnValue(resourceEndpoint);
-        spyOn(resourceEndpoint, 'fetchJson').and.returnValue(when.resolve(tilesEndpoint));
+        spyOn(resourceEndpoint, 'fetchJson').and.returnValue(Promise.resolve(tilesEndpoint));
 
         return IonResource.fromAssetId(tilesAssetId, options)
             .then(function(resource) {
@@ -77,7 +77,7 @@ describe('Core/IonResource', function() {
     function testNonImageryExternalResource(externalEndpoint) {
         var resourceEndpoint = IonResource._createEndpointResource(123890213);
         spyOn(IonResource, '_createEndpointResource').and.returnValue(resourceEndpoint);
-        spyOn(resourceEndpoint, 'fetchJson').and.returnValue(when.resolve(externalEndpoint));
+        spyOn(resourceEndpoint, 'fetchJson').and.returnValue(Promise.resolve(externalEndpoint));
 
         return IonResource.fromAssetId(123890213)
             .then(function(resource) {
@@ -113,7 +113,7 @@ describe('Core/IonResource', function() {
             attributions: []
         })
         .then(fail)
-        .otherwise(function(e) {
+        .catch(function(e) {
             expect(e).toBeInstanceOf(RuntimeError);
         });
     });

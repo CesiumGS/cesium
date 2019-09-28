@@ -43,7 +43,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             }
         }
 
-        return when.all(resultsOrPromises, function(results) {
+        return Promise.all(resultsOrPromises).then(function(results) {
             return PrimitivePipeline.packCreateGeometryResults(results, transferableObjects);
         });
     }

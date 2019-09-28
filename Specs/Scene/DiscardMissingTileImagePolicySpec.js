@@ -92,7 +92,7 @@ describe('Scene/DiscardMissingTileImagePolicy', function() {
                 return policy.isReady();
             }));
 
-            return when.all(promises, function(results) {
+            return Promise.all(promises, function(results) {
                 var redImage = results[0];
                 var greenImage = results[1];
 
@@ -116,7 +116,7 @@ describe('Scene/DiscardMissingTileImagePolicy', function() {
                 return policy.isReady();
             }));
 
-            return when.all(promises, function(results) {
+            return Promise.all(promises, function(results) {
                 var transparentImage = results[0];
                 expect(policy.shouldDiscardImage(transparentImage)).toEqual(true);
             });
@@ -138,7 +138,7 @@ describe('Scene/DiscardMissingTileImagePolicy', function() {
                 return policy.isReady();
             }));
 
-            return when.all(promises, function(results) {
+            return Promise.all(promises, function(results) {
                 var transparentImage = results[0];
                 expect(policy.shouldDiscardImage(transparentImage)).toEqual(false);
             });

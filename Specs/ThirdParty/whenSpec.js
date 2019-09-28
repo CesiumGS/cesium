@@ -111,7 +111,7 @@ describe('ThirdParty/when', function() {
 
     it('chains failure', function() {
         promise.then(undefined, function(e) {
-            return when.reject('important' + e);
+            return Promise.reject('important' + e);
         }).then(captureValue, captureError);
 
         resolver.reject('error');

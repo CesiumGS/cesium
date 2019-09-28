@@ -122,9 +122,9 @@ import TaskProcessor from './TaskProcessor.js';
             .then(function() {
                 return true;
             })
-            .otherwise(function(e) {
+            .catch(function(e) {
                 var message = 'An error occurred while accessing ' + getMetadataResource(that, '', 1).url + '.';
-                return when.reject(new RuntimeError(message));
+                return Promise.reject(new RuntimeError(message));
             });
     }
 
@@ -411,7 +411,7 @@ import TaskProcessor from './TaskProcessor.js';
         //   exists but doesn't have a subtree to request
         //   undefined so no parent exists - this shouldn't ever happen once the provider is ready
         if (!defined(t) || !t.hasSubtree()) {
-            return when.reject(new RuntimeError('Couldn\'t load metadata for tile ' + quadKey));
+            return Promise.reject(new RuntimeError('Couldn\'t load metadata for tile ' + quadKey));
         }
 
         // We need to split up the promise here because when will execute syncronously if getQuadTreePacket
@@ -434,7 +434,7 @@ import TaskProcessor from './TaskProcessor.js';
                 });
                 return populateSubtree(that, quadKey, subtreeRequest);
             })
-            .always(function() {
+            .finally(function() {
                 delete subtreePromises[q];
             });
     }
@@ -541,7 +541,7 @@ import TaskProcessor from './TaskProcessor.js';
                     }
                 }
             })
-            .otherwise(function() {
+            .catch(function() {
                 // Just eat the error and use the default values.
                 console.log('Failed to retrieve ' + resource.url + '. Using defaults.');
                 that.key = defaultKey;

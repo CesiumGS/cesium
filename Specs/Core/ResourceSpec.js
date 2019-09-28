@@ -537,7 +537,7 @@ describe('Core/Resource', function() {
             promises.push(resource.retryOnError());
         }
 
-        when.all(promises)
+        Promise.all(promises)
             .then(function(result) {
                 expect(result).toEqual([true, true, true, false, false, false]);
                 expect(cb.calls.count()).toEqual(3);
@@ -563,7 +563,7 @@ describe('Core/Resource', function() {
             promises.push(resource.retryOnError());
         }
 
-        when.all(promises)
+        Promise.all(promises)
             .then(function(result) {
                 expect(result).toEqual([false, true, false, true, false, false]);
                 expect(cb.calls.count()).toEqual(4);
@@ -832,7 +832,7 @@ describe('Core/Resource', function() {
 
     it('static fetchArrayBuffer calls correct method', function() {
         var url = 'http://test.com/data';
-        var expectedResult = when.resolve();
+        var expectedResult = Promise.resolve();
         spyOn(Resource.prototype, 'fetchArrayBuffer').and.returnValue(expectedResult);
         var result = Resource.fetchArrayBuffer(url);
         expect(result).toBe(expectedResult);
@@ -844,7 +844,7 @@ describe('Core/Resource', function() {
 
     it('fetchArrayBuffer calls fetch with expected parameters', function() {
         var url = 'http://test.com/data';
-        var expectedResult = when.resolve();
+        var expectedResult = Promise.resolve();
         spyOn(Resource.prototype, 'fetch').and.returnValue(expectedResult);
         var result = Resource.fetchArrayBuffer(url);
         expect(result).toBe(expectedResult);
@@ -856,7 +856,7 @@ describe('Core/Resource', function() {
 
     it('static fetchBlob calls correct method', function() {
         var url = 'http://test.com/data';
-        spyOn(Resource.prototype, 'fetchBlob').and.returnValue(when.resolve());
+        spyOn(Resource.prototype, 'fetchBlob').and.returnValue(Promise.resolve());
         return Resource.fetchBlob(url)
             .then(function() {
                 expect(Resource.prototype.fetchBlob).toHaveBeenCalled();
@@ -865,7 +865,7 @@ describe('Core/Resource', function() {
 
     it('fetchBlob calls fetch with expected parameters', function() {
         var url = 'http://test.com/data';
-        var expectedResult = when.resolve();
+        var expectedResult = Promise.resolve();
         spyOn(Resource.prototype, 'fetch').and.returnValue(expectedResult);
         var result = Resource.fetchBlob(url);
         expect(result).toBe(expectedResult);
@@ -877,7 +877,7 @@ describe('Core/Resource', function() {
 
     it('fetchArrayBuffer calls fetch with expected parameters', function() {
         var url = 'http://test.com/data';
-        var expectedResult = when.resolve();
+        var expectedResult = Promise.resolve();
         spyOn(Resource.prototype, 'fetch').and.returnValue(expectedResult);
         var result = Resource.fetchArrayBuffer(url);
         expect(result).toBe(expectedResult);
@@ -889,7 +889,7 @@ describe('Core/Resource', function() {
 
     it('static fetchImage calls correct method', function() {
         var url = 'http://test.com/data';
-        spyOn(Resource.prototype, 'fetchImage').and.returnValue(when.resolve());
+        spyOn(Resource.prototype, 'fetchImage').and.returnValue(Promise.resolve());
         return Resource.fetchImage(url)
             .then(function() {
                 expect(Resource.prototype.fetchImage).toHaveBeenCalled();
@@ -898,7 +898,7 @@ describe('Core/Resource', function() {
 
     it('static fetchText calls correct method', function() {
         var url = 'http://test.com/data';
-        spyOn(Resource.prototype, 'fetchText').and.returnValue(when.resolve());
+        spyOn(Resource.prototype, 'fetchText').and.returnValue(Promise.resolve());
         return Resource.fetchText(url)
             .then(function() {
                 expect(Resource.prototype.fetchText).toHaveBeenCalled();
@@ -907,7 +907,7 @@ describe('Core/Resource', function() {
 
     it('fetchText calls fetch with expected parameters', function() {
         var url = 'http://test.com/data';
-        var expectedResult = when.resolve();
+        var expectedResult = Promise.resolve();
         spyOn(Resource.prototype, 'fetch').and.returnValue(expectedResult);
         var result = Resource.fetchText(url);
         expect(result).toBe(expectedResult);
@@ -919,7 +919,7 @@ describe('Core/Resource', function() {
 
     it('static fetchJson calls correct method', function() {
         var url = 'http://test.com/data';
-        spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve());
+        spyOn(Resource.prototype, 'fetchJson').and.returnValue(Promise.resolve());
         return Resource.fetchJson(url)
             .then(function() {
                 expect(Resource.prototype.fetchJson).toHaveBeenCalled();
@@ -928,7 +928,7 @@ describe('Core/Resource', function() {
 
     it('fetchJson calls fetch with expected parameters and parses result', function() {
         var expectedResult = { x: 123 };
-        spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve(JSON.stringify(expectedResult)));
+        spyOn(Resource.prototype, 'fetch').and.returnValue(Promise.resolve(JSON.stringify(expectedResult)));
         return Resource.fetchJson('url')
             .then(function(result) {
                 expect(result).toEqual(expectedResult);
@@ -943,7 +943,7 @@ describe('Core/Resource', function() {
 
     it('static fetchXML calls correct method', function() {
         var url = 'http://test.com/data';
-        spyOn(Resource.prototype, 'fetchXML').and.returnValue(when.resolve());
+        spyOn(Resource.prototype, 'fetchXML').and.returnValue(Promise.resolve());
         return Resource.fetchXML(url)
             .then(function() {
                 expect(Resource.prototype.fetchXML).toHaveBeenCalled();
@@ -952,7 +952,7 @@ describe('Core/Resource', function() {
 
     it('fetchXML calls fetch with expected parameters', function() {
         var url = 'http://test.com/data';
-        var expectedResult = when.resolve();
+        var expectedResult = Promise.resolve();
         spyOn(Resource.prototype, 'fetch').and.returnValue(expectedResult);
         var result = Resource.fetchXML(url);
         expect(result).toBe(expectedResult);
@@ -967,7 +967,7 @@ describe('Core/Resource', function() {
 
     it('static fetchJsonp calls correct method', function() {
         var url = 'http://test.com/data';
-        spyOn(Resource.prototype, 'fetchJsonp').and.returnValue(when.resolve());
+        spyOn(Resource.prototype, 'fetchJsonp').and.returnValue(Promise.resolve());
         return Resource.fetchJsonp(url)
             .then(function() {
                 expect(Resource.prototype.fetchJsonp).toHaveBeenCalled();
@@ -976,7 +976,7 @@ describe('Core/Resource', function() {
 
     it('static fetch calls correct method', function() {
         var url = 'http://test.com/data';
-        spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve());
+        spyOn(Resource.prototype, 'fetch').and.returnValue(Promise.resolve());
         return Resource.fetch(url)
             .then(function() {
                 expect(Resource.prototype.fetch).toHaveBeenCalled();
@@ -1004,7 +1004,7 @@ describe('Core/Resource', function() {
 
     it('static delete calls correct method', function() {
         var url = 'http://test.com/data';
-        spyOn(Resource.prototype, 'delete').and.returnValue(when.resolve());
+        spyOn(Resource.prototype, 'delete').and.returnValue(Promise.resolve());
         return Resource.delete(url)
             .then(function() {
                 expect(Resource.prototype.delete).toHaveBeenCalled();
@@ -1032,7 +1032,7 @@ describe('Core/Resource', function() {
 
     it('static head calls correct method', function() {
         var url = 'http://test.com/data';
-        spyOn(Resource.prototype, 'head').and.returnValue(when.resolve({}));
+        spyOn(Resource.prototype, 'head').and.returnValue(Promise.resolve({}));
         return Resource.head(url)
             .then(function() {
                 expect(Resource.prototype.head).toHaveBeenCalled();
@@ -1096,7 +1096,7 @@ describe('Core/Resource', function() {
 
     it('static options calls correct method', function() {
         var url = 'http://test.com/data';
-        spyOn(Resource.prototype, 'options').and.returnValue(when.resolve({}));
+        spyOn(Resource.prototype, 'options').and.returnValue(Promise.resolve({}));
         return Resource.options(url)
             .then(function() {
                 expect(Resource.prototype.options).toHaveBeenCalled();
@@ -1270,7 +1270,7 @@ describe('Core/Resource', function() {
                 return;
             }
 
-            spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
+            spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(Promise.resolve(false));
             spyOn(window, 'createImageBitmap').and.callThrough();
 
             return Resource.fetchImage({
@@ -1293,7 +1293,7 @@ describe('Core/Resource', function() {
                 .then(function() {
                     fail('expected promise to reject');
                 })
-                .otherwise(function(error) {
+                .catch(function(error) {
                    expect(error).toBeInstanceOf(RequestErrorEvent);
                 });
         });
@@ -1304,7 +1304,7 @@ describe('Core/Resource', function() {
             }
 
             // Force the fetching of a bad blob that is not an image to trigger the error
-            spyOn(Resource.prototype, 'fetch').and.returnValue(when.resolve(new Blob([new Uint8Array([])], { type: 'text/plain' })));
+            spyOn(Resource.prototype, 'fetch').and.returnValue(Promise.resolve(new Blob([new Uint8Array([])], { type: 'text/plain' })));
 
             return Resource.fetchImage({
                 url: 'http://example.invalid/testuri.png',
@@ -1314,7 +1314,7 @@ describe('Core/Resource', function() {
                 .then(function() {
                     fail('expected promise to reject');
                 })
-                .otherwise(function(error) {
+                .catch(function(error) {
                    expect(error.blob).toBeInstanceOf(Blob);
                 });
         });
@@ -1325,7 +1325,7 @@ describe('Core/Resource', function() {
             // Force it to use the Image constructor since these specs all test
             // specific functionality of this code path. For example, the crossOrigin
             // restriction does not apply to images loaded with ImageBitmap.
-            spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(when.resolve(false));
+            spyOn(Resource, 'supportsImageBitmapOptions').and.returnValue(Promise.resolve(false));
         });
 
         it('can load an image', function() {
@@ -1489,7 +1489,7 @@ describe('Core/Resource', function() {
                 var failure = false;
                 promise.then(function() {
                     success = true;
-                }).otherwise(function() {
+                }).catch(function() {
                     failure = true;
                 });
 
@@ -1531,7 +1531,7 @@ describe('Core/Resource', function() {
                 var failure = false;
                 promise.then(function(value) {
                     success = true;
-                }).otherwise(function(error) {
+                }).catch(function(error) {
                     failure = true;
                 });
 
@@ -1569,7 +1569,7 @@ describe('Core/Resource', function() {
                 var failure = false;
                 promise.then(function(value) {
                     success = true;
-                }).otherwise(function(error) {
+                }).catch(function(error) {
                     failure = true;
                 });
 
@@ -1751,7 +1751,7 @@ describe('Core/Resource', function() {
                         url : 'http://example.invalid'
                     }).then(function() {
                         fail('expected promise to reject');
-                    }).otherwise(function(err) {
+                    }).catch(function(err) {
                         expect(err).toBeInstanceOf(RequestErrorEvent);
                     });
                 });
@@ -1762,7 +1762,7 @@ describe('Core/Resource', function() {
                         responseType : 'json'
                     }).then(function() {
                         fail('expected promise to reject');
-                    }).otherwise(function(err) {
+                    }).catch(function(err) {
                         expect(err).toBeDefined();
                         expect(err).toBeInstanceOf(Error);
                     });
@@ -1842,7 +1842,7 @@ describe('Core/Resource', function() {
                     var rejectedError;
                     promise.then(function(value) {
                         resolvedValue = value;
-                    }).otherwise(function (error) {
+                    }).catch(function (error) {
                         rejectedError = error;
                     });
 
@@ -1865,7 +1865,7 @@ describe('Core/Resource', function() {
                     var rejectedError;
                     promise.then(function(value) {
                         resolvedValue = value;
-                    }).otherwise(function (error) {
+                    }).catch(function (error) {
                         rejectedError = error;
                     });
 
@@ -1895,7 +1895,7 @@ describe('Core/Resource', function() {
                     promise.then(function(value) {
                         resolved = true;
                         resolvedValue = value;
-                    }).otherwise(function (error) {
+                    }).catch(function (error) {
                         rejectedError = error;
                     });
 
@@ -1921,7 +1921,7 @@ describe('Core/Resource', function() {
                     promise.then(function(value) {
                         resolved = true;
                         resolvedValue = value;
-                    }).otherwise(function (error) {
+                    }).catch(function (error) {
                         rejectedError = error;
                     });
 
@@ -1948,7 +1948,7 @@ describe('Core/Resource', function() {
                     var rejectedError;
                     promise.then(function(value) {
                         resolvedValue = value;
-                    }).otherwise(function (error) {
+                    }).catch(function (error) {
                         rejectedError = error;
                     });
 
@@ -1975,7 +1975,7 @@ describe('Core/Resource', function() {
                     var rejectedError;
                     promise.then(function(value) {
                         resolvedValue = value;
-                    }).otherwise(function (error) {
+                    }).catch(function (error) {
                         rejectedError = error;
                     });
 
@@ -2002,7 +2002,7 @@ describe('Core/Resource', function() {
                     var rejectedError;
                     promise.then(function(value) {
                         resolvedValue = value;
-                    }).otherwise(function (error) {
+                    }).catch(function (error) {
                         rejectedError = error;
                     });
 
@@ -2027,7 +2027,7 @@ describe('Core/Resource', function() {
                     var rejectedError;
                     promise.then(function(value) {
                         resolvedValue = value;
-                    }).otherwise(function (error) {
+                    }).catch(function (error) {
                         rejectedError = error;
                     });
 
@@ -2059,7 +2059,7 @@ describe('Core/Resource', function() {
                     var rejectedError;
                     promise.then(function(value) {
                         resolvedValue = value;
-                    }).otherwise(function (error) {
+                    }).catch(function (error) {
                         rejectedError = error;
                     });
 
@@ -2098,7 +2098,7 @@ describe('Core/Resource', function() {
                     var rejectedError;
                     promise.then(function(value) {
                         resolvedValue = value;
-                    }).otherwise(function (error) {
+                    }).catch(function (error) {
                         rejectedError = error;
                     });
 
@@ -2133,7 +2133,7 @@ describe('Core/Resource', function() {
                     var rejectedError;
                     promise.then(function(value) {
                         resolvedValue = value;
-                    }).otherwise(function (error) {
+                    }).catch(function (error) {
                         rejectedError = error;
                     });
 
@@ -2172,7 +2172,7 @@ describe('Core/Resource', function() {
 
         it('returns a promise that rejects when the request errors', function() {
             var testUrl = 'http://example.invalid/testuri';
-            return Resource.fetchJsonp(testUrl).otherwise(function(error) {
+            return Resource.fetchJsonp(testUrl).catch(function(error) {
                 expect(error).toBeDefined();
             });
         });
@@ -2214,7 +2214,7 @@ describe('Core/Resource', function() {
                 var rejectedError;
                 promise.then(function(value) {
                     resolvedValue = value;
-                }).otherwise(function(error) {
+                }).catch(function(error) {
                     rejectedError = error;
                 });
 
@@ -2258,7 +2258,7 @@ describe('Core/Resource', function() {
                 var rejectedError;
                 promise.then(function(value) {
                     resolvedValue = value;
-                }).otherwise(function(error) {
+                }).catch(function(error) {
                     rejectedError = error;
                 });
 
@@ -2300,7 +2300,7 @@ describe('Core/Resource', function() {
                 var rejectedError;
                 promise.then(function(value) {
                     resolvedValue = value;
-                }).otherwise(function(error) {
+                }).catch(function(error) {
                     rejectedError = error;
                 });
 

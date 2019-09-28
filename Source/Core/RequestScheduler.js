@@ -192,7 +192,7 @@ import RequestState from './RequestState.js';
         ++statistics.numberOfActiveRequests;
         ++statistics.numberOfActiveRequestsEver;
         ++numberOfActiveRequestsByServer[request.serverKey];
-        request.requestFunction().then(getRequestReceivedFunction(request)).otherwise(getRequestFailedFunction(request));
+        request.requestFunction().then(getRequestReceivedFunction(request)).catch(getRequestFailedFunction(request));
         return promise;
     }
 

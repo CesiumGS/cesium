@@ -336,7 +336,7 @@ describe('Core/RequestScheduler', function() {
         var statistics = RequestScheduler.statistics;
 
         function requestFunction() {
-            return when.resolve();
+            return Promise.resolve();
         }
 
         var request = new Request({
@@ -357,7 +357,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(request.state).toBe(RequestState.CANCELLED);
         });
     });
@@ -392,7 +392,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(request.state).toBe(RequestState.CANCELLED);
         });
     });
@@ -422,7 +422,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             fail('should not be called');
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             expect(error).toBe('Request failed');
         });
     });
@@ -434,7 +434,7 @@ describe('Core/RequestScheduler', function() {
             return function() {
                 expect(priority).toBeGreaterThan(currentPriority);
                 currentPriority = priority;
-                return when.resolve();
+                return Promise.resolve();
             };
         }
 
@@ -470,7 +470,7 @@ describe('Core/RequestScheduler', function() {
         }
 
         function requestFunction() {
-            return when.resolve();
+            return Promise.resolve();
         }
 
         function createRequest(priority) {
@@ -522,7 +522,7 @@ describe('Core/RequestScheduler', function() {
 
     it('handles low priority requests', function() {
         function requestFunction() {
-            return when.resolve();
+            return Promise.resolve();
         }
 
         function createRequest(priority) {
@@ -631,7 +631,7 @@ describe('Core/RequestScheduler', function() {
         RequestScheduler.maximumRequests = 0;
 
         function requestFunction() {
-            return when.resolve();
+            return Promise.resolve();
         }
 
         RequestScheduler.throttleRequests = true;
@@ -726,7 +726,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             expect(eventRaised).toBe(true);
-        }).always(function() {
+        }).finally(function() {
             removeListenerCallback();
         });
     });
@@ -757,7 +757,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             expect(eventRaised).toBe(true);
-        }).always(function() {
+        }).finally(function() {
             removeListenerCallback();
         });
     });
@@ -795,7 +795,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             expect(eventRaised).toBe(true);
-        }).always(function() {
+        }).finally(function() {
             removeListenerCallback();
         });
     });
@@ -828,7 +828,7 @@ describe('Core/RequestScheduler', function() {
 
         return promise.then(function() {
             expect(eventRaised).toBe(true);
-        }).always(function() {
+        }).finally(function() {
             removeListenerCallback();
         });
     });

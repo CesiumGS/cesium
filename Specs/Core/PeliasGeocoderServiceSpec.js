@@ -28,7 +28,7 @@ describe('Core/PeliasGeocoderService', function() {
                 }
             }]
         };
-        spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve(data));
+        spyOn(Resource.prototype, 'fetchJson').and.returnValue(Promise.resolve(data));
 
         return service.geocode(query)
             .then(function(results) {
@@ -43,7 +43,7 @@ describe('Core/PeliasGeocoderService', function() {
 
         var query = 'some query';
         var data = { features: [] };
-        spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve(data));
+        spyOn(Resource.prototype, 'fetchJson').and.returnValue(Promise.resolve(data));
 
         return service.geocode(query)
             .then(function(results) {
@@ -56,7 +56,7 @@ describe('Core/PeliasGeocoderService', function() {
 
         var query = 'some query';
         var data = { features: [] };
-        spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve(data));
+        spyOn(Resource.prototype, 'fetchJson').and.returnValue(Promise.resolve(data));
         var getDerivedResource = spyOn(service._url, 'getDerivedResource').and.callThrough();
 
         service.geocode(query, GeocodeType.SEARCH);
@@ -73,7 +73,7 @@ describe('Core/PeliasGeocoderService', function() {
 
         var query = 'some query';
         var data = { features: [] };
-        spyOn(Resource.prototype, 'fetchJson').and.returnValue(when.resolve(data));
+        spyOn(Resource.prototype, 'fetchJson').and.returnValue(Promise.resolve(data));
         var getDerivedResource = spyOn(service._url, 'getDerivedResource').and.callThrough();
 
         service.geocode(query, GeocodeType.AUTOCOMPLETE);

@@ -220,7 +220,7 @@ model.readyPromise.then(function(model) {
         node.matrix = Cesium.Matrix4.multiply(node.originalMatrix, newValue, new Cesium.Matrix4());
     });
 
-}).otherwise(function(error){
+}).catch(function(error){
     window.alert(error);
 });
 

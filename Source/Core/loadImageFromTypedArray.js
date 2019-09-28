@@ -47,11 +47,11 @@ import Resource from './Resource.js';
                 }
                 return result;
             })
-            .otherwise(function(error) {
+            .catch(function(error) {
                 if (defined(blobUrl)) {
                     window.URL.revokeObjectURL(blobUrl);
                 }
-                return when.reject(error);
+                return Promise.reject(error);
             });
     }
 export default loadImageFromTypedArray;

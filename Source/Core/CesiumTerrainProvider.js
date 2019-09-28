@@ -149,7 +149,7 @@ import TileProviderError from './TileProviderError.js';
 
                 requestLayerJson();
             })
-            .otherwise(function(e) {
+            .catch(function(e) {
                 deferred.reject(e);
             });
 
@@ -278,7 +278,7 @@ import TileProviderError from './TileProviderError.js';
             if (defined(parentUrl)) {
                 if (!defined(availability)) {
                     console.log('A layer.json can\'t have a parentUrl if it does\'t have an available array.');
-                    return when.resolve();
+                    return Promise.resolve();
                 }
                 lastResource = lastResource.getDerivedResource({
                     url: parentUrl
@@ -291,7 +291,7 @@ import TileProviderError from './TileProviderError.js';
                 return when(parentMetadata, parseMetadataSuccess, parseMetadataFailure);
             }
 
-            return when.resolve();
+            return Promise.resolve();
         }
 
         function parseMetadataFailure(data) {
@@ -353,7 +353,7 @@ import TileProviderError from './TileProviderError.js';
         function requestLayerJson() {
             when(layerJsonResource.fetchJson())
                 .then(metadataSuccess)
-                .otherwise(metadataFailure);
+                .catch(metadataFailure);
         }
     }
 
@@ -633,7 +633,7 @@ import TileProviderError from './TileProviderError.js';
 
     function requestTileGeometry(provider, x, y, level, layerToUse, request) {
         if (!defined(layerToUse)) {
-            return when.reject(new RuntimeError('Terrain tile doesn\'t exist'));
+            return Promise.reject(new RuntimeError('Terrain tile doesn\'t exist'));
         }
 
         var urlTemplates = layerToUse.tileUrlTemplates;

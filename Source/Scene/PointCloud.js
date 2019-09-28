@@ -1233,7 +1233,7 @@ import StencilConstants from './StencilConstants.js';
                     parsedContent.normals = defaultValue(decodedNormals, parsedContent.normals);
                     parsedContent.batchIds = defaultValue(decodedBatchIds, parsedContent.batchIds);
                     parsedContent.styleableProperties = styleableProperties;
-                }).otherwise(function(error) {
+                }).catch(function(error) {
                     pointCloud._decodingState = DecodingState.FAILED;
                     pointCloud._readyPromise.reject(error);
                 });

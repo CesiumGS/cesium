@@ -219,7 +219,7 @@ import WallGraphics from './WallGraphics.js';
             deferred.resolve();
         }
 
-        return when.join(deferred.promise, when.all(this._promises));
+        return Promise.all([deferred.promise, Promise.all(this._promises)]);
     };
 
     DeferredLoading.prototype.process = function() {
@@ -2322,7 +2322,7 @@ import WallGraphics from './WallGraphics.js';
                     } else if (viewRefreshMode === 'onRegion') {
                         oneTimeWarning('kml-refrehMode-onRegion', 'KML - Unsupported viewRefreshMode: onRegion');
                     }
-                }).otherwise(function(error) {
+                }).catch(function(error) {
                     oneTimeWarning('An error occured during loading ' + href.url);
                     dataSource._error.raiseEvent(dataSource, error);
                 });
@@ -2358,7 +2358,7 @@ import WallGraphics from './WallGraphics.js';
 
         var deferredLoading = new KmlDataSource._DeferredLoading(dataSource);
         var styleCollection = new EntityCollection(dataSource);
-        return when.all(processStyles(dataSource, kml, styleCollection, sourceResource, false, uriResolver)).then(function() {
+        return Promise.all(processStyles(dataSource, kml, styleCollection, sourceResource, false, uriResolver)).then(function() {
             var element = kml.documentElement;
             if (element.localName === 'kml') {
                 var childNodes = element.childNodes;
@@ -2429,7 +2429,7 @@ import WallGraphics from './WallGraphics.js';
                 if (defined(docEntry)) {
                     loadXmlFromZip(docEntry, uriResolver, docDefer);
                 }
-                when.all(promises).then(function() {
+                Promise.all(promises).then(function() {
                     reader.close();
                     if (!defined(uriResolver.kml)) {
                         deferred.reject(new RuntimeError('KMZ file does not contain a KML document.'));
@@ -2437,7 +2437,7 @@ import WallGraphics from './WallGraphics.js';
                     }
                     uriResolver.keys = Object.keys(uriResolver);
                     return loadKml(dataSource, entityCollection, uriResolver.kml, sourceResource, uriResolver);
-                }).then(deferred.resolve).otherwise(deferred.reject);
+                }).then(deferred.resolve).catch(deferred.reject);
             });
         }, function(e) {
             deferred.reject(e);
@@ -2519,10 +2519,10 @@ import WallGraphics from './WallGraphics.js';
                 }
                 return loadKml(dataSource, entityCollection, dataToLoad, sourceUri, uriResolver, context);
             })
-            .otherwise(function(error) {
+            .catch(function(error) {
                 dataSource._error.raiseEvent(dataSource, error);
                 console.log(error);
-                return when.reject(error);
+                return Promise.reject(error);
             });
     }
 
@@ -2857,11 +2857,11 @@ import WallGraphics from './WallGraphics.js';
             DataSource.setLoading(that, false);
 
             return that;
-        }).otherwise(function(error) {
+        }).catch(function(error) {
             DataSource.setLoading(that, false);
             that._error.raiseEvent(that, error);
             console.log(error);
-            return when.reject(error);
+            return Promise.reject(error);
         });
     };
 
@@ -3088,7 +3088,7 @@ import WallGraphics from './WallGraphics.js';
 
                     load(that, newEntityCollection, href, {context : entity.id})
                         .then(getNetworkLinkUpdateCallback(that, networkLink, newEntityCollection, newNetworkLinks, href))
-                        .otherwise(function(error) {
+                        .catch(function(error) {
                             var msg = 'NetworkLink ' + networkLink.href + ' refresh failed: ' + error;
                             console.log(msg);
                             that._error.raiseEvent(that, msg);

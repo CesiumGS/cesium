@@ -1092,7 +1092,7 @@ describe('Scene/WebMapServiceImageryProvider', function() {
 
                 return provider.pickFeatures(0, 0, 0, 0.5, 0.5).then(function (features) {
                     expect(features.length).toBe(0);
-                }).otherwise(function () {
+                }).catch(function () {
                 });
             });
         });

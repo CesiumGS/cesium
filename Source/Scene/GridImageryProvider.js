@@ -52,7 +52,7 @@ import when from '../ThirdParty/when.js';
         // We only need a single canvas since all tiles will be the same
         this._canvas = this._createGridCanvas();
 
-        this._readyPromise = when.resolve(true);
+        this._readyPromise = Promise.resolve(true);
     }
 
     defineProperties(GridImageryProvider.prototype, {

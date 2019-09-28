@@ -185,7 +185,7 @@ describe('DataSources/KmlDataSource', function() {
 
         return Resource.fetchBlob('Data/Images/Blue.png').then(function(blob) {
             return dataSource.load(blob);
-        }).otherwise(function(e) {
+        }).catch(function(e) {
             expect(e).toBeInstanceOf(RuntimeError);
             expect(spy).toHaveBeenCalled();
         });
@@ -194,7 +194,7 @@ describe('DataSources/KmlDataSource', function() {
     it('load rejects KMZ file with no KML contained', function() {
         return Resource.fetchBlob('Data/KML/empty.kmz').then(function(blob) {
             return KmlDataSource.load(blob, options);
-        }).otherwise(function(e) {
+        }).catch(function(e) {
             expect(e).toBeInstanceOf(RuntimeError);
             expect(e.message).toEqual('KMZ file does not contain a KML document.');
         });
@@ -317,19 +317,19 @@ describe('DataSources/KmlDataSource', function() {
     });
 
     it('load rejects nonexistent URL', function() {
-        return KmlDataSource.load('test.invalid', options).otherwise(function(e) {
+        return KmlDataSource.load('test.invalid', options).catch(function(e) {
             expect(e).toBeInstanceOf(RequestErrorEvent);
         });
     });
 
     it('load rejects loading non-KML URL', function() {
-        return KmlDataSource.load('Data/Images/Blue.png', options).otherwise(function(e) {
+        return KmlDataSource.load('Data/Images/Blue.png', options).catch(function(e) {
             expect(e).toBeInstanceOf(RuntimeError);
         });
     });
 
     it('load rejects valid KMZ zip URL with no KML contained', function() {
-        return KmlDataSource.load('Data/KML/empty.kmz', options).otherwise(function(e) {
+        return KmlDataSource.load('Data/KML/empty.kmz', options).catch(function(e) {
             expect(e).toBeInstanceOf(RuntimeError);
             expect(e.message).toEqual('KMZ file does not contain a KML document.');
         });

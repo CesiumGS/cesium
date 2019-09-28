@@ -348,7 +348,7 @@ describe('Scene/BingMapsImageryProvider', function() {
 
         return provider.readyPromise.then(function () {
             fail('should not resolve');
-        }).otherwise(function (e) {
+        }).catch(function (e) {
             expect(provider.ready).toBe(false);
             expect(e.message).toContain(url);
         });
@@ -550,7 +550,7 @@ describe('Scene/BingMapsImageryProvider', function() {
         // Fake ImageryProvider.loadImage's expected output in the case of an empty tile
         var e = new Error();
         e.blob = {size: 0};
-        var errorPromise = when.reject(e);
+        var errorPromise = Promise.reject(e);
 
         spyOn(ImageryProvider, 'loadImage').and.returnValue(errorPromise);
 
