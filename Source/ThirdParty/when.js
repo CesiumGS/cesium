@@ -1,20 +1,16 @@
 var when = function(promiseOrValue, onFulfilled, onRejected) {
     return new Promise(function(resolve) {
         resolve(promiseOrValue);
-    })
-        .then(function(result) {
-            debugger;
-            if (onFulfilled) {
-                return onFulfilled(result);
-            }
-            return result;
-        })
-        .catch(function(e) {
-            debugger;
-            if (onRejected) {
-                onRejected(e);
-            }
-        });
+    }).then(function(result) {
+        if (onFulfilled) {
+            return onFulfilled(result);
+        }
+        return result;
+    }).catch(function(e) {
+        if (onRejected) {
+            onRejected(e);
+        }
+    });
 }
 
 when.defer = function() {
