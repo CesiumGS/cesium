@@ -117,7 +117,7 @@ vec4 getPolylineWindowCoordinatesEC(vec4 positionEC, vec4 prevEC, vec4 nextEC, f
         expandWidth = clamp(expandWidth / sinAngle, 0.0, width * 2.0);
     }
 
-    vec2 offset = direction * expandDirection * expandWidth * czm_resolutionScale;
+    vec2 offset = direction * expandDirection * expandWidth * czm_pixelRatio;
     return vec4(endPointWC.xy + offset, -endPointWC.z, 1.0);
 }
 

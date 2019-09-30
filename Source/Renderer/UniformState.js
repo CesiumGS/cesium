@@ -158,7 +158,7 @@ define([
         this._cameraUp = new Cartesian3();
         this._frustum2DWidth = 0.0;
         this._eyeHeight2D = new Cartesian2();
-        this._resolutionScale = 1.0;
+        this._pixelRatio = 1.0;
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
 
@@ -813,9 +813,9 @@ define([
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        resolutionScale : {
+        pixelRatio : {
             get : function() {
-                return this._resolutionScale;
+                return this._pixelRatio;
             }
         },
 
@@ -1118,9 +1118,7 @@ define([
     UniformState.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
-
-        var canvas = frameState.context._canvas;
-        this._resolutionScale = canvas.width / canvas.clientWidth;
+        this._pixelRatio = frameState.pixelRatio;
 
         var camera = frameState.camera;
         this.updateCamera(camera);
