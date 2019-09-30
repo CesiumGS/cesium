@@ -364,7 +364,6 @@ define([
             touchTile(tileset, child, frameState);
         }
 
-
         // This is possible for the replacement case since lastContentLevelToCheck is defined in terms of
         // the last parent level to check, which could be the contentless tileset root.
         if (onlyContentRootTiles) {
@@ -381,7 +380,7 @@ define([
         for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
             var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
 
-            length = subtreesForThisLevel.length;
+            var length = subtreesForThisLevel.length;
             if (length === 0) {
                 // None available yet
                 break;
