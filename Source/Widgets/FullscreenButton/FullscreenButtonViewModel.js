@@ -8,6 +8,7 @@ define([
         '../createCommand',
         '../getElement'
     ], function(
+        defined,
         defaultValue,
         defineProperties,
         destroyObject,
@@ -23,10 +24,19 @@ define([
      * @alias FullscreenButtonViewModel
      * @constructor
      *
+     * @param {Element|String} container The DOM element or ID that will contain the widget.
      * @param {Element|String} [fullscreenElement=document.body] The element or id to be placed into fullscreen mode.
      */
     function FullscreenButtonViewModel(container, fullscreenElement) {
+        //>>includeStart('debug', pragmas.debug);
+        if (!defined(container)) {
+            throw new DeveloperError('container is required.');
+        }
+        //>>includeEnd('debug');
+
         var that = this;
+
+        container = getElement(container);
 
         var tmpIsFullscreen = knockout.observable(Fullscreen.fullscreen);
         var tmpIsEnabled = knockout.observable(Fullscreen.enabled);
