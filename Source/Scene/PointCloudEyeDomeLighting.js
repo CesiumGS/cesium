@@ -219,7 +219,7 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
         }
 
         this._strength = pointCloudShading.eyeDomeLightingStrength;
-        this._radius = pointCloudShading.eyeDomeLightingRadius;
+        this._radius = pointCloudShading.eyeDomeLightingRadius * frameState.pixelRatio;
 
         var dirty = createResources(this, frameState.context);
 

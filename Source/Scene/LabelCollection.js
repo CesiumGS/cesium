@@ -841,7 +841,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         }
 
         var uniformState = context.uniformState;
-        var resolutionScale = uniformState.resolutionScale;
+        var resolutionScale = uniformState.pixelRatio;
         var resolutionChanged = this._resolutionScale !== resolutionScale;
         this._resolutionScale = resolutionScale;
 
