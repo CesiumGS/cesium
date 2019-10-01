@@ -1,4 +1,5 @@
 define([
+        '../../Core/defined',
         '../../Core/defaultValue',
         '../../Core/defineProperties',
         '../../Core/destroyObject',
@@ -34,9 +35,9 @@ define([
         }
         //>>includeEnd('debug');
 
-        var that = this;
-
         container = getElement(container);
+
+        var that = this;
 
         var tmpIsFullscreen = knockout.observable(Fullscreen.fullscreen);
         var tmpIsEnabled = knockout.observable(Fullscreen.enabled);
