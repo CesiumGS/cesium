@@ -351,6 +351,8 @@ define([
         this._lastHeight = undefined;
         this._lastWidth = undefined;
 
+        var doc = container.ownerDocument;
+
         // Firefox requires SVG references to be included directly, not imported from external CSS.
         // Also, CSS minifiers get confused by this being in an external CSS file.
         var cssStyle = document.createElement('style');
@@ -366,7 +368,7 @@ define([
 .cesium-animation-knobOuter { fill: url(#animation_knobOuter); }\
 .cesium-animation-knobInner { fill: url(#animation_knobInner); }';
 
-        document.head.insertBefore(cssStyle, document.head.childNodes[0]);
+        doc.head.insertBefore(cssStyle, doc.head.childNodes[0]);
 
         var themeEle = document.createElement('div');
         themeEle.className = 'cesium-animation-theme';
@@ -513,11 +515,11 @@ define([
         shuttleRingBackPanel.addEventListener('touchstart', mouseCallback, true);
         shuttleRingSwooshG.addEventListener('mousedown', mouseCallback, true);
         shuttleRingSwooshG.addEventListener('touchstart', mouseCallback, true);
-        document.addEventListener('mousemove', mouseCallback, true);
-        document.addEventListener('touchmove', mouseCallback, true);
-        document.addEventListener('mouseup', mouseCallback, true);
-        document.addEventListener('touchend', mouseCallback, true);
-        document.addEventListener('touchcancel', mouseCallback, true);
+        doc.addEventListener('mousemove', mouseCallback, true);
+        doc.addEventListener('touchmove', mouseCallback, true);
+        doc.addEventListener('mouseup', mouseCallback, true);
+        doc.addEventListener('touchend', mouseCallback, true);
+        doc.addEventListener('touchcancel', mouseCallback, true);
         this._shuttleRingPointer.addEventListener('mousedown', mouseCallback, true);
         this._shuttleRingPointer.addEventListener('touchstart', mouseCallback, true);
         this._knobOuter.addEventListener('mousedown', mouseCallback, true);
@@ -615,16 +617,18 @@ define([
             this._observer = undefined;
         }
 
+        var doc = this._container.ownerDocument;
+
         var mouseCallback = this._mouseCallback;
         this._shuttleRingBackPanel.removeEventListener('mousedown', mouseCallback, true);
         this._shuttleRingBackPanel.removeEventListener('touchstart', mouseCallback, true);
         this._shuttleRingSwooshG.removeEventListener('mousedown', mouseCallback, true);
         this._shuttleRingSwooshG.removeEventListener('touchstart', mouseCallback, true);
-        document.removeEventListener('mousemove', mouseCallback, true);
-        document.removeEventListener('touchmove', mouseCallback, true);
-        document.removeEventListener('mouseup', mouseCallback, true);
-        document.removeEventListener('touchend', mouseCallback, true);
-        document.removeEventListener('touchcancel', mouseCallback, true);
+        doc.removeEventListener('mousemove', mouseCallback, true);
+        doc.removeEventListener('touchmove', mouseCallback, true);
+        doc.removeEventListener('mouseup', mouseCallback, true);
+        doc.removeEventListener('touchend', mouseCallback, true);
+        doc.removeEventListener('touchcancel', mouseCallback, true);
         this._shuttleRingPointer.removeEventListener('mousedown', mouseCallback, true);
         this._shuttleRingPointer.removeEventListener('touchstart', mouseCallback, true);
         this._knobOuter.removeEventListener('mousedown', mouseCallback, true);
@@ -706,20 +710,23 @@ define([
         // do anything if the container has not yet been added to the DOM.
         // Set up an observer to be notified when it is added and apply
         // the changes at that time.
-        if (!document.body.contains(this._container)) {
+
+        var doc = this._container.ownerDocument;
+
+        if (!doc.body.contains(this._container)) {
             if (defined(this._observer)) {
                 //Already listening.
                 return;
             }
             var that = this;
             that._observer = new MutationObserver(function() {
-                if (document.body.contains(that._container)) {
+                if (doc.body.contains(that._container)) {
                     that._observer.disconnect();
                     that._observer = undefined;
                     that.applyThemeChanges();
                 }
             });
-            that._observer.observe(document, {childList : true, subtree : true});
+            that._observer.observe(doc, {childList : true, subtree : true});
             return;
         }
 
