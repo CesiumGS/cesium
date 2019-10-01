@@ -734,6 +734,8 @@ import StencilConstants from './StencilConstants.js';
             u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier : function() {
                 var scratch = scratchPointSizeAndTimeAndGeometricErrorAndDepthMultiplier;
                 scratch.x = pointCloud._attenuation ? pointCloud.maximumAttenuation : pointCloud._pointSize;
+                scratch.x *= frameState.pixelRatio;
+
                 scratch.y = pointCloud.time;
 
                 if (pointCloud._attenuation) {
@@ -1097,7 +1099,7 @@ import StencilConstants from './StencilConstants.js';
         }
 
         if (hasPointSizeStyle) {
-            vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal); \n';
+            vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal) * czm_pixelRatio; \n';
         } else if (attenuation) {
             vs += '    vec4 positionEC = czm_modelView * vec4(position, 1.0); \n' +
                   '    float depth = -positionEC.z; \n' +

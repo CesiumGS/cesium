@@ -85,8 +85,8 @@ import getElement from '../getElement.js';
         var height = canvas.clientHeight;
         var pixelRatio = configurePixelRatio(widget);
 
-        widget._canvasWidth = width;
-        widget._canvasHeight = height;
+        widget._canvasClientWidth = width;
+        widget._canvasClientHeight = height;
 
         width *= pixelRatio;
         height *= pixelRatio;
@@ -223,8 +223,8 @@ import getElement from '../getElement.js';
         this._element = element;
         this._container = container;
         this._canvas = canvas;
-        this._canvasWidth = 0;
-        this._canvasHeight = 0;
+        this._canvasClientWidth = 0;
+        this._canvasClientHeight = 0;
         this._lastDevicePixelRatio = 0;
         this._creditViewport = creditViewport;
         this._creditContainer = creditContainer;
@@ -684,9 +684,7 @@ import getElement from '../getElement.js';
      */
     CesiumWidget.prototype.resize = function() {
         var canvas = this._canvas;
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
-        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height && this._lastDevicePixelRatio === window.devicePixelRatio) {
+        if (!this._forceResize && this._canvasClientWidth === canvas.clientWidth && this._canvasClientHeight === canvas.clientHeight && this._lastDevicePixelRatio === window.devicePixelRatio) {
             return;
         }
         this._forceResize = false;
