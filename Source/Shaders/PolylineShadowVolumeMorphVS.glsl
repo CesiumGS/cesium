@@ -103,12 +103,12 @@ void main()
 #endif // PER_INSTANCE_COLOR
 
 #ifdef WIDTH_VARYING
-    float width = czm_batchTable_width(batchId);
+    float width = czm_batchTable_width(batchId) * czm_pixelRatio;
     float halfWidth = width * 0.5;
     v_width = width;
     v_texcoordNormalizationAndHalfWidth.z = halfWidth;
 #else
-    float halfWidth = 0.5 * czm_batchTable_width(batchId);
+    float halfWidth = 0.5 * czm_batchTable_width(batchId) * czm_pixelRatio;
     v_texcoordNormalizationAndHalfWidth.z = halfWidth;
 #endif
 

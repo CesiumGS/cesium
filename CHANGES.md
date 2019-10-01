@@ -33,6 +33,7 @@ Change Log
 * Fixed alpha equation for `BlendingState.ALPHA_BLEND` and `BlendingState.ADDITIVE_BLEND`. [#8202](https://github.com/AnalyticalGraphicsInc/cesium/pull/8202)
 * Fixed atmosphere brightness when High Dynamic Range is disabled. [#8149](https://github.com/AnalyticalGraphicsInc/cesium/issues/8149)
 * Fixed brightness levels for procedural Image Based Lighting. [#7803](https://github.com/AnalyticalGraphicsInc/cesium/issues/7803)
+* Made pixel sizes consistent for polylines and point clouds when rendering at different pixel ratios. [#8113](https://github.com/AnalyticalGraphicsInc/cesium/issues/8113)
 
 ### 1.61 - 2019-09-03
 
