@@ -35,7 +35,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 if (!viewer.scene.highDynamicRangeSupported) {
-    throw new Cesium.RuntimeError('This browser does not support high dynamic range.');
+    window.alert('This browser does not support high dynamic range.');
 }
 
 viewer.scene.camera.setView({
