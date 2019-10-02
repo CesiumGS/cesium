@@ -698,6 +698,7 @@ define([
 
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
+            usePrimitiveFramebuffer : false,
             useOIT : false,
             useInvertClassification : false,
             usePostProcess : false,
@@ -2261,7 +2262,7 @@ define([
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
         var useDepthPlane = environmentState.useDepthPlane;
-        var usePrimitiveFramebuffer = (numFrustums > 1) && clearGlobeDepth && environmentState.useGlobeDepthFramebuffer;
+        var usePrimitiveFramebuffer = environmentState.usePrimitiveFramebuffer = (numFrustums > 1) && clearGlobeDepth && environmentState.useGlobeDepthFramebuffer;
         var clearDepth = scene._depthClearCommand;
         var clearStencil = scene._stencilClearCommand;
         var clearClassificationStencil = scene._classificationStencilClearCommand;
@@ -3152,11 +3153,9 @@ define([
         var environmentState = this._environmentState;
         var view = this._view;
         var globeDepth = view.globeDepth;
-        var numFrustums = view.frustumCommandsList.length;
 
         var useOIT = environmentState.useOIT;
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
-        var usePrimitiveFramebuffer = (numFrustums > 1) && environmentState.clearGlobeDepth && environmentState.useGlobeDepthFramebuffer;
         var usePostProcess = environmentState.usePostProcess;
 
         var defaultFramebuffer = environmentState.originalFramebuffer;
@@ -3164,7 +3163,7 @@ define([
         var sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
         var idFramebuffer = view.sceneFramebuffer.getIdFramebuffer();
 
-        if (usePrimitiveFramebuffer) {
+        if (environmentState.usePrimitiveFramebuffer) {
             // Merge primitive framebuffer into globe framebuffer
             globeDepth.executeMergeColor(context, passState);
         }
