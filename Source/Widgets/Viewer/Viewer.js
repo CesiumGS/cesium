@@ -13,7 +13,6 @@ define([
         '../../Core/HeadingPitchRange',
         '../../Core/isArray',
         '../../Core/Matrix4',
-        '../../Core/Rectangle',
         '../../Core/ScreenSpaceEventType',
         '../../DataSources/BoundingSphereState',
         '../../DataSources/ConstantPositionProperty',
@@ -63,7 +62,6 @@ define([
         HeadingPitchRange,
         isArray,
         Matrix4,
-        Rectangle,
         ScreenSpaceEventType,
         BoundingSphereState,
         ConstantPositionProperty,
@@ -284,6 +282,7 @@ define([
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
+     * @param {Boolean} [options.useBrowserRecommendedResolution=false] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
      * @param {Boolean} [options.automaticallyTrackDataSourceClocks=true] If true, this widget will automatically track the clock settings of newly added DataSources, updating if the DataSource's clock changes.  Set this to false if you want to configure the clock independently.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
      * @param {SceneMode} [options.sceneMode=SceneMode.SCENE3D] The initial scene mode.
@@ -327,7 +326,7 @@ define([
      *     //Hide the base layer picker
      *     baseLayerPicker : false,
      *     //Use OpenStreetMaps
-     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider({
+     *     imageryProvider : new Cesium.OpenStreetMapImageryProvider({
      *         url : 'https://a.tile.openstreetmap.org/'
      *     }),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
@@ -430,6 +429,7 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             useDefaultRenderLoop : options.useDefaultRenderLoop,
             targetFrameRate : options.targetFrameRate,
             showRenderLoopErrors : options.showRenderLoopErrors,
+            useBrowserRecommendedResolution : options.useBrowserRecommendedResolution,
             creditContainer : defined(options.creditContainer) ? options.creditContainer : bottomContainer,
             creditViewport : options.creditViewport,
             scene3DOnly : scene3DOnly,
@@ -709,7 +709,6 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         this._needTrackedEntityUpdate = false;
         this._selectedEntity = undefined;
         this._clockTrackedDataSource = undefined;
-        this._forceResize = false;
         this._zoomIsFlight = false;
         this._zoomTarget = undefined;
         this._zoomPromise = undefined;
@@ -1195,7 +1194,27 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
             },
             set : function(value) {
                 this._cesiumWidget.resolutionScale = value;
-                this._forceResize = true;
+            }
+        },
+
+        /**
+        * Boolean flag indicating if the browser's recommended resolution is used.
+        * If true, the browser's device pixel ratio is ignored and 1.0 is used instead,
+        * effectively rendering based on CSS pixels instead of device pixels. This can improve
+        * performance on less powerful devices that have high pixel density. When false, rendering
+        * will be in device pixels. {@link Viewer#resolutionScale} will still take effect whether
+        * this flag is true or false.
+        * @memberof Viewer.prototype
+        *
+        * @type {Boolean}
+        * @default false
+        */
+        useBrowserRecommendedResolution : {
+            get : function() {
+                return this._cesiumWidget.useBrowserRecommendedResolution;
+            },
+            set : function(value) {
+                this._cesiumWidget.useBrowserRecommendedResolution = value;
             }
         },
 
@@ -1359,12 +1378,12 @@ Either specify options.terrainProvider instead or set options.baseLayerPicker to
         var animationExists = defined(this._animation);
         var timelineExists = defined(this._timeline);
 
-        if (!this._forceResize && width === this._lastWidth && height === this._lastHeight) {
+        cesiumWidget.resize();
+
+        if (width === this._lastWidth && height === this._lastHeight) {
             return;
         }
 
-        cesiumWidget.resize();
-        this._forceResize = false;
         var panelMaxHeight = height - 125;
         var baseLayerPickerDropDown = this._baseLayerPickerDropDown;
 

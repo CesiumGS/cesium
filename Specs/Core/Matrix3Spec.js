@@ -1,16 +1,18 @@
-defineSuite([
-        'Core/Matrix3',
+define([
         'Core/Cartesian3',
         'Core/HeadingPitchRoll',
         'Core/Math',
+        'Core/Matrix3',
         'Core/Quaternion'
     ], function(
-        Matrix3,
         Cartesian3,
         HeadingPitchRoll,
         CesiumMath,
+        Matrix3,
         Quaternion) {
-    'use strict';
+        'use strict';
+
+describe('Core/Matrix3', function() {
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix3();
@@ -639,6 +641,46 @@ defineSuite([
         expect(result).toEqual(expected);
     });
 
+    it('getRotation returns matrix without scale', function() {
+        var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
+        var result = new Matrix3();
+        var expected = Matrix3.fromArray([
+                0.12309149097933272, 0.4923659639173309, 0.8616404368553291,
+                0.20739033894608505, 0.5184758473652127, 0.8295613557843402,
+                0.26726124191242440, 0.5345224838248488, 0.8017837257372732
+        ]);
+        var scale = new Cartesian3();
+        var expectedScale = new Cartesian3(1.0, 1.0, 1.0);
+        result = Matrix3.getRotation(matrix, result);
+        var resultScale = Matrix3.getScale(result, scale);
+        expect(resultScale).toEqualEpsilon(expectedScale, CesiumMath.EPSILON14);
+        expect(result).toEqualEpsilon(expected, CesiumMath.EPSILON14);
+    });
+
+    it('getRotation does not modify rotation matrix', function() {
+        var tmp = new Matrix3();
+        var result = new Matrix3();
+        var rotation = Matrix3.clone(Matrix3.IDENTITY, new Matrix3());
+        Matrix3.multiply(rotation, Matrix3.fromRotationX(1.0, tmp), rotation);
+        Matrix3.multiply(rotation, Matrix3.fromRotationY(2.0, tmp), rotation);
+        Matrix3.multiply(rotation, Matrix3.fromRotationZ(3.0, tmp), rotation);
+        result = Matrix3.getRotation(rotation, result);
+        expect(rotation).toEqualEpsilon(result, CesiumMath.EPSILON14);
+        expect(rotation).not.toBe(result);
+    });
+
+    it('getRotation throws without a matrix', function() {
+        expect(function() {
+            return Matrix3.getRotation();
+        }).toThrowDeveloperError();
+    });
+
+    it('getRotation throws without a result', function() {
+        expect(function() {
+            return Matrix3.getRotation(new Matrix3());
+        }).toThrowDeveloperError();
+    });
+
     it('transpose works with a result parameter that is an input result parameter', function() {
         var matrix = new Matrix3(1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0);
         var expected = new Matrix3(1.0, 4.0, 7.0, 2.0, 5.0, 8.0, 3.0, 6.0, 9.0);
@@ -1194,4 +1236,5 @@ defineSuite([
             expect(intArray[index]).toEqual(index + 1);
         }
     });
+});
 });

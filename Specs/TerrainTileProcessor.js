@@ -1,17 +1,17 @@
 define([
-    'Core/clone',
-    'Renderer/Texture',
-    'Scene/GlobeSurfaceTile',
-    'Scene/ImageryLayer',
-    'Scene/TerrainState',
-    'ThirdParty/when'
-], function(
-    clone,
-    Texture,
-    GlobeSurfaceTile,
-    ImageryLayer,
-    TerrainState,
-    when) {
+        'Core/clone',
+        'Renderer/Texture',
+        'Scene/GlobeSurfaceTile',
+        'Scene/ImageryLayer',
+        'Scene/TerrainState',
+        'ThirdParty/when'
+    ], function(
+        clone,
+        Texture,
+        GlobeSurfaceTile,
+        ImageryLayer,
+        TerrainState,
+        when) {
     'use strict';
 
     function TerrainTileProcessor(frameState, terrainProvider, imageryLayerCollection) {

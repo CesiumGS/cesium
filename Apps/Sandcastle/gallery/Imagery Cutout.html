@@ -42,7 +42,7 @@ function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer', {
-    imageryProvider : Cesium.createTileMapServiceImageryProvider({
+    imageryProvider : new Cesium.TileMapServiceImageryProvider({
         url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
     }),
     baseLayerPicker : false

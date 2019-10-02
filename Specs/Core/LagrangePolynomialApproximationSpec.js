@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/LagrangePolynomialApproximation'
     ], function(
         LagrangePolynomialApproximation) {
-    'use strict';
+        'use strict';
+
+describe('Core/LagrangePolynomialApproximation', function() {
 
     //The results of these specs were validated against STK Components
     //an aerospace SDK available from Analytical Graphics. www.agi.com/components/
@@ -41,4 +43,5 @@ defineSuite([
         expect(LagrangePolynomialApproximation.getRequiredDataPoints(2)).toEqual(3);
         expect(LagrangePolynomialApproximation.getRequiredDataPoints(3)).toEqual(4);
     });
+});
 });

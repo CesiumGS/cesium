@@ -1,7 +1,5 @@
 (function() {
     'use strict';
-    /*global console,Sandcastle,window*/
-
     window.parent.postMessage('reload', '*');
 
     function defined(value) {

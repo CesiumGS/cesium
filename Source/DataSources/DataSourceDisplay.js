@@ -73,6 +73,7 @@ define([
         this._eventHelper.add(dataSourceCollection.dataSourceAdded, this._onDataSourceAdded, this);
         this._eventHelper.add(dataSourceCollection.dataSourceRemoved, this._onDataSourceRemoved, this);
         this._eventHelper.add(dataSourceCollection.dataSourceMoved, this._onDataSourceMoved, this);
+        this._eventHelper.add(scene.postRender, this._postRender, this);
 
         this._dataSourceCollection = dataSourceCollection;
         this._scene = scene;
@@ -99,23 +100,23 @@ define([
         this._onDataSourceAdded(undefined, defaultDataSource);
         this._defaultDataSource = defaultDataSource;
 
-        var removeDefaultDataSoureListener;
+        var removeDefaultDataSourceListener;
         var removeDataSourceCollectionListener;
         if (!primitivesAdded) {
             var that = this;
             var addPrimitives = function() {
                 scene.primitives.add(primitives);
                 scene.groundPrimitives.add(groundPrimitives);
-                removeDefaultDataSoureListener();
+                removeDefaultDataSourceListener();
                 removeDataSourceCollectionListener();
-                that._removeDefaultDataSoureListener = undefined;
+                that._removeDefaultDataSourceListener = undefined;
                 that._removeDataSourceCollectionListener = undefined;
             };
-            removeDefaultDataSoureListener = defaultDataSource.entities.collectionChanged.addEventListener(addPrimitives);
+            removeDefaultDataSourceListener = defaultDataSource.entities.collectionChanged.addEventListener(addPrimitives);
             removeDataSourceCollectionListener = dataSourceCollection.dataSourceAdded.addEventListener(addPrimitives);
         }
 
-        this._removeDefaultDataSoureListener = removeDefaultDataSoureListener;
+        this._removeDefaultDataSourceListener = removeDefaultDataSourceListener;
         this._removeDataSourceCollectionListener = removeDataSourceCollectionListener;
 
         this._ready = false;
@@ -225,8 +226,8 @@ define([
         }
         this._onDataSourceRemoved(undefined, this._defaultDataSource);
 
-        if (defined(this._removeDefaultDataSoureListener)) {
-            this._removeDefaultDataSoureListener();
+        if (defined(this._removeDefaultDataSourceListener)) {
+            this._removeDefaultDataSourceListener();
             this._removeDataSourceCollectionListener();
         } else {
             this._scene.primitives.remove(this._primitives);
@@ -282,6 +283,30 @@ define([
         this._ready = result;
 
         return result;
+    };
+
+    DataSourceDisplay.prototype._postRender = function() {
+        // Adds credits for all datasources
+        var frameState = this._scene.frameState;
+        var dataSources = this._dataSourceCollection;
+        var length = dataSources.length;
+        for (var i = 0; i < length; i++) {
+            var dataSource = dataSources.get(i);
+
+            var credit = dataSource.credit;
+            if (defined(credit)) {
+                frameState.creditDisplay.addCredit(credit);
+            }
+
+            // Credits from the resource that the user can't remove
+            var credits = dataSource._resourceCredits;
+            if (defined(credits)) {
+                var creditCount = credits.length;
+                for (var c = 0; c < creditCount; c++) {
+                    frameState.creditDisplay.addCredit(credits[c]);
+                }
+            }
+        }
     };
 
     var getBoundingSphereArrayScratch = [];

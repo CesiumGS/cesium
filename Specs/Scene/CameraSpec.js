@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Camera',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -18,12 +17,12 @@ defineSuite([
         'Core/Rectangle',
         'Core/Transforms',
         'Core/WebMercatorProjection',
+        'Scene/Camera',
         'Scene/CameraFlightPath',
         'Scene/MapMode2D',
         'Scene/SceneMode',
         'Scene/TweenCollection'
     ], function(
-        Camera,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -42,11 +41,14 @@ defineSuite([
         Rectangle,
         Transforms,
         WebMercatorProjection,
+        Camera,
         CameraFlightPath,
         MapMode2D,
         SceneMode,
         TweenCollection) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Camera', function() {
 
     var scene;
     var camera;
@@ -206,7 +208,7 @@ defineSuite([
 
         var ellipsoid = Ellipsoid.WGS84;
         var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid);
-        var transform = Matrix4.getRotation(toFixedFrame, new Matrix3());
+        var transform = Matrix4.getMatrix3(toFixedFrame, new Matrix3());
         Matrix3.transpose(transform, transform);
 
         var right = Matrix3.multiplyByVector(transform, camera.right, new Cartesian3());
@@ -475,7 +477,7 @@ defineSuite([
         camera.up = Cartesian3.cross(camera.right, camera.direction, new Cartesian3());
 
         var toFixedFrame = Transforms.eastNorthUpToFixedFrame(camera.position, ellipsoid);
-        var transform = Matrix4.getRotation(toFixedFrame, new Matrix3());
+        var transform = Matrix4.getMatrix3(toFixedFrame, new Matrix3());
         Matrix3.transpose(transform, transform);
 
         var right = Matrix3.multiplyByVector(transform, camera.right, new Cartesian3());
@@ -3078,4 +3080,5 @@ defineSuite([
         expect(camera.positionWCDeltaMagnitude).toEqual(0);
         expect(camera.positionWCDeltaMagnitudeLastFrame).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
     });
+});
 });

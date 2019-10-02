@@ -1,24 +1,26 @@
-defineSuite([
-        'Core/GeometryInstance',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/ComponentDatatype',
         'Core/Geometry',
         'Core/GeometryAttribute',
+        'Core/GeometryInstance',
         'Core/GeometryInstanceAttribute',
         'Core/Matrix4',
         'Core/PrimitiveType'
     ], function(
-        GeometryInstance,
         BoundingSphere,
         Cartesian3,
         ComponentDatatype,
         Geometry,
         GeometryAttribute,
+        GeometryInstance,
         GeometryInstanceAttribute,
         Matrix4,
         PrimitiveType) {
-    'use strict';
+        'use strict';
+
+describe('Core/GeometryInstance', function() {
 
     it('constructor', function() {
         var geometry = new Geometry({
@@ -65,4 +67,5 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+});
 });

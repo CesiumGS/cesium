@@ -1,16 +1,18 @@
-defineSuite([
-        'Widgets/Animation/AnimationViewModel',
+define([
         'Core/ClockRange',
         'Core/ClockStep',
         'Core/JulianDate',
+        'Widgets/Animation/AnimationViewModel',
         'Widgets/ClockViewModel'
     ], function(
-        AnimationViewModel,
         ClockRange,
         ClockStep,
         JulianDate,
+        AnimationViewModel,
         ClockViewModel) {
-    'use strict';
+        'use strict';
+
+describe('Widgets/Animation/AnimationViewModel', function() {
 
     var clockViewModel;
     beforeEach(function() {
@@ -623,4 +625,5 @@ defineSuite([
         animationViewModel.setShuttleRingTicks(ticks);
         expect(animationViewModel.getShuttleRingTicks()).toEqual([0.0, 2.0, 4.0, 8.0]);
     });
+});
 });

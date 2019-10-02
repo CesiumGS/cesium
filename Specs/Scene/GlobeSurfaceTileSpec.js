@@ -1,44 +1,40 @@
-defineSuite([
-        'Scene/GlobeSurfaceTile',
+define([
+        '../MockImageryProvider',
+        '../MockTerrainProvider',
+        '../TerrainTileProcessor',
         'Core/Cartesian3',
         'Core/Cartesian4',
-        'Core/clone',
         'Core/createWorldTerrain',
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/Ray',
-        'Renderer/Texture',
-        'Scene/ImageryLayer',
+        'Scene/GlobeSurfaceTile',
         'Scene/ImageryLayerCollection',
         'Scene/QuadtreeTile',
         'Scene/QuadtreeTileLoadState',
         'Scene/TerrainState',
         'Specs/createScene',
-        'ThirdParty/when',
-        '../MockImageryProvider',
-        '../MockTerrainProvider',
-        '../TerrainTileProcessor'
+        'ThirdParty/when'
     ], function(
-        GlobeSurfaceTile,
+        MockImageryProvider,
+        MockTerrainProvider,
+        TerrainTileProcessor,
         Cartesian3,
         Cartesian4,
-        clone,
         createWorldTerrain,
         Ellipsoid,
         GeographicTilingScheme,
         Ray,
-        Texture,
-        ImageryLayer,
+        GlobeSurfaceTile,
         ImageryLayerCollection,
         QuadtreeTile,
         QuadtreeTileLoadState,
         TerrainState,
         createScene,
-        when,
-        MockImageryProvider,
-        MockTerrainProvider,
-        TerrainTileProcessor) {
-    'use strict';
+        when) {
+        'use strict';
+
+describe('Scene/GlobeSurfaceTile', function() {
 
     var frameState;
     var tilingScheme;
@@ -402,4 +398,5 @@ defineSuite([
             });
         });
     });
+});
 });

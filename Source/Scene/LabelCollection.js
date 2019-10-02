@@ -7,8 +7,9 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/writeTextToCanvas',
         '../Core/Matrix4',
+        '../Core/writeTextToCanvas',
+        '../ThirdParty/bitmap-sdf',
         './BillboardCollection',
         './BlendOption',
         './HeightReference',
@@ -17,8 +18,7 @@ define([
         './LabelStyle',
         './SDFSettings',
         './TextureAtlas',
-        './VerticalOrigin',
-        '../ThirdParty/bitmap-sdf'
+        './VerticalOrigin'
     ], function(
         BoundingRectangle,
         Cartesian2,
@@ -28,8 +28,9 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        writeTextToCanvas,
         Matrix4,
+        writeTextToCanvas,
+        bitmapSDF,
         BillboardCollection,
         BlendOption,
         HeightReference,
@@ -38,8 +39,7 @@ define([
         LabelStyle,
         SDFSettings,
         TextureAtlas,
-        VerticalOrigin,
-        bitmapSDF) {
+        VerticalOrigin) {
     'use strict';
 
     // A glyph represents a single character in a particular label.  It may or may
@@ -864,7 +864,7 @@ define([
         }
 
         var uniformState = context.uniformState;
-        var resolutionScale = uniformState.resolutionScale;
+        var resolutionScale = uniformState.pixelRatio;
         var resolutionChanged = this._resolutionScale !== resolutionScale;
         this._resolutionScale = resolutionScale;
 

@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/clone'
     ], function(
         clone) {
-    'use strict';
+        'use strict';
+
+describe('Core/clone', function() {
 
     it('can make shallow clones', function() {
         var obj = {
@@ -45,4 +47,5 @@ defineSuite([
         expect(clonedObj.c.e.f).not.toBe(obj.c.e.f);
         expect(clonedObj.c.e.f.g).toEqual(obj.c.e.f.g);
     });
+});
 });

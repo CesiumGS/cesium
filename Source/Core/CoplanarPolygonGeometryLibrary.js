@@ -1,22 +1,21 @@
 define([
-        './defined',
         './Cartesian2',
         './Cartesian3',
         './Check',
+        './defined',
         './IntersectionTests',
         './Math',
         './Matrix3',
         './OrientedBoundingBox'
     ], function(
-        defined,
         Cartesian2,
         Cartesian3,
         Check,
+        defined,
         IntersectionTests,
         CesiumMath,
         Matrix3,
-        OrientedBoundingBox
-    ) {
+        OrientedBoundingBox) {
     'use strict';
 
     /**

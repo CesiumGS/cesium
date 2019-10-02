@@ -3,7 +3,6 @@ define([
         '../Core/BoundingSphere',
         '../Core/Cartesian3',
         '../Core/Cartesian4',
-        '../Core/Math',
         '../Core/Check',
         '../Core/Color',
         '../Core/combine',
@@ -14,10 +13,10 @@ define([
         '../Core/destroyObject',
         '../Core/FeatureDetection',
         '../Core/getStringFromTypedArray',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/oneTimeWarning',
         '../Core/OrthographicFrustum',
-        '../Core/Plane',
         '../Core/PrimitiveType',
         '../Core/RuntimeError',
         '../Core/Transforms',
@@ -27,12 +26,10 @@ define([
         '../Renderer/Pass',
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
         '../Renderer/VertexArray',
         '../ThirdParty/when',
         './BlendingState',
         './Cesium3DTileBatchTable',
-        './Cesium3DTileFeature',
         './Cesium3DTileFeatureTable',
         './DracoLoader',
         './getClipAndStyleCode',
@@ -45,7 +42,6 @@ define([
         BoundingSphere,
         Cartesian3,
         Cartesian4,
-        CesiumMath,
         Check,
         Color,
         combine,
@@ -56,10 +52,10 @@ define([
         destroyObject,
         FeatureDetection,
         getStringFromTypedArray,
+        CesiumMath,
         Matrix4,
         oneTimeWarning,
         OrthographicFrustum,
-        Plane,
         PrimitiveType,
         RuntimeError,
         Transforms,
@@ -69,12 +65,10 @@ define([
         Pass,
         RenderState,
         ShaderProgram,
-        ShaderSource,
         VertexArray,
         when,
         BlendingState,
         Cesium3DTileBatchTable,
-        Cesium3DTileFeature,
         Cesium3DTileFeatureTable,
         DracoLoader,
         getClipAndStyleCode,
@@ -788,6 +782,8 @@ define([
             u_pointSizeAndTimeAndGeometricErrorAndDepthMultiplier : function() {
                 var scratch = scratchPointSizeAndTimeAndGeometricErrorAndDepthMultiplier;
                 scratch.x = pointCloud._attenuation ? pointCloud.maximumAttenuation : pointCloud._pointSize;
+                scratch.x *= frameState.pixelRatio;
+
                 scratch.y = pointCloud.time;
 
                 if (pointCloud._attenuation) {
@@ -1151,7 +1147,7 @@ define([
         }
 
         if (hasPointSizeStyle) {
-            vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal); \n';
+            vs += '    gl_PointSize = getPointSizeFromStyle(position, position_absolute, color, normal) * czm_pixelRatio; \n';
         } else if (attenuation) {
             vs += '    vec4 positionEC = czm_modelView * vec4(position, 1.0); \n' +
                   '    float depth = -positionEC.z; \n' +

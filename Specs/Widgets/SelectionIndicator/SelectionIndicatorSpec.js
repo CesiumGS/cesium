@@ -1,10 +1,12 @@
-defineSuite([
-        'Widgets/SelectionIndicator/SelectionIndicator',
-        'Specs/createScene'
+define([
+        'Specs/createScene',
+        'Widgets/SelectionIndicator/SelectionIndicator'
     ], function(
-        SelectionIndicator,
-        createScene) {
-    'use strict';
+        createScene,
+        SelectionIndicator) {
+        'use strict';
+
+describe('Widgets/SelectionIndicator/SelectionIndicator', function() {
 
     var scene;
     beforeAll(function() {
@@ -46,3 +48,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

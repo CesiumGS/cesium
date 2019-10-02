@@ -1,6 +1,5 @@
 define(function() {
     'use strict';
-    /*global performance*/
 
     /**
      * Gets a timestamp that can be used in measuring the time between events.  Timestamps

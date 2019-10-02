@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/Cartesian4',
@@ -16,7 +16,9 @@ defineSuite([
         Matrix3,
         Matrix4,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Uniform', function() {
 
     var context;
 
@@ -843,3 +845,4 @@ defineSuite([
         }).contextToRender();
     });
 }, 'WebGL');
+});

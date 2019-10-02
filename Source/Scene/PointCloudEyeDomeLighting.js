@@ -3,7 +3,6 @@ define([
         '../Core/Color',
         '../Core/defined',
         '../Core/destroyObject',
-        '../Core/FeatureDetection',
         '../Core/PixelFormat',
         '../Core/PrimitiveType',
         '../Renderer/ClearCommand',
@@ -26,7 +25,6 @@ define([
         Color,
         defined,
         destroyObject,
-        FeatureDetection,
         PixelFormat,
         PrimitiveType,
         ClearCommand,
@@ -245,7 +243,7 @@ define([
         }
 
         this._strength = pointCloudShading.eyeDomeLightingStrength;
-        this._radius = pointCloudShading.eyeDomeLightingRadius;
+        this._radius = pointCloudShading.eyeDomeLightingRadius * frameState.pixelRatio;
 
         var dirty = createResources(this, frameState.context);
 

@@ -135,7 +135,7 @@ void main()
     //    { \| }
     //       o---------- polyline segment ---->
     //
-    float width = czm_batchTable_width(batchId);
+    float width = czm_batchTable_width(batchId) * czm_pixelRatio;
 #ifdef WIDTH_VARYING
     v_width = width;
 #endif

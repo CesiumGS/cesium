@@ -95,25 +95,33 @@ define([
         requestAnimationFrame(render);
     }
 
+    function configurePixelRatio(widget) {
+        var pixelRatio = widget._useBrowserRecommendedResolution ? 1.0 : window.devicePixelRatio;
+        pixelRatio *= widget._resolutionScale;
+        if (defined(widget._scene)) {
+            widget._scene.pixelRatio = pixelRatio;
+        }
+
+        return pixelRatio;
+    }
+
     function configureCanvasSize(widget) {
         var canvas = widget._canvas;
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
-        var resolutionScale = widget._resolutionScale;
-        if (!widget._supportsImageRenderingPixelated) {
-            resolutionScale *= defaultValue(window.devicePixelRatio, 1.0);
-        }
+        var pixelRatio = configurePixelRatio(widget);
 
-        widget._canvasWidth = width;
-        widget._canvasHeight = height;
+        widget._canvasClientWidth = width;
+        widget._canvasClientHeight = height;
 
-        width *= resolutionScale;
-        height *= resolutionScale;
+        width *= pixelRatio;
+        height *= pixelRatio;
 
         canvas.width = width;
         canvas.height = height;
 
         widget._canRender = width !== 0 && height !== 0;
+        widget._lastDevicePixelRatio = window.devicePixelRatio;
     }
 
     function configureCameraFrustum(widget) {
@@ -150,6 +158,7 @@ define([
      * @param {MapProjection} [options.mapProjection=new GeographicProjection()] The map projection to use in 2D and Columbus View modes.
      * @param {Globe} [options.globe=new Globe(mapProjection.ellipsoid)] The globe to use in the scene.  If set to <code>false</code>, no globe will be added.
      * @param {Boolean} [options.useDefaultRenderLoop=true] True if this widget should control the render loop, false otherwise.
+     * @param {Boolean} [options.useBrowserRecommendedResolution=false] If true, render at the browser's recommended resolution and ignore <code>window.devicePixelRatio</code>.
      * @param {Number} [options.targetFrameRate] The target frame rate when using the default render loop.
      * @param {Boolean} [options.showRenderLoopErrors=true] If true, this widget will automatically display an HTML panel to the user containing the error, if a render loop error occurs.
      * @param {Object} [options.contextOptions] Context and WebGL creation properties corresponding to <code>options</code> passed to {@link Scene}.
@@ -174,9 +183,9 @@ define([
      * //Widget with no terrain and default Bing Maps imagery provider.
      * var widget = new Cesium.CesiumWidget('cesiumContainer');
      *
-     * //Widget with OpenStreetMaps imagery provider and Cesium World Terrain.
+     * //Widget with ion imagery and Cesium World Terrain.
      * var widget = new Cesium.CesiumWidget('cesiumContainer', {
-     *     imageryProvider : Cesium.createOpenStreetMapImageryProvider(),
+     *     imageryProvider : Cesium.createWorldImagery(),
      *     terrainProvider : Cesium.createWorldTerrain(),
      *     // Use high-res stars downloaded from https://github.com/AnalyticalGraphicsInc/cesium-assets
      *     skyBox : new Cesium.SkyBox({
@@ -203,7 +212,7 @@ define([
 
         container = getElement(container);
 
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //Configure the widget DOM elements
         var element = document.createElement('div');
@@ -235,11 +244,14 @@ define([
 
         var showRenderLoopErrors = defaultValue(options.showRenderLoopErrors, true);
 
+        var useBrowserRecommendedResolution = defaultValue(options.useBrowserRecommendedResolution, false);
+
         this._element = element;
         this._container = container;
         this._canvas = canvas;
-        this._canvasWidth = 0;
-        this._canvasHeight = 0;
+        this._canvasClientWidth = 0;
+        this._canvasClientHeight = 0;
+        this._lastDevicePixelRatio = 0;
         this._creditViewport = creditViewport;
         this._creditContainer = creditContainer;
         this._innerCreditContainer = innerCreditContainer;
@@ -247,6 +259,7 @@ define([
         this._renderLoopRunning = false;
         this._showRenderLoopErrors = showRenderLoopErrors;
         this._resolutionScale = 1.0;
+        this._useBrowserRecommendedResolution = useBrowserRecommendedResolution;
         this._forceResize = false;
         this._clock = defined(options.clock) ? options.clock : new Clock();
 
@@ -271,6 +284,7 @@ define([
 
             scene.camera.constrainedAxis = Cartesian3.UNIT_Z;
 
+            configurePixelRatio(this);
             configureCameraFrustum(this);
 
             var ellipsoid = defaultValue(scene.mapProjection.ellipsoid, Ellipsoid.WGS84);
@@ -327,7 +341,7 @@ define([
                 scene.terrainProvider = options.terrainProvider;
             }
 
-            this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas, false);
+            this._screenSpaceEventHandler = new ScreenSpaceEventHandler(canvas);
 
             if (defined(options.sceneMode)) {
                 if (options.sceneMode === SceneMode.SCENE2D) {
@@ -562,8 +576,34 @@ define([
                     throw new DeveloperError('resolutionScale must be greater than 0.');
                 }
                 //>>includeEnd('debug');
-                this._resolutionScale = value;
-                this._forceResize = true;
+                if (this._resolutionScale !== value) {
+                    this._resolutionScale = value;
+                    this._forceResize = true;
+                }
+            }
+        },
+
+        /**
+        * Boolean flag indicating if the browser's recommended resolution is used.
+        * If true, the browser's device pixel ratio is ignored and 1.0 is used instead,
+        * effectively rendering based on CSS pixels instead of device pixels. This can improve
+        * performance on less powerful devices that have high pixel density. When false, rendering
+        * will be in device pixels. {@link CesiumWidget#resolutionScale} will still take effect whether
+        * this flag is true or false.
+        * @memberof CesiumWidget.prototype
+        *
+        * @type {Boolean}
+        * @default false
+        */
+        useBrowserRecommendedResolution : {
+            get : function() {
+                return this._useBrowserRecommendedResolution;
+            },
+            set : function(value) {
+                if (this._useBrowserRecommendedResolution !== value) {
+                    this._useBrowserRecommendedResolution = value;
+                    this._forceResize = true;
+                }
             }
         }
     });
@@ -670,9 +710,7 @@ define([
      */
     CesiumWidget.prototype.resize = function() {
         var canvas = this._canvas;
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
-        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height) {
+        if (!this._forceResize && this._canvasClientWidth === canvas.clientWidth && this._canvasClientHeight === canvas.clientHeight && this._lastDevicePixelRatio === window.devicePixelRatio) {
             return;
         }
         this._forceResize = false;

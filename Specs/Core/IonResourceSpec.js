@@ -1,18 +1,20 @@
-defineSuite([
-        'Core/IonResource',
+define([
         'Core/Ion',
+        'Core/IonResource',
         'Core/RequestErrorEvent',
         'Core/Resource',
         'Core/RuntimeError',
         'ThirdParty/when'
     ], function(
-        IonResource,
         Ion,
+        IonResource,
         RequestErrorEvent,
         Resource,
         RuntimeError,
         when) {
-'use strict';
+        'use strict';
+
+describe('Core/IonResource', function() {
 
     var assetId = 123890213;
     var endpoint = {
@@ -340,4 +342,5 @@ defineSuite([
             });
         });
     });
+});
 });

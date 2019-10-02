@@ -13,8 +13,8 @@ define([
         '../Renderer/RenderState',
         '../Renderer/ShaderProgram',
         '../Renderer/ShaderSource',
-        '../Shaders/ShadowVolumeFS',
         '../Shaders/ShadowVolumeAppearanceVS',
+        '../Shaders/ShadowVolumeFS',
         '../ThirdParty/when',
         './BlendingState',
         './ClassificationType',
@@ -41,8 +41,8 @@ define([
         RenderState,
         ShaderProgram,
         ShaderSource,
-        ShadowVolumeFS,
         ShadowVolumeAppearanceVS,
+        ShadowVolumeFS,
         when,
         BlendingState,
         ClassificationType,
@@ -578,7 +578,7 @@ define([
         });
         var attributeLocations = classificationPrimitive._primitive._attributeLocations;
 
-        var shadowVolumeAppearance = new ShadowVolumeAppearance(cullFragmentsUsingExtents, planarExtents, classificationPrimitive.appearance);
+        var shadowVolumeAppearance = new ShadowVolumeAppearance(cullFragmentsUsingExtents, planarExtents, classificationPrimitive.appearance, context.floatTextureSixPlaces);
 
         classificationPrimitive._spStencil = ShaderProgram.replaceCache({
             context : context,

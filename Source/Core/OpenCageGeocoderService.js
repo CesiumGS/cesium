@@ -1,23 +1,23 @@
 define([
-    './Cartesian3',
-    './Check',
-    './combine',
-    './defaultValue',
-    './defined',
-    './defineProperties',
-    './GeocodeType',
-    './Rectangle',
-    './Resource'
-], function (
-    Cartesian3,
-    Check,
-    combine,
-    defaultValue,
-    defined,
-    defineProperties,
-    GeocodeType,
-    Rectangle,
-    Resource) {
+        './Cartesian3',
+        './Check',
+        './combine',
+        './defaultValue',
+        './defined',
+        './defineProperties',
+        './GeocodeType',
+        './Rectangle',
+        './Resource'
+    ], function(
+        Cartesian3,
+        Check,
+        combine,
+        defaultValue,
+        defined,
+        defineProperties,
+        GeocodeType,
+        Rectangle,
+        Resource) {
     'use strict';
 
     /**

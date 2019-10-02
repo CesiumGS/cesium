@@ -9,7 +9,6 @@ define([
         Matrix4,
         WebGLConstants) {
     'use strict';
-    /*global WebGLRenderingContext*/
 
     var viewerPositionWCScratch = new Cartesian3();
 
@@ -1666,18 +1665,18 @@ define([
         /**
          * An automatic GLSL uniform representing the ratio of canvas coordinate space to canvas pixel space.
          *
-         * @alias czm_resolutionScale
+         * @alias czm_pixelRatio
          * @namespace
          * @glslUniform
          *
          * @example
-         * uniform float czm_resolutionScale;
+         * uniform float czm_pixelRatio;
          */
-        czm_resolutionScale : new AutomaticUniform({
+        czm_pixelRatio : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.resolutionScale;
+                return uniformState.pixelRatio;
             }
         }),
 

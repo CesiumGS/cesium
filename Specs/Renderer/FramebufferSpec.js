@@ -1,5 +1,4 @@
-defineSuite([
-        'Renderer/Framebuffer',
+define([
         'Core/Color',
         'Core/PixelFormat',
         'Core/PrimitiveType',
@@ -10,6 +9,7 @@ defineSuite([
         'Renderer/ContextLimits',
         'Renderer/CubeMap',
         'Renderer/DrawCommand',
+        'Renderer/Framebuffer',
         'Renderer/PixelDatatype',
         'Renderer/Renderbuffer',
         'Renderer/RenderbufferFormat',
@@ -19,7 +19,6 @@ defineSuite([
         'Renderer/VertexArray',
         'Specs/createContext'
     ], function(
-        Framebuffer,
         Color,
         PixelFormat,
         PrimitiveType,
@@ -30,6 +29,7 @@ defineSuite([
         ContextLimits,
         CubeMap,
         DrawCommand,
+        Framebuffer,
         PixelDatatype,
         Renderbuffer,
         RenderbufferFormat,
@@ -38,7 +38,9 @@ defineSuite([
         Texture,
         VertexArray,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/Framebuffer', function() {
 
     var context;
     var sp;
@@ -973,3 +975,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

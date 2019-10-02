@@ -1,20 +1,22 @@
-defineSuite([
-        'Scene/TileCoordinatesImageryProvider',
+define([
         'Core/Ellipsoid',
         'Core/GeographicTilingScheme',
         'Core/WebMercatorTilingScheme',
         'Scene/ImageryProvider',
+        'Scene/TileCoordinatesImageryProvider',
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        TileCoordinatesImageryProvider,
         Ellipsoid,
         GeographicTilingScheme,
         WebMercatorTilingScheme,
         ImageryProvider,
+        TileCoordinatesImageryProvider,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/TileCoordinatesImageryProvider', function() {
 
     it('conforms to ImageryProvider interface', function() {
         expect(TileCoordinatesImageryProvider).toConformToInterface(ImageryProvider);
@@ -97,4 +99,5 @@ defineSuite([
             expect(provider.tileHeight).toEqual(456);
         });
     });
+});
 });
