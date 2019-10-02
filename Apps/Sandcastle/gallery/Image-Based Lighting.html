@@ -107,15 +107,19 @@ model.readyPromise.then(function(model) {
 
     subscribeParameter('luminanceAtZenith');
 
-    Sandcastle.addToggleButton('Use procedural image', false, function(checked) {
-        if (!checked) {
-            model.sphericalHarmonicCoefficients = coefficients;
-            model.specularEnvironmentMaps = environmentMapURL;
-        } else {
-            model.sphericalHarmonicCoefficients = undefined;
-            model.specularEnvironmentMaps = undefined;
-        }
-    });
+    if (Cesium.OctahedralProjectedCubeMap.isSupported(viewer.scene.context)) {
+        Sandcastle.addToggleButton('Use procedural environment lighting', false, function(checked) {
+            if (!checked) {
+                model.sphericalHarmonicCoefficients = coefficients;
+                model.specularEnvironmentMaps = environmentMapURL;
+            } else {
+                model.sphericalHarmonicCoefficients = undefined;
+                model.specularEnvironmentMaps = undefined;
+            }
+        });
+    } else {
+        console.log("This browser doesn't support texture environment maps.");
+    }
 }).otherwise(function(error){
     window.alert(error);
 });
