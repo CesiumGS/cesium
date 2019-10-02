@@ -949,6 +949,18 @@ define([
         },
 
         /**
+         * Returns <code>true</code> if specular environment maps are supported.
+         * @memberof Scene.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        specularEnvironmentMapSupported : {
+            get : function() {
+                return OctahedralProjectedCubeMap.isSupported(this._context);
+            }
+        },
+
+        /**
          * Gets or sets the depth-test ellipsoid.
          * @memberof Scene.prototype
          *

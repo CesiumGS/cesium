@@ -39,6 +39,10 @@ function startup(Cesium) {
 //Sandcastle_Begin
 var viewer = new Cesium.Viewer('cesiumContainer');
 
+if (!viewer.scene.specularEnvironmentMapSupported) {
+    window.alert('This browser does not support specular environment maps.');
+}
+
 var environmentMapURL = '../../SampleData/EnvironmentMap/kiara_6_afternoon_2k_ibl.ktx';
 var modelURL = '../../SampleData/models/Pawns/Pawns.glb';
 
@@ -107,19 +111,15 @@ model.readyPromise.then(function(model) {
 
     subscribeParameter('luminanceAtZenith');
 
-    if (Cesium.OctahedralProjectedCubeMap.isSupported(viewer.scene.context)) {
-        Sandcastle.addToggleButton('Use procedural environment lighting', false, function(checked) {
-            if (!checked) {
-                model.sphericalHarmonicCoefficients = coefficients;
-                model.specularEnvironmentMaps = environmentMapURL;
-            } else {
-                model.sphericalHarmonicCoefficients = undefined;
-                model.specularEnvironmentMaps = undefined;
-            }
-        });
-    } else {
-        console.log("This browser doesn't support texture environment maps.");
-    }
+    Sandcastle.addToggleButton('Use procedural environment lighting', false, function(checked) {
+        if (!checked) {
+            model.sphericalHarmonicCoefficients = coefficients;
+            model.specularEnvironmentMaps = environmentMapURL;
+        } else {
+            model.sphericalHarmonicCoefficients = undefined;
+            model.specularEnvironmentMaps = undefined;
+        }
+    });
 }).otherwise(function(error){
     window.alert(error);
 });
