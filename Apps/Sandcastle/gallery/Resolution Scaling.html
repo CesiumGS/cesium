@@ -46,11 +46,15 @@ function startup(Cesium) {
 // When browser recommended resolution is enabled, the viewer renders at
 // CSS pixel resolution (96 dppi). Otherwise, the viewer renders at the
 // screen's native resolution.
-
-// Resolution scale applies additional scaling on top.
-
-// Together the final pixel ratio is:
-// resolutionScale * (useBrowserRecommendedResolution ? 1 : devicePixelRatio)
+//
+// Resolution scale applies an additional scaling factor to the
+// WebGL canvas.
+//
+// For example, if the cesium container div is 500x500 pixels,
+// window.devicePixelRatio is 2.0, and useBrowserRecommendedResolution
+// is false, the WebGL canvas will be 1000x1000 pixels. Then if
+// the resolutionScale is 0.25, the canvas will be scaled
+// down to 250x250 pixels.
 
 var viewer = new Cesium.Viewer('cesiumContainer');
 
