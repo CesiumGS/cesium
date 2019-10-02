@@ -144,7 +144,7 @@ define([
      * @param {Object} [options.pointCloudShading] Options for constructing a {@link PointCloudShading} object to control point attenuation based on geometric error and lighting.
      * @param {Cartesian2} [options.imageBasedLightingFactor=new Cartesian2(1.0, 1.0)] Scales the diffuse and specular image-based lighting from the earth, sky, atmosphere and star skybox.
      * @param {Cartesian3} [options.lightColor] The color and intensity of the sunlight used to shade models.
-     * @param {Number} [options.luminanceAtZenith=0.5] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
+     * @param {Number} [options.luminanceAtZenith=0.2] The sun's luminance at the zenith in kilo candela per meter squared to use for this model's procedural environment map.
      * @param {Cartesian3[]} [options.sphericalHarmonicCoefficients] The third order spherical harmonic coefficients used for the diffuse color of image-based lighting.
      * @param {String} [options.specularEnvironmentMaps] A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
      * @param {String} [options.debugHeatmapTilePropertyName] The tile variable to colorize as a heatmap. All rendered tiles will be colorized relative to each other's specified variable value.
@@ -716,10 +716,10 @@ define([
          *
          * @type Number
          *
-         * @default 0.5
+         * @default 0.2
          *
          */
-        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.5);
+        this.luminanceAtZenith = defaultValue(options.luminanceAtZenith, 0.2);
 
         /**
          * The third order spherical harmonic coefficients used for the diffuse color of image-based lighting. When <code>undefined</code>, a diffuse irradiance
