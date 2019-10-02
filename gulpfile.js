@@ -1025,7 +1025,7 @@ function combineJavaScript(options) {
 
         promises.push(streamToPromise(stream));
 
-        var everythingElse = ['Source/**', '!**/*.js', '!**/*.glsl'];
+        var everythingElse = ['Source/**', '!**/*.js', '!**/*.glsl', '!Source/Assets/approximateTerrainHeightsPrecise.json'];
 
         if (optimizer === 'uglify2') {
             promises.push(minifyCSS(outputDirectory));
