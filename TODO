@@ -6,16 +6,37 @@ of the subtree
 
 
 [ ] Box array traversal
-    [x] Precompute 1D array of influence radii
-    [x] need the maxTraversalDepth, derived from root camera distance
-    [x] brute additive traversal
-    [ ] brute replacement traversal
-    [ ] Toroidial array stack (or whatever), just setup the root level
-    and look down at teh tileset, the idx should update properly as if the root box
-    was part of a continuous grid.
+    [ ] Toroidial array stack (or whatever it will be)
+    debug case: look down at teh tileset, print the center idx.
+    successive levels should update at twice the rate.
 
-[ ] script to convert pointcloud tileset to implicit tileset?
-[ ] The pointcloud makes little sense (content doesn't line up with the bounds (in the z direction))
+    IndicesFinder
+    for every available level in tileset:
+        * hold a center and seam index for x y, and z
+            convert cam pos to cell idx, must be relative to 0,0,0 corner of aabb
+            max idx on level given cam pos and infinite virtual grid
+            The root bounding box and dims on the level can give you this
+        * hold an x, y, and z dim for the worst case influence range on the level.
+            also save the actual tree grid dimensions for the level
+        * maybe move the camera distances array in here
+            as well as the max traversal depth
+        * might have to store the relative sphere radius along each axis
+            like how many cells long the radius is
 
-[ ] toroidial subtree viewer? it's camera relative, right?
-[ ] incrementally move components to array style
+            hold off on bresenham just get box ranges of indices for now
+            these will eventually be the visibliity indices (which are the request/render indces for add)
+            replace will have to make sure to extend the loop a little in cases for sibling requests.
+                literally just making sure the loop bounds starts and ends on an even number
+                subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
+
+calcs in the patent doc show that all slabs are the same dimension on each level for their worst case.
+related to the 27.7 constant that's there
+So the data stucture would want to have the seams for the axes that it is managing (x, y for sure and z as well for octree)
+the slab would have a 2d array of tile refs the dims of this array takes the min of the worst case dims for the level and the actual dims of the tree at that level.
+if the seams indicate that portions of this 2d are beginning to be exposed, you can then calc the sphere imprint on the level and see if it would start to touch those exposed portions.
+if it does we can trace teh circle in a virtual-centered space to see what index bounds on each row are, then we use this set of min/max indices to iterate over the tile ref array.
+slabs could always be xy and octrees just have a set of these along z.
+
+Not too sure about a slab of refs quite yet, this could be huge duplication of references?
+In either case, generate the array of ranges (could it be an array on every level like? [[xmin, xmax, y, z], [same thing], ...])
+use this pile of ranges to extract the relevant subtrees then use the ranges to request/select tiles in those subtrees.
