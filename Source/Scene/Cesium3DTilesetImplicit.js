@@ -275,28 +275,6 @@ define([
         // I think there are two portions? ancestor portion 1d array and the normal portion which is a 3d array (fixed sizes on each level?) toroidial array?
         // what happens when sse changes? re-init the fixed size arrays? prevent going below some value in tileset (during the set)?
 
-        // 1D array of LOD sphere radii. index 0 is the contentless tileset root, 1 is the content roots, so this array 1indexed array as opposed to 0indexed.
-        // if the camera is within that distance you can process that 1indexed level.
-        // for replacement refinement, tiles touched by this sphere on that level means that their children are required
-        // addative can start from index 1 and it can just take the tile it touches on that level since it doesn't have the requirement of all children tiles loaded
-        this._lodDistances = [];
-
-        // Children have use their parents sphere radius
-        // WHEN ADD: this var indicates content level (0 being content root) that can be accessed. The grid can start at the content root.
-        // the sphere radius to use at each content level is _lodDistances[contentLevel] so the radius at the conent level of _maximumTraversalLevel is
-        // _lodDistances[_maximumTraversalLevel], if the sphere check touches the tile on the corresponding level
-        // it can be requested and rendered (assuming it is not culled)
-        // WHEN REPLACE: this var indicates content level that can be accessed... but only through the parents.
-        // the grid will need to start at tilesetroot. the indices determined
-        // here will need to be converted to child indices for requests/rendering
-        // can traverse content levels up to _maximumTraversalLevel - 1, i.e. the last parent level but
-        // the sphere radius used at each parent level is _lodDistances[child's content level]
-        // Ex: if tileset contentless root is within _lodDistances[_startLevel] it loads the tileset contentless root's children
-        // in this case of REPLACE the radius test is checkif if the parent tile (the tile we are testing) should load all of its children (the radius we are using)
-        // the children do not have to be within this radius. these children must be loaded but don't have to be rendered if they are culled by the planes
-        // So ADD request/render tiles are the same but REPLACE has separate indices for request and render, request being a superset or looser than render.
-        this._maximumTraversalLevel = 0;
-
         this._packedArraySizes = undefined;
         this._unpackedArraySizes = undefined;
         this._packedSize = 0;
@@ -1686,91 +1664,6 @@ define([
         }
     });
 
-    var rootDistance = -1;
-    /**
-     * Updates the _maximumTraversalLevel
-     *
-     * @private
-     */
-    Cesium3DTilesetImplicit.prototype.updateTraversalInfo = function(frameState) {
-        // Update all the LOD distnaces
-        this.updateLODDistances(frameState);
-
-        // Find the distnace to the tileset contentless root and use that that determine maximumTreversalDepth
-        var distance = this._root._distanceToCamera;
-
-        var length = this._lodDistances.length;
-        var lodDistances = this._lodDistances;
-        this._maximumTraversalLevel = length - 1;
-        var tilesetStartLevel = this._startLevel;
-        var i;
-        for (i = tilesetStartLevel; i < length; i++) {
-            if (lodDistances[i] < distance) {
-                this._maximumTraversalLevel = i - 1;
-                break;
-            }
-        }
-
-        if (Math.abs(rootDistance - distance) > CesiumMath.EPSILON2) {
-            // console.log('root dist ' + distance);
-            // console.log('max lvl ' + this._maximumTraversalLevel);
-            rootDistance = distance;
-        }
-    };
-
-    /**
-     * Updates the _lodDistances array with LOD sphere radii from the camera to
-     * pull in tiles on different levels of the tree
-     *
-     * @private
-     */
-    var lodDistancesAreInit = false;
-    Cesium3DTilesetImplicit.prototype.updateLODDistances = function(frameState) {
-        // TODO: when to update this based on camera, context, and  max gerror changes?
-        var lodDistances = this._lodDistances;
-        var length = lodDistances.length;
-        var height = frameState.context.drawingBufferHeight;
-        var sseDenominator = frameState.camera.frustum.sseDenominator;
-        var factor = height / (this._maximumScreenSpaceError * sseDenominator);
-        var i, lodDistance, gErrorOnLevel;
-        // var startingGError = this._geometricErrorContentRoot;
-        var startingGError = this._geometricError;
-        var base = this.getGeomtricErrorBase();
-        var tilesetStartLevel = this._startLevel;
-        // var useChildSphere = this._allTilesAdditive ? 0 : 1; // ad to pow exponent
-        for (i = tilesetStartLevel; i < length; i++) {
-            gErrorOnLevel = startingGError / Math.pow(base, i - tilesetStartLevel);
-            lodDistance = gErrorOnLevel * factor;
-            lodDistances[i] = lodDistance;
-        }
-
-        if (!lodDistancesAreInit) {
-            // for (i = 0; i < length; i++) {
-            //     console.log('lodDistance ' + i + ' ' + lodDistances[i]);
-            // }
-            lodDistancesAreInit = true;
-        }
-    };
-
-    /**
-     * Inits the _lodDistances array so that it's the proper size
-     *
-     * @private
-     */
-    Cesium3DTilesetImplicit.prototype.initLODDistances = function() {
-        // TODO: when to update this based on camera, context, and  max gerror changes?
-        var lodDistances = this._lodDistances;
-        var tilingScheme = this._tilingScheme;
-        // +2 to get the the contentless tileset root as well as all the content levels (the other +1), though may not need
-        // 0 being the contentless tileset root, 1 being the root nodes
-        // var length = tilingScheme.lastLevel - this._startLevel + 2;
-        var length = tilingScheme.lastLevel + 1;
-        var i;
-        for (i = 0; i < length; i++) {
-            lodDistances.push(-1);
-        }
-    };
-
     /**
      * Provides a hook to override the method used to request the tileset json
      * useful when fetching tilesets from remote servers
@@ -2264,7 +2157,6 @@ define([
         if (!hasParent) {
             var subtreeLevelStart = this.findSubtreeLevelStart(subtree);
             this._startLevel = subtreeRootKey.w + subtreeLevelStart;
-            this.initLODDistances();
             this._indicesFinder.initLODDistances();
             // console.log('first level subtree: ' + subtreeLevelStart);
             // console.log('first level tree: ' + this._startLevel);

@@ -32,8 +32,27 @@ define([
         this._tileset = tileset;
 
         // LOD info
+        // 1D array of LOD sphere radii. index 0 is the contentless tileset root, 1 is the content roots, so this array 1indexed array as opposed to 0indexed.
+        // if the camera is within that distance you can process that 1indexed level.
+        // for replacement refinement, tiles touched by this sphere on that level means that their children are required
+        // addative can start from index 1 and it can just take the tile it touches on that level since it doesn't have the requirement of all children tiles loaded
+        this._lodDistances = [];
+
+        // Children have use their parents sphere radius
+        // WHEN ADD: this var indicates content level (0 being content root) that can be accessed. The grid can start at the content root.
+        // the sphere radius to use at each content level is _lodDistances[contentLevel] so the radius at the conent level of _maximumTraversalLevel is
+        // _lodDistances[_maximumTraversalLevel], if the sphere check touches the tile on the corresponding level
+        // it can be requested and rendered (assuming it is not culled)
+        // WHEN REPLACE: this var indicates content level that can be accessed... but only through the parents.
+        // the grid will need to start at tilesetroot. the indices determined
+        // here will need to be converted to child indices for requests/rendering
+        // can traverse content levels up to _maximumTraversalLevel - 1, i.e. the last parent level but
+        // the sphere radius used at each parent level is _lodDistances[child's content level]
+        // Ex: if tileset contentless root is within _lodDistances[_startLevel] it loads the tileset contentless root's children
+        // in this case of REPLACE the radius test is checkif if the parent tile (the tile we are testing) should load all of its children (the radius we are using)
+        // the children do not have to be within this radius. these children must be loaded but don't have to be rendered if they are culled by the planes
+        // So ADD request/render tiles are the same but REPLACE has separate indices for request and render, request being a superset or looser than render.
         this._maximumTraversalLevel = 0;
-        this._lodDistances = []; // set of spheres per level centered around the camera
         this._lodFactor = -1;
 
         // How the camera relates to the grids on every level
