@@ -40,8 +40,7 @@ define([
         tileset._emptyTiles.length = 0;
         tileset._hasMixedContent = false;
 
-        var tilesetRoot = tileset.root;
-        updateVisibility(tileset, tilesetRoot, frameState);
+        updateVisibility(tileset, tileset.root, frameState);
         tileset._indicesFinder.update(frameState);
 
         // ADD: _maximumTraversalLevel is the max content level we can explicitly check, starting at content root
