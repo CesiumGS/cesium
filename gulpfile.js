@@ -31,7 +31,8 @@ var yargs = require('yargs');
 var AWS = require('aws-sdk');
 var mime = require('mime');
 var rollup = require('rollup');
-var rollupPluginStripPragma = require('./Tools/rollup-plugin-strip-pragma');
+var rollupPluginBanner = require('rollup-plugin-banner');
+var rollupPluginStripPragma = require('rollup-plugin-strip-pragma');
 var rollupPluginExternalGlobals = require('rollup-plugin-external-globals');
 var rollupPluginUglify = require('rollup-plugin-uglify');
 var cleanCSS = require('gulp-clean-css');
@@ -116,7 +117,8 @@ function createWorkers() {
     ]);
 
     return rollup.rollup({
-        input: workers
+        input: workers,
+        plugins: [rollupPluginBanner.default('This file is automatically rebuilt by the Cesium build process.')]
     }).then(function(bundle) {
         return bundle.write({
             dir: 'Build/createWorkers',
@@ -152,20 +154,21 @@ gulp.task('buildApps', function() {
 });
 
 gulp.task('build-specs', function buildSpecs() {
-    var cesiumViewerOutputDirectory = 'Build/Apps/CesiumViewer';
-    mkdirp.sync(cesiumViewerOutputDirectory);
+    var externalCesium = rollupPluginExternalGlobals({
+        '../Source/Cesium.js': 'Cesium',
+        '../../Source/Cesium.js': 'Cesium',
+        '../../../Source/Cesium.js': 'Cesium',
+        '../../../../Source/Cesium.js': 'Cesium'
+    });
+
+    var removePragmas = rollupPluginStripPragma({
+        pragmas: ['debug']
+    });
 
     var promise = Promise.join(
         rollup.rollup({
             input: 'Specs/SpecList.js',
-            plugins: [
-                rollupPluginExternalGlobals({
-                    '../Source/Cesium.js': 'Cesium',
-                    '../../Source/Cesium.js': 'Cesium',
-                    '../../../Source/Cesium.js': 'Cesium',
-                    '../../../../Source/Cesium.js': 'Cesium'
-                })
-            ]
+            plugins: [externalCesium]
         }).then(function(bundle) {
             return bundle.write({
                 file: 'Build/Specs/Specs.js',
@@ -174,17 +177,7 @@ gulp.task('build-specs', function buildSpecs() {
         }).then(function(){
             return rollup.rollup({
                 input: 'Specs/spec-main.js',
-                plugins: [
-                    rollupPluginStripPragma({
-                        pragmas: ['debug']
-                    }),
-                    rollupPluginExternalGlobals({
-                        '../Source/Cesium.js': 'Cesium',
-                        '../../Source/Cesium.js': 'Cesium',
-                        '../../../Source/Cesium.js': 'Cesium',
-                        '../../../../Source/Cesium.js': 'Cesium'
-                    })
-                ]
+                plugins: [removePragmas, externalCesium]
             }).then(function(bundle) {
                 return bundle.write({
                     file: 'Build/Specs/spec-main.js',
@@ -194,17 +187,7 @@ gulp.task('build-specs', function buildSpecs() {
         }).then(function(){
             return rollup.rollup({
                 input: 'Specs/karma-main.js',
-                plugins: [
-                    rollupPluginStripPragma({
-                        pragmas: ['debug']
-                    }),
-                    rollupPluginExternalGlobals({
-                        '../Source/Cesium.js': 'Cesium',
-                        '../../Source/Cesium.js': 'Cesium',
-                        '../../../Source/Cesium.js': 'Cesium',
-                        '../../../../Source/Cesium.js': 'Cesium'
-                    })
-                ]
+                plugins: [removePragmas, externalCesium]
             }).then(function(bundle) {
                 return bundle.write({
                     file: 'Build/Specs/karma-main.js',
