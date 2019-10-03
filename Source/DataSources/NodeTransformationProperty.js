@@ -1,20 +1,10 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        '../Core/TranslationRotationScale',
-        './createPropertyDescriptor',
-        './Property'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        Event,
-        TranslationRotationScale,
-        createPropertyDescriptor,
-        Property) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Event from '../Core/Event.js';
+import TranslationRotationScale from '../Core/TranslationRotationScale.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import Property from './Property.js';
 
     var defaultNodeTransformation = new TranslationRotationScale();
 
@@ -133,6 +123,4 @@ define([
                 Property.equals(this._rotation, other._rotation) &&
                 Property.equals(this._scale, other._scale));
     };
-
-    return NodeTransformationProperty;
-});
+export default NodeTransformationProperty;

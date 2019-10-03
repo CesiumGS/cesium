@@ -1,62 +1,31 @@
-define([
-        '../Core/ApproximateTerrainHeights',
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/Matrix4',
-        '../Core/OrthographicFrustum',
-        '../Core/OrthographicOffCenterFrustum',
-        '../Core/PerspectiveFrustum',
-        '../Core/PerspectiveOffCenterFrustum',
-        '../Core/Ray',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../ThirdParty/when',
-        './Camera',
-        './Cesium3DTileFeature',
-        './Cesium3DTilePass',
-        './Cesium3DTilePassState',
-        './Cesium3DTileset',
-        './PickDepth',
-        './PrimitiveCollection',
-        './SceneMode',
-        './SceneTransforms',
-        './View'
-    ], function(
-        ApproximateTerrainHeights,
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        Color,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Matrix4,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
-        PerspectiveOffCenterFrustum,
-        Ray,
-        ShowGeometryInstanceAttribute,
-        when,
-        Camera,
-        Cesium3DTileFeature,
-        Cesium3DTilePass,
-        Cesium3DTilePassState,
-        Cesium3DTileset,
-        PickDepth,
-        PrimitiveCollection,
-        SceneMode,
-        SceneTransforms,
-        View) {
-    'use strict';
+import  ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
+import  BoundingRectangle from '../Core/BoundingRectangle.js';
+import  Cartesian2 from '../Core/Cartesian2.js';
+import  Cartesian3 from '../Core/Cartesian3.js';
+import  Cartographic from '../Core/Cartographic.js';
+import  Check from '../Core/Check.js';
+import  Color from '../Core/Color.js';
+import  defaultValue from '../Core/defaultValue.js';
+import  defined from '../Core/defined.js';
+import  DeveloperError from '../Core/DeveloperError.js';
+import  Matrix4 from '../Core/Matrix4.js';
+import  OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import  OrthographicOffCenterFrustum from '../Core/OrthographicOffCenterFrustum.js';
+import  PerspectiveFrustum from '../Core/PerspectiveFrustum.js';
+import  PerspectiveOffCenterFrustum from '../Core/PerspectiveOffCenterFrustum.js';
+import  Ray from '../Core/Ray.js';
+import  ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import  when from '../ThirdParty/when.js';
+import  Camera from './Camera.js';
+import  Cesium3DTileFeature from './Cesium3DTileFeature.js';
+import  Cesium3DTilePass from './Cesium3DTilePass.js';
+import  Cesium3DTilePassState from './Cesium3DTilePassState.js';
+import  Cesium3DTileset from './Cesium3DTileset.js';
+import  PickDepth from './PickDepth.js';
+import  PrimitiveCollection from './PrimitiveCollection.js';
+import  SceneMode from './SceneMode.js';
+import  SceneTransforms from './SceneTransforms.js';
+import  View from './View.js';
 
     var offscreenDefaultWidth = 0.1;
 
@@ -907,6 +876,4 @@ define([
     Picking.prototype.destroy = function() {
         this._pickOffscreenView = this._pickOffscreenView && this._pickOffscreenView.destroy();
     };
-
-    return Picking;
-});
+export default Picking;

@@ -1,12 +1,6 @@
-define([
-        './defined',
-        './DeveloperError',
-        './isArray'
-    ], function(
-        defined,
-        DeveloperError,
-        isArray) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import isArray from './isArray.js';
 
     /**
      * Converts an object representing a set of name/value pairs into a query string,
@@ -61,6 +55,4 @@ define([
 
         return result;
     }
-
-    return objectToQuery;
-});
+export default objectToQuery;

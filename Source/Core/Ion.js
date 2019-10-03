@@ -1,12 +1,6 @@
-define([
-        './Credit',
-        './defined',
-        './Resource'
-    ], function(
-        Credit,
-        defined,
-        Resource) {
-    'use strict';
+import Credit from './Credit.js';
+import defined from './defined.js';
+import Resource from './Resource.js';
 
     var defaultTokenCredit;
     var defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMzJhNTk5NS1lMTc5LTQ0MWMtYTc3Mi1lZmE3NjYyZWMwMzAiLCJpZCI6MjU5LCJzY29wZXMiOlsiYXNyIiwiZ2MiXSwiaWF0IjoxNTY5OTMyNDcwfQ.ifTZn9zZ4Tc3UD6yqH8yqwyU-8OgFQN2cqno6HmxWGw';
@@ -58,6 +52,4 @@ define([
 
         return defaultTokenCredit;
     };
-
-    return Ion;
-});
+export default Ion;

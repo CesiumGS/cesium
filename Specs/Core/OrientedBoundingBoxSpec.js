@@ -1,32 +1,16 @@
-define([
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Ellipsoid',
-        'Core/Intersect',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Occluder',
-        'Core/OrientedBoundingBox',
-        'Core/Plane',
-        'Core/Quaternion',
-        'Core/Rectangle',
-        'Specs/createPackableSpecs'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Cartesian4,
-        Ellipsoid,
-        Intersect,
-        CesiumMath,
-        Matrix3,
-        Occluder,
-        OrientedBoundingBox,
-        Plane,
-        Quaternion,
-        Rectangle,
-        createPackableSpecs) {
-        'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Occluder } from '../../Source/Cesium.js';
+import { OrientedBoundingBox } from '../../Source/Cesium.js';
+import { Plane } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/OrientedBoundingBox', function() {
 
@@ -772,5 +756,4 @@ describe('Core/OrientedBoundingBox', function() {
     });
 
     createPackableSpecs(OrientedBoundingBox, new OrientedBoundingBox(new Cartesian3(1.0, 2.0, 3.0), Matrix3.IDENTITY), [1.0, 2.0, 3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0]);
-});
 });

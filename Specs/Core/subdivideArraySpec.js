@@ -1,8 +1,4 @@
-define([
-        'Core/subdivideArray'
-    ], function(
-        subdivideArray) {
-        'use strict';
+import { subdivideArray } from '../../Source/Cesium.js';
 
 describe('Core/subdivideArray', function() {
 
@@ -42,5 +38,4 @@ describe('Core/subdivideArray', function() {
             subdivideArray([], -1);
         }).toThrowDeveloperError();
     });
-});
 });

@@ -1,18 +1,9 @@
-define([
-        'Core/defined',
-        'Core/TimeInterval',
-        'Specs/createViewer',
-        'Specs/DomEventSimulator',
-        'Specs/pollToPromise',
-        'Widgets/Viewer/viewerDragDropMixin'
-    ], function(
-        defined,
-        TimeInterval,
-        createViewer,
-        DomEventSimulator,
-        pollToPromise,
-        viewerDragDropMixin) {
-        'use strict';
+import { defined } from '../../../Source/Cesium.js';
+import { TimeInterval } from '../../../Source/Cesium.js';
+import createViewer from '../../createViewer.js';
+import DomEventSimulator from '../../DomEventSimulator.js';
+import pollToPromise from '../../pollToPromise.js';
+import { viewerDragDropMixin } from '../../../Source/Cesium.js';
 
 describe('Widgets/Viewer/viewerDragDropMixin', function() {
 
@@ -462,4 +453,3 @@ describe('Widgets/Viewer/viewerDragDropMixin', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

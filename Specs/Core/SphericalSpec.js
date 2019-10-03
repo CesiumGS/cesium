@@ -1,12 +1,6 @@
-define([
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/Spherical'
-    ], function(
-        Cartesian3,
-        CesiumMath,
-        Spherical) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Spherical } from '../../Source/Cesium.js';
 
 describe('Core/Spherical', function() {
 
@@ -110,5 +104,4 @@ describe('Core/Spherical', function() {
         var v = new Spherical(1, 2, 3);
         expect(v.toString()).toEqual('(1, 2, 3)');
     });
-});
 });

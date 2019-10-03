@@ -1,8 +1,4 @@
-define([
-        'Core/oneTimeWarning'
-    ], function(
-        oneTimeWarning) {
-        'use strict';
+import { oneTimeWarning } from '../../Source/Cesium.js';
 
 describe('Core/oneTimeWarning', function() {
 
@@ -23,5 +19,4 @@ describe('Core/oneTimeWarning', function() {
             oneTimeWarning();
         }).toThrowDeveloperError();
     });
-});
 });

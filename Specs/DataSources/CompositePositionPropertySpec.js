@@ -1,22 +1,11 @@
-define([
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'Core/ReferenceFrame',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/CompositePositionProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/PositionProperty'
-    ], function(
-        Cartesian3,
-        JulianDate,
-        ReferenceFrame,
-        TimeInterval,
-        TimeIntervalCollection,
-        CompositePositionProperty,
-        ConstantPositionProperty,
-        PositionProperty) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { CompositePositionProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { PositionProperty } from '../../Source/Cesium.js';
 
 describe('DataSources/CompositePositionProperty', function() {
 
@@ -303,5 +292,4 @@ describe('DataSources/CompositePositionProperty', function() {
         interval1.data.setValue(new Cartesian3());
         expect(listener.calls.count()).toBe(2);
     });
-});
 });

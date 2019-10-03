@@ -1,12 +1,6 @@
-define([
-        'Core/getAbsoluteUri',
-        'Core/isCrossOriginUrl',
-        'ThirdParty/Uri'
-    ], function(
-        getAbsoluteUri,
-        isCrossOriginUrl,
-        Uri) {
-        'use strict';
+import { getAbsoluteUri } from '../../Source/Cesium.js';
+import { isCrossOriginUrl } from '../../Source/Cesium.js';
+import { Uri } from '../../Source/Cesium.js';
 
 describe('Core/isCrossOriginUrl', function() {
 
@@ -41,5 +35,4 @@ describe('Core/isCrossOriginUrl', function() {
         absoluteUrl = pageUri.toString();
         expect(isCrossOriginUrl(absoluteUrl)).toEqual(true);
     });
-});
 });

@@ -1,8 +1,4 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from './freezeObject.js';
 
     /**
      * This enumerated type is used to determine how the vertices of the terrain mesh are compressed.
@@ -28,6 +24,4 @@ define([
          */
         BITS12 : 1
     };
-
-    return freezeObject(TerrainQuantization);
-});
+export default freezeObject(TerrainQuantization);

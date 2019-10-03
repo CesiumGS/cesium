@@ -1,12 +1,6 @@
-define([
-        '../ThirdParty/Uri',
-        './defined',
-        './DeveloperError'
-    ], function(
-        Uri,
-        defined,
-        DeveloperError) {
-    'use strict';
+import Uri from '../ThirdParty/Uri.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Given a URI, returns the base path of the URI.
@@ -50,6 +44,4 @@ define([
 
         return basePath;
     }
-
-    return getBaseUri;
-});
+export default getBaseUri;

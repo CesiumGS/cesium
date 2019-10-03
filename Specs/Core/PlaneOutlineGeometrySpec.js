@@ -1,10 +1,5 @@
-define([
-        'Core/PlaneOutlineGeometry',
-        'Specs/createPackableSpecs'
-    ], function(
-        PlaneOutlineGeometry,
-        createPackableSpecs) {
-        'use strict';
+import { PlaneOutlineGeometry } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/PlaneOutlineGeometry', function() {
 
@@ -16,5 +11,4 @@ describe('Core/PlaneOutlineGeometry', function() {
     });
 
     createPackableSpecs(PlaneOutlineGeometry, new PlaneOutlineGeometry(), []);
-});
 });

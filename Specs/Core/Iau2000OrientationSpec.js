@@ -1,12 +1,6 @@
-define([
-        'Core/Iau2000Orientation',
-        'Core/JulianDate',
-        'Core/TimeStandard'
-    ], function(
-        Iau2000Orientation,
-        JulianDate,
-        TimeStandard) {
-        'use strict';
+import { Iau2000Orientation } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeStandard } from '../../Source/Cesium.js';
 
 describe('Core/Iau2000Orientation', function() {
 
@@ -26,5 +20,4 @@ describe('Core/Iau2000Orientation', function() {
         expect(param.rotation).toEqual(expectedRotation);
         expect(param.rotationRate).toEqual(expectedRotationRate);
     });
-});
 });

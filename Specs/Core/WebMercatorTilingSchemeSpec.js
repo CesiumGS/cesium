@@ -1,22 +1,11 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/TilingScheme',
-        'Core/WebMercatorProjection',
-        'Core/WebMercatorTilingScheme'
-    ], function(
-        Cartesian2,
-        Cartographic,
-        Ellipsoid,
-        CesiumMath,
-        Rectangle,
-        TilingScheme,
-        WebMercatorProjection,
-        WebMercatorTilingScheme) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { TilingScheme } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
 
 describe('Core/WebMercatorTilingScheme', function() {
 
@@ -276,5 +265,4 @@ describe('Core/WebMercatorTilingScheme', function() {
             expect(resultParameter).toEqual(new Cartesian2(1, 0));
         });
     });
-});
 });

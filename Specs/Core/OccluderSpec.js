@@ -1,20 +1,10 @@
-define([
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/Occluder',
-        'Core/Rectangle',
-        'Core/Visibility'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        Occluder,
-        Rectangle,
-        Visibility) {
-        'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Occluder } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Visibility } from '../../Source/Cesium.js';
 
 describe('Core/Occluder', function() {
 
@@ -311,5 +301,4 @@ describe('Core/Occluder', function() {
         expect(occluder1.position).toEqual(occluder0.position);
         expect(occluder1.radius).toEqual(occluder0.radius);
     });
-});
 });

@@ -1,20 +1,10 @@
-define([
-        'Core/EllipsoidTerrainProvider',
-        'Core/Rectangle',
-        'Scene/computeFlyToLocationForRectangle',
-        'Scene/Globe',
-        'Scene/SceneMode',
-        'Specs/createScene',
-        'ThirdParty/when'
-    ], function(
-        EllipsoidTerrainProvider,
-        Rectangle,
-        computeFlyToLocationForRectangle,
-        Globe,
-        SceneMode,
-        createScene,
-        when) {
-        'use strict';
+import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { computeFlyToLocationForRectangle } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/computeFlyToLocationForRectangle', function() {
 
@@ -148,5 +138,4 @@ describe('Scene/computeFlyToLocationForRectangle', function() {
                 expect(computeFlyToLocationForRectangle._sampleTerrainMostDetailed).not.toHaveBeenCalled();
             });
     });
-});
 });

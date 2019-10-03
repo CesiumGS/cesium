@@ -1,18 +1,9 @@
-define([
-        './addToArray',
-        './ForEach',
-        './getAccessorByteStride',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/WebGLConstants'
-    ], function(
-        addToArray,
-        ForEach,
-        getAccessorByteStride,
-        defaultValue,
-        defined,
-        WebGLConstants) {
-    'use strict';
+import addToArray from './addToArray.js'
+import ForEach from './ForEach.js'
+import getAccessorByteStride from './getAccessorByteStride.js'
+import defaultValue from '../../Core/defaultValue.js'
+import defined from '../../Core/defined.js'
+import WebGLConstants from '../../Core/WebGLConstants.js'
 
     /**
      * Adds default glTF values if they don't exist.
@@ -187,5 +178,4 @@ define([
         }
     }
 
-    return addDefaults;
-});
+    export default addDefaults;

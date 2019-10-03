@@ -1,12 +1,6 @@
-define([
-        'Core/Cartesian3',
-        'Scene/BoxEmitter',
-        'Scene/Particle'
-    ], function(
-        Cartesian3,
-        BoxEmitter,
-        Particle) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { BoxEmitter } from '../../Source/Cesium.js';
+import { Particle } from '../../Source/Cesium.js';
 
 describe('Scene/BoxEmitter', function() {
 
@@ -70,5 +64,4 @@ describe('Scene/BoxEmitter', function() {
             expect(particle.velocity).toEqual(Cartesian3.normalize(particle.position, new Cartesian3()));
         }
     });
-});
 });

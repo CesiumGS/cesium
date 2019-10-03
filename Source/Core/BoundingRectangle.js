@@ -1,22 +1,11 @@
-define([
-        './Cartesian2',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './GeographicProjection',
-        './Intersect',
-        './Rectangle'
-    ], function(
-        Cartesian2,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        GeographicProjection,
-        Intersect,
-        Rectangle) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import GeographicProjection from './GeographicProjection.js';
+import Intersect from './Intersect.js';
+import Rectangle from './Rectangle.js';
 
     /**
      * A bounding rectangle given by a corner, width and height.
@@ -366,6 +355,4 @@ define([
     BoundingRectangle.prototype.equals = function(right) {
         return BoundingRectangle.equals(this, right);
     };
-
-    return BoundingRectangle;
-});
+export default BoundingRectangle;

@@ -1,22 +1,11 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/JulianDate',
-        '../Core/Request',
-        '../Core/RequestType'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        JulianDate,
-        Request,
-        RequestType) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import JulianDate from '../Core/JulianDate.js';
+import Request from '../Core/Request.js';
+import RequestType from '../Core/RequestType.js';
 
     /**
      * Provides functionality for ImageryProviders that have time dynamic imagery
@@ -299,6 +288,4 @@ define([
 
         return true;
     }
-
-    return TimeDynamicImagery;
-});
+export default TimeDynamicImagery;

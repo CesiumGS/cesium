@@ -1,8 +1,4 @@
-define([
-        'Core/parseResponseHeaders'
-    ], function(
-        parseResponseHeaders) {
-        'use strict';
+import { parseResponseHeaders } from '../../Source/Cesium.js';
 
 describe('Core/parseResponseHeaders', function() {
 
@@ -29,5 +25,4 @@ describe('Core/parseResponseHeaders', function() {
             'Content-Type': 'text/plain; charset=utf-8'
         });
     });
-});
 });

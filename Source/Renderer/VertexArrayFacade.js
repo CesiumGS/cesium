@@ -1,26 +1,13 @@
-define([
-        '../Core/Check',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        './Buffer',
-        './BufferUsage',
-        './VertexArray'
-    ], function(
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        destroyObject,
-        DeveloperError,
-        CesiumMath,
-        Buffer,
-        BufferUsage,
-        VertexArray) {
-    'use strict';
+import Check from '../Core/Check.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
+import Buffer from './Buffer.js';
+import BufferUsage from './BufferUsage.js';
+import VertexArray from './VertexArray.js';
 
     /**
      * @private
@@ -454,6 +441,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return VertexArrayFacade;
-});
+export default VertexArrayFacade;

@@ -1,28 +1,14 @@
-define([
-        './binarySearch',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Event',
-        './GregorianDate',
-        './isLeapYear',
-        './Iso8601',
-        './JulianDate',
-        './TimeInterval'
-    ], function(
-        binarySearch,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        GregorianDate,
-        isLeapYear,
-        Iso8601,
-        JulianDate,
-        TimeInterval) {
-    'use strict';
+import binarySearch from './binarySearch.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Event from './Event.js';
+import GregorianDate from './GregorianDate.js';
+import isLeapYear from './isLeapYear.js';
+import Iso8601 from './Iso8601.js';
+import JulianDate from './JulianDate.js';
+import TimeInterval from './TimeInterval.js';
 
     function compareIntervalStartTimes(left, right) {
         return JulianDate.compare(left.start, right.start);
@@ -1019,6 +1005,4 @@ define([
             dataCallback : options.dataCallback
         }, result);
     };
-
-    return TimeIntervalCollection;
-});
+export default TimeIntervalCollection;

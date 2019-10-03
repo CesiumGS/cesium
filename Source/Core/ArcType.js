@@ -1,8 +1,4 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from './freezeObject.js';
 
     /**
      * ArcType defines the path that should be taken connecting vertices.
@@ -34,6 +30,4 @@ define([
          */
         RHUMB : 2
     };
-
-    return freezeObject(ArcType);
-});
+export default freezeObject(ArcType);

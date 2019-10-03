@@ -1,22 +1,11 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './Property'
-    ], function(
-        Cartesian2,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        Event,
-        createPropertyDescriptor,
-        Property) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import Property from './Property.js';
 
     var defaultColor = Color.WHITE;
     var defaultCellAlpha = 0.1;
@@ -179,6 +168,4 @@ define([
         Property.equals(this._lineThickness, other._lineThickness) && //
         Property.equals(this._lineOffset, other._lineOffset));
     };
-
-    return GridMaterialProperty;
-});
+export default GridMaterialProperty;

@@ -1,16 +1,8 @@
-define([
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/EllipsoidGeodesic',
-        'Core/EllipsoidRhumbLine',
-        'Core/Math'
-    ], function(
-        Cartographic,
-        Ellipsoid,
-        EllipsoidGeodesic,
-        EllipsoidRhumbLine,
-        CesiumMath) {
-        'use strict';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidGeodesic } from '../../Source/Cesium.js';
+import { EllipsoidRhumbLine } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
 
 describe('Core/EllipsoidRhumbLine', function() {
 
@@ -651,5 +643,4 @@ describe('Core/EllipsoidRhumbLine', function() {
         var midpointUsingIntersection = rhumb.findIntersectionWithLatitude(midpointUsingInterpolation.latitude);
         expect(Cartographic.equalsEpsilon(midpointUsingInterpolation, midpointUsingIntersection, CesiumMath.EPSILON12)).toBe(true);
     });
-});
 });

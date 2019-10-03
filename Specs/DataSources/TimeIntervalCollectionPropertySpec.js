@@ -1,16 +1,8 @@
-define([
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/TimeIntervalCollectionProperty'
-    ], function(
-        Cartesian3,
-        JulianDate,
-        TimeInterval,
-        TimeIntervalCollection,
-        TimeIntervalCollectionProperty) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
 
 describe('DataSources/TimeIntervalCollectionProperty', function() {
 
@@ -176,5 +168,4 @@ describe('DataSources/TimeIntervalCollectionProperty', function() {
         property.intervals.removeAll();
         expect(listener).toHaveBeenCalledWith(property);
     });
-});
 });

@@ -1,12 +1,6 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event'
-    ], function(
-        defined,
-        defineProperties,
-        Event) {
-    'use strict';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Event from '../Core/Event.js';
 
     /**
      * A {@link Property} whose value does not change with respect to simulation time.
@@ -118,6 +112,4 @@ define([
     ConstantProperty.prototype.toString = function() {
         return String(this._value);
     };
-
-    return ConstantProperty;
-});
+export default ConstantProperty;

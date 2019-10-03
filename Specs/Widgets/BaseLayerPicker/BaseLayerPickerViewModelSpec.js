@@ -1,14 +1,7 @@
-define([
-        'Core/EllipsoidTerrainProvider',
-        'Scene/ImageryLayerCollection',
-        'Widgets/BaseLayerPicker/BaseLayerPickerViewModel',
-        'Widgets/BaseLayerPicker/ProviderViewModel'
-    ], function(
-        EllipsoidTerrainProvider,
-        ImageryLayerCollection,
-        BaseLayerPickerViewModel,
-        ProviderViewModel) {
-        'use strict';
+import { EllipsoidTerrainProvider } from '../../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../../Source/Cesium.js';
+import { BaseLayerPickerViewModel } from '../../../Source/Cesium.js';
+import { ProviderViewModel } from '../../../Source/Cesium.js';
 
 describe('Widgets/BaseLayerPicker/BaseLayerPickerViewModel', function() {
 
@@ -284,5 +277,4 @@ describe('Widgets/BaseLayerPicker/BaseLayerPickerViewModel', function() {
             return new BaseLayerPickerViewModel({});
         }).toThrowDeveloperError();
     });
-});
 });

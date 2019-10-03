@@ -1,6 +1,3 @@
-define([], function() {
-    'use strict';
-
 function earcut(data, holeIndices, dim) {
 
     dim = dim || 2;
@@ -642,5 +639,4 @@ earcut.flatten = function (data) {
     return result;
 };
 
-return earcut;
-});
+export default earcut;

@@ -1,24 +1,12 @@
-define([
-        'Core/ArcType',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/PrimitiveType',
-        'Core/SimplePolylineGeometry',
-        'Specs/createPackableSpecs'
-    ], function(
-        ArcType,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        Ellipsoid,
-        CesiumMath,
-        PrimitiveType,
-        SimplePolylineGeometry,
-        createPackableSpecs) {
-        'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { SimplePolylineGeometry } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/SimplePolylineGeometry', function() {
 
@@ -212,5 +200,4 @@ describe('Core/SimplePolylineGeometry', function() {
     });
     packedInstance = [3, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 12, 13, 14, 0, 0, 11];
     createPackableSpecs(SimplePolylineGeometry, line, packedInstance, 'straight line');
-});
 });

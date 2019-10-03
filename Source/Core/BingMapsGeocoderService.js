@@ -1,20 +1,9 @@
-define([
-        './BingMapsApi',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Rectangle',
-        './Resource'
-    ], function(
-        BingMapsApi,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        Rectangle,
-        Resource) {
-    'use strict';
+import BingMapsApi from './BingMapsApi.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defineProperties from './defineProperties.js';
+import Rectangle from './Rectangle.js';
+import Resource from './Resource.js';
 
     var url = 'https://dev.virtualearth.net/REST/v1/Locations';
 
@@ -103,6 +92,4 @@ define([
             });
         });
     };
-
-    return BingMapsGeocoderService;
-});
+export default BingMapsGeocoderService;

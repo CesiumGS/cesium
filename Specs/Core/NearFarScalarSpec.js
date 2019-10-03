@@ -1,10 +1,5 @@
-define([
-        'Core/NearFarScalar',
-        'Specs/createPackableSpecs'
-    ], function(
-        NearFarScalar,
-        createPackableSpecs) {
-        'use strict';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/NearFarScalar', function() {
 
@@ -47,5 +42,4 @@ describe('Core/NearFarScalar', function() {
     });
 
     createPackableSpecs(NearFarScalar, new NearFarScalar(1, 2, 3, 4), [1, 2, 3, 4]);
-});
 });

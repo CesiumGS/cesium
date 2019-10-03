@@ -1,18 +1,9 @@
-define([
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './destroyObject',
-        './Iso8601',
-        './JulianDate'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        Iso8601,
-        JulianDate) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import destroyObject from './destroyObject.js';
+import Iso8601 from './Iso8601.js';
+import JulianDate from './JulianDate.js';
 
     /**
      * Synchronizes a video element with a simulation clock.
@@ -226,6 +217,4 @@ define([
             that._firstTickAfterSeek = true;
         };
     }
-
-    return VideoSynchronizer;
-});
+export default VideoSynchronizer;

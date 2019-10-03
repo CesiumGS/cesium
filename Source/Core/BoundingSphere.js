@@ -1,32 +1,16 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './Ellipsoid',
-        './GeographicProjection',
-        './Intersect',
-        './Interval',
-        './Math',
-        './Matrix3',
-        './Matrix4',
-        './Rectangle'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        Ellipsoid,
-        GeographicProjection,
-        Intersect,
-        Interval,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Rectangle) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Ellipsoid from './Ellipsoid.js';
+import GeographicProjection from './GeographicProjection.js';
+import Intersect from './Intersect.js';
+import Interval from './Interval.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import Matrix4 from './Matrix4.js';
+import Rectangle from './Rectangle.js';
 
     /**
      * A bounding sphere with a center and a radius.
@@ -1311,6 +1295,4 @@ define([
         var radius = this.radius;
         return volumeConstant * radius * radius * radius;
     };
-
-    return BoundingSphere;
-});
+export default BoundingSphere;

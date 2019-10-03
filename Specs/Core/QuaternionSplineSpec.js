@@ -1,14 +1,7 @@
-define([
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/Quaternion',
-        'Core/QuaternionSpline'
-    ], function(
-        Cartesian3,
-        CesiumMath,
-        Quaternion,
-        QuaternionSpline) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { QuaternionSpline } from '../../Source/Cesium.js';
 
 describe('Core/QuaternionSpline', function() {
 
@@ -129,5 +122,4 @@ describe('Core/QuaternionSpline', function() {
         expect(actual).toBe(result);
         expect(actual).toEqualEpsilon(expected, CesiumMath.EPSILON6);
     });
-});
 });

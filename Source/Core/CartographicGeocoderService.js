@@ -1,12 +1,6 @@
-define([
-        '../ThirdParty/when',
-        './Cartesian3',
-        './Check'
-    ], function(
-        when,
-        Cartesian3,
-        Check) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
 
     /**
      * Geocodes queries containing longitude and latitude coordinates and an optional height.
@@ -59,6 +53,4 @@ define([
         }
         return when.resolve([]);
     };
-
-    return CartographicGeocoderService;
-});
+export default CartographicGeocoderService;

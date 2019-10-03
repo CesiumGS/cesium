@@ -1,24 +1,12 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Ellipsoid',
-        './Math'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        CesiumMath) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import CesiumMath from './Math.js';
 
     function calculateM(ellipticity, major, latitude) {
         if (ellipticity === 0.0) { // sphere
@@ -506,6 +494,4 @@ define([
 
         return new Cartographic(longitude, intersectionLatitude, 0);
     };
-
-    return EllipsoidRhumbLine;
-});
+export default EllipsoidRhumbLine;

@@ -1,10 +1,5 @@
-define([
-        'Core/Cartesian3',
-        'Core/Ray'
-    ], function(
-        Cartesian3,
-        Ray) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ray } from '../../Source/Cesium.js';
 
 describe('Core/Ray', function() {
 
@@ -92,5 +87,4 @@ describe('Core/Ray', function() {
             Ray.getPoint(ray, undefined);
         }).toThrowDeveloperError();
     });
-});
 });

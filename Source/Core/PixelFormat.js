@@ -1,12 +1,6 @@
-define([
-        '../Renderer/PixelDatatype',
-        './freezeObject',
-        './WebGLConstants'
-    ], function(
-        PixelDatatype,
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import freezeObject from './freezeObject.js';
+import WebGLConstants from './WebGLConstants.js';
 
     /**
      * The format of a pixel, i.e., the number of components it has and what they represent.
@@ -330,6 +324,4 @@ define([
             return flipped;
         }
     };
-
-    return freezeObject(PixelFormat);
-});
+export default freezeObject(PixelFormat);

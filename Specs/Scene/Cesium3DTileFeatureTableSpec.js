@@ -1,10 +1,5 @@
-define([
-        'Core/ComponentDatatype',
-        'Scene/Cesium3DTileFeatureTable'
-    ], function(
-        ComponentDatatype,
-        Cesium3DTileFeatureTable) {
-        'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { Cesium3DTileFeatureTable } from '../../Source/Cesium.js';
 
 describe('Scene/Cesium3DTileFeatureTable', function() {
 
@@ -35,5 +30,4 @@ describe('Scene/Cesium3DTileFeatureTable', function() {
         var properties = featureTable.getPropertyArray('TEST', ComponentDatatype.UNSIGNED_BYTE, 2);
         expect(properties).toEqual([0, 1, 2, 3, 4, 5]);
     });
-});
 });

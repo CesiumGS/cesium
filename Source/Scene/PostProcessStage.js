@@ -1,52 +1,26 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/PixelFormat',
-        '../Core/Resource',
-        '../Renderer/PassState',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../ThirdParty/when',
-        './PostProcessStageSampleMode'
-    ], function(
-        BoundingRectangle,
-        Check,
-        Color,
-        combine,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        PixelFormat,
-        Resource,
-        PassState,
-        PixelDatatype,
-        RenderState,
-        Sampler,
-        ShaderSource,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        when,
-        PostProcessStageSampleMode) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Resource from '../Core/Resource.js';
+import PassState from '../Renderer/PassState.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import when from '../ThirdParty/when.js';
+import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
 
     /**
      * Runs a post-process stage on either the texture rendered by the scene or the output of a previous post-process stage.
@@ -966,6 +940,4 @@ define([
         releaseResources(this);
         return destroyObject(this);
     };
-
-    return PostProcessStage;
-});
+export default PostProcessStage;

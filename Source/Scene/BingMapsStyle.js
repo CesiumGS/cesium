@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The types of imagery provided by Bing Maps.
@@ -96,6 +92,4 @@ define([
          */
         COLLINS_BART : 'CollinsBart'
     };
-
-    return freezeObject(BingMapsStyle);
-});
+export default freezeObject(BingMapsStyle);

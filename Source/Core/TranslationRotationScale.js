@@ -1,14 +1,7 @@
-define([
-        './Cartesian3',
-        './defaultValue',
-        './defined',
-        './Quaternion'
-    ], function(
-        Cartesian3,
-        defaultValue,
-        defined,
-        Quaternion) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Quaternion from './Quaternion.js';
 
     var defaultScale = new Cartesian3(1.0, 1.0, 1.0);
     var defaultTranslation = Cartesian3.ZERO;
@@ -60,6 +53,4 @@ define([
                 Quaternion.equals(this.rotation, right.rotation) &&
                 Cartesian3.equals(this.scale, right.scale));
     };
-
-    return TranslationRotationScale;
-});
+export default TranslationRotationScale;

@@ -1,10 +1,5 @@
-define([
-        'Scene/Cesium3DTilePass',
-        'Scene/Cesium3DTilePassState'
-    ], function(
-        Cesium3DTilePass,
-        Cesium3DTilePassState) {
-        'use strict';
+import { Cesium3DTilePass } from '../../Source/Cesium.js';
+import { Cesium3DTilePassState } from '../../Source/Cesium.js';
 
 describe('Scene/Cesium3DTilePassState', function() {
 
@@ -46,5 +41,4 @@ describe('Scene/Cesium3DTilePassState', function() {
             return new Cesium3DTilePassState({});
         }).toThrowDeveloperError();
     });
-});
 });

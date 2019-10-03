@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     /**
      * @exports defined
@@ -17,6 +15,4 @@ define(function() {
     function defined(value) {
         return value !== undefined && value !== null;
     }
-
-    return defined;
-});
+export default defined;

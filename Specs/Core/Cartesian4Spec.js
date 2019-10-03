@@ -1,16 +1,8 @@
-define([
-        'Core/Cartesian4',
-        'Core/Color',
-        'Core/Math',
-        'Specs/createPackableArraySpecs',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian4,
-        Color,
-        CesiumMath,
-        createPackableArraySpecs,
-        createPackableSpecs) {
-        'use strict';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import createPackableArraySpecs from '../createPackableArraySpecs.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/Cartesian4', function() {
 
@@ -965,5 +957,4 @@ describe('Core/Cartesian4', function() {
 
     createPackableSpecs(Cartesian4, new Cartesian4(1, 2, 3, 4), [1, 2, 3, 4]);
     createPackableArraySpecs(Cartesian4, [new Cartesian4(1, 2, 3, 4), new Cartesian4(5, 6, 7, 8)], [1, 2, 3, 4, 5, 6, 7, 8]);
-});
 });

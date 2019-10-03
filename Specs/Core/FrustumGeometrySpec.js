@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian3',
-        'Core/FrustumGeometry',
-        'Core/Math',
-        'Core/PerspectiveFrustum',
-        'Core/Quaternion',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian3,
-        FrustumGeometry,
-        CesiumMath,
-        PerspectiveFrustum,
-        Quaternion,
-        VertexFormat,
-        createPackableSpecs) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { FrustumGeometry } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/FrustumGeometry', function() {
 
@@ -92,5 +82,4 @@ describe('Core/FrustumGeometry', function() {
         orientation : Quaternion.IDENTITY,
         vertexFormat : VertexFormat.POSITION_ONLY
     }), [0.0, 1.0, 2.0, 3.0, 4.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
-});
 });

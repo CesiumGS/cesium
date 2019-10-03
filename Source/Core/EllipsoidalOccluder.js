@@ -1,20 +1,10 @@
-define([
-        './BoundingSphere',
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Rectangle'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        Rectangle) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import Rectangle from './Rectangle.js';
 
     /**
      * Determine whether or not other objects are visible or hidden behind the visible horizon defined by
@@ -297,6 +287,4 @@ define([
         ellipsoid.transformPositionToScaledSpace(directionToPoint, directionToPointScratch);
         return Cartesian3.normalize(directionToPointScratch, directionToPointScratch);
     }
-
-    return EllipsoidalOccluder;
-});
+export default EllipsoidalOccluder;

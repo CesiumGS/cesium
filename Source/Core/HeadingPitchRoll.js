@@ -1,14 +1,7 @@
-define([
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Math'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        CesiumMath) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     /**
      * A rotation expressed as a heading, pitch, and roll. Heading is the rotation about the
@@ -184,6 +177,4 @@ define([
     HeadingPitchRoll.prototype.toString = function() {
         return '(' + this.heading + ', ' + this.pitch + ', ' + this.roll + ')';
     };
-
-    return HeadingPitchRoll;
-});
+export default HeadingPitchRoll;

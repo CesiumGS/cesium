@@ -1,5 +1,3 @@
-define([], function() {
-    'use strict';
     /**
      * Representation of <Camera> from KML
      * @alias KmlCamera
@@ -12,6 +10,4 @@ define([], function() {
         this.position = position;
         this.headingPitchRoll = headingPitchRoll;
     }
-
-    return KmlCamera;
-});
+export default KmlCamera;

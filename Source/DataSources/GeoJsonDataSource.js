@@ -1,64 +1,32 @@
-define([
-        '../Core/ArcType',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/createGuid',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/getFilenameFromUri',
-        '../Core/PinBuilder',
-        '../Core/PolygonHierarchy',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Scene/HeightReference',
-        '../Scene/VerticalOrigin',
-        '../ThirdParty/topojson',
-        '../ThirdParty/when',
-        './BillboardGraphics',
-        './CallbackProperty',
-        './ColorMaterialProperty',
-        './ConstantPositionProperty',
-        './ConstantProperty',
-        './DataSource',
-        './EntityCluster',
-        './EntityCollection',
-        './PolygonGraphics',
-        './PolylineGraphics'
-    ], function(
-        ArcType,
-        Cartesian3,
-        Color,
-        createGuid,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        getFilenameFromUri,
-        PinBuilder,
-        PolygonHierarchy,
-        Resource,
-        RuntimeError,
-        HeightReference,
-        VerticalOrigin,
-        topojson,
-        when,
-        BillboardGraphics,
-        CallbackProperty,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        DataSource,
-        EntityCluster,
-        EntityCollection,
-        PolygonGraphics,
-        PolylineGraphics) {
-    'use strict';
+import ArcType from '../Core/ArcType.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import createGuid from '../Core/createGuid.js';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import getFilenameFromUri from '../Core/getFilenameFromUri.js';
+import PinBuilder from '../Core/PinBuilder.js';
+import PolygonHierarchy from '../Core/PolygonHierarchy.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import HeightReference from '../Scene/HeightReference.js';
+import VerticalOrigin from '../Scene/VerticalOrigin.js';
+import topojson from '../ThirdParty/topojson.js';
+import when from '../ThirdParty/when.js';
+import BillboardGraphics from './BillboardGraphics.js';
+import CallbackProperty from './CallbackProperty.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import ConstantPositionProperty from './ConstantPositionProperty.js';
+import ConstantProperty from './ConstantProperty.js';
+import DataSource from './DataSource.js';
+import EntityCluster from './EntityCluster.js';
+import EntityCollection from './EntityCollection.js';
+import PolygonGraphics from './PolygonGraphics.js';
+import PolylineGraphics from './PolylineGraphics.js';
 
     function defaultCrsFunction(coordinates) {
         return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
@@ -955,6 +923,4 @@ define([
      * @param {Object} properties The properties of the feature.
      * @param {String} nameProperty The property key that Cesium estimates to have the name of the feature.
      */
-
-    return GeoJsonDataSource;
-});
+export default GeoJsonDataSource;

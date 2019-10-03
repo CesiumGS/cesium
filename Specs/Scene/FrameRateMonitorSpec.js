@@ -1,14 +1,7 @@
-define([
-        'Core/defined',
-        'Core/getTimestamp',
-        'Scene/FrameRateMonitor',
-        'Specs/createScene'
-    ], function(
-        defined,
-        getTimestamp,
-        FrameRateMonitor,
-        createScene) {
-        'use strict';
+import { defined } from '../../Source/Cesium.js';
+import { getTimestamp } from '../../Source/Cesium.js';
+import { FrameRateMonitor } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/FrameRateMonitor', function() {
 
@@ -260,4 +253,3 @@ describe('Scene/FrameRateMonitor', function() {
         expect(nominalListener).toHaveBeenCalled();
     });
 }, 'WebGL');
-});

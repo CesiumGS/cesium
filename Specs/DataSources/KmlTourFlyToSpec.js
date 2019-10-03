@@ -1,22 +1,11 @@
-define([
-        'Core/Cartesian3',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'Core/Math',
-        'DataSources/KmlCamera',
-        'DataSources/KmlLookAt',
-        'DataSources/KmlTourFlyTo',
-        'Specs/pollToPromise'
-    ], function(
-        Cartesian3,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        CesiumMath,
-        KmlCamera,
-        KmlLookAt,
-        KmlTourFlyTo,
-        pollToPromise) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { KmlCamera } from '../../Source/Cesium.js';
+import { KmlLookAt } from '../../Source/Cesium.js';
+import { KmlTourFlyTo } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('DataSources/KmlTourFlyTo', function() {
 
@@ -136,5 +125,4 @@ describe('DataSources/KmlTourFlyTo', function() {
         });
     });
 
-});
 });
