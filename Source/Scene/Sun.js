@@ -306,8 +306,9 @@ define([
         var limbCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
         var limbWC = SceneTransforms.clipToGLWindowCoordinates(passState.viewport, limbCC, scratchLimbWC);
 
-        this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
+        this._size = Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
+        this._size = Math.ceil(this._size);
 
         return this._commands;
     };
