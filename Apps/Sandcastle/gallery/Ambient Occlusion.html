@@ -61,7 +61,7 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 if (!Cesium.PostProcessStageLibrary.isAmbientOcclusionSupported(viewer.scene)) {
-    console.log('This browser does not support the ambient occlusion post process.');
+    window.alert('This browser does not support the ambient occlusion post process.');
 }
 
 // Power Plant design model provided by Bentley Systems

@@ -39,7 +39,7 @@ var scene = viewer.scene;
 scene.globe.depthTestAgainstTerrain = true;
 
 if (!scene.sampleHeightSupported) {
-    console.log('This browser does not support sampleHeight.');
+    window.alert('This browser does not support sampleHeight.');
 }
 
 var longitude = -2.1480545852753163;

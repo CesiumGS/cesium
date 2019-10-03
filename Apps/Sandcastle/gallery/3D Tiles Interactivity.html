@@ -50,7 +50,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 
 var scene = viewer.scene;
 if (!scene.pickPositionSupported) {
-    console.log('This browser does not support pickPosition.');
+    window.alert('This browser does not support pickPosition.');
 }
 
 scene.globe.depthTestAgainstTerrain = true;

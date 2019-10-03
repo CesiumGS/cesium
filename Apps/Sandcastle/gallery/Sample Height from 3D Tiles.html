@@ -34,6 +34,10 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 var scene = viewer.scene;
 
+if (!scene.clampToHeightSupported) {
+    window.alert('This browser does not support clampToHeightMostDetailed.');
+}
+
 var tileset = scene.primitives.add(
     new Cesium.Cesium3DTileset({
         url: Cesium.IonResource.fromAssetId(40866)
@@ -51,10 +55,6 @@ Sandcastle.addToolbarButton('Sample heights', function() {
 });
 
 function sampleHeights() {
-    if (!scene.clampToHeightSupported) {
-        console.log('This browser does not support clampToHeightMostDetailed.');
-    }
-
     viewer.entities.removeAll();
 
     var cartesian1 = new Cesium.Cartesian3(1216390.063324395, -4736314.814479433, 4081341.9787972216);

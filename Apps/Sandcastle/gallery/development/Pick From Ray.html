@@ -34,7 +34,7 @@ var scene = viewer.scene;
 scene.globe.depthTestAgainstTerrain = true;
 
 if (!scene.pickPositionSupported) {
-    console.log('This browser does not support pickPosition or getting position from pickFromRay.');
+    window.alert('This browser does not support pickPosition or getting position from pickFromRay.');
 }
 
 var i;

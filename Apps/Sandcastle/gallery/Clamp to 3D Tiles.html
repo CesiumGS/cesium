@@ -58,7 +58,7 @@ viewer.camera.setView({
 if (scene.clampToHeightSupported) {
     tileset.initialTilesLoaded.addEventListener(start);
 } else {
-    console.log('This browser does not support clampToHeight.');
+    window.alert('This browser does not support clampToHeight.');
 }
 
 function start() {
