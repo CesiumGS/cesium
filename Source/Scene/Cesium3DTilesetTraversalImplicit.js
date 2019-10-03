@@ -52,7 +52,6 @@ define([
             replacementTraversal(tileset, frameState);
         }
 
-
         // Update the priority for any requests found during traversal
         // Update after traversal so that min and max values can be used to normalize priority values
         var requestedTiles = tileset._requestedTiles;
@@ -195,7 +194,7 @@ define([
         // You then loop over all tiles on the subtree level that we care about.
         // 1. call updateTile, if not vis continue to next tile, otherwise call loadTile
         // Just make the requests, let priority handle the ordering / shoving onto requeset queue
-        // Selection is what cares about blocked indices
+        // Selection is what cares about blocked indices, loading does not
 
         var indicesFinder = tileset._indicesFinder;
         var contentStartLevel = tileset._startLevel;

@@ -6,7 +6,8 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
-        '../Core/Math'
+        '../Core/Math',
+        '../Core/Matrix3'
     ], function(
         Cartesian3,
         Cartesian4,
@@ -15,7 +16,8 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
-        CesiumMath) {
+        CesiumMath,
+        Matrix3) {
     'use strict';
 
     /**
@@ -32,46 +34,39 @@ define([
         this._tileset = tileset;
 
         // LOD info
-        // 1D array of LOD sphere radii. index 0 is the contentless tileset root, 1 is the content roots, so this array 1indexed array as opposed to 0indexed.
-        // if the camera is within that distance you can process that 1indexed level.
-        // for replacement refinement, tiles touched by this sphere on that level means that their children are required
-        // addative can start from index 1 and it can just take the tile it touches on that level since it doesn't have the requirement of all children tiles loaded
+        // 1D array of LOD sphere radii.
         this._lodDistances = [];
 
-        // Children have use their parents sphere radius
-        // WHEN ADD: this var indicates content level (0 being content root) that can be accessed. The grid can start at the content root.
-        // the sphere radius to use at each content level is _lodDistances[contentLevel] so the radius at the conent level of _maximumTraversalLevel is
-        // _lodDistances[_maximumTraversalLevel], if the sphere check touches the tile on the corresponding level
-        // it can be requested and rendered (assuming it is not culled)
-        // WHEN REPLACE: this var indicates content level that can be accessed... but only through the parents.
-        // the grid will need to start at tilesetroot. the indices determined
-        // here will need to be converted to child indices for requests/rendering
-        // can traverse content levels up to _maximumTraversalLevel - 1, i.e. the last parent level but
-        // the sphere radius used at each parent level is _lodDistances[child's content level]
-        // Ex: if tileset contentless root is within _lodDistances[_startLevel] it loads the tileset contentless root's children
-        // in this case of REPLACE the radius test is checkif if the parent tile (the tile we are testing) should load all of its children (the radius we are using)
-        // the children do not have to be within this radius. these children must be loaded but don't have to be rendered if they are culled by the planes
-        // So ADD request/render tiles are the same but REPLACE has separate indices for request and render, request being a superset or looser than render.
+        // Probably not needed?
+        this._rootDistance = 0;
+
+        // The content level that can be accessed.
+        // ADD iterates down to this level using this the distance for the level
+        // REPLACE iterates down to this level - 1 since it is parent based traversal.
+        // It checks if the parent is in range of the distance for the childs level, if so the parent must be replaced by its children.
+        // So ADD request/render tiles are the same but REPLACE has different indices for request and render,
+        // i.e. request must take all children (packs of 4/8) so just expand render indices a little to pick up those culled children
+        // for min index, just subtract 1 if odd, for max index add 1 if even
         this._maximumTraversalLevel = 0;
-        this._lodFactor = -1;
+        this._lodFactor = -1; // from the distanced based sse equation (screenHeight / (tileset._maximumScreenSpaceError * sseDenominator))
 
         // How the camera relates to the grids on every level
-        this._seams = []; // xyz Seams per level
-        this._radii = []; // sphere cut radii in meters, the circle that forms on the surface of nearest face slab, clamp to max if camera inside slab
-        this._cellRadii = []; // Radii / cell dim on a level. cartesian3
-        this._centers = []; // Where the cam pos lives on the level, cartesian3
+        this._seams = []; // Cartesian3's, xyz seam per level, max index along each dir.
+        this._radii = []; // Number, sphere cut radii in meters, the circle that forms on the surface of nearest face slab, clamp to max if camera inside slab
+        this._radiiRatios = []; // Cartesian3's, Radii / cell dim on a level
+        this._centers = []; // Cartesian3's, Where the cam pos lives on the level
+        this._region = undefined;
+        this._boundsMin = new Cartesian3();
+        this._boundsMax = new Cartesian3();
+        this._boundsSpan = new Cartesian3();
 
         // Dim info
         this._worstCaseVirtualDims = new Cartesian3(); // Should be the same for every level
-        this._treeDimsPerLevel = [];
-        this._virtualDimsPerLevel = [];
-
-        this._is2DMap = false; // boundingVolume instanceof region
+        this._virtualDims = []; // Cartesian3's, min or worst case dim and treedim
+        this._treeDims = []; // Cartesian3's
+        this._invTileDims = []; // Cartesian3's
 
         // TODO: move things like _startLevel from tileset into here?
-
-        // Probably not needed
-        this._rootDistance = 0;
     }
 
     defineProperties(ImplicitIndicesFinder.prototype, {
@@ -96,8 +91,7 @@ define([
         }
 
         this._lodFactor = factor;
-        // var startingGError = tileset._geometricErrorContentRoot;
-        var startingGError = tileset._geometricError;
+        var startingGError = tileset._geometricErrorContentRoot;
         var base = tileset.getGeomtricErrorBase();
         var tilesetStartLevel = tileset._startLevel;
         // var useChildSphere = tileset._allTilesAdditive ? 0 : 1; // ad to pow exponent
@@ -106,13 +100,12 @@ define([
             gErrorOnLevel = startingGError / Math.pow(base, i - tilesetStartLevel);
             lodDistance = gErrorOnLevel * factor;
             lodDistances[i] = lodDistance;
+            // TODO: if lodFactor changed you must also update the other infomation about the levels
         }
 
         for (i = 0; i < length; i++) {
             console.log('lodDistance ' + i + ' ' + lodDistances[i]);
         }
-
-        // TODO: if lodFactor changed you must also update the other infomation about the levels
     };
 
     /**
@@ -120,21 +113,67 @@ define([
      *
      * @private
      */
-    ImplicitIndicesFinder.prototype.initLODDistances = function() {
+    ImplicitIndicesFinder.prototype.updateBoundsMinMax = function() {
+        // Only works with orientedBoundingBox, region-based should not move.
+        var bounds = this._tileset._root.boundingVolume;
+        var center = bounds.center;
+        var halfAxes = bounds.halfAxes
+    };
+
+    /**
+     * Inits the _lodDistances array so that it's the proper size
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.initArraySizes = function() {
         // TODO: when to update this based on camera, context, and  max gerror changes?
-        var lodDistances = this._lodDistances;
         var tileset = this._tileset;
         var tilingScheme = tileset._tilingScheme;
-        // +2 to get the the contentless tileset root as well as all the content levels (the other +1), though may not need
-        // 0 being the contentless tileset root, 1 being the root nodes
-        // var length = tilingScheme.lastLevel - this._startLevel + 2;
         var length = tilingScheme.lastLevel + 1;
+
+        var lodDistances = this._lodDistances;
+        var seams =  this._seams;
+        var radii =  this._radii;
+        var radiiRatios =  this._radiiRatios;
+        var centers =  this._centers;
+        var treeDims =  this._treeDims;
+        var virtuaDims =  this._virtualDims;
+        var invTileDims =  this._invTileDims;
+
         var i;
         for (i = 0; i < length; i++) {
             lodDistances.push(-1);
-            // TODO: init sizes of other arrays
+            seams.push(new Cartesian3());
+            radii.push(-1);
+            radiiRatios.push(new Cartesian3());
+            centers.push(new Cartesian3());
+        }
+
+        var bounds = tilingScheme.boundingVolume.region;
+        if (defined(bounds)) {
+            this._region = bounds;
+        } else {
+            this.updateBoundsMinMax();
+            Cartesian3.subtract(this._boundsMax, this._boundsMin, this._boundsSpan);
+        }
+
+        var boundsSpan = this._boundsSpan;
+        var isOct = tileset._isOct;
+        var rootGridDimensions = tilingScheme.headCount;
+        var result;
+        for (i = 0; i < length; i++) {
+            result = new Cartesian3(
+                (rootGridDimensions[0] << i),
+                (rootGridDimensions[1] << i),
+                isOct ? (rootGridDimensions[2] << i) : 1
+            );
+            treeDims.push(result);
+
+            result = Cartesian3.divideComponents(boundsSpan, result, result);
+            invTileDims.push(result);
         }
     };
+
     /**
      * @private
      */

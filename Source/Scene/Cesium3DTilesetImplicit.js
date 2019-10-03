@@ -1055,6 +1055,7 @@ define([
 
                     that._subtreeInfo = new SubtreeInfo(that);
                     that._root = that.updateTilesetFromSubtree(resource, subtreeArrayBuffer, rootKey);
+                    that._indicesFinder.initArraySizes();
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
                 }
@@ -2157,7 +2158,7 @@ define([
         if (!hasParent) {
             var subtreeLevelStart = this.findSubtreeLevelStart(subtree);
             this._startLevel = subtreeRootKey.w + subtreeLevelStart;
-            this._indicesFinder.initLODDistances();
+            // this._indicesFinder.initArraySizes();
             // console.log('first level subtree: ' + subtreeLevelStart);
             // console.log('first level tree: ' + this._startLevel);
         }
