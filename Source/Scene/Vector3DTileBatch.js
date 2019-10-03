@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     /**
      * Describes a renderable batch of geometry.
@@ -37,6 +35,4 @@ define(function() {
          */
         this.batchIds = options.batchIds;
     }
-
-    return Vector3DTileBatch;
-});
+export default Vector3DTileBatch;

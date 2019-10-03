@@ -1,12 +1,6 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defined'
-    ], function(
-        Cartesian3,
-        Check,
-        defined) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defined from './defined.js';
 
     /**
      * A fixed-point encoding of a {@link Cartesian3} with 64-bit floating-point components, as two {@link Cartesian3}
@@ -173,6 +167,4 @@ define([
         cartesianArray[index + 4] = low.y;
         cartesianArray[index + 5] = low.z;
     };
-
-    return EncodedCartesian3;
-});
+export default EncodedCartesian3;

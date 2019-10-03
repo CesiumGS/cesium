@@ -1,10 +1,5 @@
-define([
-        'Core/Color',
-        'Core/writeTextToCanvas'
-    ], function(
-        Color,
-        writeTextToCanvas) {
-        'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { writeTextToCanvas } from '../../Source/Cesium.js';
 
 describe('Core/writeTextToCanvas', function() {
 
@@ -135,5 +130,4 @@ describe('Core/writeTextToCanvas', function() {
         expect(canvas2.width).toEqual(canvas1.width+4);
         expect(canvas2.height).toEqual(canvas1.height+4);
     });
-});
 });

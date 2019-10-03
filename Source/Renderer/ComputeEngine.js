@@ -1,32 +1,16 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/PrimitiveType',
-        '../Shaders/ViewportQuadVS',
-        './ClearCommand',
-        './DrawCommand',
-        './Framebuffer',
-        './RenderState',
-        './ShaderProgram'
-    ], function(
-        BoundingRectangle,
-        Check,
-        Color,
-        defined,
-        destroyObject,
-        DeveloperError,
-        PrimitiveType,
-        ViewportQuadVS,
-        ClearCommand,
-        DrawCommand,
-        Framebuffer,
-        RenderState,
-        ShaderProgram) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import ViewportQuadVS from '../Shaders/ViewportQuadVS.js';
+import ClearCommand from './ClearCommand.js';
+import DrawCommand from './DrawCommand.js';
+import Framebuffer from './Framebuffer.js';
+import RenderState from './RenderState.js';
+import ShaderProgram from './ShaderProgram.js';
 
     /**
      * @private
@@ -138,6 +122,4 @@ define([
     ComputeEngine.prototype.destroy = function() {
         return destroyObject(this);
     };
-
-    return ComputeEngine;
-});
+export default ComputeEngine;

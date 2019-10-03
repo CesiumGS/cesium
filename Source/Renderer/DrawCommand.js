@@ -1,14 +1,7 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/PrimitiveType'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        PrimitiveType) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
 
     /**
      * Represents a command to the renderer for drawing.
@@ -564,6 +557,4 @@ define([
     DrawCommand.prototype.execute = function(context, passState) {
         context.draw(this, passState);
     };
-
-    return DrawCommand;
-});
+export default DrawCommand;

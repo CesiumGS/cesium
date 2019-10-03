@@ -1,36 +1,18 @@
-define([
-        './arrayFill',
-        './BoundingSphere',
-        './Cartesian3',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryOffsetAttribute',
-        './IndexDatatype',
-        './Math',
-        './PrimitiveType'
-    ], function(
-        arrayFill,
-        BoundingSphere,
-        Cartesian3,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryOffsetAttribute,
-        IndexDatatype,
-        CesiumMath,
-        PrimitiveType) {
-    'use strict';
+import arrayFill from './arrayFill.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryOffsetAttribute from './GeometryOffsetAttribute.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import PrimitiveType from './PrimitiveType.js';
 
     var defaultRadii = new Cartesian3(1.0, 1.0, 1.0);
     var cos = Math.cos;
@@ -450,6 +432,4 @@ define([
             offsetAttribute : ellipsoidGeometry._offsetAttribute
         });
     };
-
-    return EllipsoidOutlineGeometry;
-});
+export default EllipsoidOutlineGeometry;

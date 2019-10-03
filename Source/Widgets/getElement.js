@@ -1,8 +1,4 @@
-define([
-        '../Core/DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * If element is a string, look up the element in the DOM by ID.  Otherwise return element.
@@ -25,6 +21,4 @@ define([
         }
         return element;
     }
-
-    return getElement;
-});
+export default getElement;

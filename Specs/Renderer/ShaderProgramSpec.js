@@ -1,14 +1,7 @@
-define([
-        'Renderer/ContextLimits',
-        'Renderer/ShaderProgram',
-        'Renderer/ShaderSource',
-        'Specs/createContext'
-    ], function(
-        ContextLimits,
-        ShaderProgram,
-        ShaderSource,
-        createContext) {
-        'use strict';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { ShaderProgram } from '../../Source/Cesium.js';
+import { ShaderSource } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
 describe('Renderer/ShaderProgram', function() {
 
@@ -549,4 +542,3 @@ describe('Renderer/ShaderProgram', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

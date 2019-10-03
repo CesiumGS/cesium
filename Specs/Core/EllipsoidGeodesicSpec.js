@@ -1,14 +1,7 @@
-define([
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/EllipsoidGeodesic',
-        'Core/Math'
-    ], function(
-        Cartographic,
-        Ellipsoid,
-        EllipsoidGeodesic,
-        CesiumMath) {
-        'use strict';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidGeodesic } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
 
 describe('Core/EllipsoidGeodesic', function() {
 
@@ -245,5 +238,4 @@ describe('Core/EllipsoidGeodesic', function() {
         expect(expectedMid.longitude).toEqualEpsilon(result.longitude, CesiumMath.EPSILON13);
         expect(expectedMid.latitude).toEqualEpsilon(result.latitude, CesiumMath.EPSILON13);
     });
-});
 });

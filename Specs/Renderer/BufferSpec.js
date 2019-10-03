@@ -1,14 +1,7 @@
-define([
-        'Core/IndexDatatype',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Specs/createContext'
-    ], function(
-        IndexDatatype,
-        Buffer,
-        BufferUsage,
-        createContext) {
-        'use strict';
+import { IndexDatatype } from '../../Source/Cesium.js';
+import { Buffer } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
 describe('Renderer/Buffer', function() {
 
@@ -705,4 +698,3 @@ describe('Renderer/Buffer', function() {
         });
     }
 }, 'WebGL');
-});

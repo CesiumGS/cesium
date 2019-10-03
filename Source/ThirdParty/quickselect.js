@@ -1,5 +1,3 @@
-define([], function() {
-'use strict';
 
 function quickselect(arr, k, left, right, compare) {
     quickselectStep(arr, k, left || 0, right || (arr.length - 1), compare || defaultCompare);
@@ -55,5 +53,4 @@ function defaultCompare(a, b) {
     return a < b ? -1 : a > b ? 1 : 0;
 }
 
-return quickselect;
-});
+export default quickselect;

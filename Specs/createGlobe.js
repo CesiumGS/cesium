@@ -1,14 +1,7 @@
-define([
-        'Core/defaultValue',
-        'Core/defineProperties',
-        'Core/Ellipsoid',
-        'Core/Event'
-    ], function(
-        defaultValue,
-        defineProperties,
-        Ellipsoid,
-        Event) {
-    'use strict';
+import { defaultValue } from '../Source/Cesium.js';
+import { defineProperties } from '../Source/Cesium.js';
+import { Ellipsoid } from '../Source/Cesium.js';
+import { Event } from '../Source/Cesium.js';
 
     function createGlobe(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -54,6 +47,4 @@ define([
 
         return globe;
     }
-
-    return createGlobe;
-});
+export default createGlobe;

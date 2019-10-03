@@ -1,8 +1,4 @@
-define([
-        './DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Wraps a function on the provided objects with another function called in the
@@ -27,6 +23,4 @@ define([
             oldFunction.apply(obj, arguments);
         };
     }
-
-    return wrapFunction;
-});
+export default wrapFunction;

@@ -1,68 +1,32 @@
-define([
-        '../Core/buildModuleUrl',
-        '../Core/Color',
-        '../Core/createGuid',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/destroyObject',
-        '../Core/Ellipsoid',
-        '../Shaders/PostProcessStages/AcesTonemappingStage',
-        '../Shaders/PostProcessStages/AmbientOcclusionGenerate',
-        '../Shaders/PostProcessStages/AmbientOcclusionModulate',
-        '../Shaders/PostProcessStages/BlackAndWhite',
-        '../Shaders/PostProcessStages/BloomComposite',
-        '../Shaders/PostProcessStages/Brightness',
-        '../Shaders/PostProcessStages/ContrastBias',
-        '../Shaders/PostProcessStages/DepthOfField',
-        '../Shaders/PostProcessStages/DepthView',
-        '../Shaders/PostProcessStages/EdgeDetection',
-        '../Shaders/PostProcessStages/FilmicTonemapping',
-        '../Shaders/PostProcessStages/FXAA',
-        '../Shaders/PostProcessStages/GaussianBlur1D',
-        '../Shaders/PostProcessStages/LensFlare',
-        '../Shaders/PostProcessStages/ModifiedReinhardTonemapping',
-        '../Shaders/PostProcessStages/NightVision',
-        '../Shaders/PostProcessStages/ReinhardTonemapping',
-        '../Shaders/PostProcessStages/Silhouette',
-        '../ThirdParty/Shaders/FXAA3_11',
-        './AutoExposure',
-        './PostProcessStage',
-        './PostProcessStageComposite',
-        './PostProcessStageSampleMode'
-    ], function(
-        buildModuleUrl,
-        Color,
-        createGuid,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        destroyObject,
-        Ellipsoid,
-        AcesTonemapping,
-        AmbientOcclusionGenerate,
-        AmbientOcclusionModulate,
-        BlackAndWhite,
-        BloomComposite,
-        Brightness,
-        ContrastBias,
-        DepthOfField,
-        DepthView,
-        EdgeDetection,
-        FilmicTonemapping,
-        FXAA,
-        GaussianBlur1D,
-        LensFlare,
-        ModifiedReinhardTonemapping,
-        NightVision,
-        ReinhardTonemapping,
-        Silhouette,
-        FXAA3_11,
-        AutoExposure,
-        PostProcessStage,
-        PostProcessStageComposite,
-        PostProcessStageSampleMode) {
-    'use strict';
+import buildModuleUrl from '../Core/buildModuleUrl.js';
+import Color from '../Core/Color.js';
+import createGuid from '../Core/createGuid.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import AcesTonemapping from '../Shaders/PostProcessStages/AcesTonemappingStage.js';
+import AmbientOcclusionGenerate from '../Shaders/PostProcessStages/AmbientOcclusionGenerate.js';
+import AmbientOcclusionModulate from '../Shaders/PostProcessStages/AmbientOcclusionModulate.js';
+import BlackAndWhite from '../Shaders/PostProcessStages/BlackAndWhite.js';
+import BloomComposite from '../Shaders/PostProcessStages/BloomComposite.js';
+import Brightness from '../Shaders/PostProcessStages/Brightness.js';
+import ContrastBias from '../Shaders/PostProcessStages/ContrastBias.js';
+import DepthOfField from '../Shaders/PostProcessStages/DepthOfField.js';
+import DepthView from '../Shaders/PostProcessStages/DepthView.js';
+import EdgeDetection from '../Shaders/PostProcessStages/EdgeDetection.js';
+import FilmicTonemapping from '../Shaders/PostProcessStages/FilmicTonemapping.js';
+import FXAA from '../Shaders/PostProcessStages/FXAA.js';
+import GaussianBlur1D from '../Shaders/PostProcessStages/GaussianBlur1D.js';
+import LensFlare from '../Shaders/PostProcessStages/LensFlare.js';
+import ModifiedReinhardTonemapping from '../Shaders/PostProcessStages/ModifiedReinhardTonemapping.js';
+import NightVision from '../Shaders/PostProcessStages/NightVision.js';
+import ReinhardTonemapping from '../Shaders/PostProcessStages/ReinhardTonemapping.js';
+import Silhouette from '../Shaders/PostProcessStages/Silhouette.js';
+import FXAA3_11 from '../ThirdParty/Shaders/FXAA3_11.js';
+import AutoExposure from './AutoExposure.js';
+import PostProcessStage from './PostProcessStage.js';
+import PostProcessStageComposite from './PostProcessStageComposite.js';
+import PostProcessStageSampleMode from './PostProcessStageSampleMode.js';
 
     /**
      * Contains functions for creating common post-process stages.
@@ -867,6 +831,4 @@ define([
             }
         });
     };
-
-    return PostProcessStageLibrary;
-});
+export default PostProcessStageLibrary;

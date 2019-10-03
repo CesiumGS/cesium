@@ -1,22 +1,11 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './defined',
-        './DeveloperError',
-        './GeographicProjection',
-        './Math',
-        './Matrix2',
-        './Rectangle'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        defined,
-        DeveloperError,
-        GeographicProjection,
-        CesiumMath,
-        Matrix2,
-        Rectangle) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import GeographicProjection from './GeographicProjection.js';
+import CesiumMath from './Math.js';
+import Matrix2 from './Matrix2.js';
+import Rectangle from './Rectangle.js';
 
     var cos = Math.cos;
     var sin = Math.sin;
@@ -230,6 +219,4 @@ define([
 
         return computedOptions;
     };
-
-    return RectangleGeometryLibrary;
-});
+export default RectangleGeometryLibrary;

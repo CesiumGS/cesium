@@ -1,12 +1,6 @@
-define([
-        './defined',
-        './DeveloperError',
-        './isArray'
-    ], function(
-        defined,
-        DeveloperError,
-        isArray) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import isArray from './isArray.js';
 
     /**
      * Parses a query string into an object, where the keys and values of the object are the
@@ -64,6 +58,4 @@ define([
         }
         return result;
     }
-
-    return queryToObject;
-});
+export default queryToObject;

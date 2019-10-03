@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/PolygonPipeline',
-        'Core/WindingOrder'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        PolygonPipeline,
-        WindingOrder) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PolygonPipeline } from '../../Source/Cesium.js';
+import { WindingOrder } from '../../Source/Cesium.js';
 
 describe('Core/PolygonPipeline', function() {
 
@@ -283,5 +274,4 @@ describe('Core/PolygonPipeline', function() {
         expect(subdivision.attributes.position.values.length).toEqual(180); // 60 vertices
         expect(subdivision.indices.length).toEqual(252); // 84 triangles
     });
-});
 });

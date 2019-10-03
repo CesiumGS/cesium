@@ -1,32 +1,16 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/BoxOutlineGeometry',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defineProperties',
-        '../Core/GeometryInstance',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
-        '../Core/Math',
-        './PerInstanceColorAppearance',
-        './Primitive'
-    ], function(
-        BoundingSphere,
-        BoxOutlineGeometry,
-        Cartesian3,
-        Check,
-        ColorGeometryInstanceAttribute,
-        defineProperties,
-        GeometryInstance,
-        Matrix3,
-        Matrix4,
-        OrientedBoundingBox,
-        CesiumMath,
-        PerInstanceColorAppearance,
-        Primitive) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import BoxOutlineGeometry from '../Core/BoxOutlineGeometry.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defineProperties from '../Core/defineProperties.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import CesiumMath from '../Core/Math.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Primitive from './Primitive.js';
 
     var scratchU = new Cartesian3();
     var scratchV = new Cartesian3();
@@ -213,6 +197,4 @@ define([
             asynchronous : false
         });
     };
-
-    return TileOrientedBoundingBox;
-});
+export default TileOrientedBoundingBox;

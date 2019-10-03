@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Color',
-        'Core/Math',
-        'Scene/Expression',
-        'Scene/ExpressionNodeType'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        CesiumMath,
-        Expression,
-        ExpressionNodeType) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Expression } from '../../Source/Cesium.js';
+import { ExpressionNodeType } from '../../Source/Cesium.js';
 
 describe('Scene/Expression', function() {
 
@@ -3668,5 +3658,4 @@ describe('Scene/Expression', function() {
             return expression.getShaderExpression('', {});
         }).toThrowRuntimeError();
     });
-});
 });

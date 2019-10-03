@@ -1,12 +1,6 @@
-define([
-        './numberOfComponentsForType',
-        '../../Core/ComponentDatatype',
-        '../../Core/defined'
-    ], function(
-        numberOfComponentsForType,
-        ComponentDatatype,
-        defined) {
-    'use strict';
+import numberOfComponentsForType from './numberOfComponentsForType.js'
+import ComponentDatatype from '../../Core/ComponentDatatype.js'
+import defined from '../../Core/defined.js'
 
     /**
      * Returns the byte stride of the provided accessor.
@@ -29,5 +23,4 @@ define([
         return ComponentDatatype.getSizeInBytes(accessor.componentType) * numberOfComponentsForType(accessor.type);
     }
 
-    return getAccessorByteStride;
-});
+    export default getAccessorByteStride;

@@ -1,10 +1,5 @@
-define([
-        './defaultValue',
-        './getStringFromTypedArray'
-    ], function(
-        defaultValue,
-        getStringFromTypedArray) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import getStringFromTypedArray from './getStringFromTypedArray.js';
 
     /**
      * @private
@@ -13,6 +8,4 @@ define([
         byteOffset = defaultValue(byteOffset, 0);
         return getStringFromTypedArray(uint8Array, byteOffset, Math.min(4, uint8Array.length));
     }
-
-    return getMagic;
-});
+export default getMagic;

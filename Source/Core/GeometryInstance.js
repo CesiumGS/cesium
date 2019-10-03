@@ -1,14 +1,7 @@
-define([
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Matrix4'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        Matrix4) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Matrix4 from './Matrix4.js';
 
     /**
      * Geometry instancing allows one {@link Geometry} object to be positions in several
@@ -123,6 +116,4 @@ define([
          */
         this.eastHemisphereGeometry = undefined;
     }
-
-    return GeometryInstance;
-});
+export default GeometryInstance;

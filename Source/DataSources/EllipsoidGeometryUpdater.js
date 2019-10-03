@@ -1,62 +1,31 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DistanceDisplayCondition',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/EllipsoidGeometry',
-        '../Core/EllipsoidOutlineGeometry',
-        '../Core/GeometryInstance',
-        '../Core/GeometryOffsetAttribute',
-        '../Core/Iso8601',
-        '../Core/Matrix4',
-        '../Core/OffsetGeometryInstanceAttribute',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/HeightReference',
-        '../Scene/MaterialAppearance',
-        '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
-        '../Scene/SceneMode',
-        './ColorMaterialProperty',
-        './DynamicGeometryUpdater',
-        './GeometryUpdater',
-        './heightReferenceOnEntityPropertyChanged',
-        './MaterialProperty',
-        './Property'
-    ], function(
-        Cartesian3,
-        Check,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        defined,
-        defineProperties,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        EllipsoidGeometry,
-        EllipsoidOutlineGeometry,
-        GeometryInstance,
-        GeometryOffsetAttribute,
-        Iso8601,
-        Matrix4,
-        OffsetGeometryInstanceAttribute,
-        ShowGeometryInstanceAttribute,
-        HeightReference,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        Primitive,
-        SceneMode,
-        ColorMaterialProperty,
-        DynamicGeometryUpdater,
-        GeometryUpdater,
-        heightReferenceOnEntityPropertyChanged,
-        MaterialProperty,
-        Property) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import EllipsoidGeometry from '../Core/EllipsoidGeometry.js';
+import EllipsoidOutlineGeometry from '../Core/EllipsoidOutlineGeometry.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import GeometryOffsetAttribute from '../Core/GeometryOffsetAttribute.js';
+import Iso8601 from '../Core/Iso8601.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OffsetGeometryInstanceAttribute from '../Core/OffsetGeometryInstanceAttribute.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import HeightReference from '../Scene/HeightReference.js';
+import MaterialAppearance from '../Scene/MaterialAppearance.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import Primitive from '../Scene/Primitive.js';
+import SceneMode from '../Scene/SceneMode.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import DynamicGeometryUpdater from './DynamicGeometryUpdater.js';
+import GeometryUpdater from './GeometryUpdater.js';
+import heightReferenceOnEntityPropertyChanged from './heightReferenceOnEntityPropertyChanged.js';
+import MaterialProperty from './MaterialProperty.js';
+import Property from './Property.js';
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultOffset = Cartesian3.ZERO;
@@ -464,6 +433,4 @@ define([
             this._outlinePrimitive.modelMatrix = modelMatrix;
         }
     };
-
-    return EllipsoidGeometryUpdater;
-});
+export default EllipsoidGeometryUpdater;

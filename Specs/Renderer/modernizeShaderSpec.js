@@ -1,8 +1,4 @@
-define([
-        'Renderer/modernizeShader'
-    ], function(
-        modernizeShader) {
-        'use strict';
+import { modernizeShader } from '../../Source/Cesium.js';
 
 describe('Renderer/modernizeShader', function() {
 
@@ -316,5 +312,4 @@ describe('Renderer/modernizeShader', function() {
         expect(output).toContain(expected0);
         expect(output).toContain(expected1);
     });
-});
 });

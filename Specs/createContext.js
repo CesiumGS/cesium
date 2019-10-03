@@ -1,18 +1,9 @@
-define([
-        'Core/clone',
-        'Core/defaultValue',
-        'Renderer/Context',
-        'Specs/createCanvas',
-        'Specs/createFrameState',
-        'Specs/getWebGLStub'
-    ], function(
-        clone,
-        defaultValue,
-        Context,
-        createCanvas,
-        createFrameState,
-        getWebGLStub) {
-    'use strict';
+import { clone } from '../Source/Cesium.js';
+import { defaultValue } from '../Source/Cesium.js';
+import { Context } from '../Source/Cesium.js';
+import createCanvas from './createCanvas.js';
+import createFrameState from './createFrameState.js';
+import getWebGLStub from './getWebGLStub.js';
 
     function createContext(options, canvasWidth, canvasHeight) {
         // clone options so we can change properties
@@ -44,6 +35,4 @@ define([
 
         return context;
     }
-
-    return createContext;
-});
+export default createContext;

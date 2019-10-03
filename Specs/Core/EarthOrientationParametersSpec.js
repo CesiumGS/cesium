@@ -1,14 +1,7 @@
-define([
-        'Core/defined',
-        'Core/EarthOrientationParameters',
-        'Core/JulianDate',
-        'Core/TimeStandard'
-    ], function(
-        defined,
-        EarthOrientationParameters,
-        JulianDate,
-        TimeStandard) {
-        'use strict';
+import { defined } from '../../Source/Cesium.js';
+import { EarthOrientationParameters } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeStandard } from '../../Source/Cesium.js';
 
 describe('Core/EarthOrientationParameters', function() {
 
@@ -193,5 +186,4 @@ describe('Core/EarthOrientationParameters', function() {
             expect(Math.abs(resultBefore.ut1MinusUtc - resultAfter.ut1MinusUtc) > 0.5).toEqual(true);
         });
     });
-});
 });

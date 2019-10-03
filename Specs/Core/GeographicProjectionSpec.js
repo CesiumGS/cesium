@@ -1,16 +1,8 @@
-define([
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/Math'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        GeographicProjection,
-        CesiumMath) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
 
 describe('Core/GeographicProjection', function() {
 
@@ -82,5 +74,4 @@ describe('Core/GeographicProjection', function() {
             return projection.unproject();
         }).toThrowDeveloperError();
     });
-});
 });

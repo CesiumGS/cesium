@@ -1,14 +1,7 @@
-define([
-        'Core/WebGLConstants',
-        'Scene/Appearance',
-        'Scene/BlendingState',
-        'Scene/Material'
-    ], function(
-        WebGLConstants,
-        Appearance,
-        BlendingState,
-        Material) {
-        'use strict';
+import { WebGLConstants } from '../../Source/Cesium.js';
+import { Appearance } from '../../Source/Cesium.js';
+import { BlendingState } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
 
 describe('Scene/Appearance', function() {
 
@@ -124,5 +117,4 @@ describe('Scene/Appearance', function() {
         expect(rs.depthMask).toEqual(false);
         expect(rs.blending).toBe(BlendingState.ALPHA_BLEND);
     });
-});
 });

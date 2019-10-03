@@ -1,12 +1,6 @@
-define([
-        '../Core/freezeObject',
-        './BlendEquation',
-        './BlendFunction'
-    ], function(
-        freezeObject,
-        BlendEquation,
-        BlendFunction) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
+import BlendEquation from './BlendEquation.js';
+import BlendFunction from './BlendFunction.js';
 
     /**
      * The blending state combines {@link BlendEquation} and {@link BlendFunction} and the
@@ -77,6 +71,4 @@ define([
             functionDestinationAlpha : BlendFunction.ONE
         })
     };
-
-    return freezeObject(BlendingState);
-});
+export default freezeObject(BlendingState);

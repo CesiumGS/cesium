@@ -1,64 +1,32 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/IndexDatatype',
-        '../Core/Matrix4',
-        '../Core/PrimitiveType',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArray',
-        '../Shaders/ShadowVolumeFS',
-        '../Shaders/VectorTileVS',
-        './BlendingState',
-        './Cesium3DTileFeature',
-        './ClassificationType',
-        './DepthFunction',
-        './Expression',
-        './StencilConstants',
-        './StencilFunction',
-        './StencilOperation',
-        './Vector3DTileBatch'
-    ], function(
-        Cartesian3,
-        Color,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        IndexDatatype,
-        Matrix4,
-        PrimitiveType,
-        Buffer,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArray,
-        ShadowVolumeFS,
-        VectorTileVS,
-        BlendingState,
-        Cesium3DTileFeature,
-        ClassificationType,
-        DepthFunction,
-        Expression,
-        StencilConstants,
-        StencilFunction,
-        StencilOperation,
-        Vector3DTileBatch) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import ShadowVolumeFS from '../Shaders/ShadowVolumeFS.js';
+import VectorTileVS from '../Shaders/VectorTileVS.js';
+import BlendingState from './BlendingState.js';
+import Cesium3DTileFeature from './Cesium3DTileFeature.js';
+import ClassificationType from './ClassificationType.js';
+import DepthFunction from './DepthFunction.js';
+import Expression from './Expression.js';
+import StencilConstants from './StencilConstants.js';
+import StencilFunction from './StencilFunction.js';
+import StencilOperation from './StencilOperation.js';
+import Vector3DTileBatch from './Vector3DTileBatch.js';
 
     /**
      * Creates a batch of classification meshes.
@@ -1239,6 +1207,4 @@ define([
         this._vaSwap = this._vaSwap && this._vaSwap.destroy();
         return destroyObject(this);
     };
-
-    return Vector3DTilePrimitive;
-});
+export default Vector3DTilePrimitive;

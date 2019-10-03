@@ -1,18 +1,9 @@
-define([
-        '../Core/Color',
-        '../Core/DeveloperError',
-        '../Core/Resource',
-        './ColorMaterialProperty',
-        './createPropertyDescriptor',
-        './ImageMaterialProperty'
-    ], function(
-        Color,
-        DeveloperError,
-        Resource,
-        ColorMaterialProperty,
-        createPropertyDescriptor,
-        ImageMaterialProperty) {
-    'use strict';
+import Color from '../Core/Color.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Resource from '../Core/Resource.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import ImageMaterialProperty from './ImageMaterialProperty.js';
 
     function createMaterialProperty(value) {
         if (value instanceof Color) {
@@ -36,6 +27,4 @@ define([
     function createMaterialPropertyDescriptor(name, configurable) {
         return createPropertyDescriptor(name, configurable, createMaterialProperty);
     }
-
-    return createMaterialPropertyDescriptor;
-});
+export default createMaterialPropertyDescriptor;

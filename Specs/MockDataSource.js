@@ -1,12 +1,6 @@
-define([
-        'Core/Event',
-        'DataSources/EntityCluster',
-        'DataSources/EntityCollection'
-    ], function(
-        Event,
-        EntityCluster,
-        EntityCollection) {
-    'use strict';
+import { Event } from '../Source/Cesium.js';
+import { EntityCluster } from '../Source/Cesium.js';
+import { EntityCollection } from '../Source/Cesium.js';
 
     function MockDataSource() {
         //Values to be fiddled with by the test
@@ -28,6 +22,4 @@ define([
     MockDataSource.prototype.destroy = function() {
         this.destroyed = true;
     };
-
-    return MockDataSource;
-});
+export default MockDataSource;

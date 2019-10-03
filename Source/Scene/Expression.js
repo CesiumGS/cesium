@@ -1,32 +1,16 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/isArray',
-        '../Core/Math',
-        '../Core/RuntimeError',
-        '../ThirdParty/jsep',
-        './ExpressionNodeType'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Check,
-        Color,
-        defined,
-        defineProperties,
-        DeveloperError,
-        isArray,
-        CesiumMath,
-        RuntimeError,
-        jsep,
-        ExpressionNodeType) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import isArray from '../Core/isArray.js';
+import CesiumMath from '../Core/Math.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import jsep from '../ThirdParty/jsep.js';
+import ExpressionNodeType from './ExpressionNodeType.js';
 
     /**
      * An expression for a style applied to a {@link Cesium3DTileset}.
@@ -1768,6 +1752,4 @@ define([
                 }
         }
     };
-
-    return Expression;
-});
+export default Expression;

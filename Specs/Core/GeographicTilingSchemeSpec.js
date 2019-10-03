@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartographic',
-        'Core/GeographicProjection',
-        'Core/GeographicTilingScheme',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/TilingScheme'
-    ], function(
-        Cartesian2,
-        Cartographic,
-        GeographicProjection,
-        GeographicTilingScheme,
-        CesiumMath,
-        Rectangle,
-        TilingScheme) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { TilingScheme } from '../../Source/Cesium.js';
 
 describe('Core/GeographicTilingScheme', function() {
 
@@ -179,5 +169,4 @@ describe('Core/GeographicTilingScheme', function() {
             expect(resultParameter).toEqual(new Cartesian2(3, 0));
         });
     });
-});
 });

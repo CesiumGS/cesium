@@ -1,22 +1,11 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/FeatureDetection',
-        '../Core/VertexFormat',
-        '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS',
-        '../Shaders/Appearances/PolylineColorAppearanceVS',
-        '../Shaders/PolylineCommon',
-        './Appearance'
-    ], function(
-        defaultValue,
-        defineProperties,
-        FeatureDetection,
-        VertexFormat,
-        PerInstanceFlatColorAppearanceFS,
-        PolylineColorAppearanceVS,
-        PolylineCommon,
-        Appearance) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defineProperties from '../Core/defineProperties.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import VertexFormat from '../Core/VertexFormat.js';
+import PerInstanceFlatColorAppearanceFS from '../Shaders/Appearances/PerInstanceFlatColorAppearanceFS.js';
+import PolylineColorAppearanceVS from '../Shaders/Appearances/PolylineColorAppearanceVS.js';
+import PolylineCommon from '../Shaders/PolylineCommon.js';
+import Appearance from './Appearance.js';
 
     var defaultVertexShaderSource = PolylineCommon + '\n' + PolylineColorAppearanceVS;
     var defaultFragmentShaderSource = PerInstanceFlatColorAppearanceFS;
@@ -220,6 +209,4 @@ define([
      * @returns {Object} The render state.
      */
     PolylineColorAppearance.prototype.getRenderState = Appearance.prototype.getRenderState;
-
-    return PolylineColorAppearance;
-});
+export default PolylineColorAppearance;

@@ -1,14 +1,7 @@
-define([
-        'DataSources/Entity',
-        'DataSources/GeometryUpdater',
-        'Scene/PrimitiveCollection',
-        'Specs/createScene'
-    ], function(
-        Entity,
-        GeometryUpdater,
-        PrimitiveCollection,
-        createScene) {
-        'use strict';
+import { Entity } from '../../Source/Cesium.js';
+import { GeometryUpdater } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('DataSources/GeometryUpdater', function() {
 
@@ -122,5 +115,4 @@ describe('DataSources/GeometryUpdater', function() {
             return updater.createDynamicUpdater(new PrimitiveCollection(), undefined);
         }).toThrowDeveloperError();
     });
-});
 });

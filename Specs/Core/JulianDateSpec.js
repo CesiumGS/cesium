@@ -1,16 +1,8 @@
-define([
-        'Core/Iso8601',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/TimeConstants',
-        'Core/TimeStandard'
-    ], function(
-        Iso8601,
-        JulianDate,
-        CesiumMath,
-        TimeConstants,
-        TimeStandard) {
-        'use strict';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TimeConstants } from '../../Source/Cesium.js';
+import { TimeStandard } from '../../Source/Cesium.js';
 
 describe('Core/JulianDate', function() {
 
@@ -1063,5 +1055,4 @@ describe('Core/JulianDate', function() {
         expect(iso86011).toEqual(iso86012);
         expect(JulianDate.compare(julian1, julian2)).toEqual(0);
     });
-});
 });
