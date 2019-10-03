@@ -108,6 +108,10 @@ define([
         }
     };
 
+    var scratch0 = new Cartesian3();
+    var scratch1 = new Cartesian3();
+    var scratch2 = new Cartesian3();
+    var scratchHalfDiagonal = new Cartesian3();
     /**
      * Inits the _lodDistances array so that it's the proper size
      *
@@ -115,9 +119,23 @@ define([
      */
     ImplicitIndicesFinder.prototype.updateBoundsMinMax = function() {
         // Only works with orientedBoundingBox, region-based should not move.
-        var bounds = this._tileset._root.boundingVolume;
+        var bounds = this._tileset._root.boundingVolume._orientedBoundingBox;
         var center = bounds.center;
         var halfAxes = bounds.halfAxes
+
+        var boundsMin = this._boundsMin;
+        var boundsMax = this._boundsMax;
+
+        Matrix3.getColumn(halfAxes, 0, scratch0);
+        Matrix3.getColumn(halfAxes, 1, scratch1);
+        Matrix3.getColumn(halfAxes, 2, scratch2);
+        // Get the half diagonal
+        Cartesian3.add(scratch0, scratch1, scratchHalfDiagonal);
+        Cartesian3.add(scratchHalfDiagonal, scratch2 , scratchHalfDiagonal);
+
+        // Find min max corners relative to its center in world coords
+        Cartesian3.subtract(center, scratchHalfDiagonal, boundsMin);
+        Cartesian3.add(center, scratchHalfDiagonal, boundsMax);
     };
 
     /**
@@ -149,15 +167,27 @@ define([
             centers.push(new Cartesian3());
         }
 
+        var boundsMin = this._boundsMin;
+        var boundsMax = this._boundsMax;
+        var boundsSpan = this._boundsSpan;
+
         var bounds = tilingScheme.boundingVolume.region;
+
         if (defined(bounds)) {
             this._region = bounds;
+            // region: [ west, south, east, north, minimumHeight, maximumHeight ]
+            boundsMin.x = bounds[0];
+            boundsMin.y = bounds[1];
+            boundsMin.z = bounds[4];
+            boundsMax.x = bounds[2];
+            boundsMax.y = bounds[3];
+            boundsMax.z = bounds[5];
         } else {
             this.updateBoundsMinMax();
-            Cartesian3.subtract(this._boundsMax, this._boundsMin, this._boundsSpan);
         }
 
-        var boundsSpan = this._boundsSpan;
+        Cartesian3.subtract(boundsMax, boundsMin, boundsSpan);
+
         var isOct = tileset._isOct;
         var rootGridDimensions = tilingScheme.headCount;
         var result;
