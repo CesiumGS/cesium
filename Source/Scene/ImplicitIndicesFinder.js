@@ -190,16 +190,17 @@ define([
 
         var isOct = tileset._isOct;
         var rootGridDimensions = tilingScheme.headCount;
-        var result;
+        var dimsOnLevel, result;
         for (i = 0; i < length; i++) {
-            result = new Cartesian3(
+            dimsOnLevel = new Cartesian3(
                 (rootGridDimensions[0] << i),
                 (rootGridDimensions[1] << i),
                 isOct ? (rootGridDimensions[2] << i) : 1
             );
-            treeDims.push(result);
+            treeDims.push(dimsOnLevel);
 
-            result = Cartesian3.divideComponents(boundsSpan, result, result);
+            result = new Cartesian3();
+            Cartesian3.divideComponents(boundsSpan, dimsOnLevel, result);
             invTileDims.push(result);
         }
     };
