@@ -269,6 +269,8 @@ define([
         var tilesetRoot = tileset.root;
         updateTile(tileset, tilesetRoot, frameState);
         tileset.updateTraversalInfo(frameState);
+        var indicesFinder = tileset._indicesFinder;
+        indicesFinder.update(frameState);
 
         var isAdd = tileset._allTilesAdditive;
 

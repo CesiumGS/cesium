@@ -42,6 +42,7 @@ define([
         './Cesium3DTilesetTraversalImplicit',
         './Cesium3DTileStyleEngine',
         './ClippingPlaneCollection',
+        './ImplicitIndicesFinder',
         './LabelCollection',
         './PointCloudEyeDomeLighting',
         './PointCloudShading',
@@ -96,6 +97,7 @@ define([
         Cesium3DTilesetTraversalImplicit,
         Cesium3DTileStyleEngine,
         ClippingPlaneCollection,
+        ImplicitIndicesFinder,
         LabelCollection,
         PointCloudEyeDomeLighting,
         PointCloudShading,
@@ -268,6 +270,7 @@ define([
         // this._subtreeInfo = new Map(); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
         // this._tiles = new Map(); // Holds the subtree tiles, Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is an Array of tiles (undefined spots are unavailable)
         this._subtreeInfo = undefined; // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
+        this._indicesFinder = new ImplicitIndicesFinder(this); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
         // this._subtreeViewer = new ImplicitSubtreeViewer(this); // TODO: Make class with the toroidial multi dimensional array to make iteration easier, needs to update small portions every frame
         // I think there are two portions? ancestor portion 1d array and the normal portion which is a 3d array (fixed sizes on each level?) toroidial array?
         // what happens when sse changes? re-init the fixed size arrays? prevent going below some value in tileset (during the set)?
@@ -1709,8 +1712,8 @@ define([
         }
 
         if (Math.abs(rootDistance - distance) > CesiumMath.EPSILON2) {
-            console.log('root dist ' + distance);
-            console.log('max lvl ' + this._maximumTraversalLevel);
+            // console.log('root dist ' + distance);
+            // console.log('max lvl ' + this._maximumTraversalLevel);
             rootDistance = distance;
         }
     };
@@ -1742,9 +1745,9 @@ define([
         }
 
         if (!lodDistancesAreInit) {
-            for (i = 0; i < length; i++) {
-                console.log('lodDistance ' + i + ' ' + lodDistances[i]);
-            }
+            // for (i = 0; i < length; i++) {
+            //     console.log('lodDistance ' + i + ' ' + lodDistances[i]);
+            // }
             lodDistancesAreInit = true;
         }
     };
@@ -2262,6 +2265,7 @@ define([
             var subtreeLevelStart = this.findSubtreeLevelStart(subtree);
             this._startLevel = subtreeRootKey.w + subtreeLevelStart;
             this.initLODDistances();
+            this._indicesFinder.initLODDistances();
             // console.log('first level subtree: ' + subtreeLevelStart);
             // console.log('first level tree: ' + this._startLevel);
         }
