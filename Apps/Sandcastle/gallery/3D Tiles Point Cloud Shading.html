@@ -91,7 +91,7 @@ var scene = viewer.scene;
 var viewModelTileset;
 
 if (!Cesium.PointCloudShading.isSupported(scene)) {
-    console.log('This browser does not support point cloud shading');
+    window.alert('This browser does not support point cloud shading');
 }
 
 function reset() {

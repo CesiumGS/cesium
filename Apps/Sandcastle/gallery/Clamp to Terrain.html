@@ -218,7 +218,7 @@ Sandcastle.addDefaultToolbarMenu([{
     onselect : function() {
 
         if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
-            console.log('Polylines on terrain are not supported on this platform');
+            window.alert('Polylines on terrain are not supported on this platform');
         }
 
         viewer.entities.add({

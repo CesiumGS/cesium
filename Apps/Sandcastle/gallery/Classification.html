@@ -179,8 +179,8 @@ function highlightTrees() {
 }
 
 function invertClassification(checked) {
-    if (!scene.invertClassificationSupported) {
-        console.log('This browser does not support invert classification');
+    if (checked && !scene.invertClassificationSupported) {
+        window.alert('This browser does not support invert classification');
     }
 
     scene.invertClassification = checked;

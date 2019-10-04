@@ -79,11 +79,11 @@ viewer.entities.add({
 });
 
 if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
-    console.log('Polylines on terrain are not supported on this platform, Z-index will be ignored');
+    window.alert('Polylines on terrain are not supported on this platform, Z-index will be ignored');
 }
 
 if (!Cesium.Entity.supportsMaterialsforEntitiesOnTerrain(viewer.scene)) {
-    console.log('Textured materials on terrain polygons are not supported on this platform, Z-index will be ignored');
+    window.alert('Textured materials on terrain polygons are not supported on this platform, Z-index will be ignored');
 }
 
 viewer.entities.add({
