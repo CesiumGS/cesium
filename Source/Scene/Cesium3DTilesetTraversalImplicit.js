@@ -187,7 +187,6 @@ define([
         } // for contentLevel
     }
 
-
     function replacementTraversal(tileset, frameState) {
         // Must request all content roots for REPLACE refinement, so it's slightly different than the main loop
         // Access through the tileset's subtreeInfo database, add accessor functions for pulling all subtrees for a given level

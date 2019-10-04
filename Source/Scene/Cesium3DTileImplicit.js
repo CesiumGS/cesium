@@ -113,10 +113,18 @@ define([
          * @readonly
          */
         this.computedTransform = computedTransform;
-        this.computedTransformInverse = Matrix4.inverseTransformation(computedTransform, new Matrix4());
+
+        /**
+         * The normalized axes of the oriented box.
+         * Used in implicit calcs
+         * @type {Matrix3}
+         * @readonly
+         */
+        this.boxAxes = new Matrix3();
 
         this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform);
         this._boundingVolume2D = undefined;
+        // this.computedTransformInverse = Matrix4.inverseTransformation(computedTransform, new Matrix4());
 
         var contentBoundingVolume;
 
@@ -1317,7 +1325,10 @@ define([
     var scratchOrientedBoundingBox = new OrientedBoundingBox();
     var scratchTransform = new Matrix4();
 
-    function createBox(box, transform, result) {
+    var scratchBoxScale = new Cartesian3();
+    var scratchColumn = new Cartesian3();
+
+    function createBox(box, transform, result, tile) {
         var center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
         var halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
 
@@ -1330,6 +1341,23 @@ define([
             result.update(center, halfAxes);
             return result;
         }
+
+        // Get the normalized halfAxes, needed for implicit calcs
+        var boxAxes = Matrix3.clone(halfAxes, tile.boxAxes);
+        Matrix3.getScale(boxAxes, scratchBoxScale);
+
+        Matrix3.getColumn(boxAxes, 0, scratchColumn);
+        Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.x, scratchColumn);
+        Matrix3.setColumn(boxAxes, 0, scratchColumn, boxAxes);
+
+        Matrix3.getColumn(boxAxes, 1, scratchColumn);
+        Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.y, scratchColumn);
+        Matrix3.setColumn(boxAxes, 1, scratchColumn, boxAxes);
+
+        Matrix3.getColumn(boxAxes, 2, scratchColumn);
+        Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.z, scratchColumn);
+        Matrix3.setColumn(boxAxes, 2, scratchColumn, boxAxes);
+
         return new TileOrientedBoundingBox(center, halfAxes);
     }
 
@@ -1405,11 +1433,16 @@ define([
      * @private
      */
     Cesium3DTileImplicit.prototype.createBoundingVolume = function(boundingVolumeHeader, transform, result) {
+        var root = this._tileset._root;
+        if (!defined(root) || this === root) {
+            var fuckyou = 1;
+        }
+
         if (!defined(boundingVolumeHeader)) {
             throw new RuntimeError('boundingVolume must be defined');
         }
         if (defined(boundingVolumeHeader.box)) {
-            return createBox(boundingVolumeHeader.box, transform, result);
+            return createBox(boundingVolumeHeader.box, transform, result, this);
         }
         if (defined(boundingVolumeHeader.region)) {
             return createRegion(boundingVolumeHeader.region, transform, this._initialTransform, result);
@@ -1435,7 +1468,7 @@ define([
         }
 
         Matrix4.clone(computedTransform, this.computedTransform);
-        Matrix4.inverseTransformation(computedTransform, this.computedTransformInverse);
+        // Matrix4.inverseTransformation(computedTransform, this.computedTransformInverse);
 
         // Update the bounding volumes
         var header = this._header;
