@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/combine'
-    ], function(
-        combine) {
-    'use strict';
+import { combine } from '../../Source/Cesium.js';
+
+describe('Core/combine', function() {
 
     it('can combine shallow references', function() {
         var obj1 = {

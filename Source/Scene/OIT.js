@@ -1,40 +1,20 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Core/WebGLConstants',
-        '../Renderer/ClearCommand',
-        '../Renderer/DrawCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Shaders/AdjustTranslucentFS',
-        '../Shaders/CompositeOITFS',
-        './BlendEquation',
-        './BlendFunction'
-    ], function(
-        BoundingRectangle,
-        Color,
-        defined,
-        destroyObject,
-        PixelFormat,
-        WebGLConstants,
-        ClearCommand,
-        DrawCommand,
-        Framebuffer,
-        PixelDatatype,
-        RenderState,
-        ShaderSource,
-        Texture,
-        AdjustTranslucentFS,
-        CompositeOITFS,
-        BlendEquation,
-        BlendFunction) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import AdjustTranslucentFS from '../Shaders/AdjustTranslucentFS.js';
+import CompositeOITFS from '../Shaders/CompositeOITFS.js';
+import BlendEquation from './BlendEquation.js';
+import BlendFunction from './BlendFunction.js';
 
     /**
      * @private
@@ -89,6 +69,8 @@ define([
 
         this._useScissorTest = false;
         this._scissorRectangle = undefined;
+
+        this._useHDR = false;
     }
 
     function destroyTextures(oit) {
@@ -200,7 +182,7 @@ define([
         return supported;
     }
 
-    OIT.prototype.update = function(context, passState, framebuffer) {
+    OIT.prototype.update = function(context, passState, framebuffer, useHDR) {
         if (!this.isSupported()) {
             return;
         }
@@ -213,7 +195,7 @@ define([
         var height = this._opaqueTexture.height;
 
         var accumulationTexture = this._accumulationTexture;
-        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height;
+        var textureChanged = !defined(accumulationTexture) || accumulationTexture.width !== width || accumulationTexture.height !== height || useHDR !== this._useHDR;
         if (textureChanged) {
             updateTextures(this, context, width, height);
         }
@@ -224,6 +206,8 @@ define([
                 return;
             }
         }
+
+        this._useHDR = useHDR;
 
         var that = this;
         var fs;
@@ -677,6 +661,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return OIT;
-});
+export default OIT;

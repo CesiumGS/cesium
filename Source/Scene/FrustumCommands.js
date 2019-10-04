@@ -1,10 +1,5 @@
-define([
-        '../Core/defaultValue',
-        '../Renderer/Pass'
-    ], function(
-        defaultValue,
-        Pass) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import Pass from '../Renderer/Pass.js';
 
     /**
      * Defines a list of commands whose geometry are bound by near and far distances from the camera.
@@ -32,6 +27,4 @@ define([
         this.commands = commands;
         this.indices = indices;
     }
-
-    return FrustumCommands;
-});
+export default FrustumCommands;

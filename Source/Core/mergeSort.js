@@ -1,10 +1,5 @@
-define([
-        './defined',
-        './DeveloperError'
-    ], function(
-        defined,
-        DeveloperError) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     var leftScratchArray = [];
     var rightScratchArray = [];
@@ -57,7 +52,6 @@ define([
      * A stable merge sort.
      *
      * @exports mergeSort
-     *
      * @param {Array} array The array to sort.
      * @param {mergeSort~Comparator} comparator The function to use to compare elements in the array.
      * @param {*} [userDefinedObject] Any item to pass as the third parameter to <code>comparator</code>.
@@ -110,6 +104,4 @@ define([
      *     return a - b;
      * }
      */
-
-    return mergeSort;
-});
+export default mergeSort;

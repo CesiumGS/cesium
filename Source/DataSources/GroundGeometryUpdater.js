@@ -1,47 +1,23 @@
-define([
-    '../Core/ApproximateTerrainHeights',
-    '../Core/Cartesian3',
-    '../Core/Check',
-    '../Core/defaultValue',
-    '../Core/defined',
-    '../Core/defineProperties',
-    '../Core/DeveloperError',
-    '../Core/GeometryOffsetAttribute',
-    '../Core/Iso8601',
-    '../Core/oneTimeWarning',
-    '../Scene/GroundPrimitive',
-    '../Scene/HeightReference',
-    './CallbackProperty',
-    './ConstantProperty',
-    './GeometryUpdater',
-    './Property',
-    './TerrainOffsetProperty'
-], function(
-    ApproximateTerrainHeights,
-    Cartesian3,
-    Check,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    GeometryOffsetAttribute,
-    Iso8601,
-    oneTimeWarning,
-    GroundPrimitive,
-    HeightReference,
-    CallbackProperty,
-    ConstantProperty,
-    GeometryUpdater,
-    Property,
-    TerrainOffsetProperty) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import GeometryOffsetAttribute from '../Core/GeometryOffsetAttribute.js';
+import oneTimeWarning from '../Core/oneTimeWarning.js';
+import GroundPrimitive from '../Scene/GroundPrimitive.js';
+import HeightReference from '../Scene/HeightReference.js';
+import CallbackProperty from './CallbackProperty.js';
+import ConstantProperty from './ConstantProperty.js';
+import GeometryUpdater from './GeometryUpdater.js';
+import TerrainOffsetProperty from './TerrainOffsetProperty.js';
 
     var defaultZIndex = new ConstantProperty(0);
 
     /**
      * An abstract class for updating ground geometry entities.
      * @constructor
-     *
+     * @alias GroundGeometryUpdater
      * @param {Object} options An object with the following properties:
      * @param {Entity} options.entity The entity containing the geometry to be visualized.
      * @param {Scene} options.scene The scene where visualization is taking place.
@@ -130,6 +106,20 @@ define([
     };
 
     /**
+     * Destroys and resources used by the object.  Once an object is destroyed, it should not be used.
+     *
+     * @exception {DeveloperError} This object was destroyed, i.e., destroy() was called.
+     */
+    GroundGeometryUpdater.prototype.destroy = function() {
+        if (defined(this._terrainOffsetProperty)) {
+            this._terrainOffsetProperty.destroy();
+            this._terrainOffsetProperty = undefined;
+        }
+
+        GeometryUpdater.prototype.destroy.call(this);
+    };
+
+    /**
      * @private
      */
     GroundGeometryUpdater.getGeometryHeight = function(height, heightReference) {
@@ -200,6 +190,4 @@ define([
 
         return undefined;
     };
-
-    return GroundGeometryUpdater;
-});
+export default GroundGeometryUpdater;

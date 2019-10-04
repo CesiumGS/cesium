@@ -1,8 +1,4 @@
-define([
-        'Core/defaultValue'
-    ], function(
-        defaultValue) {
-    'use strict';
+import { defaultValue } from '../Source/Cesium.js';
 
     function createPackableArraySpecs(packable, unpackedArray, packedArray, namePrefix) {
         namePrefix = defaultValue(namePrefix, '');
@@ -36,6 +32,4 @@ define([
             }).toThrowDeveloperError();
         });
     }
-
-    return createPackableArraySpecs;
-});
+export default createPackableArraySpecs;

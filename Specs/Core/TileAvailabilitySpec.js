@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/TileAvailability',
-        'Core/Cartographic',
-        'Core/GeographicTilingScheme',
-        'Core/Rectangle',
-        'Core/WebMercatorTilingScheme'
-    ], function(
-        TileAvailability,
-        Cartographic,
-        GeographicTilingScheme,
-        Rectangle,
-        WebMercatorTilingScheme) {
-    'use strict';
+import { Cartographic } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { TileAvailability } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+
+describe('Core/TileAvailability', function() {
 
     var webMercator = new WebMercatorTilingScheme();
     var geographic = new GeographicTilingScheme();

@@ -1,8 +1,4 @@
-define([
-    '../Core/freezeObject'
-], function(
-    freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The type of geocoding to be performed by a {@link GeocoderService}.
@@ -27,6 +23,4 @@ define([
          */
         AUTOCOMPLETE: 1
     };
-
-    return freezeObject(GeocodeType);
-});
+export default freezeObject(GeocodeType);

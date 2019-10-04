@@ -1,28 +1,16 @@
-defineSuite([
-        'DataSources/CompositeEntityCollection',
-        'Core/Iso8601',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/BillboardGraphics',
-        'DataSources/CompositePositionProperty',
-        'DataSources/CompositeProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/Entity',
-        'DataSources/EntityCollection'
-    ], function(
-        CompositeEntityCollection,
-        Iso8601,
-        JulianDate,
-        TimeInterval,
-        TimeIntervalCollection,
-        BillboardGraphics,
-        CompositePositionProperty,
-        CompositeProperty,
-        ConstantProperty,
-        Entity,
-        EntityCollection) {
-    'use strict';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { BillboardGraphics } from '../../Source/Cesium.js';
+import { CompositeEntityCollection } from '../../Source/Cesium.js';
+import { CompositePositionProperty } from '../../Source/Cesium.js';
+import { CompositeProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+
+describe('DataSources/CompositeEntityCollection', function() {
 
     function CollectionListener() {
         this.timesCalled = 0;
@@ -534,6 +522,57 @@ defineSuite([
 
         entity3.billboard.show = undefined;
         expect(compositeObject.billboard.show).toBeUndefined();
+    });
+
+    it('per-entity availability works', function() {
+        var id = 'test';
+        var collection1 = new EntityCollection();
+        var availability1 = new TimeIntervalCollection();
+        availability1.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2019-01-01/2019-01-04'
+        }));
+        var entity1 = new Entity({
+            id : id,
+            availability : availability1
+        });
+        collection1.add(entity1);
+
+        var collection2 = new EntityCollection();
+        var availability2 = new TimeIntervalCollection();
+        availability2.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2019-01-02/2019-01-05'
+        }));
+        var entity2 = new Entity({
+            id : id,
+            availability : availability2
+        });
+        collection2.add(entity2);
+
+        var collection3 = new EntityCollection();
+        var availability3 = new TimeIntervalCollection();
+        availability3.addInterval(TimeInterval.fromIso8601({
+            iso8601 : '2019-01-03/2019-01-06'
+        }));
+        var entity3 = new Entity({
+            id : id,
+            availability : availability3
+        });
+        collection3.add(entity3);
+
+        //Add collections in reverse order to lower numbers of priority
+        var composite = new CompositeEntityCollection();
+        composite.addCollection(collection3);
+        composite.addCollection(collection2);
+        composite.addCollection(collection1);
+
+        var compositeObject = composite.getById(id);
+        expect(compositeObject.availability.start).toEqual(JulianDate.fromIso8601('2019-01-01'));
+
+        composite.removeCollection(collection1);
+        expect(compositeObject.availability.start).toEqual(JulianDate.fromIso8601('2019-01-02'));
+
+        composite.removeCollection(collection2);
+        expect(compositeObject.availability.start).toEqual(JulianDate.fromIso8601('2019-01-03'));
     });
 
     it('works when collection being composited suspends updates', function() {

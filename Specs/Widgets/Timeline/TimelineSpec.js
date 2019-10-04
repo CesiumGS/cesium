@@ -1,10 +1,7 @@
-defineSuite([
-        'Widgets/Timeline/Timeline',
-        'Core/Clock'
-    ], function(
-        Timeline,
-        Clock) {
-    'use strict';
+import { Clock } from '../../../Source/Cesium.js';
+import { Timeline } from '../../../Source/Cesium.js';
+
+describe('Widgets/Timeline/Timeline', function() {
 
     var container;
     beforeEach(function(){

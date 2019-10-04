@@ -79,5 +79,5 @@ vec2 integrateBrdf(float roughness, float NdotV)
 
 void main()
 {
-    gl_FragColor = vec4(integrateBrdf(1.0 - v_textureCoordinates.y, v_textureCoordinates.x), 0.0, 1.0);
+    gl_FragColor = vec4(integrateBrdf(v_textureCoordinates.y, v_textureCoordinates.x), 0.0, 1.0);
 }

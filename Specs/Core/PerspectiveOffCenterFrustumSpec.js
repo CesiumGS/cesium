@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/PerspectiveOffCenterFrustum',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Math',
-        'Core/Matrix4'
-    ], function(
-        PerspectiveOffCenterFrustum,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        CesiumMath,
-        Matrix4) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PerspectiveOffCenterFrustum } from '../../Source/Cesium.js';
+
+describe('Core/PerspectiveOffCenterFrustum', function() {
 
     var frustum, planes;
 

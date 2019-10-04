@@ -1,16 +1,8 @@
-define([
-        './defined',
-        './DeveloperError',
-        './freezeObject',
-        './Math',
-        './WebGLConstants'
-    ], function(
-        defined,
-        DeveloperError,
-        freezeObject,
-        CesiumMath,
-        WebGLConstants) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
+import WebGLConstants from './WebGLConstants.js';
 
     /**
      * Constants for WebGL index datatypes.  These corresponds to the
@@ -70,6 +62,27 @@ define([
         //>>includeStart('debug', pragmas.debug);
         throw new DeveloperError('indexDatatype is required and must be a valid IndexDatatype constant.');
         //>>includeEnd('debug');
+    };
+
+    /**
+     * Gets the datatype with a given size in bytes.
+     *
+     * @param {Number} sizeInBytes The size of a single index in bytes.
+     * @returns {IndexDatatype} The index datatype with the given size.
+     */
+    IndexDatatype.fromSizeInBytes = function(sizeInBytes) {
+        switch (sizeInBytes) {
+            case 2:
+                return IndexDatatype.UNSIGNED_SHORT;
+            case 4:
+                return IndexDatatype.UNSIGNED_INT;
+            case 1:
+                return IndexDatatype.UNSIGNED_BYTE;
+            //>>includeStart('debug', pragmas.debug);
+            default:
+                throw new DeveloperError('Size in bytes cannot be mapped to an IndexDatatype');
+            //>>includeEnd('debug');
+        }
     };
 
     /**
@@ -145,6 +158,4 @@ define([
 
         return new Uint16Array(sourceArray, byteOffset, length);
     };
-
-    return freezeObject(IndexDatatype);
-});
+export default freezeObject(IndexDatatype);

@@ -1,14 +1,9 @@
-defineSuite([
-        'Renderer/ShaderProgram',
-        'Renderer/ContextLimits',
-        'Renderer/ShaderSource',
-        'Specs/createContext'
-    ], function(
-        ShaderProgram,
-        ContextLimits,
-        ShaderSource,
-        createContext) {
-    'use strict';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { ShaderProgram } from '../../Source/Cesium.js';
+import { ShaderSource } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/ShaderProgram', function() {
 
     var webglStub = !!window.webglStub;
     var context;

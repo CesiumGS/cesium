@@ -67,7 +67,7 @@ mersenne-twister.js - https://gist.github.com/banksean/300494
    http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
    email: m-mat @ math.sci.hiroshima-u.ac.jp (remove space)
 */
-define(function() {
+
 var MersenneTwister = function(seed) {
   if (seed == undefined) {
     seed = new Date().getTime();
@@ -199,5 +199,4 @@ MersenneTwister.prototype.random = function() {
 
 /* These real versions are due to Isaku Wada, 2002/01/09 added */
 
-return MersenneTwister;
-});
+export default MersenneTwister;

@@ -1,34 +1,19 @@
-defineSuite([
-        'Scene/Cesium3DTileBatchTable',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Color',
-        'Core/HeadingPitchRange',
-        'Core/Matrix2',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Renderer/ContextLimits',
-        'Scene/Batched3DModel3DTileContent',
-        'Scene/Cesium3DTileStyle',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
-    ], function(
-        Cesium3DTileBatchTable,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Color,
-        HeadingPitchRange,
-        Matrix2,
-        Matrix3,
-        Matrix4,
-        ContextLimits,
-        Batched3DModel3DTileContent,
-        Cesium3DTileStyle,
-        Cesium3DTilesTester,
-        createScene) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Matrix2 } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { Batched3DModel3DTileContent } from '../../Source/Cesium.js';
+import { Cesium3DTileBatchTable } from '../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createScene from '../createScene.js';
+
+describe('Scene/Cesium3DTileBatchTable', function() {
 
     var scene;
     var centerLongitude = -1.31968;

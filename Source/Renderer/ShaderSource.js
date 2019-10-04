@@ -1,18 +1,9 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Renderer/modernizeShader',
-        '../Shaders/Builtin/CzmBuiltins',
-        './AutomaticUniforms'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        modernizeShader,
-        CzmBuiltins,
-        AutomaticUniforms) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import modernizeShader from '../Renderer/modernizeShader.js';
+import CzmBuiltins from '../Shaders/Builtin/CzmBuiltins.js';
+import AutomaticUniforms from './AutomaticUniforms.js';
 
     function removeComments(source) {
         // remove inline comments
@@ -248,6 +239,11 @@ define([
             result += '#define OUTPUT_DECLARATION\n\n';
         }
 
+        // Define a constant for the OES_texture_float_linear extension since WebGL does not.
+        if (context.textureFloatLinear) {
+            result += '#define OES_texture_float_linear\n\n';
+        }
+
         // append built-ins
         if (shaderSource.includeBuiltIns) {
             result += getBuiltinsAndAutomaticUniforms(combinedSources);
@@ -423,6 +419,4 @@ define([
     ShaderSource.findPositionVarying = function(shaderSource) {
         return ShaderSource.findVarying(shaderSource, positionVaryingNames);
     };
-
-    return ShaderSource;
-});
+export default ShaderSource;

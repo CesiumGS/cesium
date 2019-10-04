@@ -1,52 +1,23 @@
-defineSuite([
-        'Scene/Vector3DTileContent',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/combine',
-        'Core/destroyObject',
-        'Core/Ellipsoid',
-        'Core/GeometryInstance',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/Transforms',
-        'Renderer/Pass',
-        'Scene/Cesium3DTileBatchTable',
-        'Scene/Cesium3DTileset',
-        'Scene/Cesium3DTileStyle',
-        'Scene/ClassificationType',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
-    ], function(
-        Vector3DTileContent,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        combine,
-        destroyObject,
-        Ellipsoid,
-        GeometryInstance,
-        CesiumMath,
-        Matrix4,
-        Rectangle,
-        RectangleGeometry,
-        Transforms,
-        Pass,
-        Cesium3DTileBatchTable,
-        Cesium3DTileset,
-        Cesium3DTileStyle,
-        ClassificationType,
-        PerInstanceColorAppearance,
-        Primitive,
-        Cesium3DTilesTester,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { destroyObject } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { Cesium3DTileset } from '../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { StencilConstants } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createScene from '../createScene.js';
+
+describe('Scene/Vector3DTileContent', function() {
 
     var tilesetRectangle = Rectangle.fromDegrees(-0.01, -0.01, 0.01, 0.01);
     var combinedRectangle = Rectangle.fromDegrees(-0.02, -0.01, 0.02, 0.01);
@@ -74,52 +45,32 @@ defineSuite([
 
     var scene;
     var rectangle;
-    var depthPrimitive;
     var tileset;
+    var globePrimitive;
+    var tilesetPrimitive;
+    var reusableGlobePrimitive;
+    var reusableTilesetPrimitive;
+    var depthColor;
 
     var ellipsoid = Ellipsoid.WGS84;
 
-    beforeAll(function() {
-        scene = createScene();
-    });
-
-    afterAll(function() {
-        scene.destroyForSpecs();
-    });
-
-    function MockGlobePrimitive(primitive) {
-        this._primitive = primitive;
-        this.pass = Pass.CESIUM_3D_TILE;
-    }
-
-    MockGlobePrimitive.prototype.update = function(frameState) {
-        var commandList = frameState.commandList;
-        var startLength = commandList.length;
-        this._primitive.update(frameState);
-
-        for (var i = startLength; i < commandList.length; ++i) {
-            var command = commandList[i];
-            command.pass = this.pass;
+    function createPrimitive(rectangle, pass) {
+        var renderState;
+        if (pass === Pass.CESIUM_3D_TILE) {
+            renderState = RenderState.fromCache({
+                stencilTest : StencilConstants.setCesium3DTileBit(),
+                stencilMask : StencilConstants.CESIUM_3D_TILE_MASK,
+                depthTest : {
+                    enabled : true
+                }
+            });
         }
-    };
-
-    MockGlobePrimitive.prototype.isDestroyed = function() {
-        return false;
-    };
-
-    MockGlobePrimitive.prototype.destroy = function() {
-        this._primitive.destroy();
-        return destroyObject(this);
-    };
-
-    beforeEach(function() {
-        rectangle = Rectangle.fromDegrees(-40.0, -40.0, 40.0, 40.0);
-
         var depthColorAttribute = ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 0.0, 0.0, 1.0));
-        var primitive = new Primitive({
+        depthColor = depthColorAttribute.value;
+        return new Primitive({
             geometryInstances : new GeometryInstance({
                 geometry : new RectangleGeometry({
-                    ellipsoid : ellipsoid,
+                    ellipsoid : Ellipsoid.WGS84,
                     rectangle : rectangle
                 }),
                 id : 'depth rectangle',
@@ -129,25 +80,69 @@ defineSuite([
             }),
             appearance : new PerInstanceColorAppearance({
                 translucent : false,
-                flat : true
+                flat : true,
+                renderState : renderState
             }),
             asynchronous : false
         });
+    }
 
-        // wrap rectangle primitive so it gets executed during the globe pass to lay down depth
-        depthPrimitive = new MockGlobePrimitive(primitive);
+    function MockPrimitive(primitive, pass) {
+        this._primitive = primitive;
+        this._pass = pass;
+        this.show = true;
+    }
+
+    MockPrimitive.prototype.update = function(frameState) {
+        if (!this.show) {
+            return;
+        }
+
+        var commandList = frameState.commandList;
+        var startLength = commandList.length;
+        this._primitive.update(frameState);
+
+        for (var i = startLength; i < commandList.length; ++i) {
+            var command = commandList[i];
+            command.pass = this._pass;
+        }
+    };
+
+    MockPrimitive.prototype.isDestroyed = function() {
+        return false;
+    };
+
+    MockPrimitive.prototype.destroy = function() {
+        return destroyObject(this);
+    };
+
+    beforeAll(function() {
+        scene = createScene();
+
+        rectangle = Rectangle.fromDegrees(-40.0, -40.0, 40.0, 40.0);
+        reusableGlobePrimitive = createPrimitive(rectangle, Pass.GLOBE);
+        reusableTilesetPrimitive = createPrimitive(rectangle, Pass.CESIUM_3D_TILE);
+    });
+
+    afterAll(function() {
+        reusableGlobePrimitive.destroy();
+        reusableTilesetPrimitive.destroy();
+        scene.destroyForSpecs();
+    });
+
+    beforeEach(function() {
+        // wrap rectangle primitive so it gets executed during the globe pass and 3D Tiles pass to lay down depth
+        globePrimitive = new MockPrimitive(reusableGlobePrimitive, Pass.GLOBE);
+        tilesetPrimitive = new MockPrimitive(reusableTilesetPrimitive, Pass.CESIUM_3D_TILE);
+        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)), new Cartesian3(0.0, 0.0, 0.01));
     });
 
     afterEach(function() {
         scene.primitives.removeAll();
-        depthPrimitive = depthPrimitive && !depthPrimitive.isDestroyed() && depthPrimitive.destroy();
+        globePrimitive = globePrimitive && !globePrimitive.isDestroyed() && globePrimitive.destroy();
+        tilesetPrimitive = tilesetPrimitive && !tilesetPrimitive.isDestroyed() && tilesetPrimitive.destroy();
         tileset = tileset && !tileset.isDestroyed() && tileset.destroy();
     });
-
-    function loadTileset(tileset) {
-        scene.camera.lookAt(ellipsoid.cartographicToCartesian(Rectangle.center(tilesetRectangle)), new Cartesian3(0.0, 0.0, 0.01));
-        return Cesium3DTilesTester.waitForTilesLoaded(scene, tileset);
-    }
 
     function expectPick(scene) {
         expect(scene).toPickAndCall(function(result) {
@@ -411,182 +406,129 @@ defineSuite([
     }
 
     it('renders points', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPoints
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPoints).then(function(tileset) {
             verifyRenderPoints(tileset, scene);
             verifyPickPoints(scene);
         });
     });
 
     it('renders batched points', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPointsBatchedChildren
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPointsBatchedChildren).then(function(tileset) {
             verifyRenderPoints(tileset, scene);
             verifyPickPoints(scene);
         });
     });
 
     it('renders points with a batch table', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPointsWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPointsWithBatchTable).then(function(tileset) {
             verifyRenderPoints(tileset, scene);
             verifyPickPoints(scene);
         });
     });
 
     it('renders batched points with a batch table', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPointsBatchedChildrenWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPointsBatchedChildrenWithBatchTable).then(function(tileset) {
             verifyRenderPoints(tileset, scene);
             verifyPickPoints(scene);
         });
     });
 
     it('renders points with batch ids', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPointsWithBatchIds
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPointsWithBatchIds).then(function(tileset) {
             verifyRenderPoints(tileset, scene);
             verifyPickPoints(scene);
         });
     });
 
     it('renders polygons', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygons
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        scene.primitives.add(globePrimitive);
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygons).then(function(tileset) {
             verifyRender(tileset, scene);
             verifyPick(scene);
         });
     });
 
     it('renders batched polygons', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsBatchedChildren
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        scene.primitives.add(globePrimitive);
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonsBatchedChildren).then(function(tileset) {
             verifyRender(tileset, scene);
             verifyPick(scene);
         });
     });
 
     it('renders polygons with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        scene.primitives.add(globePrimitive);
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonsWithBatchTable).then(function(tileset) {
             verifyRender(tileset, scene);
             verifyPick(scene);
         });
     });
 
     it('renders batched polygons with a batch table', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsBatchedChildrenWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        scene.primitives.add(globePrimitive);
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonsBatchedChildrenWithBatchTable).then(function(tileset) {
             verifyRender(tileset, scene);
             verifyPick(scene);
         });
     });
 
     it('renders polygons with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsWithBatchIds
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        scene.primitives.add(globePrimitive);
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonsWithBatchIds).then(function(tileset) {
             verifyRender(tileset, scene);
             verifyPick(scene);
         });
     });
 
     it('renders polylines', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolylines
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolylines).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
         });
     });
 
     it('renders batched polylines', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolylinesBatchedChildren
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolylinesBatchedChildren).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
         });
     });
 
     it('renders polylines with a batch table', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolylinesWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolylinesWithBatchTable).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
         });
     });
 
     it('renders batched polylines with a batch table', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolylinesBatchedChildrenWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolylinesBatchedChildrenWithBatchTable).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
         });
     });
 
     it('renders polylines with batch ids', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolylinesWithBatchIds
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolylinesWithBatchIds).then(function(tileset) {
             verifyRenderPolylines(tileset, scene);
         });
     });
 
     it('renders combined tile', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorCombined
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        scene.primitives.add(globePrimitive);
+        return Cesium3DTilesTester.loadTileset(scene, vectorCombined).then(function(tileset) {
             verifyRenderCombined(tileset, scene);
         });
     });
 
     it('renders combined tile with batch ids', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorCombinedWithBatchIds
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        scene.primitives.add(globePrimitive);
+        return Cesium3DTilesTester.loadTileset(scene, vectorCombinedWithBatchIds).then(function(tileset) {
             verifyRenderCombined(tileset, scene);
         });
     });
 
     it('renders with debug color', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorCombined,
+        scene.primitives.add(globePrimitive);
+        return Cesium3DTilesTester.loadTileset(scene, vectorCombined, {
             debugColorizeTiles : true
-        }));
-        return loadTileset(tileset).then(function() {
+        }).then(function() {
             var width = combinedRectangle.width;
             var step = width / 3;
 
@@ -603,49 +545,63 @@ defineSuite([
         });
     });
 
-    it('renders with different classification types', function() {
-        scene.primitives.add(depthPrimitive);
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsBatchedChildren,
+    it('renders on 3D Tiles', function() {
+        scene.primitives.add(globePrimitive);
+        scene.primitives.add(tilesetPrimitive);
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonsBatchedChildren, {
             classificationType : ClassificationType.CESIUM_3D_TILE
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        }).then(function(tileset) {
+            globePrimitive.show = false;
+            tilesetPrimitive.show = true;
             verifyRender(tileset, scene);
             verifyPick(scene);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = false;
+            expectRender(scene, depthColor);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
+        });
+    });
 
-            scene.primitives.remove(tileset);
+    it('renders on globe', function() {
+        scene.primitives.add(globePrimitive);
+        scene.primitives.add(tilesetPrimitive);
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonsBatchedChildren, {
+            classificationType : ClassificationType.TERRAIN
+        }).then(function(tileset) {
+            globePrimitive.show = false;
+            tilesetPrimitive.show = true;
+            expectRender(scene, depthColor);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = false;
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
+        });
+    });
 
-            tileset = scene.primitives.add(new Cesium3DTileset({
-                url : vectorPolygonsBatchedChildren,
-                classificationType : ClassificationType.TERRAIN
-            }));
-            return loadTileset(tileset).then(function(tileset) {
-                depthPrimitive.pass = Pass.GLOBE;
-                verifyRender(tileset, scene);
-                verifyPick(scene);
-
-                scene.primitives.remove(tileset);
-
-                tileset = scene.primitives.add(new Cesium3DTileset({
-                    url : vectorPolygonsBatchedChildren,
-                    classificationType : ClassificationType.BOTH
-                }));
-                return loadTileset(tileset).then(function(tileset) {
-                    verifyRender(tileset, scene);
-                    verifyPick(scene);
-                    depthPrimitive.pass = Pass.CESIUM_3D_TILE;
-                    verifyRender(tileset, scene);
-                    verifyPick(scene);
-                });
-            });
+    it('renders on 3D Tiles and globe', function() {
+        scene.primitives.add(globePrimitive);
+        scene.primitives.add(tilesetPrimitive);
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonsBatchedChildren, {
+            classificationType : ClassificationType.BOTH
+        }).then(function(tileset) {
+            globePrimitive.show = false;
+            tilesetPrimitive.show = true;
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = false;
+            verifyRender(tileset, scene);
+            verifyPick(scene);
+            globePrimitive.show = true;
+            tilesetPrimitive.show = true;
         });
     });
 
     it('can get features and properties', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonsWithBatchTable).then(function(tileset) {
             var content = tileset.root.content;
             expect(content.featuresLength).toBe(1);
             expect(content.innerContents).toBeUndefined();
@@ -655,10 +611,7 @@ defineSuite([
     });
 
     it('throws when calling getFeature with invalid index', function() {
-        tileset = scene.primitives.add(new Cesium3DTileset({
-            url : vectorPolygonsWithBatchTable
-        }));
-        return loadTileset(tileset).then(function(tileset) {
+        return Cesium3DTilesTester.loadTileset(scene, vectorPolygonsWithBatchTable).then(function(tileset) {
             var content = tileset.root.content;
             expect(function(){
                 content.getFeature(-1);

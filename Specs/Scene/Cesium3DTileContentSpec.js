@@ -1,8 +1,6 @@
-defineSuite([
-        'Scene/Cesium3DTileContent'
-    ], function(
-        Cesium3DTileContent) {
-    'use strict';
+import { Cesium3DTileContent } from '../../Source/Cesium.js';
+
+describe('Scene/Cesium3DTileContent', function() {
 
     it('throws', function() {
         var content = new Cesium3DTileContent();

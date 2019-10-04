@@ -1,12 +1,6 @@
-define([
-        './defaultValue',
-        './defined',
-        './DeveloperError'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Values and type information for geometry attributes.  A {@link Geometry}
@@ -136,6 +130,4 @@ define([
          */
         this.values = options.values;
     }
-
-    return GeometryAttribute;
-});
+export default GeometryAttribute;

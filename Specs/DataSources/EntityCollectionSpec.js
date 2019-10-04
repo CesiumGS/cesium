@@ -1,18 +1,11 @@
-defineSuite([
-        'DataSources/EntityCollection',
-        'Core/Iso8601',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/Entity'
-    ], function(
-        EntityCollection,
-        Iso8601,
-        JulianDate,
-        TimeInterval,
-        TimeIntervalCollection,
-        Entity) {
-    'use strict';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+
+describe('DataSources/EntityCollection', function() {
 
     function CollectionListener() {
         this.timesCalled = 0;

@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/Occluder',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/Visibility'
-    ], function(
-        Occluder,
-        BoundingSphere,
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        Rectangle,
-        Visibility) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Occluder } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Visibility } from '../../Source/Cesium.js';
+
+describe('Core/Occluder', function() {
 
     it('throws an exception during construction (1 of 3)', function() {
         expect(function() {

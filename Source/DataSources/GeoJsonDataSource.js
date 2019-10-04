@@ -1,60 +1,32 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/getFilenameFromUri',
-        '../Core/PinBuilder',
-        '../Core/PolygonHierarchy',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Scene/HeightReference',
-        '../Scene/VerticalOrigin',
-        '../ThirdParty/topojson',
-        '../ThirdParty/when',
-        './BillboardGraphics',
-        './CallbackProperty',
-        './ColorMaterialProperty',
-        './ConstantPositionProperty',
-        './ConstantProperty',
-        './DataSource',
-        './EntityCluster',
-        './EntityCollection',
-        './PolygonGraphics',
-        './PolylineGraphics'
-    ], function(
-        Cartesian3,
-        Color,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        getFilenameFromUri,
-        PinBuilder,
-        PolygonHierarchy,
-        Resource,
-        RuntimeError,
-        HeightReference,
-        VerticalOrigin,
-        topojson,
-        when,
-        BillboardGraphics,
-        CallbackProperty,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        DataSource,
-        EntityCluster,
-        EntityCollection,
-        PolygonGraphics,
-        PolylineGraphics) {
-    'use strict';
+import ArcType from '../Core/ArcType.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import createGuid from '../Core/createGuid.js';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import getFilenameFromUri from '../Core/getFilenameFromUri.js';
+import PinBuilder from '../Core/PinBuilder.js';
+import PolygonHierarchy from '../Core/PolygonHierarchy.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import HeightReference from '../Scene/HeightReference.js';
+import VerticalOrigin from '../Scene/VerticalOrigin.js';
+import topojson from '../ThirdParty/topojson.js';
+import when from '../ThirdParty/when.js';
+import BillboardGraphics from './BillboardGraphics.js';
+import CallbackProperty from './CallbackProperty.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import ConstantPositionProperty from './ConstantPositionProperty.js';
+import ConstantProperty from './ConstantProperty.js';
+import DataSource from './DataSource.js';
+import EntityCluster from './EntityCluster.js';
+import EntityCollection from './EntityCollection.js';
+import PolygonGraphics from './PolygonGraphics.js';
+import PolylineGraphics from './PolylineGraphics.js';
 
     function defaultCrsFunction(coordinates) {
         return Cartesian3.fromDegrees(coordinates[0], coordinates[1], coordinates[2]);
@@ -365,6 +337,7 @@ define([
         polylineGraphics.material = material;
         polylineGraphics.width = widthProperty;
         polylineGraphics.positions = new ConstantProperty(coordinatesArrayToCartesianArray(coordinates, crsFunction));
+        polylineGraphics.arcType = ArcType.RHUMB;
     }
 
     function processLineString(dataSource, geoJson, geometry, crsFunction, options) {
@@ -434,6 +407,7 @@ define([
         polygon.outlineColor = outlineColorProperty;
         polygon.outlineWidth = widthProperty;
         polygon.material = material;
+        polygon.arcType = ArcType.RHUMB;
 
         var holes = [];
         for (var i = 1, len = coordinates.length; i < len; i++) {
@@ -507,6 +481,8 @@ define([
         this._promises = [];
         this._pinBuilder = new PinBuilder();
         this._entityCluster = new EntityCluster();
+        this._credit = undefined;
+        this._resourceCredits = [];
     }
 
     /**
@@ -522,6 +498,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the geometry features (polygons or linestrings) clamped to the ground.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @returns {Promise.<GeoJsonDataSource>} A promise that will resolve when the data is loaded.
      */
@@ -782,6 +759,16 @@ define([
                 //>>includeEnd('debug');
                 this._entityCluster = value;
             }
+        },
+        /**
+         * Gets the credit that will be displayed for the data source
+         * @memberof GeoJsonDataSource.prototype
+         * @type {Credit}
+         */
+        credit : {
+            get : function() {
+                return this._credit;
+            }
         }
     });
 
@@ -800,6 +787,7 @@ define([
      * @param {Number} [options.strokeWidth=GeoJsonDataSource.strokeWidth] The default width of polylines and polygon outlines.
      * @param {Color} [options.fill=GeoJsonDataSource.fill] The default color for polygon interiors.
      * @param {Boolean} [options.clampToGround=GeoJsonDataSource.clampToGround] true if we want the features clamped to the ground.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.
      *
      * @returns {Promise.<GeoJsonDataSource>} a promise that will resolve when the GeoJSON is loaded.
      */
@@ -811,16 +799,31 @@ define([
         //>>includeEnd('debug');
 
         DataSource.setLoading(this, true);
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
+
+        // User specified credit
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
 
         var promise = data;
-        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         var sourceUri = options.sourceUri;
         if (typeof data === 'string' || (data instanceof Resource)) {
             data = Resource.createIfNeeded(data);
-
             promise = data.fetchJson();
-
             sourceUri = defaultValue(sourceUri, data.getUrlComponent());
+
+            // Add resource credits to our list of credits to display
+            var resourceCredits = this._resourceCredits;
+            var credits = data.credits;
+            if (defined(credits)) {
+                var length = credits.length;
+                for (var i = 0; i < length; i++) {
+                    resourceCredits.push(credits[i]);
+                }
+            }
         }
 
         options = {
@@ -920,6 +923,4 @@ define([
      * @param {Object} properties The properties of the feature.
      * @param {String} nameProperty The property key that Cesium estimates to have the name of the feature.
      */
-
-    return GeoJsonDataSource;
-});
+export default GeoJsonDataSource;

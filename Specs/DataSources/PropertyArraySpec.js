@@ -1,14 +1,9 @@
-defineSuite([
-        'DataSources/PropertyArray',
-        'Core/JulianDate',
-        'DataSources/ConstantProperty',
-        'DataSources/SampledProperty'
-    ], function(
-        PropertyArray,
-        JulianDate,
-        ConstantProperty,
-        SampledProperty) {
-    'use strict';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { PropertyArray } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/PropertyArray', function() {
 
     var time = JulianDate.now();
 

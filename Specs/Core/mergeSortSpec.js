@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/mergeSort',
-        'Core/BoundingSphere',
-        'Core/Cartesian3'
-    ], function(
-        mergeSort,
-        BoundingSphere,
-        Cartesian3) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { mergeSort } from '../../Source/Cesium.js';
+
+describe('Core/mergeSort', function() {
 
     it('sorts', function() {
         var array = [0, 9, 1, 8, 2, 7, 3, 6, 4, 5];

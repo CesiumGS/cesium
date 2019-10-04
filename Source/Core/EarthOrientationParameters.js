@@ -1,30 +1,15 @@
-define([
-        '../ThirdParty/when',
-        './binarySearch',
-        './defaultValue',
-        './defined',
-        './EarthOrientationParametersSample',
-        './freezeObject',
-        './JulianDate',
-        './LeapSecond',
-        './Resource',
-        './RuntimeError',
-        './TimeConstants',
-        './TimeStandard'
-    ], function(
-        when,
-        binarySearch,
-        defaultValue,
-        defined,
-        EarthOrientationParametersSample,
-        freezeObject,
-        JulianDate,
-        LeapSecond,
-        Resource,
-        RuntimeError,
-        TimeConstants,
-        TimeStandard) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import binarySearch from './binarySearch.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import EarthOrientationParametersSample from './EarthOrientationParametersSample.js';
+import freezeObject from './freezeObject.js';
+import JulianDate from './JulianDate.js';
+import LeapSecond from './LeapSecond.js';
+import Resource from './Resource.js';
+import RuntimeError from './RuntimeError.js';
+import TimeConstants from './TimeConstants.js';
+import TimeStandard from './TimeStandard.js';
 
     /**
      * Specifies Earth polar motion coordinates and the difference between UT1 and UTC.
@@ -136,7 +121,7 @@ define([
      * Gets a promise that, when resolved, indicates that the EOP data has been loaded and is
      * ready to use.
      *
-     * @returns {Promise.<undefined>} The promise.
+     * @returns {Promise} The promise.
      *
      * @see when
      */
@@ -379,6 +364,4 @@ define([
         result.ut1MinusUtc = linearInterp(factor, beforeUt1MinusUtc, afterUt1MinusUtc);
         return result;
     }
-
-    return EarthOrientationParameters;
-});
+export default EarthOrientationParameters;

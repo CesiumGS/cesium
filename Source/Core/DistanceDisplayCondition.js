@@ -1,14 +1,7 @@
-define([
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Determines visibility based on the distance to the camera.
@@ -175,6 +168,4 @@ define([
     DistanceDisplayCondition.prototype.equals = function(other) {
         return DistanceDisplayCondition.equals(this, other);
     };
-
-    return DistanceDisplayCondition;
-});
+export default DistanceDisplayCondition;

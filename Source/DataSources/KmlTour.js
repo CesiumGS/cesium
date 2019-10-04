@@ -1,10 +1,5 @@
-define([
-        '../Core/defined',
-        '../Core/Event'
-    ], function(
-        defined,
-        Event) {
-    'use strict';
+import defined from '../Core/defined.js';
+import Event from '../Core/Event.js';
     /**
      * @alias KmlTour
      * @constructor
@@ -106,26 +101,15 @@ define([
         cancelAllEntries(this._activeEntries);
     };
 
-    /**
-     * Stop all activeEntries.
-     * @param {Array} activeEntries
-     */
+    // Stop all activeEntries.
     function cancelAllEntries(activeEntries) {
         for(var entry = activeEntries.pop(); entry !== undefined; entry = activeEntries.pop()) {
             entry.stop();
         }
     }
 
-    /**
-     * Play playlist entry.
-     * This function is called recursevly with playNext
-     * and iterates over all entries from playlist.
-     *
-     * @param {ViewerWidget} viewer Cesium viewer.
-     * @param {Object} cameraOptions see {@link Camera#flyTo}.
-     * @param {Function} allDone a function will be called when all entries from playlist
-     * being played or user call {@link KmlTour#stop}.
-     */
+    // Play playlist entry.
+    // This function is called recursevly with playNext and iterates over all entries from playlist.
     function playEntry(viewer, cameraOptions, allDone) {
         var entry = this.playlist[this.playlistIndex];
         if (entry) {
@@ -152,16 +136,7 @@ define([
         }
     }
 
-    /**
-     * Increment playlistIndex and call playEntry
-     * if terminated isn't true.
-     *
-     * @param {ViewerWidget} viewer passed for recursion.
-     * @param {Object} cameraOptions passed for recursion.
-     * @param {Function} allDone passed for recursion.
-     * @param {Boolean} terminated true if active entry was terminated,
-     * and the whole tour should be terminated.
-     */
+    // Increment playlistIndex and call playEntry if terminated isn't true.
     function playNext(viewer, cameraOptions, allDone, terminated) {
         var entry = this.playlist[this.playlistIndex];
         this.entryEnd.raiseEvent(entry, terminated);
@@ -178,6 +153,4 @@ define([
             playEntry.call(this, viewer, cameraOptions, allDone);
         }
     }
-
-    return KmlTour;
-});
+export default KmlTour;

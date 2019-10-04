@@ -1,4 +1,3 @@
-/*global require*/
 require({
     baseUrl : '../..',
     packages : [{
@@ -7,15 +6,6 @@ require({
     }, {
         name : 'dijit',
         location : 'ThirdParty/dojo-release-1.10.4/dijit'
-    }, {
-        name : 'Core',
-        location : 'Source/Core'
-    }, {
-        name : 'Widgets',
-        location : 'Source/Widgets'
-    }, {
-        name : 'ThirdParty',
-        location : 'Source/ThirdParty'
     }, {
         name : 'TimelineDemo',
         location : 'Apps/TimelineDemo'

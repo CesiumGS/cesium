@@ -1,44 +1,22 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Check',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/Ellipsoid',
-        '../Core/GeometryInstance',
-        '../Core/IntersectionTests',
-        '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
-        '../Core/Plane',
-        '../Core/Ray',
-        '../Core/Rectangle',
-        '../Core/RectangleOutlineGeometry',
-        './PerInstanceColorAppearance',
-        './Primitive',
-        './SceneMode'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        defineProperties,
-        Ellipsoid,
-        GeometryInstance,
-        IntersectionTests,
-        Matrix4,
-        OrientedBoundingBox,
-        Plane,
-        Ray,
-        Rectangle,
-        RectangleOutlineGeometry,
-        PerInstanceColorAppearance,
-        Primitive,
-        SceneMode) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Check from '../Core/Check.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defaultValue from '../Core/defaultValue.js';
+import defineProperties from '../Core/defineProperties.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import IntersectionTests from '../Core/IntersectionTests.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import Plane from '../Core/Plane.js';
+import Ray from '../Core/Ray.js';
+import Rectangle from '../Core/Rectangle.js';
+import RectangleOutlineGeometry from '../Core/RectangleOutlineGeometry.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Primitive from './Primitive.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * A tile bounding volume specified as a longitude/latitude/height region.
@@ -50,6 +28,8 @@ define([
      * @param {Number} [options.minimumHeight=0.0] The minimum height of the region.
      * @param {Number} [options.maximumHeight=0.0] The maximum height of the region.
      * @param {Ellipsoid} [options.ellipsoid=Cesium.Ellipsoid.WGS84] The ellipsoid.
+     * @param {Boolean} [options.computeBoundingVolumes=true] True to compute the {@link TileBoundingRegion#boundingVolume} and
+     *                  {@link TileBoundingVolume#boundingSphere}. If false, these properties will be undefined.
      *
      * @private
      */
@@ -122,10 +102,12 @@ define([
         var ellipsoid = defaultValue(options.ellipsoid, Ellipsoid.WGS84);
         computeBox(this, options.rectangle, ellipsoid);
 
-        // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
-        this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
+        if (defaultValue(options.computeBoundingVolumes, true)) {
+            // An oriented bounding box that encloses this tile's region.  This is used to calculate tile visibility.
+            this._orientedBoundingBox = OrientedBoundingBox.fromRectangle(this.rectangle, this.minimumHeight, this.maximumHeight, ellipsoid);
 
-        this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
+            this._boundingSphere = BoundingSphere.fromOrientedBoundingBox(this._orientedBoundingBox);
+        }
     }
 
     defineProperties(TileBoundingRegion.prototype, {
@@ -300,16 +282,24 @@ define([
         }
 
         var cameraHeight;
+        var minimumHeight;
+        var maximumHeight;
         if (frameState.mode === SceneMode.SCENE3D) {
             cameraHeight = cameraCartographicPosition.height;
+            minimumHeight = this.minimumHeight;
+            maximumHeight = this.maximumHeight;
         } else {
             cameraHeight = cameraCartesianPosition.x;
+            minimumHeight = 0.0;
+            maximumHeight = 0.0;
         }
 
-        var maximumHeight = frameState.mode === SceneMode.SCENE3D ? this.maximumHeight : 0.0;
-        var distanceFromTop = cameraHeight - maximumHeight;
-        if (distanceFromTop > 0.0) {
-            result += distanceFromTop * distanceFromTop;
+        if (cameraHeight > maximumHeight) {
+            var distanceAboveTop = cameraHeight - maximumHeight;
+            result += distanceAboveTop * distanceAboveTop;
+        } else if (cameraHeight < minimumHeight) {
+            var distanceBelowBottom = minimumHeight - cameraHeight;
+            result += distanceBelowBottom * distanceBelowBottom;
         }
 
         return Math.sqrt(result);
@@ -368,6 +358,4 @@ define([
             asynchronous : false
         });
     };
-
-    return TileBoundingRegion;
-});
+export default TileBoundingRegion;

@@ -1,40 +1,20 @@
-define([
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './IndexDatatype',
-        './Intersections2D',
-        './Math',
-        './OrientedBoundingBox',
-        './QuantizedMeshTerrainData',
-        './Rectangle',
-        './TaskProcessor',
-        './TerrainEncoding',
-        './TerrainMesh'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        IndexDatatype,
-        Intersections2D,
-        CesiumMath,
-        OrientedBoundingBox,
-        QuantizedMeshTerrainData,
-        Rectangle,
-        TaskProcessor,
-        TerrainEncoding,
-        TerrainMesh) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import IndexDatatype from './IndexDatatype.js';
+import Intersections2D from './Intersections2D.js';
+import CesiumMath from './Math.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import QuantizedMeshTerrainData from './QuantizedMeshTerrainData.js';
+import Rectangle from './Rectangle.js';
+import TaskProcessor from './TaskProcessor.js';
+import TerrainEncoding from './TerrainEncoding.js';
+import TerrainMesh from './TerrainMesh.js';
 
     /**
      * Terrain data for a single tile from a Google Earth Enterprise server.
@@ -193,18 +173,24 @@ define([
         var that = this;
         return verticesPromise
             .then(function(result) {
+                // Clone complex result objects because the transfer from the web worker
+                // has stripped them down to JSON-style objects.
                 that._mesh = new TerrainMesh(
                     center,
                     new Float32Array(result.vertices),
                     new Uint16Array(result.indices),
                     result.minimumHeight,
                     result.maximumHeight,
-                    result.boundingSphere3D,
-                    result.occludeePointInScaledSpace,
+                    BoundingSphere.clone(result.boundingSphere3D),
+                    Cartesian3.clone(result.occludeePointInScaledSpace),
                     result.numberOfAttributes,
-                    result.orientedBoundingBox,
+                    OrientedBoundingBox.clone(result.orientedBoundingBox),
                     TerrainEncoding.clone(result.encoding),
-                    exaggeration);
+                    exaggeration,
+                    result.westIndicesSouthToNorth,
+                    result.southIndicesEastToWest,
+                    result.eastIndicesNorthToSouth,
+                    result.northIndicesWestToEast);
 
                 that._vertexCountWithoutSkirts = result.vertexCountWithoutSkirts;
                 that._skirtIndex = result.skirtIndex;
@@ -505,6 +491,4 @@ define([
         // Position does not lie in any triangle in this mesh.
         return undefined;
     }
-
-    return GoogleEarthEnterpriseTerrainData;
-});
+export default GoogleEarthEnterpriseTerrainData;

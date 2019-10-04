@@ -1,20 +1,10 @@
-define([
-        '../Core/Check',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/loadCRN',
-        '../Core/loadKTX',
-        '../Core/Resource'
-    ], function(
-        Check,
-        defined,
-        defineProperties,
-        DeveloperError,
-        loadCRN,
-        loadKTX,
-        Resource) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import loadCRN from '../Core/loadCRN.js';
+import loadKTX from '../Core/loadKTX.js';
+import Resource from '../Core/Resource.js';
 
     /**
      * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an
@@ -25,12 +15,13 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see OpenStreetMapImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see GoogleEarthEnterpriseImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
      * @see GridImageryProvider
      * @see MapboxImageryProvider
+     * @see MapboxStyleImageryProvider
      * @see SingleTileImageryProvider
      * @see TileCoordinatesImageryProvider
      * @see UrlTemplateImageryProvider
@@ -339,16 +330,21 @@ define([
 
         var resource = Resource.createIfNeeded(url);
 
-        if (ktxRegex.test(resource)) {
+        if (ktxRegex.test(resource.url)) {
             return loadKTX(resource);
-        } else if (crnRegex.test(resource)) {
+        } else if (crnRegex.test(resource.url)) {
             return loadCRN(resource);
-        } else if (defined(imageryProvider.tileDiscardPolicy)) {
-            return resource.fetchImage(true);
+        } else if (defined(imageryProvider) && defined(imageryProvider.tileDiscardPolicy)) {
+            return resource.fetchImage({
+                preferBlob : true,
+                preferImageBitmap : true,
+                flipY : true
+            });
         }
 
-        return resource.fetchImage();
+        return resource.fetchImage({
+            preferImageBitmap : true,
+            flipY : true
+        });
     };
-
-    return ImageryProvider;
-});
+export default ImageryProvider;

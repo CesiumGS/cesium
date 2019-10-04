@@ -1,14 +1,9 @@
-defineSuite([
-        'Scene/ConeEmitter',
-        'Core/Cartesian3',
-        'Core/Math',
-        'Scene/Particle'
-    ], function(
-        ConeEmitter,
-        Cartesian3,
-        CesiumMath,
-        Particle) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { ConeEmitter } from '../../Source/Cesium.js';
+import { Particle } from '../../Source/Cesium.js';
+
+describe('Scene/ConeEmitter', function() {
 
     it('default constructor', function() {
         var emitter = new ConeEmitter();

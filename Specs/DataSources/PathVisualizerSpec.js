@@ -1,48 +1,26 @@
-defineSuite([
-        'DataSources/PathVisualizer',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Matrix4',
-        'Core/ReferenceFrame',
-        'Core/TimeInterval',
-        'DataSources/CompositePositionProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EntityCollection',
-        'DataSources/PathGraphics',
-        'DataSources/PolylineGlowMaterialProperty',
-        'DataSources/PolylineOutlineMaterialProperty',
-        'DataSources/ReferenceProperty',
-        'DataSources/SampledPositionProperty',
-        'DataSources/ScaledPositionProperty',
-        'DataSources/TimeIntervalCollectionPositionProperty',
-        'Scene/SceneMode',
-        'Specs/createScene'
-    ], function(
-        PathVisualizer,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        JulianDate,
-        Matrix4,
-        ReferenceFrame,
-        TimeInterval,
-        CompositePositionProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EntityCollection,
-        PathGraphics,
-        PolylineGlowMaterialProperty,
-        PolylineOutlineMaterialProperty,
-        ReferenceProperty,
-        SampledPositionProperty,
-        ScaledPositionProperty,
-        TimeIntervalCollectionPositionProperty,
-        SceneMode,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { CompositePositionProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { PathGraphics } from '../../Source/Cesium.js';
+import { PathVisualizer } from '../../Source/Cesium.js';
+import { PolylineGlowMaterialProperty } from '../../Source/Cesium.js';
+import { PolylineOutlineMaterialProperty } from '../../Source/Cesium.js';
+import { ReferenceProperty } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { ScaledPositionProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionPositionProperty } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/PathVisualizer', function() {
 
     var scene;
     var visualizer;
@@ -231,6 +209,7 @@ defineSuite([
         path.material = new PolylineGlowMaterialProperty();
         path.material.color = new ConstantProperty(new Color(0.8, 0.7, 0.6, 0.5));
         path.material.glowPower = new ConstantProperty(0.2);
+        path.material.taperPower = new ConstantProperty(0.15);
         path.width = new ConstantProperty(12.5);
         path.leadTime = new ConstantProperty(25);
         path.trailTime = new ConstantProperty(10);
@@ -245,6 +224,7 @@ defineSuite([
         var material = primitive.material;
         expect(material.uniforms.color).toEqual(testObject.path.material.color.getValue(updateTime));
         expect(material.uniforms.glowPower).toEqual(testObject.path.material.glowPower.getValue(updateTime));
+        expect(material.uniforms.taperPower).toEqual(testObject.path.material.taperPower.getValue(updateTime));
     });
 
     it('Reuses primitives when hiding one and showing another', function() {

@@ -1,12 +1,6 @@
-define([
-        './Cartesian3',
-        './defined',
-        './DeveloperError'
-    ], function(
-        Cartesian3,
-        defined,
-        DeveloperError) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Uses the Tridiagonal Matrix Algorithm, also known as the Thomas Algorithm, to solve
@@ -102,6 +96,4 @@ define([
 
         return x;
     };
-
-    return TridiagonalSystemSolver;
-});
+export default TridiagonalSystemSolver;

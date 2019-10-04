@@ -1,14 +1,9 @@
-defineSuite([
-        'Scene/FrameRateMonitor',
-        'Core/defined',
-        'Core/getTimestamp',
-        'Specs/createScene'
-    ], function(
-        FrameRateMonitor,
-        defined,
-        getTimestamp,
-        createScene) {
-    'use strict';
+import { defined } from '../../Source/Cesium.js';
+import { getTimestamp } from '../../Source/Cesium.js';
+import { FrameRateMonitor } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/FrameRateMonitor', function() {
 
     var scene;
     beforeAll(function() {

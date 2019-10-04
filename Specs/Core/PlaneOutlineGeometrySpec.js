@@ -1,12 +1,7 @@
-defineSuite([
-        'Core/PlaneOutlineGeometry',
-        'Core/Cartesian3',
-        'Specs/createPackableSpecs'
-    ], function(
-        PlaneOutlineGeometry,
-        Cartesian3,
-        createPackableSpecs) {
-    'use strict';
+import { PlaneOutlineGeometry } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/PlaneOutlineGeometry', function() {
 
     it('constructor creates positions', function() {
         var m = PlaneOutlineGeometry.createGeometry(new PlaneOutlineGeometry());

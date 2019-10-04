@@ -1,44 +1,25 @@
-define([
-        './arrayRemoveDuplicates',
-        './Cartesian2',
-        './Cartesian3',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryPipeline',
-        './IndexDatatype',
-        './Math',
-        './Matrix3',
-        './PolygonPipeline',
-        './PrimitiveType',
-        './Quaternion',
-        './Queue',
-        './WindingOrder'
-    ], function(
-        arrayRemoveDuplicates,
-        Cartesian2,
-        Cartesian3,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryPipeline,
-        IndexDatatype,
-        CesiumMath,
-        Matrix3,
-        PolygonPipeline,
-        PrimitiveType,
-        Quaternion,
-        Queue,
-        WindingOrder) {
-    'use strict';
+import ArcType from './ArcType.js';
+import arrayRemoveDuplicates from './arrayRemoveDuplicates.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Ellipsoid from './Ellipsoid.js';
+import EllipsoidRhumbLine from './EllipsoidRhumbLine.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryPipeline from './GeometryPipeline.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import PolygonPipeline from './PolygonPipeline.js';
+import PrimitiveType from './PrimitiveType.js';
+import Quaternion from './Quaternion.js';
+import Queue from './Queue.js';
+import WindingOrder from './WindingOrder.js';
 
     /**
      * @private
@@ -141,7 +122,20 @@ define([
     PolygonGeometryLibrary.subdivideLineCount = function(p0, p1, minDistance) {
         var distance = Cartesian3.distance(p0, p1);
         var n = distance / minDistance;
-        var countDivide = Math.max(0, Math.ceil(Math.log(n) / Math.log(2)));
+        var countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
+        return Math.pow(2, countDivide);
+    };
+
+    var scratchCartographic0 = new Cartographic();
+    var scratchCartographic1 = new Cartographic();
+    var scratchCartographic2 = new Cartographic();
+    var scratchCartesian0 = new Cartesian3();
+    PolygonGeometryLibrary.subdivideRhumbLineCount = function(ellipsoid, p0, p1, minDistance) {
+        var c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
+        var c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
+        var rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
+        var n = rhumb.surfaceDistance / minDistance;
+        var countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
         return Math.pow(2, countDivide);
     };
 
@@ -163,6 +157,35 @@ define([
             positions[index++] = p[0];
             positions[index++] = p[1];
             positions[index++] = p[2];
+        }
+
+        return positions;
+    };
+
+    PolygonGeometryLibrary.subdivideRhumbLine = function(ellipsoid, p0, p1, minDistance, result) {
+        var c0 = ellipsoid.cartesianToCartographic(p0, scratchCartographic0);
+        var c1 = ellipsoid.cartesianToCartographic(p1, scratchCartographic1);
+        var rhumb = new EllipsoidRhumbLine(c0, c1, ellipsoid);
+
+        var n = rhumb.surfaceDistance / minDistance;
+        var countDivide = Math.max(0, Math.ceil(CesiumMath.log2(n)));
+        var numVertices = Math.pow(2, countDivide);
+        var distanceBetweenVertices = rhumb.surfaceDistance / numVertices;
+
+        if (!defined(result)) {
+            result = [];
+        }
+
+        var positions = result;
+        positions.length = numVertices * 3;
+
+        var index = 0;
+        for ( var i = 0; i < numVertices; i++) {
+            var c = rhumb.interpolateUsingSurfaceDistance(i * distanceBetweenVertices, scratchCartographic2);
+            var p = ellipsoid.cartographicToCartesian(c, scratchCartesian0);
+            positions[index++] = p.x;
+            positions[index++] = p.y;
+            positions[index++] = p.z;
         }
 
         return positions;
@@ -403,7 +426,7 @@ define([
         return result;
     };
 
-    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat) {
+    PolygonGeometryLibrary.createGeometryFromPositions = function(ellipsoid, polygon, granularity, perPositionHeight, vertexFormat, arcType) {
         var indices = PolygonPipeline.triangulate(polygon.positions2D, polygon.holes);
 
         /* If polygon is completely unrenderable, just use the first three vertices */
@@ -442,14 +465,18 @@ define([
             return geometry;
         }
 
-        return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
+        if (arcType === ArcType.GEODESIC) {
+            return PolygonPipeline.computeSubdivision(ellipsoid, positions, indices, granularity);
+        } else if (arcType === ArcType.RHUMB) {
+            return PolygonPipeline.computeRhumbLineSubdivision(ellipsoid, positions, indices, granularity);
+        }
     };
 
     var computeWallIndicesSubdivided = [];
     var p1Scratch = new Cartesian3();
     var p2Scratch = new Cartesian3();
 
-    PolygonGeometryLibrary.computeWallGeometry = function(positions, ellipsoid, granularity, perPositionHeight) {
+    PolygonGeometryLibrary.computeWallGeometry = function(positions, ellipsoid, granularity, perPositionHeight, arcType) {
         var edgePositions;
         var topEdgeLength;
         var i;
@@ -463,8 +490,14 @@ define([
             var minDistance = CesiumMath.chordLength(granularity, ellipsoid.maximumRadius);
 
             var numVertices = 0;
-            for (i = 0; i < length; i++) {
-                numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
+            if (arcType === ArcType.GEODESIC) {
+                for (i = 0; i < length; i++) {
+                    numVertices += PolygonGeometryLibrary.subdivideLineCount(positions[i], positions[(i + 1) % length], minDistance);
+                }
+            } else if (arcType === ArcType.RHUMB) {
+                for (i = 0; i < length; i++) {
+                    numVertices += PolygonGeometryLibrary.subdivideRhumbLineCount(ellipsoid, positions[i], positions[(i + 1) % length], minDistance);
+                }
             }
 
             topEdgeLength = (numVertices + length) * 3;
@@ -473,7 +506,12 @@ define([
                 p1 = positions[i];
                 p2 = positions[(i + 1) % length];
 
-                var tempPositions = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance, computeWallIndicesSubdivided);
+                var tempPositions;
+                if (arcType === ArcType.GEODESIC) {
+                    tempPositions = PolygonGeometryLibrary.subdivideLine(p1, p2, minDistance, computeWallIndicesSubdivided);
+                } else if (arcType === ArcType.RHUMB) {
+                    tempPositions = PolygonGeometryLibrary.subdivideRhumbLine(ellipsoid, p1, p2, minDistance, computeWallIndicesSubdivided);
+                }
                 var tempPositionsLength = tempPositions.length;
                 for (var j = 0; j < tempPositionsLength; ++j, ++index) {
                     edgePositions[index] = tempPositions[j];
@@ -526,7 +564,8 @@ define([
 
             p1 = Cartesian3.fromArray(edgePositions, UL * 3, p1Scratch);
             p2 = Cartesian3.fromArray(edgePositions, UR * 3, p2Scratch);
-            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON14)) {
+            if (Cartesian3.equalsEpsilon(p1, p2, CesiumMath.EPSILON10, CesiumMath.EPSILON10)) {
+                //skip corner
                 continue;
             }
 
@@ -550,6 +589,4 @@ define([
             primitiveType : PrimitiveType.TRIANGLES
         });
     };
-
-    return PolygonGeometryLibrary;
-});
+export default PolygonGeometryLibrary;

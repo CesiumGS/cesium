@@ -1,14 +1,7 @@
-define([
-        'Core/defined',
-        'Core/Intersect',
-        'Renderer/Pass',
-        'Scene/SceneMode'
-    ], function(
-        defined,
-        Intersect,
-        Pass,
-        SceneMode) {
-    'use strict';
+import { defined } from '../Source/Cesium.js';
+import { Intersect } from '../Source/Cesium.js';
+import { Pass } from '../Source/Cesium.js';
+import { SceneMode } from '../Source/Cesium.js';
 
     function executeCommands(frameState, commands) {
         var commandsExecuted = 0;
@@ -61,6 +54,4 @@ define([
 
         return commandsExecuted;
     }
-
-    return render;
-});
+export default render;

@@ -1,33 +1,20 @@
-define([
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/DeveloperError',
-        '../../Core/Event',
-        '../../Core/wrapFunction',
-        '../../DataSources/CzmlDataSource',
-        '../../DataSources/GeoJsonDataSource',
-        '../../DataSources/KmlDataSource',
-        '../getElement'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        wrapFunction,
-        CzmlDataSource,
-        GeoJsonDataSource,
-        KmlDataSource,
-        getElement) {
-    'use strict';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import Event from '../../Core/Event.js';
+import wrapFunction from '../../Core/wrapFunction.js';
+import CzmlDataSource from '../../DataSources/CzmlDataSource.js';
+import GeoJsonDataSource from '../../DataSources/GeoJsonDataSource.js';
+import KmlDataSource from '../../DataSources/KmlDataSource.js';
+import getElement from '../getElement.js';
 
     /**
      * A mixin which adds default drag and drop support for CZML files to the Viewer widget.
      * Rather than being called directly, this function is normally passed as
      * a parameter to {@link Viewer#extend}, as shown in the example below.
      * @exports viewerDragDropMixin
-     *
+     * @namespace
      * @param {Viewer} viewer The viewer instance.
      * @param {Object} [options] Object with the following properties:
      * @param {Element|String} [options.dropTarget=viewer.container] The DOM element which will serve as the drop target.
@@ -300,6 +287,4 @@ define([
             viewer.dropError.raiseEvent(viewer, file.name, evt.target.error);
         };
     }
-
-    return viewerDragDropMixin;
-});
+export default viewerDragDropMixin;

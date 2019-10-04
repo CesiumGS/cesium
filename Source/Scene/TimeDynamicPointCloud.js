@@ -1,46 +1,23 @@
-define([
-        '../Core/arrayFill',
-        '../Core/Check',
-        '../Core/combine',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/Event',
-        '../Core/getTimestamp',
-        '../Core/JulianDate',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/Resource',
-        '../ThirdParty/when',
-        './ClippingPlaneCollection',
-        './PointCloud',
-        './PointCloudEyeDomeLighting',
-        './PointCloudShading',
-        './SceneMode',
-        './ShadowMode'
-    ], function(
-        arrayFill,
-        Check,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        Event,
-        getTimestamp,
-        JulianDate,
-        CesiumMath,
-        Matrix4,
-        Resource,
-        when,
-        ClippingPlaneCollection,
-        PointCloud,
-        PointCloudEyeDomeLighting,
-        PointCloudShading,
-        SceneMode,
-        ShadowMode) {
-    'use strict';
+import arrayFill from '../Core/arrayFill.js';
+import Check from '../Core/Check.js';
+import combine from '../Core/combine.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import Event from '../Core/Event.js';
+import getTimestamp from '../Core/getTimestamp.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Resource from '../Core/Resource.js';
+import when from '../ThirdParty/when.js';
+import ClippingPlaneCollection from './ClippingPlaneCollection.js';
+import PointCloud from './PointCloud.js';
+import PointCloudEyeDomeLighting from './PointCloudEyeDomeLighting.js';
+import PointCloudShading from './PointCloudShading.js';
+import SceneMode from './SceneMode.js';
+import ShadowMode from './ShadowMode.js';
 
     /**
      * Provides playback of time-dynamic point cloud data.
@@ -490,7 +467,10 @@ define([
         return 10.0;
     }
 
+    var defaultShading = new PointCloudShading();
+
     function renderFrame(that, frame, updateState, frameState) {
+        var shading = defaultValue(that.shading, defaultShading);
         var pointCloud = frame.pointCloud;
         var transform = defaultValue(frame.transform, Matrix4.IDENTITY);
         pointCloud.modelMatrix = Matrix4.multiplyTransformation(that.modelMatrix, transform, scratchModelMatrix);
@@ -499,14 +479,13 @@ define([
         pointCloud.shadows = that.shadows;
         pointCloud.clippingPlanes = that._clippingPlanes;
         pointCloud.isClipped = updateState.isClipped;
+        pointCloud.attenuation = shading.attenuation;
+        pointCloud.backFaceCulling = shading.backFaceCulling;
+        pointCloud.normalShading = shading.normalShading;
+        pointCloud.geometricError = getGeometricError(that, pointCloud);
+        pointCloud.geometricErrorScale = shading.geometricErrorScale;
+        pointCloud.maximumAttenuation = getMaximumAttenuation(that);
 
-        var shading = that.shading;
-        if (defined(shading)) {
-            pointCloud.attenuation = shading.attenuation;
-            pointCloud.geometricError = getGeometricError(that, pointCloud);
-            pointCloud.geometricErrorScale = shading.geometricErrorScale;
-            pointCloud.maximumAttenuation = getMaximumAttenuation(that);
-        }
         pointCloud.update(frameState);
         frame.touchedFrameNumber = frameState.frameNumber;
     }
@@ -783,6 +762,4 @@ define([
         this._pickId = this._pickId && this._pickId.destroy();
         return destroyObject(this);
     };
-
-    return TimeDynamicPointCloud;
-});
+export default TimeDynamicPointCloud;

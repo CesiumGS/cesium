@@ -1,38 +1,20 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/BoundingSphere',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Scene/PolylineColorAppearance',
-        '../Scene/PolylineMaterialAppearance',
-        '../Scene/ShadowMode',
-        './BoundingSphereState',
-        './ColorMaterialProperty',
-        './DynamicGeometryBatch',
-        './PolylineGeometryUpdater',
-        './StaticGeometryColorBatch',
-        './StaticGeometryPerMaterialBatch',
-        './StaticGroundPolylinePerMaterialBatch'
-    ], function(
-        AssociativeArray,
-        BoundingSphere,
-        Check,
-        defaultValue,
-        defined,
-        destroyObject,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
-        ShadowMode,
-        BoundingSphereState,
-        ColorMaterialProperty,
-        DynamicGeometryBatch,
-        PolylineGeometryUpdater,
-        StaticGeometryColorBatch,
-        StaticGeometryPerMaterialBatch,
-        StaticGroundPolylinePerMaterialBatch) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import ClassificationType from '../Scene/ClassificationType.js';
+import PolylineColorAppearance from '../Scene/PolylineColorAppearance.js';
+import PolylineMaterialAppearance from '../Scene/PolylineMaterialAppearance.js';
+import ShadowMode from '../Scene/ShadowMode.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import DynamicGeometryBatch from './DynamicGeometryBatch.js';
+import PolylineGeometryUpdater from './PolylineGeometryUpdater.js';
+import StaticGeometryColorBatch from './StaticGeometryColorBatch.js';
+import StaticGeometryPerMaterialBatch from './StaticGeometryPerMaterialBatch.js';
+import StaticGroundPolylinePerMaterialBatch from './StaticGroundPolylinePerMaterialBatch.js';
 
     var emptyArray = [];
 
@@ -52,7 +34,8 @@ define([
         }
 
         if (updater.clampToGround && updater.fillEnabled) { // Also checks for support
-            that._groundBatch.add(time, updater);
+            var classificationType = updater.classificationTypeProperty.getValue(time);
+            that._groundBatches[classificationType].add(time, updater);
             return;
         }
 
@@ -106,11 +89,12 @@ define([
         this._removedObjects = new AssociativeArray();
         this._changedObjects = new AssociativeArray();
 
+        var i;
         var numberOfShadowModes = ShadowMode.NUMBER_OF_SHADOW_MODES;
         this._colorBatches = new Array(numberOfShadowModes * 3);
         this._materialBatches = new Array(numberOfShadowModes * 3);
 
-        for (var i = 0; i < numberOfShadowModes; ++i) {
+        for (i = 0; i < numberOfShadowModes; ++i) {
             this._colorBatches[i] = new StaticGeometryColorBatch(primitives, PolylineColorAppearance, undefined, false, i); // no depth fail appearance
             this._materialBatches[i] = new StaticGeometryPerMaterialBatch(primitives, PolylineMaterialAppearance, undefined, false, i);
 
@@ -122,10 +106,15 @@ define([
         }
 
         this._dynamicBatch = new DynamicGeometryBatch(primitives, groundPrimitives);
-        // Only available for terrain classification
-        this._groundBatch = new StaticGroundPolylinePerMaterialBatch(groundPrimitives);
 
-        this._batches = this._colorBatches.concat(this._materialBatches, this._dynamicBatch, this._groundBatch);
+        var numberOfClassificationTypes = ClassificationType.NUMBER_OF_CLASSIFICATION_TYPES;
+        this._groundBatches = new Array(numberOfClassificationTypes);
+
+        for (i = 0; i < numberOfClassificationTypes; ++i) {
+            this._groundBatches[i] = new StaticGroundPolylinePerMaterialBatch(groundPrimitives, i);
+        }
+
+        this._batches = this._colorBatches.concat(this._materialBatches, this._dynamicBatch, this._groundBatches);
 
         this._subscriptions = new AssociativeArray();
         this._updaters = new AssociativeArray();
@@ -338,6 +327,4 @@ define([
             }
         }
     };
-
-    return PolylineVisualizer;
-});
+export default PolylineVisualizer;

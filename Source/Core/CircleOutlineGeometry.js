@@ -1,18 +1,9 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './EllipseOutlineGeometry',
-        './Ellipsoid'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        EllipseOutlineGeometry,
-        Ellipsoid) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import EllipseOutlineGeometry from './EllipseOutlineGeometry.js';
+import Ellipsoid from './Ellipsoid.js';
 
     /**
      * A description of the outline of a circle on the ellipsoid.
@@ -141,6 +132,4 @@ define([
     CircleOutlineGeometry.createGeometry = function(circleGeometry) {
         return EllipseOutlineGeometry.createGeometry(circleGeometry._ellipseGeometry);
     };
-
-    return CircleOutlineGeometry;
-});
+export default CircleOutlineGeometry;

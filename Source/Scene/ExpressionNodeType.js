@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -28,6 +24,4 @@ define([
         LITERAL_UNDEFINED : 17,
         BUILTIN_VARIABLE : 18
     };
-
-    return freezeObject(ExpressionNodeType);
-});
+export default freezeObject(ExpressionNodeType);

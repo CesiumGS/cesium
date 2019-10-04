@@ -1,20 +1,10 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/Math',
-        '../Core/destroyObject',
-        '../Renderer/ClearCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/Texture'
-    ], function(
-        Color,
-        defined,
-        CesiumMath,
-        destroyObject,
-        ClearCommand,
-        Framebuffer,
-        Texture) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import CesiumMath from '../Core/Math.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import Texture from '../Renderer/Texture.js';
 
     /**
      * Creates a minimal amount of textures and framebuffers.
@@ -111,6 +101,9 @@ define([
         } else {
             for (j = 1; j < length; ++j) {
                 name = getLastStageName(composite.get(j));
+                if (!defined(dependencies[name])) {
+                    dependencies[name] = {};
+                }
                 dependencies[name][originalDependency] = true;
             }
         }
@@ -309,8 +302,7 @@ define([
      */
     PostProcessStageTextureCache.prototype.clear = function(context) {
         var framebuffers = this._framebuffers;
-        var length = 0;
-        for (var i = 0; i < length; ++i) {
+        for (var i = 0; i < framebuffers.length; ++i) {
             framebuffers[i].clear.execute(context);
         }
     };
@@ -379,6 +371,4 @@ define([
         releaseResources(this);
         return destroyObject(this);
     };
-
-    return PostProcessStageTextureCache;
-});
+export default PostProcessStageTextureCache;

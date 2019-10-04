@@ -1,30 +1,15 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/NearFarScalar',
-        '../Scene/createBillboardPointCallback',
-        '../Scene/HeightReference',
-        './BoundingSphereState',
-        './Property'
-    ], function(
-        AssociativeArray,
-        Cartesian3,
-        Color,
-        defined,
-        destroyObject,
-        DeveloperError,
-        DistanceDisplayCondition,
-        NearFarScalar,
-        createBillboardPointCallback,
-        HeightReference,
-        BoundingSphereState,
-        Property) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import NearFarScalar from '../Core/NearFarScalar.js';
+import createBillboardPointCallback from '../Scene/createBillboardPointCallback.js';
+import HeightReference from '../Scene/HeightReference.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import Property from './Property.js';
 
     var defaultColor = Color.WHITE;
     var defaultOutlineColor = Color.BLACK;
@@ -114,6 +99,7 @@ define([
             }
 
             var needsRedraw = false;
+            var updateClamping = false;
             if ((heightReference !== HeightReference.NONE) && !defined(billboard)) {
                 if (defined(pointPrimitive)) {
                     returnPrimitive(item, entity, cluster);
@@ -125,6 +111,12 @@ define([
                 billboard.image = undefined;
                 item.billboard = billboard;
                 needsRedraw = true;
+
+                // If this new billboard happens to have a position and height reference that match our new values,
+                // billboard._updateClamping will not be called automatically. That's a problem because the clamped
+                // height may be based on different terrain than is now loaded. So we'll manually call
+                // _updateClamping below.
+                updateClamping = Cartesian3.equals(billboard.position, position) && billboard.heightReference === heightReference;
             } else if ((heightReference === HeightReference.NONE) && !defined(pointPrimitive)) {
                 if (defined(billboard)) {
                     returnPrimitive(item, entity, cluster);
@@ -189,6 +181,10 @@ define([
                     var textureId = JSON.stringify([cssColor, newPixelSize, cssOutlineColor, newOutlineWidth]);
 
                     billboard.setImage(textureId, createBillboardPointCallback(centerAlpha, cssColor, cssOutlineColor, newOutlineWidth, newPixelSize));
+                }
+
+                if (updateClamping) {
+                    billboard._updateClamping();
                 }
             }
         }
@@ -303,6 +299,4 @@ define([
             }
         }
     }
-
-    return PointVisualizer;
-});
+export default PointVisualizer;

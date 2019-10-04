@@ -1,14 +1,7 @@
-define([
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Math'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        CesiumMath) {
-    'use strict';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     /**
      * Provides terrain or other geometry for the surface of an ellipsoid.  The surface geometry is
@@ -124,12 +117,12 @@ define([
      *
      * @param {Number} width The number of vertices in the regular grid in the horizontal direction.
      * @param {Number} height The number of vertices in the regular grid in the vertical direction.
-     * @returns {Uint16Array} The list of indices.
+     * @returns {Uint16Array|Uint32Array} The list of indices. Uint16Array gets returned for 64KB or less and Uint32Array for 4GB or less.
      */
     TerrainProvider.getRegularGridIndices = function(width, height) {
         //>>includeStart('debug', pragmas.debug);
-        if (width * height >= CesiumMath.SIXTY_FOUR_KILOBYTES) {
-            throw new DeveloperError('The total number of vertices (width * height) must be less than 65536.');
+        if (width * height >= CesiumMath.FOUR_GIGABYTES) {
+            throw new DeveloperError('The total number of vertices (width * height) must be less than 4,294,967,295.');
         }
         //>>includeEnd('debug');
 
@@ -140,7 +133,11 @@ define([
 
         var indices = byWidth[height];
         if (!defined(indices)) {
-            indices = byWidth[height] = new Uint16Array((width - 1) * (height - 1) * 6);
+            if (width * height < CesiumMath.SIXTY_FOUR_KILOBYTES) {
+                indices = byWidth[height] = new Uint16Array((width - 1) * (height - 1) * 6);
+            } else {
+                indices = byWidth[height] = new Uint32Array((width - 1) * (height - 1) * 6);
+            }
 
             var index = 0;
             var indicesIndex = 0;
@@ -229,6 +226,7 @@ define([
 
     /**
      * Makes sure we load availability data for a tile
+     * @function
      *
      * @param {Number} x The X coordinate of the tile for which to request geometry.
      * @param {Number} y The Y coordinate of the tile for which to request geometry.
@@ -236,6 +234,4 @@ define([
      * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
      */
     TerrainProvider.prototype.loadTileDataAvailability = DeveloperError.throwInstantiationError;
-
-    return TerrainProvider;
-});
+export default TerrainProvider;

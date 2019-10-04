@@ -1,10 +1,5 @@
-define([
-        './DeveloperError',
-        './QuadraticRealPolynomial'
-    ], function(
-        DeveloperError,
-        QuadraticRealPolynomial) {
-    'use strict';
+import DeveloperError from './DeveloperError.js';
+import QuadraticRealPolynomial from './QuadraticRealPolynomial.js';
 
     /**
      * Defines functions for 3rd order polynomial functions of one variable with only real coefficients.
@@ -234,6 +229,4 @@ define([
 
         return computeRealRoots(a, b, c, d);
     };
-
-    return CubicRealPolynomial;
-});
+export default CubicRealPolynomial;

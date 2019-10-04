@@ -1,24 +1,14 @@
-defineSuite([
-        'DataSources/VelocityVectorProperty',
-        'Core/Cartesian3',
-        'Core/Event',
-        'Core/ExtrapolationType',
-        'Core/JulianDate',
-        'Core/Math',
-        'DataSources/CallbackProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/SampledPositionProperty'
-    ], function(
-        VelocityVectorProperty,
-        Cartesian3,
-        Event,
-        ExtrapolationType,
-        JulianDate,
-        CesiumMath,
-        CallbackProperty,
-        ConstantPositionProperty,
-        SampledPositionProperty) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { ExtrapolationType } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { VelocityVectorProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/VelocityVectorProperty', function() {
 
     var time = JulianDate.now();
 

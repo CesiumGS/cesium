@@ -1,22 +1,11 @@
-define([
-        '../ThirdParty/when',
-        './buildModuleUrl',
-        './defaultValue',
-        './defined',
-        './Iau2006XysSample',
-        './JulianDate',
-        './Resource',
-        './TimeStandard'
-    ], function(
-        when,
-        buildModuleUrl,
-        defaultValue,
-        defined,
-        Iau2006XysSample,
-        JulianDate,
-        Resource,
-        TimeStandard) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import buildModuleUrl from './buildModuleUrl.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Iau2006XysSample from './Iau2006XysSample.js';
+import JulianDate from './JulianDate.js';
+import Resource from './Resource.js';
+import TimeStandard from './TimeStandard.js';
 
     /**
      * A set of IAU2006 XYS data that is used to evaluate the transformation between the International
@@ -96,7 +85,7 @@ define([
      *                 the Terrestrial Time (TT) time standard.
      * @param {Number} stopSecondTT The seconds past noon of the end of the interval to preload, expressed in
      *                 the Terrestrial Time (TT) time standard.
-     * @returns {Promise.<undefined>} A promise that, when resolved, indicates that the requested interval has been
+     * @returns {Promise} A promise that, when resolved, indicates that the requested interval has been
      *                    preloaded.
      */
     Iau2006XysData.prototype.preload = function(startDayTT, startSecondTT, stopDayTT, stopSecondTT) {
@@ -265,6 +254,4 @@ define([
 
         return deferred.promise;
     }
-
-    return Iau2006XysData;
-});
+export default Iau2006XysData;

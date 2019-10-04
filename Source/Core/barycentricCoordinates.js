@@ -1,16 +1,8 @@
-define([
-        './Cartesian2',
-        './Cartesian3',
-        './Check',
-        './defined',
-        './Math'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Check,
-        defined,
-        CesiumMath) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defined from './defined.js';
+import CesiumMath from './Math.js';
 
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
@@ -100,13 +92,19 @@ define([
             dot12 = Cartesian3.dot(v1, v2);
         }
 
+        result.y = (dot11 * dot02 - dot01 * dot12);
+        result.z = (dot00 * dot12 - dot01 * dot02);
         var q = dot00 * dot11 - dot01 * dot01;
-        var invQ = 1.0 / q;
-        result.y = (dot11 * dot02 - dot01 * dot12) * invQ;
-        result.z = (dot00 * dot12 - dot01 * dot02) * invQ;
+
+        // This is done to avoid dividing by infinity causing a NaN
+        if (result.y !== 0) {
+            result.y /= q;
+        }
+        if (result.z !== 0) {
+            result.z /= q;
+        }
+
         result.x = 1.0 - result.y - result.z;
         return result;
     }
-
-    return barycentricCoordinates;
-});
+export default barycentricCoordinates;

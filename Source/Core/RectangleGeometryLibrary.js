@@ -1,22 +1,11 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './defined',
-        './DeveloperError',
-        './GeographicProjection',
-        './Math',
-        './Matrix2',
-        './Rectangle'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        defined,
-        DeveloperError,
-        GeographicProjection,
-        CesiumMath,
-        Matrix2,
-        Rectangle) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import GeographicProjection from './GeographicProjection.js';
+import CesiumMath from './Math.js';
+import Matrix2 from './Matrix2.js';
+import Rectangle from './Rectangle.js';
 
     var cos = Math.cos;
     var sin = Math.sin;
@@ -132,6 +121,16 @@ define([
         var north = rectangle.north;
         var south = rectangle.south;
 
+        var northCap = false;
+        var southCap = false;
+
+        if (north === CesiumMath.PI_OVER_TWO) {
+            northCap = true;
+        }
+        if (south === -CesiumMath.PI_OVER_TWO) {
+            southCap = true;
+        }
+
         var width;
         var height;
         var granularityX;
@@ -140,17 +139,14 @@ define([
         var dy = north - south;
         if (west > east) {
             dx = (CesiumMath.TWO_PI - west + east);
-            width = Math.ceil(dx / granularity) + 1;
-            height = Math.ceil(dy / granularity) + 1;
-            granularityX = dx / (width - 1);
-            granularityY = dy / (height - 1);
         } else {
             dx = east - west;
-            width = Math.ceil(dx / granularity) + 1;
-            height = Math.ceil(dy / granularity) + 1;
-            granularityX = dx / (width - 1);
-            granularityY = dy / (height - 1);
         }
+
+        width = Math.ceil(dx / granularity) + 1;
+        height = Math.ceil(dy / granularity) + 1;
+        granularityX = dx / (width - 1);
+        granularityY = dy / (height - 1);
 
         var nwCorner = Rectangle.northwest(rectangle, nwCornerResult);
         var center = Rectangle.center(rectangle, centerScratch);
@@ -176,7 +172,9 @@ define([
             nwCorner : nwCorner,
             boundingRectangle : boundingRectangle,
             width: width,
-            height: height
+            height: height,
+            northCap: northCap,
+            southCap: southCap
         };
 
         if (rotation !== 0) {
@@ -221,6 +219,4 @@ define([
 
         return computedOptions;
     };
-
-    return RectangleGeometryLibrary;
-});
+export default RectangleGeometryLibrary;

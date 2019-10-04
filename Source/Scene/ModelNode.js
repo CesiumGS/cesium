@@ -1,10 +1,5 @@
-define([
-        '../Core/defineProperties',
-        '../Core/Matrix4'
-    ], function(
-        defineProperties,
-        Matrix4) {
-    'use strict';
+import defineProperties from '../Core/defineProperties.js';
+import Matrix4 from '../Core/Matrix4.js';
 
     /**
      * A model node with a transform for user-defined animations.  A glTF asset can
@@ -38,6 +33,7 @@ define([
 
         this._show = true;
         this._matrix = Matrix4.clone(matrix);
+        this._originalMatrix = Matrix4.clone(matrix);
     }
 
     defineProperties(ModelNode.prototype, {
@@ -112,6 +108,19 @@ define([
                 model._cesiumAnimationsDirty = true;
                 this._runtimeNode.dirtyNumber = model._maxDirtyNumber;
             }
+        },
+
+        /**
+         * Gets the node's original 4x4 matrix transform from its local coordinates to
+         * its parent's, without any node transformations or articulations applied.
+         *
+         * @memberof ModelNode.prototype
+         * @type {Matrix4}
+         */
+        originalMatrix : {
+            get : function() {
+                return this._originalMatrix;
+            }
         }
     });
 
@@ -123,6 +132,4 @@ define([
         // to keep the matrix in-sync during a glTF animation.
         Matrix4.clone(matrix, this._matrix);
     };
-
-    return ModelNode;
-});
+export default ModelNode;

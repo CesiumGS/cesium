@@ -1,38 +1,19 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/NearFarScalar',
-        '../Scene/HeightReference',
-        '../Scene/HorizontalOrigin',
-        '../Scene/LabelStyle',
-        '../Scene/VerticalOrigin',
-        './BoundingSphereState',
-        './Property'
-    ], function(
-        AssociativeArray,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defaultValue,
-        defined,
-        destroyObject,
-        DeveloperError,
-        DistanceDisplayCondition,
-        NearFarScalar,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        VerticalOrigin,
-        BoundingSphereState,
-        Property) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import NearFarScalar from '../Core/NearFarScalar.js';
+import HeightReference from '../Scene/HeightReference.js';
+import HorizontalOrigin from '../Scene/HorizontalOrigin.js';
+import LabelStyle from '../Scene/LabelStyle.js';
+import VerticalOrigin from '../Scene/VerticalOrigin.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import Property from './Property.js';
 
     var defaultScale = 1.0;
     var defaultFont = '30px sans-serif';
@@ -136,10 +117,19 @@ define([
                 cluster._clusterDirty = true;
             }
 
+            var updateClamping = false;
+            var heightReference = Property.getValueOrDefault(labelGraphics._heightReference, time, defaultHeightReference);
+
             if (!defined(label)) {
                 label = cluster.getLabel(entity);
                 label.id = entity;
                 item.label = label;
+
+                // If this new label happens to have a position and height reference that match our new values,
+                // label._updateClamping will not be called automatically. That's a problem because the clamped
+                // height may be based on different terrain than is now loaded. So we'll manually call
+                // _updateClamping below.
+                updateClamping = Cartesian3.equals(label.position, position) && label.heightReference === heightReference;
             }
 
             label.show = true;
@@ -156,7 +146,7 @@ define([
             label.backgroundPadding = Property.getValueOrDefault(labelGraphics._backgroundPadding, time, defaultBackgroundPadding, backgroundPaddingScratch);
             label.pixelOffset = Property.getValueOrDefault(labelGraphics._pixelOffset, time, defaultPixelOffset, pixelOffsetScratch);
             label.eyeOffset = Property.getValueOrDefault(labelGraphics._eyeOffset, time, defaultEyeOffset, eyeOffsetScratch);
-            label.heightReference = Property.getValueOrDefault(labelGraphics._heightReference, time, defaultHeightReference);
+            label.heightReference = heightReference;
             label.horizontalOrigin = Property.getValueOrDefault(labelGraphics._horizontalOrigin, time, defaultHorizontalOrigin);
             label.verticalOrigin = Property.getValueOrDefault(labelGraphics._verticalOrigin, time, defaultVerticalOrigin);
             label.translucencyByDistance = Property.getValueOrUndefined(labelGraphics._translucencyByDistance, time, translucencyByDistanceScratch);
@@ -164,6 +154,10 @@ define([
             label.scaleByDistance = Property.getValueOrUndefined(labelGraphics._scaleByDistance, time, scaleByDistanceScratch);
             label.distanceDisplayCondition = Property.getValueOrUndefined(labelGraphics._distanceDisplayCondition, time, distanceDisplayConditionScratch);
             label.disableDepthTestDistance = Property.getValueOrUndefined(labelGraphics._disableDepthTestDistance, time);
+
+            if (updateClamping) {
+                label._updateClamping();
+            }
         }
         return true;
     };
@@ -259,6 +253,4 @@ define([
             cluster.removeLabel(entity);
         }
     }
-
-    return LabelVisualizer;
-});
+export default LabelVisualizer;

@@ -1,22 +1,14 @@
-defineSuite([
-        'DataSources/SampledPositionProperty',
-        'Core/Cartesian3',
-        'Core/ExtrapolationType',
-        'Core/JulianDate',
-        'Core/LagrangePolynomialApproximation',
-        'Core/LinearApproximation',
-        'Core/ReferenceFrame',
-        'DataSources/PositionProperty'
-    ], function(
-        SampledPositionProperty,
-        Cartesian3,
-        ExtrapolationType,
-        JulianDate,
-        LagrangePolynomialApproximation,
-        LinearApproximation,
-        ReferenceFrame,
-        PositionProperty) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ExtrapolationType } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { LagrangePolynomialApproximation } from '../../Source/Cesium.js';
+import { LinearApproximation } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { PositionProperty } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/SampledPositionProperty', function() {
 
     it('constructor sets expected defaults', function() {
         var property = new SampledPositionProperty();
@@ -110,8 +102,8 @@ defineSuite([
     });
 
     it('addSample works', function() {
-        var values = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var values = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
 
         var property = new SampledPositionProperty();
         property.addSample(times[0], values[0]);
@@ -125,8 +117,8 @@ defineSuite([
     });
 
     it('addSamples works', function() {
-        var values = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
         var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var values = [new Cartesian3(7, 8, 9), new Cartesian3(8, 9, 10), new Cartesian3(9, 10, 11)];
 
         var property = new SampledPositionProperty();
         property.addSamples(times, values);
@@ -134,6 +126,50 @@ defineSuite([
         expect(property.getValue(times[1])).toEqual(values[1]);
         expect(property.getValue(times[2])).toEqual(values[2]);
         expect(property.getValue(new JulianDate(0.5, 0))).toEqual(new Cartesian3(7.5, 8.5, 9.5));
+    });
+
+    it('can remove a sample at a date', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0)];
+        var values = [new Cartesian3(7, 8, 9), new Cartesian3(18, 19, 110), new Cartesian3(9, 10, 11)];
+
+        var property = new SampledPositionProperty();
+        property.addSamples(times, values);
+
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.removeSample(times[1]);
+
+        expect(listener).toHaveBeenCalledWith(property);
+
+        expect(property.getValue(times[0])).toEqual(values[0]);
+        // removing the sample at times[1] causes the property to interpolate
+        expect(property.getValue(times[1])).toEqual(new Cartesian3(8, 9, 10));
+        expect(property.getValue(times[2])).toEqual(values[2]);
+    });
+
+    it('can remove samples for a time interval', function() {
+        var times = [new JulianDate(0, 0), new JulianDate(1, 0), new JulianDate(2, 0), new JulianDate(3, 0)];
+        var values = [new Cartesian3(7, 8, 9), new Cartesian3(18, 19, 110), new Cartesian3(19, 20, 110), new Cartesian3(10, 11, 12)];
+
+        var property = new SampledPositionProperty();
+        property.addSamples(times, values);
+
+        var listener = jasmine.createSpy('listener');
+        property.definitionChanged.addEventListener(listener);
+
+        property.removeSamples(new TimeInterval({
+            start: times[1],
+            stop: times[2]
+        }));
+
+        expect(listener).toHaveBeenCalledWith(property);
+
+        expect(property.getValue(times[0])).toEqual(values[0]);
+        // removing the samples causes the property to interpolate
+        expect(property.getValue(times[1])).toEqual(new Cartesian3(8, 9, 10));
+        expect(property.getValue(times[2])).toEqual(new Cartesian3(9, 10, 11));
+        expect(property.getValue(times[3])).toEqual(values[3]);
     });
 
     it('addSamplesPackedArray works with derivatives', function() {

@@ -1,14 +1,9 @@
-defineSuite([
-        'Core/CircleOutlineGeometry',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Specs/createPackableSpecs'
-    ], function(
-        CircleOutlineGeometry,
-        Cartesian3,
-        Ellipsoid,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CircleOutlineGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/CircleOutlineGeometry', function() {
 
     it('throws without a center', function() {
         expect(function() {

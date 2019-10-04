@@ -1,41 +1,24 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Check',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/PixelFormat',
-        '../Core/WebGLConstants',
-        './ContextLimits',
-        './MipmapHint',
-        './PixelDatatype',
-        './Sampler',
-        './TextureMagnificationFilter',
-        './TextureMinificationFilter'
-    ], function(
-        Cartesian2,
-        Check,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        CesiumMath,
-        PixelFormat,
-        WebGLConstants,
-        ContextLimits,
-        MipmapHint,
-        PixelDatatype,
-        Sampler,
-        TextureMagnificationFilter,
-        TextureMinificationFilter) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Check from '../Core/Check.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import ContextLimits from './ContextLimits.js';
+import MipmapHint from './MipmapHint.js';
+import PixelDatatype from './PixelDatatype.js';
+import Sampler from './Sampler.js';
+import TextureMagnificationFilter from './TextureMagnificationFilter.js';
+import TextureMinificationFilter from './TextureMinificationFilter.js';
 
+    /**
+     * @private
+    */
     function Texture(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
@@ -189,10 +172,15 @@ define([
         var textureTarget = gl.TEXTURE_2D;
         var texture = gl.createTexture();
 
-        // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(textureTarget, texture);
+
+        var unpackAlignment = 4;
+        if (defined(source) && defined(source.arrayBufferView) && !isCompressed) {
+            unpackAlignment = PixelFormat.alignmentInBytes(pixelFormat, pixelDatatype, width);
+        }
+
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
         if (defined(source)) {
             if (defined(source.arrayBufferView)) {
@@ -263,6 +251,15 @@ define([
 
         this.sampler = defined(options.sampler) ? options.sampler : new Sampler();
     }
+
+    /**
+     * This function is identical to using the Texture constructor except that it can be
+     * replaced with a mock/spy in tests.
+     * @private
+     */
+    Texture.create = function(options) {
+        return new Texture(options);
+    };
 
     /**
      * Creates a texture, and copies a subimage of the framebuffer to it.  When called without arguments,
@@ -506,8 +503,6 @@ define([
         var gl = this._context._gl;
         var target = this._textureTarget;
 
-        // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
@@ -522,6 +517,13 @@ define([
 
         var preMultiplyAlpha = this._preMultiplyAlpha;
         var flipY = this._flipY;
+
+        var unpackAlignment = 4;
+        if (defined(arrayBufferView)) {
+            unpackAlignment = PixelFormat.alignmentInBytes(pixelFormat, pixelDatatype, width);
+        }
+
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
         var uploaded = false;
         if (!this._initialized) {
@@ -555,7 +557,7 @@ define([
         }
 
         if (!uploaded) {
-            if (arrayBufferView) {
+            if (defined(arrayBufferView)) {
                 gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
@@ -686,6 +688,4 @@ define([
         this._context._gl.deleteTexture(this._texture);
         return destroyObject(this);
     };
-
-    return Texture;
-});
+export default Texture;

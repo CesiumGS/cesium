@@ -1,10 +1,5 @@
-define([
-        'Core/defaultValue',
-        'Core/FeatureDetection'
-    ], function(
-        defaultValue,
-        FeatureDetection) {
-    'use strict';
+import { defaultValue } from '../Source/Cesium.js';
+import { FeatureDetection } from '../Source/Cesium.js';
 
     function createMouseEvent(type, options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -92,7 +87,6 @@ define([
         var deltaMode = defaultValue(options.deltaMode, 0);
 
         try {
-            /*global WheelEvent*/
             return new WheelEvent(type, {
                 view : view,
                 detail : detail,
@@ -282,6 +276,4 @@ define([
             eventHandler.call(window, event);
         }
     };
-
-    return DomEventSimulator;
-});
+export default DomEventSimulator;

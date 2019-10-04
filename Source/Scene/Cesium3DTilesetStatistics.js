@@ -1,8 +1,4 @@
-define([
-        '../Core/defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from '../Core/defined.js';
 
     /**
      * @private
@@ -18,6 +14,7 @@ define([
         this.numberOfTilesProcessing = 0;
         this.numberOfTilesWithContentReady = 0; // Number of tiles with content loaded, does not include empty tiles
         this.numberOfTilesTotal = 0; // Number of tiles in tileset JSON (and other tileset JSON files as they are loaded)
+        this.numberOfLoadedTilesTotal = 0; // Running total of loaded tiles for the lifetime of the session
         // Features statistics
         this.numberOfFeaturesSelected = 0; // Number of features rendered
         this.numberOfFeaturesLoaded = 0; // Number of features in memory
@@ -111,6 +108,4 @@ define([
         result.texturesByteLength = statistics.texturesByteLength;
         result.batchTableByteLength = statistics.batchTableByteLength;
     };
-
-    return Cesium3DTilesetStatistics;
-});
+export default Cesium3DTilesetStatistics;
