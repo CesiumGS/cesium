@@ -1,22 +1,11 @@
-define([
-        './Cartesian3',
-        './CornerType',
-        './defined',
-        './Math',
-        './Matrix3',
-        './PolylinePipeline',
-        './PolylineVolumeGeometryLibrary',
-        './Quaternion'
-    ], function(
-        Cartesian3,
-        CornerType,
-        defined,
-        CesiumMath,
-        Matrix3,
-        PolylinePipeline,
-        PolylineVolumeGeometryLibrary,
-        Quaternion) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import CornerType from './CornerType.js';
+import defined from './defined.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import PolylinePipeline from './PolylinePipeline.js';
+import PolylineVolumeGeometryLibrary from './PolylineVolumeGeometryLibrary.js';
+import Quaternion from './Quaternion.js';
 
     /**
      * @private
@@ -308,6 +297,4 @@ define([
             endPositions : endPositions
         };
     };
-
-    return CorridorGeometryLibrary;
-});
+export default CorridorGeometryLibrary;

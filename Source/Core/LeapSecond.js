@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     /**
      * Describes a single leap second, which is constructed from a {@link JulianDate} and a
@@ -24,6 +22,4 @@ define(function() {
          */
         this.offset = offset;
     }
-
-    return LeapSecond;
-});
+export default LeapSecond;

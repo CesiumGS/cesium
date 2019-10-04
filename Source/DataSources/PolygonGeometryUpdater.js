@@ -1,70 +1,32 @@
-define([
-        '../Core/ApproximateTerrainHeights',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/CoplanarPolygonGeometry',
-        '../Core/CoplanarPolygonOutlineGeometry',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/EllipsoidTangentPlane',
-        '../Core/GeometryInstance',
-        '../Core/GeometryOffsetAttribute',
-        '../Core/isArray',
-        '../Core/Iso8601',
-        '../Core/oneTimeWarning',
-        '../Core/OffsetGeometryInstanceAttribute',
-        '../Core/PolygonGeometry',
-        '../Core/PolygonHierarchy',
-        '../Core/PolygonOutlineGeometry',
-        '../Core/Rectangle',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/GroundPrimitive',
-        '../Scene/HeightReference',
-        '../Scene/MaterialAppearance',
-        '../Scene/PerInstanceColorAppearance',
-        './ColorMaterialProperty',
-        './DynamicGeometryUpdater',
-        './GeometryUpdater',
-        './GroundGeometryUpdater',
-        './Property'
-    ], function(
-        ApproximateTerrainHeights,
-        Cartesian2,
-        Cartesian3,
-        Check,
-        Color,
-        ColorGeometryInstanceAttribute,
-        CoplanarPolygonGeometry,
-        CoplanarPolygonOutlineGeometry,
-        defined,
-        DeveloperError,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        EllipsoidTangentPlane,
-        GeometryInstance,
-        GeometryOffsetAttribute,
-        isArray,
-        Iso8601,
-        oneTimeWarning,
-        OffsetGeometryInstanceAttribute,
-        PolygonGeometry,
-        PolygonHierarchy,
-        PolygonOutlineGeometry,
-        Rectangle,
-        ShowGeometryInstanceAttribute,
-        GroundPrimitive,
-        HeightReference,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        ColorMaterialProperty,
-        DynamicGeometryUpdater,
-        GeometryUpdater,
-        GroundGeometryUpdater,
-        Property) {
-    'use strict';
+import ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
+import ArcType from '../Core/ArcType.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import CoplanarPolygonGeometry from '../Core/CoplanarPolygonGeometry.js';
+import CoplanarPolygonOutlineGeometry from '../Core/CoplanarPolygonOutlineGeometry.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import EllipsoidTangentPlane from '../Core/EllipsoidTangentPlane.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import Iso8601 from '../Core/Iso8601.js';
+import OffsetGeometryInstanceAttribute from '../Core/OffsetGeometryInstanceAttribute.js';
+import oneTimeWarning from '../Core/oneTimeWarning.js';
+import PolygonGeometry from '../Core/PolygonGeometry.js';
+import PolygonOutlineGeometry from '../Core/PolygonOutlineGeometry.js';
+import Rectangle from '../Core/Rectangle.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import HeightReference from '../Scene/HeightReference.js';
+import MaterialAppearance from '../Scene/MaterialAppearance.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import DynamicGeometryUpdater from './DynamicGeometryUpdater.js';
+import GeometryUpdater from './GeometryUpdater.js';
+import GroundGeometryUpdater from './GroundGeometryUpdater.js';
+import Property from './Property.js';
 
     var heightAndPerPositionHeightWarning = 'Entity polygons cannot have both height and perPositionHeight.  height will be ignored';
     var heightReferenceAndPerPositionHeightWarning = 'heightReference is not supported for entity polygons with perPositionHeight. heightReference will be ignored';
@@ -88,6 +50,7 @@ define([
         this.granularity = undefined;
         this.stRotation = undefined;
         this.offsetAttribute = undefined;
+        this.arcType = undefined;
     }
 
     /**
@@ -220,10 +183,11 @@ define([
     };
 
     PolygonGeometryUpdater.prototype._computeCenter = function(time, result) {
-        var positions = Property.getValueOrUndefined(this._entity.polygon.hierarchy, time);
-        if (defined(positions) && !isArray(positions)) {
-            positions = positions.positions;
+        var hierarchy = Property.getValueOrUndefined(this._entity.polygon.hierarchy, time);
+        if (!defined(hierarchy)) {
+            return;
         }
+        var positions = hierarchy.positions;
         if (positions.length === 0) {
             return;
         }
@@ -275,6 +239,7 @@ define([
                !Property.isConstant(polygon.closeTop) || //
                !Property.isConstant(polygon.closeBottom) || //
                !Property.isConstant(polygon.zIndex) || //
+               !Property.isConstant(polygon.arcType) || //
                (this._onTerrain && !Property.isConstant(this._materialProperty));
     };
 
@@ -285,10 +250,6 @@ define([
         options.vertexFormat = isColorMaterial ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
 
         var hierarchyValue = polygon.hierarchy.getValue(Iso8601.MINIMUM_VALUE);
-        if (isArray(hierarchyValue)) {
-            hierarchyValue = new PolygonHierarchy(hierarchyValue);
-        }
-
         var heightValue = Property.getValueOrUndefined(polygon.height, Iso8601.MINIMUM_VALUE);
         var heightReferenceValue = Property.getValueOrDefault(polygon.heightReference, Iso8601.MINIMUM_VALUE, HeightReference.NONE);
         var extrudedHeightValue = Property.getValueOrUndefined(polygon.extrudedHeight, Iso8601.MINIMUM_VALUE);
@@ -322,10 +283,11 @@ define([
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, Iso8601.MINIMUM_VALUE, true);
         options.offsetAttribute = offsetAttribute;
         options.height = heightValue;
+        options.arcType = Property.getValueOrDefault(polygon.arcType, Iso8601.MINIMUM_VALUE, ArcType.GEODESIC);
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
-            extrudedHeightValue = ApproximateTerrainHeights.getApproximateTerrainHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
+            extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
         }
 
         options.extrudedHeight = extrudedHeightValue;
@@ -359,12 +321,7 @@ define([
     DyanmicPolygonGeometryUpdater.prototype._setOptions = function(entity, polygon, time) {
         var options = this._options;
 
-        var hierarchy = Property.getValueOrUndefined(polygon.hierarchy, time);
-        if (isArray(hierarchy)) {
-            options.polygonHierarchy = new PolygonHierarchy(hierarchy);
-        } else {
-            options.polygonHierarchy = hierarchy;
-        }
+        options.polygonHierarchy = Property.getValueOrUndefined(polygon.hierarchy, time);
 
         var heightValue = Property.getValueOrUndefined(polygon.height, time);
         var heightReferenceValue = Property.getValueOrDefault(polygon.heightReference, time, HeightReference.NONE);
@@ -399,14 +356,13 @@ define([
         options.closeBottom = Property.getValueOrDefault(polygon.closeBottom, time, true);
         options.offsetAttribute = offsetAttribute;
         options.height = heightValue;
+        options.arcType = Property.getValueOrDefault(polygon.arcType, time, ArcType.GEODESIC);
 
         extrudedHeightValue = GroundGeometryUpdater.getGeometryExtrudedHeight(extrudedHeightValue, extrudedHeightReferenceValue);
         if (extrudedHeightValue === GroundGeometryUpdater.CLAMP_TO_GROUND) {
-            extrudedHeightValue = ApproximateTerrainHeights.getApproximateTerrainHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
+            extrudedHeightValue = ApproximateTerrainHeights.getMinimumMaximumHeights(PolygonGeometry.computeRectangle(options, scratchRectangle)).minimumTerrainHeight;
         }
 
         options.extrudedHeight = extrudedHeightValue;
     };
-
-    return PolygonGeometryUpdater;
-});
+export default PolygonGeometryUpdater;

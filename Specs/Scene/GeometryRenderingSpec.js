@@ -1,86 +1,47 @@
-defineSuite([
-        'Core/BoundingSphere',
-        'Core/BoxGeometry',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/CircleGeometry',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/CoplanarPolygonGeometry',
-        'Core/ComponentDatatype',
-        'Core/CornerType',
-        'Core/CorridorGeometry',
-        'Core/CylinderGeometry',
-        'Core/defined',
-        'Core/EllipseGeometry',
-        'Core/Ellipsoid',
-        'Core/EllipsoidGeometry',
-        'Core/Geometry',
-        'Core/GeometryAttribute',
-        'Core/GeometryInstance',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/PerspectiveFrustum',
-        'Core/PolygonGeometry',
-        'Core/PolylineGeometry',
-        'Core/PolylineVolumeGeometry',
-        'Core/PrimitiveType',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/SimplePolylineGeometry',
-        'Core/SphereGeometry',
-        'Core/Transforms',
-        'Core/WallGeometry',
-        'Scene/EllipsoidSurfaceAppearance',
-        'Scene/Material',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/PolylineColorAppearance',
-        'Scene/Primitive',
-        'Scene/SceneMode',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], 'Scene/GeometryRendering', function(
-        BoundingSphere,
-        BoxGeometry,
-        Cartesian2,
-        Cartesian3,
-        CircleGeometry,
-        Color,
-        ColorGeometryInstanceAttribute,
-        CoplanarPolygonGeometry,
-        ComponentDatatype,
-        CornerType,
-        CorridorGeometry,
-        CylinderGeometry,
-        defined,
-        EllipseGeometry,
-        Ellipsoid,
-        EllipsoidGeometry,
-        Geometry,
-        GeometryAttribute,
-        GeometryInstance,
-        CesiumMath,
-        Matrix4,
-        PerspectiveFrustum,
-        PolygonGeometry,
-        PolylineGeometry,
-        PolylineVolumeGeometry,
-        PrimitiveType,
-        Rectangle,
-        RectangleGeometry,
-        SimplePolylineGeometry,
-        SphereGeometry,
-        Transforms,
-        WallGeometry,
-        EllipsoidSurfaceAppearance,
-        Material,
-        PerInstanceColorAppearance,
-        PolylineColorAppearance,
-        Primitive,
-        SceneMode,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { BoxGeometry } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CircleGeometry } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { CoplanarPolygonGeometry } from '../../Source/Cesium.js';
+import { CornerType } from '../../Source/Cesium.js';
+import { CorridorGeometry } from '../../Source/Cesium.js';
+import { CylinderGeometry } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { EllipseGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidGeometry } from '../../Source/Cesium.js';
+import { Geometry } from '../../Source/Cesium.js';
+import { GeometryAttribute } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { PlaneGeometry } from '../../Source/Cesium.js';
+import { PolygonGeometry } from '../../Source/Cesium.js';
+import { PolylineGeometry } from '../../Source/Cesium.js';
+import { PolylineVolumeGeometry } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { SimplePolylineGeometry } from '../../Source/Cesium.js';
+import { SphereGeometry } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { WallGeometry } from '../../Source/Cesium.js';
+import { EllipsoidSurfaceAppearance } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { PolylineColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/GeometryRenderingSpec', function() {
 
     var scene;
     var ellipsoid;
@@ -270,6 +231,45 @@ defineSuite([
                 }
             });
             geometry = BoxGeometry.createGeometry(instance.geometry);
+            geometry.boundingSphereWC = BoundingSphere.transform(geometry.boundingSphere, instance.modelMatrix);
+        });
+
+        it('3D', function() {
+            render3D(instance);
+        });
+
+        it('Columbus view', function() {
+            renderCV(instance);
+        });
+
+        it('2D', function() {
+            render2D(instance);
+        });
+
+        it('pick', function() {
+            pickGeometry(instance);
+        });
+
+        it('async', function() {
+            return renderAsync(instance);
+        });
+    }, 'WebGL');
+
+    describe('PlaneGeometry', function() {
+        var instance;
+        beforeAll(function() {
+            instance = new GeometryInstance({
+                geometry : new PlaneGeometry({
+                    vertexFormat : PerInstanceColorAppearance.FLAT_VERTEX_FORMAT
+                }),
+                modelMatrix : Matrix4.multiplyByTranslation(Transforms.eastNorthUpToFixedFrame(
+                    Cartesian3.fromDegrees(-75.59777, 40.03883)), new Cartesian3(0.0, 0.0, 100000.0), new Matrix4()),
+                id : 'plane',
+                attributes : {
+                    color : new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 1.0)
+                }
+            });
+            geometry = PlaneGeometry.createGeometry(instance.geometry);
             geometry.boundingSphereWC = BoundingSphere.transform(geometry.boundingSphere, instance.modelMatrix);
         });
 
@@ -1522,7 +1522,7 @@ defineSuite([
                     ]),
                     width : 20.0,
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
-                    followSurface: false
+                    arcType : ArcType.NONE
                 }),
                 id : 'polyline'
             });
@@ -1541,7 +1541,7 @@ defineSuite([
                     width : 20.0,
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
                     colorsPerVertex : true,
-                    followSurface: false
+                    arcType : ArcType.NONE
                 }),
                 id : 'polyline'
             });

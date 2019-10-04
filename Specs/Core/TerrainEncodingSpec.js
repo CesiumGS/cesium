@@ -1,22 +1,13 @@
-defineSuite([
-        'Core/TerrainEncoding',
-        'Core/AttributeCompression',
-        'Core/AxisAlignedBoundingBox',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Matrix4',
-        'Core/TerrainQuantization',
-        'Core/Transforms'
-    ], function(
-        TerrainEncoding,
-        AttributeCompression,
-        AxisAlignedBoundingBox,
-        Cartesian2,
-        Cartesian3,
-        Matrix4,
-        TerrainQuantization,
-        Transforms) {
-    'use strict';
+import { AttributeCompression } from '../../Source/Cesium.js';
+import { AxisAlignedBoundingBox } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { TerrainEncoding } from '../../Source/Cesium.js';
+import { TerrainQuantization } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+
+describe('Core/TerrainEncoding', function() {
 
     var center;
     var maximum;
@@ -38,7 +29,7 @@ defineSuite([
 
     it('default constructs', function() {
         var encoding = new TerrainEncoding();
-        expect(encoding.quantization).not.toBeDefined();
+        expect(encoding.quantization).toBe(TerrainQuantization.NONE);
         expect(encoding.minimumHeight).not.toBeDefined();
         expect(encoding.maximumHeight).not.toBeDefined();
         expect(encoding.center).not.toBeDefined();

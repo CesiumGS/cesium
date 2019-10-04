@@ -1,22 +1,11 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './Property'
-    ], function(
-        Cartesian2,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        Event,
-        createPropertyDescriptor,
-        Property) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import Property from './Property.js';
 
     var defaultEvenColor = Color.WHITE;
     var defaultOddColor = Color.BLACK;
@@ -36,13 +25,10 @@ define([
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         this._definitionChanged = new Event();
-
         this._evenColor = undefined;
         this._evenColorSubscription = undefined;
-
         this._oddColor = undefined;
         this._oddColorSubscription = undefined;
-
         this._repeat = undefined;
         this._repeatSubscription = undefined;
 
@@ -67,6 +53,7 @@ define([
                        Property.isConstant(this._repeat);
             }
         },
+
         /**
          * Gets the event that is raised whenever the definition of this property changes.
          * The definition is considered to have changed if a call to getValue would return
@@ -81,6 +68,7 @@ define([
                 return this._definitionChanged;
             }
         },
+
         /**
          * Gets or sets the Property specifying the first {@link Color}.
          * @memberof CheckerboardMaterialProperty.prototype
@@ -88,6 +76,7 @@ define([
          * @default Color.WHITE
          */
         evenColor : createPropertyDescriptor('evenColor'),
+
         /**
          * Gets or sets the Property specifying the second {@link Color}.
          * @memberof CheckerboardMaterialProperty.prototype
@@ -95,6 +84,7 @@ define([
          * @default Color.BLACK
          */
         oddColor : createPropertyDescriptor('oddColor'),
+
         /**
          * Gets or sets the {@link Cartesian2} Property specifying how many times the tiles repeat in each direction.
          * @memberof CheckerboardMaterialProperty.prototype
@@ -145,6 +135,4 @@ define([
                        Property.equals(this._oddColor, other._oddColor) && //
                        Property.equals(this._repeat, other._repeat));
     };
-
-    return CheckerboardMaterialProperty;
-});
+export default CheckerboardMaterialProperty;

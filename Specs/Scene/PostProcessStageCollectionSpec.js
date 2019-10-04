@@ -1,18 +1,10 @@
-defineSuite([
-        'Scene/PostProcessStageCollection',
-        'Core/Color',
-        'Scene/PostProcessStage',
-        'Scene/Tonemapper',
-        'Specs/createScene',
-        'Specs/ViewportPrimitive'
-    ], function(
-        PostProcessStageCollection,
-        Color,
-        PostProcessStage,
-        Tonemapper,
-        createScene,
-        ViewportPrimitive) {
-    'use strict';
+import { PostProcessStage } from '../../Source/Cesium.js';
+import { PostProcessStageCollection } from '../../Source/Cesium.js';
+import { Tonemapper } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import ViewportPrimitive from '../ViewportPrimitive.js';
+
+describe('Scene/PostProcessStageCollection', function() {
 
     var scene;
 
@@ -278,7 +270,9 @@ defineSuite([
 
         scene.postProcessStages.tonemapper = Tonemapper.MODIFIED_REINHARD;
 
-        expect(scene).toRender([127, 0, 0, 255]);
+        expect(scene).toRenderAndCall(function(rgba) {
+            expect(rgba).toEqualEpsilon([127, 0, 0, 255], 5);
+        });
         scene.highDynamicRange = true;
         expect(scene).toRenderAndCall(function(rgba) {
             expect(rgba).not.toEqual([0, 0, 0, 255]);

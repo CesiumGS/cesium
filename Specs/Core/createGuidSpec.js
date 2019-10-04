@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/createGuid'
-    ], function(
-        createGuid) {
-    'use strict';
+import { createGuid } from '../../Source/Cesium.js';
+
+describe('Core/createGuid', function() {
 
     it('creates GUIDs', function() {
         var isGuidRegex = /^(\{){0,1}[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}(\}){0,1}$/;

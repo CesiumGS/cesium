@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/PerspectiveFrustum',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Math',
-        'Core/Matrix4',
-        'Specs/createPackableSpecs'
-    ], function(
-        PerspectiveFrustum,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        CesiumMath,
-        Matrix4,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/PerspectiveFrustum', function() {
 
     var frustum, planes;
 

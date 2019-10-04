@@ -1,8 +1,4 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from './freezeObject.js';
 
     /**
      * Constants to determine how much time advances with each call
@@ -41,6 +37,4 @@ define([
          */
         SYSTEM_CLOCK : 2
     };
-
-    return freezeObject(ClockStep);
-});
+export default freezeObject(ClockStep);

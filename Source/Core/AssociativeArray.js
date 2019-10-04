@@ -1,12 +1,6 @@
-define([
-        './defined',
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * A collection of key-value pairs that is stored as a hash for easy
@@ -131,6 +125,4 @@ define([
             array.length = 0;
         }
     };
-
-    return AssociativeArray;
-});
+export default AssociativeArray;

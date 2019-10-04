@@ -1,14 +1,7 @@
-define([
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Math'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        CesiumMath) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     /**
      * A rotation expressed as a heading, pitch, and roll. Heading is the rotation about the
@@ -50,7 +43,7 @@ define([
         var numeratorHeading = 2 * (quaternion.w * quaternion.z + quaternion.x * quaternion.y);
         result.heading = -Math.atan2(numeratorHeading, denominatorHeading);
         result.roll = Math.atan2(numeratorRoll, denominatorRoll);
-        result.pitch = -Math.asin(test);
+        result.pitch = -CesiumMath.asinClamped(test);
         return result;
     };
 
@@ -184,6 +177,4 @@ define([
     HeadingPitchRoll.prototype.toString = function() {
         return '(' + this.heading + ', ' + this.pitch + ', ' + this.roll + ')';
     };
-
-    return HeadingPitchRoll;
-});
+export default HeadingPitchRoll;

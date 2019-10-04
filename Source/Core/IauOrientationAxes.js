@@ -1,20 +1,10 @@
-define([
-        './Cartesian3',
-        './defined',
-        './Iau2000Orientation',
-        './JulianDate',
-        './Math',
-        './Matrix3',
-        './Quaternion'
-    ], function(
-        Cartesian3,
-        defined,
-        Iau2000Orientation,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        Quaternion) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import defined from './defined.js';
+import Iau2000Orientation from './Iau2000Orientation.js';
+import JulianDate from './JulianDate.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import Quaternion from './Quaternion.js';
 
     /**
      * The Axes representing the orientation of a Globe as represented by the data
@@ -80,7 +70,7 @@ define([
      *
      * @param {JulianDate} date The date to evaluate the matrix.
      * @param {Matrix3} result The object onto which to store the result.
-     * @returns {Matrix} The modified result parameter or a new instance of the rotation from ICRF to Fixed.
+     * @returns {Matrix3} The modified result parameter or a new instance of the rotation from ICRF to Fixed.
      */
     IauOrientationAxes.prototype.evaluate = function(date, result) {
         if (!defined(date)) {
@@ -104,6 +94,4 @@ define([
      * @param {JulianDate} date The date to evaluate the parameters.
      * @returns {IauOrientationParameters} The orientation parameters.
      */
-
-    return IauOrientationAxes;
-});
+export default IauOrientationAxes;

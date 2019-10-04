@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/subdivideArray'
-    ], function(
-        subdivideArray) {
-    'use strict';
+import { subdivideArray } from '../../Source/Cesium.js';
+
+describe('Core/subdivideArray', function() {
 
     it('Splits evenly divided arrays', function() {
         var values = [1, 2, 3, 4];

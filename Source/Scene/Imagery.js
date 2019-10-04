@@ -1,12 +1,6 @@
-define([
-        '../Core/defined',
-        '../Core/destroyObject',
-        './ImageryState'
-    ], function(
-        defined,
-        destroyObject,
-        ImageryState) {
-    'use strict';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import ImageryState from './ImageryState.js';
 
     /**
      * Stores details about a tile of imagery.
@@ -84,10 +78,10 @@ define([
         return this.referenceCount;
     };
 
-    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, priorityFunction) {
-        if (this.state === ImageryState.UNLOADED) {
+    Imagery.prototype.processStateMachine = function(frameState, needGeographicProjection, skipLoading) {
+        if (this.state === ImageryState.UNLOADED && !skipLoading) {
             this.state = ImageryState.TRANSITIONING;
-            this.imageryLayer._requestImagery(this, priorityFunction);
+            this.imageryLayer._requestImagery(this);
         }
 
         if (this.state === ImageryState.RECEIVED) {
@@ -105,6 +99,4 @@ define([
             this.imageryLayer._reprojectTexture(frameState, this, needGeographicProjection);
         }
     };
-
-    return Imagery;
-});
+export default Imagery;

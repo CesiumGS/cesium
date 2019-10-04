@@ -1,10 +1,7 @@
-defineSuite([
-    'Scene/OrderedGroundPrimitiveCollection',
-    'Core/destroyObject'
-], function(
-    OrderedGroundPrimitiveCollection,
-    destroyObject) {
-    'use strict';
+import { destroyObject } from '../../Source/Cesium.js';
+import { OrderedGroundPrimitiveCollection } from '../../Source/Cesium.js';
+
+describe('Scene/OrderedGroundPrimitiveCollection', function() {
 
     var updateCallOrder;
 

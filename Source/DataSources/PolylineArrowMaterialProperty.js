@@ -1,18 +1,9 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './Property'
-    ], function(
-        Color,
-        defined,
-        defineProperties,
-        Event,
-        createPropertyDescriptor,
-        Property) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import Property from './Property.js';
 
     /**
      * A {@link MaterialProperty} that maps to PolylineArrow {@link Material} uniforms.
@@ -26,6 +17,7 @@ define([
         this._definitionChanged = new Event();
         this._color = undefined;
         this._colorSubscription = undefined;
+
         this.color = color;
     }
 
@@ -103,6 +95,4 @@ define([
                (other instanceof PolylineArrowMaterialProperty && //
                 Property.equals(this._color, other._color));
     };
-
-    return PolylineArrowMaterialProperty;
-});
+export default PolylineArrowMaterialProperty;

@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/arraySlice',
-        'Core/FeatureDetection'
-    ], function(
-        arraySlice,
-        FeatureDetection) {
-    'use strict';
+import { arraySlice } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
+
+describe('Core/arraySlice', function() {
 
     var array = [1, 2, 3, 4, 5];
 

@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     /**
      * Represents a Gregorian date in a more precise format than the JavaScript Date object.
@@ -51,6 +49,4 @@ define(function() {
          */
         this.isLeapSecond = isLeapSecond;
     }
-
-    return GregorianDate;
-});
+export default GregorianDate;

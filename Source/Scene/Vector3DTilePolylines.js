@@ -1,60 +1,30 @@
-define([
-        '../Core/arraySlice',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/Ellipsoid',
-        '../Core/FeatureDetection',
-        '../Core/IndexDatatype',
-        '../Core/Matrix4',
-        '../Core/Rectangle',
-        '../Core/TaskProcessor',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArray',
-        '../Shaders/PolylineCommon',
-        '../Shaders/Vector3DTilePolylinesVS',
-        '../ThirdParty/when',
-        './BlendingState',
-        './Cesium3DTileFeature'
-    ], function(
-        arraySlice,
-        Cartesian3,
-        Color,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        Ellipsoid,
-        FeatureDetection,
-        IndexDatatype,
-        Matrix4,
-        Rectangle,
-        TaskProcessor,
-        Buffer,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArray,
-        PolylineCommon,
-        Vector3DTilePolylinesVS,
-        when,
-        BlendingState,
-        Cesium3DTileFeature) {
-    'use strict';
+import arraySlice from '../Core/arraySlice.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Rectangle from '../Core/Rectangle.js';
+import TaskProcessor from '../Core/TaskProcessor.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import PolylineCommon from '../Shaders/PolylineCommon.js';
+import Vector3DTilePolylinesVS from '../Shaders/Vector3DTilePolylinesVS.js';
+import when from '../ThirdParty/when.js';
+import BlendingState from './BlendingState.js';
+import Cesium3DTileFeature from './Cesium3DTileFeature.js';
 
     /**
      * Creates a batch of polylines that have been subdivided to be draped on terrain.
@@ -563,6 +533,4 @@ define([
         this._sp = this._sp && this._sp.destroy();
         return destroyObject(this);
     };
-
-    return Vector3DTilePolylines;
-});
+export default Vector3DTilePolylines;

@@ -37,6 +37,10 @@ uniform float u_dayTextureOneOverGamma[TEXTURE_UNITS];
 uniform vec4 u_dayTextureCutoutRectangles[TEXTURE_UNITS];
 #endif
 
+#ifdef APPLY_COLOR_TO_ALPHA
+uniform vec4 u_colorsToAlpha[TEXTURE_UNITS];
+#endif
+
 uniform vec4 u_dayTextureTexCoordsRectangle[TEXTURE_UNITS];
 #endif
 
@@ -76,6 +80,10 @@ uniform float u_minimumBrightness;
 uniform vec3 u_hsbShift; // Hue, saturation, brightness
 #endif
 
+#ifdef HIGHLIGHT_FILL_TILE
+uniform vec4 u_fillHighlightColor;
+#endif
+
 varying vec3 v_positionMC;
 varying vec3 v_positionEC;
 varying vec3 v_textureCoordinates;
@@ -85,6 +93,7 @@ varying vec3 v_normalEC;
 #ifdef APPLY_MATERIAL
 varying float v_height;
 varying float v_slope;
+varying float v_aspect;
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
@@ -110,7 +119,8 @@ vec4 sampleAndBlend(
     float textureHue,
     float textureSaturation,
     float textureOneOverGamma,
-    float split)
+    float split,
+    vec4 colorToAlpha)
 {
     // This crazy step stuff sets the alpha to 0.0 if this following condition is true:
     //    tileTextureCoordinates.s < textureCoordinateRectangle.s ||
@@ -132,7 +142,17 @@ vec4 sampleAndBlend(
     vec3 color = value.rgb;
     float alpha = value.a;
 
-#ifdef APPLY_GAMMA
+#ifdef APPLY_COLOR_TO_ALPHA
+    vec3 colorDiff = abs(color.rgb - colorToAlpha.rgb);
+    colorDiff.r = max(max(colorDiff.r, colorDiff.g), colorDiff.b);
+    alpha = czm_branchFreeTernary(colorDiff.r < colorToAlpha.a, 0.0, alpha);
+#endif
+
+#if !defined(APPLY_GAMMA)
+    vec4 tempColor = czm_gammaCorrect(vec4(color, alpha));
+    color = tempColor.rgb;
+    alpha = tempColor.a;
+#else
     color = pow(color, vec3(textureOneOverGamma));
 #endif
 
@@ -164,14 +184,31 @@ vec4 sampleAndBlend(
     color = czm_saturation(color, textureSaturation);
 #endif
 
-    vec4 tempColor = czm_gammaCorrect(vec4(color, alpha));
-    color = tempColor.rgb;
-    alpha = tempColor.a;
-
     float sourceAlpha = alpha * textureAlpha;
     float outAlpha = mix(previousColor.a, 1.0, sourceAlpha);
+    outAlpha += sign(outAlpha) - 1.0;
+
     vec3 outColor = mix(previousColor.rgb * previousColor.a, color, sourceAlpha) / outAlpha;
-    return vec4(outColor, outAlpha);
+
+    // When rendering imagery for a tile in multiple passes,
+    // some GPU/WebGL implementation combinations will not blend fragments in
+    // additional passes correctly if their computation includes an unmasked
+    // divide-by-zero operation,
+    // even if it's not in the output or if the output has alpha zero.
+    //
+    // For example, without sanitization for outAlpha,
+    // this renders without artifacts:
+    //   if (outAlpha == 0.0) { outColor = vec3(0.0); }
+    //
+    // but using czm_branchFreeTernary will cause portions of the tile that are
+    // alpha-zero in the additional pass to render as black instead of blending
+    // with the previous pass:
+    //   outColor = czm_branchFreeTernary(outAlpha == 0.0, vec3(0.0), outColor);
+    //
+    // So instead, sanitize against divide-by-zero,
+    // store this state on the sign of outAlpha, and correct on return.
+
+    return vec4(outColor, max(outAlpha, 0.0));
 }
 
 vec3 colorCorrect(vec3 rgb) {
@@ -193,7 +230,6 @@ vec4 computeWaterColor(vec3 positionEyeCoordinates, vec2 textureCoordinates, mat
 
 void main()
 {
-
 #ifdef TILE_LIMIT_RECTANGLE
     if (v_textureCoordinates.x < u_cartographicLimitRectangle.x || u_cartographicLimitRectangle.z < v_textureCoordinates.x ||
         v_textureCoordinates.y < u_cartographicLimitRectangle.y || u_cartographicLimitRectangle.w < v_textureCoordinates.y)
@@ -242,7 +278,7 @@ void main()
     float fadeOutDist = u_lightingFadeDistance.x;
     float fadeInDist = u_lightingFadeDistance.y;
     if (czm_sceneMode != czm_sceneMode3D) {
-        vec3 radii = czm_getWgs84EllipsoidEC().radii;
+        vec3 radii = czm_ellipsoidRadii;
         float maxRadii = max(radii.x, max(radii.y, radii.z));
         fadeOutDist -= maxRadii;
         fadeInDist -= maxRadii;
@@ -279,6 +315,7 @@ void main()
     materialInput.normalEC = normalize(v_normalEC);
     materialInput.slope = v_slope;
     materialInput.height = v_height;
+    materialInput.aspect = v_aspect;
     czm_material material = czm_getMaterial(materialInput);
     color.xyz = mix(color.xyz, material.diffuse, material.alpha);
 #endif
@@ -303,6 +340,10 @@ void main()
     {
         finalColor = clippingPlanesEdgeColor;
     }
+#endif
+
+#ifdef HIGHLIGHT_FILL_TILE
+    finalColor = vec4(mix(finalColor.rgb, u_fillHighlightColor.rgb, u_fillHighlightColor.a), finalColor.a);
 #endif
 
 #if defined(FOG) || defined(GROUND_ATMOSPHERE)
@@ -335,8 +376,6 @@ void main()
     }
 
 #if defined(PER_FRAGMENT_GROUND_ATMOSPHERE) && (defined(ENABLE_DAYNIGHT_SHADING) || defined(ENABLE_VERTEX_LIGHTING))
-    czm_ellipsoid ellipsoid = czm_getWgs84EllipsoidEC();
-
     float mpp = czm_metersPerPixel(vec4(0.0, 0.0, -czm_currentFrustum.x, 1.0));
     vec2 xy = gl_FragCoord.xy / czm_viewport.zw * 2.0 - vec2(1.0);
     xy *= czm_viewport.zw * mpp * 0.5;
@@ -344,7 +383,9 @@ void main()
     vec3 direction = normalize(vec3(xy, -czm_currentFrustum.x));
     czm_ray ray = czm_ray(vec3(0.0), direction);
 
-    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid);
+    vec3 ellipsoid_center = czm_view[3].xyz;
+
+    czm_raySegment intersection = czm_rayEllipsoidIntersectionInterval(ray, ellipsoid_center, czm_ellipsoidInverseRadii);
 
     vec3 ellipsoidPosition = czm_pointAlongRay(ray, intersection.start);
     ellipsoidPosition = (czm_inverseView * vec4(ellipsoidPosition, 1.0)).xyz;

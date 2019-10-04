@@ -1,14 +1,7 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/PrimitiveType'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        PrimitiveType) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
 
     /**
      * Represents a command to the renderer for drawing.
@@ -21,6 +14,7 @@ define([
         this._boundingVolume = options.boundingVolume;
         this._orientedBoundingBox = options.orientedBoundingBox;
         this._cull = defaultValue(options.cull, true);
+        this._occlude = defaultValue(options.occlude, true);
         this._modelMatrix = options.modelMatrix;
         this._primitiveType = defaultValue(options.primitiveType, PrimitiveType.TRIANGLES);
         this._vertexArray = options.vertexArray;
@@ -115,6 +109,26 @@ define([
             set : function(value) {
                 if (this._cull !== value) {
                     this._cull = value;
+                    this.dirty = true;
+                }
+            }
+        },
+
+        /**
+         * When <code>true</code>, the horizon culls the command based on its {@link DrawCommand#boundingVolume}.
+         * {@link DrawCommand#cull} must also be <code>true</code> in order for the command to be culled.
+         *
+         * @memberof DrawCommand.prototype
+         * @type {Boolean}
+         * @default true
+         */
+        occlude : {
+            get : function() {
+                return this._occlude;
+            },
+            set : function(value) {
+                if (this._occlude !== value) {
+                    this._occlude = value;
                     this.dirty = true;
                 }
             }
@@ -479,11 +493,16 @@ define([
          * @memberof DrawCommand.prototype
          * @type {Boolean}
          * @default false
-         * @readonly
          */
         pickOnly : {
             get : function() {
                 return this._pickOnly;
+            },
+            set : function(value) {
+                if (this._pickOnly !== value) {
+                    this._pickOnly = value;
+                    this.dirty = true;
+                }
             }
         }
     });
@@ -502,6 +521,7 @@ define([
         result._boundingVolume = command._boundingVolume;
         result._orientedBoundingBox = command._orientedBoundingBox;
         result._cull = command._cull;
+        result._occlude = command._occlude;
         result._modelMatrix = command._modelMatrix;
         result._primitiveType = command._primitiveType;
         result._vertexArray = command._vertexArray;
@@ -537,6 +557,4 @@ define([
     DrawCommand.prototype.execute = function(context, passState) {
         context.draw(this, passState);
     };
-
-    return DrawCommand;
-});
+export default DrawCommand;

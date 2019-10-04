@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/HermitePolynomialApproximation'
-    ], function(
-        HermitePolynomialApproximation) {
-    'use strict';
+import { HermitePolynomialApproximation } from '../../Source/Cesium.js';
+
+describe('Core/HermitePolynomialApproximation', function() {
 
     //The results of these specs were validated against STK Components
     //an aerospace SDK available from Analytical Graphics. www.agi.com/components/

@@ -1,10 +1,5 @@
-define([
-        '../Core/freezeObject',
-        '../Core/WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
      * Determines how blending factors are computed.
@@ -106,7 +101,7 @@ define([
          * @type {Number}
          * @constant
          */
-        ONE_MINUS_CONSTANT_COLOR : WebGLConstants.ONE_MINUS_CONSTANT_ALPHA,
+        ONE_MINUS_CONSTANT_COLOR : WebGLConstants.ONE_MINUS_CONSTANT_COLOR,
 
         /**
          * The blend factor is the constant alpha.
@@ -132,6 +127,4 @@ define([
          */
         SOURCE_ALPHA_SATURATE : WebGLConstants.SRC_ALPHA_SATURATE
     };
-
-    return freezeObject(BlendFunction);
-});
+export default freezeObject(BlendFunction);

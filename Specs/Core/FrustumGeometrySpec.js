@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/FrustumGeometry',
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/PerspectiveFrustum',
-        'Core/Quaternion',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        FrustumGeometry,
-        Cartesian3,
-        CesiumMath,
-        PerspectiveFrustum,
-        Quaternion,
-        VertexFormat,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { FrustumGeometry } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/FrustumGeometry', function() {
 
     it('constructor throws without options', function() {
         expect(function() {

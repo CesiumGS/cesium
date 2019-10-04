@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The types of imagery provided by Bing Maps.
@@ -25,8 +21,28 @@ define([
          *
          * @type {String}
          * @constant
+         * @deprecated See https://github.com/AnalyticalGraphicsInc/cesium/issues/7128.
+         * Use `BingMapsStyle.AERIAL_WITH_LABELS_ON_DEMAND` instead
          */
         AERIAL_WITH_LABELS : 'AerialWithLabels',
+
+        /**
+         * Aerial imagery with a road overlay.
+         *
+         * @type {String}
+         * @constant
+         */
+        AERIAL_WITH_LABELS_ON_DEMAND : 'AerialWithLabelsOnDemand',
+
+        /**
+         * Roads without additional imagery.
+         *
+         * @type {String}
+         * @constant
+         * @deprecated See https://github.com/AnalyticalGraphicsInc/cesium/issues/7128.
+         * Use `BingMapsStyle.ROAD_ON_DEMAND` instead
+         */
+        ROAD : 'Road',
 
         /**
          * Roads without additional imagery.
@@ -34,7 +50,7 @@ define([
          * @type {String}
          * @constant
          */
-        ROAD : 'Road',
+        ROAD_ON_DEMAND : 'RoadOnDemand',
 
         /**
          * A dark version of the road maps.
@@ -76,6 +92,4 @@ define([
          */
         COLLINS_BART : 'CollinsBart'
     };
-
-    return freezeObject(BingMapsStyle);
-});
+export default freezeObject(BingMapsStyle);

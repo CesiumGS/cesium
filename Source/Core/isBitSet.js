@@ -1,5 +1,3 @@
-define([], function() {
-    'use strict';
 
     /**
      * @private
@@ -7,6 +5,4 @@ define([], function() {
     function isBitSet(bits, mask) {
         return ((bits & mask) !== 0);
     }
-
-    return isBitSet;
-});
+export default isBitSet;

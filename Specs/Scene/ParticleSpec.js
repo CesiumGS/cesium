@@ -1,14 +1,9 @@
-defineSuite([
-        'Scene/Particle',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color'
-    ], function(
-        Particle,
-        Cartesian2,
-        Cartesian3,
-        Color) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Particle } from '../../Source/Cesium.js';
+
+describe('Scene/Particle', function() {
 
     it('default constructor', function() {
         var p = new Particle();

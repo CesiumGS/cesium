@@ -1,26 +1,15 @@
-defineSuite([
-        'DataSources/RectangleGraphics',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/Rectangle',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'Scene/ClassificationType',
-        'Scene/ShadowMode',
-        'Specs/testDefinitionChanged',
-        'Specs/testMaterialDefinitionChanged'
-    ], function(
-        RectangleGraphics,
-        Color,
-        DistanceDisplayCondition,
-        Rectangle,
-        ColorMaterialProperty,
-        ConstantProperty,
-        ClassificationType,
-        ShadowMode,
-        testDefinitionChanged,
-        testMaterialDefinitionChanged) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { RectangleGraphics } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
+import testMaterialDefinitionChanged from '../testMaterialDefinitionChanged.js';
+
+describe('DataSources/RectangleGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {

@@ -1,8 +1,4 @@
-define([
-        'DataSources/ColorMaterialProperty'
-    ], function(
-        ColorMaterialProperty) {
-    'use strict';
+import { ColorMaterialProperty } from '../Source/Cesium.js';
 
     function testMaterialDefinitionChanged(property, name, value1, value2) {
         var listener = jasmine.createSpy('listener');
@@ -20,6 +16,4 @@ define([
         property[name] = property[name];
         expect(listener.calls.count()).toEqual(0);
     }
-
-    return testMaterialDefinitionChanged;
-});
+export default testMaterialDefinitionChanged;

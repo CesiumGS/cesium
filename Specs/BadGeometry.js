@@ -1,10 +1,5 @@
-define([
-        'Core/queryToObject',
-        'Core/RuntimeError'
-    ], function(
-        queryToObject,
-        RuntimeError) {
-    'use strict';
+import { queryToObject } from '../Source/Cesium.js';
+import { RuntimeError } from '../Source/Cesium.js';
 
     function BadGeometry() {
         this._workerName = '../../Specs/TestWorkers/createBadGeometry';
@@ -32,6 +27,4 @@ define([
     BadGeometry.unpack = function() {
         return new BadGeometry();
     };
-
-    return BadGeometry;
-});
+export default BadGeometry;

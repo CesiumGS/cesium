@@ -1,24 +1,14 @@
-defineSuite([
-        'Scene/Moon',
-        'Core/BoundingSphere',
-        'Core/Color',
-        'Core/defined',
-        'Core/Ellipsoid',
-        'Core/Matrix3',
-        'Core/Simon1994PlanetaryPositions',
-        'Core/Transforms',
-        'Specs/createScene'
-    ], function(
-        Moon,
-        BoundingSphere,
-        Color,
-        defined,
-        Ellipsoid,
-        Matrix3,
-        Simon1994PlanetaryPositions,
-        Transforms,
-        createScene) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Simon1994PlanetaryPositions } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Moon } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/Moon', function() {
 
     var scene;
     var backgroundColor = [255, 0, 0, 255];

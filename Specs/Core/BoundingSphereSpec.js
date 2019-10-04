@@ -1,34 +1,19 @@
-defineSuite([
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/EncodedCartesian3',
-        'Core/GeographicProjection',
-        'Core/Intersect',
-        'Core/Interval',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/OrientedBoundingBox',
-        'Core/Plane',
-        'Core/Rectangle',
-        'Specs/createPackableSpecs'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        EncodedCartesian3,
-        GeographicProjection,
-        Intersect,
-        Interval,
-        CesiumMath,
-        Matrix4,
-        OrientedBoundingBox,
-        Plane,
-        Rectangle,
-        createPackableSpecs) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EncodedCartesian3 } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { Interval } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { OrientedBoundingBox } from '../../Source/Cesium.js';
+import { Plane } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/BoundingSphere', function() {
 
     var positionsRadius = 1.0;
     var positionsCenter = new Cartesian3(10000001.0, 0.0, 0.0);

@@ -1,24 +1,12 @@
-define([
-        './AttributeCompression',
-        './Cartesian2',
-        './Cartesian3',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './Math',
-        './Matrix4',
-        './TerrainQuantization'
-    ], function(
-        AttributeCompression,
-        Cartesian2,
-        Cartesian3,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        CesiumMath,
-        Matrix4,
-        TerrainQuantization) {
-    'use strict';
+import AttributeCompression from './AttributeCompression.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import CesiumMath from './Math.js';
+import Matrix4 from './Matrix4.js';
+import TerrainQuantization from './TerrainQuantization.js';
 
     var cartesian3Scratch = new Cartesian3();
     var cartesian3DimScratch = new Cartesian3();
@@ -45,7 +33,7 @@ define([
      * @private
      */
     function TerrainEncoding(axisAlignedBoundingBox, minimumHeight, maximumHeight, fromENU, hasVertexNormals, hasWebMercatorT) {
-        var quantization;
+        var quantization = TerrainQuantization.NONE;
         var center;
         var toENU;
         var matrix;
@@ -248,6 +236,16 @@ define([
         return buffer[index + 3];
     };
 
+    TerrainEncoding.prototype.decodeWebMercatorT = function(buffer, index) {
+        index *= this.getStride();
+
+        if (this.quantization === TerrainQuantization.BITS12) {
+            return AttributeCompression.decompressTextureCoordinates(buffer[index + 3], cartesian2Scratch).x;
+        }
+
+        return buffer[index + 6];
+    };
+
     TerrainEncoding.prototype.getOctEncodedNormal = function(buffer, index, result) {
         var stride = this.getStride();
         index = (index + 1) * stride - 1;
@@ -385,6 +383,4 @@ define([
         result.hasWebMercatorT = encoding.hasWebMercatorT;
         return result;
     };
-
-    return TerrainEncoding;
-});
+export default TerrainEncoding;

@@ -1,8 +1,4 @@
-define([
-        '../Core/DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * Defines a bounding volume for a tile. This type describes an interface
@@ -71,6 +67,4 @@ define([
     TileBoundingVolume.prototype.createDebugVolume = function(color) {
         DeveloperError.throwInstantiationError();
     };
-
-    return TileBoundingVolume;
-});
+export default TileBoundingVolume;

@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/DistanceDisplayCondition',
-        'Specs/createPackableSpecs'
-    ], function(
-        DistanceDisplayCondition,
-        createPackableSpecs) {
-    'use strict';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/DistanceDisplayCondition', function() {
 
     it('default constructs', function() {
         var dc = new DistanceDisplayCondition();

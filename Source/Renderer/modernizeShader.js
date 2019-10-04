@@ -1,10 +1,5 @@
-define([
-        '../Core/defined',
-        '../Core/DeveloperError'
-    ], function(
-        defined,
-        DeveloperError) {
-    'use strict';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * A function to port GLSL shaders from GLSL ES 1.00 to GLSL ES 3.00
@@ -222,6 +217,4 @@ define([
         var regex = '#extension\\s+GL_' + name + '\\s+:\\s+[a-zA-Z0-9]+\\s*$';
         replaceInSourceRegex(new RegExp(regex, 'g'), '', splitSource);
     }
-
-    return modernizeShader;
-});
+export default modernizeShader;

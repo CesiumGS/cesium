@@ -1,18 +1,9 @@
-define([
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Quaternion'
-    ], function(
-        defined,
-        destroyObject,
-        DeveloperError,
-        CesiumMath,
-        Matrix3,
-        Quaternion) {
-    'use strict';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Quaternion from '../Core/Quaternion.js';
 
     /**
      * @private
@@ -126,6 +117,4 @@ define([
         this._removeListener();
         return destroyObject(this);
     };
-
-    return DeviceOrientationCameraController;
-});
+export default DeviceOrientationCameraController;

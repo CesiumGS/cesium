@@ -1,32 +1,16 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/OrthographicFrustum',
-        '../Core/OrthographicOffCenterFrustum',
-        '../Core/Transforms',
-        './SceneMode'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        defined,
-        DeveloperError,
-        CesiumMath,
-        Matrix4,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        Transforms,
-        SceneMode) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import OrthographicOffCenterFrustum from '../Core/OrthographicOffCenterFrustum.js';
+import Transforms from '../Core/Transforms.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * Functions that do scene-dependent transforms between rendering-related coordinate systems.
@@ -315,7 +299,7 @@ define([
             depth = far * (1.0 - near / depth) / (far - near);
         }
 
-        var viewport = scene._view.passState.viewport;
+        var viewport = scene.view.passState.viewport;
         var ndc = Cartesian4.clone(Cartesian4.UNIT_W, scratchNDC);
         ndc.x = (drawingBufferPosition.x - viewport.x) / viewport.width * 2.0 - 1.0;
         ndc.y = (drawingBufferPosition.y - viewport.y) / viewport.height * 2.0 - 1.0;
@@ -344,6 +328,4 @@ define([
         }
         return Cartesian3.fromCartesian4(worldCoords, result);
     };
-
-    return SceneTransforms;
-});
+export default SceneTransforms;

@@ -1,16 +1,10 @@
-defineSuite([
-        'Scene/DebugCameraPrimitive',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Scene/Camera',
-        'Specs/createScene'
-    ], function(
-        DebugCameraPrimitive,
-        Cartesian3,
-        Color,
-        Camera,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { DebugCameraPrimitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/DebugCameraPrimitive', function() {
 
     var scene;
     var camera;

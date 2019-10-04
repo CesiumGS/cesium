@@ -1,64 +1,35 @@
-defineSuite([
-        'Scene/GlobeSurfaceTileProvider',
-        'Core/Cartesian3',
-        'Core/CesiumTerrainProvider',
-        'Core/Color',
-        'Core/Credit',
-        'Core/defined',
-        'Core/Ellipsoid',
-        'Core/EllipsoidTerrainProvider',
-        'Core/GeographicProjection',
-        'Core/Rectangle',
-        'Core/WebMercatorProjection',
-        'Renderer/ContextLimits',
-        'Renderer/RenderState',
-        'Scene/BlendingState',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/Fog',
-        'Scene/Globe',
-        'Scene/GlobeSurfaceShaderSet',
-        'Scene/ImageryLayerCollection',
-        'Scene/ImagerySplitDirection',
-        'Scene/Model',
-        'Scene/QuadtreeTile',
-        'Scene/QuadtreeTileProvider',
-        'Scene/SceneMode',
-        'Scene/SingleTileImageryProvider',
-        'Scene/WebMapServiceImageryProvider',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        GlobeSurfaceTileProvider,
-        Cartesian3,
-        CesiumTerrainProvider,
-        Color,
-        Credit,
-        defined,
-        Ellipsoid,
-        EllipsoidTerrainProvider,
-        GeographicProjection,
-        Rectangle,
-        WebMercatorProjection,
-        ContextLimits,
-        RenderState,
-        BlendingState,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        Fog,
-        Globe,
-        GlobeSurfaceShaderSet,
-        ImageryLayerCollection,
-        ImagerySplitDirection,
-        Model,
-        QuadtreeTile,
-        QuadtreeTileProvider,
-        SceneMode,
-        SingleTileImageryProvider,
-        WebMapServiceImageryProvider,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { CesiumTerrainProvider } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Credit } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { BlendingState } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { Fog } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { GlobeSurfaceShaderSet } from '../../Source/Cesium.js';
+import { GlobeSurfaceTileProvider } from '../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../Source/Cesium.js';
+import { ImagerySplitDirection } from '../../Source/Cesium.js';
+import { Model } from '../../Source/Cesium.js';
+import { QuadtreeTile } from '../../Source/Cesium.js';
+import { QuadtreeTileProvider } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { SingleTileImageryProvider } from '../../Source/Cesium.js';
+import { WebMapServiceImageryProvider } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/GlobeSurfaceTileProvider', function() {
 
     var scene;
 
@@ -304,7 +275,7 @@ defineSuite([
                 // Verify that each tile has 2 imagery objects and no loaded callbacks
                 forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
                     expect(tile.data.imagery.length).toBe(2);
-                    expect(Object.keys(tile._loadedCallbacks).length).toBe(1);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
                 });
 
                 // Reload each layer
@@ -319,14 +290,14 @@ defineSuite([
                 //  and also has 2 callbacks so the old imagery will be removed once loaded.
                 forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
                     expect(tile.data.imagery.length).toBe(4);
-                    expect(Object.keys(tile._loadedCallbacks).length).toBe(3);
+                    expect(Object.keys(tile._loadedCallbacks).length).toBe(2);
                 });
 
                 return updateUntilDone(scene.globe).then(function() {
                     // Verify the old imagery was removed and the callbacks are no longer there
                     forEachRenderedTile(scene.globe._surface, 1, undefined, function(tile) {
                         expect(tile.data.imagery.length).toBe(2);
-                        expect(Object.keys(tile._loadedCallbacks).length).toBe(1);
+                        expect(Object.keys(tile._loadedCallbacks).length).toBe(0);
                     });
                 });
             });
@@ -586,6 +557,49 @@ defineSuite([
             expect(scene).toRenderAndCall(function(rgba) {
                 expect(rgba).not.toEqual(baseColor);
                 expect(rgba).not.toEqual([0, 0, 0, 255]);
+            });
+        });
+    });
+
+    it('renders imagery with color-to-alpha', function() {
+        expect(scene).toRender([0, 0, 0, 255]);
+
+        var layer = scene.imageryLayers.addImageryProvider(new SingleTileImageryProvider({
+            url : 'Data/Images/Red16x16.png'
+        }));
+
+        switchViewMode(SceneMode.SCENE3D, new GeographicProjection(Ellipsoid.WGS84));
+
+        var layerColor;
+        return updateUntilDone(scene.globe).then(function() {
+            expect(scene).toRenderAndCall(function(rgba) {
+                layerColor = rgba;
+                // Expect the layer color to be mostly red
+                expect(layerColor[0]).toBeGreaterThan(layerColor[1]);
+                expect(layerColor[0]).toBeGreaterThan(layerColor[2]);
+            });
+
+            layer.colorToAlpha = new Color(1.0, 0.0, 0.0);
+            layer.colorToAlphaThreshold = 0.1;
+
+            return updateUntilDone(scene.globe);
+        })
+        .then(function() {
+            var commandList = scene.frameState.commandList;
+
+            for (var i = 0; i < commandList.length; ++i) {
+                var command = commandList[i];
+
+                var uniforms = command.uniformMap;
+                if (!defined(uniforms) || !defined(uniforms.u_dayTextureAlpha)) {
+                    continue;
+                }
+
+                expect(uniforms.u_colorsToAlpha()).toEqual([new Cartesian4(1.0, 0.0, 0.0, 0.1)]);
+            }
+
+            expect(scene).toRenderAndCall(function(rgba) {
+                expect(rgba).not.toEqual(layerColor);
             });
         });
     });
@@ -987,6 +1001,11 @@ defineSuite([
             .then(function() {
                 expect(scene).toRender(result);
             });
+    });
+
+    it('cartographicLimitRectangle defaults to Rectangle.MAX_VALUE', function() {
+        scene.globe.cartographicLimitRectangle = undefined;
+        expect(scene.globe.cartographicLimitRectangle.equals(Rectangle.MAX_VALUE)).toBe(true);
     });
 
     it('cartographicLimitRectangle culls tiles outside the region', function() {

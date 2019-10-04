@@ -1,20 +1,10 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/PixelFormat',
-        './PixelDatatype'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        PixelFormat,
-        PixelDatatype) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import PixelDatatype from './PixelDatatype.js';
 
     /**
      * @private
@@ -96,8 +86,6 @@ define([
         var target = this._textureTarget;
         var targetFace = this._targetFace;
 
-        // TODO: gl.pixelStorei(gl._UNPACK_ALIGNMENT, 4);
-
         gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(target, this._texture);
 
@@ -111,6 +99,13 @@ define([
 
         var preMultiplyAlpha = this._preMultiplyAlpha;
         var flipY = this._flipY;
+
+        var unpackAlignment = 4;
+        if (defined(arrayBufferView)) {
+            unpackAlignment = PixelFormat.alignmentInBytes(pixelFormat, pixelDatatype, width);
+        }
+
+        gl.pixelStorei(gl.UNPACK_ALIGNMENT, unpackAlignment);
 
         var uploaded = false;
         if (!this._initialized) {
@@ -144,7 +139,7 @@ define([
         }
 
         if (!uploaded) {
-            if (arrayBufferView) {
+            if (defined(arrayBufferView)) {
                 gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, false);
                 gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
 
@@ -226,6 +221,4 @@ define([
         gl.bindTexture(target, null);
         this._initialized = true;
     };
-
-    return CubeMapFace;
-});
+export default CubeMapFace;

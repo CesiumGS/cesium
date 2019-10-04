@@ -1,12 +1,8 @@
-defineSuite([
-        'Widgets/InfoBox/InfoBox',
-        'Core/defined',
-        'Specs/pollToPromise'
-    ], function(
-        InfoBox,
-        defined,
-        pollToPromise) {
-    'use strict';
+import { defined } from '../../../Source/Cesium.js';
+import pollToPromise from '../../pollToPromise.js';
+import { InfoBox } from '../../../Source/Cesium.js';
+
+describe('Widgets/InfoBox/InfoBox', function() {
 
     var testContainer;
     var infoBox;

@@ -1,14 +1,9 @@
-defineSuite([
-        'Core/EllipsoidTangentPlane',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Ellipsoid'
-    ], function(
-        EllipsoidTangentPlane,
-        Cartesian2,
-        Cartesian3,
-        Ellipsoid) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidTangentPlane } from '../../Source/Cesium.js';
+
+describe('Core/EllipsoidTangentPlane', function() {
 
     it('constructor defaults to WGS84', function() {
         var origin = new Cartesian3(Ellipsoid.WGS84.radii.x, 0.0, 0.0);

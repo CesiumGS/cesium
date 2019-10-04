@@ -1,66 +1,28 @@
-define([
-        '../Core/AttributeCompression',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/FeatureDetection',
-        '../Core/getBaseUri',
-        '../Core/getStringFromTypedArray',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/Quaternion',
-        '../Core/RequestType',
-        '../Core/RuntimeError',
-        '../Core/Transforms',
-        '../Core/TranslationRotationScale',
-        '../Renderer/Pass',
-        './Axis',
-        './Cesium3DTileBatchTable',
-        './Cesium3DTileFeature',
-        './Cesium3DTileFeatureTable',
-        './ModelInstanceCollection'
-    ], function(
-        AttributeCompression,
-        Cartesian3,
-        Color,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        destroyObject,
-        DeveloperError,
-        Ellipsoid,
-        FeatureDetection,
-        getBaseUri,
-        getStringFromTypedArray,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        RequestType,
-        RuntimeError,
-        Transforms,
-        TranslationRotationScale,
-        Pass,
-        Axis,
-        Cesium3DTileBatchTable,
-        Cesium3DTileFeature,
-        Cesium3DTileFeatureTable,
-        ModelInstanceCollection) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import AttributeCompression from '../Core/AttributeCompression.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import deprecationWarning from '../Core/deprecationWarning.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Quaternion from '../Core/Quaternion.js';
+import RequestType from '../Core/RequestType.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Transforms from '../Core/Transforms.js';
+import TranslationRotationScale from '../Core/TranslationRotationScale.js';
+import Pass from '../Renderer/Pass.js';
+import Axis from './Axis.js';
+import Cesium3DTileBatchTable from './Cesium3DTileBatchTable.js';
+import Cesium3DTileFeature from './Cesium3DTileFeature.js';
+import Cesium3DTileFeatureTable from './Cesium3DTileFeatureTable.js';
+import ModelInstanceCollection from './ModelInstanceCollection.js';
 
     /**
      * Represents the contents of a
@@ -289,7 +251,10 @@ define([
             opaquePass : Pass.CESIUM_3D_TILE, // Draw opaque portions during the 3D Tiles pass
             pickIdLoaded : getPickIdCallback(content),
             imageBasedLightingFactor : tileset.imageBasedLightingFactor,
-            lightColor : tileset.lightColor
+            lightColor : tileset.lightColor,
+            luminanceAtZenith : tileset.luminanceAtZenith,
+            sphericalHarmonicCoefficients : tileset.sphericalHarmonicCoefficients,
+            specularEnvironmentMaps : tileset.specularEnvironmentMaps
         };
 
         if (gltfFormat === 0) {
@@ -375,7 +340,7 @@ define([
                     hasCustomOrientation = true;
                 } else if (eastNorthUp) {
                     Transforms.eastNorthUpToFixedFrame(instancePosition, Ellipsoid.WGS84, instanceTransform);
-                    Matrix4.getRotation(instanceTransform, instanceRotation);
+                    Matrix4.getMatrix3(instanceTransform, instanceRotation);
                 } else {
                     Matrix3.clone(Matrix3.IDENTITY, instanceRotation);
                 }
@@ -468,6 +433,10 @@ define([
         this._batchTable.update(tileset, frameState);
         this._modelInstanceCollection.modelMatrix = this._tile.computedTransform;
         this._modelInstanceCollection.shadows = this._tileset.shadows;
+        this._modelInstanceCollection.lightColor = this._tileset.lightColor;
+        this._modelInstanceCollection.luminanceAtZenith = this._tileset.luminanceAtZenith;
+        this._modelInstanceCollection.sphericalHarmonicCoefficients = this._tileset.sphericalHarmonicCoefficients;
+        this._modelInstanceCollection.specularEnvironmentMaps = this._tileset.specularEnvironmentMaps;
         this._modelInstanceCollection.debugWireframe = this._tileset.debugWireframe;
 
         var model = this._modelInstanceCollection._model;
@@ -475,13 +444,11 @@ define([
         if (defined(model)) {
             // Update for clipping planes
             var tilesetClippingPlanes = this._tileset.clippingPlanes;
-            if (defined(tilesetClippingPlanes)) {
-               model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
-                if (this._tile.clippingPlanesDirty) {
-                    // Dereference the clipping planes from the model if they are irrelevant - saves on shading
-                    // Link/Dereference directly to avoid ownership checks.
-                    model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
-                }
+            model.clippingPlanesOriginMatrix = this._tileset.clippingPlanesOriginMatrix;
+            if (defined(tilesetClippingPlanes) && this._tile.clippingPlanesDirty) {
+                // Dereference the clipping planes from the model if they are irrelevant - saves on shading
+                // Link/Dereference directly to avoid ownership checks.
+                model._clippingPlanes = (tilesetClippingPlanes.enabled && this._tile._isClipped) ? tilesetClippingPlanes : undefined;
             }
 
             // If the model references a different ClippingPlaneCollection due to the tileset's collection being replaced with a
@@ -510,5 +477,4 @@ define([
 
         return destroyObject(this);
     };
-    return Instanced3DModel3DTileContent;
-});
+export default Instanced3DModel3DTileContent;

@@ -1,60 +1,30 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/EncodedCartesian3',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/PrimitiveType',
-        '../Core/WebGLConstants',
-        '../Renderer/BufferUsage',
-        '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArrayFacade',
-        '../Shaders/PointPrimitiveCollectionFS',
-        '../Shaders/PointPrimitiveCollectionVS',
-        './BlendingState',
-        './BlendOption',
-        './PointPrimitive',
-        './SceneMode'
-    ], function(
-        BoundingSphere,
-        Color,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        EncodedCartesian3,
-        CesiumMath,
-        Matrix4,
-        PrimitiveType,
-        WebGLConstants,
-        BufferUsage,
-        ContextLimits,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArrayFacade,
-        PointPrimitiveCollectionFS,
-        PointPrimitiveCollectionVS,
-        BlendingState,
-        BlendOption,
-        PointPrimitive,
-        SceneMode) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Color from '../Core/Color.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import VertexArrayFacade from '../Renderer/VertexArrayFacade.js';
+import PointPrimitiveCollectionFS from '../Shaders/PointPrimitiveCollectionFS.js';
+import PointPrimitiveCollectionVS from '../Shaders/PointPrimitiveCollectionVS.js';
+import BlendingState from './BlendingState.js';
+import BlendOption from './BlendOption.js';
+import PointPrimitive from './PointPrimitive.js';
+import SceneMode from './SceneMode.js';
 
     var SHOW_INDEX = PointPrimitive.SHOW_INDEX;
     var POSITION_INDEX = PointPrimitive.POSITION_INDEX;
@@ -266,7 +236,7 @@ define([
      * Creates and adds a point with the specified initial properties to the collection.
      * The added point is returned so it can be modified or removed from the collection later.
      *
-     * @param {Object}[pointPrimitive] A template describing the point's properties as shown in Example 1.
+     * @param {Object}[options] A template describing the point's properties as shown in Example 1.
      * @returns {PointPrimitive} The point that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -297,8 +267,8 @@ define([
      * @see PointPrimitiveCollection#remove
      * @see PointPrimitiveCollection#removeAll
      */
-    PointPrimitiveCollection.prototype.add = function(pointPrimitive) {
-        var p = new PointPrimitive(pointPrimitive, this);
+    PointPrimitiveCollection.prototype.add = function(options) {
+        var p = new PointPrimitive(options, this);
         p._index = this._pointPrimitives.length;
 
         this._pointPrimitives.push(p);
@@ -1060,6 +1030,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return PointPrimitiveCollection;
-});
+export default PointPrimitiveCollection;

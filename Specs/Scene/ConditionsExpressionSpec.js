@@ -1,12 +1,8 @@
-defineSuite([
-        'Scene/ConditionsExpression',
-        'Core/Cartesian4',
-        'Core/Color'
-    ], function(
-        ConditionsExpression,
-        Cartesian4,
-        Color) {
-    'use strict';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ConditionsExpression } from '../../Source/Cesium.js';
+
+describe('Scene/ConditionsExpression', function() {
 
     function MockFeature(value) {
         this._value = value;

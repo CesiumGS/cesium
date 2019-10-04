@@ -1,36 +1,18 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/Event',
-        '../Core/JulianDate',
-        '../Core/Math',
-        '../Core/Matrix4',
-        './BillboardCollection',
-        './CircleEmitter',
-        './Particle'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Check,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        Event,
-        JulianDate,
-        CesiumMath,
-        Matrix4,
-        BillboardCollection,
-        CircleEmitter,
-        Particle) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import Event from '../Core/Event.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import BillboardCollection from './BillboardCollection.js';
+import CircleEmitter from './CircleEmitter.js';
+import Particle from './Particle.js';
 
     var defaultImageSize = new Cartesian2(1.0, 1.0);
 
@@ -134,8 +116,8 @@ define([
         this._minimumMass = defaultValue(options.mass, defaultValue(options.minimumMass, 1.0));
         this._maximumMass = defaultValue(options.mass, defaultValue(options.maximumMass, 1.0));
 
-        this._minimumImageSize = defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize));
-        this._maximumImageSize = defaultValue(options.imageSize, defaultValue(options.maximumImageSize, defaultImageSize));
+        this._minimumImageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultValue(options.minimumImageSize, defaultImageSize)));
+        this._maximumImageSize = Cartesian2.clone(defaultValue(options.imageSize, defaultValue(options.maximumImageSize, defaultImageSize)));
 
         this._lifetime = defaultValue(options.lifetime, Number.MAX_VALUE);
 
@@ -802,6 +784,4 @@ define([
      *    particle.velocity = Cesium.Cartesian3.add(particle.velocity, gravityVector, particle.velocity);
      * }
      */
-
-    return ParticleSystem;
-});
+export default ParticleSystem;

@@ -1,52 +1,26 @@
-defineSuite([
-        'Scene/PointCloud3DTileContent',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ComponentDatatype',
-        'Core/defined',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/PerspectiveFrustum',
-        'Core/Transforms',
-        'Renderer/Pass',
-        'Scene/Cesium3DTileRefine',
-        'Scene/Cesium3DTileStyle',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/DracoLoader',
-        'Scene/Expression',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createCanvas',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        PointCloud3DTileContent,
-        Cartesian3,
-        Color,
-        ComponentDatatype,
-        defined,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        CesiumMath,
-        Matrix4,
-        PerspectiveFrustum,
-        Transforms,
-        Pass,
-        Cesium3DTileRefine,
-        Cesium3DTileStyle,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        DracoLoader,
-        Expression,
-        Cesium3DTilesTester,
-        createCanvas,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { Cesium3DTileRefine } from '../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { DracoLoader } from '../../Source/Cesium.js';
+import { Expression } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createCanvas from '../createCanvas.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/PointCloud3DTileContent', function() {
 
     var scene;
     var centerLongitude = -1.31968;
@@ -464,7 +438,7 @@ defineSuite([
 
             expect(scene).toPickAndCall(function(result) {
                 // Set culling to true
-                content._pointCloud.backFaceCulling = true;
+                tileset.pointCloudShading.backFaceCulling = true;
 
                 expect(scene).toPickAndCall(function(result) {
                     picked = result;
@@ -487,7 +461,7 @@ defineSuite([
                 }
 
                 // Set culling to false
-                content._pointCloud.backFaceCulling = false;
+                tileset.pointCloudShading.backFaceCulling = false;
 
                 expect(scene).toPickAndCall(function(result) {
                     picked = result;
@@ -572,7 +546,7 @@ defineSuite([
             tileset.pointCloudShading.attenuation = true;
             tileset.pointCloudShading.geometricErrorScale = 1.0;
             tileset.pointCloudShading.maximumAttenuation = undefined;
-            tileset.pointCloudShading.baseResolution = CesiumMath.EPSILON20;
+            tileset.pointCloudShading.baseResolution = 0.20;
             tileset.maximumScreenSpaceError = 16;
             expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
                 expect(pixelCount).toEqual(noAttenuationPixelCount);
@@ -583,9 +557,9 @@ defineSuite([
     it('modulates attenuation using the geometricErrorScale parameter', function() {
         return attenuationTest(function(scene, tileset) {
             tileset.pointCloudShading.attenuation = true;
-            tileset.pointCloudShading.geometricErrorScale = 0.0;
+            tileset.pointCloudShading.geometricErrorScale = 0.2;
             tileset.pointCloudShading.maximumAttenuation = undefined;
-            tileset.pointCloudShading.baseResolution = undefined;
+            tileset.pointCloudShading.baseResolution = 1.0;
             tileset.maximumScreenSpaceError = 1;
             expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
                 expect(pixelCount).toEqual(noAttenuationPixelCount);

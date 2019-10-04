@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian3',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/GeographicProjection',
-        'Core/Matrix4',
-        'Scene/Camera'
-    ], function(
-        Cartesian3,
-        defaultValue,
-        defined,
-        GeographicProjection,
-        Matrix4,
-        Camera) {
-    'use strict';
+import { Cartesian3 } from '../Source/Cesium.js';
+import { defaultValue } from '../Source/Cesium.js';
+import { defined } from '../Source/Cesium.js';
+import { GeographicProjection } from '../Source/Cesium.js';
+import { Matrix4 } from '../Source/Cesium.js';
+import { Camera } from '../Source/Cesium.js';
 
     function MockScene(canvas) {
         canvas = defaultValue(canvas, {
@@ -46,6 +37,4 @@ define([
 
         return camera;
     }
-
-    return createCamera;
-});
+export default createCamera;

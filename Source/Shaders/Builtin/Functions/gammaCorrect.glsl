@@ -17,7 +17,6 @@ vec3 czm_gammaCorrect(vec3 color) {
 vec4 czm_gammaCorrect(vec4 color) {
 #ifdef HDR
     color.rgb = pow(color.rgb, vec3(czm_gamma));
-    color.a = pow(color.a, 1.0 / czm_gamma);
 #endif
     return color;
 }

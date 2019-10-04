@@ -1,30 +1,16 @@
-defineSuite([
-        'Scene/SingleTileImageryProvider',
-        'Core/DefaultProxy',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/Rectangle',
-        'Core/Resource',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        SingleTileImageryProvider,
-        DefaultProxy,
-        Ellipsoid,
-        GeographicTilingScheme,
-        Rectangle,
-        Resource,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { SingleTileImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/SingleTileImageryProvider', function() {
 
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
@@ -150,7 +136,7 @@ defineSuite([
             return provider.ready;
         }).then(function() {
             return when(provider.requestImage(0, 0, 0), function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -216,7 +202,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

@@ -1,14 +1,7 @@
-define([
-        'Core/defaultValue',
-        'Core/defineProperties',
-        'Core/Ellipsoid',
-        'Core/Event'
-    ], function(
-        defaultValue,
-        defineProperties,
-        Ellipsoid,
-        Event) {
-    'use strict';
+import { defaultValue } from '../Source/Cesium.js';
+import { defineProperties } from '../Source/Cesium.js';
+import { Ellipsoid } from '../Source/Cesium.js';
+import { Event } from '../Source/Cesium.js';
 
     function createGlobe(ellipsoid) {
         ellipsoid = defaultValue(ellipsoid, Ellipsoid.WGS84);
@@ -25,8 +18,8 @@ define([
                 return 0.0;
             },
             _surface : {},
-            tileLoadedEvent : new Event(),
             imageryLayersUpdatedEvent : new Event(),
+            _terrainProvider : undefined,
             terrainProviderChanged : new Event(),
             destroy : function() {}
         };
@@ -42,7 +35,11 @@ define([
         globe.terrainProviderChanged = new Event();
         defineProperties(globe, {
             terrainProvider : {
+                get : function() {
+                    return this._terrainProvider;
+                },
                 set : function(value) {
+                    this._terrainProvider = value;
                     this.terrainProviderChanged.raiseEvent(value);
                 }
             }
@@ -50,6 +47,4 @@ define([
 
         return globe;
     }
-
-    return createGlobe;
-});
+export default createGlobe;

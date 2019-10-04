@@ -1,32 +1,16 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Check',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Scene/GroundPrimitive',
-        '../Scene/MaterialAppearance',
-        '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
-        './BoundingSphereState',
-        './ColorMaterialProperty',
-        './MaterialProperty',
-        './Property'
-    ], function(
-        BoundingSphere,
-        Check,
-        defined,
-        destroyObject,
-        DeveloperError,
-        GroundPrimitive,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        Primitive,
-        BoundingSphereState,
-        ColorMaterialProperty,
-        MaterialProperty,
-        Property) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Check from '../Core/Check.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import GroundPrimitive from '../Scene/GroundPrimitive.js';
+import MaterialAppearance from '../Scene/MaterialAppearance.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import Primitive from '../Scene/Primitive.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import MaterialProperty from './MaterialProperty.js';
+import Property from './Property.js';
 
     /**
      * Defines the interface for a dynamic geometry updater.  A DynamicGeometryUpdater
@@ -107,7 +91,7 @@ define([
             if (isColorAppearance) {
                 appearance = new PerInstanceColorAppearance({
                     closed: closed,
-                    flat : !(onTerrain && geometryUpdater._supportsMaterialsforEntitiesOnTerrain)
+                    flat : onTerrain && !geometryUpdater._supportsMaterialsforEntitiesOnTerrain
                 });
             } else {
                 var material = MaterialProperty.getValue(time, fillMaterialProperty, this._material);
@@ -241,6 +225,4 @@ define([
         primitives.removeAndDestroy(this._outlinePrimitive);
         destroyObject(this);
     };
-
-    return DynamicGeometryUpdater;
-});
+export default DynamicGeometryUpdater;
