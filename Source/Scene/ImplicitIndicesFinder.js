@@ -51,7 +51,7 @@ define([
         this._lodFactor = -1; // from the distanced based sse equation (screenHeight / (tileset._maximumScreenSpaceError * sseDenominator))
 
         // How the camera relates to the grids on every level
-        this._seams = []; // Cartesian3's, xyz seam per level, max index along each dir.
+        this._maxIndices = []; // Cartesian3's, max index along each dir, continuous grid
         this._radii = []; // Number, sphere cut radii in meters, the circle that forms on the surface of nearest face slab, clamp to max if camera inside slab
         this._radiiRatios = []; // Cartesian3's, Radii / cell dim on a level
         this._centers = []; // Cartesian3's, Where the cam pos lives on the level
@@ -65,6 +65,7 @@ define([
         this._virtualDims = []; // Cartesian3's, min of worst case dim and treedim
         this._treeDims = []; // Cartesian3's
         this._invTileDims = []; // Cartesian3's
+        this._invLocalTileDims = []; // Cartesian3's
 
         // TODO: move things like _startLevel from tileset into here?
     }
@@ -110,6 +111,7 @@ define([
         boundsSpan.z = Cartesian3.magnitude(scratch2);
     };
 
+    var scratchLocalBoxSpan = new Cartesian3(2,2,2);
     /**
      * Inits the _lodDistances array so that it's the proper size
      *
@@ -121,18 +123,19 @@ define([
         var length = tilingScheme.lastLevel + 1;
 
         var lodDistances = this._lodDistances;
-        var seams =  this._seams;
+        var maxIndices =  this._maxIndices;
         var radii =  this._radii;
         var radiiRatios =  this._radiiRatios;
         var centers =  this._centers;
         var treeDims =  this._treeDims;
         var virtuaDims =  this._virtualDims;
         var invTileDims =  this._invTileDims;
+        var invLocalTileDims =  this._invLocalTileDims;
 
         var i;
         for (i = 0; i < length; i++) {
             lodDistances.push(-1);
-            seams.push(new Cartesian3());
+            maxIndices.push(new Cartesian3());
             radii.push(-1);
             radiiRatios.push(new Cartesian3());
             centers.push(new Cartesian3());
@@ -162,7 +165,7 @@ define([
 
         var isOct = tileset._isOct;
         var rootGridDimensions = tilingScheme.headCount;
-        var treeDimsOnLevel, invTileDimsOnLevel;
+        var treeDimsOnLevel, invTileDimsOnLevel, invLocalTileDimsOnLevel;
         for (i = 0; i < length; i++) {
             treeDimsOnLevel = new Cartesian3(
                 (rootGridDimensions[0] << i),
@@ -174,6 +177,10 @@ define([
             invTileDimsOnLevel = new Cartesian3();
             Cartesian3.divideComponents(treeDimsOnLevel, boundsSpan, invTileDimsOnLevel);
             invTileDims.push(invTileDimsOnLevel);
+
+            invLocalTileDimsOnLevel = new Cartesian3();
+            Cartesian3.divideComponents(treeDimsOnLevel, scratchLocalBoxSpan, invLocalTileDimsOnLevel);
+            invLocalTileDims.push(invLocalTileDimsOnLevel);
         }
     };
 
@@ -217,7 +224,8 @@ define([
         var treeDims = this._treeDims;
         var virtuaDims = this._virtualDims;
         var invTileDims = this._invTileDims;
-        var seams = this._seams;
+        var invLocalTileDims = this._invLocalTileDims;
+        var maxIndices = this._maxIndices;
         var radii = this._radii;
         var radiiRatios = this._radiiRatios;
         var centers = this._centers;
@@ -226,7 +234,8 @@ define([
         var worstCaseVirtualDims = this._worstCaseVirtualDims;
         lodDistance = startingGError * factor;
         // TODO: The calc is different for 2D Map, it would be the max cone angle between the two sphere intersections tile dims is in radians in that case
-        // TODO: also not sure if its the same on ever level in the 2D map case?
+        // TODO: also not sure if worstCaseVirtualDims the same on every level in the 2D map case
+        // var radius = defined(this._region) ? this.getMaxConeAngle() : lodDistance;
         var radius = defined(this._region) ? lodDistance : lodDistance;
         Cartesian3.multiplyByScalar(invTileDims[tilesetStartLevel], radius * 2, worstCaseVirtualDims);
         worstCaseVirtualDims.x = Math.ceil(worstCaseVirtualDims.x) + 1;
@@ -245,7 +254,7 @@ define([
             Cartesian3.minimumByComponent(worstCaseVirtualDims, treeDimsOnLevel, virtuaDimsOnLevel);
 
             // centers, the cell location of cam pos
-            // seams, the cell location of the sphere extents
+            // maxIndices, centers + worstCaseVirtualDims
             // radii, the circle formed on the surface of the slabs
             // radiiRatios, the circle radius length in array space along each direction
         }

@@ -1425,6 +1425,28 @@ define([
         },
 
         /**
+         * The tileset inverse transform.
+         *
+         * @memberof Cesium3DTilesetImplicit.prototype
+         *
+         * @type {Matrix4}
+         * @readonly
+         * });
+         */
+         computedTransformInverse : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                this._root.updateTransform(this._modelMatrix);
+                return this._root.computedTransformInverse;
+            }
+        },
+
+        /**
          * A 4x4 transformation matrix that transforms the entire tileset.
          *
          * @memberof Cesium3DTilesetImplicit.prototype

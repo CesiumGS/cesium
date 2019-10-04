@@ -113,6 +113,7 @@ define([
          * @readonly
          */
         this.computedTransform = computedTransform;
+        this.computedTransformInverse = Matrix4.inverseTransformation(computedTransform, new Matrix4());
 
         this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform);
         this._boundingVolume2D = undefined;
@@ -1434,6 +1435,7 @@ define([
         }
 
         Matrix4.clone(computedTransform, this.computedTransform);
+        Matrix4.inverseTransformation(computedTransform, this.computedTransformInverse);
 
         // Update the bounding volumes
         var header = this._header;
