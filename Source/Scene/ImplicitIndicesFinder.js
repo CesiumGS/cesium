@@ -61,8 +61,8 @@ define([
         this._boundsSpan = new Cartesian3();
 
         // Dim info
-        this._worstCaseVirtualDims = new Cartesian3(); // Should be the same for every level
-        this._virtualDims = []; // Cartesian3's, min or worst case dim and treedim
+        this._worstCaseVirtualDims = new Cartesian3(); // The same for every level
+        this._virtualDims = []; // Cartesian3's, min of worst case dim and treedim
         this._treeDims = []; // Cartesian3's
         this._invTileDims = []; // Cartesian3's
 
@@ -71,42 +71,6 @@ define([
 
     defineProperties(ImplicitIndicesFinder.prototype, {
     });
-
-    /**
-     * Updates the _lodDistances array with LOD sphere radii from the camera to
-     * pull in tiles on different levels of the tree
-     *
-     * @private
-     */
-    ImplicitIndicesFinder.prototype.updateLODDistances = function(frameState) {
-        var lodDistances = this._lodDistances;
-        var length = lodDistances.length;
-        var height = frameState.context.drawingBufferHeight;
-        var sseDenominator = frameState.camera.frustum.sseDenominator;
-        var tileset = this._tileset;
-        var factor = height / (tileset._maximumScreenSpaceError * sseDenominator);
-
-        if (this._lodFactor === factor) {
-            return;
-        }
-
-        this._lodFactor = factor;
-        var startingGError = tileset._geometricErrorContentRoot;
-        var base = tileset.getGeomtricErrorBase();
-        var tilesetStartLevel = tileset._startLevel;
-        // var useChildSphere = tileset._allTilesAdditive ? 0 : 1; // ad to pow exponent
-        var i, lodDistance, gErrorOnLevel;
-        for (i = tilesetStartLevel; i < length; i++) {
-            gErrorOnLevel = startingGError / Math.pow(base, i - tilesetStartLevel);
-            lodDistance = gErrorOnLevel * factor;
-            lodDistances[i] = lodDistance;
-            // TODO: if lodFactor changed you must also update the other infomation about the levels
-        }
-
-        for (i = 0; i < length; i++) {
-            console.log('lodDistance ' + i + ' ' + lodDistances[i]);
-        }
-    };
 
     var scratch0 = new Cartesian3();
     var scratch1 = new Cartesian3();
@@ -117,18 +81,20 @@ define([
      *
      * @private
      */
-    ImplicitIndicesFinder.prototype.updateBoundsMinMax = function() {
+    ImplicitIndicesFinder.prototype.updateBoundsMinMaxSpan = function() {
         // Only works with orientedBoundingBox, region-based should not move.
         var bounds = this._tileset._root.boundingVolume._orientedBoundingBox;
         var center = bounds.center;
-        var halfAxes = bounds.halfAxes
+        var halfAxes = bounds.halfAxes;
 
         var boundsMin = this._boundsMin;
         var boundsMax = this._boundsMax;
 
+        // Each col is vector from center to a face along local axes
         Matrix3.getColumn(halfAxes, 0, scratch0);
         Matrix3.getColumn(halfAxes, 1, scratch1);
         Matrix3.getColumn(halfAxes, 2, scratch2);
+
         // Get the half diagonal
         Cartesian3.add(scratch0, scratch1, scratchHalfDiagonal);
         Cartesian3.add(scratchHalfDiagonal, scratch2 , scratchHalfDiagonal);
@@ -136,6 +102,12 @@ define([
         // Find min max corners relative to its center in world coords
         Cartesian3.subtract(center, scratchHalfDiagonal, boundsMin);
         Cartesian3.add(center, scratchHalfDiagonal, boundsMax);
+
+        // Get full diagonal, this is bounds span in each direction
+        var boundsSpan = this._boundsSpan;
+        boundsSpan.x = Cartesian3.magnitude(scratch0);
+        boundsSpan.y = Cartesian3.magnitude(scratch1);
+        boundsSpan.z = Cartesian3.magnitude(scratch2);
     };
 
     /**
@@ -144,7 +116,6 @@ define([
      * @private
      */
     ImplicitIndicesFinder.prototype.initArraySizes = function() {
-        // TODO: when to update this based on camera, context, and  max gerror changes?
         var tileset = this._tileset;
         var tilingScheme = tileset._tilingScheme;
         var length = tilingScheme.lastLevel + 1;
@@ -165,8 +136,10 @@ define([
             radii.push(-1);
             radiiRatios.push(new Cartesian3());
             centers.push(new Cartesian3());
+            virtuaDims.push(new Cartesian3());
         }
 
+        // TODO: don't think these are needed beyond finding the invTileDims per level
         var boundsMin = this._boundsMin;
         var boundsMax = this._boundsMax;
         var boundsSpan = this._boundsSpan;
@@ -182,26 +155,103 @@ define([
             boundsMax.x = bounds[2];
             boundsMax.y = bounds[3];
             boundsMax.z = bounds[5];
+            Cartesian3.subtract(boundsMax, boundsMin, boundsSpan);
         } else {
-            this.updateBoundsMinMax();
+            this.updateBoundsMinMaxSpan();
         }
-
-        Cartesian3.subtract(boundsMax, boundsMin, boundsSpan);
 
         var isOct = tileset._isOct;
         var rootGridDimensions = tilingScheme.headCount;
-        var dimsOnLevel, result;
+        var treeDimsOnLevel, invTileDimsOnLevel;
         for (i = 0; i < length; i++) {
-            dimsOnLevel = new Cartesian3(
+            treeDimsOnLevel = new Cartesian3(
                 (rootGridDimensions[0] << i),
                 (rootGridDimensions[1] << i),
                 isOct ? (rootGridDimensions[2] << i) : 1
             );
-            treeDims.push(dimsOnLevel);
+            treeDims.push(treeDimsOnLevel);
 
-            result = new Cartesian3();
-            Cartesian3.divideComponents(boundsSpan, dimsOnLevel, result);
-            invTileDims.push(result);
+            invTileDimsOnLevel = new Cartesian3();
+            Cartesian3.divideComponents(treeDimsOnLevel, boundsSpan, invTileDimsOnLevel);
+            invTileDims.push(invTileDimsOnLevel);
+        }
+    };
+
+    /**
+     * Updates the _lodDistances array with LOD sphere radii from the camera to
+     * pull in tiles on different levels of the tree
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.getMaxConeAngle = function() {
+        return 0;
+    };
+
+    /**
+     * Updates the _lodDistances array with LOD sphere radii from the camera to
+     * pull in tiles on different levels of the tree
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.updateLevelInfo = function(frameState) {
+        var lodDistances = this._lodDistances;
+        var length = lodDistances.length;
+        var height = frameState.context.drawingBufferHeight;
+        var sseDenominator = frameState.camera.frustum.sseDenominator;
+        var tileset = this._tileset;
+        var factor = height / (tileset._maximumScreenSpaceError * sseDenominator);
+
+        if (this._lodFactor === factor) {
+            return;
+        }
+
+        // NOTE: if lodFactor changed, you must also update the other infomation about the levels.
+
+        this._lodFactor = factor;
+        var startingGError = tileset._geometricErrorContentRoot;
+        var base = tileset.getGeomtricErrorBase();
+        var tilesetStartLevel = tileset._startLevel;
+        // var useChildSphere = tileset._allTilesAdditive ? 0 : 1; // ad to pow exponent
+        var i, lodDistance, gErrorOnLevel;
+        var treeDimsOnLevel, virtuaDimsOnLevel;
+        var treeDims = this._treeDims;
+        var virtuaDims = this._virtualDims;
+        var invTileDims = this._invTileDims;
+        var seams = this._seams;
+        var radii = this._radii;
+        var radiiRatios = this._radiiRatios;
+        var centers = this._centers;
+
+        // Worst case dims, they're the same for every level
+        var worstCaseVirtualDims = this._worstCaseVirtualDims;
+        lodDistance = startingGError * factor;
+        // TODO: The calc is different for 2D Map, it would be the max cone angle between the two sphere intersections tile dims is in radians in that case
+        // TODO: also not sure if its the same on ever level in the 2D map case?
+        var radius = defined(this._region) ? lodDistance : lodDistance;
+        Cartesian3.multiplyByScalar(invTileDims[tilesetStartLevel], radius * 2, worstCaseVirtualDims);
+        worstCaseVirtualDims.x = Math.ceil(worstCaseVirtualDims.x) + 1;
+        worstCaseVirtualDims.y = Math.ceil(worstCaseVirtualDims.y) + 1;
+        worstCaseVirtualDims.z = Math.ceil(worstCaseVirtualDims.z) + 1;
+
+
+        for (i = tilesetStartLevel; i < length; i++) {
+            gErrorOnLevel = startingGError / Math.pow(base, i - tilesetStartLevel);
+            lodDistance = gErrorOnLevel * factor;
+            lodDistances[i] = lodDistance;
+
+            // virtuaDims, i.e. min of worst and treeDimsOnLevel, or what the actual virtual grid would store
+            treeDimsOnLevel = treeDims[i];
+            virtuaDimsOnLevel = virtuaDims[i];
+            Cartesian3.minimumByComponent(worstCaseVirtualDims, treeDimsOnLevel, virtuaDimsOnLevel);
+
+            // centers, the cell location of cam pos
+            // seams, the cell location of the sphere extents
+            // radii, the circle formed on the surface of the slabs
+            // radiiRatios, the circle radius length in array space along each direction
+        }
+
+        for (i = 0; i < length; i++) {
+            console.log('lodDistance ' + i + ' ' + lodDistances[i]);
         }
     };
 
@@ -213,10 +263,11 @@ define([
         // Depeding on expense, maybe just do for every level and call it a day
         // (in case something wants to query beyond traversal depth later).
 
-        this.updateLODDistances(frameState);
+        this.updateLevelInfo(frameState);
 
-        var tileset = this._tileset;
         // Find the distnace to the tileset contentless root and use that that determine maximumTreversalDepth
+        var tileset = this._tileset;
+        // updateVisibility is called on root in traversal before this
         var distance = tileset._root._distanceToCamera;
 
         var lodDistances = this._lodDistances;
