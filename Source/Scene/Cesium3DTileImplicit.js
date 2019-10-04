@@ -1325,10 +1325,7 @@ define([
     var scratchOrientedBoundingBox = new OrientedBoundingBox();
     var scratchTransform = new Matrix4();
 
-    var scratchBoxScale = new Cartesian3();
-    var scratchColumn = new Cartesian3();
-
-    function createBox(box, transform, result, tile) {
+    function createBox(box, transform, result) {
         var center = Cartesian3.fromElements(box[0], box[1], box[2], scratchCenter);
         var halfAxes = Matrix3.fromArray(box, 3, scratchHalfAxes);
 
@@ -1341,22 +1338,6 @@ define([
             result.update(center, halfAxes);
             return result;
         }
-
-        // Get the normalized halfAxes, needed for implicit calcs
-        var boxAxes = Matrix3.clone(halfAxes, tile.boxAxes);
-        Matrix3.getScale(boxAxes, scratchBoxScale);
-
-        Matrix3.getColumn(boxAxes, 0, scratchColumn);
-        Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.x, scratchColumn);
-        Matrix3.setColumn(boxAxes, 0, scratchColumn, boxAxes);
-
-        Matrix3.getColumn(boxAxes, 1, scratchColumn);
-        Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.y, scratchColumn);
-        Matrix3.setColumn(boxAxes, 1, scratchColumn, boxAxes);
-
-        Matrix3.getColumn(boxAxes, 2, scratchColumn);
-        Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.z, scratchColumn);
-        Matrix3.setColumn(boxAxes, 2, scratchColumn, boxAxes);
 
         return new TileOrientedBoundingBox(center, halfAxes);
     }
@@ -1433,16 +1414,11 @@ define([
      * @private
      */
     Cesium3DTileImplicit.prototype.createBoundingVolume = function(boundingVolumeHeader, transform, result) {
-        var root = this._tileset._root;
-        if (!defined(root) || this === root) {
-            var fuckyou = 1;
-        }
-
         if (!defined(boundingVolumeHeader)) {
             throw new RuntimeError('boundingVolume must be defined');
         }
         if (defined(boundingVolumeHeader.box)) {
-            return createBox(boundingVolumeHeader.box, transform, result, this);
+            return createBox(boundingVolumeHeader.box, transform, result);
         }
         if (defined(boundingVolumeHeader.region)) {
             return createRegion(boundingVolumeHeader.region, transform, this._initialTransform, result);
@@ -1453,6 +1429,8 @@ define([
         throw new RuntimeError('boundingVolume must contain a sphere, region, or box');
     };
 
+    var scratchBoxScale = new Cartesian3();
+    var scratchColumn = new Cartesian3();
     /**
      * Update the tile's transform. The transform is applied to the tile's bounding volumes.
      *
@@ -1474,6 +1452,27 @@ define([
         var header = this._header;
         var content = this._header.content;
         this._boundingVolume = this.createBoundingVolume(header.boundingVolume, this.computedTransform, this._boundingVolume);
+        var boxBounds = this._boundingVolume._orientedBoundingBox;
+
+        if (this === this._tileset._root && defined(boxBounds)) {
+            // Get the normalized halfAxes, needed for implicit calcs
+            var halfAxes = boxBounds._halfAxes;
+            var boxAxes = Matrix3.clone(halfAxes, this.boxAxes);
+            Matrix3.getScale(boxAxes, scratchBoxScale);
+
+            Matrix3.getColumn(boxAxes, 0, scratchColumn);
+            Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.x, scratchColumn);
+            Matrix3.setColumn(boxAxes, 0, scratchColumn, boxAxes);
+
+            Matrix3.getColumn(boxAxes, 1, scratchColumn);
+            Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.y, scratchColumn);
+            Matrix3.setColumn(boxAxes, 1, scratchColumn, boxAxes);
+
+            Matrix3.getColumn(boxAxes, 2, scratchColumn);
+            Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.z, scratchColumn);
+            Matrix3.setColumn(boxAxes, 2, scratchColumn, boxAxes);
+        }
+
         if (defined(this._contentBoundingVolume)) {
             this._contentBoundingVolume = this.createBoundingVolume(content.boundingVolume, this.computedTransform, this._contentBoundingVolume);
         }
