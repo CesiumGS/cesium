@@ -11,18 +11,6 @@ of the subtree
     successive levels should update at twice the rate.
 
     IndicesFinder
-    for every available level in tileset:
-        * hold a center and seam index for x y, and z
-            convert cam pos to cell idx, must be relative to 0,0,0 corner of aabb
-            max idx on level given cam pos and infinite virtual grid
-            The root bounding box and dims on the level can give you this
-        * hold an x, y, and z dim for the worst case influence range on the level.
-            also save the actual tree grid dimensions for the level
-        * maybe move the camera distances array in here
-            as well as the max traversal depth
-        * might have to store the relative sphere radius along each axis
-            like how many cells long the radius is
-
             hold off on bresenham just get box ranges of indices for now
             these will eventually be the visibliity indices (which are the request/render indces for add)
             replace will have to make sure to extend the loop a little in cases for sibling requests.
