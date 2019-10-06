@@ -10,6 +10,8 @@ of the subtree
     debug case: look down at teh tileset, print the center idx.
     successive levels should update at twice the rate.
 
+    looking at the x y z sides of the box and zooming out and making sure min max makes sense
+
     IndicesFinder
             hold off on bresenham just get box ranges of indices for now
             these will eventually be the visibliity indices (which are the request/render indces for add)
