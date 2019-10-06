@@ -316,6 +316,8 @@ define([
 
         this._modelMatrix = defined(options.modelMatrix) ? Matrix4.clone(options.modelMatrix) : Matrix4.clone(Matrix4.IDENTITY);
 
+        this._boxAxes = undefined; // If a local tileset, the orthonormal axes of the oriented box in world space.
+
         this._statistics = new Cesium3DTilesetStatistics();
         this._statisticsLast = new Cesium3DTilesetStatistics();
         this._statisticsPerPass = new Array(Cesium3DTilePass.NUMBER_OF_PASSES);
@@ -1421,6 +1423,41 @@ define([
 
                 this._root.updateTransform(this._modelMatrix);
                 return this._root.boundingSphere;
+            }
+        },
+
+        /**
+         * The tileset's bounding box axes  in world space
+         *
+         * @memberof Cesium3DTilesetImplicit.prototype
+         *
+         * @type {BoundingSphere}
+         * @readonly
+         *
+         * @exception {DeveloperError} The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.
+         *
+         * @example
+         * var tileset = viewer.scene.primitives.add(new Cesium.Cesium3DTilesetImplicit({
+         *     url : 'http://localhost:8002/tilesets/Seattle/tileset.json'
+         * }));
+         *
+         * tileset.readyPromise.then(function(tileset) {
+         *     // Set the camera to view the newly added tileset
+         *     viewer.camera.viewBoundingSphere(tileset.boundingSphere, new Cesium.HeadingPitchRange(0, -0.5, 0));
+         * });
+         */
+        boxAxes : {
+            get : function() {
+                //>>includeStart('debug', pragmas.debug);
+                if (!this.ready) {
+                    throw new DeveloperError('The tileset is not loaded.  Use Cesium3DTilesetImplicit.readyPromise or wait for Cesium3DTilesetImplicit.ready to be true.');
+                }
+                //>>includeEnd('debug');
+
+                // pulled from boundingSphere getter, does it really need to check if all the transforms are applied?
+                // wouldn't this happen at the top of the frame somewhere?
+                this._root.updateTransform(this._modelMatrix);
+                return this._boxAxes;
             }
         },
 

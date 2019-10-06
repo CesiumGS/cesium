@@ -114,14 +114,6 @@ define([
          */
         this.computedTransform = computedTransform;
 
-        /**
-         * The normalized axes of the oriented box.
-         * Used in implicit calcs
-         * @type {Matrix3}
-         * @readonly
-         */
-        this.boxAxes = new Matrix3();
-
         this._boundingVolume = this.createBoundingVolume(header.boundingVolume, computedTransform);
         this._boundingVolume2D = undefined;
         // this.computedTransformInverse = Matrix4.inverseTransformation(computedTransform, new Matrix4());
@@ -1441,7 +1433,12 @@ define([
         var computedTransform = Matrix4.multiply(parentTransform, this.transform, scratchTransform);
         var transformChanged = !Matrix4.equals(computedTransform, this.computedTransform);
 
-        if (!transformChanged) {
+        var boxBounds = this._boundingVolume._orientedBoundingBox;
+        var tileset = this._tileset;
+        var boxAxes = tileset._boxAxes;
+        var rootWithBoxBounds = (this === tileset._root) && defined(boxBounds);
+        var shouldInitBoxAxes = rootWithBoxBounds && !defined(boxAxes);
+        if (!transformChanged && !shouldInitBoxAxes) {
             return;
         }
 
@@ -1452,23 +1449,26 @@ define([
         var header = this._header;
         var content = this._header.content;
         this._boundingVolume = this.createBoundingVolume(header.boundingVolume, this.computedTransform, this._boundingVolume);
-        var boxBounds = this._boundingVolume._orientedBoundingBox;
 
-        if (this === this._tileset._root && defined(boxBounds)) {
-            // Get the normalized halfAxes, needed for implicit calcs
-            var halfAxes = boxBounds._halfAxes;
-            var boxAxes = Matrix3.clone(halfAxes, this.boxAxes);
-            Matrix3.getScale(boxAxes, scratchBoxScale);
+        if (rootWithBoxBounds) {
+            if (shouldInitBoxAxes) {
+                tileset._boxAxes = new Matrix3();
+                boxAxes = tileset._boxAxes;
+            }
 
-            Matrix3.getColumn(boxAxes, 0, scratchColumn);
+            // Get the orthonormal halfAxes, needed for implicit calcs
+            var halfAxes = boxBounds.halfAxes;
+            Matrix3.getScale(halfAxes, scratchBoxScale);
+
+            Matrix3.getColumn(halfAxes, 0, scratchColumn);
             Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.x, scratchColumn);
             Matrix3.setColumn(boxAxes, 0, scratchColumn, boxAxes);
 
-            Matrix3.getColumn(boxAxes, 1, scratchColumn);
+            Matrix3.getColumn(halfAxes, 1, scratchColumn);
             Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.y, scratchColumn);
             Matrix3.setColumn(boxAxes, 1, scratchColumn, boxAxes);
 
-            Matrix3.getColumn(boxAxes, 2, scratchColumn);
+            Matrix3.getColumn(halfAxes, 2, scratchColumn);
             Cartesian3.divideByScalar(scratchColumn, scratchBoxScale.z, scratchColumn);
             Matrix3.setColumn(boxAxes, 2, scratchColumn, boxAxes);
         }

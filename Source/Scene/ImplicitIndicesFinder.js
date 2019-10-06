@@ -275,11 +275,10 @@ define([
         var lodDistances = this._lodDistances;
         var length = lodDistances.length;
         var tileset = this._tileset;
-        var root = tileset.root;
-        var boxAxes = root.boxAxes;
+        var boxAxes = tileset.boxAxes;
 
         var tilesetStartLevel = tileset._startLevel;
-        var invLocalTileDims = this._invLocalTileDims;
+        // var invLocalTileDims = this._invLocalTileDims;
         var maxIndices = this._maxIndices;
         var minIndices = this._minIndices;
         var radii = this._radii;
@@ -322,7 +321,6 @@ define([
 
             // maxIndices
             maxIndicesOnLevel = maxIndices[i];
-            invTileDimsOnLevel = invTileDims[i];
             lodDistanceOnLevel = lodDistances[i];
             Cartesian3.multiplyByScalar(invTileDimsOnLevel, lodDistanceOnLevel, scratchLodDistanceToCellRatio);
             Cartesian3.add(cellPos, scratchLodDistanceToCellRatio, maxIndicesOnLevel);
