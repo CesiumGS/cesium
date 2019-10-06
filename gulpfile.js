@@ -69,9 +69,17 @@ var sourceFiles = ['Source/**/*.js',
                    '!Source/ThirdParty/pako_inflate.js',
                    '!Source/ThirdParty/crunch.js'];
 
-var buildFiles = ['Source/**/*.js',
-                  '!Specs/SpecList.js',
-                  'Source/Shaders/**/*.glsl'];
+var watchedFiles = ['Source/**/*.js',
+                    '!Source/Cesium.js',
+                    '!Source/Build/**',
+                    '!Source/Shaders/**/*.js',
+                    'Source/Shaders/**/*.glsl',
+                    '!Source/ThirdParty/Shaders/*.js',
+                    'Source/ThirdParty/Shaders/*.glsl',
+                    '!Source/Workers/**',
+                    'Source/Workers/cesiumWorkerBootstrapper.js',
+                    'Source/Workers/transferTypedArrayTest.js',
+                    '!Specs/SpecList.js'];
 
 var filesToClean = ['Source/Cesium.js',
                     'Source/Shaders/**/*.js',
@@ -143,7 +151,7 @@ gulp.task('build', function() {
 });
 
 gulp.task('build-watch', function() {
-    return gulp.watch(buildFiles, gulp.series('build'));
+    return gulp.watch(watchedFiles, gulp.series('build'));
 });
 
 gulp.task('buildApps', function() {
