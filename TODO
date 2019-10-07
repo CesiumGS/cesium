@@ -21,18 +21,18 @@ of the subtree
         then a subtree gets assigned a range into the array that holds all the indices
 
     IndicesFinder
-        * For the current way, try to get a method that pulls subtrees out from a given
-          block range (level as well as xyz).
-          right now, this block is the min max indices lodDiatance block that bounds the sphere
-          on that  level, clipped to the tree indices for the level
-          these index bounds per level will be further refined by the clipping plane indices.
-
-        MAYBE (meh):
+        Maybe (too optimized for now):
         * use the min max indices per level to find a set of subtrees
           and group sets of indices with those subtrees
           for each min max on each level divide each  and see which subtree it falls into
           if not already in map of subtrees, add it and tack on the indices for the level
 
+          would only have to do this on subtree transition levels since
+          any levels below the transition level would have smaller spheres.
+          so from startLevel to maximumTreversalLevel, skipping by distance to next
+          subtree level, process the min max ranges for that level.
+          basically take the min corner and the max corner, find out what their
+          subtree root indexes are. sift teh index ranges into subtree bins?
 
         * probably only need to trace the lodDistance sphere on each plane face
          given the camera position within the continuous grid. Then clip
