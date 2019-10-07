@@ -2216,13 +2216,13 @@ define([
         // }
         if (!hasParent) {
             var subtreeLevelStart = this.findSubtreeLevelStart(subtree);
-            this._startLevel = subtreeRootKey.w + subtreeLevelStart;
+            this._indicesFinder._startLevel = subtreeRootKey.w + subtreeLevelStart;
             // this._indicesFinder.initArraySizes();
             // console.log('first level subtree: ' + subtreeLevelStart);
-            // console.log('first level tree: ' + this._startLevel);
+            // console.log('first level tree: ' + this._indicesFinder._startLevel);
         }
 
-        var level = this._startLevel;
+        var level = this._indicesFinder._startLevel;
 
         // TODO: merge with loop version but wait till the other todo's are ironed out
 
@@ -2250,7 +2250,7 @@ define([
         var subtreeLevels0Indexed = subtreeLevels -  1;
         var treeKey, subtreeKey, subtreeIndex, result, hasSubtree, onLastSubtreeLevel, levelDiff, gerrorDenom;
         var x, y, z, uri, uriSubtree, tileInfo, tile;
-        var tilesetStartLevel = this._startLevel;
+        var tilesetStartLevel = this._indicesFinder._startLevel;
         var twoBitModeHasExtSub = true;
         var tilesetLastLevel = tilingScheme.lastLevel;
         var oneBitMode = defined(tilesetLastLevel);

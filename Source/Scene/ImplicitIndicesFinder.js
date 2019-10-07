@@ -50,13 +50,15 @@ define([
         // i.e. request must take all children (packs of 4/8) so just expand render indices a little to pick up those culled children
         // for min index, just subtract 1 if odd, for max index add 1 if even
         this._maximumTraversalLevel = 0;
+        this._startLevel = 0;
         this._lodFactor = -1; // from the distanced based sse equation (screenHeight / (tileset._maximumScreenSpaceError * sseDenominator))
 
         // How the camera relates to the grids on every level
+        // NOTE: min max indices are an inclusive range
         this._minIndices = []; // Cartesian3's, max index along each dir, continuous grid
         this._maxIndices = []; // Cartesian3's, max index along each dir, continuous grid
         this._centerIndices = []; // Cartesian3's, Where the cam pos lives on the level, continuous grid.
-        // TODO: are these needed
+        // TODO: are these needed?
         this._minTilePositions = []; // Same as minIndices but includes fractional part as well
         this._maxTilePositions = []; // Same as maxIndices but includes fractional part as well
         this._centerTilePositions = []; // Same as center but includes fractional part as well.
@@ -87,8 +89,6 @@ define([
         this._lastIndices = []; // Cartesian3's
         this._invTileDims = []; // Cartesian3's
         this._invLocalTileDims = []; // Cartesian3's
-
-        // TODO: move things like _startLevel from tileset into here?
     }
 
     defineProperties(ImplicitIndicesFinder.prototype, {
@@ -251,7 +251,7 @@ define([
         this._lodFactor = factor;
         var startingGError = tileset._geometricErrorContentRoot;
         var base = tileset.getGeomtricErrorBase();
-        var tilesetStartLevel = tileset._startLevel;
+        var tilesetStartLevel = this._startLevel;
         var i, lodDistance, gErrorOnLevel;
         var treeDimsOnLevel, virtuaDimsOnLevel;
         var treeDims = this._treeDims;
@@ -314,7 +314,7 @@ define([
         var tileset = this._tileset;
         var boxAxes = tileset.boxAxes;
 
-        var tilesetStartLevel = tileset._startLevel;
+        var tilesetStartLevel = this._startLevel;
         // var invLocalTileDims = this._invLocalTileDims;
         var centerIndices = this._centerIndices;
         var centerTilePositions = this._centerTilePositions;
@@ -399,7 +399,7 @@ define([
             maxIndicesOnLevel.z = Math.floor(maxTilePositionOnLevel.z);
 
             lastIndicesOnLevel = lastIndices[i];
-            // Cartesian3.minimumByComponent(maxIndicesOnLevel, lastIndicesOnLevel, maxIndicesOnLevel);
+            Cartesian3.minimumByComponent(maxIndicesOnLevel, lastIndicesOnLevel, maxIndicesOnLevel);
 
             // minIndices, Positions
             minTilePositionOnLevel = minTilePositions[i];
@@ -409,7 +409,7 @@ define([
             minIndicesOnLevel.x = Math.floor(minTilePositionOnLevel.x);
             minIndicesOnLevel.y = Math.floor(minTilePositionOnLevel.y);
             minIndicesOnLevel.z = Math.floor(minTilePositionOnLevel.z);
-            // Cartesian3.maximumByComponent(minIndicesOnLevel, Cartesian3.ZERO, minIndicesOnLevel);
+            Cartesian3.maximumByComponent(minIndicesOnLevel, Cartesian3.ZERO, minIndicesOnLevel);
 
             // DEBUG PRINTS
             if (i === tilesetStartLevel) {
@@ -429,10 +429,10 @@ define([
                 //     Cartesian3.clone(centerTilePositionOnLevel, lastcenterpos);
                 //     console.log('centerTilePositionOnLevel: ' + centerTilePositionOnLevel);
                 // }
-                if (!Cartesian3.equals(lastminpos, minTilePositionOnLevel)) {
-                    Cartesian3.clone(minTilePositionOnLevel, lastminpos);
-                    console.log('minTilePositionOnLevel: ' + minTilePositionOnLevel);
-                }
+                // if (!Cartesian3.equals(lastminpos, minTilePositionOnLevel)) {
+                //     Cartesian3.clone(minTilePositionOnLevel, lastminpos);
+                //     console.log('minTilePositionOnLevel: ' + minTilePositionOnLevel);
+                // }
                 // if (!Cartesian3.equals(lastmaxpos, maxTilePositionOnLevel)) {
                 //     Cartesian3.clone(maxTilePositionOnLevel, lastmaxpos);
                 //     console.log('maxTilePositionOnLevel: ' + maxTilePositionOnLevel);

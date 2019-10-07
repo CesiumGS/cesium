@@ -131,15 +131,17 @@ define([
         // ADD: On every level in the loop:
         // 1. updateTile
         // 2. if visible and within the Camear distance for the level, loadTile and selectDesiredTile
-        var contentStartLevel = tileset._startLevel;
         var indicesFinder = tileset._indicesFinder;
+        var contentStartLevel = indicesFinder._startLevel;
         var lastContentLevelToCheck = indicesFinder._maximumTraversalLevel;
         var contentRootAccessible = contentStartLevel <= lastContentLevelToCheck;
         if (!contentRootAccessible) {
             return;
         }
 
-        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck); // TODO: Maybe later update this to take min max x, y ,z?
+        var minIndices = indicesFinder._minIndices;
+        var maxIndices = indicesFinder._maxIndices;
+        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck, minIndices, maxIndices);
         if (allSubtrees.length === 0) {
             // None available yet
             return;
@@ -196,7 +198,7 @@ define([
         // Selection is what cares about blocked indices, loading does not
 
         var indicesFinder = tileset._indicesFinder;
-        var contentStartLevel = tileset._startLevel;
+        var contentStartLevel = indicesFinder._startLevel;
         var lastContentLevelToCheck = indicesFinder._maximumTraversalLevel - 1;
 
         var contentRootAccessible = contentStartLevel - 1 <= lastContentLevelToCheck;
@@ -234,7 +236,9 @@ define([
             return;
         }
 
-        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck); // TODO: Maybe later update this to take min max x, y ,z?
+        var minIndices = indicesFinder._minIndices;
+        var maxIndices = indicesFinder._maxIndices;
+        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck, minIndices, maxIndices);
         if (allSubtrees.length === 0) {
             // None available yet
             return;

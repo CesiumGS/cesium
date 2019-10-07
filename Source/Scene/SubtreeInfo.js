@@ -194,7 +194,7 @@ define([
             }
 
             // Don't take if level is the same as rootkey since the parent subtree will suffice
-            // If the parent is not subtrees the child won't be either.
+            // If the parent is not in subtrees, the child won't be either.
             if (level !== contentStartLevel && level === subtree._subtreeRootKey.w) {
                 continue;
             }
@@ -208,15 +208,17 @@ define([
      * Given an inclusive level range, get all the available subtreeInfos that overlap this range.
      * Does not include dud subtrees, i.e. subtrees that only have a root (unless it is the  root subtree).
      *
-     * @param {Number} startLevel The min level in the range we care about,
-     * @param {Number} endLevel The max level in the range we care about,
+     * @param {Number} startLevel The min level.
+     * @param {Number} endLevel The max level.
+     * @param {Array} minIndicesPerLevel The min xyz indices per level.
+     * @param {Array} maxIndicesPerLevel The max xyz indices per level.
      * @returns {Array} An array of subtreeInfo's
      * @private
      */
-    SubtreeInfo.prototype.subtreesInRange = function(startLevel, endLevel) {
+    SubtreeInfo.prototype.subtreesInRange = function(startLevel, endLevel, minIndicesPerLevel, maxIndicesPerLevel) {
         var subtreesInRange = [];
         var stack = [];
-        var contentStartLevel = this._tileset._startLevel;
+        var contentStartLevel = this._tileset._indicesFinder._startLevel;
 
         var current;
         var children, key, value, child;
@@ -235,9 +237,14 @@ define([
                 continue;
             }
 
+            // Don't take if level is the same as rootkey since the parent subtree will suffice
+            // If the parent is not in subtrees, the child won't be either.
             if (endLevel !== contentStartLevel && endLevel === current._subtreeRootKey.w) {
                 continue;
             }
+
+            // TODO: check if at least one level's inclusive range touches this subtree.
+            // if so, push.
 
             subtreesInRange.push(current);
 
@@ -250,6 +257,8 @@ define([
                 if (!defined(child)) {
                     continue;
                 }
+
+                // TODO: only push children in range
                 stack.push(child);
             }
         }
