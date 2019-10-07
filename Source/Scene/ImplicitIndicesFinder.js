@@ -297,7 +297,9 @@ define([
     var scratchMinCornerToCameraPosition = new Cartesian3();
     var scratchTranspose = new Matrix3();
     var lastmin = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+    var lastminpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
     var lastmax = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+    var lastmaxpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
     var lastcenter = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
     var lastcenterpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
     /**
@@ -366,12 +368,12 @@ define([
             centerIndexOnLevel.y = Math.floor(centerTilePositionOnLevel.y);
             centerIndexOnLevel.z = Math.floor(centerTilePositionOnLevel.z);
 
-            // TODO: not sure if need to the full thing or just the fractional part
+            // TODO: not sure if need to the full thing or just the fractional part...
             // Cartesian3.subtract(centerTilePositionOnLevel.x, centerIndexOnLevel.x, centerTilePositionOnLevel.x);
             // Cartesian3.subtract(centerTilePositionOnLevel.y, centerIndexOnLevel.y, centerTilePositionOnLevel.y);
             // Cartesian3.subtract(centerTilePositionOnLevel.z, centerIndexOnLevel.z, centerTilePositionOnLevel.z);
-
         }
+
         var lastIndicesOnLevel, minIndicesOnLevel, maxIndicesOnLevel, maxTilePositionOnLevel, minTilePositionOnLevel;
         var minIndices = this._minIndices;
         var maxIndices = this._maxIndices;
@@ -415,10 +417,6 @@ define([
                 //     Cartesian3.clone(centerIndexOnLevel, lastcenter);
                 //     console.log('centerIndexOnLevel: ' + centerIndexOnLevel);
                 // }
-                // if (!Cartesian3.equals(lastcenterpos, centerTilePositionOnLevel)) {
-                //     Cartesian3.clone(centerTilePositionOnLevel, lastcenterpos);
-                //     console.log('centerTilePositionOnLevel: ' + centerTilePositionOnLevel);
-                // }
                 // if (!Cartesian3.equals(lastmin, minIndicesOnLevel)) {
                 //     Cartesian3.clone(minIndicesOnLevel, lastmin);
                 //     console.log('min indices: ' + minIndicesOnLevel);
@@ -426,6 +424,18 @@ define([
                 // if (!Cartesian3.equals(lastmax, maxIndicesOnLevel)) {
                 //     Cartesian3.clone(maxIndicesOnLevel, lastmax);
                 //     console.log('max indices: ' + maxIndicesOnLevel);
+                // }
+                // if (!Cartesian3.equals(lastcenterpos, centerTilePositionOnLevel)) {
+                //     Cartesian3.clone(centerTilePositionOnLevel, lastcenterpos);
+                //     console.log('centerTilePositionOnLevel: ' + centerTilePositionOnLevel);
+                // }
+                if (!Cartesian3.equals(lastminpos, minTilePositionOnLevel)) {
+                    Cartesian3.clone(minTilePositionOnLevel, lastminpos);
+                    console.log('minTilePositionOnLevel: ' + minTilePositionOnLevel);
+                }
+                // if (!Cartesian3.equals(lastmaxpos, maxTilePositionOnLevel)) {
+                //     Cartesian3.clone(maxTilePositionOnLevel, lastmaxpos);
+                //     console.log('maxTilePositionOnLevel: ' + maxTilePositionOnLevel);
                 // }
             }
         }

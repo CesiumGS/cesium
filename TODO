@@ -21,13 +21,12 @@ of the subtree
         then a subtree gets assigned a range into the array that holds all the indices
 
     IndicesFinder
+        * probably only need to trace the lodDistance sphere on each plane face
+         given the camera position within the continuous grid. Then clip
+          index bounds considering the min/max tree indices as well as the
+          min/max lodDistance circle trace indices on each plane face.
         * avoid the sqrt if it turns out you just need the radiiToTileRatios more than the radii array
         * can it be done in a way that can be lerp'd based on center position fraction (not a linear thing?)
-        * Might want to find max trav depth before finding camera level info since you could stop early
-        for traversal info, would probably still need to go all the way for other array infos
-        * Max trave depth probably covers this but you could have a bool array that
-        says if a level has all 3 imprint radii ranges touching some portion of the tree range
-        for that level.
 
         hold off on bresenham just get box ranges of indices for now
         these will eventually be the visibliity indices (which are the request/render indces for add)
