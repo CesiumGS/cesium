@@ -92,7 +92,17 @@ define([
     };
 
     SubtreeInfo.prototype.arrayIndexRangeForLevel = function(treeLevel) {
-        var subtreeLevel = treeLevel - this._subtreeRootKey.w;
+        var subtreeRootLevel = this._subtreeRootKey.w;
+        if (treeLevel < subtreeRootLevel) {
+            throw new DeveloperError('DEBUG: Level is before root of subtree');
+        }
+
+        var subtreeLevel = treeLevel - subtreeRootLevel;
+        var subtreeLevels = this._tileset._tilingScheme.subtreeLevels;
+        if (subtreeLevel >= subtreeLevels) {
+            throw new DeveloperError('DEBUG: Level is after last level of subtree');
+        }
+
         var sizesArray = this._tileset._unpackedArraySizes;
         var levelOffset = sizesArray[subtreeLevel];
         var nextLevelOffset = sizesArray[subtreeLevel + 1];
