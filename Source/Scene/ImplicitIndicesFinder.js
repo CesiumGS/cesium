@@ -39,7 +39,7 @@ define([
         // 1D array of LOD sphere radii.
         this._lodDistances = [];
 
-        // Probably not needed?
+        // Only used for debug
         this._rootDistance = 0;
 
         // The content level that can be accessed.
@@ -53,17 +53,32 @@ define([
         this._lodFactor = -1; // from the distanced based sse equation (screenHeight / (tileset._maximumScreenSpaceError * sseDenominator))
 
         // How the camera relates to the grids on every level
+        this._minIndices = []; // Cartesian3's, max index along each dir, continuous grid
         this._maxIndices = []; // Cartesian3's, max index along each dir, continuous grid
-        this._minIndices = [];
-        this._centerIndices = []; // Cartesian3's, Where the cam pos lives on the level
-        this._radii = []; // Number, sphere cut radii in meters, the circle that forms on the surface of nearest face slab, clamp to max if camera inside slab
-        this._radiiRatios = []; // Cartesian3's, Radii / cell dim on a level
-        this._centerCellPositions = []; // Same as center but includes fractional part as well.
+        this._centerIndices = []; // Cartesian3's, Where the cam pos lives on the level, continuous grid.
+        // TODO: are these needed
+        this._minTilePositions = []; // Same as minIndices but includes fractional part as well
+        this._maxTilePositions = []; // Same as maxIndices but includes fractional part as well
+        this._centerTilePositions = []; // Same as center but includes fractional part as well.
+
+        // Number, sphere cut radii in meters, the circle that forms on the surface of nearest face slab, clamp to max if camera inside slab
+        // imprintRadii, the circle formed on the surface of the slabs
+        // for quad you only need along the z dir, for oct you need x and y dirs as well
+        // for quad there's only 1 slab on every level. For oct every level will have a set of slabs (worstCaseVirtualDims)
+        // radiiToTileRatios, the circle radius length in array space along each direction, same idea as to lodDistanceToTileRatio
+        // Don't think i need per slab imprint radii, only lodDistanceToTileRatio
+        // this._imprintRadiiZ = []; // Only 1 per level in quad
+        // this._imprintRadiiX = []; // Oct only
+        // this._imprintRadiiY = []; // Oct only
+        // // Cartesian3's, Radii / cell dim on a level. How many tiles long is it, in each direction.
+        // this._imprintRadiiToTileRatiosZ = [];
+        // this._imprintRadiiToTileRatiosX = [];
+        // this._imprintRadiiToTileRatiosY = [];
         this._region = undefined;
-        this._boundsMin = new Cartesian3();
-        this._boundsMax = new Cartesian3();
-        this._boundsSpan = new Cartesian3();
-        this._lodDistanceToTileRatio = new Cartesian3(); // the lod sphere radii / tile dims. Will be the same for every level.
+        this._boundsMin = new Cartesian3(); // world space min corner of the box bounds
+        this._boundsMax = new Cartesian3();  // world space max corner of the box bounds
+        this._boundsSpan = new Cartesian3(); // world length, width, height of the box bounds
+        this._lodDistanceToTileRatio = new Cartesian3(); // the lod sphere radii / tile dims. Will be the same for every level. How many tiles long is it, in each direction.
 
         // Dim info
         this._worstCaseVirtualDims = new Cartesian3(); // The same for every level
@@ -130,12 +145,14 @@ define([
         var length = tilingScheme.lastLevel + 1;
 
         var lodDistances = this._lodDistances;
-        var maxIndices =  this._maxIndices;
         var minIndices =  this._minIndices;
-        var radii =  this._radii;
-        var radiiRatios =  this._radiiRatios;
+        var maxIndices =  this._maxIndices;
         var centerIndices =  this._centerIndices;
-        var centerCellPositions =  this._centerCellPositions;
+        // var imprintRadii =  this._imprintRadii;
+        // var imprintRadiiToTileRatios =  this._imprintRadiiToTileRatios;
+        var minTilePositions =  this._minTilePositions;
+        var maxTilePositions =  this._maxTilePositions;
+        var centerTilePositions =  this._centerTilePositions;
         var treeDims =  this._treeDims;
         var lastIndices =  this._lastIndices;
         var virtuaDims =  this._virtualDims;
@@ -145,12 +162,14 @@ define([
         var i;
         for (i = 0; i < length; i++) {
             lodDistances.push(-1);
-            maxIndices.push(new Cartesian3());
             minIndices.push(new Cartesian3());
-            radii.push(-1);
-            radiiRatios.push(new Cartesian3());
+            maxIndices.push(new Cartesian3());
             centerIndices.push(new Cartesian3());
-            centerCellPositions.push(new Cartesian3());
+            // imprintRadii.push(new Cartesian3());
+            // imprintRadiiToTileRatios.push(new Cartesian3());
+            minTilePositions.push(new Cartesian3());
+            maxTilePositions.push(new Cartesian3());
+            centerTilePositions.push(new Cartesian3());
             virtuaDims.push(new Cartesian3());
         }
 
@@ -262,6 +281,8 @@ define([
             treeDimsOnLevel = treeDims[i];
             virtuaDimsOnLevel = virtuaDims[i];
             Cartesian3.minimumByComponent(worstCaseVirtualDims, treeDimsOnLevel, virtuaDimsOnLevel);
+
+            // TODO: setup array of radii
         }
 
         Cartesian3.multiplyByScalar(invTileDims[tilesetStartLevel], lodDistances[tilesetStartLevel], this._lodDistanceToTileRatio);
@@ -275,8 +296,6 @@ define([
     var scratchLocalCameraPosition = new Cartesian3();
     var scratchMinCornerToCameraPosition = new Cartesian3();
     var scratchTranspose = new Matrix3();
-    var scratchLastIndicesOnLevel = new Matrix3();
-    var constOne = new Matrix3(1, 1, 1);
     var lastmin = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
     var lastmax = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
     var lastcenter = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
@@ -295,19 +314,33 @@ define([
 
         var tilesetStartLevel = tileset._startLevel;
         // var invLocalTileDims = this._invLocalTileDims;
-        var maxIndices = this._maxIndices;
-        var minIndices = this._minIndices;
-        var radii = this._radii;
-        var radiiRatios = this._radiiRatios;
         var centerIndices = this._centerIndices;
-        var centerCellPositions = this._centerCellPositions;
+        var centerTilePositions = this._centerTilePositions;
         var invTileDims = this._invTileDims;
         var lastIndices = this._lastIndices;
         var cameraPosition = frameState.camera.positionWC;
         var lodDistanceToTileRatio = this._lodDistanceToTileRatio;
 
-        var i, invTileDimsOnLevel, lastIndicesOnLevel, minIndicesOnLevel, maxIndicesOnLevel;
-        var centerIndexOnLevel , centerCellPositionOnLevel, lodDistanceOnLevel;
+        var i, invTileDimsOnLevel;
+        var centerIndexOnLevel , centerTilePositionOnLevel, lodDistanceOnLevel;
+
+        // Find the distnace to the tileset contentless root and use that that determine maximumTreversalDepth
+        // updateVisibility is called on root in traversal before this
+        var distance = tileset._root._distanceToCamera;
+        this._maximumTraversalLevel = length - 1;
+        for (i = tilesetStartLevel; i < length; i++) {
+            if (lodDistances[i] < distance) {
+                this._maximumTraversalLevel = i - 1;
+                break;
+            }
+        }
+
+        // DEBUG PRINT
+        if (Math.abs(this._rootDistance - distance) > CesiumMath.EPSILON2) {
+            // console.log('root dist ' + distance);
+            // console.log('max lvl ' + this._maximumTraversalLevel);
+            this._rootDistance = distance;
+        }
 
         // Get local cam pos relative to min corner
         // Matrix4.multiplyByPoint(tileset.computedTransformInverse, cameraPosition, scratchLocalCameraPosition);
@@ -320,45 +353,60 @@ define([
         for (i = tilesetStartLevel; i < length; i++) {
 
             // centerIndices:
-            // the center cell index of cam pos
-            centerIndexOnLevel = centerIndices[i];
-            centerCellPositionOnLevel = centerCellPositions[i];
+            // the center tile index of cam pos
+            centerTilePositionOnLevel = centerTilePositions[i];
 
             // invLocalTileDimsOnLevel = invLocalTileDims[i];
-            // Cartesian3.multiplyComponents(scratchLocalCameraPosition, invLocalTileDimsOnLevel, centerCellPositionOnLevel);
+            // Cartesian3.multiplyComponents(scratchLocalCameraPosition, invLocalTileDimsOnLevel, centerTilePositionOnLevel);
             invTileDimsOnLevel = invTileDims[i];
-            Cartesian3.multiplyComponents(scratchLocalCameraPosition, invTileDimsOnLevel, centerCellPositionOnLevel);
+            Cartesian3.multiplyComponents(scratchLocalCameraPosition, invTileDimsOnLevel, centerTilePositionOnLevel);
 
-            centerIndexOnLevel.x = Math.floor(centerCellPositionOnLevel.x);
-            centerIndexOnLevel.y = Math.floor(centerCellPositionOnLevel.y);
-            centerIndexOnLevel.z = Math.floor(centerCellPositionOnLevel.z);
+            centerIndexOnLevel = centerIndices[i];
+            centerIndexOnLevel.x = Math.floor(centerTilePositionOnLevel.x);
+            centerIndexOnLevel.y = Math.floor(centerTilePositionOnLevel.y);
+            centerIndexOnLevel.z = Math.floor(centerTilePositionOnLevel.z);
 
             // TODO: not sure if need to the full thing or just the fractional part
-            // Cartesian3.subtract(centerCellPositionOnLevel.x, centerIndexOnLevel.x, centerCellPositionOnLevel.x);
-            // Cartesian3.subtract(centerCellPositionOnLevel.y, centerIndexOnLevel.y, centerCellPositionOnLevel.y);
-            // Cartesian3.subtract(centerCellPositionOnLevel.z, centerIndexOnLevel.z, centerCellPositionOnLevel.z);
+            // Cartesian3.subtract(centerTilePositionOnLevel.x, centerIndexOnLevel.x, centerTilePositionOnLevel.x);
+            // Cartesian3.subtract(centerTilePositionOnLevel.y, centerIndexOnLevel.y, centerTilePositionOnLevel.y);
+            // Cartesian3.subtract(centerTilePositionOnLevel.z, centerIndexOnLevel.z, centerTilePositionOnLevel.z);
 
-            // maxIndices
-            maxIndicesOnLevel = maxIndices[i];
+        }
+        var lastIndicesOnLevel, minIndicesOnLevel, maxIndicesOnLevel, maxTilePositionOnLevel, minTilePositionOnLevel;
+        var minIndices = this._minIndices;
+        var maxIndices = this._maxIndices;
+        var minTilePositions = this._minTilePositions;
+        var maxTilePositions = this._maxTilePositions;
+        // var imprintRadii = this._imprintRadii;
+        // var imprintRadiiToTileRatios = this._imprintRadiiToTileRatios;
+
+        var maximumTreversalLevel = this._maximumTraversalLevel;
+        for (i = tilesetStartLevel; i < maximumTreversalLevel; i++) {
+            invTileDimsOnLevel = invTileDims[i];
+            centerTilePositionOnLevel = centerTilePositions[i];
+
+            // maxIndices, Positions
+            maxTilePositionOnLevel = maxTilePositions[i];
             lodDistanceOnLevel = lodDistances[i];
             Cartesian3.multiplyByScalar(invTileDimsOnLevel, lodDistanceOnLevel, lodDistanceToTileRatio);
-            Cartesian3.add(centerCellPositionOnLevel, lodDistanceToTileRatio, maxIndicesOnLevel);
+            Cartesian3.add(centerTilePositionOnLevel, lodDistanceToTileRatio, maxTilePositionOnLevel);
 
-            maxIndicesOnLevel.x = Math.floor(maxIndicesOnLevel.x);
-            maxIndicesOnLevel.y = Math.floor(maxIndicesOnLevel.y);
-            maxIndicesOnLevel.z = Math.floor(maxIndicesOnLevel.z);
+            maxIndicesOnLevel = maxIndices[i];
+            maxIndicesOnLevel.x = Math.floor(maxTilePositionOnLevel.x);
+            maxIndicesOnLevel.y = Math.floor(maxTilePositionOnLevel.y);
+            maxIndicesOnLevel.z = Math.floor(maxTilePositionOnLevel.z);
 
             lastIndicesOnLevel = lastIndices[i];
             // Cartesian3.minimumByComponent(maxIndicesOnLevel, lastIndicesOnLevel, maxIndicesOnLevel);
 
-            // minIndices
+            // minIndices, Positions
+            minTilePositionOnLevel = minTilePositions[i];
+            Cartesian3.subtract(centerTilePositionOnLevel, lodDistanceToTileRatio, minTilePositionOnLevel);
+
             minIndicesOnLevel = minIndices[i];
-            Cartesian3.subtract(centerCellPositionOnLevel, lodDistanceToTileRatio, minIndicesOnLevel);
-
-            minIndicesOnLevel.x = Math.floor(minIndicesOnLevel.x);
-            minIndicesOnLevel.y = Math.floor(minIndicesOnLevel.y);
-            minIndicesOnLevel.z = Math.floor(minIndicesOnLevel.z);
-
+            minIndicesOnLevel.x = Math.floor(minTilePositionOnLevel.x);
+            minIndicesOnLevel.y = Math.floor(minTilePositionOnLevel.y);
+            minIndicesOnLevel.z = Math.floor(minTilePositionOnLevel.z);
             // Cartesian3.maximumByComponent(minIndicesOnLevel, Cartesian3.ZERO, minIndicesOnLevel);
 
             // DEBUG PRINTS
@@ -367,9 +415,9 @@ define([
                 //     Cartesian3.clone(centerIndexOnLevel, lastcenter);
                 //     console.log('centerIndexOnLevel: ' + centerIndexOnLevel);
                 // }
-                // if (!Cartesian3.equals(lastcenterpos, centerCellPositionOnLevel)) {
-                //     Cartesian3.clone(centerCellPositionOnLevel, lastcenterpos);
-                //     console.log('centerCellPositionOnLevel: ' + centerCellPositionOnLevel);
+                // if (!Cartesian3.equals(lastcenterpos, centerTilePositionOnLevel)) {
+                //     Cartesian3.clone(centerTilePositionOnLevel, lastcenterpos);
+                //     console.log('centerTilePositionOnLevel: ' + centerTilePositionOnLevel);
                 // }
                 // if (!Cartesian3.equals(lastmin, minIndicesOnLevel)) {
                 //     Cartesian3.clone(minIndicesOnLevel, lastmin);
@@ -380,10 +428,6 @@ define([
                 //     console.log('max indices: ' + maxIndicesOnLevel);
                 // }
             }
-
-            // radii, the circle formed on the surface of the slabs
-            // radiiToTileRatios, the circle radius length in array space along each direction, same idea as to lodDistanceToTileRatio
-            // i.e. how many tiles long is it, in each direction.
         }
     };
 
@@ -396,30 +440,8 @@ define([
         // (in case something wants to query beyond traversal depth later).
 
         this.updateLevelInfo(frameState);
+
         this.updateCameraLevelInfo(frameState);
-
-        // Find the distnace to the tileset contentless root and use that that determine maximumTreversalDepth
-        var tileset = this._tileset;
-        // updateVisibility is called on root in traversal before this
-        var distance = tileset._root._distanceToCamera;
-
-        var lodDistances = this._lodDistances;
-        var length = lodDistances.length;
-        this._maximumTraversalLevel = length - 1;
-        var tilesetStartLevel = tileset._startLevel;
-        var i;
-        for (i = tilesetStartLevel; i < length; i++) {
-            if (lodDistances[i] < distance) {
-                this._maximumTraversalLevel = i - 1;
-                break;
-            }
-        }
-
-        if (Math.abs(this._rootDistance - distance) > CesiumMath.EPSILON2) {
-            // console.log('root dist ' + distance);
-            // console.log('max lvl ' + this._maximumTraversalLevel);
-            this._rootDistance = distance;
-        }
     };
 
     /**

@@ -21,11 +21,19 @@ of the subtree
         then a subtree gets assigned a range into the array that holds all the indices
 
     IndicesFinder
-            hold off on bresenham just get box ranges of indices for now
-            these will eventually be the visibliity indices (which are the request/render indces for add)
-            replace will have to make sure to extend the loop a little in cases for sibling requests.
-                literally just making sure the loop bounds starts and ends on an even number
-                subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
+        * avoid the sqrt if it turns out you just need the radiiToTileRatios more than the radii array
+        * can it be done in a way that can be lerp'd based on center position fraction (not a linear thing?)
+        * Might want to find max trav depth before finding camera level info since you could stop early
+        for traversal info, would probably still need to go all the way for other array infos
+        * Max trave depth probably covers this but you could have a bool array that
+        says if a level has all 3 imprint radii ranges touching some portion of the tree range
+        for that level.
+
+        hold off on bresenham just get box ranges of indices for now
+        these will eventually be the visibliity indices (which are the request/render indces for add)
+        replace will have to make sure to extend the loop a little in cases for sibling requests.
+            literally just making sure the loop bounds starts and ends on an even number
+            subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
 
 calcs in the patent doc show that all slabs are the same dimension on each level for their worst case.
 related to the 27.7 constant that's there
