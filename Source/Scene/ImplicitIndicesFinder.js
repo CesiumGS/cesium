@@ -383,7 +383,7 @@ define([
         // var imprintRadiiToTileRatios = this._imprintRadiiToTileRatios;
 
         var maximumTreversalLevel = this._maximumTraversalLevel;
-        for (i = tilesetStartLevel; i < maximumTreversalLevel; i++) {
+        for (i = tilesetStartLevel; i <= maximumTreversalLevel; i++) {
             invTileDimsOnLevel = invTileDims[i];
             centerTilePositionOnLevel = centerTilePositions[i];
 

@@ -91,6 +91,38 @@ define([
         return defined(this._subtreesMap); // this._subtreeLastTreeLevel0Indexed !== this._subtreeRootKey.w;
     };
 
+    /**
+     * Given a a tree level, what are the tree index ranges for the level in the subtree
+     *
+     * @param {Number} treeLevel The tree level we care about.
+     * @param {Cartesian3} outMin The output parameter for the min tree range on the level for the subtree.
+     * @param {Cartesian3} outMax The output parameter for the max tree range on the level for the subtree.
+     * @private
+     */
+    SubtreeInfo.prototype.treeIndexRangeForTreeLevel = function(treeLevel, outMin, outMax) {
+        var subtreeRootKey = this._subtreeRootKey;
+        var subtreeRootLevel = subtreeRootKey.w;
+        if (treeLevel < subtreeRootLevel) {
+            throw new DeveloperError('DEBUG: Level is before root of subtree');
+        }
+
+        var subtreeLevel = treeLevel - subtreeRootLevel;
+        var subtreeLevels = this._tileset._tilingScheme.subtreeLevels;
+        if (subtreeLevel >= subtreeLevels) {
+            throw new DeveloperError('DEBUG: Level is after last level of subtree');
+        }
+
+        outMin.x = (subtreeRootKey.x << subtreeLevel);
+        outMin.y = (subtreeRootKey.y << subtreeLevel);
+        outMin.z = (subtreeRootKey.z << subtreeLevel);
+
+        var dimOnLevel = (1 << subtreeLevel);
+        var toLastIndex = dimOnLevel - 1;
+        outMax.x = outMin.x + toLastIndex;
+        outMax.y = outMin.y + toLastIndex;
+        outMax.z = outMin.z + toLastIndex;
+    };
+
     SubtreeInfo.prototype.arrayIndexRangeForLevel = function(treeLevel) {
         var subtreeRootLevel = this._subtreeRootKey.w;
         if (treeLevel < subtreeRootLevel) {
