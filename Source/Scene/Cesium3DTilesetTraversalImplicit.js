@@ -141,7 +141,7 @@ define([
 
         var minIndices = indicesFinder._minIndices;
         var maxIndices = indicesFinder._maxIndices;
-        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck, minIndices, maxIndices);
+        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck/* , minIndices, maxIndices */);
         if (allSubtrees.length === 0) {
             // None available yet
             return;
@@ -163,9 +163,11 @@ define([
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
-                var indexRange = subtree.indexRangeForLevel(contentLevel);
+                var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
                 var begin = indexRange.begin;
                 var end = indexRange.end;
+                // TODO: continue if tree index inclusive range for subtree level does not touch minIndices or maxIndices for level.
+                // var treeIndexRange = subtree.treeIndexRangeForTreeLevel(contentLevel);
                 var tiles = subtree._tiles;
                 for (j = begin; j < end; j++) {
                     var tile = tiles[j];
@@ -238,7 +240,7 @@ define([
 
         var minIndices = indicesFinder._minIndices;
         var maxIndices = indicesFinder._maxIndices;
-        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck, minIndices, maxIndices);
+        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck/* , minIndices, maxIndices */);
         if (allSubtrees.length === 0) {
             // None available yet
             return;
@@ -259,7 +261,7 @@ define([
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
-                var indexRange = subtree.indexRangeForLevel(contentLevel);
+                var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
                 var begin = indexRange.begin;
                 var end = indexRange.end;
                 var tiles = subtree._tiles;

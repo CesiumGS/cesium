@@ -27,7 +27,6 @@ of the subtree
           on that  level, clipped to the tree indices for the level
           these index bounds per level will be further refined by the clipping plane indices.
 
-
         MAYBE (meh):
         * use the min max indices per level to find a set of subtrees
           and group sets of indices with those subtrees

@@ -36,61 +36,9 @@ define([
         } else {
             this.init();
         }
-
-        // /**
-        //  * When <code>true</code>, the tile has no content.
-        //  *
-        //  * @type {Boolean}
-        //  * @readonly
-        //  *
-        //  * @private
-        //  */
-        // this.hasEmptyContent = hasEmptyContent;
-        //
-        // /**
-        //  * The node in the tileset's LRU cache, used to determine when to unload a tile's content.
-        //  *
-        //  * See {@link Cesium3DTilesetCache}
-        //  *
-        //  * @type {DoublyLinkedListNode}
-        //  * @readonly
-        //  *
-        //  * @private
-        //  */
-        // this.cacheNode = undefined;
-        //
-        // /**
-        //  * The time in seconds after the tile's content is ready when the content expires and new content is requested.
-        //  *
-        //  * @type {Number}
-        //  */
-        // this.expireDuration = expireDuration;
     }
 
     defineProperties(SubtreeInfo.prototype, {
-        // /**
-        //  * Gets or sets the tile's highlight color.
-        //  *
-        //  * @memberof SubtreeInfo.prototype
-        //  *
-        //  * @type {Color}
-        //  *
-        //  * @default {@link Color.WHITE}
-        //  *
-        //  * @private
-        //  */
-        // subtreeRoot : {
-        //     get : function() {
-        //         if (!defined(this._subtreeRoot)) {
-        //             this._color = new Color();
-        //         }
-        //         return Color.clone(this._color);
-        //     },
-        //     set : function(value) {
-        //         this._color = Color.clone(value, this._color);
-        //         this._colorDirty = true;
-        //     }
-        // },
     });
 
     // var scratchCartesian = new Cartesian4();
@@ -143,7 +91,7 @@ define([
         return defined(this._subtreesMap); // this._subtreeLastTreeLevel0Indexed !== this._subtreeRootKey.w;
     };
 
-    SubtreeInfo.prototype.indexRangeForLevel = function(treeLevel) {
+    SubtreeInfo.prototype.arrayIndexRangeForLevel = function(treeLevel) {
         var subtreeLevel = treeLevel - this._subtreeRootKey.w;
         var sizesArray = this._tileset._unpackedArraySizes;
         var levelOffset = sizesArray[subtreeLevel];
