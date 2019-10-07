@@ -1,8 +1,4 @@
-define([
-        'ThirdParty/when'
-    ], function(
-        when) {
-        'use strict';
+import { when } from '../../Source/Cesium.js';
 
 describe('ThirdParty/when', function() {
 
@@ -294,5 +290,4 @@ describe('ThirdParty/when', function() {
             expect(capturedError).toEqual(error);
         });
     });
-});
 });

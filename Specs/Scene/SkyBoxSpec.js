@@ -1,14 +1,7 @@
-define([
-        'Core/Resource',
-        'Scene/SceneMode',
-        'Scene/SkyBox',
-        'Specs/createScene'
-    ], function(
-        Resource,
-        SceneMode,
-        SkyBox,
-        createScene) {
-        'use strict';
+import { Resource } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { SkyBox } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/SkyBox', function() {
 
@@ -361,4 +354,3 @@ describe('Scene/SkyBox', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

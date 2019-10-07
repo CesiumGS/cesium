@@ -1,40 +1,20 @@
-define([
-        'Core/ApproximateTerrainHeights',
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/TimeIntervalCollection',
-        'DataSources/ConstantProperty',
-        'DataSources/Entity',
-        'DataSources/RectangleGeometryUpdater',
-        'DataSources/RectangleGraphics',
-        'DataSources/SampledProperty',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
-        'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterGroundGeometrySpecs',
-        'Specs/createGeometryUpdaterSpecs',
-        'Specs/createScene'
-    ], function(
-        ApproximateTerrainHeights,
-        Cartesian3,
-        JulianDate,
-        CesiumMath,
-        Rectangle,
-        TimeIntervalCollection,
-        ConstantProperty,
-        Entity,
-        RectangleGeometryUpdater,
-        RectangleGraphics,
-        SampledProperty,
-        PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
-        createDynamicProperty,
-        createGeometryUpdaterGroundGeometrySpecs,
-        createGeometryUpdaterSpecs,
-        createScene) {
-        'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { RectangleGeometryUpdater } from '../../Source/Cesium.js';
+import { RectangleGraphics } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createDynamicGeometryUpdaterSpecs from '../createDynamicGeometryUpdaterSpecs.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createGeometryUpdaterGroundGeometrySpecs from '../createGeometryUpdaterGroundGeometrySpecs.js';
+import createGeometryUpdaterSpecs from '../createGeometryUpdaterSpecs.js';
+import createScene from '../createScene.js';
 
 describe('DataSources/RectangleGeometryUpdater', function() {
 
@@ -254,4 +234,3 @@ describe('DataSources/RectangleGeometryUpdater', function() {
 
     createGeometryUpdaterGroundGeometrySpecs(RectangleGeometryUpdater, 'rectangle', createBasicRectangleWithoutHeight, createDynamicRectangleWithoutHeight, getScene);
 }, 'WebGL');
-});

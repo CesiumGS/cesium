@@ -1,28 +1,14 @@
-define([
-        'Core/BoundingRectangle',
-        'Core/PixelFormat',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Renderer/ComputeCommand',
-        'Renderer/ShaderProgram',
-        'Renderer/Texture',
-        'Renderer/VertexArray',
-        'Scene/Material',
-        'Scene/ViewportQuad',
-        'Specs/createScene'
-    ], function(
-        BoundingRectangle,
-        PixelFormat,
-        Buffer,
-        BufferUsage,
-        ComputeCommand,
-        ShaderProgram,
-        Texture,
-        VertexArray,
-        Material,
-        ViewportQuad,
-        createScene) {
-        'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Buffer } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import { ComputeCommand } from '../../Source/Cesium.js';
+import { ShaderProgram } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import { VertexArray } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { ViewportQuad } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Renderer/ComputeCommand', function() {
 
@@ -163,4 +149,3 @@ describe('Renderer/ComputeCommand', function() {
         expect(scene).notToRender([0, 0, 0, 255]);
     });
 }, 'WebGL');
-});

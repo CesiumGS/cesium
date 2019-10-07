@@ -1,22 +1,11 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './ConstantProperty',
-        './createPropertyDescriptor',
-        './Property'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        ConstantProperty,
-        createPropertyDescriptor,
-        Property) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import ConstantProperty from './ConstantProperty.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import Property from './Property.js';
 
     /**
      * A {@link Property} whose value is a key-value mapping of property names to the computed value of other properties.
@@ -257,6 +246,4 @@ define([
                (other instanceof PropertyBag && //
                 propertiesEqual(this, other));
     };
-
-    return PropertyBag;
-});
+export default PropertyBag;

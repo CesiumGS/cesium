@@ -1,18 +1,9 @@
-define([
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/TerrainQuantization',
-        '../Renderer/ShaderProgram',
-        './getClippingFunction',
-        './SceneMode'
-    ], function(
-        defined,
-        destroyObject,
-        TerrainQuantization,
-        ShaderProgram,
-        getClippingFunction,
-        SceneMode) {
-    'use strict';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import TerrainQuantization from '../Core/TerrainQuantization.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import getClippingFunction from './getClippingFunction.js';
+import SceneMode from './SceneMode.js';
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram, clippingShaderState) {
         this.numberOfDayTextures = numberOfDayTextures;
@@ -345,6 +336,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return GlobeSurfaceShaderSet;
-});
+export default GlobeSurfaceShaderSet;

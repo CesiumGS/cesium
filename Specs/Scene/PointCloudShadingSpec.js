@@ -1,10 +1,5 @@
-define([
-        'Scene/PointCloudShading',
-        'Specs/createScene'
-    ], function(
-        PointCloudShading,
-        createScene) {
-        'use strict';
+import { PointCloudShading } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/PointCloudShading', function() {
 
@@ -48,5 +43,4 @@ describe('Scene/PointCloudShading', function() {
         expect(PointCloudShading.isSupported(scene)).toEqual(expectedSupport);
         scene.destroyForSpecs();
     });
-});
 });

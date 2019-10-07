@@ -1,22 +1,11 @@
-define([
-        './Cartesian3',
-        './defined',
-        './DeveloperError',
-        './JulianDate',
-        './Math',
-        './Matrix3',
-        './TimeConstants',
-        './TimeStandard'
-    ], function(
-        Cartesian3,
-        defined,
-        DeveloperError,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        TimeConstants,
-        TimeStandard) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import JulianDate from './JulianDate.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import TimeConstants from './TimeConstants.js';
+import TimeStandard from './TimeStandard.js';
 
     /**
      * Contains functions for finding the Cartesian coordinates of the sun and the moon in the
@@ -538,6 +527,4 @@ define([
 
         return result;
     };
-
-    return Simon1994PlanetaryPositions;
-});
+export default Simon1994PlanetaryPositions;

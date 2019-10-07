@@ -1,8 +1,4 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from './freezeObject.js';
 
     /**
      * Enum containing WebGL Constant values by name.
@@ -611,6 +607,4 @@ define([
         // Extensions
         MAX_TEXTURE_MAX_ANISOTROPY_EXT : 0x84FF
     };
-
-    return freezeObject(WebGLConstants);
-});
+export default freezeObject(WebGLConstants);

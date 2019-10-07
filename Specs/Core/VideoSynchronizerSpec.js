@@ -1,20 +1,10 @@
-define([
-        'Core/Clock',
-        'Core/FeatureDetection',
-        'Core/Iso8601',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/VideoSynchronizer',
-        'Specs/pollToPromise'
-    ], function(
-        Clock,
-        FeatureDetection,
-        Iso8601,
-        JulianDate,
-        CesiumMath,
-        VideoSynchronizer,
-        pollToPromise) {
-        'use strict';
+import { Clock } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { VideoSynchronizer } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Core/VideoSynchronizer', function() {
 
@@ -193,5 +183,4 @@ describe('Core/VideoSynchronizer', function() {
 
         videoSynchronizer.destroy();
     });
-});
 });

@@ -1,14 +1,7 @@
-define([
-        'Core/ApproximateTerrainHeights',
-        'Core/GeometryOffsetAttribute',
-        'DataSources/GroundGeometryUpdater',
-        'Scene/HeightReference'
-    ], function(
-        ApproximateTerrainHeights,
-        GeometryOffsetAttribute,
-        GroundGeometryUpdater,
-        HeightReference) {
-        'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { GroundGeometryUpdater } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
 
 describe('DataSources/GroundGeometryUpdater', function() {
 
@@ -140,5 +133,4 @@ describe('DataSources/GroundGeometryUpdater', function() {
         expect(groundGeometryUpdater._terrainOffsetProperty).toBeUndefined();
         expect(groundGeometryUpdater.isDestroyed()).toBe(true);
     });
-});
 });

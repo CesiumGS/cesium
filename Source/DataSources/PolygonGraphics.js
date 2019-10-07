@@ -1,26 +1,13 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/isArray',
-        '../Core/PolygonHierarchy',
-        './ConstantProperty',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        isArray,
-        PolygonHierarchy,
-        ConstantProperty,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import isArray from '../Core/isArray.js';
+import PolygonHierarchy from '../Core/PolygonHierarchy.js';
+import ConstantProperty from './ConstantProperty.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     function createPolygonHierarchyProperty(value) {
         if (isArray(value)) {
@@ -363,6 +350,4 @@ define([
         this.classificationType = defaultValue(this.classificationType, source.classificationType);
         this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
-
-    return PolygonGraphics;
-});
+export default PolygonGraphics;

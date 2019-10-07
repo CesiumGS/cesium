@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/CornerType',
-        'Core/Ellipsoid',
-        'Core/PolylineVolumeGeometry',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        CornerType,
-        Ellipsoid,
-        PolylineVolumeGeometry,
-        VertexFormat,
-        createPackableSpecs) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CornerType } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { PolylineVolumeGeometry } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/PolylineVolumeGeometry', function() {
 
@@ -250,5 +240,4 @@ describe('Core/PolylineVolumeGeometry', function() {
     });
     var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 3.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0, 0.1];
     createPackableSpecs(PolylineVolumeGeometry, volume, packedInstance);
-});
 });

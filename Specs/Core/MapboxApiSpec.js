@@ -1,8 +1,4 @@
-define([
-        'Core/MapboxApi'
-    ], function(
-        MapboxApi) {
-        'use strict';
+import { MapboxApi } from '../../Source/Cesium.js';
 
 describe('Core/MapboxApi', function() {
 
@@ -23,5 +19,4 @@ describe('Core/MapboxApi', function() {
         expect(MapboxApi.getAccessToken(undefined).length).toBeGreaterThan(0);
         MapboxApi.defaultAccessToken = oldAccessToken;
     });
-});
 });

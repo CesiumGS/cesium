@@ -1,8 +1,4 @@
-define([
-        '../Core/defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from '../Core/defined.js';
 
     /**
      * @private
@@ -112,6 +108,4 @@ define([
         result.texturesByteLength = statistics.texturesByteLength;
         result.batchTableByteLength = statistics.batchTableByteLength;
     };
-
-    return Cesium3DTilesetStatistics;
-});
+export default Cesium3DTilesetStatistics;

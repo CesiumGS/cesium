@@ -1,8 +1,4 @@
-define([
-        'Core/RuntimeError'
-    ], function(
-        RuntimeError) {
-        'use strict';
+import { RuntimeError } from '../../Source/Cesium.js';
 
 describe('Core/RuntimeError', function() {
 
@@ -23,14 +19,22 @@ describe('Core/RuntimeError', function() {
     });
 
     it('has a stack property', function() {
-        expect(e.stack).toContain('RuntimeErrorSpec.js');
+        if (window.specsUsingRelease) {
+            expect(e.stack).toContain('Specs.js');
+        } else {
+            expect(e.stack).toContain('RuntimeErrorSpec.js');
+        }
     });
 
     it('has a working toString', function() {
         var str = new RuntimeError(testMessage).toString();
 
         expect(str).toContain(name + ': ' + testMessage);
-        expect(str).toContain('Core/RuntimeErrorSpec.js');
+
+        if (window.specsUsingRelease) {
+            expect(str).toContain('Specs.js');
+        } else {
+            expect(str).toContain('Core/RuntimeErrorSpec.js');
+        }
     });
-});
 });

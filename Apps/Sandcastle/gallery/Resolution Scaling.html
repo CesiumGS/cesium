@@ -8,15 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -43,6 +36,19 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
+// When browser recommended resolution is enabled, the viewer renders at
+// CSS pixel resolution (96 dpi). Otherwise, the viewer renders at the
+// screen's native resolution.
+//
+// Resolution scale applies an additional scaling factor to the
+// WebGL canvas.
+//
+// For example, if the cesium container div is 500x500 pixels,
+// window.devicePixelRatio is 2.0, and useBrowserRecommendedResolution
+// is false, the WebGL canvas will be 1000x1000 pixels. Then if
+// the resolutionScale is 0.25, the canvas will be scaled
+// down to 250x250 pixels.
+
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var viewModel = {
@@ -72,9 +78,8 @@ update();
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

@@ -1,16 +1,8 @@
-define([
-        'Core/arrayFill',
-        'Core/CylinderGeometry',
-        'Core/GeometryOffsetAttribute',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        arrayFill,
-        CylinderGeometry,
-        GeometryOffsetAttribute,
-        VertexFormat,
-        createPackableSpecs) {
-        'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { CylinderGeometry } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/CylinderGeometry', function() {
 
@@ -182,5 +174,4 @@ describe('Core/CylinderGeometry', function() {
     });
     var packedInstance = [1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 3.0, -1.0];
     createPackableSpecs(CylinderGeometry, cylinder, packedInstance);
-});
 });

@@ -1,20 +1,10 @@
-define([
-        '../../Core/Color',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../getElement',
-        '../subscribeAndEvaluate'
-    ], function(
-        Color,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        getElement,
-        subscribeAndEvaluate) {
-    'use strict';
+import Color from '../../Core/Color.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import getElement from '../getElement.js';
+import subscribeAndEvaluate from '../subscribeAndEvaluate.js';
 
     var svgNS = 'http://www.w3.org/2000/svg';
     var xlinkNS = 'http://www.w3.org/1999/xlink';
@@ -1022,6 +1012,4 @@ define([
         }
         this._defsElement = defsElement;
     };
-
-    return Animation;
-});
+export default Animation;

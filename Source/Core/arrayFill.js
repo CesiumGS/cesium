@@ -1,12 +1,6 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined'
-    ], function(
-        Check,
-        defaultValue,
-        defined) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
 
     /**
      * Fill an array or a portion of an array with a given value.
@@ -50,6 +44,4 @@ define([
         }
         return array;
     }
-
-    return arrayFill;
-});
+export default arrayFill;

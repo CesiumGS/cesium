@@ -1,8 +1,4 @@
-define([
-        './Check'
-    ], function(
-        Check) {
-    'use strict';
+import Check from './Check.js';
 
     var dataUriRegex = /^data:/i;
 
@@ -23,6 +19,4 @@ define([
 
         return dataUriRegex.test(uri);
     }
-
-    return isDataUri;
-});
+export default isDataUri;

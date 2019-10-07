@@ -1,8 +1,4 @@
-define([
-        './freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from './freezeObject.js';
 
     /**
      * Style options for corners.
@@ -40,6 +36,4 @@ define([
          */
         BEVELED : 2
     };
-
-    return freezeObject(CornerType);
-});
+export default freezeObject(CornerType);

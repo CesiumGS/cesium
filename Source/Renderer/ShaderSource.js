@@ -1,18 +1,9 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Renderer/modernizeShader',
-        '../Shaders/Builtin/CzmBuiltins',
-        './AutomaticUniforms'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        modernizeShader,
-        CzmBuiltins,
-        AutomaticUniforms) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import modernizeShader from '../Renderer/modernizeShader.js';
+import CzmBuiltins from '../Shaders/Builtin/CzmBuiltins.js';
+import AutomaticUniforms from './AutomaticUniforms.js';
 
     function removeComments(source) {
         // remove inline comments
@@ -428,6 +419,4 @@ define([
     ShaderSource.findPositionVarying = function(shaderSource) {
         return ShaderSource.findVarying(shaderSource, positionVaryingNames);
     };
-
-    return ShaderSource;
-});
+export default ShaderSource;

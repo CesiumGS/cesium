@@ -1,20 +1,14 @@
-define([
-        './defined',
-        './getTimestamp'
-    ], function(
-        defined,
-        getTimestamp) {
-    'use strict';
+import defined from './defined.js';
+import getTimestamp from './getTimestamp.js';
 
-    if (typeof window === 'undefined') {
-        return;
+    var implementation;
+    if (typeof requestAnimationFrame !== 'undefined') {
+        implementation = requestAnimationFrame;
     }
-
-    var implementation = window.requestAnimationFrame;
 
     (function() {
         // look for vendor prefixed function
-        if (!defined(implementation)) {
+        if (!defined(implementation) && typeof window !== 'undefined') {
             var vendors = ['webkit', 'moz', 'ms', 'o'];
             var i = 0;
             var len = vendors.length;
@@ -64,7 +58,7 @@ define([
      *
      * @see {@link https://www.w3.org/TR/html51/webappapis.html#animation-frames|The Web API Animation Frames interface}
      */
-    function requestAnimationFrame(callback) {
+    function requestAnimationFramePolyFill(callback) {
         // we need this extra wrapper function because the native requestAnimationFrame
         // functions must be invoked on the global scope (window), which is not the case
         // if invoked as Cesium.requestAnimationFrame(callback)
@@ -77,6 +71,4 @@ define([
      *
      * @param {Number} timestamp A timestamp for the frame, in milliseconds.
      */
-
-    return requestAnimationFrame;
-});
+export default requestAnimationFramePolyFill;

@@ -1,20 +1,10 @@
-define([
-        '../Core/arraySlice',
-        '../Core/ComponentDatatype',
-        '../Core/defined',
-        '../Core/FeatureDetection',
-        '../Core/TaskProcessor',
-        '../ThirdParty/GltfPipeline/ForEach',
-        '../ThirdParty/when'
-    ], function(
-        arraySlice,
-        ComponentDatatype,
-        defined,
-        FeatureDetection,
-        TaskProcessor,
-        ForEach,
-        when) {
-    'use strict';
+import arraySlice from '../Core/arraySlice.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defined from '../Core/defined.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import TaskProcessor from '../Core/TaskProcessor.js';
+import ForEach from '../ThirdParty/GltfPipeline/ForEach.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * @private
@@ -286,6 +276,4 @@ define([
             }
         }
     };
-
-    return DracoLoader;
-});
+export default DracoLoader;

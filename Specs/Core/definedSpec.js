@@ -1,8 +1,4 @@
-define([
-        'Core/defined'
-    ], function(
-        defined) {
-        'use strict';
+import { defined } from '../../Source/Cesium.js';
 
 describe('Core/defined', function() {
 
@@ -17,5 +13,4 @@ describe('Core/defined', function() {
     it('works for undefined value', function() {
         expect(defined(undefined)).toEqual(false);
     });
-});
 });

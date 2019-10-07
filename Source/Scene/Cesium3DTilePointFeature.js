@@ -1,18 +1,9 @@
-define([
-        '../Core/Cartographic',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        './createBillboardPointCallback'
-    ], function(
-        Cartographic,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        createBillboardPointCallback) {
-    'use strict';
+import Cartographic from '../Core/Cartographic.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import createBillboardPointCallback from './createBillboardPointCallback.js';
 
     /**
      * A point feature of a {@link Cesium3DTileset}.
@@ -801,6 +792,4 @@ define([
     Cesium3DTilePointFeature.prototype.getExactClassName = function() {
         return this._content.batchTable.getExactClassName(this._batchId);
     };
-
-    return Cesium3DTilePointFeature;
-});
+export default Cesium3DTilePointFeature;

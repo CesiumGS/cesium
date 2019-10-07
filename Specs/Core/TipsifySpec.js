@@ -1,8 +1,4 @@
-define([
-        'Core/Tipsify'
-    ], function(
-        Tipsify) {
-        'use strict';
+import { Tipsify } from '../../Source/Cesium.js';
 
 describe('Core/Tipsify', function() {
 
@@ -113,5 +109,4 @@ describe('Core/Tipsify', function() {
                                                                           maximumIndex : 28,
                                                                           cacheSize: 6}));
     });
-});
 });

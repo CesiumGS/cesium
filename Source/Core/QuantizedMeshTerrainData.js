@@ -1,36 +1,18 @@
-define([
-        '../ThirdParty/when',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './IndexDatatype',
-        './Intersections2D',
-        './Math',
-        './OrientedBoundingBox',
-        './TaskProcessor',
-        './TerrainEncoding',
-        './TerrainMesh'
-    ], function(
-        when,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        IndexDatatype,
-        Intersections2D,
-        CesiumMath,
-        OrientedBoundingBox,
-        TaskProcessor,
-        TerrainEncoding,
-        TerrainMesh) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import IndexDatatype from './IndexDatatype.js';
+import Intersections2D from './Intersections2D.js';
+import CesiumMath from './Math.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import TaskProcessor from './TaskProcessor.js';
+import TerrainEncoding from './TerrainEncoding.js';
+import TerrainMesh from './TerrainMesh.js';
 
     /**
      * Terrain data for a single tile where the terrain data is represented as a quantized mesh.  A quantized
@@ -642,6 +624,4 @@ define([
     QuantizedMeshTerrainData.prototype.wasCreatedByUpsampling = function() {
         return this._createdByUpsampling;
     };
-
-    return QuantizedMeshTerrainData;
-});
+export default QuantizedMeshTerrainData;

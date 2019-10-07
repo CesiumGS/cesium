@@ -1,16 +1,8 @@
-define([
-        'Core/Cartesian3',
-        'Core/HeadingPitchRoll',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Quaternion'
-    ], function(
-        Cartesian3,
-        HeadingPitchRoll,
-        CesiumMath,
-        Matrix3,
-        Quaternion) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
 
 describe('Core/Matrix3', function() {
 
@@ -1236,5 +1228,4 @@ describe('Core/Matrix3', function() {
             expect(intArray[index]).toEqual(index + 1);
         }
     });
-});
 });

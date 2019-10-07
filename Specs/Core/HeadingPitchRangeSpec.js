@@ -1,8 +1,4 @@
-define([
-        'Core/HeadingPitchRange'
-    ], function(
-        HeadingPitchRange) {
-        'use strict';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
 
 describe('Core/HeadingPitchRange', function() {
 
@@ -35,5 +31,4 @@ describe('Core/HeadingPitchRange', function() {
         expect(hpr).toBe(returnedResult);
     });
 
-});
 });

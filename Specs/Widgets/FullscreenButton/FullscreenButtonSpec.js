@@ -1,8 +1,4 @@
-define([
-        'Widgets/FullscreenButton/FullscreenButton'
-    ], function(
-        FullscreenButton) {
-        'use strict';
+import { FullscreenButton } from '../../../Source/Cesium.js';
 
 describe('Widgets/FullscreenButton/FullscreenButton', function() {
 
@@ -44,5 +40,4 @@ describe('Widgets/FullscreenButton/FullscreenButton', function() {
             return new FullscreenButton('testElement');
         }).toThrowDeveloperError();
     });
-});
 });

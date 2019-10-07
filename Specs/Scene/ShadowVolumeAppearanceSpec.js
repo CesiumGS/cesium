@@ -1,34 +1,17 @@
-define([
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/ComponentDatatype',
-        'Core/Ellipsoid',
-        'Core/EncodedCartesian3',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/Rectangle',
-        'Core/Transforms',
-        'Core/WebMercatorProjection',
-        'Scene/Material',
-        'Scene/MaterialAppearance',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/ShadowVolumeAppearance'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        ComponentDatatype,
-        Ellipsoid,
-        EncodedCartesian3,
-        CesiumMath,
-        Matrix4,
-        Rectangle,
-        Transforms,
-        WebMercatorProjection,
-        Material,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        ShadowVolumeAppearance) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EncodedCartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { MaterialAppearance } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { ShadowVolumeAppearance } from '../../Source/Cesium.js';
 
 describe('Scene/ShadowVolumeAppearance', function() {
 
@@ -606,5 +589,4 @@ describe('Scene/ShadowVolumeAppearance', function() {
         expect(defines.indexOf('FLAT')).not.toEqual(-1);
         expect(defines.length).toEqual(3);
     });
-});
 });

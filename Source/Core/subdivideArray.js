@@ -1,10 +1,5 @@
-define([
-        './defined',
-        './DeveloperError'
-    ], function(
-        defined,
-        DeveloperError) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Subdivides an array into a number of smaller, equal sized arrays.
@@ -37,6 +32,4 @@ define([
         }
         return result;
     }
-
-    return subdivideArray;
-});
+export default subdivideArray;

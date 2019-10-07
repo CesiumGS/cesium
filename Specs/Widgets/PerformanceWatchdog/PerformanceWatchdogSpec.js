@@ -1,10 +1,5 @@
-define([
-        'Specs/createScene',
-        'Widgets/PerformanceWatchdog/PerformanceWatchdog'
-    ], function(
-        createScene,
-        PerformanceWatchdog) {
-        'use strict';
+import createScene from '../../createScene.js';
+import { PerformanceWatchdog } from '../../../Source/Cesium.js';
 
 describe('Widgets/PerformanceWatchdog/PerformanceWatchdog', function() {
 
@@ -74,4 +69,3 @@ describe('Widgets/PerformanceWatchdog/PerformanceWatchdog', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

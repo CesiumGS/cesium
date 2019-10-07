@@ -1,52 +1,26 @@
-define([
-        'Core/ApproximateTerrainHeights',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defined',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/BoundingSphereState',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/Entity',
-        'DataSources/PolylineGeometryUpdater',
-        'DataSources/PolylineGraphics',
-        'DataSources/PolylineOutlineMaterialProperty',
-        'DataSources/StaticGroundPolylinePerMaterialBatch',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/ClassificationType',
-        'Scene/GroundPolylinePrimitive',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        ApproximateTerrainHeights,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        defined,
-        DistanceDisplayCondition,
-        JulianDate,
-        CesiumMath,
-        TimeInterval,
-        TimeIntervalCollection,
-        BoundingSphereState,
-        ColorMaterialProperty,
-        ConstantProperty,
-        Entity,
-        PolylineGeometryUpdater,
-        PolylineGraphics,
-        PolylineOutlineMaterialProperty,
-        StaticGroundPolylinePerMaterialBatch,
-        TimeIntervalCollectionProperty,
-        ClassificationType,
-        GroundPolylinePrimitive,
-        createScene,
-        pollToPromise) {
-        'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { BoundingSphereState } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { PolylineGeometryUpdater } from '../../Source/Cesium.js';
+import { PolylineGraphics } from '../../Source/Cesium.js';
+import { PolylineOutlineMaterialProperty } from '../../Source/Cesium.js';
+import { StaticGroundPolylinePerMaterialBatch } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { GroundPolylinePrimitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('DataSources/StaticGroundPolylinePerMaterialBatch', function() {
 
@@ -570,5 +544,4 @@ describe('DataSources/StaticGroundPolylinePerMaterialBatch', function() {
                 batch.removeAllPrimitives();
             });
     });
-});
 });

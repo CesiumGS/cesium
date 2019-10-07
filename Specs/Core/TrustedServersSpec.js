@@ -1,8 +1,4 @@
-define([
-        'Core/TrustedServers'
-    ], function(
-        TrustedServers) {
-        'use strict';
+import { TrustedServers } from '../../Source/Cesium.js';
 
 describe('Core/TrustedServers', function() {
 
@@ -78,5 +74,4 @@ describe('Core/TrustedServers', function() {
         TrustedServers.add('cesiumjs.org', 80);
         expect(TrustedServers.contains('http://cesiumjs.org/index.html')).toBe(true);
     });
-});
 });
