@@ -951,10 +951,13 @@ define([
         /**
          * Returns <code>true</code> if specular environment maps are supported.
          * @memberof Scene.prototype
+         *
          * @type {Boolean}
-         * @default true
+         * @readonly
+         *
+         * @see Scene#specularEnvironmentMaps
          */
-        specularEnvironmentMapSupported : {
+        specularEnvironmentMapsSupported : {
             get : function() {
                 return OctahedralProjectedCubeMap.isSupported(this._context);
             }
