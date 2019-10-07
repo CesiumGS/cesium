@@ -870,6 +870,21 @@ import View from './View.js';
         },
 
         /**
+         * Returns <code>true</code> if specular environment maps are supported.
+         * @memberof Scene.prototype
+         *
+         * @type {Boolean}
+         * @readonly
+         *
+         * @see Scene#specularEnvironmentMaps
+         */
+        specularEnvironmentMapsSupported : {
+            get : function() {
+                return OctahedralProjectedCubeMap.isSupported(this._context);
+            }
+        },
+
+        /**
          * Gets or sets the depth-test ellipsoid.
          * @memberof Scene.prototype
          *
