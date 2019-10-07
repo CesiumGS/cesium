@@ -382,7 +382,8 @@ define([
             }
 
             // radii, the circle formed on the surface of the slabs
-            // radiiRatios, the circle radius length in array space along each direction
+            // radiiToTileRatios, the circle radius length in array space along each direction, same idea as to lodDistanceToTileRatio
+            // i.e. how many tiles long is it, in each direction.
         }
     };
 
