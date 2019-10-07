@@ -10,7 +10,6 @@ services:
 before_script:
   - export DISPLAY=:99.0
 script:
-  - npm --silent run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
 
   - npm --silent run eslint
@@ -18,20 +17,10 @@ script:
   - npm --silent run build
   - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
-  - travis_wait 20 npm --silent run makeZipFile -- --concurrency 1
+  - travis_wait 20 npm --silent run website-release -- --concurrency 1
   - npm pack &> /dev/null
 
   - npm --silent run buildApps
 
-  - npm --silent run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
+  - npm --silent run deploy-s3 -- -c 'public, max-age=1800' --confirm
   - npm --silent run deploy-status -- --status success --message Deployed
-
-  - npm --silent run build-specs
-  - npm --silent run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
-
-# Various Node.js smoke-screen tests
-  - node -e "const Cesium = require('./');"
-  - NODE_ENV=development node index.js
-  - NODE_ENV=production node index.js
-
-  - npm --silent run cloc

@@ -4,6 +4,7 @@ import Resource from './Resource.js';
 
     var defaultTokenCredit;
     var defaultAccessToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiIwMzJhNTk5NS1lMTc5LTQ0MWMtYTc3Mi1lZmE3NjYyZWMwMzAiLCJpZCI6MjU5LCJzY29wZXMiOlsiYXNyIiwiZ2MiXSwiaWF0IjoxNTY5OTMyNDcwfQ.ifTZn9zZ4Tc3UD6yqH8yqwyU-8OgFQN2cqno6HmxWGw';
+    var cesiumWebsiteToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJqdGkiOiI4NjE5ZTIzYy0zN2JkLTRjNzEtYmQ5NC02NjMzZjI0MWRhOTUiLCJpZCI6MjU5LCJzY29wZXMiOlsiYXNyIiwiZ2MiXSwiaWF0IjoxNTY5OTM5MjkyfQ.JBBkmCCcbd4De9AawCQStH0IzQXIimYn0wmhZ4YD2Ts';
 
     /**
      * Default settings for accessing the Cesium ion API.
@@ -26,7 +27,7 @@ import Resource from './Resource.js';
      *
      * @type {String}
      */
-    Ion.defaultAccessToken = defaultAccessToken;
+    Ion.defaultAccessToken = cesiumWebsiteToken;
 
     /**
      * Gets or sets the default Cesium ion server.

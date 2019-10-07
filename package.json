@@ -99,6 +99,7 @@
     "minifyRelease": "gulp minifyRelease",
     "optimizeApproximateTerrainHeights": "gulp optimizeApproximateTerrainHeights -p 2",
     "release": "gulp release",
+    "website-release": "gulp website-release",
     "build-specs": "gulp build-specs",
     "test": "gulp test",
     "test-all": "gulp test --all",
