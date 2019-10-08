@@ -13,7 +13,7 @@ vec2 neighborContribution(float log2Depth, vec2 offset)
     vec2 texCoord1 = v_textureCoordinates + offset * ceil(dist);
 
     float depthOrLogDepth0 = czm_unpackDepth(texture2D(u_pointCloud_depthGBuffer, texCoord0));
-    float depthOrLogDepth1= czm_unpackDepth(texture2D(u_pointCloud_depthGBuffer, texCoord1));
+    float depthOrLogDepth1 = czm_unpackDepth(texture2D(u_pointCloud_depthGBuffer, texCoord1));
 
     // ignore depth values that are the clear depth
     if (depthOrLogDepth0 == 0.0 || depthOrLogDepth1 == 0.0) {
