@@ -31,7 +31,6 @@ var yargs = require('yargs');
 var AWS = require('aws-sdk');
 var mime = require('mime');
 var rollup = require('rollup');
-var rollupPluginBanner = require('rollup-plugin-banner');
 var rollupPluginStripPragma = require('rollup-plugin-strip-pragma');
 var rollupPluginExternalGlobals = require('rollup-plugin-external-globals');
 var rollupPluginUglify = require('rollup-plugin-uglify');
@@ -134,11 +133,11 @@ function createWorkers() {
 
     return rollup.rollup({
         input: workers,
-        plugins: [rollupPluginBanner.default('This file is automatically rebuilt by the Cesium build process.')],
         onwarn: rollupWarning
     }).then(function(bundle) {
         return bundle.write({
             dir: 'Build/createWorkers',
+            banner: '/* This file is automatically rebuilt by the Cesium build process. */',
             format: 'amd'
         });
     }).then(function(){
