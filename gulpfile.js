@@ -1305,7 +1305,7 @@ function buildSandcastle() {
         .pipe(gulpReplace('../../../', '.'))
         .pipe(gulpReplace('    <script type="module" src="load-cesium-es6.js"></script>', ''))
         .pipe(gulpReplace('nomodule', ''))
-        .pipe(gulpReplace('../../Build', '../'))
+        .pipe(gulpReplace('../../Build', '.'))
         .pipe(gulp.dest('Build/Sandcastle'));
 
     return streamToPromise(mergeStream(appStream, fileStream, dataStream, imageStream, standaloneStream));
