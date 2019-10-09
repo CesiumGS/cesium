@@ -150,9 +150,9 @@ describe('Scene/Scene', function() {
     });
 
     it('constructor throws without options.canvas', function() {
-      expect(function() {
-          return new Scene({});
-      }).toThrowDeveloperError();
+        expect(function() {
+            return new Scene({});
+        }).toThrowDeveloperError();
     });
 
     it('draws background color', function() {
@@ -1309,13 +1309,12 @@ describe('Scene/Scene', function() {
 
         scene.renderForSpecs();
 
-        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
-        expect(lastRenderTime).toBeDefined();
+        var lastFrameNumber = scene.frameState.frameNumber;
 
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
+        expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
@@ -1325,8 +1324,7 @@ describe('Scene/Scene', function() {
 
         scene.renderForSpecs();
 
-        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
-        expect(lastRenderTime).toBeDefined();
+        var lastFrameNumber = scene.frameState.frameNumber;
         expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
@@ -1336,7 +1334,7 @@ describe('Scene/Scene', function() {
         expect(scene._renderRequested).toBe(true);
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
@@ -1347,7 +1345,6 @@ describe('Scene/Scene', function() {
         scene.renderForSpecs();
 
         var lastFrameNumber = scene.frameState.frameNumber;
-        expect(lastFrameNumber).toBeDefined();
         expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
@@ -1366,8 +1363,7 @@ describe('Scene/Scene', function() {
 
         scene.renderForSpecs();
 
-        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
-        expect(lastRenderTime).toBeDefined();
+        var lastFrameNumber = scene.frameState.frameNumber;
         expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
@@ -1377,12 +1373,12 @@ describe('Scene/Scene', function() {
 
         // Render once properly
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         // Render again - but this time nothing should happen.
-        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        lastFrameNumber = scene.frameState.frameNumber;
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
@@ -1393,7 +1389,6 @@ describe('Scene/Scene', function() {
         scene.renderForSpecs();
 
         var lastFrameNumber = scene.frameState.frameNumber;
-        expect(lastFrameNumber).toBeDefined();
         expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
@@ -1416,8 +1411,7 @@ describe('Scene/Scene', function() {
 
         scene.renderForSpecs();
 
-        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
-        expect(lastRenderTime).toBeDefined();
+        var lastFrameNumber = scene.frameState.frameNumber;
         expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
@@ -1430,7 +1424,7 @@ describe('Scene/Scene', function() {
         expect(scene._renderRequested).toBe(true);
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
@@ -1440,8 +1434,7 @@ describe('Scene/Scene', function() {
 
         scene.renderForSpecs();
 
-        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
-        expect(lastRenderTime).toBeDefined();
+        var lastFrameNumber = scene.frameState.frameNumber;
         expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
@@ -1458,7 +1451,7 @@ describe('Scene/Scene', function() {
         expect(scene._renderRequested).toBe(true);
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
@@ -1468,8 +1461,7 @@ describe('Scene/Scene', function() {
 
         scene.renderForSpecs();
 
-        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
-        expect(lastRenderTime).toBeDefined();
+        var lastFrameNumber = scene.frameState.frameNumber;
         expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
@@ -1482,11 +1474,11 @@ describe('Scene/Scene', function() {
         scene.requestRender();
         Object.defineProperty(globe, 'tilesLoaded', { value: false });
         scene.renderForSpecs();
-        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        lastFrameNumber = scene.frameState.frameNumber;
 
         expect(scene._renderRequested).toBe(true);
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
@@ -1496,8 +1488,7 @@ describe('Scene/Scene', function() {
 
         scene.renderForSpecs();
 
-        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
-        expect(lastRenderTime).toBeDefined();
+        var lastFrameNumber = scene.frameState.frameNumber;
         expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
@@ -1513,7 +1504,7 @@ describe('Scene/Scene', function() {
         expect(scene._renderRequested).toBe(true);
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
@@ -1523,8 +1514,7 @@ describe('Scene/Scene', function() {
 
         scene.renderForSpecs();
 
-        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
-        expect(lastRenderTime).toBeDefined();
+        var lastFrameNumber = scene.frameState.frameNumber;
         expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
@@ -1540,7 +1530,7 @@ describe('Scene/Scene', function() {
         expect(scene._renderRequested).toBe(true);
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
@@ -1549,6 +1539,7 @@ describe('Scene/Scene', function() {
         var scene = createScene();
         scene.renderForSpecs();
 
+        var lastFrameNumber = scene.frameState.frameNumber;
         var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
         expect(lastRenderTime).toBeDefined();
         expect(scene._renderRequested).toBe(false);
@@ -1558,38 +1549,40 @@ describe('Scene/Scene', function() {
 
         scene.morphTo2D(1.0);
         scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         scene.completeMorph();
         scene.renderForSpecs();
-        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        lastFrameNumber = scene.frameState.frameNumber;
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
+        expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
+        lastFrameNumber = scene.frameState.frameNumber;
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.morphToColumbusView(1.0);
         scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         scene.completeMorph();
         scene.renderForSpecs();
-        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        lastFrameNumber = scene.frameState.frameNumber;
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
+        expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
+        lastFrameNumber = scene.frameState.frameNumber;
         lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
 
         scene.morphTo3D(1.0);
         scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 0.5, new JulianDate()));
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         scene.completeMorph();
         scene.renderForSpecs();
-        lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
+        lastFrameNumber = scene.frameState.frameNumber;
 
         scene.renderForSpecs();
-        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
+        expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
@@ -1599,6 +1592,7 @@ describe('Scene/Scene', function() {
 
         scene.renderForSpecs();
 
+        var lastFrameNumber = scene.frameState.frameNumber;
         var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
         expect(lastRenderTime).toBeDefined();
         expect(scene._renderRequested).toBe(false);
@@ -1606,15 +1600,15 @@ describe('Scene/Scene', function() {
         scene.requestRenderMode = true;
 
         scene.renderForSpecs(lastRenderTime);
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
 
         scene.maximumRenderTimeChange = 100.0;
 
         scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 50.0, new JulianDate()));
-        expect(scene.lastRenderTime).toEqualEpsilon(lastRenderTime, CesiumMath.EPSILON15);
+        expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
 
         scene.renderForSpecs(JulianDate.addSeconds(lastRenderTime, 150.0, new JulianDate()));
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
@@ -1624,6 +1618,7 @@ describe('Scene/Scene', function() {
 
         scene.renderForSpecs();
 
+        var lastFrameNumber = scene.frameState.frameNumber;
         var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
         expect(lastRenderTime).toBeDefined();
         expect(scene._renderRequested).toBe(false);
@@ -1636,7 +1631,7 @@ describe('Scene/Scene', function() {
         scene.renderForSpecs();
         scene.renderForSpecs(farFuture);
 
-        expect(scene.lastRenderTime).toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
@@ -1646,15 +1641,14 @@ describe('Scene/Scene', function() {
 
         scene.renderForSpecs();
 
-        var lastRenderTime = JulianDate.clone(scene.lastRenderTime, scratchTime);
-        expect(lastRenderTime).toBeDefined();
+        var lastFrameNumber = scene.frameState.frameNumber;
         expect(scene._renderRequested).toBe(false);
 
         scene.requestRenderMode = true;
         scene.maximumRenderTimeChange = undefined;
 
         scene.forceRender();
-        expect(scene.lastRenderTime).not.toEqual(lastRenderTime);
+        expect(scene.frameState.frameNumber).not.toEqual(lastFrameNumber);
 
         scene.destroyForSpecs();
     });
