@@ -1,22 +1,11 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './Property'
-    ], function(
-        Cartesian2,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        Event,
-        createPropertyDescriptor,
-        Property) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import Property from './Property.js';
 
     var defaultRepeat = new Cartesian2(1, 1);
     var defaultTransparent = false;
@@ -161,6 +150,4 @@ define([
                 Property.equals(this._color, other._color) &&
                 Property.equals(this._transparent, other._transparent));
     };
-
-    return ImageMaterialProperty;
-});
+export default ImageMaterialProperty;

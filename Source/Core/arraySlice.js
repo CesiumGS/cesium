@@ -1,12 +1,6 @@
-define([
-        './Check',
-        './defined',
-        './FeatureDetection'
-    ], function(
-        Check,
-        defined,
-        FeatureDetection) {
-    'use strict';
+import Check from './Check.js';
+import defined from './defined.js';
+import FeatureDetection from './FeatureDetection.js';
 
      /**
      * Create a shallow copy of an array from begin to end.
@@ -45,6 +39,4 @@ define([
 
         return copy;
     }
-
-    return arraySlice;
-});
+export default arraySlice;

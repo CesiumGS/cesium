@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -13,6 +9,4 @@ define([
         BUFFER : 2,
         NUMBER_OF_JOB_TYPES : 3
     };
-
-    return freezeObject(JobType);
-});
+export default freezeObject(JobType);

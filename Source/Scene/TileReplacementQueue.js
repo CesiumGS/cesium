@@ -1,8 +1,4 @@
-define([
-        '../Core/defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from '../Core/defined.js';
 
     /**
      * A priority queue of tiles to be replaced, if necessary, to make room for new tiles.  The queue
@@ -118,6 +114,4 @@ define([
 
         this.head = item;
     };
-
-    return TileReplacementQueue;
-});
+export default TileReplacementQueue;

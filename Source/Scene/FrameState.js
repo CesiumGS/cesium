@@ -1,8 +1,4 @@
-define([
-        './SceneMode'
-    ], function(
-        SceneMode) {
-    'use strict';
+import SceneMode from './SceneMode.js';
 
     /**
      * State information about the current frame.  An instance of this class
@@ -157,7 +153,7 @@ define([
         this.maximumScreenSpaceError = undefined;
 
         /**
-         * Ratio between a pixel and a density-independent pixel. Provides a standard unity of
+         * Ratio between a pixel and a density-independent pixel. Provides a standard unit of
          * measure for real pixel measurements appropriate to a particular device.
          *
          * @type {Number}
@@ -402,6 +398,4 @@ define([
      *
      * @callback FrameState~AfterRenderCallback
      */
-
-    return FrameState;
-});
+export default FrameState;

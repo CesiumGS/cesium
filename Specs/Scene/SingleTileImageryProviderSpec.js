@@ -1,28 +1,14 @@
-define([
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/Rectangle',
-        'Core/Resource',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Scene/SingleTileImageryProvider',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        Ellipsoid,
-        GeographicTilingScheme,
-        Rectangle,
-        Resource,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        SingleTileImageryProvider,
-        pollToPromise,
-        when) {
-        'use strict';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { SingleTileImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/SingleTileImageryProvider', function() {
 
@@ -222,5 +208,4 @@ describe('Scene/SingleTileImageryProvider', function() {
             });
         });
     });
-});
 });

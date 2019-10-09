@@ -1,8 +1,4 @@
-define([
-        'Core/Check'
-    ], function(
-        Check) {
-        'use strict';
+import { Check } from '../../Source/Cesium.js';
 
 describe('Core/Check', function() {
 
@@ -256,5 +252,4 @@ describe('Core/Check', function() {
             }).not.toThrowDeveloperError();
         });
     });
-});
 });

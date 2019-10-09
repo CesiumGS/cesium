@@ -1,24 +1,12 @@
-define([
-        'Core/Cartesian2',
-        'Core/clone',
-        'Core/combine',
-        'Core/defined',
-        'Core/FeatureDetection',
-        'Core/KeyboardEventModifier',
-        'Core/ScreenSpaceEventHandler',
-        'Core/ScreenSpaceEventType',
-        'Specs/DomEventSimulator'
-    ], function(
-        Cartesian2,
-        clone,
-        combine,
-        defined,
-        FeatureDetection,
-        KeyboardEventModifier,
-        ScreenSpaceEventHandler,
-        ScreenSpaceEventType,
-        DomEventSimulator) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { clone } from '../../Source/Cesium.js';
+import { combine } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { KeyboardEventModifier } from '../../Source/Cesium.js';
+import { ScreenSpaceEventHandler } from '../../Source/Cesium.js';
+import { ScreenSpaceEventType } from '../../Source/Cesium.js';
+import DomEventSimulator from '../DomEventSimulator.js';
 
 describe('Core/ScreenSpaceEventHandler', function() {
 
@@ -1372,5 +1360,4 @@ describe('Core/ScreenSpaceEventHandler', function() {
 
         expect(element.removeEventListener.calls.count()).toEqual(element.addEventListener.calls.count());
     });
-});
 });

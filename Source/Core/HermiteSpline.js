@@ -1,26 +1,13 @@
-define([
-        './Cartesian3',
-        './Cartesian4',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './LinearSpline',
-        './Matrix4',
-        './Spline',
-        './TridiagonalSystemSolver'
-    ], function(
-        Cartesian3,
-        Cartesian4,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        LinearSpline,
-        Matrix4,
-        Spline,
-        TridiagonalSystemSolver) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartesian4 from './Cartesian4.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import LinearSpline from './LinearSpline.js';
+import Matrix4 from './Matrix4.js';
+import Spline from './Spline.js';
+import TridiagonalSystemSolver from './TridiagonalSystemSolver.js';
 
     var scratchLower = [];
     var scratchDiagonal = [];
@@ -547,6 +534,4 @@ define([
         Cartesian3.multiplyByScalar(inTangents[i], coefs.w, scratchTemp);
         return Cartesian3.add(result, scratchTemp, result);
     };
-
-    return HermiteSpline;
-});
+export default HermiteSpline;

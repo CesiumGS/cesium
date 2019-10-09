@@ -1,8 +1,4 @@
-define([
-        'Core/getExtensionFromUri'
-    ], function(
-        getExtensionFromUri) {
-        'use strict';
+import { getExtensionFromUri } from '../../Source/Cesium.js';
 
 describe('Core/getExtensionFromUri', function() {
 
@@ -22,5 +18,4 @@ describe('Core/getExtensionFromUri', function() {
             getExtensionFromUri(undefined);
         }).toThrowDeveloperError();
     });
-});
 });

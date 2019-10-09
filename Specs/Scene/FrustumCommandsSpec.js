@@ -1,12 +1,7 @@
-define([
-        'Renderer/Pass',
-        'Scene/FrustumCommands'
-    ], function(
-        Pass,
-        FrustumCommands) {
-        'use strict';
+import { Pass } from '../../Source/Cesium.js';
+import { FrustumCommands } from '../../Source/Cesium.js';
 
-describe('Renderer/Pass', function() {
+describe('Scene/FrustumCommands', function() {
 
     it('constructs without arguments', function() {
         var frustum = new FrustumCommands();
@@ -29,5 +24,4 @@ describe('Renderer/Pass', function() {
         expect(frustum.indices).toBeDefined();
         expect(frustum.indices.length).toEqual(Pass.NUMBER_OF_PASSES);
     });
-});
 });

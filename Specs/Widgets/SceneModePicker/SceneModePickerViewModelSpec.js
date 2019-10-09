@@ -1,16 +1,8 @@
-define([
-        'Core/Ellipsoid',
-        'Scene/Globe',
-        'Scene/SceneMode',
-        'Specs/createScene',
-        'Widgets/SceneModePicker/SceneModePickerViewModel'
-    ], function(
-        Ellipsoid,
-        Globe,
-        SceneMode,
-        createScene,
-        SceneModePickerViewModel) {
-        'use strict';
+import { Ellipsoid } from '../../../Source/Cesium.js';
+import { Globe } from '../../../Source/Cesium.js';
+import { SceneMode } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
+import { SceneModePickerViewModel } from '../../../Source/Cesium.js';
 
 describe('Widgets/SceneModePicker/SceneModePickerViewModel', function() {
 
@@ -108,4 +100,3 @@ describe('Widgets/SceneModePicker/SceneModePickerViewModel', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

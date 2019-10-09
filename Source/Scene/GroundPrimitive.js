@@ -1,64 +1,24 @@
-define([
-        '../Core/ApproximateTerrainHeights',
-        '../Core/BoundingSphere',
-        '../Core/buildModuleUrl',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/Check',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/GeographicTilingScheme',
-        '../Core/GeometryInstance',
-        '../Core/isArray',
-        '../Core/Math',
-        '../Core/OrientedBoundingBox',
-        '../Core/Rectangle',
-        '../Core/RectangleGeometry',
-        '../Core/Resource',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../ThirdParty/when',
-        './ClassificationPrimitive',
-        './ClassificationType',
-        './PerInstanceColorAppearance',
-        './SceneMode',
-        './ShadowVolumeAppearance'
-    ], function(
-        ApproximateTerrainHeights,
-        BoundingSphere,
-        buildModuleUrl,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        GeographicTilingScheme,
-        GeometryInstance,
-        isArray,
-        CesiumMath,
-        OrientedBoundingBox,
-        Rectangle,
-        RectangleGeometry,
-        Resource,
-        DrawCommand,
-        Pass,
-        when,
-        ClassificationPrimitive,
-        ClassificationType,
-        PerInstanceColorAppearance,
-        SceneMode,
-        ShadowVolumeAppearance) {
-    'use strict';
+import ApproximateTerrainHeights from '../Core/ApproximateTerrainHeights.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import isArray from '../Core/isArray.js';
+import CesiumMath from '../Core/Math.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import Rectangle from '../Core/Rectangle.js';
+import when from '../ThirdParty/when.js';
+import ClassificationPrimitive from './ClassificationPrimitive.js';
+import ClassificationType from './ClassificationType.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import SceneMode from './SceneMode.js';
+import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
 
     var GroundPrimitiveUniformMap = {
         u_globeMinimumAltitude: function() {
@@ -730,10 +690,11 @@ define([
                     var boundingRectangle = getRectangle(frameState, geometry);
                     var textureCoordinateRotationPoints = geometry.textureCoordinateRotationPoints;
 
+                    var useFloatBatchTable = frameState.context.floatTextureSixPlaces;
                     if (usePlanarExtents) {
-                        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, frameState.mapProjection, this._maxHeight);
+                        attributes = ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, frameState.mapProjection, useFloatBatchTable, this._maxHeight);
                     } else {
-                        attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, frameState.mapProjection);
+                        attributes = ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, frameState.mapProjection, useFloatBatchTable);
                     }
 
                     var instanceAttributes = instance.attributes;
@@ -894,6 +855,4 @@ define([
 
         return GroundPrimitive._supportsMaterials(scene.frameState.context);
     };
-
-    return GroundPrimitive;
-});
+export default GroundPrimitive;

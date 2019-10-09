@@ -1,10 +1,5 @@
-define([
-        './defined',
-        './defineProperties'
-    ], function(
-        defined,
-        defineProperties) {
-    'use strict';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
 
     var _supportsFullscreen;
     var _names = {
@@ -253,6 +248,4 @@ define([
 
     //For unit tests
     Fullscreen._names = _names;
-
-    return Fullscreen;
-});
+export default Fullscreen;

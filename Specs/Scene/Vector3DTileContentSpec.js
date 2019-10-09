@@ -1,42 +1,21 @@
-define([
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/destroyObject',
-        'Core/Ellipsoid',
-        'Core/GeometryInstance',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Renderer/Pass',
-        'Renderer/RenderState',
-        'Scene/Cesium3DTileset',
-        'Scene/Cesium3DTileStyle',
-        'Scene/ClassificationType',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
-        'Scene/StencilConstants',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
-    ], function(
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        destroyObject,
-        Ellipsoid,
-        GeometryInstance,
-        Rectangle,
-        RectangleGeometry,
-        Pass,
-        RenderState,
-        Cesium3DTileset,
-        Cesium3DTileStyle,
-        ClassificationType,
-        PerInstanceColorAppearance,
-        Primitive,
-        StencilConstants,
-        Cesium3DTilesTester,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { destroyObject } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { Cesium3DTileset } from '../../Source/Cesium.js';
+import { Cesium3DTileStyle } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { StencilConstants } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createScene from '../createScene.js';
 
 describe('Scene/Vector3DTileContent', function() {
 
@@ -689,4 +668,3 @@ describe('Scene/Vector3DTileContent', function() {
     });
 
 }, 'WebGL');
-});

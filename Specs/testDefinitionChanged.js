@@ -1,8 +1,4 @@
-define([
-        'DataSources/ConstantProperty'
-    ], function(
-        ConstantProperty) {
-    'use strict';
+import { ConstantProperty } from '../Source/Cesium.js';
 
     function testDefinitionChanged(property, name, value1, value2) {
         var listener = jasmine.createSpy('listener');
@@ -20,6 +16,4 @@ define([
         property[name] = property[name];
         expect(listener.calls.count()).toEqual(0);
     }
-
-    return testDefinitionChanged;
-});
+export default testDefinitionChanged;

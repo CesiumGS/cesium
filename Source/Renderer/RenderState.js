@@ -1,24 +1,12 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/WebGLConstants',
-        '../Core/WindingOrder',
-        './ContextLimits',
-        './freezeRenderState'
-    ], function(
-        BoundingRectangle,
-        Color,
-        defaultValue,
-        defined,
-        DeveloperError,
-        WebGLConstants,
-        WindingOrder,
-        ContextLimits,
-        freezeRenderState) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import WindingOrder from '../Core/WindingOrder.js';
+import ContextLimits from './ContextLimits.js';
+import freezeRenderState from './freezeRenderState.js';
 
     function validateBlendEquation(blendEquation) {
         return ((blendEquation === WebGLConstants.FUNC_ADD) ||
@@ -837,6 +825,4 @@ define([
             viewport : defined(renderState.viewport) ? BoundingRectangle.clone(renderState.viewport) : undefined
         };
     };
-
-    return RenderState;
-});
+export default RenderState;

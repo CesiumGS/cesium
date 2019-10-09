@@ -1,22 +1,11 @@
-define([
-        'Core/BoundingRectangle',
-        'Core/Color',
-        'Core/Resource',
-        'Renderer/Texture',
-        'Scene/Material',
-        'Scene/ViewportQuad',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        BoundingRectangle,
-        Color,
-        Resource,
-        Texture,
-        Material,
-        ViewportQuad,
-        createScene,
-        pollToPromise) {
-        'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { ViewportQuad } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/ViewportQuad', function() {
 
@@ -119,4 +108,3 @@ describe('Scene/ViewportQuad', function() {
         expect(vq.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
-});

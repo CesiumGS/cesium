@@ -1,44 +1,22 @@
-define([
-        '../Core/BingMapsApi',
-        '../Core/buildModuleUrl',
-        '../Core/Check',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/Math',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/TileProviderError',
-        '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/when',
-        './BingMapsStyle',
-        './DiscardEmptyTileImagePolicy',
-        './ImageryProvider'
-    ], function(
-        BingMapsApi,
-        buildModuleUrl,
-        Check,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        CesiumMath,
-        Rectangle,
-        Resource,
-        RuntimeError,
-        TileProviderError,
-        WebMercatorTilingScheme,
-        when,
-        BingMapsStyle,
-        DiscardEmptyTilePolicy,
-        ImageryProvider) {
-    'use strict';
+import BingMapsApi from '../Core/BingMapsApi.js';
+import buildModuleUrl from '../Core/buildModuleUrl.js';
+import Check from '../Core/Check.js';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import CesiumMath from '../Core/Math.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import TileProviderError from '../Core/TileProviderError.js';
+import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
+import when from '../ThirdParty/when.js';
+import BingMapsStyle from './BingMapsStyle.js';
+import DiscardEmptyTilePolicy from './DiscardEmptyTileImagePolicy.js';
+import ImageryProvider from './ImageryProvider.js';
 
     /**
      * Provides tiled imagery using the Bing Maps Imagery REST API.
@@ -65,9 +43,9 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
@@ -718,6 +696,4 @@ define([
 
     // Exposed for testing
     BingMapsImageryProvider._metadataCache = {};
-
-    return BingMapsImageryProvider;
-});
+export default BingMapsImageryProvider;

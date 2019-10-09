@@ -1,14 +1,7 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Scene/Particle'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Color,
-        Particle) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Particle } from '../../Source/Cesium.js';
 
 describe('Scene/Particle', function() {
 
@@ -98,5 +91,4 @@ describe('Scene/Particle', function() {
         expect(p.mass).toEqual(expectedMass);
         expect(p.update(dt)).toEqual(false);
     });
-});
 });

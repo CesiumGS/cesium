@@ -1,22 +1,11 @@
-define([
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../ThirdParty/knockout',
-        '../getElement',
-        '../InspectorShared',
-        './CesiumInspectorViewModel'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        knockout,
-        getElement,
-        InspectorShared,
-        CesiumInspectorViewModel) {
-    'use strict';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import knockout from '../../ThirdParty/knockout.js';
+import getElement from '../getElement.js';
+import InspectorShared from '../InspectorShared.js';
+import CesiumInspectorViewModel from './CesiumInspectorViewModel.js';
 
     /**
      * Inspector widget to aid in debugging
@@ -278,6 +267,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return CesiumInspector;
-});
+export default CesiumInspector;

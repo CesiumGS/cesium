@@ -1,8 +1,4 @@
-define([
-        './defaultValue'
-    ], function(
-        defaultValue) {
-    'use strict';
+import defaultValue from './defaultValue.js';
 
     /**
      * Attributes, which make up a geometry's vertices.  Each property in this object corresponds to a
@@ -89,6 +85,4 @@ define([
          */
         this.color = options.color;
     }
-
-    return GeometryAttributes;
-});
+export default GeometryAttributes;

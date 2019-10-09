@@ -1,16 +1,8 @@
-define([
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/JulianDate',
-        'Widgets/Animation/AnimationViewModel',
-        'Widgets/ClockViewModel'
-    ], function(
-        ClockRange,
-        ClockStep,
-        JulianDate,
-        AnimationViewModel,
-        ClockViewModel) {
-        'use strict';
+import { ClockRange } from '../../../Source/Cesium.js';
+import { ClockStep } from '../../../Source/Cesium.js';
+import { JulianDate } from '../../../Source/Cesium.js';
+import { AnimationViewModel } from '../../../Source/Cesium.js';
+import { ClockViewModel } from '../../../Source/Cesium.js';
 
 describe('Widgets/Animation/AnimationViewModel', function() {
 
@@ -625,5 +617,4 @@ describe('Widgets/Animation/AnimationViewModel', function() {
         animationViewModel.setShuttleRingTicks(ticks);
         expect(animationViewModel.getShuttleRingTicks()).toEqual([0.0, 2.0, 4.0, 8.0]);
     });
-});
 });

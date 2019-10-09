@@ -1,12 +1,6 @@
-define([
-        'Specs/createViewer',
-        'Widgets/PerformanceWatchdog/PerformanceWatchdog',
-        'Widgets/Viewer/viewerPerformanceWatchdogMixin'
-    ], function(
-        createViewer,
-        PerformanceWatchdog,
-        viewerPerformanceWatchdogMixin) {
-        'use strict';
+import createViewer from '../../createViewer.js';
+import { PerformanceWatchdog } from '../../../Source/Cesium.js';
+import { viewerPerformanceWatchdogMixin } from '../../../Source/Cesium.js';
 
 describe('Widgets/Viewer/viewerPerformanceWatchdogMixin', function() {
 
@@ -47,4 +41,3 @@ describe('Widgets/Viewer/viewerPerformanceWatchdogMixin', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

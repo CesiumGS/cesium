@@ -1,16 +1,8 @@
-define([
-        'Core/defined',
-        'Core/getTimestamp',
-        'Scene/FrameRateMonitor',
-        'Specs/createScene',
-        'Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel'
-    ], function(
-        defined,
-        getTimestamp,
-        FrameRateMonitor,
-        createScene,
-        PerformanceWatchdogViewModel) {
-        'use strict';
+import { defined } from '../../../Source/Cesium.js';
+import { getTimestamp } from '../../../Source/Cesium.js';
+import { FrameRateMonitor } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
+import { PerformanceWatchdogViewModel } from '../../../Source/Cesium.js';
 
 describe('Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel', function() {
 
@@ -207,4 +199,3 @@ describe('Widgets/PerformanceWatchdog/PerformanceWatchdogViewModel', function() 
         expect(viewModel.showingLowFrameRateMessage).toBe(false);
     });
 }, 'WebGL');
-});

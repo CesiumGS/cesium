@@ -1,62 +1,31 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DistanceDisplayCondition',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/EllipsoidGeometry',
-        '../Core/EllipsoidOutlineGeometry',
-        '../Core/GeometryInstance',
-        '../Core/GeometryOffsetAttribute',
-        '../Core/Iso8601',
-        '../Core/Matrix4',
-        '../Core/OffsetGeometryInstanceAttribute',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/HeightReference',
-        '../Scene/MaterialAppearance',
-        '../Scene/PerInstanceColorAppearance',
-        '../Scene/Primitive',
-        '../Scene/SceneMode',
-        './ColorMaterialProperty',
-        './DynamicGeometryUpdater',
-        './GeometryUpdater',
-        './heightReferenceOnEntityPropertyChanged',
-        './MaterialProperty',
-        './Property'
-    ], function(
-        Cartesian3,
-        Check,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        defined,
-        defineProperties,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        EllipsoidGeometry,
-        EllipsoidOutlineGeometry,
-        GeometryInstance,
-        GeometryOffsetAttribute,
-        Iso8601,
-        Matrix4,
-        OffsetGeometryInstanceAttribute,
-        ShowGeometryInstanceAttribute,
-        HeightReference,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        Primitive,
-        SceneMode,
-        ColorMaterialProperty,
-        DynamicGeometryUpdater,
-        GeometryUpdater,
-        heightReferenceOnEntityPropertyChanged,
-        MaterialProperty,
-        Property) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import EllipsoidGeometry from '../Core/EllipsoidGeometry.js';
+import EllipsoidOutlineGeometry from '../Core/EllipsoidOutlineGeometry.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import GeometryOffsetAttribute from '../Core/GeometryOffsetAttribute.js';
+import Iso8601 from '../Core/Iso8601.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OffsetGeometryInstanceAttribute from '../Core/OffsetGeometryInstanceAttribute.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import HeightReference from '../Scene/HeightReference.js';
+import MaterialAppearance from '../Scene/MaterialAppearance.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import Primitive from '../Scene/Primitive.js';
+import SceneMode from '../Scene/SceneMode.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import DynamicGeometryUpdater from './DynamicGeometryUpdater.js';
+import GeometryUpdater from './GeometryUpdater.js';
+import heightReferenceOnEntityPropertyChanged from './heightReferenceOnEntityPropertyChanged.js';
+import MaterialProperty from './MaterialProperty.js';
+import Property from './Property.js';
 
     var defaultMaterial = new ColorMaterialProperty(Color.WHITE);
     var defaultOffset = Cartesian3.ZERO;
@@ -70,6 +39,11 @@ define([
         this.id = entity;
         this.vertexFormat = undefined;
         this.radii = undefined;
+        this.innerRadii = undefined;
+        this.minimumClock = undefined;
+        this.maximumClock = undefined;
+        this.minimumCone = undefined;
+        this.maximumCone = undefined;
         this.stackPartitions = undefined;
         this.slicePartitions = undefined;
         this.subdivisions = undefined;
@@ -231,6 +205,11 @@ define([
         var options = this._options;
         options.vertexFormat = this._materialProperty instanceof ColorMaterialProperty ? PerInstanceColorAppearance.VERTEX_FORMAT : MaterialAppearance.MaterialSupport.TEXTURED.vertexFormat;
         options.radii = ellipsoid.radii.getValue(Iso8601.MINIMUM_VALUE, options.radii);
+        options.innerRadii = Property.getValueOrUndefined(ellipsoid.innerRadii, options.radii);
+        options.minimumClock = Property.getValueOrUndefined(ellipsoid.minimumClock, Iso8601.MINIMUM_VALUE);
+        options.maximumClock = Property.getValueOrUndefined(ellipsoid.maximumClock, Iso8601.MINIMUM_VALUE);
+        options.minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, Iso8601.MINIMUM_VALUE);
+        options.maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, Iso8601.MINIMUM_VALUE);
         options.stackPartitions = Property.getValueOrUndefined(ellipsoid.stackPartitions, Iso8601.MINIMUM_VALUE);
         options.slicePartitions = Property.getValueOrUndefined(ellipsoid.slicePartitions, Iso8601.MINIMUM_VALUE);
         options.subdivisions = Property.getValueOrUndefined(ellipsoid.subdivisions, Iso8601.MINIMUM_VALUE);
@@ -344,6 +323,18 @@ define([
             options.subdivisions = subdivisions;
             options.offsetAttribute = offsetAttribute;
             options.radii = in3D ? unitSphere : radii;
+            var innerRadii = Property.getValueOrDefault(ellipsoid.innerRadii, time, radii, new Cartesian3());
+            if (in3D) {
+               var mag = Cartesian3.magnitude(radii);
+               var innerRadiiUnit = new Cartesian3(innerRadii.x/mag, innerRadii.y/mag, innerRadii.z/mag);
+               options.innerRadii = innerRadiiUnit;
+            } else {
+               options.innerRadii = innerRadii;
+            }
+            options.minimumClock = Property.getValueOrUndefined(ellipsoid.minimumClock, time);
+            options.maximumClock = Property.getValueOrUndefined(ellipsoid.maximumClock, time);
+            options.minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, time);
+            options.maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, time);
 
             var appearance = new MaterialAppearance({
                 material : material,
@@ -442,6 +433,4 @@ define([
             this._outlinePrimitive.modelMatrix = modelMatrix;
         }
     };
-
-    return EllipsoidGeometryUpdater;
-});
+export default EllipsoidGeometryUpdater;

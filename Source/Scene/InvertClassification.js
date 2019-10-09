@@ -1,46 +1,23 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Renderer/ClearCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Shaders/PostProcessStages/PassThrough',
-        './BlendingState',
-        './StencilConstants',
-        './StencilFunction',
-        './StencilOperation'
-    ], function(
-        Color,
-        defined,
-        defineProperties,
-        destroyObject,
-        PixelFormat,
-        ClearCommand,
-        Framebuffer,
-        PixelDatatype,
-        RenderState,
-        Sampler,
-        ShaderSource,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        PassThrough,
-        BlendingState,
-        StencilConstants,
-        StencilFunction,
-        StencilOperation) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import PassThrough from '../Shaders/PostProcessStages/PassThrough.js';
+import BlendingState from './BlendingState.js';
+import StencilConstants from './StencilConstants.js';
+import StencilFunction from './StencilFunction.js';
+import StencilOperation from './StencilOperation.js';
 
     /**
      * @private
@@ -368,6 +345,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return InvertClassification;
-});
+export default InvertClassification;

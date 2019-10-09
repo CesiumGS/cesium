@@ -1,24 +1,12 @@
-define([
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'DataSources/BoxGraphics',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'Scene/ShadowMode',
-        'Specs/testDefinitionChanged',
-        'Specs/testMaterialDefinitionChanged'
-    ], function(
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        BoxGraphics,
-        ColorMaterialProperty,
-        ConstantProperty,
-        ShadowMode,
-        testDefinitionChanged,
-        testMaterialDefinitionChanged) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { BoxGraphics } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
+import testMaterialDefinitionChanged from '../testMaterialDefinitionChanged.js';
 
 describe('DataSources/BoxGraphics', function() {
 
@@ -163,5 +151,4 @@ describe('DataSources/BoxGraphics', function() {
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
-});
 });

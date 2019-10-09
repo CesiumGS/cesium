@@ -1,18 +1,9 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './freezeObject',
-        './Math'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
 
     /**
      * A 4D Cartesian point.
@@ -809,9 +800,9 @@ define([
     };
 
     /**
-     * Creates a string representing this Cartesian in the format '(x, y)'.
+     * Creates a string representing this Cartesian in the format '(x, y, z, w)'.
      *
-     * @returns {String} A string representing the provided Cartesian in the format '(x, y)'.
+     * @returns {String} A string representing the provided Cartesian in the format '(x, y, z, w)'.
      */
     Cartesian4.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
@@ -905,6 +896,4 @@ define([
 
         return unpacked * Math.pow(10.0, exponent);
     };
-
-    return Cartesian4;
-});
+export default Cartesian4;

@@ -1,8 +1,4 @@
-define([
-        'Core/RequestErrorEvent'
-    ], function(
-        RequestErrorEvent) {
-        'use strict';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
 
 describe('Core/RequestErrorEvent', function() {
 
@@ -24,5 +20,4 @@ describe('Core/RequestErrorEvent', function() {
             'Another': 'second value!'
         });
     });
-});
 });

@@ -1,10 +1,5 @@
-define([
-        'Core/IndexDatatype',
-        'Core/Math'
-    ], function(
-        IndexDatatype,
-        CesiumMath) {
-        'use strict';
+import { IndexDatatype } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
 
 describe('Core/IndexDatatype', function() {
 
@@ -91,5 +86,4 @@ describe('Core/IndexDatatype', function() {
             IndexDatatype.getSizeInBytes(undefined);
         }).toThrowDeveloperError();
     });
-});
 });

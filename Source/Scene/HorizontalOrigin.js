@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The horizontal location of an origin relative to an object, e.g., a {@link Billboard}
@@ -44,6 +40,4 @@ define([
          */
         RIGHT : -1
     };
-
-    return freezeObject(HorizontalOrigin);
-});
+export default freezeObject(HorizontalOrigin);

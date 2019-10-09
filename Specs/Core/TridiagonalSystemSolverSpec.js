@@ -1,12 +1,6 @@
-define([
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/TridiagonalSystemSolver'
-    ], function(
-        Cartesian3,
-        CesiumMath,
-        TridiagonalSystemSolver) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TridiagonalSystemSolver } from '../../Source/Cesium.js';
 
 describe('Core/TridiagonalSystemSolver', function() {
 
@@ -109,5 +103,4 @@ describe('Core/TridiagonalSystemSolver', function() {
         expect(actual[7]).toEqualEpsilon(expected[7], CesiumMath.EPSILON4);
         expect(actual[8]).toEqualEpsilon(expected[8], CesiumMath.EPSILON4);
     });
-});
 });

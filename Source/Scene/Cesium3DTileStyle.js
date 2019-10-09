@@ -1,24 +1,12 @@
-define([
-        '../Core/clone',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Resource',
-        '../ThirdParty/when',
-        './ConditionsExpression',
-        './Expression'
-    ], function(
-        clone,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Resource,
-        when,
-        ConditionsExpression,
-        Expression) {
-    'use strict';
+import clone from '../Core/clone.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Resource from '../Core/Resource.js';
+import when from '../ThirdParty/when.js';
+import ConditionsExpression from './ConditionsExpression.js';
+import Expression from './Expression.js';
 
     /**
      * A style that is applied to a {@link Cesium3DTileset}.
@@ -1680,6 +1668,4 @@ define([
         //>>includeEnd('debug');
         mutables[mutableName].value = value;
     };
-
-    return Cesium3DTileStyle;
-});
+export default Cesium3DTileStyle;

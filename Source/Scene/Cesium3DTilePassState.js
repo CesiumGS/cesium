@@ -1,8 +1,4 @@
-define([
-        '../Core/Check'
-    ], function(
-        Check) {
-    'use strict';
+import Check from '../Core/Check.js';
 
     /**
      * The state for a 3D Tiles update pass.
@@ -52,6 +48,4 @@ define([
          */
         this.ready = false;
     }
-
-    return Cesium3DTilePassState;
-});
+export default Cesium3DTilePassState;

@@ -1,8 +1,4 @@
-define([
-        '../Core/defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from '../Core/defined.js';
     /**
      * @alias KmlTourWait
      * @constructor
@@ -48,6 +44,4 @@ define([
      * @param {Boolean} terminated true if {@link KmlTourWait#stop} was
      * called before entry done playback.
      */
-
-    return KmlTourWait;
-});
+export default KmlTourWait;

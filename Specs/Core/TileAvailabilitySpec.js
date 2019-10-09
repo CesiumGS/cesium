@@ -1,16 +1,8 @@
-define([
-        'Core/Cartographic',
-        'Core/GeographicTilingScheme',
-        'Core/Rectangle',
-        'Core/TileAvailability',
-        'Core/WebMercatorTilingScheme'
-    ], function(
-        Cartographic,
-        GeographicTilingScheme,
-        Rectangle,
-        TileAvailability,
-        WebMercatorTilingScheme) {
-        'use strict';
+import { Cartographic } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { TileAvailability } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
 
 describe('Core/TileAvailability', function() {
 
@@ -126,5 +118,4 @@ describe('Core/TileAvailability', function() {
             expect(availability.computeMaximumLevelAtPosition(new Cartographic(-Math.PI / 2.0, 0.0))).toBe(1);
         });
     });
-});
 });

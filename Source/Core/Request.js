@@ -1,14 +1,7 @@
-define([
-        './defaultValue',
-        './defined',
-        './RequestState',
-        './RequestType'
-    ], function(
-        defaultValue,
-        defined,
-        RequestState,
-        RequestType) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import RequestState from './RequestState.js';
+import RequestType from './RequestType.js';
 
     /**
      * Stores information for making a request. In general this does not need to be constructed directly.
@@ -197,6 +190,4 @@ define([
      * @callback Request~PriorityCallback
      * @returns {Number} The updated priority value.
      */
-
-    return Request;
-});
+export default Request;

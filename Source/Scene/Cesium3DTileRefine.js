@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * The refinement approach for a tile.
@@ -32,6 +28,4 @@ define([
          */
         REPLACE : 1
     };
-
-    return freezeObject(Cesium3DTileRefine);
-});
+export default freezeObject(Cesium3DTileRefine);

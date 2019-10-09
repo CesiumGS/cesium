@@ -1,12 +1,6 @@
-define([
-        './defined',
-        './DeveloperError',
-        './oneTimeWarning'
-    ], function(
-        defined,
-        DeveloperError,
-        oneTimeWarning) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import oneTimeWarning from './oneTimeWarning.js';
 
     /**
      * Logs a deprecation message to the console.  Use this function instead of
@@ -56,6 +50,4 @@ define([
 
         oneTimeWarning(identifier, message);
     }
-
-    return deprecationWarning;
-});
+export default deprecationWarning;

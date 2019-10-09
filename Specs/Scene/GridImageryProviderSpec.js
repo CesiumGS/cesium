@@ -1,20 +1,10 @@
-define([
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/WebMercatorTilingScheme',
-        'Scene/GridImageryProvider',
-        'Scene/ImageryProvider',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        Ellipsoid,
-        GeographicTilingScheme,
-        WebMercatorTilingScheme,
-        GridImageryProvider,
-        ImageryProvider,
-        pollToPromise,
-        when) {
-        'use strict';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { GridImageryProvider } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/GridImageryProvider', function() {
 
@@ -99,5 +89,4 @@ describe('Scene/GridImageryProvider', function() {
             expect(provider.tileHeight).toEqual(456);
         });
     });
-});
 });

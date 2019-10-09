@@ -1,22 +1,11 @@
-define([
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/GeographicTilingScheme',
-        'Core/Math',
-        'Core/QuantizedMeshTerrainData',
-        'Core/TerrainData',
-        'Core/TerrainMesh',
-        'ThirdParty/when'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        GeographicTilingScheme,
-        CesiumMath,
-        QuantizedMeshTerrainData,
-        TerrainData,
-        TerrainMesh,
-        when) {
-        'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { QuantizedMeshTerrainData } from '../../Source/Cesium.js';
+import { TerrainData } from '../../Source/Cesium.js';
+import { TerrainMesh } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Core/QuantizedMeshTerrainData', function() {
 
@@ -808,5 +797,4 @@ describe('Core/QuantizedMeshTerrainData', function() {
              expect(data.isChildAvailable(10, 20, 21, 41)).toBe(false);
          });
      });
-});
 });

@@ -1,20 +1,10 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Math',
-        './PerspectiveOffCenterFrustum'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        CesiumMath,
-        PerspectiveOffCenterFrustum) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
+import PerspectiveOffCenterFrustum from './PerspectiveOffCenterFrustum.js';
 
     /**
      * The viewing frustum is defined by 6 planes.
@@ -390,6 +380,4 @@ define([
                 CesiumMath.equalsEpsilon(this.aspectRatio, other.aspectRatio, relativeEpsilon, absoluteEpsilon) &&
                 this._offCenterFrustum.equalsEpsilon(other._offCenterFrustum, relativeEpsilon, absoluteEpsilon));
     };
-
-    return PerspectiveFrustum;
-});
+export default PerspectiveFrustum;

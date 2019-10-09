@@ -1,10 +1,5 @@
-define([
-        './freezeObject',
-        './WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import freezeObject from './freezeObject.js';
+import WebGLConstants from './WebGLConstants.js';
 
     /**
      * Winding order defines the order of vertices for a triangle to be considered front-facing.
@@ -36,6 +31,4 @@ define([
                    windingOrder === WindingOrder.COUNTER_CLOCKWISE;
         }
     };
-
-    return freezeObject(WindingOrder);
-});
+export default freezeObject(WindingOrder);

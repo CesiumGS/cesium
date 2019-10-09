@@ -1,8 +1,4 @@
-define([
-        'Renderer/PassState'
-    ], function(
-        PassState) {
-        'use strict';
+import { PassState } from '../../Source/Cesium.js';
 
 describe('Renderer/PassState', function() {
 
@@ -14,5 +10,4 @@ describe('Renderer/PassState', function() {
         expect(passState.blendingEnabled).not.toBeDefined();
         expect(passState.scissorTest).not.toBeDefined();
     });
-});
 });

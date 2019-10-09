@@ -1,8 +1,4 @@
-define([
-        'Core/Math'
-    ], function(
-        CesiumMath) {
-        'use strict';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
 
 describe('Core/Math', function() {
 
@@ -613,5 +609,4 @@ describe('Core/Math', function() {
             CesiumMath.fastApproximateAtan2(0, 0);
         }).toThrowDeveloperError();
     });
-});
 });

@@ -1,12 +1,6 @@
-define([
-        './defaultValue',
-        './defined',
-        './DeveloperError'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Represents a scalar value's lower and upper bound at a near distance and far distance in eye space.
@@ -170,6 +164,4 @@ define([
     NearFarScalar.prototype.equals = function(right) {
         return NearFarScalar.equals(this, right);
     };
-
-    return NearFarScalar;
-});
+export default NearFarScalar;

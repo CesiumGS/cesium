@@ -1,10 +1,5 @@
-define([
-        'Core/JulianDate',
-        'DataSources/CallbackProperty'
-    ], function(
-        JulianDate,
-        CallbackProperty) {
-        'use strict';
+import { JulianDate } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
 
 describe('DataSources/CallbackProperty', function() {
 
@@ -75,5 +70,4 @@ describe('DataSources/CallbackProperty', function() {
         }, true);
         expect(left.equals(right)).toEqual(false);
     });
-});
 });

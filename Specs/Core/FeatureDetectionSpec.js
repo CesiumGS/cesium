@@ -1,8 +1,4 @@
-define([
-        'Core/FeatureDetection'
-    ], function(
-        FeatureDetection) {
-        'use strict';
+import { FeatureDetection } from '../../Source/Cesium.js';
 
 describe('Core/FeatureDetection', function() {
 
@@ -136,5 +132,4 @@ describe('Core/FeatureDetection', function() {
                 expect(FeatureDetection.supportsWebP()).toEqual(supportsWebP);
             });
     });
-});
 });

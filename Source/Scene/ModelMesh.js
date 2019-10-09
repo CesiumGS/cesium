@@ -1,8 +1,4 @@
-define([
-        '../Core/defineProperties'
-    ], function(
-        defineProperties) {
-    'use strict';
+import defineProperties from '../Core/defineProperties.js';
 
     /**
      * A model's mesh and its materials.
@@ -74,6 +70,4 @@ define([
             }
         }
     });
-
-    return ModelMesh;
-});
+export default ModelMesh;
