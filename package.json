@@ -29,6 +29,9 @@
     "url": "https://github.com/AnalyticalGraphicsInc/cesium/issues",
     "email": "cesium-dev@googlegroups.com"
   },
+  "main": "index.js",
+  "module": "Source/Cesium.js",
+  "type": "module",
   "dependencies": {
     "esm": "^3.2.25"
   },
