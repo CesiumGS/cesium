@@ -1,12 +1,14 @@
-defineSuite([
-        'Core/isCrossOriginUrl',
+define([
         'Core/getAbsoluteUri',
+        'Core/isCrossOriginUrl',
         'ThirdParty/Uri'
     ], function(
-        isCrossOriginUrl,
         getAbsoluteUri,
+        isCrossOriginUrl,
         Uri) {
-    'use strict';
+        'use strict';
+
+describe('Core/isCrossOriginUrl', function() {
 
     it('returns false for relative urls', function() {
         expect(isCrossOriginUrl('/some/url.jpg')).toEqual(false);
@@ -39,4 +41,5 @@ defineSuite([
         absoluteUrl = pageUri.toString();
         expect(isCrossOriginUrl(absoluteUrl)).toEqual(true);
     });
+});
 });

@@ -167,11 +167,6 @@ define([
             throw new DeveloperError('Either options.name or options.index must be defined.');
         }
 
-        if (defined(options.speedup)) {
-            deprecationWarning('options.speedup', 'options.speedup is deprecated and will be removed in Cesium 1.54. Use options.multiplier instead.');
-            options.multiplier = options.speedup;
-        }
-
         if (defined(options.multiplier) && (options.multiplier <= 0.0)) {
             throw new DeveloperError('options.multiplier must be greater than zero.');
         }
@@ -235,11 +230,6 @@ define([
         //>>includeStart('debug', pragmas.debug);
         if (!defined(this._model._runtime.animations)) {
             throw new DeveloperError('Animations are not loaded.  Wait for Model.readyPromise to resolve.');
-        }
-
-        if (defined(options.speedup)) {
-            deprecationWarning('options.speedup', 'options.speedup is deprecated and will be removed in Cesium 1.54. Use options.multiplier instead.');
-            options.multiplier = options.speedup;
         }
 
         if (defined(options.multiplier) && (options.multiplier <= 0.0)) {

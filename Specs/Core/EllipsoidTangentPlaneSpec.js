@@ -1,14 +1,16 @@
-defineSuite([
-        'Core/EllipsoidTangentPlane',
+define([
         'Core/Cartesian2',
         'Core/Cartesian3',
-        'Core/Ellipsoid'
+        'Core/Ellipsoid',
+        'Core/EllipsoidTangentPlane'
     ], function(
-        EllipsoidTangentPlane,
         Cartesian2,
         Cartesian3,
-        Ellipsoid) {
-    'use strict';
+        Ellipsoid,
+        EllipsoidTangentPlane) {
+        'use strict';
+
+describe('Core/EllipsoidTangentPlane', function() {
 
     it('constructor defaults to WGS84', function() {
         var origin = new Cartesian3(Ellipsoid.WGS84.radii.x, 0.0, 0.0);
@@ -283,4 +285,5 @@ defineSuite([
         expect(positionsBack[0].y).toBeCloseTo(points[0].y);
         expect(positionsBack[0].z).toBeCloseTo(points[0].z);
     });
+});
 });

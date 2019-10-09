@@ -1,10 +1,12 @@
-defineSuite([
-        'Core/ShowGeometryInstanceAttribute',
-        'Core/ComponentDatatype'
+define([
+        'Core/ComponentDatatype',
+        'Core/ShowGeometryInstanceAttribute'
     ], function(
-        ShowGeometryInstanceAttribute,
-        ComponentDatatype) {
-    'use strict';
+        ComponentDatatype,
+        ShowGeometryInstanceAttribute) {
+        'use strict';
+
+describe('Core/ShowGeometryInstanceAttribute', function() {
 
     it('constructor', function() {
         var attribute = new ShowGeometryInstanceAttribute(false);
@@ -34,4 +36,5 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 
+});
 });

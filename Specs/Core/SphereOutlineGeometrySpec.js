@@ -1,10 +1,14 @@
-defineSuite([
+define([
         'Core/SphereOutlineGeometry',
-        'Specs/createPackableSpecs'
+        'Specs/createPackableSpecs',
+        'Core/Math'
     ], function(
         SphereOutlineGeometry,
-        createPackableSpecs) {
-    'use strict';
+        createPackableSpecs,
+        CesiumMath) {
+        'use strict';
+
+describe('Core/SphereOutlineGeometry', function() {
 
     it('constructor throws if stackPartitions less than 1', function() {
         expect(function() {
@@ -37,7 +41,7 @@ defineSuite([
             subdivisions: 2
         }));
 
-        expect(m.attributes.position.values.length).toEqual(6 * 3);
+        expect(m.attributes.position.values.length).toEqual(12 * 3);
         expect(m.indices.length).toEqual(6 * 2);
         expect(m.boundingSphere.radius).toEqual(1);
     });
@@ -58,6 +62,7 @@ defineSuite([
         slicePartitions: 3,
         subdivisions: 2
     });
-    var packedInstance = [1.0, 1.0, 1.0, 3.0, 3.0, 2.0, -1.0];
+    var packedInstance = [ 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, CesiumMath.TWO_PI, 0.0, CesiumMath.PI, 3.0, 3.0, 2.0, -1.0 ];
     createPackableSpecs(SphereOutlineGeometry, sphere, packedInstance);
+});
 });

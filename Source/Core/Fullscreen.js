@@ -20,6 +20,7 @@ define([
      * Browser-independent functions for working with the standard fullscreen API.
      *
      * @exports Fullscreen
+     * @namespace
      *
      * @see {@link http://dvcs.w3.org/hg/fullscreen/raw-file/tip/Overview.html|W3C Fullscreen Living Specification}
      */
@@ -249,6 +250,9 @@ define([
 
         document[_names.exitFullscreen]();
     };
+
+    //For unit tests
+    Fullscreen._names = _names;
 
     return Fullscreen;
 });

@@ -5,9 +5,10 @@ sudo: false
 addons:
   chrome: stable
   firefox: latest
+services:
+  - xvfb
 before_script:
   - export DISPLAY=:99.0
-  - sh -e /etc/init.d/xvfb start
 script:
   - npm --silent run deploy-set-version -- --buildVersion $TRAVIS_BRANCH.$TRAVIS_BUILD_NUMBER
   - npm --silent run deploy-status -- --status pending --message 'Waiting for build'
@@ -15,9 +16,8 @@ script:
   - npm --silent run eslint
 
   - npm --silent run build
-  - npm --silent run test -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
+  - npm --silent run coverage -- --browsers FirefoxHeadless --webgl-stub --failTaskOnError --suppressPassed
 
-  - npm --silent run clean
   - travis_wait 20 npm --silent run makeZipFile -- --concurrency 1
   - npm pack &> /dev/null
 
@@ -26,8 +26,11 @@ script:
   - npm --silent run deploy-s3 -- -b cesium-dev -d cesium/$TRAVIS_BRANCH --confirm -c 'no-cache'
   - npm --silent run deploy-status -- --status success --message Deployed
 
-  - npm --silent run test -- --browsers FirefoxHeadless --failTaskOnError --webgl-stub --release --suppressPassed
+  - npm --silent run test -- --browsers ChromeCI --failTaskOnError --webgl-stub --release --suppressPassed
 
-  - node index.js
+# Various Node.js smoke-screen tests
+  - node -e "const Cesium = require('./');"
+  - NODE_ENV=development node index.js
+  - NODE_ENV=production node index.js
 
   - npm --silent run cloc

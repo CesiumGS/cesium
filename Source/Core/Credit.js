@@ -1,15 +1,15 @@
 define([
         '../ThirdParty/purify',
+        './Check',
         './defaultValue',
         './defined',
-        './defineProperties',
-        './Check'
+        './defineProperties'
     ], function(
         DOMPurify,
+        Check,
         defaultValue,
         defined,
-        defineProperties,
-        Check) {
+        defineProperties) {
     'use strict';
 
     var nextCreditId = 0;

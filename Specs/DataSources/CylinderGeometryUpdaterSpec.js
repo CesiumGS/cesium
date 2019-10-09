@@ -1,5 +1,4 @@
-defineSuite([
-        'DataSources/CylinderGeometryUpdater',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/GeometryOffsetAttribute',
@@ -8,6 +7,7 @@ defineSuite([
         'Core/TimeIntervalCollection',
         'DataSources/ConstantPositionProperty',
         'DataSources/ConstantProperty',
+        'DataSources/CylinderGeometryUpdater',
         'DataSources/CylinderGraphics',
         'DataSources/Entity',
         'DataSources/SampledPositionProperty',
@@ -19,7 +19,6 @@ defineSuite([
         'Specs/createGeometryUpdaterSpecs',
         'Specs/createScene'
     ], function(
-        CylinderGeometryUpdater,
         Cartesian3,
         Color,
         GeometryOffsetAttribute,
@@ -28,6 +27,7 @@ defineSuite([
         TimeIntervalCollection,
         ConstantPositionProperty,
         ConstantProperty,
+        CylinderGeometryUpdater,
         CylinderGraphics,
         Entity,
         SampledPositionProperty,
@@ -38,7 +38,9 @@ defineSuite([
         createDynamicProperty,
         createGeometryUpdaterSpecs,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/CylinderGeometryUpdater', function() {
 
     var scene;
     var time;
@@ -293,3 +295,4 @@ defineSuite([
 
     createDynamicGeometryUpdaterSpecs(CylinderGeometryUpdater, 'cylinder', createDynamicCylinder, getScene);
 }, 'WebGL');
+});

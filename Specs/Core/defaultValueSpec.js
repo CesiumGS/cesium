@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/defaultValue'
     ], function(
         defaultValue) {
-    'use strict';
+        'use strict';
+
+describe('Core/defaultValue', function() {
 
     it('Works with first parameter undefined', function() {
         expect(defaultValue(undefined, 5)).toEqual(5);
@@ -16,4 +18,5 @@ defineSuite([
         expect(defaultValue(1, 5)).toEqual(1);
     });
 
+});
 });

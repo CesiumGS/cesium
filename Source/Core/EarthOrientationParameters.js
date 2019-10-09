@@ -136,7 +136,7 @@ define([
      * Gets a promise that, when resolved, indicates that the EOP data has been loaded and is
      * ready to use.
      *
-     * @returns {Promise.<undefined>} The promise.
+     * @returns {Promise} The promise.
      *
      * @see when
      */

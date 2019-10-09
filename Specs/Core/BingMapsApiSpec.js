@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/BingMapsApi'
     ], function(
         BingMapsApi) {
-    'use strict';
+        'use strict';
+
+describe('Core/BingMapsApi', function() {
 
     it('getKey returns provided key if one is provided', function() {
         expect(BingMapsApi.getKey('foo')).toEqual('foo');
@@ -14,4 +16,5 @@ defineSuite([
         expect(BingMapsApi.getKey(undefined)).toEqual('somekey');
         BingMapsApi.defaultKey = oldKey;
     });
+});
 });

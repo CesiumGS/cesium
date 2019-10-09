@@ -1,22 +1,24 @@
-defineSuite([
-        'DataSources/WallGraphics',
+define([
         'Core/Color',
         'Core/DistanceDisplayCondition',
         'DataSources/ColorMaterialProperty',
         'DataSources/ConstantProperty',
+        'DataSources/WallGraphics',
         'Scene/ShadowMode',
         'Specs/testDefinitionChanged',
         'Specs/testMaterialDefinitionChanged'
     ], function(
-        WallGraphics,
         Color,
         DistanceDisplayCondition,
         ColorMaterialProperty,
         ConstantProperty,
+        WallGraphics,
         ShadowMode,
         testDefinitionChanged,
         testMaterialDefinitionChanged) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/WallGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {
@@ -194,4 +196,5 @@ defineSuite([
         testDefinitionChanged(property, 'shadows', ShadowMode.ENABLED, ShadowMode.DISABLED);
         testDefinitionChanged(property, 'distanceDisplayCondition', new DistanceDisplayCondition(), new DistanceDisplayCondition(10.0, 100.0));
     });
+});
 });

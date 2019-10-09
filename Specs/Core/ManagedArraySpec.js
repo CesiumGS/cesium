@@ -1,8 +1,10 @@
-defineSuite([
+define([
         'Core/ManagedArray'
     ], function(
         ManagedArray) {
-    'use strict';
+        'use strict';
+
+describe('Core/ManagedArray', function() {
 
     it('constructor has expected default values', function() {
         var array = new ManagedArray();
@@ -147,4 +149,5 @@ defineSuite([
         expect(array.length).toEqual(2);
         expect(array.values.length).toEqual(3);
     });
+});
 });

@@ -1,13 +1,13 @@
 define([
-        '../ThirdParty/when',
         '../Core/defaultValue',
         '../Core/defined',
-        '../Core/formatError'
+        '../Core/formatError',
+        '../ThirdParty/when'
     ], function(
-        when,
         defaultValue,
         defined,
-        formatError) {
+        formatError,
+        when) {
     'use strict';
 
     // createXXXGeometry functions may return Geometry or a Promise that resolves to Geometry
@@ -53,7 +53,6 @@ define([
         var postMessage;
 
         return function(event) {
-            /*global self*/
             var data = event.data;
 
             var transferableObjects = [];

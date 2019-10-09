@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/PointCloud3DTileContent',
+define([
         'Core/Cartesian3',
         'Core/Color',
         'Core/ComponentDatatype',
@@ -7,7 +6,6 @@ defineSuite([
         'Core/HeadingPitchRange',
         'Core/HeadingPitchRoll',
         'Core/Math',
-        'Core/Matrix4',
         'Core/PerspectiveFrustum',
         'Core/Transforms',
         'Renderer/Pass',
@@ -23,7 +21,6 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        PointCloud3DTileContent,
         Cartesian3,
         Color,
         ComponentDatatype,
@@ -31,7 +28,6 @@ defineSuite([
         HeadingPitchRange,
         HeadingPitchRoll,
         CesiumMath,
-        Matrix4,
         PerspectiveFrustum,
         Transforms,
         Pass,
@@ -46,7 +42,9 @@ defineSuite([
         createScene,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PointCloud3DTileContent', function() {
 
     var scene;
     var centerLongitude = -1.31968;
@@ -464,7 +462,7 @@ defineSuite([
 
             expect(scene).toPickAndCall(function(result) {
                 // Set culling to true
-                content._pointCloud.backFaceCulling = true;
+                tileset.pointCloudShading.backFaceCulling = true;
 
                 expect(scene).toPickAndCall(function(result) {
                     picked = result;
@@ -487,7 +485,7 @@ defineSuite([
                 }
 
                 // Set culling to false
-                content._pointCloud.backFaceCulling = false;
+                tileset.pointCloudShading.backFaceCulling = false;
 
                 expect(scene).toPickAndCall(function(result) {
                     picked = result;
@@ -572,7 +570,7 @@ defineSuite([
             tileset.pointCloudShading.attenuation = true;
             tileset.pointCloudShading.geometricErrorScale = 1.0;
             tileset.pointCloudShading.maximumAttenuation = undefined;
-            tileset.pointCloudShading.baseResolution = CesiumMath.EPSILON20;
+            tileset.pointCloudShading.baseResolution = 0.20;
             tileset.maximumScreenSpaceError = 16;
             expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
                 expect(pixelCount).toEqual(noAttenuationPixelCount);
@@ -583,9 +581,9 @@ defineSuite([
     it('modulates attenuation using the geometricErrorScale parameter', function() {
         return attenuationTest(function(scene, tileset) {
             tileset.pointCloudShading.attenuation = true;
-            tileset.pointCloudShading.geometricErrorScale = 0.0;
+            tileset.pointCloudShading.geometricErrorScale = 0.2;
             tileset.pointCloudShading.maximumAttenuation = undefined;
-            tileset.pointCloudShading.baseResolution = undefined;
+            tileset.pointCloudShading.baseResolution = 1.0;
             tileset.maximumScreenSpaceError = 1;
             expect(scene).toRenderPixelCountAndCall(function(pixelCount) {
                 expect(pixelCount).toEqual(noAttenuationPixelCount);
@@ -1032,3 +1030,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

@@ -1,14 +1,14 @@
-defineSuite([
+define([
+        'Core/ArcType',
         'Core/BoundingSphere',
         'Core/BoxGeometry',
-        'Core/PlaneGeometry',
         'Core/Cartesian2',
         'Core/Cartesian3',
         'Core/CircleGeometry',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
-        'Core/CoplanarPolygonGeometry',
         'Core/ComponentDatatype',
+        'Core/CoplanarPolygonGeometry',
         'Core/CornerType',
         'Core/CorridorGeometry',
         'Core/CylinderGeometry',
@@ -22,6 +22,7 @@ defineSuite([
         'Core/Math',
         'Core/Matrix4',
         'Core/PerspectiveFrustum',
+        'Core/PlaneGeometry',
         'Core/PolygonGeometry',
         'Core/PolylineGeometry',
         'Core/PolylineVolumeGeometry',
@@ -41,16 +42,16 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], 'Scene/GeometryRendering', function(
+        ArcType,
         BoundingSphere,
         BoxGeometry,
-        PlaneGeometry,
         Cartesian2,
         Cartesian3,
         CircleGeometry,
         Color,
         ColorGeometryInstanceAttribute,
-        CoplanarPolygonGeometry,
         ComponentDatatype,
+        CoplanarPolygonGeometry,
         CornerType,
         CorridorGeometry,
         CylinderGeometry,
@@ -64,6 +65,7 @@ defineSuite([
         CesiumMath,
         Matrix4,
         PerspectiveFrustum,
+        PlaneGeometry,
         PolygonGeometry,
         PolylineGeometry,
         PolylineVolumeGeometry,
@@ -82,7 +84,9 @@ defineSuite([
         SceneMode,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('Scene/GeometryRenderingSpec', function() {
 
     var scene;
     var ellipsoid;
@@ -1563,7 +1567,7 @@ defineSuite([
                     ]),
                     width : 20.0,
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
-                    followSurface: false
+                    arcType : ArcType.NONE
                 }),
                 id : 'polyline'
             });
@@ -1582,7 +1586,7 @@ defineSuite([
                     width : 20.0,
                     colors : [new Color(1.0, 0.0, 0.0, 1.0), new Color(0.0, 1.0, 0.0, 1.0)],
                     colorsPerVertex : true,
-                    followSurface: false
+                    arcType : ArcType.NONE
                 }),
                 id : 'polyline'
             });
@@ -1743,3 +1747,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

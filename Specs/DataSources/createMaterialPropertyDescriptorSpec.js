@@ -1,16 +1,18 @@
-defineSuite([
-        'DataSources/createMaterialPropertyDescriptor',
+define([
         'Core/Color',
         'Core/Event',
         'DataSources/ColorMaterialProperty',
+        'DataSources/createMaterialPropertyDescriptor',
         'DataSources/ImageMaterialProperty'
     ], function(
-        createMaterialPropertyDescriptor,
         Color,
         Event,
         ColorMaterialProperty,
+        createMaterialPropertyDescriptor,
         ImageMaterialProperty) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/createMaterialPropertyDescriptor', function() {
 
     function MockGraphics() {
         this._definitionChanged = new Event();
@@ -50,4 +52,5 @@ defineSuite([
             instance.materialProperty = {};
         }).toThrowDeveloperError();
     });
+});
 });

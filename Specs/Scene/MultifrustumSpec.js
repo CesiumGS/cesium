@@ -1,4 +1,4 @@
-defineSuite([
+define([
         'Core/BoundingSphere',
         'Core/BoxGeometry',
         'Core/Cartesian2',
@@ -52,7 +52,9 @@ defineSuite([
         TextureAtlas,
         createScene,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Multifrustum', function() {
 
     var scene;
     var context;
@@ -218,7 +220,7 @@ defineSuite([
         var found = false;
         var sources = billboardCall.object.shaderProgram.fragmentShaderSource.sources;
         for (var j = 0; j < sources.length; ++j) {
-            if (sources[i].indexOf('czm_Debug_main') !== -1) {
+            if (sources[j].indexOf('czm_Debug_main') !== -1) {
                 found = true;
                 break;
             }
@@ -374,3 +376,4 @@ defineSuite([
         expect(scene.frustumCommandsList.length).toEqual(1);
     });
 }, 'WebGL');
+});

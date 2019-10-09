@@ -79,7 +79,11 @@ define([
             occludeePointInScaledSpace : statistics.occludeePointInScaledSpace,
             encoding : statistics.encoding,
             vertexCountWithoutSkirts : statistics.vertexCountWithoutSkirts,
-            skirtIndex : statistics.skirtIndex
+            skirtIndex : statistics.skirtIndex,
+            westIndicesSouthToNorth : statistics.westIndicesSouthToNorth,
+            southIndicesEastToWest : statistics.southIndicesEastToWest,
+            eastIndicesNorthToSouth : statistics.eastIndicesNorthToSouth,
+            northIndicesWestToEast : statistics.northIndicesWestToEast
         };
     }
 
@@ -233,17 +237,19 @@ define([
                 scratchCartographic.longitude = longitude;
                 var latitude = originY + dv.getUint8(offset++) * stepY;
                 scratchCartographic.latitude = latitude;
-                // Height is stored in units of (1/EarthRadius) or (1/6371010.0)
-                var height = dv.getFloat32(offset, true) * 6371010.0;
+
+                var height = dv.getFloat32(offset, true);
                 offset += sizeOfFloat;
 
                 // In order to support old clients, negative altitude values are stored as
                 // height/-2^32. Old clients see the value as really close to 0 but new clients multiply
                 // by -2^32 to get the real negative altitude value.
-                if (height < negativeElevationThreshold) {
-                    height *= negativeAltitudeExponentBias;
+                if (height !== 0 && height < negativeElevationThreshold) {
+                    height *= -Math.pow(2, negativeAltitudeExponentBias);
                 }
-                height *= exaggeration;
+
+                // Height is stored in units of (1/EarthRadius) or (1/6371010.0)
+                height *= 6371010.0 * exaggeration;
 
                 scratchCartographic.height = height;
 
@@ -398,6 +404,17 @@ define([
             bufferIndex = encoding.encode(vertices, bufferIndex, positions[k], uvs[k], heights[k], undefined, webMercatorTs[k]);
         }
 
+        var westIndicesSouthToNorth = westBorder.map(function(vertex) { return vertex.index; }).reverse();
+        var southIndicesEastToWest = southBorder.map(function(vertex) { return vertex.index; }).reverse();
+        var eastIndicesNorthToSouth = eastBorder.map(function(vertex) { return vertex.index; }).reverse();
+        var northIndicesWestToEast = northBorder.map(function(vertex) { return vertex.index; }).reverse();
+
+        southIndicesEastToWest.unshift(eastIndicesNorthToSouth[eastIndicesNorthToSouth.length - 1]);
+        southIndicesEastToWest.push(westIndicesSouthToNorth[0]);
+
+        northIndicesWestToEast.unshift(westIndicesSouthToNorth[westIndicesSouthToNorth.length - 1]);
+        northIndicesWestToEast.push(eastIndicesNorthToSouth[0]);
+
         return {
             vertices : vertices,
             indices : new Uint16Array(indices),
@@ -408,7 +425,11 @@ define([
             orientedBoundingBox : orientedBoundingBox,
             occludeePointInScaledSpace : occludeePointInScaledSpace,
             vertexCountWithoutSkirts : vertexCountWithoutSkirts,
-            skirtIndex : skirtIndex
+            skirtIndex : skirtIndex,
+            westIndicesSouthToNorth : westIndicesSouthToNorth,
+            southIndicesEastToWest : southIndicesEastToWest,
+            eastIndicesNorthToSouth : eastIndicesNorthToSouth,
+            northIndicesWestToEast : northIndicesWestToEast
         };
     }
 

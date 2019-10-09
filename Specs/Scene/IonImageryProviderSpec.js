@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/IonImageryProvider',
+define([
         'Core/Credit',
         'Core/defaultValue',
         'Core/IonResource',
@@ -10,6 +9,7 @@ defineSuite([
         'Scene/BingMapsImageryProvider',
         'Scene/GoogleEarthEnterpriseMapsProvider',
         'Scene/ImageryProvider',
+        'Scene/IonImageryProvider',
         'Scene/MapboxImageryProvider',
         'Scene/SingleTileImageryProvider',
         'Scene/UrlTemplateImageryProvider',
@@ -17,7 +17,6 @@ defineSuite([
         'Scene/WebMapTileServiceImageryProvider',
         'ThirdParty/when'
     ], function(
-        IonImageryProvider,
         Credit,
         defaultValue,
         IonResource,
@@ -28,13 +27,16 @@ defineSuite([
         BingMapsImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
         ImageryProvider,
+        IonImageryProvider,
         MapboxImageryProvider,
         SingleTileImageryProvider,
         UrlTemplateImageryProvider,
         WebMapServiceImageryProvider,
         WebMapTileServiceImageryProvider,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Scene/IonImageryProvider', function() {
 
     function createTestProvider(endpointData) {
         endpointData = defaultValue(endpointData, {
@@ -59,6 +61,7 @@ defineSuite([
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
+        IonImageryProvider._endpointCache = {};
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -114,6 +117,40 @@ defineSuite([
                 expect(provider.errorEvent).toBeDefined();
                 expect(provider.ready).toBe(true);
                 expect(provider._imageryProvider).toBeInstanceOf(UrlTemplateImageryProvider);
+            });
+    });
+
+    it('Uses previously fetched endpoint cache', function() {
+        var endpointData = {
+            type: 'IMAGERY',
+            url: 'http://test.invalid/layer',
+            accessToken: 'not_really_a_refresh_token',
+            attributions: []
+        };
+
+        var assetId = 12335;
+        var options = { assetId: assetId, accessToken: 'token', server: 'http://test.invalid' };
+        var endpointResource = IonResource._createEndpointResource(assetId, options);
+        spyOn(IonResource, '_createEndpointResource').and.returnValue(endpointResource);
+        spyOn(endpointResource, 'fetchJson').and.returnValue(when.resolve(endpointData));
+
+        expect(endpointResource.fetchJson.calls.count()).toBe(0);
+        var provider = new IonImageryProvider(options);
+        var provider2;
+        return provider.readyPromise
+            .then(function() {
+                expect(provider.ready).toBe(true);
+                expect(endpointResource.fetchJson.calls.count()).toBe(1);
+
+                // Same as options but in a different order to verify cache is order independant.
+                var options2 = { accessToken: 'token', server: 'http://test.invalid', assetId: assetId };
+                provider2 = new IonImageryProvider(options2);
+                return provider2.readyPromise;
+            })
+            .then(function() {
+                //Since the data is cached, fetchJson is not called again.
+                expect(endpointResource.fetchJson.calls.count()).toBe(1);
+                expect(provider2.ready).toBe(true);
             });
     });
 
@@ -255,4 +292,5 @@ defineSuite([
     it('createImageryProvider works with WMTS', function() {
         return testExternalImagery('WMTS', { url: 'http://test.invalid', layer: '', style: '', tileMatrixSetID: 1 }, WebMapTileServiceImageryProvider);
     });
+});
 });

@@ -47,20 +47,47 @@ define([
 
     function constructRectangle(geometry, computedOptions) {
         var ellipsoid = geometry._ellipsoid;
-        var size = computedOptions.size;
         var height = computedOptions.height;
         var width = computedOptions.width;
+        var northCap = computedOptions.northCap;
+        var southCap = computedOptions.southCap;
+
+        var rowHeight = height;
+        var widthMultiplier = 2;
+        var size = 0;
+        var corners = 4;
+        if (northCap) {
+            widthMultiplier -= 1;
+            rowHeight -= 1;
+            size += 1;
+            corners -= 2;
+        }
+        if (southCap) {
+            widthMultiplier -= 1;
+            rowHeight -= 1;
+            size += 1;
+            corners -= 2;
+        }
+        size += (widthMultiplier * width + 2 * rowHeight - corners);
+
         var positions = new Float64Array(size * 3);
 
         var posIndex = 0;
         var row = 0;
         var col;
         var position = positionScratch;
-        for (col = 0; col < width; col++) {
-            RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, false, row, col, position);
+        if (northCap) {
+            RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, false, row, 0, position);
             positions[posIndex++] = position.x;
             positions[posIndex++] = position.y;
             positions[posIndex++] = position.z;
+        } else {
+            for (col = 0; col < width; col++) {
+                RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, false, row, col, position);
+                positions[posIndex++] = position.x;
+                positions[posIndex++] = position.y;
+                positions[posIndex++] = position.z;
+            }
         }
 
         col = width - 1;
@@ -72,11 +99,13 @@ define([
         }
 
         row = height - 1;
-        for (col = width-2; col >=0; col--){
-            RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, false, row, col, position);
-            positions[posIndex++] = position.x;
-            positions[posIndex++] = position.y;
-            positions[posIndex++] = position.z;
+        if (!southCap) {  // if southCap is true, we dont need to add any more points because the south pole point was added by the iteration above
+            for (col = width - 2; col >= 0; col--) {
+                RectangleGeometryLibrary.computePosition(computedOptions, ellipsoid, false, row, col, position);
+                positions[posIndex++] = position.x;
+                positions[posIndex++] = position.y;
+                positions[posIndex++] = position.z;
+            }
         }
 
         col = 0;
@@ -87,15 +116,15 @@ define([
             positions[posIndex++] = position.z;
         }
 
-        var indicesSize = positions.length/3 * 2;
+        var indicesSize = positions.length / 3 * 2;
         var indices = IndexDatatype.createTypedArray(positions.length / 3, indicesSize);
 
         var index = 0;
-        for(var i = 0; i < (positions.length/3)-1; i++) {
+        for (var i = 0; i < (positions.length / 3) - 1; i++) {
             indices[index++] = i;
-            indices[index++] = i+1;
+            indices[index++] = i + 1;
         }
-        indices[index++] = (positions.length/3)-1;
+        indices[index++] = (positions.length / 3) - 1;
         indices[index++] = 0;
 
         var geo = new Geometry({
@@ -126,19 +155,29 @@ define([
 
         var topPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, maxHeight, ellipsoid, false);
         var length = topPositions.length;
-        var positions = new Float64Array(length*2);
+        var positions = new Float64Array(length * 2);
         positions.set(topPositions);
         var bottomPositions = PolygonPipeline.scaleToGeodeticHeight(geo.attributes.position.values, minHeight, ellipsoid);
         positions.set(bottomPositions, length);
         geo.attributes.position.values = positions;
 
-        var indicesSize = positions.length/3 * 2 + 8;
+        var northCap = computedOptions.northCap;
+        var southCap = computedOptions.southCap;
+        var corners = 4;
+        if (northCap) {
+            corners -= 1;
+        }
+        if (southCap) {
+            corners -= 1;
+        }
+
+        var indicesSize = (positions.length / 3 + corners) * 2;
         var indices = IndexDatatype.createTypedArray(positions.length / 3, indicesSize);
-        length = positions.length/6;
+        length = positions.length / 6;
         var index = 0;
         for (var i = 0; i < length - 1; i++) {
             indices[index++] = i;
-            indices[index++] =i+1;
+            indices[index++] = i + 1;
             indices[index++] = i + length;
             indices[index++] = i + length + 1;
         }
@@ -149,12 +188,25 @@ define([
 
         indices[index++] = 0;
         indices[index++] = length;
-        indices[index++] = width-1;
-        indices[index++] = length + width-1;
-        indices[index++] = width + height - 2;
-        indices[index++] = width + height - 2 + length;
-        indices[index++] =  2*width + height - 3;
-        indices[index++] = 2*width + height - 3 + length;
+
+        var bottomCorner;
+        if (northCap) {
+            bottomCorner = height - 1;
+        } else {
+            var topRightCorner = width - 1;
+            indices[index++] = topRightCorner;
+            indices[index++] = topRightCorner + length;
+            bottomCorner = width + height - 2;
+        }
+
+        indices[index++] = bottomCorner;
+        indices[index++] = bottomCorner + length;
+
+        if (!southCap) {
+            var bottomLeftCorner = width + bottomCorner - 1;
+            indices[index++] = bottomLeftCorner;
+            indices[index] = bottomLeftCorner + length;
+        }
 
         geo.indices = indices;
 
@@ -274,7 +326,7 @@ define([
         height : undefined,
         rotation : undefined,
         extrudedHeight : undefined,
-        offsetAttribute: undefined
+        offsetAttribute : undefined
     };
 
     /**
@@ -339,7 +391,6 @@ define([
         var rectangle = rectangleGeometry._rectangle;
         var ellipsoid = rectangleGeometry._ellipsoid;
         var computedOptions = RectangleGeometryLibrary.computeOptions(rectangle, rectangleGeometry._granularity, rectangleGeometry._rotation, 0, rectangleScratch, nwScratch);
-        computedOptions.size =  2 * computedOptions.width + 2 * computedOptions.height - 4;
 
         var geometry;
         var boundingSphere;
@@ -386,7 +437,7 @@ define([
                 geometry.attributes.applyOffset = new GeometryAttribute({
                     componentDatatype : ComponentDatatype.UNSIGNED_BYTE,
                     componentsPerAttribute : 1,
-                    values: applyOffset
+                    values : applyOffset
                 });
             }
 

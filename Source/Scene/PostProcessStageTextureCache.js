@@ -1,16 +1,16 @@
 define([
         '../Core/Color',
         '../Core/defined',
-        '../Core/Math',
         '../Core/destroyObject',
+        '../Core/Math',
         '../Renderer/ClearCommand',
         '../Renderer/Framebuffer',
         '../Renderer/Texture'
     ], function(
         Color,
         defined,
-        CesiumMath,
         destroyObject,
+        CesiumMath,
         ClearCommand,
         Framebuffer,
         Texture) {
@@ -312,8 +312,7 @@ define([
      */
     PostProcessStageTextureCache.prototype.clear = function(context) {
         var framebuffers = this._framebuffers;
-        var length = 0;
-        for (var i = 0; i < length; ++i) {
+        for (var i = 0; i < framebuffers.length; ++i) {
             framebuffers[i].clear.execute(context);
         }
     };

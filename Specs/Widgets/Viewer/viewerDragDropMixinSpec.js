@@ -1,18 +1,20 @@
-defineSuite([
-        'Widgets/Viewer/viewerDragDropMixin',
+define([
         'Core/defined',
         'Core/TimeInterval',
         'Specs/createViewer',
         'Specs/DomEventSimulator',
-        'Specs/pollToPromise'
+        'Specs/pollToPromise',
+        'Widgets/Viewer/viewerDragDropMixin'
     ], function(
-        viewerDragDropMixin,
         defined,
         TimeInterval,
         createViewer,
         DomEventSimulator,
-        pollToPromise) {
-    'use strict';
+        pollToPromise,
+        viewerDragDropMixin) {
+        'use strict';
+
+describe('Widgets/Viewer/viewerDragDropMixin', function() {
 
     var container;
     var viewer;
@@ -460,3 +462,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

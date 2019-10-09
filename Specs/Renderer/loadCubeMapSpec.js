@@ -1,24 +1,26 @@
-defineSuite([
-        'Renderer/loadCubeMap',
+define([
         'Core/Cartesian3',
         'Core/PrimitiveType',
         'Renderer/Buffer',
         'Renderer/BufferUsage',
         'Renderer/DrawCommand',
+        'Renderer/loadCubeMap',
         'Renderer/ShaderProgram',
         'Renderer/VertexArray',
         'Specs/createContext'
     ], function(
-        loadCubeMap,
         Cartesian3,
         PrimitiveType,
         Buffer,
         BufferUsage,
         DrawCommand,
+        loadCubeMap,
         ShaderProgram,
         VertexArray,
         createContext) {
-    'use strict';
+        'use strict';
+
+describe('Renderer/loadCubeMap', function() {
 
     var context;
 
@@ -289,3 +291,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

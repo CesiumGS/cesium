@@ -1,16 +1,14 @@
-defineSuite([
+define([
         'Core/OpenCageGeocoderService',
-        'Core/GeocodeType',
-        'Core/Cartesian3',
         'Core/Resource',
         'ThirdParty/when'
     ], function(
         OpenCageGeocoderService,
-        GeocodeType,
-        Cartesian3,
         Resource,
         when) {
-    'use strict';
+        'use strict';
+
+describe('Core/OpenCageGeocoderService', function() {
 
     var endpoint = 'https://api.opencagedata.com/geocode/v1/';
     var apiKey = 'c2a490d593b14612aefa6ec2e6b77c47';
@@ -72,4 +70,5 @@ defineSuite([
                 expect(results.length).toEqual(0);
             });
     });
+});
 });

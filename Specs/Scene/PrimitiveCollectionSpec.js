@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/PrimitiveCollection',
+define([
         'Core/ColorGeometryInstanceAttribute',
         'Core/defaultValue',
         'Core/defined',
@@ -10,10 +9,10 @@ defineSuite([
         'Scene/LabelCollection',
         'Scene/PerInstanceColorAppearance',
         'Scene/Primitive',
+        'Scene/PrimitiveCollection',
         'Scene/VerticalOrigin',
         'Specs/createScene'
     ], function(
-        PrimitiveCollection,
         ColorGeometryInstanceAttribute,
         defaultValue,
         defined,
@@ -24,9 +23,12 @@ defineSuite([
         LabelCollection,
         PerInstanceColorAppearance,
         Primitive,
+        PrimitiveCollection,
         VerticalOrigin,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PrimitiveCollection', function() {
 
     var scene;
     var context;
@@ -130,6 +132,33 @@ defineSuite([
         expect(primitives.length).toEqual(1);
     });
 
+    it('add works with an index', function() {
+        var p0 = createLabels();
+        var p1 = createLabels();
+
+        expect(function() {
+            primitives.add(p0, 1);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            primitives.add(p0, -1);
+        }).toThrowDeveloperError();
+
+        primitives.add(p0, 0);
+        expect(primitives.get(0)).toBe(p0);
+
+        expect(function() {
+            primitives.add(p1, -1);
+        }).toThrowDeveloperError();
+
+        expect(function() {
+            primitives.add(p1, 2);
+        }).toThrowDeveloperError();
+
+        primitives.add(p1, 0);
+        expect(primitives.get(0)).toBe(p1);
+    });
+
     it('removes the first primitive', function() {
         var p0 = createLabels();
         var p1 = createLabels();
@@ -200,6 +229,22 @@ defineSuite([
         primitives.add(labels0);
 
         expect(primitives.contains(labels1)).toEqual(false);
+    });
+
+    it('does not contain removed primitive', function() {
+        var labels0 = createLabels();
+        primitives.add(labels0);
+        primitives.remove(labels0);
+
+        expect(primitives.contains(labels0)).toEqual(false);
+    });
+
+    it('does not contain all removed primitives', function() {
+        var labels0 = createLabels();
+        primitives.add(labels0);
+        primitives.removeAll();
+
+        expect(primitives.contains(labels0)).toEqual(false);
     });
 
     it('does not contain undefined', function() {
@@ -581,3 +626,4 @@ defineSuite([
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
+});

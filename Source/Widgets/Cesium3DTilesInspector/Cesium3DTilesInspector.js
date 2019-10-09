@@ -30,7 +30,7 @@ define([
      * @param {Scene} scene the Scene instance to use.
      */
     function Cesium3DTilesInspector(container, scene) {
-        //>includeStart('debug', pragmas.debug);
+        //>>includeStart('debug', pragmas.debug);
         Check.defined('container', container);
         Check.typeOf.object('scene', scene);
         //>>includeEnd('debug');

@@ -18,6 +18,7 @@ define([
 
     var defaultColor = Color.WHITE;
     var defaultGlowPower = 0.25;
+    var defaultTaperPower = 1.0;
 
     /**
      * A {@link MaterialProperty} that maps to polyline glow {@link Material} uniforms.
@@ -27,6 +28,7 @@ define([
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.color=Color.WHITE] A Property specifying the {@link Color} of the line.
      * @param {Property} [options.glowPower=0.25] A numeric Property specifying the strength of the glow, as a percentage of the total line width.
+     * @param {Property} [options.taperPower=1.0] A numeric Property specifying the strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.
      */
     function PolylineGlowMaterialProperty(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -36,9 +38,12 @@ define([
         this._colorSubscription = undefined;
         this._glowPower = undefined;
         this._glowPowerSubscription = undefined;
+        this._taperPower = undefined;
+        this._taperPowerSubscription = undefined;
 
         this.color = options.color;
         this.glowPower = options.glowPower;
+        this.taperPower = options.taperPower;
     }
 
     defineProperties(PolylineGlowMaterialProperty.prototype, {
@@ -73,12 +78,20 @@ define([
          * @type {Property}
          */
         color : createPropertyDescriptor('color'),
+
         /**
          * Gets or sets the numeric Property specifying the strength of the glow, as a percentage of the total line width (less than 1.0).
          * @memberof PolylineGlowMaterialProperty.prototype
          * @type {Property}
          */
-        glowPower : createPropertyDescriptor('glowPower')
+        glowPower : createPropertyDescriptor('glowPower'),
+
+        /**
+         * Gets or sets the numeric Property specifying the strength of the tapering effect, as a percentage of the total line length.  If 1.0 or higher, no taper effect is used.
+         * @memberof PolylineGlowMaterialProperty.prototype
+         * @type {Property}
+         */
+        taperPower : createPropertyDescriptor('taperPower')
     });
 
     /**
@@ -104,6 +117,7 @@ define([
         }
         result.color = Property.getValueOrClonedDefault(this._color, time, defaultColor, result.color);
         result.glowPower = Property.getValueOrDefault(this._glowPower, time, defaultGlowPower, result.glowPower);
+        result.taperPower = Property.getValueOrDefault(this._taperPower, time, defaultTaperPower, result.taperPower);
         return result;
     };
 
@@ -115,10 +129,11 @@ define([
      * @returns {Boolean} <code>true</code> if left and right are equal, <code>false</code> otherwise.
      */
     PolylineGlowMaterialProperty.prototype.equals = function(other) {
-        return this === other || //
-               (other instanceof PolylineGlowMaterialProperty && //
+        return this === other ||
+                (other instanceof PolylineGlowMaterialProperty &&
                 Property.equals(this._color, other._color) &&
-                Property.equals(this._glowPower, other._glowPower));
+                Property.equals(this._glowPower, other._glowPower) &&
+                Property.equals(this._taperPower, other._taperPower));
     };
 
     return PolylineGlowMaterialProperty;

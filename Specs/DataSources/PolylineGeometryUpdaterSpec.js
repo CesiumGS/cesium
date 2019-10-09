@@ -1,10 +1,11 @@
-defineSuite([
-        'DataSources/PolylineGeometryUpdater',
+define([
         'Core/ApproximateTerrainHeights',
+        'Core/ArcType',
         'Core/BoundingSphere',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
+        'Core/defined',
         'Core/DistanceDisplayCondition',
         'Core/DistanceDisplayConditionGeometryInstanceAttribute',
         'Core/GroundPolylineGeometry',
@@ -19,6 +20,7 @@ defineSuite([
         'DataSources/ConstantProperty',
         'DataSources/Entity',
         'DataSources/GridMaterialProperty',
+        'DataSources/PolylineGeometryUpdater',
         'DataSources/PolylineGraphics',
         'DataSources/PropertyArray',
         'DataSources/SampledPositionProperty',
@@ -31,12 +33,13 @@ defineSuite([
         'Specs/createScene',
         'Specs/pollToPromise'
     ], function(
-        PolylineGeometryUpdater,
         ApproximateTerrainHeights,
+        ArcType,
         BoundingSphere,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
+        defined,
         DistanceDisplayCondition,
         DistanceDisplayConditionGeometryInstanceAttribute,
         GroundPolylineGeometry,
@@ -51,6 +54,7 @@ defineSuite([
         ConstantProperty,
         Entity,
         GridMaterialProperty,
+        PolylineGeometryUpdater,
         PolylineGraphics,
         PropertyArray,
         SampledPositionProperty,
@@ -62,7 +66,9 @@ defineSuite([
         createDynamicProperty,
         createScene,
         pollToPromise) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/PolylineGeometryUpdater', function() {
 
     var scene;
     beforeAll(function(){
@@ -115,6 +121,7 @@ defineSuite([
         expect(updater.distanceDisplayConditionProperty).toBe(undefined);
         expect(updater.isDynamic).toBe(false);
         expect(updater.clampToGround).toBe(false);
+        expect(updater.arcType).toBe(undefined);
         expect(updater.zIndex).toBe(0);
 
         expect(updater.isOutlineVisible(time)).toBe(false);
@@ -159,6 +166,7 @@ defineSuite([
         expect(updater.distanceDisplayConditionProperty).toEqual(new ConstantProperty(new DistanceDisplayCondition()));
         expect(updater.isDynamic).toBe(false);
         expect(updater.clampToGround).toBe(false);
+        expect(updater.arcType).toBe(undefined);
         expect(updater.zIndex).toEqual(new ConstantProperty(0));
     });
 
@@ -199,17 +207,17 @@ defineSuite([
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying followSurface causes geometry to be dynamic', function() {
-        var followSurface = new TimeIntervalCollectionProperty();
-        followSurface.intervals.addInterval(new TimeInterval({
+    it('A time-varying arcType causes geometry to be dynamic', function() {
+        var arcType = new TimeIntervalCollectionProperty();
+        arcType.intervals.addInterval(new TimeInterval({
             start : new JulianDate(0, 0),
             stop : new JulianDate(10, 0),
-            data : false
+            data : ArcType.NONE
         }));
 
         var entity = createBasicPolyline();
         var updater = new PolylineGeometryUpdater(entity, scene);
-        entity.polyline.followSurface = followSurface;
+        entity.polyline.arcType = arcType;
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -226,6 +234,14 @@ defineSuite([
         var updater = new PolylineGeometryUpdater(entity, scene);
         entity.polyline.clampToGround = new SampledProperty(Number);
         entity.polyline.clampToGround.addSample(time, true);
+        expect(updater.isDynamic).toBe(true);
+    });
+
+    it('A time-varying arcType causes geometry to be dynamic', function() {
+        var entity = createBasicPolyline();
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        entity.polyline.arcType = new SampledProperty(Number);
+        entity.polyline.arcType.addSample(time, 1);
         expect(updater.isDynamic).toBe(true);
     });
 
@@ -247,10 +263,10 @@ defineSuite([
         polyline.depthFailMaterial = options.depthFailMaterial;
 
         polyline.width = new ConstantProperty(options.width);
-        polyline.followSurface = new ConstantProperty(options.followSurface);
         polyline.granularity = new ConstantProperty(options.granularity);
         polyline.distanceDisplayCondition = options.distanceDisplayCondition;
         polyline.clampToGround = new ConstantProperty(clampToGround);
+        polyline.arcType = new ConstantProperty(options.arcType);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
 
@@ -265,7 +281,9 @@ defineSuite([
             expect(geometry.width).toEqual(options.width);
         } else {
             expect(geometry._width).toEqual(options.width);
-            expect(geometry._followSurface).toEqual(options.followSurface);
+            if (defined(options.arcType)) {
+                expect(geometry._arcType).toEqual(options.arcType);
+            }
             expect(geometry._granularity).toEqual(options.granularity);
 
             if (options.depthFailMaterial && options.depthFailMaterial instanceof ColorMaterialProperty) {
@@ -291,9 +309,9 @@ defineSuite([
             show : true,
             material : new ColorMaterialProperty(Color.RED),
             width : 3,
-            followSurface : false,
             clampToGround : false,
-            granularity : 1.0
+            granularity : 1.0,
+            arcType : ArcType.NONE
         });
 
         if (!Entity.supportsPolylinesOnTerrain(scene)) {
@@ -305,9 +323,9 @@ defineSuite([
             show : true,
             material : new ColorMaterialProperty(Color.RED),
             width : 3,
-            followSurface : false,
             clampToGround : true,
-            granularity : 1.0
+            granularity : 1.0,
+            arcType : ArcType.GEODESIC
         });
     });
 
@@ -317,9 +335,9 @@ defineSuite([
             material : new ColorMaterialProperty(Color.RED),
             depthFailMaterial : new ColorMaterialProperty(Color.BLUE),
             width : 3,
-            followSurface : false,
             clampToGround : false,
-            granularity : 1.0
+            granularity : 1.0,
+            arcType : ArcType.GEODESIC
         });
     });
 
@@ -329,9 +347,9 @@ defineSuite([
             material : new ColorMaterialProperty(Color.RED),
             depthFailMaterial : new GridMaterialProperty(),
             width : 3,
-            followSurface : false,
             clampToGround : false,
-            granularity : 1.0
+            granularity : 1.0,
+            arcType : ArcType.RHUMB
         });
     });
 
@@ -340,9 +358,9 @@ defineSuite([
             show : true,
             material : new GridMaterialProperty(),
             width : 4,
-            followSurface : true,
             clampToGround : false,
-            granularity : 0.5
+            granularity : 0.5,
+            arcType: ArcType.GEODESIC
         });
 
         if (!Entity.supportsPolylinesOnTerrain(scene)) {
@@ -354,9 +372,9 @@ defineSuite([
             show : true,
             material : new GridMaterialProperty(),
             width : 4,
-            followSurface : true,
             clampToGround : true,
-            granularity : 0.5
+            granularity : 0.5,
+            arcType: ArcType.GEODESIC
         });
     });
 
@@ -366,7 +384,6 @@ defineSuite([
             material : new GridMaterialProperty(),
             depthFailMaterial : new ColorMaterialProperty(Color.BLUE),
             width : 4,
-            followSurface : true,
             clampToGround : false,
             granularity : 0.5
         });
@@ -378,7 +395,6 @@ defineSuite([
             material : new GridMaterialProperty(),
             depthFailMaterial : new GridMaterialProperty(),
             width : 4,
-            followSurface : true,
             clampToGround : false,
             granularity : 0.5
         });
@@ -389,7 +405,6 @@ defineSuite([
             show : true,
             material : new ColorMaterialProperty(Color.RED),
             width : 3,
-            followSurface : false,
             clampToGround : false,
             granularity : 1.0,
             distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
@@ -404,7 +419,6 @@ defineSuite([
             show : true,
             material : new ColorMaterialProperty(Color.RED),
             width : 3,
-            followSurface : false,
             clampToGround : true,
             granularity : 1.0,
             distanceDisplayCondition : new DistanceDisplayCondition(10.0, 100.0)
@@ -475,8 +489,8 @@ defineSuite([
         polyline.width = width;
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 1, 0)]);
         polyline.material = new ColorMaterialProperty(Color.RED);
-        polyline.followSurface = new ConstantProperty(false);
         polyline.granularity = new ConstantProperty(0.001);
+        polyline.arcType = new ConstantProperty(ArcType.NONE);
 
         var updater = new PolylineGeometryUpdater(entity, scene);
 
@@ -498,7 +512,7 @@ defineSuite([
         expect(primitive.material.uniforms.color).toEqual(Color.RED);
         expect(primitive.positions.length).toEqual(2);
 
-        polyline.followSurface = new ConstantProperty(true);
+        polyline.arcType = new ConstantProperty(ArcType.GEODESIC);
         dynamicUpdater.update(time3);
 
         expect(primitive.width).toEqual(3);
@@ -530,7 +544,6 @@ defineSuite([
         polyline.width = new ConstantProperty(1.0);
         polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 1, 0)]);
         polyline.material = new ColorMaterialProperty(Color.RED);
-        polyline.followSurface = new ConstantProperty(false);
         polyline.granularity = new ConstantProperty(0.001);
         polyline.clampToGround = clampToGround;
 
@@ -557,6 +570,58 @@ defineSuite([
 
         expect(scene.primitives.length).toBe(0);
         expect(groundPrimitives.length).toBe(0);
+
+        updater.destroy();
+    });
+
+    it('arcType can be dynamic', function() {
+        var entity = new Entity();
+        var polyline = new PolylineGraphics();
+        entity.polyline = polyline;
+
+        var time = new JulianDate(0, 0);
+
+        var arcTypeVar = ArcType.GEODESIC;
+        var arcType = new CallbackProperty(function() {
+            return arcTypeVar;
+        }, false);
+
+        polyline.show = new ConstantProperty(true);
+        polyline.width = new ConstantProperty(1.0);
+        polyline.positions = new ConstantProperty([Cartesian3.fromDegrees(0, 0, 0), Cartesian3.fromDegrees(0, 1, 0)]);
+        polyline.material = new ColorMaterialProperty(Color.RED);
+        polyline.granularity = new ConstantProperty(0.001);
+        polyline.clampToGround = new ConstantProperty(false);
+        polyline.arcType = arcType;
+
+        var updater = new PolylineGeometryUpdater(entity, scene);
+
+        var primitives = scene.primitives;
+        expect(primitives.length).toBe(0);
+
+        var dynamicUpdater = updater.createDynamicUpdater(primitives, scene.groundPrimitives);
+        expect(dynamicUpdater.isDestroyed()).toBe(false);
+        expect(primitives.length).toBe(0);
+
+        dynamicUpdater.update(time);
+
+        expect(primitives.length).toBe(1);
+        var polylineCollection = primitives.get(0);
+        var polylineObject = polylineCollection.get(0);
+
+        expect(polylineObject.show).toEqual(true);
+
+        var geodesicPolylinePositionsLength = polylineObject.positions.length;
+
+        arcTypeVar = ArcType.NONE;
+        dynamicUpdater.update(time);
+
+        expect(polylineObject.positions.length).not.toEqual(geodesicPolylinePositionsLength);
+
+        dynamicUpdater.destroy();
+
+        expect(scene.primitives.length).toBe(0);
+        expect(primitives.length).toBe(0);
 
         updater.destroy();
     });
@@ -766,7 +831,28 @@ defineSuite([
         expect(scene.groundPrimitives.length).toBe(0);
     });
 
-    it('followSurface true with undefined globe does not call generateCartesianArc', function() {
+    it('calls generateCartesianRhumbArc for RHUMB arcType', function() {
+        var entity = createBasicPolyline();
+        entity.polyline.width = createDynamicProperty(1);
+        entity.polyline.arcType = ArcType.RHUMB;
+
+        var updater = new PolylineGeometryUpdater(entity, scene);
+        var dynamicUpdater = updater.createDynamicUpdater(scene.primitives, scene.groundPrimitives);
+        spyOn(PolylinePipeline, 'generateCartesianRhumbArc').and.callThrough();
+        dynamicUpdater.update(time);
+        expect(PolylinePipeline.generateCartesianRhumbArc).toHaveBeenCalled();
+        dynamicUpdater.destroy();
+        updater.destroy();
+
+        expect(scene.primitives.length).toBe(0);
+        expect(scene.groundPrimitives.length).toBe(0);
+    });
+
+    it('arcType GEODESIC with undefined globe does not call generateCartesianArc', function() {
+        if (!Entity.supportsPolylinesOnTerrain(scene)) {
+            return;
+        }
+
         var entity = createBasicPolyline();
         entity.polyline.width = createDynamicProperty(1);
         scene.globe = undefined;
@@ -799,8 +885,9 @@ defineSuite([
         expect(updater.clampToGround).toBe(false);
 
         var instance = updater.createFillGeometryInstance(time);
-        expect(instance.geometry instanceof GroundPolylineGeometry).toBe(false);
+        expect(instance.geometry).not.toBeInstanceOf(GroundPolylineGeometry);
 
         updater.destroy();
     });
 }, 'WebGL');
+});

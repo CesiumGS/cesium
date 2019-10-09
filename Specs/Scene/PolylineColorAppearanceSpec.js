@@ -1,24 +1,28 @@
-defineSuite([
-        'Scene/PolylineColorAppearance',
+define([
+        'Core/ArcType',
         'Core/Cartesian3',
         'Core/Color',
         'Core/ColorGeometryInstanceAttribute',
         'Core/GeometryInstance',
         'Core/PolylineGeometry',
         'Scene/Appearance',
+        'Scene/PolylineColorAppearance',
         'Scene/Primitive',
         'Specs/createScene'
     ], function(
-        PolylineColorAppearance,
+        ArcType,
         Cartesian3,
         Color,
         ColorGeometryInstanceAttribute,
         GeometryInstance,
         PolylineGeometry,
         Appearance,
+        PolylineColorAppearance,
         Primitive,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/PolylineColorAppearance', function() {
 
     var scene;
     var primitive;
@@ -59,7 +63,7 @@ defineSuite([
                     ],
                     width : 10.0,
                     vertexFormat : PolylineColorAppearance.VERTEX_FORMAT,
-                    followSurface: false
+                    arcType : ArcType.NONE
                 }),
                 attributes : {
                     color : ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0))
@@ -78,3 +82,4 @@ defineSuite([
     });
 
 }, 'WebGL');
+});

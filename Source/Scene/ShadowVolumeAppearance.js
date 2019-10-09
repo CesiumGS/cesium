@@ -1,8 +1,7 @@
 define([
-        '../Core/Cartographic',
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/Math',
+        '../Core/Cartographic',
         '../Core/Check',
         '../Core/ComponentDatatype',
         '../Core/defaultValue',
@@ -10,17 +9,17 @@ define([
         '../Core/defineProperties',
         '../Core/EncodedCartesian3',
         '../Core/GeometryInstanceAttribute',
+        '../Core/Math',
         '../Core/Matrix4',
         '../Core/Rectangle',
         '../Core/Transforms',
         '../Renderer/ShaderSource',
         '../Scene/PerInstanceColorAppearance',
         '../Shaders/ShadowVolumeAppearanceFS'
-], function(
-        Cartographic,
+    ], function(
         Cartesian2,
         Cartesian3,
-        CesiumMath,
+        Cartographic,
         Check,
         ComponentDatatype,
         defaultValue,
@@ -28,6 +27,7 @@ define([
         defineProperties,
         EncodedCartesian3,
         GeometryInstanceAttribute,
+        CesiumMath,
         Matrix4,
         Rectangle,
         Transforms,
@@ -49,14 +49,18 @@ define([
      * @param {Boolean} extentsCulling Discard fragments outside the instance's texture coordinate extents.
      * @param {Boolean} planarExtents If true, texture coordinates will be computed using planes instead of spherical coordinates.
      * @param {Appearance} appearance An Appearance to be used with a ClassificationPrimitive via GroundPrimitive.
+     * @param {Boolean} useFloatBatchTable Whether or not the ShadowVolumeAppearance should use floating point batch table values.
      * @private
      */
-    function ShadowVolumeAppearance(extentsCulling, planarExtents, appearance) {
+    function ShadowVolumeAppearance(extentsCulling, planarExtents, appearance, useFloatBatchTable) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.bool('extentsCulling', extentsCulling);
         Check.typeOf.bool('planarExtents', planarExtents);
         Check.typeOf.object('appearance', appearance);
+        Check.typeOf.bool('useFloatBatchTable', useFloatBatchTable);
         //>>includeEnd('debug');
+
+        this._useFloatBatchTable = useFloatBatchTable;
 
         // Compute shader dependencies
         var colorShaderDependencies = new ShaderDependencies();
@@ -200,7 +204,7 @@ define([
         Check.typeOf.bool('columbusView2D', columbusView2D);
         Check.defined('mapProjection', mapProjection);
         //>>includeEnd('debug');
-        return createShadowVolumeAppearanceVS(this._colorShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, this._appearance, mapProjection);
+        return createShadowVolumeAppearanceVS(this._colorShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, this._appearance, mapProjection, this._useFloatBatchTable);
     };
 
     /**
@@ -219,7 +223,7 @@ define([
         Check.typeOf.bool('columbusView2D', columbusView2D);
         Check.defined('mapProjection', mapProjection);
         //>>includeEnd('debug');
-        return createShadowVolumeAppearanceVS(this._pickShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, undefined, mapProjection);
+        return createShadowVolumeAppearanceVS(this._pickShaderDependencies, this._planarExtents, columbusView2D, defines, vertexShaderSource, undefined, mapProjection, this._useFloatBatchTable);
     };
 
     var longitudeExtentsCartesianScratch = new Cartesian3();
@@ -228,7 +232,7 @@ define([
         high : 0.0,
         low : 0.0
     };
-    function createShadowVolumeAppearanceVS(shaderDependencies, planarExtents, columbusView2D, defines, vertexShaderSource, appearance, mapProjection) {
+    function createShadowVolumeAppearanceVS(shaderDependencies, planarExtents, columbusView2D, defines, vertexShaderSource, appearance, mapProjection, useFloatBatchTable) {
         var allDefines = defines.slice();
 
         if (projectionExtentDefines.eastMostYhighDefine === '') {
@@ -269,6 +273,10 @@ define([
             if (columbusView2D) {
                 allDefines.push('COLUMBUS_VIEW_2D');
             }
+        }
+
+        if (!useFloatBatchTable) {
+            allDefines.push('UINT8_PACKING');
         }
 
         return new ShaderSource({
@@ -403,12 +411,81 @@ define([
         });
     }
 
+    function encodeLowLessThan100k(value, valueName, attributes) {
+        // Encode a value like 12,345.678 to 4 uint8 values: 12 34 56 78
+        var fract = Math.abs(value);
+        var d12 = Math.floor(fract / 1000);
+        fract -= d12 * 1000; // 345.678
+        var d34 = Math.floor(fract / 10);
+        fract -= d34 * 10; // 5.678
+        var d56 = Math.floor(fract * 10);
+        fract -= d56 * 0.1; // 0.078
+        var d78 = Math.floor(fract * 1000);
+
+        if (value < 0) {
+            d12 = 255 - d12;
+        }
+
+        attributes[valueName] = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : [d12, d34, d56, d78]
+        });
+    }
+
+    function encodeHighLessThan100Million(value, valueName, attributes) {
+        // Encode a value like -12,345,678 to 4 uint8 values: sign+12 34 56 78
+        var fract = Math.abs(value);
+        var d12 = Math.floor(fract / 1000000);
+        fract -= d12 * 1000000; // 345678
+        var d34 = Math.floor(fract / 10000);
+        fract -= d34 * 10000; // 5678
+        var d56 = Math.floor(fract / 100);
+        fract -= d56 * 100; // 78
+        var d78 = Math.floor(fract);
+
+        if (value < 0) {
+            d12 = 255 - d12;
+        }
+
+        attributes[valueName] = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : [d12, d34, d56, d78]
+        });
+    }
+
+    function encodeLessThan1000k(value, valueName, attributes) {
+        // Encode a value like -123456.78 to 4 uint8 values sign+12 34 56 78
+        var fract = Math.abs(value);
+        var d12 = Math.floor(fract / 10000);
+        fract -= d12 * 10000; // 3456.78
+        var d34 = Math.floor(fract / 100);
+        fract -= d34 * 100; // 56.78
+        var d56 = Math.floor(fract);
+        fract -= d56; // 0.78
+        var d78 = Math.floor(fract / 0.001);
+
+        if (value < 0) {
+            d12 = 255 - d12;
+        }
+
+        attributes[valueName] = new GeometryInstanceAttribute({
+            componentDatatype: ComponentDatatype.UNSIGNED_BYTE,
+            componentsPerAttribute: 4,
+            normalize: false,
+            value : [d12, d34, d56, d78]
+        });
+    }
+
     var cartographicScratch = new Cartographic();
     var cornerScratch = new Cartesian3();
     var northWestScratch = new Cartesian3();
     var southEastScratch = new Cartesian3();
     var highLowScratch = {high : 0.0, low : 0.0};
-    function add2DTextureCoordinateAttributes(rectangle, projection, attributes) {
+    function add2DTextureCoordinateAttributes(rectangle, projection, attributes, useFloatBatchTable) {
         // Compute corner positions in double precision
         var carto = cartographicScratch;
         carto.height = 0.0;
@@ -432,9 +509,30 @@ define([
         // y: y value for southWestCorner
         // z: y value for northWest
         // w: x value for southEast
+
+        var encoded;
+        if (!useFloatBatchTable) {
+            encoded = EncodedCartesian3.encode(southWestCorner.x, highLowScratch);
+            encodeHighLessThan100Million(encoded.high, 'planes2D_HIGH_x', attributes);
+            encodeLowLessThan100k(encoded.low, 'planes2D_LOW_x', attributes);
+
+            encoded = EncodedCartesian3.encode(southWestCorner.y, highLowScratch);
+            encodeHighLessThan100Million(encoded.high, 'planes2D_HIGH_y', attributes);
+            encodeLowLessThan100k(encoded.low, 'planes2D_LOW_y', attributes);
+
+            encoded = EncodedCartesian3.encode(northWest.y, highLowScratch);
+            encodeHighLessThan100Million(encoded.high, 'planes2D_HIGH_z', attributes);
+            encodeLowLessThan100k(encoded.low, 'planes2D_LOW_z', attributes);
+
+            encoded = EncodedCartesian3.encode(southEast.x, highLowScratch);
+            encodeHighLessThan100Million(encoded.high, 'planes2D_HIGH_w', attributes);
+            encodeLowLessThan100k(encoded.low, 'planes2D_LOW_w', attributes);
+            return;
+        }
+
         var valuesHigh = [0, 0, 0, 0];
         var valuesLow = [0, 0, 0, 0];
-        var encoded = EncodedCartesian3.encode(southWestCorner.x, highLowScratch);
+        encoded = EncodedCartesian3.encode(southWestCorner.x, highLowScratch);
         valuesHigh[0] = encoded.high;
         valuesLow[0] = encoded.low;
 
@@ -578,15 +676,17 @@ define([
      * @param {Number[]} textureCoordinateRotationPoints Points in the computed texture coordinate system for remapping texture coordinates
      * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
      * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
+     * @param {Boolean} useFloatBatchTable Whether or not the ShadowVolumeAppearance should use floating point batch table values.
      * @param {Number} [height=0] The maximum height for the shadow volume.
      * @returns {Object} An attributes dictionary containing planar texture coordinate attributes.
      */
-    ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, projection, height) {
+    ShadowVolumeAppearance.getPlanarTextureCoordinateAttributes = function(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, projection, useFloatBatchTable, height) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('boundingRectangle', boundingRectangle);
         Check.defined('textureCoordinateRotationPoints', textureCoordinateRotationPoints);
         Check.typeOf.object('ellipsoid', ellipsoid);
         Check.typeOf.object('projection', projection);
+        Check.typeOf.bool('useFloatBatchTable', useFloatBatchTable);
         //>>includeEnd('debug');
 
         var corner = cornerScratch;
@@ -598,6 +698,30 @@ define([
         addTextureCoordinateRotationAttributes(attributes, textureCoordinateRotationPoints);
 
         var encoded = EncodedCartesian3.fromCartesian(corner, encodeScratch);
+
+        if (!useFloatBatchTable) {
+            var high = encoded.high;
+            encodeHighLessThan100Million(high.x, 'southWest_HIGH_x', attributes);
+            encodeHighLessThan100Million(high.y, 'southWest_HIGH_y', attributes);
+            encodeHighLessThan100Million(high.z, 'southWest_HIGH_z', attributes);
+
+            var low = encoded.low;
+            encodeLowLessThan100k(low.x, 'southWest_LOW_x', attributes);
+            encodeLowLessThan100k(low.y, 'southWest_LOW_y', attributes);
+            encodeLowLessThan100k(low.z, 'southWest_LOW_z', attributes);
+
+            encodeLessThan1000k(eastward.x, 'eastward_x', attributes);
+            encodeLessThan1000k(eastward.y, 'eastward_y', attributes);
+            encodeLessThan1000k(eastward.z, 'eastward_z', attributes);
+
+            encodeLessThan1000k(northward.x, 'northward_x', attributes);
+            encodeLessThan1000k(northward.y, 'northward_y', attributes);
+            encodeLessThan1000k(northward.z, 'northward_z', attributes);
+
+            add2DTextureCoordinateAttributes(boundingRectangle, projection, attributes, false);
+            return attributes;
+        }
+
         attributes.southWest_HIGH = new GeometryInstanceAttribute({
             componentDatatype: ComponentDatatype.FLOAT,
             componentsPerAttribute: 3,
@@ -623,7 +747,7 @@ define([
             value : Cartesian3.pack(northward, [0, 0, 0])
         });
 
-        add2DTextureCoordinateAttributes(boundingRectangle, projection, attributes);
+        add2DTextureCoordinateAttributes(boundingRectangle, projection, attributes, true);
         return attributes;
     };
 
@@ -667,14 +791,16 @@ define([
      * @param {Number[]} textureCoordinateRotationPoints Points in the computed texture coordinate system for remapping texture coordinates
      * @param {Ellipsoid} ellipsoid Ellipsoid for converting Rectangle points to world coordinates
      * @param {MapProjection} projection The MapProjection used for 2D and Columbus View.
+     * @param {Boolean} useFloatBatchTable Whether or not the ShadowVolumeAppearance should use floating point batch table values.
      * @returns {Object} An attributes dictionary containing spherical texture coordinate attributes.
      */
-    ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, projection) {
+    ShadowVolumeAppearance.getSphericalExtentGeometryInstanceAttributes = function(boundingRectangle, textureCoordinateRotationPoints, ellipsoid, projection, useFloatBatchTable) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('boundingRectangle', boundingRectangle);
         Check.defined('textureCoordinateRotationPoints', textureCoordinateRotationPoints);
         Check.typeOf.object('ellipsoid', ellipsoid);
         Check.typeOf.object('projection', projection);
+        Check.typeOf.bool('useFloatBatchTable', useFloatBatchTable);
         //>>includeEnd('debug');
 
         // rectangle cartographic coords !== spherical because it's on an ellipsoid
@@ -721,21 +847,48 @@ define([
         };
 
         addTextureCoordinateRotationAttributes(attributes, textureCoordinateRotationPoints);
-        add2DTextureCoordinateAttributes(boundingRectangle, projection, attributes);
+        add2DTextureCoordinateAttributes(boundingRectangle, projection, attributes, useFloatBatchTable);
         return attributes;
     };
 
     ShadowVolumeAppearance.hasAttributesForTextureCoordinatePlanes = function(attributes) {
-        return defined(attributes.southWest_HIGH) && defined(attributes.southWest_LOW) &&
+        var hasFloatAttributes =
+            defined(attributes.southWest_HIGH) && defined(attributes.southWest_LOW) &&
             defined(attributes.northward) && defined(attributes.eastward) &&
             defined(attributes.planes2D_HIGH) && defined(attributes.planes2D_LOW) &&
             defined(attributes.uMaxVmax) && defined(attributes.uvMinAndExtents);
+
+        var hasUint8Attributes =
+            defined(attributes.southWest_HIGH_x) && defined(attributes.southWest_LOW_x) &&
+            defined(attributes.southWest_HIGH_y) && defined(attributes.southWest_LOW_y) &&
+            defined(attributes.southWest_HIGH_z) && defined(attributes.southWest_LOW_z) &&
+            defined(attributes.northward_x) && defined(attributes.eastward_x) &&
+            defined(attributes.northward_y) && defined(attributes.eastward_y) &&
+            defined(attributes.northward_z) && defined(attributes.eastward_z) &&
+            defined(attributes.planes2D_HIGH_x) && defined(attributes.planes2D_LOW_x) &&
+            defined(attributes.planes2D_HIGH_y) && defined(attributes.planes2D_LOW_y) &&
+            defined(attributes.planes2D_HIGH_z) && defined(attributes.planes2D_LOW_z) &&
+            defined(attributes.planes2D_HIGH_w) && defined(attributes.planes2D_LOW_w) &&
+            defined(attributes.uMaxVmax) && defined(attributes.uvMinAndExtents);
+
+        return hasFloatAttributes || hasUint8Attributes;
     };
 
     ShadowVolumeAppearance.hasAttributesForSphericalExtents = function(attributes) {
-        return defined(attributes.sphericalExtents) && defined(attributes.longitudeRotation) &&
-        defined(attributes.planes2D_HIGH) && defined(attributes.planes2D_LOW) &&
-        defined(attributes.uMaxVmax) && defined(attributes.uvMinAndExtents);
+        var hasFloatAttributes =
+            defined(attributes.sphericalExtents) && defined(attributes.longitudeRotation) &&
+            defined(attributes.planes2D_HIGH) && defined(attributes.planes2D_LOW) &&
+            defined(attributes.uMaxVmax) && defined(attributes.uvMinAndExtents);
+
+        var hasUint8Attributes =
+            defined(attributes.sphericalExtents) && defined(attributes.longitudeRotation) &&
+            defined(attributes.planes2D_HIGH_x) && defined(attributes.planes2D_LOW_x) &&
+            defined(attributes.planes2D_HIGH_y) && defined(attributes.planes2D_LOW_y) &&
+            defined(attributes.planes2D_HIGH_z) && defined(attributes.planes2D_LOW_z) &&
+            defined(attributes.planes2D_HIGH_w) && defined(attributes.planes2D_LOW_w) &&
+            defined(attributes.uMaxVmax) && defined(attributes.uvMinAndExtents);
+
+        return hasFloatAttributes || hasUint8Attributes;
     };
 
     function shouldUseSpherical(rectangle) {

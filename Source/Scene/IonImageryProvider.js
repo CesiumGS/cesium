@@ -1,6 +1,5 @@
 define([
         '../Core/Check',
-        '../Core/Credit',
         '../Core/defaultValue',
         '../Core/defined',
         '../Core/defineProperties',
@@ -11,7 +10,7 @@ define([
         '../ThirdParty/when',
         './ArcGisMapServerImageryProvider',
         './BingMapsImageryProvider',
-        './createTileMapServiceImageryProvider',
+        './TileMapServiceImageryProvider',
         './GoogleEarthEnterpriseMapsProvider',
         './MapboxImageryProvider',
         './SingleTileImageryProvider',
@@ -20,7 +19,6 @@ define([
         './WebMapTileServiceImageryProvider'
     ], function(
         Check,
-        Credit,
         defaultValue,
         defined,
         defineProperties,
@@ -31,7 +29,7 @@ define([
         when,
         ArcGisMapServerImageryProvider,
         BingMapsImageryProvider,
-        createTileMapServiceImageryProvider,
+        TileMapServiceImageryProvider,
         GoogleEarthEnterpriseMapsProvider,
         MapboxImageryProvider,
         SingleTileImageryProvider,
@@ -54,7 +52,7 @@ define([
         GOOGLE_EARTH: createFactory(GoogleEarthEnterpriseMapsProvider),
         MAPBOX: createFactory(MapboxImageryProvider),
         SINGLE_TILE: createFactory(SingleTileImageryProvider),
-        TMS: createTileMapServiceImageryProvider,
+        TMS: createFactory(TileMapServiceImageryProvider),
         URL_TEMPLATE: createFactory(UrlTemplateImageryProvider),
         WMS: createFactory(WebMapServiceImageryProvider),
         WMTS: createFactory(WebMapTileServiceImageryProvider)
@@ -77,11 +75,10 @@ define([
     function IonImageryProvider(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
+        var assetId = options.assetId;
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.number('options.assetId', options.assetId);
+        Check.typeOf.number('options.assetId', assetId);
         //>>includeEnd('debug');
-
-        var endpointResource = IonResource._createEndpointResource(options.assetId, options);
 
         /**
          * The default alpha blending value of this provider, with 0.0 representing fully transparent and
@@ -156,16 +153,29 @@ define([
         this._errorEvent = new Event();
 
         var that = this;
-        this._readyPromise = endpointResource.fetchJson()
+        var endpointResource = IonResource._createEndpointResource(assetId, options);
+
+        // A simple cache to avoid making repeated requests to ion for endpoints we've
+        // already retrieved. This exists mainly to support Bing caching to reduce
+        // world imagery sessions, but provides a small boost of performance in general
+        // if constantly reloading assets
+        var cacheKey = options.assetId.toString() + options.accessToken + options.server;
+        var promise = IonImageryProvider._endpointCache[cacheKey];
+        if (!defined(promise)) {
+            promise = endpointResource.fetchJson();
+            IonImageryProvider._endpointCache[cacheKey] = promise;
+        }
+
+        this._readyPromise = promise
             .then(function(endpoint) {
                 if (endpoint.type !== 'IMAGERY') {
-                    return when.reject(new RuntimeError('Cesium ion asset ' + options.assetId + ' is not an imagery asset.'));
+                    return when.reject(new RuntimeError('Cesium ion asset ' + assetId + ' is not an imagery asset.'));
                 }
 
                 var imageryProvider;
                 var externalType = endpoint.externalType;
                 if (!defined(externalType)) {
-                    imageryProvider = createTileMapServiceImageryProvider({
+                    imageryProvider = new TileMapServiceImageryProvider({
                         url: new IonResource(endpoint, endpointResource)
                     });
                 } else {
@@ -484,6 +494,9 @@ define([
         //>>includeEnd('debug');
         return this._imageryProvider.pickFeatures(x, y, level, longitude, latitude);
     };
+
+    //exposed for testing
+    IonImageryProvider._endpointCache = {};
 
     return IonImageryProvider;
 });

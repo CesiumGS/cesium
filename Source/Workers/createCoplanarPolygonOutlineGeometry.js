@@ -1,11 +1,11 @@
 define([
-    '../Core/defined',
-    '../Core/CoplanarPolygonOutlineGeometry',
-    '../Core/Ellipsoid'
-], function(
-    defined,
-    CoplanarPolygonOutlineGeometry,
-    Ellipsoid) {
+        '../Core/CoplanarPolygonOutlineGeometry',
+        '../Core/defined',
+        '../Core/Ellipsoid'
+    ], function(
+        CoplanarPolygonOutlineGeometry,
+        defined,
+        Ellipsoid) {
     'use strict';
 
     function createCoplanarPolygonOutlineGeometry(polygonGeometry, offset) {

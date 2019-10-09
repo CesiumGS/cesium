@@ -90,7 +90,9 @@
 function startup(Cesium) {
     'use strict';
 //Sandcastle_Begin
-var viewer = new Cesium.Viewer('cesiumContainer');
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
+});
 
 var scene = viewer.scene;
 var viewModelTileset;
@@ -158,18 +160,22 @@ function loadStHelens() {
 function loadChurch() {
     // Point Cloud by Prof. Peter Allen, Columbia University Robotics Lab. Scanning by Alejandro Troccoli and Matei Ciocarlie.
     // This tileset uses additive refinement and has geometric error based on the bounding box size for each tile.
-    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(5714) });
+    var tileset = new Cesium.Cesium3DTileset({ url: Cesium.IonResource.fromAssetId(16421) });
     viewer.scene.primitives.add(tileset);
 
-    tileset.maximumScreenSpaceError = 1024.0; // For better performance, due to how this tileset treats geometric error.
-    tileset.pointCloudShading.maximumAttenuation = 8.0; // Don't allow points larger than 8 pixels.
+    tileset.maximumScreenSpaceError = 16.0;
+    tileset.pointCloudShading.maximumAttenuation = 4.0; // Don't allow points larger than 4 pixels.
     tileset.pointCloudShading.baseResolution = 0.05; // Assume an original capture resolution of 5 centimeters between neighboring points.
-    tileset.pointCloudShading.geometricErrorScale = 1.0; // Applies to both geometric error and the base resolution.
+    tileset.pointCloudShading.geometricErrorScale = 0.5; // Applies to both geometric error and the base resolution.
     tileset.pointCloudShading.attenuation = true;
     tileset.pointCloudShading.eyeDomeLighting = true;
 
+    viewer.scene.camera.setView({
+        destination: new Cesium.Cartesian3(4401744.644145314, 225051.41078911052, 4595420.374784433),
+        orientation: new Cesium.HeadingPitchRoll(5.646733805039757, -0.276607153839886, 6.281110875400085)
+    });
+
     tilesetToViewModel(tileset);
-    viewer.zoomTo(tileset);
 }
 
 function checkZero(newValue) {

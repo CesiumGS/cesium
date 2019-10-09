@@ -1,16 +1,18 @@
-defineSuite([
-        'Core/WallOutlineGeometry',
+define([
         'Core/Cartesian3',
         'Core/Ellipsoid',
         'Core/Math',
+        'Core/WallOutlineGeometry',
         'Specs/createPackableSpecs'
     ], function(
-        WallOutlineGeometry,
         Cartesian3,
         Ellipsoid,
         CesiumMath,
+        WallOutlineGeometry,
         createPackableSpecs) {
-    'use strict';
+        'use strict';
+
+describe('Core/WallOutlineGeometry', function() {
 
     var ellipsoid = Ellipsoid.WGS84;
 
@@ -186,4 +188,5 @@ defineSuite([
     });
     var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 0.01];
     createPackableSpecs(WallOutlineGeometry, wall, packedInstance);
+});
 });

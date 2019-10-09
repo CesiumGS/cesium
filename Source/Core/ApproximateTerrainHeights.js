@@ -1,28 +1,28 @@
 define([
-        './buildModuleUrl',
-        './defaultValue',
-        './defined',
-        './defineProperties',
         './BoundingSphere',
+        './buildModuleUrl',
         './Cartesian2',
         './Cartesian3',
         './Cartographic',
         './Check',
+        './defaultValue',
+        './defined',
+        './defineProperties',
         './DeveloperError',
         './Ellipsoid',
         './GeographicTilingScheme',
         './Rectangle',
         './Resource'
     ], function(
-        buildModuleUrl,
-        defaultValue,
-        defined,
-        defineProperties,
         BoundingSphere,
+        buildModuleUrl,
         Cartesian2,
         Cartesian3,
         Cartographic,
         Check,
+        defaultValue,
+        defined,
+        defineProperties,
         DeveloperError,
         Ellipsoid,
         GeographicTilingScheme,
@@ -72,7 +72,7 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid
      * @return {{minimumTerrainHeight: Number, maximumTerrainHeight: Number}}
      */
-    ApproximateTerrainHeights.getApproximateTerrainHeights = function(rectangle, ellipsoid) {
+    ApproximateTerrainHeights.getMinimumMaximumHeights = function(rectangle, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('rectangle', rectangle);
         if (!defined(ApproximateTerrainHeights._terrainHeights)) {
@@ -124,7 +124,7 @@ define([
      * @param {Ellipsoid} [ellipsoid=Ellipsoid.WGS84] The ellipsoid
      * @return {BoundingSphere} The result bounding sphere
      */
-    ApproximateTerrainHeights.getInstanceBoundingSphere = function(rectangle, ellipsoid) {
+    ApproximateTerrainHeights.getBoundingSphere = function(rectangle, ellipsoid) {
         //>>includeStart('debug', pragmas.debug);
         Check.defined('rectangle', rectangle);
         if (!defined(ApproximateTerrainHeights._terrainHeights)) {

@@ -1,7 +1,6 @@
 define([
         '../Core/Cartesian2',
         '../Core/Cartesian3',
-        '../Core/Check',
         '../Core/Color',
         '../Core/defaultValue',
         '../Core/defined',
@@ -9,7 +8,6 @@ define([
     ], function(
         Cartesian2,
         Cartesian3,
-        Check,
         Color,
         defaultValue,
         defined,

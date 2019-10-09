@@ -483,7 +483,9 @@ define([
     };
 
     ModelUtility.supportedExtensions = {
+        'AGI_articulations' : true,
         'CESIUM_RTC' : true,
+        'EXT_texture_webp' : true,
         'KHR_blend' : true,
         'KHR_binary_glTF' : true,
         'KHR_draco_mesh_compression' : true,
@@ -491,14 +493,19 @@ define([
         'KHR_techniques_webgl' : true,
         'KHR_materials_unlit' : true,
         'KHR_materials_pbrSpecularGlossiness' : true,
+        'KHR_texture_transform' : true,
         'WEB3D_quantized_attributes' : true
     };
 
-    ModelUtility.checkSupportedExtensions = function(extensionsRequired) {
+    ModelUtility.checkSupportedExtensions = function(extensionsRequired, browserSupportsWebp) {
         for (var extension in extensionsRequired) {
             if (extensionsRequired.hasOwnProperty(extension)) {
                 if (!ModelUtility.supportedExtensions[extension]) {
                     throw new RuntimeError('Unsupported glTF Extension: ' + extension);
+                }
+
+                if (extension === 'EXT_texture_webp' && browserSupportsWebp === false) {
+                    throw new RuntimeError('Loaded model requires WebP but browser does not support it.');
                 }
             }
         }
@@ -595,6 +602,12 @@ define([
                     }
                     shader = variableType + ' ' + decodedAttributeVarName + ';\n' + shader;
 
+                    // The gltf 2.0 COLOR_0 vertex attribute can be VEC4 or VEC3
+                    var vec3Color = size === 3 && attributeSemantic === 'COLOR_0';
+                    if (vec3Color) {
+                        shader = replaceAllButFirstInString(shader, decodedAttributeVarName, 'vec4(' + decodedAttributeVarName + ', 1.0)');
+                    }
+
                     // splice decode function into the shader
                     var decode = '';
                     if (quantization.octEncoded) {
@@ -611,9 +624,10 @@ define([
                         var decodeUniformVarNameMin = decodeUniformVarName + '_min';
                         shader = 'uniform float ' + decodeUniformVarNameNormConstant + ';\n' +
                                 'uniform ' + variableType + ' ' + decodeUniformVarNameMin + ';\n' + shader;
+                        var attributeVarAccess = vec3Color ? '.xyz' : '';
                         decode = '\n' +
                                 'void main() {\n' +
-                                '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameMin + ' + ' + attributeVarName + ' * ' + decodeUniformVarNameNormConstant + ';\n' +
+                                '    ' + decodedAttributeVarName + ' = ' + decodeUniformVarNameMin + ' + ' + attributeVarName + attributeVarAccess + ' * ' + decodeUniformVarNameNormConstant + ';\n' +
                                 '    ' + newMain + '();\n' +
                                 '}\n';
                     }

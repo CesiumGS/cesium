@@ -1,19 +1,19 @@
 define([
-    './Cartesian3',
-    './Check',
-    './defined',
-    './defineProperties',
-    './GeocodeType',
-    './Rectangle',
-    './Resource'
-], function (
-    Cartesian3,
-    Check,
-    defined,
-    defineProperties,
-    GeocodeType,
-    Rectangle,
-    Resource) {
+        './Cartesian3',
+        './Check',
+        './defined',
+        './defineProperties',
+        './GeocodeType',
+        './Rectangle',
+        './Resource'
+    ], function(
+        Cartesian3,
+        Check,
+        defined,
+        defineProperties,
+        GeocodeType,
+        Rectangle,
+        Resource) {
     'use strict';
 
     /**
@@ -47,7 +47,7 @@ define([
         /**
          * The Resource used to access the Pelias endpoint.
          * @type {Resource}
-         * @memberof {PeliasGeocoderService.prototype}
+         * @memberof PeliasGeocoderService.prototype
          * @readonly
          */
         url: {

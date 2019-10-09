@@ -56,7 +56,7 @@ define([
      * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification/Styling|3D Tiles Styling language}
      */
     function Cesium3DTileStyle(style) {
-        this._style = undefined;
+        this._style = {};
         this._ready = false;
 
         this._show = undefined;
@@ -113,9 +113,8 @@ define([
     }
 
     function setup(that, styleJson) {
-        that._style = clone(styleJson, true);
-
-        styleJson = defaultValue(styleJson, defaultValue.EMPTY_OBJECT);
+        styleJson = defaultValue(clone(styleJson, true), that._style);
+        that._style = styleJson;
 
         that.show = styleJson.show;
         that.color = styleJson.color;
@@ -164,6 +163,7 @@ define([
 
     function getExpression(tileStyle, value) {
         var defines = defaultValue(tileStyle._style, defaultValue.EMPTY_OBJECT).defines;
+
         if (!defined(value)) {
             return undefined;
         } else if (typeof value === 'boolean' || typeof value === 'number') {
@@ -176,6 +176,17 @@ define([
         return value;
     }
 
+    function getJsonFromExpression(expression) {
+        if (!defined(expression)) {
+            return undefined;
+        } else if (defined(expression.expression)) {
+            return expression.expression;
+        } else if (defined(expression.conditionsExpression)) {
+            return clone(expression.conditionsExpression, true);
+        }
+        return expression;
+    }
+
     defineProperties(Cesium3DTileStyle.prototype, {
         /**
          * Gets the object defining the style using the
@@ -186,7 +197,7 @@ define([
          * @type {Object}
          * @readonly
          *
-         * @default undefined
+         * @default {}
          *
          * @exception {DeveloperError} The style is not loaded.  Use Cesium3DTileStyle.readyPromise or wait for Cesium3DTileStyle.ready to be true.
          */
@@ -298,6 +309,7 @@ define([
             },
             set : function(value) {
                 this._show = getExpression(this, value);
+                this._style.show = getJsonFromExpression(this._show);
                 this._showShaderFunctionReady = false;
             }
         },
@@ -360,6 +372,7 @@ define([
             },
             set : function(value) {
                 this._color = getExpression(this, value);
+                this._style.color = getJsonFromExpression(this._color);
                 this._colorShaderFunctionReady = false;
             }
         },
@@ -427,6 +440,7 @@ define([
             },
             set : function(value) {
                 this._pointSize = getExpression(this, value);
+                this._style.pointSize = getJsonFromExpression(this._pointSize);
                 this._pointSizeShaderFunctionReady = false;
             }
         },
@@ -476,6 +490,7 @@ define([
             },
             set : function(value) {
                 this._pointOutlineColor = getExpression(this, value);
+                this._style.pointOutlineColor = getJsonFromExpression(this._pointOutlineColor);
             }
         },
 
@@ -524,6 +539,7 @@ define([
             },
             set : function(value) {
                 this._pointOutlineWidth = getExpression(this, value);
+                this._style.pointOutlineWidth = getJsonFromExpression(this._pointOutlineWidth);
             }
         },
 
@@ -572,6 +588,7 @@ define([
             },
             set : function(value) {
                 this._labelColor = getExpression(this, value);
+                this._style.labelColor = getJsonFromExpression(this._labelColor);
             }
         },
 
@@ -620,6 +637,7 @@ define([
             },
             set : function(value) {
                 this._labelOutlineColor = getExpression(this, value);
+                this._style.labelOutlineColor = getJsonFromExpression(this._labelOutlineColor);
             }
         },
 
@@ -668,6 +686,7 @@ define([
             },
             set : function(value) {
                 this._labelOutlineWidth = getExpression(this, value);
+                this._style.labelOutlineWidth = getJsonFromExpression(this._labelOutlineWidth);
             }
         },
 
@@ -716,6 +735,7 @@ define([
             },
             set : function(value) {
                 this._font = getExpression(this, value);
+                this._style.font = getJsonFromExpression(this._font);
             }
         },
 
@@ -764,6 +784,7 @@ define([
             },
             set : function(value) {
                 this._labelStyle = getExpression(this, value);
+                this._style.labelStyle = getJsonFromExpression(this._labelStyle);
             }
         },
 
@@ -812,6 +833,7 @@ define([
             },
             set : function(value) {
                 this._labelText = getExpression(this, value);
+                this._style.labelText = getJsonFromExpression(this._labelText);
             }
         },
 
@@ -860,6 +882,7 @@ define([
             },
             set : function(value) {
                 this._backgroundColor = getExpression(this, value);
+                this._style.backgroundColor = getJsonFromExpression(this._backgroundColor);
             }
         },
 
@@ -899,6 +922,7 @@ define([
             },
             set : function(value) {
                 this._backgroundPadding = getExpression(this, value);
+                this._style.backgroundPadding = getJsonFromExpression(this._backgroundPadding);
             }
         },
 
@@ -947,6 +971,7 @@ define([
             },
             set : function(value) {
                 this._backgroundEnabled = getExpression(this, value);
+                this._style.backgroundEnabled = getJsonFromExpression(this._backgroundEnabled);
             }
         },
 
@@ -986,6 +1011,7 @@ define([
             },
             set : function(value) {
                 this._scaleByDistance = getExpression(this, value);
+                this._style.scaleByDistance = getJsonFromExpression(this._scaleByDistance);
             }
         },
 
@@ -1025,6 +1051,7 @@ define([
             },
             set : function(value) {
                 this._translucencyByDistance = getExpression(this, value);
+                this._style.translucencyByDistance = getJsonFromExpression(this._translucencyByDistance);
             }
         },
 
@@ -1064,6 +1091,7 @@ define([
             },
             set : function(value) {
                 this._distanceDisplayCondition = getExpression(this, value);
+                this._style.distanceDisplayCondition = getJsonFromExpression(this._distanceDisplayCondition);
             }
         },
 
@@ -1112,6 +1140,7 @@ define([
             },
             set : function(value) {
                 this._heightOffset = getExpression(this, value);
+                this._style.heightOffset = getJsonFromExpression(this._heightOffset);
             }
         },
 
@@ -1160,6 +1189,7 @@ define([
             },
             set : function(value) {
                 this._anchorLineEnabled = getExpression(this, value);
+                this._style.anchorLineEnabled = getJsonFromExpression(this._anchorLineEnabled);
             }
         },
 
@@ -1208,6 +1238,7 @@ define([
             },
             set : function(value) {
                 this._anchorLineColor = getExpression(this, value);
+                this._style.anchorLineColor = getJsonFromExpression(this._anchorLineColor);
             }
         },
 
@@ -1256,6 +1287,7 @@ define([
             },
             set : function(value) {
                 this._image = getExpression(this, value);
+                this._style.image = getJsonFromExpression(this._image);
             }
         },
 
@@ -1295,6 +1327,7 @@ define([
             },
             set : function(value) {
                 this._disableDepthTestDistance = getExpression(this, value);
+                this._style.disableDepthTestDistance = getJsonFromExpression(this._disableDepthTestDistance);
             }
         },
 
@@ -1343,6 +1376,7 @@ define([
             },
             set : function(value) {
                 this._horizontalOrigin = getExpression(this, value);
+                this._style.horizontalOrigin = getJsonFromExpression(this._horizontalOrigin);
             }
         },
 
@@ -1391,6 +1425,7 @@ define([
             },
             set : function(value) {
                 this._verticalOrigin = getExpression(this, value);
+                this._style.verticalOrigin = getJsonFromExpression(this._verticalOrigin);
             }
         },
 
@@ -1439,6 +1474,7 @@ define([
             },
             set : function(value) {
                 this._labelHorizontalOrigin = getExpression(this, value);
+                this._style.labelHorizontalOrigin = getJsonFromExpression(this._labelHorizontalOrigin);
             }
         },
 
@@ -1487,6 +1523,7 @@ define([
             },
             set : function(value) {
                 this._labelVerticalOrigin = getExpression(this, value);
+                this._style.labelVerticalOrigin = getJsonFromExpression(this._labelVerticalOrigin);
             }
         },
 

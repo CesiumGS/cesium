@@ -10,7 +10,8 @@ define([
         '../Core/Resource',
         '../Core/RuntimeError',
         '../Core/TileProviderError',
-        '../ThirdParty/when'
+        '../ThirdParty/when',
+        './ImageryProvider'
     ], function(
         Credit,
         defaultValue,
@@ -23,7 +24,8 @@ define([
         Resource,
         RuntimeError,
         TileProviderError,
-        when) {
+        when,
+        ImageryProvider) {
     'use strict';
 
     /**
@@ -42,14 +44,14 @@ define([
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see OpenStreetMapImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      */
     function SingleTileImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
             throw new DeveloperError('options.url is required.');
@@ -109,7 +111,10 @@ define([
         }
 
         function doRequest() {
-            when(resource.fetchImage(), success, failure);
+            ImageryProvider
+                .loadImage(null, resource)
+                .then(success)
+                .otherwise(failure);
         }
 
         doRequest();

@@ -83,6 +83,7 @@ define([
      * @param {Ellipsoid} [options.ellipsoid] The ellipsoid.  If the tilingScheme is specified and used,
      *                    this parameter is ignored and the tiling scheme's ellipsoid is used instead. If neither
      *                    parameter is specified, the WGS84 ellipsoid is used.
+     * @param {Credit|String} [options.credit] A credit for the data source, which is displayed on the canvas.  This parameter is ignored when accessing a tiled server.
      * @param {Number} [options.tileWidth=256] The width of each tile in pixels.  This parameter is ignored when accessing a tiled server.
      * @param {Number} [options.tileHeight=256] The height of each tile in pixels.  This parameter is ignored when accessing a tiled server.
      * @param {Number} [options.maximumLevel] The maximum tile level to request, or undefined if there is no maximum.  This parameter is ignored when accessing
@@ -90,9 +91,9 @@ define([
      *
      * @see BingMapsImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
-     * @see createOpenStreetMapImageryProvider
+     * @see OpenStreetMapImageryProvider
      * @see SingleTileImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
@@ -103,11 +104,11 @@ define([
      *     url : 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer'
      * });
      *
-     * @see {@link http://resources.esri.com/help/9.3/arcgisserver/apis/rest/|ArcGIS Server REST API}
+     * @see {@link https://developers.arcgis.com/rest/|ArcGIS Server REST API}
      * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
      */
     function ArcGisMapServerImageryProvider(options) {
-        options = defaultValue(options, {});
+        options = defaultValue(options, defaultValue.EMPTY_OBJECT);
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(options.url)) {
@@ -131,10 +132,15 @@ define([
         this._tileHeight = defaultValue(options.tileHeight, 256);
         this._maximumLevel = options.maximumLevel;
         this._tilingScheme = defaultValue(options.tilingScheme, new GeographicTilingScheme({ ellipsoid : options.ellipsoid }));
-        this._credit = undefined;
         this._useTiles = defaultValue(options.usePreCachedTilesIfAvailable, true);
         this._rectangle = defaultValue(options.rectangle, this._tilingScheme.rectangle);
         this._layers = options.layers;
+
+        var credit = options.credit;
+        if (typeof credit === 'string') {
+            credit = new Credit(credit);
+        }
+        this._credit = credit;
 
         /**
          * Gets or sets a value indicating whether feature picking is enabled.  If true, {@link ArcGisMapServerImageryProvider#pickFeatures} will

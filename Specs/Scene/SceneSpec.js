@@ -1,5 +1,4 @@
-defineSuite([
-        'Scene/Scene',
+define([
         'Core/BoundingSphere',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -36,6 +35,7 @@ defineSuite([
         'Scene/Material',
         'Scene/Primitive',
         'Scene/PrimitiveCollection',
+        'Scene/Scene',
         'Scene/SceneTransforms',
         'Scene/ScreenSpaceCameraController',
         'Scene/TweenCollection',
@@ -44,7 +44,6 @@ defineSuite([
         'Specs/pollToPromise',
         'Specs/render'
     ], function(
-        Scene,
         BoundingSphere,
         Cartesian2,
         Cartesian3,
@@ -81,6 +80,7 @@ defineSuite([
         Material,
         Primitive,
         PrimitiveCollection,
+        Scene,
         SceneTransforms,
         ScreenSpaceCameraController,
         TweenCollection,
@@ -88,7 +88,9 @@ defineSuite([
         createScene,
         pollToPromise,
         render) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Scene', function() {
 
     var scene;
     var simpleShaderProgram;
@@ -559,6 +561,24 @@ defineSuite([
         it('renders a globe with a SlopeRamp', function() {
             s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
             s.globe.material = Material.fromType('SlopeRamp');
+            s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
+            s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
+            s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
+
+            // To avoid Jasmine's spec has no expectations error
+            expect(true).toEqual(true);
+
+            return expect(s).toRenderAndCall(function() {
+                return pollToPromise(function() {
+                    render(s.frameState, s.globe);
+                    return !jasmine.matchersUtil.equals(s._context.readPixels(), [0, 0, 0, 0]);
+                });
+            });
+        });
+
+        it('renders a globe with AspectRamp', function() {
+            s.globe = new Globe(Ellipsoid.UNIT_SPHERE);
+            s.globe.material = Material.fromType('AspectRamp');
             s.camera.position = new Cartesian3(1.02, 0.0, 0.0);
             s.camera.up = Cartesian3.clone(Cartesian3.UNIT_Z);
             s.camera.direction = Cartesian3.negate(Cartesian3.normalize(s.camera.position, new Cartesian3()), new Cartesian3());
@@ -1099,9 +1119,12 @@ defineSuite([
         var spyListener = jasmine.createSpy('listener');
         s.camera.moveEnd.addEventListener(spyListener);
 
-        s.cameraEventWaitTime = 0.0;
+        // We use negative time here to ensure the event runs on the next frame.
+        s.cameraEventWaitTime = -1.0;
         s.camera.moveLeft();
+        // The first render will trigger the moveStart event.
         s.render();
+        // The second will trigger the moveEnd.
         s.render();
 
         expect(spyListener.calls.count()).toBe(1);
@@ -1726,4 +1749,26 @@ defineSuite([
         scene.destroyForSpecs();
     });
 
+    it('does not occlude if DrawCommand.occlude is false', function() {
+        var scene = createScene();
+        scene.globe = new Globe(Ellipsoid.WGS84);
+
+        var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -90.0, 40.0);
+        var rectanglePrimitive = createRectangle(rectangle, 10);
+        scene.primitives.add(rectanglePrimitive);
+
+        scene.renderForSpecs();
+        rectanglePrimitive._colorCommands[0].occlude = false;
+
+        scene.camera.setView({
+            destination: new Cartesian3(-5754647.167415793, 14907694.100240812, -483807.2406259497),
+            orientation: new HeadingPitchRoll(6.283185307179586, -1.5698869547885104, 0.0)
+        });
+        scene.renderForSpecs();
+        expect(getFrustumCommandsLength(scene)).toBe(1);
+
+        scene.destroyForSpecs();
+    });
+
 }, 'WebGL');
+});

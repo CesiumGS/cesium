@@ -197,7 +197,7 @@ Sandcastle.addDefaultToolbarMenu([{
             viewer.entities.add({
                 polyline : {
                     positions : Cesium.Ellipsoid.WGS84.cartographicArrayToCartesianArray(samples),
-                    followSurface : false,
+                    arcType : Cesium.ArcType.NONE,
                     width : 5,
                     material : new Cesium.PolylineOutlineMaterialProperty({
                         color : Cesium.Color.ORANGE,

@@ -1,5 +1,5 @@
-defineSuite([
-        'DataSources/KmlDataSource',
+define([
+        'Core/ArcType',
         'Core/BoundingRectangle',
         'Core/Cartesian2',
         'Core/Cartesian3',
@@ -7,6 +7,7 @@ defineSuite([
         'Core/ClockStep',
         'Core/Color',
         'Core/combine',
+        'Core/Credit',
         'Core/Ellipsoid',
         'Core/Event',
         'Core/HeadingPitchRange',
@@ -24,6 +25,7 @@ defineSuite([
         'DataSources/EntityCollection',
         'DataSources/ImageMaterialProperty',
         'DataSources/KmlCamera',
+        'DataSources/KmlDataSource',
         'DataSources/KmlLookAt',
         'DataSources/KmlTour',
         'DataSources/KmlTourFlyTo',
@@ -37,7 +39,7 @@ defineSuite([
         'Specs/pollToPromise',
         'ThirdParty/when'
     ], function(
-        KmlDataSource,
+        ArcType,
         BoundingRectangle,
         Cartesian2,
         Cartesian3,
@@ -45,6 +47,7 @@ defineSuite([
         ClockStep,
         Color,
         combine,
+        Credit,
         Ellipsoid,
         Event,
         HeadingPitchRange,
@@ -62,6 +65,7 @@ defineSuite([
         EntityCollection,
         ImageMaterialProperty,
         KmlCamera,
+        KmlDataSource,
         KmlLookAt,
         KmlTour,
         KmlTourFlyTo,
@@ -74,7 +78,9 @@ defineSuite([
         createCamera,
         pollToPromise,
         when) {
-    'use strict';
+        'use strict';
+
+describe('DataSources/KmlDataSource', function() {
 
     var parser = new DOMParser();
 
@@ -147,7 +153,8 @@ defineSuite([
         canvas : {
             clientWidth : 512,
             clientHeight : 512
-        }
+        },
+        credit: 'This is my credit'
     };
     options.camera.frustum.fov = CesiumMath.PI_OVER_FOUR;
     options.camera.frustum.aspectRatio = 1.0;
@@ -168,6 +175,7 @@ defineSuite([
         expect(dataSource.loadingEvent).toBeInstanceOf(Event);
         expect(dataSource.unsupportedNodeEvent).toBeInstanceOf(Event);
         expect(dataSource.show).toBe(true);
+        expect(dataSource.credit).toBeInstanceOf(Credit);
     });
 
     it('setting name raises changed event', function() {
@@ -269,6 +277,52 @@ defineSuite([
         return dataSource.load(resource).then(function(source) {
             expect(source).toBe(dataSource);
             expect(source.entities.values.length).toEqual(1);
+        });
+    });
+
+    it('load does deferred loading', function() {
+        var kml = '<?xml version="1.0" encoding="UTF-8"?>\
+        <Document xmlns="http://www.opengis.net/kml/2.2"\
+                  xmlns:gx="http://www.google.com/kml/ext/2.2">\
+            <Placemark id="Bob">\
+            </Placemark>\
+            <Placemark id="Bob2">\
+            </Placemark>\
+        </Document>';
+
+        jasmine.clock().install();
+        jasmine.clock().mockDate(new Date());
+
+        // Jasmine doesn't mock performance.now(), so force Date.now()
+        spyOn(KmlDataSource, '_getTimestamp').and.callFake(function() {
+            return Date.now();
+        });
+
+        var OrigDeferredLoading = KmlDataSource._DeferredLoading;
+        var deferredLoading;
+        spyOn(KmlDataSource, '_DeferredLoading').and.callFake(function(datasource) {
+            deferredLoading = new OrigDeferredLoading(datasource);
+
+            var process = deferredLoading._process.bind(deferredLoading);
+            spyOn(deferredLoading, '_process').and.callFake(function(isFirst) {
+                jasmine.clock().tick(1001); // Step over a second everytime, so we only process 1 feature
+                return process(isFirst);
+            });
+
+            var giveUpTime = deferredLoading._giveUpTime.bind(deferredLoading);
+            spyOn(deferredLoading, '_giveUpTime').and.callFake(function() {
+                giveUpTime();
+                jasmine.clock().tick(1); // Fire the setTimeout callback
+            });
+
+            return deferredLoading;
+        });
+
+        var dataSource = new KmlDataSource(options);
+        return dataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(source) {
+            expect(deferredLoading._process.calls.count()).toEqual(3); // Document and 2 placemarks
+
+            jasmine.clock().uninstall();
         });
     });
 
@@ -2161,7 +2215,7 @@ defineSuite([
             expect(polyline).toBeDefined();
 
             expect(polyline.positions).toBeUndefined();
-            expect(polyline.followSurface).toBeUndefined();
+            expect(polyline.arcType).toBeUndefined();
             expect(polyline.width).toBeUndefined();
             expect(polyline.show).toBeUndefined();
             expect(polyline.material).toBeUndefined();
@@ -2899,7 +2953,7 @@ defineSuite([
             var entity = entities[0];
             expect(entity.wall).toBeUndefined();
             expect(entity.polyline).toBeDefined();
-            expect(entity.polyline.followSurface.getValue()).toEqual(false);
+            expect(entity.polyline.arcType.getValue()).toEqual(ArcType.NONE);
         });
     });
 
@@ -2923,7 +2977,7 @@ defineSuite([
 
             var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
             expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
-            expect(entity.polyline.followSurface.getValue()).toEqual(false);
+            expect(entity.polyline.arcType.getValue()).toEqual(ArcType.NONE);
         });
     });
 
@@ -2968,7 +3022,7 @@ defineSuite([
             expect(entities.length).toEqual(1);
 
             var entity = entities[0];
-            expect(entity.polyline.followSurface).toBeUndefined();
+            expect(entity.polyline.arcType).toBeUndefined();
             var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
             expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
         });
@@ -2991,7 +3045,7 @@ defineSuite([
             expect(entities.length).toEqual(1);
 
             var entity = entities[0];
-            expect(entity.polyline.followSurface).toBeUndefined();
+            expect(entity.polyline.arcType).toBeUndefined();
             var positions = entity.polyline.positions.getValue(Iso8601.MINIMUM_VALUE);
             expect(positions).toEqualEpsilon([Cartesian3.fromDegrees(1, 2), Cartesian3.fromDegrees(4, 5)], CesiumMath.EPSILON10);
         });
@@ -3864,16 +3918,16 @@ defineSuite([
         });
     });
 
-	it('can load styles from a KML file with namespaces', function() {
-		return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
-			console.debug(dataSource.entities.values[2]);
-			var polyline = dataSource.entities.values[2].polyline;
-			var expectedColor = Color.fromBytes(0xff, 0x00, 0xff, 0x00);
-			var polylineColor = polyline.material.color.getValue();
-			expect(polylineColor).toEqual(expectedColor);
-			expect(polyline.width.getValue()).toEqual(10);
-		});
-	});
+    it('can load styles from a KML file with namespaces', function() {
+        return KmlDataSource.load('Data/KML/namespaced.kml', options).then(function(dataSource) {
+            console.debug(dataSource.entities.values[2]);
+            var polyline = dataSource.entities.values[2].polyline;
+            var expectedColor = Color.fromBytes(0xff, 0x00, 0xff, 0x00);
+            var polylineColor = polyline.material.color.getValue();
+            expect(polylineColor).toEqual(expectedColor);
+            expect(polyline.width.getValue()).toEqual(10);
+        });
+    });
 
     it('Boolean values can use true string', function() {
         var kml = '<?xml version="1.0" encoding="UTF-8"?>\
@@ -3958,7 +4012,7 @@ defineSuite([
         return KmlDataSource.load(parser.parseFromString(kml, 'text/xml'), options).then(function(dataSource) {
             expect(dataSource.entities.values.length).toEqual(1);
             expect(console.warn.calls.count()).toEqual(1);
-			expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon refreshMode: onInterval');
+            expect(console.warn).toHaveBeenCalledWith('KML - Unsupported Icon refreshMode: onInterval');
         });
     });
 
@@ -4540,4 +4594,5 @@ defineSuite([
             expect(dataSource.entities.values[2].polygon.material.color.getValue()).not.toEqual(dataSource.entities.values[3].polygon.material.color.getValue());
         });
     });
+});
 });

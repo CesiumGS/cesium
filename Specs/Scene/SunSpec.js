@@ -1,18 +1,20 @@
-defineSuite([
-        'Scene/Sun',
+define([
         'Core/BoundingSphere',
         'Core/Color',
         'Core/Math',
         'Scene/SceneMode',
+        'Scene/Sun',
         'Specs/createScene'
     ], function(
-        Sun,
         BoundingSphere,
         Color,
         CesiumMath,
         SceneMode,
+        Sun,
         createScene) {
-    'use strict';
+        'use strict';
+
+describe('Scene/Sun', function() {
 
     var scene;
     var backgroundColor = [255, 0, 0, 255];
@@ -86,7 +88,7 @@ defineSuite([
 
         viewSun(scene.camera, scene.context.uniformState);
         scene.frameState.passes.render = false;
-        var command = scene.sun.update(scene.frameState, scene._view.passState);
+        var command = scene.sun.update(scene.frameState, scene.view.passState);
         expect(command).not.toBeDefined();
     });
 
@@ -115,3 +117,4 @@ defineSuite([
         expect(sun.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
+});
