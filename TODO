@@ -21,6 +21,43 @@ of the subtree
         then a subtree gets assigned a range into the array that holds all the indices
 
     IndicesFinder
+    * CAN'T just do 3 perp profiles and intersect them together. see https://evanw.github.io/csg.js/ where you intersect 3 cylinders
+    * you will have to do a stack of slices:
+
+    // Here's a 2 loop midpoint slice stack impl
+    // the outer loop generates the ring slice radii along the up direction (y in this case)
+    // the inner loop uses that radii to generate the circl slice in the xz plane at y
+    // assuming c is the center point
+    // midpointCircle is the mid point circle algo that gets list of points and the radius error term of a circle with center at the origin.
+    function sphere(c, radius, outList) {
+        // get list of index points for the upper left quadrant and the radiusError
+        const list = midpointCircle(radius);
+        for {p, radiusError} of list {
+            const listSlice = midpointCircle(pSlice.x, radiusError);
+            for {pSlice, dontcare} of listSlice {
+                // The particular octant of the sphere that each line corresponds to
+                // depends on what quadrant midpointCircle generates and handedness of axes
+                outList.push(c.x + pSlice.x, c.y + p.y, c.z + pSlice.y);
+                outList.push(c.x + pSlice.x, c.y + p.y, c.z - pSlice.y);
+                outList.push(c.x - pSlice.x, c.y + p.y, c.z + pSlice.y);
+                outList.push(c.x - pSlice.x, c.y + p.y, c.z - pSlice.y);
+                outList.push(c.x + pSlice.x, c.y - p.y, c.z + pSlice.y);
+                outList.push(c.x + pSlice.x, c.y - p.y, c.z - pSlice.y);
+                outList.push(c.x - pSlice.x, c.y - p.y, c.z + pSlice.y);
+                outList.push(c.x - pSlice.x, c.y - p.y, c.z - pSlice.y);
+            }
+        }
+    }
+
+    float version of geeksforgeeks circle algo that's here https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/
+        https://ide.geeksforgeeks.org/QGRgv1EEN5
+    Ellipse:
+        https://www.geeksforgeeks.org/midpoint-ellipse-drawing-algorithm/
+    Some other site with list of examples
+        http://members.chello.at/~easyfilter/bresenham.html
+
+    * looking at the midpoint notes, can the centered index set be precomputed then offset during runtime?
+
         Maybe (too optimized for now):
         * use the min max indices per level to find a set of subtrees
           and group sets of indices with those subtrees
@@ -47,8 +84,6 @@ of the subtree
             literally just making sure the loop bounds starts and ends on an even number
             subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
 
-calcs in the patent doc show that all slabs are the same dimension on each level for their worst case.
-related to the 27.7 constant that's there
 So the data stucture would want to have the seams for the axes that it is managing (x, y for sure and z as well for octree)
 the slab would have a 2d array of tile refs the dims of this array takes the min of the worst case dims for the level and the actual dims of the tree at that level.
 if the seams indicate that portions of this 2d are beginning to be exposed, you can then calc the sphere imprint on the level and see if it would start to touch those exposed portions.

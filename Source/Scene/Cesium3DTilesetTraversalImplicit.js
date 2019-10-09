@@ -279,6 +279,22 @@ define([
                 var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
                 var begin = indexRange.begin;
                 var end = indexRange.end;
+
+                subtree.treeIndexRangeForTreeLevel(contentLevel, minTreeIndicesForLevel, maxTreeIndicesForLevel);
+                // if any of the min from indices finder for the level are greater than any of the max you can break (sphere ranges get smaller as you go down levels)
+                // vice versa for max vs min
+                var minTraversalIndicesForLevel = minIndices[contentLevel];
+                var maxTraversalIndicesForLevel = maxIndices[contentLevel];
+
+                if (maxTreeIndicesForLevel.x < minTraversalIndicesForLevel.x ||
+                    maxTreeIndicesForLevel.y < minTraversalIndicesForLevel.y ||
+                    maxTreeIndicesForLevel.z < minTraversalIndicesForLevel.z ||
+                    minTreeIndicesForLevel.x > maxTraversalIndicesForLevel.x ||
+                    minTreeIndicesForLevel.y > maxTraversalIndicesForLevel.y ||
+                    minTreeIndicesForLevel.z > maxTraversalIndicesForLevel.z) {
+                    continue;
+                }
+
                 var tiles = subtree._tiles;
                 for (j = begin; j < end; j++) {
                     var tile = tiles[j];
