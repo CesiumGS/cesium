@@ -28,7 +28,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this volume will be displayed.
      *
      * @see Entity
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
      */
     function PolylineVolumeGraphics(options) {
         this._definitionChanged = new Event();

@@ -29,7 +29,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.zIndex=0] A Property specifying the zIndex used for ordering ground geometry. Only has an effect if `clampToGround` is true and polylines on terrain is supported.
      *
      * @see Entity
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
      */
     function PolylineGraphics(options) {
         this._definitionChanged = new Event();

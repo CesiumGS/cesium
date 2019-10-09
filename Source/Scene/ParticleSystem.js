@@ -51,9 +51,9 @@ import Particle from './Particle.js';
      * @param {Number} [options.mass=1.0] Sets the minimum and maximum mass of particles in kilograms.
      * @param {Number} [options.minimumMass] Sets the minimum bound for the mass of a particle in kilograms. A particle's actual mass will be chosen as a random amount above this value.
      * @param {Number} [options.maximumMass] Sets the maximum mass of particles in kilograms. A particle's actual mass will be chosen as a random amount below this value.
-     * @tutorial {@link https://cesiumjs.org/tutorials/Particle-Systems-Tutorial/|Particle Systems Tutorial}
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Particle%20System.html&label=Showcases|Particle Systems Tutorial Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
+     * @tutorial {@link https://cesium.com/docs/tutorials/particle-systems//|Particle Systems Tutorial}
+     * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System.html&label=Showcases|Particle Systems Tutorial Demo}
+     * @demo {@link https://sandcastle.cesium.com/?src=Particle%20System%20Fireworks.html&label=Showcases|Particle Systems Fireworks Demo}
      */
     function ParticleSystem(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -768,8 +768,6 @@ import Particle from './Particle.js';
     /**
      * A function used to modify attributes of the particle at each time step. This can include force modifications,
      * color, sizing, etc.
-     *
-     * @see {@link https://cesiumjs.org/tutorials/Particle-Systems-Tutorial/|Particle Systems Tutorial}
      *
      * @callback ParticleSystem~updateCallback
      *

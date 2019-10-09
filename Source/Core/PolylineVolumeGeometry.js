@@ -175,7 +175,7 @@ import WindingOrder from './WindingOrder.js';
      *
      * @see PolylineVolumeGeometry#createGeometry
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline%20Volume.html|Cesium Sandcastle Polyline Volume Demo}
      *
      * @example
      * function computeCircle(radius) {

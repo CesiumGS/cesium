@@ -37,7 +37,7 @@ import SceneMode from './SceneMode.js';
      * @example
      * scene.skyAtmosphere = new Cesium.SkyAtmosphere();
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Sky%20Atmosphere.html|Sky atmosphere demo in Sandcastle}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Sky%20Atmosphere.html|Sky atmosphere demo in Sandcastle}
      *
      * @see Scene.skyAtmosphere
      */
