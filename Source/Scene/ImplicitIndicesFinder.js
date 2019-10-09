@@ -76,11 +76,21 @@ define([
         // this._imprintRadiiToTileRatiosZ = [];
         // this._imprintRadiiToTileRatiosX = [];
         // this._imprintRadiiToTileRatiosY = [];
+        // TODO: likely want a separate class for region? not sure which functions are different
         this._region = undefined;
         this._boundsMin = new Cartesian3(); // world space min corner of the box bounds
         this._boundsMax = new Cartesian3();  // world space max corner of the box bounds
         this._boundsSpan = new Cartesian3(); // world length, width, height of the box bounds
         this._lodDistanceToTileRatio = new Cartesian3(); // the lod sphere radii / tile dims. Will be the same for every level. How many tiles long is it, in each direction.
+
+        // this is precomputed after _lodDistanceToTileRatio is recomputeda since that tells the ellipsoid axial extents
+        // This is a precomputed ellipsoid spine for the fixed grid where the camera is at 000
+        // It does not store the main axes extents which would just be _lodDistanceToTileRatio
+        // This is reference spine is the same for every level
+        // Every level generates its own traversal spine from the 000 spine and _centerTilePositions[level].
+        // Need to know when poke-through happens and what to do about it.
+        // MAYBE: only need to update portions of traversal spine that need it
+        this._originEllipsoidGridExtents = []; // array of cartesian2, 3 if oct.
 
         // Dim info
         this._worstCaseVirtualDims = new Cartesian3(); // The same for every level
@@ -326,8 +336,8 @@ define([
         var i, invTileDimsOnLevel;
         var centerIndexOnLevel , centerTilePositionOnLevel, lodDistanceOnLevel;
 
-        // Find the distnace to the tileset contentless root and use that that determine maximumTreversalDepth
-        // updateVisibility is called on root in traversal before this
+        // Find the distance to the tileset's contentless root and use that that determine maximumTreversalDepth
+        // NOTE: updateVisibility is called on root in traversal before this
         var distance = tileset._root._distanceToCamera;
         this._maximumTraversalLevel = length - 1;
         for (i = tilesetStartLevel; i < length; i++) {
