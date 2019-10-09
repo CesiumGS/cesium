@@ -56,7 +56,10 @@ of the subtree
     Some other site with list of examples
         http://members.chello.at/~easyfilter/bresenham.html
 
-    * looking at the midpoint notes, can the centered index set be precomputed then offset during runtime?
+    * Precompute a lattice / spine thing for the ellipsoid during init then during runtime update the runtime lattic/spine thing
+      using the camera center cell inner fractional position to offset the precomputed lattice.
+    * there needs to be something to handle poke through when the camera offset would cause
+      another layer of the lattice to form (can one be removed from the other end?)
 
         Maybe (too optimized for now):
         * use the min max indices per level to find a set of subtrees
