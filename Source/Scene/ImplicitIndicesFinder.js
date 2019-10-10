@@ -95,7 +95,7 @@ define([
         // bunch of yz coordinates (make a struct for this concept/primitive, like [x1, x2, y, z] oct and [x1, x2, y] quad, or use cartesian4/3 to use add)
         // The main x axis spine just flips once(two versionn +x and -x), higher x axis spines (further up z) need 4 versions but everything else needs 8 versions
         // since they are in an actual octant.
-        this._originEllipsoidGridExtents = []; // array of cartesian2, 3 if oct.
+        this._originEllipsoid = []; // array of cartesian2, 3 if oct.
 
         // Dim info
         this._worstCaseVirtualDims = new Cartesian3(); // The same for every level
@@ -244,6 +244,77 @@ define([
     };
 
     /**
+     * Updates the _originEllipsoid array for a quadtree.
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.generateOriginEllipsoidQuad = function() {
+        var lodDistanceToTileRatio = this._lodDistanceToTileRatio;
+        var axesExtentsX = lodDistanceToTileRatio.x;
+        var axesExtentsY = lodDistanceToTileRatio.y;
+        // For quad, we only care about x extents at every y tick.
+        this._originEllipsoid = []; // reset
+        var originEllipsoid = this._originEllipsoid;
+
+        // The x axis for the ellipsoid only needs 1 pair of start/stop along x axis
+        // Everything else needs 2 pairs 1 above and below x axis.
+        var x = axesExtentsX;
+        originEllipsoid.push(new Cartesian3(-x, 0, x));
+
+        var yEnd = Math.floor(axesExtentsY);
+        var My = axesExtentsX * axesExtentsX;
+        var Ny = My / (axesExtentsY * axesExtentsY);
+        var y;
+        for (y = 1; y <= yEnd; y++) {
+            x = Math.sqrt(My - Ny * y * y);
+            originEllipsoid.push(new Cartesian3(-x, y, x));
+            originEllipsoid.push(new Cartesian3(-x,-y, x));
+        }
+    };
+
+    /**
+     * Updates the _originEllipsoid array for an octree.
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.generateOriginEllipsoidOct = function() {
+        var lodDistanceToTileRatio = this._lodDistanceToTileRatio;
+        var axesExtentsX = lodDistanceToTileRatio.x;
+        var axesExtentsY = lodDistanceToTileRatio.y;
+        var axesExtentsZ = lodDistanceToTileRatio.z;
+
+        this._originEllipsoid = []; // Reset
+        var originEllipsoid = this._originEllipsoid;
+
+        // The x axis for the ellipsoid only needs 1 pair of start/stop along x axis
+        // Everything else needs 2 pairs 1 above and below x axis.
+        var x = axesExtentsX;
+        originEllipsoid.push(new Cartesian4(-x, 0, 0, x));
+
+        var yToXExtentRatio = axesExtentsY / axesExtentsX;
+        var zEnd = Math.floor(axesExtentsZ);
+        var Mz = axesExtentsX * axesExtentsX;
+        var Nz = Mz / (axesExtentsZ * axesExtentsZ);
+        var y, z, yEnd, My, Ny, yExtentForEllipsoidSlice;
+        for (z = 1; z <= zEnd; z++) {
+            x = Math.sqrt(Mz - Nz * z * z);
+            originEllipsoid.push(new Cartesian3(-x, 0,  z, x));
+            originEllipsoid.push(new Cartesian3(-x, 0, -z, x));
+            yExtentForEllipsoidSlice = x*yToXExtentRatio;
+            yEnd = Math.floor(yExtentForEllipsoidSlice);
+            My = x * x;
+            Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
+            for (y = 1; y <= yEnd; y++) {
+                x = Math.sqrt(My - Ny * y * y);
+                originEllipsoid.push(new Cartesian3(-x, y, z, x));
+                originEllipsoid.push(new Cartesian3(-x, y,-z, x));
+                originEllipsoid.push(new Cartesian3(-x,-y, z, x));
+                originEllipsoid.push(new Cartesian3(-x,-y,-z, x));
+            }
+        }
+    };
+
+    /**
      * Updates the _lodDistances array with LOD sphere radii from the camera to
      * pull in tiles on different levels of the tree
      *
@@ -272,8 +343,6 @@ define([
         var treeDims = this._treeDims;
         var virtuaDims = this._virtualDims;
         var invTileDims = this._invTileDims;
-        // Shouldn't this be the same on every level?
-        // var lodDistanceToTileRatios = this._lodDistanceToTileRatios;
 
         // Worst case dims, they're the same for every level
         var worstCaseVirtualDims = this._worstCaseVirtualDims;
@@ -302,10 +371,16 @@ define([
 
         Cartesian3.multiplyByScalar(invTileDims[tilesetStartLevel], lodDistances[tilesetStartLevel], this._lodDistanceToTileRatio);
 
+        if (tileset._isOct) {
+            this.generateOriginEllipsoidOct();
+        } else {
+            this.generateOriginEllipsoidQuad();
+        }
+
         for (i = 0; i < length; i++) {
             console.log('lodDistance ' + i + ' ' + lodDistances[i]);
         }
-        console.log('lodDistanceToTileRatios ' + this._lodDistanceToTileRatio);
+        console.log('lodDistanceToTileRatio ' + this._lodDistanceToTileRatio);
     };
 
     var scratchLocalCameraPosition = new Cartesian3();
