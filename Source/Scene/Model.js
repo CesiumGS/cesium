@@ -1126,7 +1126,7 @@ import ShadowMode from './ShadowMode.js';
          * </p>
          *
          * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
-         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
          * supplied to {@link Model#specularEnvironmentMaps}.
          *
          * @memberof Model.prototype
@@ -1264,7 +1264,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
-     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
@@ -3904,7 +3904,7 @@ import ShadowMode from './ShadowMode.js';
 
     function updatePerNodeShow(model) {
         // Totally not worth it, but we could optimize this:
-        // http://blogs.agi.com/insight3d/index.php/2008/02/13/deletion-in-bounding-volume-hierarchies/
+        // http://help.agi.com/AGIComponents/html/BlogDeletionInBoundingVolumeHierarchies.htm
 
         var rootNodes = model._runtime.rootNodes;
         var length = rootNodes.length;

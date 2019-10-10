@@ -64,7 +64,7 @@ import Property from './Property.js';
     defineProperties(BoxGeometryUpdater.prototype, {
         /**
          * Gets the terrain offset property
-         * @type {TerrainOffsetProperty}
+         * @type {Property}
          * @memberof BoxGeometryUpdater.prototype
          * @readonly
          */

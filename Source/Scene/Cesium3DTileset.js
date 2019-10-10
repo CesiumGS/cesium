@@ -673,7 +673,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          * </p>
          *
          * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
-         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
          * supplied to {@link Cesium3DTileset#specularEnvironmentMaps}.
          *
          * @type {Cartesian3[]}

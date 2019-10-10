@@ -50,10 +50,6 @@ import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
      * @see WebMapTileServiceImageryProvider
      * @see UrlTemplateImageryProvider
      *
-     * @see {@link http://www.maptiler.org/|MapTiler}
-     * @see {@link http://www.klokan.cz/projects/gdal2tiles/|GDAL2Tiles}
-     * @see {@link http://www.w3.org/TR/cors/|Cross-Origin Resource Sharing}
-     *
      * @example
      * var tms = new Cesium.TileMapServiceImageryProvider({
      *    url : '../images/cesium_maptiler/Cesium_Logo_Color',
