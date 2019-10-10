@@ -267,7 +267,7 @@ define([
         // The x axis for the ellipsoid only needs 1 pair of start/stop along x axis
         // Everything else needs 2 pairs 1 above and below x axis.
         var x = axesExtentsX;
-        originEllipsoid.push(new Cartesian3(-x, 0, x));
+        originEllipsoid.push(new Cartesian3(x, 0, -x));
 
         var yEnd = Math.floor(axesExtentsY);
         var My = axesExtentsX * axesExtentsX;
@@ -275,8 +275,8 @@ define([
         var y;
         for (y = 1; y <= yEnd; y++) {
             x = Math.sqrt(My - Ny * y * y);
-            originEllipsoid.push(new Cartesian3(-x, y, x));
-            originEllipsoid.push(new Cartesian3(-x,-y, x));
+            originEllipsoid.push(new Cartesian3(x, y,-x));
+            originEllipsoid.push(new Cartesian3(x,-y,-x));
         }
 
         this.updateLevelEllipsoidsLengths();
@@ -299,7 +299,7 @@ define([
         // The x axis for the ellipsoid only needs 1 pair of start/stop along x axis
         // Everything else needs 2 pairs 1 above and below x axis.
         var x = axesExtentsX;
-        originEllipsoid.push(new Cartesian4(-x, 0, 0, x));
+        originEllipsoid.push(new Cartesian4(x, 0, 0,-x));
 
         var yToXExtentRatio = axesExtentsY / axesExtentsX;
         var zEnd = Math.floor(axesExtentsZ);
@@ -308,18 +308,18 @@ define([
         var y, z, yEnd, My, Ny, yExtentForEllipsoidSlice;
         for (z = 1; z <= zEnd; z++) {
             x = Math.sqrt(Mz - Nz * z * z);
-            originEllipsoid.push(new Cartesian3(-x, 0,  z, x));
-            originEllipsoid.push(new Cartesian3(-x, 0, -z, x));
+            originEllipsoid.push(new Cartesian3(x, 0,  z,-x));
+            originEllipsoid.push(new Cartesian3(x, 0, -z,-x));
             yExtentForEllipsoidSlice = x*yToXExtentRatio;
             yEnd = Math.floor(yExtentForEllipsoidSlice);
             My = x * x;
             Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
             for (y = 1; y <= yEnd; y++) {
                 x = Math.sqrt(My - Ny * y * y);
-                originEllipsoid.push(new Cartesian3(-x, y, z, x));
-                originEllipsoid.push(new Cartesian3(-x, y,-z, x));
-                originEllipsoid.push(new Cartesian3(-x,-y, z, x));
-                originEllipsoid.push(new Cartesian3(-x,-y,-z, x));
+                originEllipsoid.push(new Cartesian3(x, y, z,-x));
+                originEllipsoid.push(new Cartesian3(x, y,-z,-x));
+                originEllipsoid.push(new Cartesian3(x,-y, z,-x));
+                originEllipsoid.push(new Cartesian3(x,-y,-z,-x));
             }
         }
 
@@ -425,6 +425,9 @@ define([
             }
         }
     };
+
+    // TODO: post process the level ellipsoids to nullify (make the +x component negative) rows that are culled by planes
+    // or modify rows where the planes cut into them.
 
     var scratchLocalCameraPosition = new Cartesian3();
     var scratchMinCornerToCameraPosition = new Cartesian3();
