@@ -90,6 +90,11 @@ define([
         // Every level generates its own traversal spine from the 000 spine and _centerTilePositions[level].
         // Need to know when poke-through happens and what to do about it.
         // MAYBE: only need to update portions of traversal spine that need it
+        //
+        // how to organize it? want a pile of xstart-xend index pairs for a
+        // bunch of yz coordinates (make a struct for this concept/primitive, like [x1, x2, y, z] oct and [x1, x2, y] quad, or use cartesian4/3 to use add)
+        // The main x axis spine just flips once(two versionn +x and -x), higher x axis spines (further up z) need 4 versions but everything else needs 8 versions
+        // since they are in an actual octant.
         this._originEllipsoidGridExtents = []; // array of cartesian2, 3 if oct.
 
         // Dim info
