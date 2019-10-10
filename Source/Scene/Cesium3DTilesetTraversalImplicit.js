@@ -127,8 +127,97 @@ define([
         return !hasEmptyContent(tile) && tile.contentUnloaded;
     }
 
-    var minTreeIndicesForLevel = new Cartesian3();
-    var maxTreeIndicesForLevel = new Cartesian3();
+    function additiveTileChecks_visAndDist(tileset, subtree, contentLevel, distanceForLevel, frameState) {
+        var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
+        var begin = indexRange.begin;
+        var end = indexRange.end;
+        var tiles = subtree._tiles;
+        var j, tile;
+        for (j = begin; j < end; j++) {
+            tile = tiles[j];
+
+            if (!defined(tile)) {
+                continue;
+            }
+
+            updateVisibility(tileset, tile, frameState);
+
+            if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
+                continue;
+            }
+
+            loadTile(tileset, tile, frameState);
+            selectDesiredTile(tileset, tile, frameState);
+            visitTile(tileset, tile, frameState);
+            touchTile(tileset, tile, frameState);
+        }
+    }
+
+    function additiveTileChecks_vis_OCT(
+        tileset,
+        subtree,
+        subtreeMinTreeIndicesForLevel,
+        subtreeMaxTreeIndicesForLevel,
+        contentLevel,
+        levelEllipsoid,
+        frameState) {
+
+        var i;
+        var levelEllipsoidLength = levelEllipsoid.length;
+        var xRowRange;
+        for (i = 0; i < levelEllipsoidLength; i++) {
+            xRowRange = levelEllipsoid[i];
+            if (xRowRange.x < 0 || // Culled by frustum or outside tree entirely
+                xRowRange.x < subtreeMinTreeIndicesForLevel.x ||
+                xRowRange.w > subtreeMaxTreeIndicesForLevel.x ||
+                xRowRange.y < subtreeMinTreeIndicesForLevel.y ||
+                xRowRange.y > subtreeMaxTreeIndicesForLevel.y ||
+                xRowRange.z < subtreeMinTreeIndicesForLevel.z ||
+                xRowRange.z > subtreeMaxTreeIndicesForLevel.z) {
+                continue;
+            }
+
+            // Clamp the xRowRange start and end to the subtrees indices for level
+            var xStart = Math.max(subtreeMinTreeIndicesForLevel.x, xRowRange.w);
+            var xEnd = Math.min(subtreeMaxTreeIndicesForLevel.x, xRowRange.x);
+
+            // Find the begin and end in the tiles array for this x row stretch
+            var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
+            var offset = indexRange.begin;
+
+            var relXInSubtreeLevelGrid = xStart      - subtreeMinTreeIndicesForLevel.x;
+            var relYInSubtreeLevelGrid = xRowRange.y - subtreeMinTreeIndicesForLevel.y;
+            var relZInSubtreeLevelGrid = xRowRange.z - subtreeMinTreeIndicesForLevel.z;
+            var subtreeLevelDim = subtreeMaxTreeIndicesForLevel.x - subtreeMinTreeIndicesForLevel.x + 1;
+            var begin = offset + relZInSubtreeLevelGrid*subtreeLevelDim*subtreeLevelDim + relYInSubtreeLevelGrid*subtreeLevelDim + relXInSubtreeLevelGrid;
+            var end = begin + xEnd - xStart;
+
+            var tiles = subtree._tiles;
+            var j, tile;
+            for (j = begin; j <= end; j++) {
+                tile = tiles[j];
+
+                if (!defined(tile)) {
+                    continue;
+                }
+
+                updateVisibility(tileset, tile, frameState);
+
+                // if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
+                if (!isVisible(tile)) {
+                    continue;
+                }
+
+                loadTile(tileset, tile, frameState);
+                selectDesiredTile(tileset, tile, frameState);
+                visitTile(tileset, tile, frameState);
+                touchTile(tileset, tile, frameState);
+            }
+        }
+    }
+
+    var subtreeMinTreeIndicesForLevel = new Cartesian3();
+    var subtreeMaxTreeIndicesForLevel = new Cartesian3();
     function additiveTraversal(tileset, frameState) {
         // ADD: On every level in the loop:
         // 1. updateTile
@@ -164,48 +253,30 @@ define([
             }
 
             var distanceForLevel = lodDistances[contentLevel];
+            var levelEllipsoid = indicesFinder._levelEllipsoids[contentLevel];
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
-                subtree.treeIndexRangeForTreeLevel(contentLevel, minTreeIndicesForLevel, maxTreeIndicesForLevel);
+                subtree.treeIndexRangeForTreeLevel(contentLevel, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel);
                 // if any of the min from indices finder for the level are greater than any of the max you can break (sphere ranges get smaller as you go down levels)
                 // vice versa for max vs min
                 var minTraversalIndicesForLevel = minIndices[contentLevel];
                 var maxTraversalIndicesForLevel = maxIndices[contentLevel];
 
-                if (maxTreeIndicesForLevel.x < minTraversalIndicesForLevel.x ||
-                    maxTreeIndicesForLevel.y < minTraversalIndicesForLevel.y ||
-                    maxTreeIndicesForLevel.z < minTraversalIndicesForLevel.z ||
-                    minTreeIndicesForLevel.x > maxTraversalIndicesForLevel.x ||
-                    minTreeIndicesForLevel.y > maxTraversalIndicesForLevel.y ||
-                    minTreeIndicesForLevel.z > maxTraversalIndicesForLevel.z) {
+                if (subtreeMaxTreeIndicesForLevel.x < minTraversalIndicesForLevel.x ||
+                    subtreeMaxTreeIndicesForLevel.y < minTraversalIndicesForLevel.y ||
+                    subtreeMaxTreeIndicesForLevel.z < minTraversalIndicesForLevel.z ||
+                    subtreeMinTreeIndicesForLevel.x > maxTraversalIndicesForLevel.x ||
+                    subtreeMinTreeIndicesForLevel.y > maxTraversalIndicesForLevel.y ||
+                    subtreeMinTreeIndicesForLevel.z > maxTraversalIndicesForLevel.z) {
                     continue;
                 }
 
                 // Using traditional visbility and distance
-                // But we really want to iterate using the level ellipoid indices
-                var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
-                var begin = indexRange.begin;
-                var end = indexRange.end;
-                var tiles = subtree._tiles;
-                for (j = begin; j < end; j++) {
-                    var tile = tiles[j];
+                // additiveTileChecks_visAndDist(tileset, subtree, contentLevel, distanceForLevel, frameState);
 
-                    if (!defined(tile)) {
-                        continue;
-                    }
-
-                    updateVisibility(tileset, tile, frameState);
-
-                    if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
-                        continue;
-                    }
-
-                    loadTile(tileset, tile, frameState);
-                    selectDesiredTile(tileset, tile, frameState);
-                    visitTile(tileset, tile, frameState);
-                    touchTile(tileset, tile, frameState);
-                } // for j
+                // Using traditional visibility but using level ellipsoid indices in place of distance check
+                additiveTileChecks_vis_OCT(tileset, subtree, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel, contentLevel, levelEllipsoid, frameState);
             } // for i
         } // for contentLevel
     }
@@ -281,18 +352,18 @@ define([
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
 
-                subtree.treeIndexRangeForTreeLevel(contentLevel, minTreeIndicesForLevel, maxTreeIndicesForLevel);
+                subtree.treeIndexRangeForTreeLevel(contentLevel, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel);
                 // if any of the min from indices finder for the level are greater than any of the max you can break (sphere ranges get smaller as you go down levels)
                 // vice versa for max vs min
                 var minTraversalIndicesForLevel = minIndices[contentLevel];
                 var maxTraversalIndicesForLevel = maxIndices[contentLevel];
 
-                if (maxTreeIndicesForLevel.x < minTraversalIndicesForLevel.x ||
-                    maxTreeIndicesForLevel.y < minTraversalIndicesForLevel.y ||
-                    maxTreeIndicesForLevel.z < minTraversalIndicesForLevel.z ||
-                    minTreeIndicesForLevel.x > maxTraversalIndicesForLevel.x ||
-                    minTreeIndicesForLevel.y > maxTraversalIndicesForLevel.y ||
-                    minTreeIndicesForLevel.z > maxTraversalIndicesForLevel.z) {
+                if (subtreeMaxTreeIndicesForLevel.x < minTraversalIndicesForLevel.x ||
+                    subtreeMaxTreeIndicesForLevel.y < minTraversalIndicesForLevel.y ||
+                    subtreeMaxTreeIndicesForLevel.z < minTraversalIndicesForLevel.z ||
+                    subtreeMinTreeIndicesForLevel.x > maxTraversalIndicesForLevel.x ||
+                    subtreeMinTreeIndicesForLevel.y > maxTraversalIndicesForLevel.y ||
+                    subtreeMinTreeIndicesForLevel.z > maxTraversalIndicesForLevel.z) {
                     continue;
                 }
 

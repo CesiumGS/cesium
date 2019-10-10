@@ -242,12 +242,22 @@ define([
         var originEllipsoidLength = this._originEllipsoid.length;
         var i, levelEllipsoid;
         var levelEllipsoids = this._levelEllipsoids;
-        for (i = startLevel; i <= lastLevel; i++) {
-            levelEllipsoid = levelEllipsoids[i];
-            while(originEllipsoidLength > levelEllipsoid.length) {
-                levelEllipsoid.push(new Cartesian3());
+        if (this._tileset._isOct) {
+            for (i = startLevel; i <= lastLevel; i++) {
+                levelEllipsoid = levelEllipsoids[i];
+                while(originEllipsoidLength > levelEllipsoid.length) {
+                    levelEllipsoid.push(new Cartesian4());
+                }
+                levelEllipsoid.length = originEllipsoidLength;
             }
-            levelEllipsoid.length = originEllipsoidLength;
+        } else {
+            for (i = startLevel; i <= lastLevel; i++) {
+                levelEllipsoid = levelEllipsoids[i];
+                while(originEllipsoidLength > levelEllipsoid.length) {
+                    levelEllipsoid.push(new Cartesian3());
+                }
+                levelEllipsoid.length = originEllipsoidLength;
+            }
         }
     };
 
@@ -308,18 +318,18 @@ define([
         var y, z, yEnd, My, Ny, yExtentForEllipsoidSlice;
         for (z = 1; z <= zEnd; z++) {
             x = Math.sqrt(Mz - Nz * z * z);
-            originEllipsoid.push(new Cartesian3(x, 0,  z,-x));
-            originEllipsoid.push(new Cartesian3(x, 0, -z,-x));
+            originEllipsoid.push(new Cartesian4(x, 0,  z,-x));
+            originEllipsoid.push(new Cartesian4(x, 0, -z,-x));
             yExtentForEllipsoidSlice = x*yToXExtentRatio;
             yEnd = Math.floor(yExtentForEllipsoidSlice);
             My = x * x;
             Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
             for (y = 1; y <= yEnd; y++) {
                 x = Math.sqrt(My - Ny * y * y);
-                originEllipsoid.push(new Cartesian3(x, y, z,-x));
-                originEllipsoid.push(new Cartesian3(x, y,-z,-x));
-                originEllipsoid.push(new Cartesian3(x,-y, z,-x));
-                originEllipsoid.push(new Cartesian3(x,-y,-z,-x));
+                originEllipsoid.push(new Cartesian4(x, y, z,-x));
+                originEllipsoid.push(new Cartesian4(x, y,-z,-x));
+                originEllipsoid.push(new Cartesian4(x,-y, z,-x));
+                originEllipsoid.push(new Cartesian4(x,-y,-z,-x));
             }
         }
 
@@ -410,18 +420,18 @@ define([
             for (i = 0; i < length; i++) {
                 indexRange = levelEllipsoid[i];
                 Cartesian4.clone(originEllipsoid[i], indexRange);
-                indexRange.x += centerTilePositionOnLevel.x;
-                indexRange.y += centerTilePositionOnLevel.y;
-                indexRange.z += centerTilePositionOnLevel.z;
-                indexRange.w += centerTilePositionOnLevel.x;
+                indexRange.x = Math.floor(indexRange.x + centerTilePositionOnLevel.x);
+                indexRange.y = Math.floor(indexRange.y + centerTilePositionOnLevel.y);
+                indexRange.z = Math.floor(indexRange.z + centerTilePositionOnLevel.z);
+                indexRange.w = Math.floor(indexRange.w + centerTilePositionOnLevel.x);
             }
         } else {
             for (i = 0; i < length; i++) {
                 indexRange = levelEllipsoid[i];
                 Cartesian3.clone(originEllipsoid[i], indexRange);
-                indexRange.x += centerTilePositionOnLevel.x;
-                indexRange.y += centerTilePositionOnLevel.y;
-                indexRange.z += centerTilePositionOnLevel.x;
+                indexRange.x = Math.floor(indexRange.x + centerTilePositionOnLevel.x);
+                indexRange.y = Math.floor(indexRange.y + centerTilePositionOnLevel.y);
+                indexRange.z = Math.floor(indexRange.z + centerTilePositionOnLevel.x);
             }
         }
     };
