@@ -141,8 +141,10 @@ define([
             return;
         }
 
+        // These are really the level ellipsoids index bounding box
         var minIndices = indicesFinder._minIndices;
         var maxIndices = indicesFinder._maxIndices;
+
         var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, lastContentLevelToCheck/* , minIndices, maxIndices */);
         if (allSubtrees.length === 0) {
             // None available yet
@@ -165,9 +167,6 @@ define([
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
-                var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
-                var begin = indexRange.begin;
-                var end = indexRange.end;
                 subtree.treeIndexRangeForTreeLevel(contentLevel, minTreeIndicesForLevel, maxTreeIndicesForLevel);
                 // if any of the min from indices finder for the level are greater than any of the max you can break (sphere ranges get smaller as you go down levels)
                 // vice versa for max vs min
@@ -183,6 +182,11 @@ define([
                     continue;
                 }
 
+                // Using traditional visbility and distance
+                // But we really want to iterate using the level ellipoid indices
+                var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
+                var begin = indexRange.begin;
+                var end = indexRange.end;
                 var tiles = subtree._tiles;
                 for (j = begin; j < end; j++) {
                     var tile = tiles[j];
@@ -276,9 +280,6 @@ define([
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
-                var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
-                var begin = indexRange.begin;
-                var end = indexRange.end;
 
                 subtree.treeIndexRangeForTreeLevel(contentLevel, minTreeIndicesForLevel, maxTreeIndicesForLevel);
                 // if any of the min from indices finder for the level are greater than any of the max you can break (sphere ranges get smaller as you go down levels)
@@ -296,6 +297,9 @@ define([
                 }
 
                 var tiles = subtree._tiles;
+                var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
+                var begin = indexRange.begin;
+                var end = indexRange.end;
                 for (j = begin; j < end; j++) {
                     var tile = tiles[j];
 

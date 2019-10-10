@@ -21,45 +21,14 @@ of the subtree
         then a subtree gets assigned a range into the array that holds all the indices
 
     IndicesFinder
-    * CAN'T just do 3 perp profiles and intersect them together. see https://evanw.github.io/csg.js/ where you intersect 3 cylinders
-    * you will have to do a stack of slices:
-
-    // Here's a 2 loop midpoint slice stack impl
-    // the outer loop generates the ring slice radii along the up direction (y in this case)
-    // the inner loop uses that radii to generate the circl slice in the xz plane at y
-    // assuming c is the center point
-    // midpointCircle is the mid point circle algo that gets list of points and the radius error term of a circle with center at the origin.
-    function sphere(c, radius, outList) {
-        // get list of index points for the upper left quadrant and the radiusError
-        const list = midpointCircle(radius);
-        for {p, radiusError} of list {
-            const listSlice = midpointCircle(pSlice.x, radiusError);
-            for {pSlice, dontcare} of listSlice {
-                // The particular octant of the sphere that each line corresponds to
-                // depends on what quadrant midpointCircle generates and handedness of axes
-                outList.push(c.x + pSlice.x, c.y + p.y, c.z + pSlice.y);
-                outList.push(c.x + pSlice.x, c.y + p.y, c.z - pSlice.y);
-                outList.push(c.x - pSlice.x, c.y + p.y, c.z + pSlice.y);
-                outList.push(c.x - pSlice.x, c.y + p.y, c.z - pSlice.y);
-                outList.push(c.x + pSlice.x, c.y - p.y, c.z + pSlice.y);
-                outList.push(c.x + pSlice.x, c.y - p.y, c.z - pSlice.y);
-                outList.push(c.x - pSlice.x, c.y - p.y, c.z + pSlice.y);
-                outList.push(c.x - pSlice.x, c.y - p.y, c.z - pSlice.y);
-            }
-        }
-    }
-
-    float version of geeksforgeeks circle algo that's here https://www.geeksforgeeks.org/mid-point-circle-drawing-algorithm/
-        https://ide.geeksforgeeks.org/QGRgv1EEN5
-    Ellipse:
-        https://www.geeksforgeeks.org/midpoint-ellipse-drawing-algorithm/
-    Some other site with list of examples
-        http://members.chello.at/~easyfilter/bresenham.html
-
-    * Precompute a lattice / spine thing for the ellipsoid during init then during runtime update the runtime lattic/spine thing
-      using the camera center cell inner fractional position to offset the precomputed lattice.
-    * there needs to be something to handle poke through when the camera offset would cause
+    * Can't just do 3 perp profiles and intersect them together. see https://evanw.github.io/csg.js/ where you intersect 3 cylinders
+    * There needs to be something to handle poke through when the camera offset would cause
       another layer of the lattice to form (can one be removed from the other end?)
+      have a spill over array for these extra spine bones
+    * Use the levelEllipsoid indices as replacement for distance check.
+        * when loop through the available subtrees for the levels we need,
+          we ignore those that fall ouside of the ellipsoid box, which is nice.
+          now just need to loop through all the level indices using the ones that overlap the subtree
 
         Maybe (too optimized for now):
         * use the min max indices per level to find a set of subtrees
