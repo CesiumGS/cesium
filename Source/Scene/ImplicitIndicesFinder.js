@@ -270,6 +270,8 @@ define([
             originEllipsoid.push(new Cartesian3(-x, y, x));
             originEllipsoid.push(new Cartesian3(-x,-y, x));
         }
+
+        // TODO: when finished add an array of the same size (can init to defaul cartesians) for every level(for doing the camera offset later, offset + originEllipsoid)
     };
 
     /**
@@ -312,6 +314,7 @@ define([
                 originEllipsoid.push(new Cartesian3(-x,-y,-z, x));
             }
         }
+        // TODO: when finished add an array of the same size (can init to defaul cartesians) for every level(for doing the camera offset later, offset + originEllipsoid)
     };
 
     /**
