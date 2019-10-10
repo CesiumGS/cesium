@@ -316,20 +316,27 @@ define([
         var Mz = axesExtentsX * axesExtentsX;
         var Nz = Mz / (axesExtentsZ * axesExtentsZ);
         var y, z, yEnd, My, Ny, yExtentForEllipsoidSlice;
-        for (z = 1; z <= zEnd; z++) {
+        for (z = 0; z <= zEnd; z++) {
             x = Math.sqrt(Mz - Nz * z * z);
-            originEllipsoid.push(new Cartesian4(x, 0,  z,-x));
-            originEllipsoid.push(new Cartesian4(x, 0, -z,-x));
+            if (z > 0) {
+                originEllipsoid.push(new Cartesian4(x, 0,  z,-x));
+                originEllipsoid.push(new Cartesian4(x, 0, -z,-x));
+            }
             yExtentForEllipsoidSlice = x*yToXExtentRatio;
             yEnd = Math.floor(yExtentForEllipsoidSlice);
             My = x * x;
             Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
             for (y = 1; y <= yEnd; y++) {
                 x = Math.sqrt(My - Ny * y * y);
-                originEllipsoid.push(new Cartesian4(x, y, z,-x));
-                originEllipsoid.push(new Cartesian4(x, y,-z,-x));
-                originEllipsoid.push(new Cartesian4(x,-y, z,-x));
-                originEllipsoid.push(new Cartesian4(x,-y,-z,-x));
+                if (z > 0) {
+                    originEllipsoid.push(new Cartesian4(x, y, z,-x));
+                    originEllipsoid.push(new Cartesian4(x, y,-z,-x));
+                    originEllipsoid.push(new Cartesian4(x,-y, z,-x));
+                    originEllipsoid.push(new Cartesian4(x,-y,-z,-x));
+                } else {
+                    originEllipsoid.push(new Cartesian4(x, y, 0,-x));
+                    originEllipsoid.push(new Cartesian4(x,-y, 0,-x));
+                }
             }
         }
 

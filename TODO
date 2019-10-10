@@ -4,7 +4,6 @@ of the subtree
 *** only real reason to do the above is if 0 sse is really important and can't get rid of it
     I don't think you absolutely need 0 sse in the leaves, since there're examples working
 
-
 [ ] Box array traversal
     [ ] Toroidial array stack (or whatever it will be)
     debug case: look down at teh tileset, print the center idx.
@@ -47,11 +46,8 @@ of the subtree
          given the camera position within the continuous grid. Then clip
           index bounds considering the min/max tree indices as well as the
           min/max lodDistance circle trace indices on each plane face.
-        * avoid the sqrt if it turns out you just need the radiiToTileRatios more than the radii array
-        * can it be done in a way that can be lerp'd based on center position fraction (not a linear thing?)
 
-        hold off on bresenham just get box ranges of indices for now
-        these will eventually be the visibliity indices (which are the request/render indces for add)
+        these will eventually be the visibliity indices (which are the request/render inidces for add)
         replace will have to make sure to extend the loop a little in cases for sibling requests.
             literally just making sure the loop bounds starts and ends on an even number
             subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
