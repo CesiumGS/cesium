@@ -93,11 +93,12 @@ function offsetBillboard(entity, entityPosition, angle, magnitude, lines, billbo
 
     var drawingBufferWidth = scene.drawingBufferWidth;
     var drawingBufferHeight = scene.drawingBufferHeight;
+    var pixelRatio = scene.pixelRatio;
 
     var diff = Cesium.Cartesian3.subtract(entityPosition, camera.positionWC, new Cesium.Cartesian3());
     var distance = Cesium.Cartesian3.dot(camera.directionWC, diff);
 
-    var dimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, new Cesium.Cartesian2());
+    var dimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, pixelRatio, distance, new Cesium.Cartesian2());
     Cesium.Cartesian2.multiplyByScalar(offset, Cesium.Cartesian2.maximumComponent(dimensions), offset);
 
     var labelOffset;

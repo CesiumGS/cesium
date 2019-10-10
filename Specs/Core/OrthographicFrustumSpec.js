@@ -149,32 +149,58 @@ describe('Core/OrthographicFrustum', function() {
 
     it('get pixel dimensions throws without canvas height', function() {
         expect(function() {
-            return frustum.getPixelDimensions(1.0, undefined, 0.0, new Cartesian2());
+            return frustum.getPixelDimensions(1.0, undefined, 1.0, 0.0, new Cartesian2());
         }).toThrowDeveloperError();
     });
 
     it('get pixel dimensions throws without canvas width', function() {
         expect(function() {
-            return frustum.getPixelDimensions(undefined, 1.0, 0.0, new Cartesian2());
+            return frustum.getPixelDimensions(undefined, 1.0, 1.0, 0.0, new Cartesian2());
         }).toThrowDeveloperError();
     });
 
     it('get pixel dimensions throws with canvas width less than or equal to zero', function() {
         expect(function() {
-            return frustum.getPixelDimensions(0.0, 1.0, 0.0, new Cartesian2());
+            return frustum.getPixelDimensions(0.0, 1.0, 1.0, 0.0, new Cartesian2());
         }).toThrowDeveloperError();
     });
 
     it('get pixel dimensions throws with canvas height less than or equal to zero', function() {
         expect(function() {
-            return frustum.getPixelDimensions(1.0, 0.0, 0.0, new Cartesian2());
+            return frustum.getPixelDimensions(1.0, 0.0, 1.0, 0.0, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('get pixel dimensions throws without pixel ratio', function() {
+        expect(function() {
+            return frustum.getPixelDimensions(1.0, 1.0, undefined, 0.0, new Cartesian2());
+        }).toThrowDeveloperError();
+    });
+
+    it('get pixel dimensions throws with pixel ratio less than or equal to zero', function() {
+        expect(function() {
+            return frustum.getPixelDimensions(1.0, 1.0, 0.0, 0.0, new Cartesian2());
         }).toThrowDeveloperError();
     });
 
     it('get pixel dimensions', function() {
-        var pixelSize = frustum.getPixelDimensions(1.0, 1.0, 0.0, new Cartesian2());
-        expect(pixelSize.x).toEqual(2.0);
-        expect(pixelSize.y).toEqual(2.0);
+        var dimensions = new Cartesian2(1.0, 1.0);
+        var pixelRatio = 1.0;
+        var distance = 1.0;
+        var pixelSize = frustum.getPixelDimensions(dimensions.x, dimensions.y, pixelRatio, distance, new Cartesian2());
+        var expected = frustum._offCenterFrustum.getPixelDimensions(dimensions.x, dimensions.y, pixelRatio, distance, new Cartesian2());
+        expect(pixelSize.x).toEqual(expected.x);
+        expect(pixelSize.y).toEqual(expected.y);
+    });
+
+    it('get pixel dimensions with pixel ratio', function() {
+        var dimensions = new Cartesian2(1.0, 1.0);
+        var pixelRatio = 2.0;
+        var distance = 1.0;
+        var pixelSize = frustum.getPixelDimensions(dimensions.x, dimensions.y, pixelRatio, distance, new Cartesian2());
+        var expected = frustum._offCenterFrustum.getPixelDimensions(dimensions.x, dimensions.y, pixelRatio, distance, new Cartesian2());
+        expect(pixelSize.x).toEqual(expected.x);
+        expect(pixelSize.y).toEqual(expected.y);
     });
 
     it('equals', function() {

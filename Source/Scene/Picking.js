@@ -139,7 +139,7 @@ define([
             Cartesian3.fromElements(origin.z, origin.x, origin.y, origin);
         }
 
-        var pixelSize = frustum.getPixelDimensions(viewport.width, viewport.height, 1.0, scratchOrthoPixelSize);
+        var pixelSize = frustum.getPixelDimensions(viewport.width, viewport.height, 1.0, 1.0, scratchOrthoPixelSize);
 
         var ortho = scratchOrthoPickingFrustum;
         ortho.right = pixelSize.x * 0.5;
@@ -169,7 +169,7 @@ define([
         var xDir = x * near * tanTheta;
         var yDir = y * near * tanPhi;
 
-        var pixelSize = frustum.getPixelDimensions(viewport.width, viewport.height, 1.0, scratchPerspPixelSize);
+        var pixelSize = frustum.getPixelDimensions(viewport.width, viewport.height, 1.0, 1.0, scratchPerspPixelSize);
         var pickWidth = pixelSize.x * width * 0.5;
         var pickHeight = pixelSize.y * height * 0.5;
 

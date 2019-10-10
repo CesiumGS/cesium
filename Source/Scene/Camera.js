@@ -2686,7 +2686,7 @@ define([
         //>>includeEnd('debug');
 
         var distance = this.distanceToBoundingSphere(boundingSphere);
-        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scratchPixelSize);
+        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, this._scene.pixelRatio, distance, scratchPixelSize);
         return Math.max(pixelSize.x, pixelSize.y);
     };
 
