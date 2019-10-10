@@ -65,27 +65,14 @@ define([
         // Needed to shift the originEllipsoid to the camera location in the level grid
         this._centerTilePositions = []; // Same as center but includes fractional part as well.
 
-        // Number, sphere cut radii in meters, the circle that forms on the surface of nearest face slab, clamp to max if camera inside slab
-        // imprintRadii, the circle formed on the surface of the slabs
-        // for quad you only need along the z dir, for oct you need x and y dirs as well
-        // for quad there's only 1 slab on every level. For oct every level will have a set of slabs (worstCaseVirtualDims)
-        // radiiToTileRatios, the circle radius length in array space along each direction, same idea as to lodDistanceToTileRatio
-        // Don't think i need per slab imprint radii, only lodDistanceToTileRatio
-        // this._imprintRadiiZ = []; // Only 1 per level in quad
-        // this._imprintRadiiX = []; // Oct only
-        // this._imprintRadiiY = []; // Oct only
-        // // Cartesian3's, Radii / cell dim on a level. How many tiles long is it, in each direction.
-        // this._imprintRadiiToTileRatiosZ = [];
-        // this._imprintRadiiToTileRatiosX = [];
-        // this._imprintRadiiToTileRatiosY = [];
         // TODO: likely want a separate class for region? not sure which functions are different
         this._region = undefined;
         this._boundsMin = new Cartesian3(); // world space min corner of the box bounds
         this._boundsMax = new Cartesian3();  // world space max corner of the box bounds
         this._boundsSpan = new Cartesian3(); // world length, width, height of the box bounds
-        this._lodDistanceToTileRatio = new Cartesian3(); // the lod sphere radii / tile dims. Will be the same for every level. How many tiles long is it, in each direction.
+        this._lodDistanceToTileRatio = new Cartesian3(); // LOD radii / tile dims. How many tiles long is it, in each direction. Same for every level.
 
-        // this is precomputed after _lodDistanceToTileRatio is recomputeda since that tells the ellipsoid axial extents
+        // this is precomputed after _lodDistanceToTileRatio is recomputed since that tells the ellipsoid axial extents
         // This is a precomputed ellipsoid spine for the fixed grid where the camera is at 000
         // It does not store the main axes extents which would just be _lodDistanceToTileRatio
         // This is reference spine is the same for every level
@@ -101,7 +88,7 @@ define([
         this._levelEllipsoids = []; // array of shifted  origin ellipsoids  for every level
 
         // Dim info
-        this._worstCaseVirtualDims = new Cartesian3(); // The same for every level
+        this._worstCaseVirtualDims = new Cartesian3(); // Same for every level
         this._virtualDims = []; // Cartesian3's, min of worst case dim and treedim
         this._treeDims = []; // Cartesian3's
         this._lastIndices = []; // Cartesian3's tree indices on every level
@@ -166,8 +153,6 @@ define([
         var minIndices =  this._minIndices;
         var maxIndices =  this._maxIndices;
         var centerIndices =  this._centerIndices;
-        // var imprintRadii =  this._imprintRadii;
-        // var imprintRadiiToTileRatios =  this._imprintRadiiToTileRatios;
         var minTilePositions =  this._minTilePositions;
         var maxTilePositions =  this._maxTilePositions;
         var centerTilePositions =  this._centerTilePositions;
@@ -184,8 +169,6 @@ define([
             minIndices.push(new Cartesian3());
             maxIndices.push(new Cartesian3());
             centerIndices.push(new Cartesian3());
-            // imprintRadii.push(new Cartesian3());
-            // imprintRadiiToTileRatios.push(new Cartesian3());
             minTilePositions.push(new Cartesian3());
             maxTilePositions.push(new Cartesian3());
             centerTilePositions.push(new Cartesian3());
@@ -412,6 +395,37 @@ define([
         console.log('lodDistanceToTileRatio ' + this._lodDistanceToTileRatio);
     };
 
+    /**
+     * Updates an ellipsoid for the given level using the origin ellipsoid and the cameraCenterPosition
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.updateLevelEllipsoid = function(level) {
+        var centerTilePositionOnLevel = this._centerTilePositions[level];
+        var levelEllipsoid = this._levelEllipsoids[level];
+        var originEllipsoid = this._originEllipsoid;
+        var i, indexRange;
+        var length = levelEllipsoid.length;
+        if (this._tileset._isOct) {
+            for (i = 0; i < length; i++) {
+                indexRange = levelEllipsoid[i];
+                Cartesian4.clone(originEllipsoid[i], indexRange);
+                indexRange.x += centerTilePositionOnLevel.x;
+                indexRange.y += centerTilePositionOnLevel.y;
+                indexRange.z += centerTilePositionOnLevel.z;
+                indexRange.w += centerTilePositionOnLevel.x;
+            }
+        } else {
+            for (i = 0; i < length; i++) {
+                indexRange = levelEllipsoid[i];
+                Cartesian3.clone(originEllipsoid[i], indexRange);
+                indexRange.x += centerTilePositionOnLevel.x;
+                indexRange.y += centerTilePositionOnLevel.y;
+                indexRange.z += centerTilePositionOnLevel.x;
+            }
+        }
+    };
+
     var scratchLocalCameraPosition = new Cartesian3();
     var scratchMinCornerToCameraPosition = new Cartesian3();
     var scratchTranspose = new Matrix3();
@@ -421,6 +435,7 @@ define([
     var lastmaxpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
     var lastcenter = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
     var lastcenterpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+
     /**
      * Updates the _lodDistances array with LOD sphere radii from the camera to
      * pull in tiles on different levels of the tree
@@ -498,8 +513,6 @@ define([
         var maxIndices = this._maxIndices;
         var minTilePositions = this._minTilePositions;
         var maxTilePositions = this._maxTilePositions;
-        // var imprintRadii = this._imprintRadii;
-        // var imprintRadiiToTileRatios = this._imprintRadiiToTileRatios;
 
         var maximumTreversalLevel = this._maximumTraversalLevel;
         for (i = tilesetStartLevel; i <= maximumTreversalLevel; i++) {
@@ -529,6 +542,8 @@ define([
             minIndicesOnLevel.y = Math.floor(minTilePositionOnLevel.y);
             minIndicesOnLevel.z = Math.floor(minTilePositionOnLevel.z);
             Cartesian3.maximumByComponent(minIndicesOnLevel, Cartesian3.ZERO, minIndicesOnLevel);
+
+            this.updateLevelEllipsoid(i);
 
             // DEBUG PRINTS
             if (i === tilesetStartLevel) {
