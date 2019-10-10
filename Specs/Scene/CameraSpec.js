@@ -2838,15 +2838,6 @@ describe('Scene/Camera', function() {
         }).toThrowDeveloperError();
     });
 
-    it('getPixelSize throws when there is no pixel ratio', function() {
-        scene.mode = SceneMode.SCENE3D;
-        var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
-
-        expect(function() {
-            camera.getPixelSize(sphere, 1.0, 1.0);
-        }).toThrowDeveloperError();
-    });
-
     it('computeViewRectangle when zoomed in', function() {
         scene.mode = SceneMode.SCENE3D;
 
