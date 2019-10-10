@@ -58,9 +58,11 @@ define([
         this._minIndices = []; // Cartesian3's, max index along each dir, continuous grid
         this._maxIndices = []; // Cartesian3's, max index along each dir, continuous grid
         this._centerIndices = []; // Cartesian3's, Where the cam pos lives on the level, continuous grid.
-        // TODO: are these needed?
+        // TODO: are these needed outside of debug?
         this._minTilePositions = []; // Same as minIndices but includes fractional part as well
         this._maxTilePositions = []; // Same as maxIndices but includes fractional part as well
+
+        // Needed to shift the originEllipsoid to the camera location in the level grid
         this._centerTilePositions = []; // Same as center but includes fractional part as well.
 
         // Number, sphere cut radii in meters, the circle that forms on the surface of nearest face slab, clamp to max if camera inside slab
@@ -96,12 +98,13 @@ define([
         // The main x axis spine just flips once(two versionn +x and -x), higher x axis spines (further up z) need 4 versions but everything else needs 8 versions
         // since they are in an actual octant.
         this._originEllipsoid = []; // array of cartesian2, 3 if oct.
+        this._levelEllipsoids = []; // array of shifted  origin ellipsoids  for every level
 
         // Dim info
         this._worstCaseVirtualDims = new Cartesian3(); // The same for every level
         this._virtualDims = []; // Cartesian3's, min of worst case dim and treedim
         this._treeDims = []; // Cartesian3's
-        this._lastIndices = []; // Cartesian3's
+        this._lastIndices = []; // Cartesian3's tree indices on every level
         this._invTileDims = []; // Cartesian3's
         this._invLocalTileDims = []; // Cartesian3's
     }
@@ -173,6 +176,7 @@ define([
         var virtuaDims =  this._virtualDims;
         var invTileDims =  this._invTileDims;
         var invLocalTileDims =  this._invLocalTileDims;
+        var levelEllipsoids =  this._levelEllipsoids;
 
         var i;
         for (i = 0; i < length; i++) {
@@ -186,6 +190,7 @@ define([
             maxTilePositions.push(new Cartesian3());
             centerTilePositions.push(new Cartesian3());
             virtuaDims.push(new Cartesian3());
+            levelEllipsoids.push([]);
         }
 
         // TODO: don't think these are needed beyond finding the invTileDims per level
@@ -244,6 +249,26 @@ define([
     };
 
     /**
+     * Called at the end of a generateOriginEllipsoid to sync the sizes for each level ellipsoid with the origin ellipsoid
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.updateLevelEllipsoidsLengths = function() {
+        var startLevel = this._startLevel;
+        var lastLevel = this._tileset._tilingScheme.lastLevel;
+        var originEllipsoidLength = this._originEllipsoid.length;
+        var i, levelEllipsoid;
+        var levelEllipsoids = this._levelEllipsoids;
+        for (i = startLevel; i <= lastLevel; i++) {
+            levelEllipsoid = levelEllipsoids[i];
+            while(originEllipsoidLength > levelEllipsoid.length) {
+                levelEllipsoid.push(new Cartesian3());
+            }
+            levelEllipsoid.length = originEllipsoidLength;
+        }
+    };
+
+    /**
      * Updates the _originEllipsoid array for a quadtree.
      *
      * @private
@@ -271,7 +296,7 @@ define([
             originEllipsoid.push(new Cartesian3(-x,-y, x));
         }
 
-        // TODO: when finished add an array of the same size (can init to defaul cartesians) for every level(for doing the camera offset later, offset + originEllipsoid)
+        this.updateLevelEllipsoidsLengths();
     };
 
     /**
@@ -314,7 +339,8 @@ define([
                 originEllipsoid.push(new Cartesian3(-x,-y,-z, x));
             }
         }
-        // TODO: when finished add an array of the same size (can init to defaul cartesians) for every level(for doing the camera offset later, offset + originEllipsoid)
+
+        this.updateLevelEllipsoidsLengths();
     };
 
     /**
@@ -543,7 +569,6 @@ define([
         // (in case something wants to query beyond traversal depth later).
 
         this.updateLevelInfo(frameState);
-
         this.updateCameraLevelInfo(frameState);
     };
 
