@@ -443,6 +443,23 @@ define([
         }
     };
 
+        // TODO: REMOVE
+    ImplicitIndicesFinder.prototype.updateLevelEllipsoidDynamicOct = function(level) {
+        var centerTilePositionOnLevel = this._centerTilePositions[level];
+        var levelEllipsoid = this._levelEllipsoids[level];
+        var i, indexRange;
+        var length = levelEllipsoid.length;
+        if (this._tileset._isOct) {
+            for (i = 0; i < length; i++) {
+                indexRange = levelEllipsoid[i];
+            }
+        } else {
+            for (i = 0; i < length; i++) {
+                indexRange = levelEllipsoid[i];
+            }
+        }
+    };
+
     // TODO: post process the level ellipsoids to nullify (make the +x component negative) rows that are culled by planes
     // or modify rows where the planes cut into them.
 
@@ -564,6 +581,8 @@ define([
             Cartesian3.maximumByComponent(minIndicesOnLevel, Cartesian3.ZERO, minIndicesOnLevel);
 
             this.updateLevelEllipsoid(i);
+            // TODO: REMOVE
+            // this.updateLevelEllipsoidDynamicOct(i);
 
             // DEBUG PRINTS
             if (i === tilesetStartLevel) {
