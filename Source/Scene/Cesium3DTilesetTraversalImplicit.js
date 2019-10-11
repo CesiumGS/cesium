@@ -203,7 +203,6 @@ define([
 
                 updateVisibility(tileset, tile, frameState);
 
-                // if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
                 if (!isVisible(tile)) {
                     continue;
                 }
@@ -253,7 +252,6 @@ define([
             }
 
             var distanceForLevel = lodDistances[contentLevel];
-            // var levelEllipsoid = indicesFinder._levelEllipsoids[contentLevel];
             // var levelEllipsoid = indicesFinder.updateLevelEllipsoid(contentLevel);
             var levelEllipsoid = indicesFinder.updateLevelEllipsoidDynamicOct(contentLevel);
 
