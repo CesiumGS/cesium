@@ -32,6 +32,7 @@ import Property from './Property.js';
 
     var offsetScratch = new Cartesian3();
     var radiiScratch = new Cartesian3();
+    var innerRadiiScratch = new Cartesian3();
     var scratchColor = new Color();
     var unitSphere = new Cartesian3(1, 1, 1);
 
@@ -39,7 +40,7 @@ import Property from './Property.js';
         this.id = entity;
         this.vertexFormat = undefined;
         this.radii = undefined;
-        this.innerRadii = undefined;
+        this.innerRadii =  undefined;
         this.minimumClock = undefined;
         this.maximumClock = undefined;
         this.minimumCone = undefined;
@@ -194,9 +195,14 @@ import Property from './Property.js';
         return !entity.position.isConstant || //
                !Property.isConstant(entity.orientation) || //
                !ellipsoid.radii.isConstant || //
+               !Property.isConstant(ellipsoid.innerRadii) || //
                !Property.isConstant(ellipsoid.stackPartitions) || //
                !Property.isConstant(ellipsoid.slicePartitions) || //
                !Property.isConstant(ellipsoid.outlineWidth) || //
+               !Property.isConstant(ellipsoid.minimumClock) || //
+               !Property.isConstant(ellipsoid.maximumClock) || //
+               !Property.isConstant(ellipsoid.minimumCone) || //
+               !Property.isConstant(ellipsoid.maximumCone) || //
                !Property.isConstant(ellipsoid.subdivisions);
     };
 
@@ -282,6 +288,11 @@ import Property from './Property.js';
         var material = MaterialProperty.getValue(time, defaultValue(ellipsoid.material, defaultMaterial), this._material);
 
         // Check properties that could trigger a primitive rebuild.
+        var innerRadii = Property.getValueOrUndefined(ellipsoid.innerRadii, time, innerRadiiScratch);
+        var minimumClock = Property.getValueOrUndefined(ellipsoid.minimumClock, time);
+        var maximumClock = Property.getValueOrUndefined(ellipsoid.maximumClock, time);
+        var minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, time);
+        var maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, time);
         var stackPartitions = Property.getValueOrUndefined(ellipsoid.stackPartitions, time);
         var slicePartitions = Property.getValueOrUndefined(ellipsoid.slicePartitions, time);
         var subdivisions = Property.getValueOrUndefined(ellipsoid.subdivisions, time);
@@ -307,7 +318,10 @@ import Property from './Property.js';
         //For the radii, we use unit sphere and then deform it with a scale matrix.
         var rebuildPrimitives = !in3D || this._lastSceneMode !== sceneMode || !defined(this._primitive) || //
                                 options.stackPartitions !== stackPartitions || options.slicePartitions !== slicePartitions || //
-                                options.subdivisions !== subdivisions || this._lastOutlineWidth !== outlineWidth || options.offsetAttribute !== offsetAttribute;
+                                defined(innerRadii) && !Cartesian3.equals(options.innerRadii !== innerRadii) || options.minimumClock !== minimumClock || //
+                                options.maximumClock !== maximumClock || options.minimumCone !== minimumCone || //
+                                options.maximumCone !== maximumCone || options.subdivisions !== subdivisions || //
+                                this._lastOutlineWidth !== outlineWidth || options.offsetAttribute !== offsetAttribute;
 
         if (rebuildPrimitives) {
             var primitives = this._primitives;
@@ -322,19 +336,21 @@ import Property from './Property.js';
             options.slicePartitions = slicePartitions;
             options.subdivisions = subdivisions;
             options.offsetAttribute = offsetAttribute;
-            options.radii = in3D ? unitSphere : radii;
-            var innerRadii = Property.getValueOrDefault(ellipsoid.innerRadii, time, radii, new Cartesian3());
-            if (in3D) {
-               var mag = Cartesian3.magnitude(radii);
-               var innerRadiiUnit = new Cartesian3(innerRadii.x/mag, innerRadii.y/mag, innerRadii.z/mag);
-               options.innerRadii = innerRadiiUnit;
+            options.radii = Cartesian3.clone(in3D ? unitSphere : radii, options.radii);
+            if (defined(innerRadii)) {
+                if (in3D) {
+                    var mag = Cartesian3.magnitude(radii);
+                    options.innerRadii = Cartesian3.fromElements(innerRadii.x/mag, innerRadii.y/mag, innerRadii.z/mag, options.innerRadii);
+                } else {
+                    options.innerRadii = Cartesian3.clone(innerRadii, options.innerRadii);
+                }
             } else {
-               options.innerRadii = innerRadii;
+                options.innerRadii = undefined;
             }
-            options.minimumClock = Property.getValueOrUndefined(ellipsoid.minimumClock, time);
-            options.maximumClock = Property.getValueOrUndefined(ellipsoid.maximumClock, time);
-            options.minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, time);
-            options.maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, time);
+            options.minimumClock = minimumClock;
+            options.maximumClock = maximumClock;
+            options.minimumCone = minimumCone;
+            options.maximumCone = maximumCone;
 
             var appearance = new MaterialAppearance({
                 material : material,
