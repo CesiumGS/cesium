@@ -566,7 +566,34 @@ define([
             indices.w = Math.floor(indices.w);
         }
 
+        this.clipIndicesToTree(level);
+
         return levelEllipsoid;
+    };
+
+    /**
+     * Updates the _lodDistances array with LOD sphere radii from the camera to
+     * pull in tiles on different levels of the tree
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.clipIndicesToTree = function(level) {
+        var levelEllipsoid = this._levelEllipsoid;
+        var lastIndices = this._lastIndices[level];
+        var length = levelEllipsoid.length;
+        var indices, x;
+        for (x = 0; x < length; x++) {
+            indices = levelEllipsoid[x];
+            if (indices.x < 0) {
+                continue;
+            } else if (indices.y < 0 || indices.y > lastIndices.y || indices.z < 0 || indices.z > lastIndices.z) {
+                indices.x = -indices.x;
+                continue;
+            }
+
+            indices.x = Math.min(indices.x, lastIndices.x);
+            indices.w = Math.max(indices.w, 0);
+        }
     };
 
     // TODO: post process the level ellipsoids to nullify (make the +x component negative) rows that are culled by planes
