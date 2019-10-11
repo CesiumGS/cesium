@@ -26,8 +26,9 @@ of the subtree
           they also edit the normal by doing the same and renormalizing.
           yes, planes point outside frustum
        3) simplest thing from here is find which corner to test from the plane normal
-       then loop through indices testing the "corners" by modifying the index
-       skipping those which have a negative .x
+       then loop through indices testing the "corners" by modifying the index by
+       making .x neg or cipping the min or max for each plane
+       skipping those which have a negative .x or both corners are passing
     * TODO: You could sort the indices by moving all the neg .x to the back and saying how many valid there are.
       look into managed array since i think it has 2 different lengths
     * For size/iteration length management, could use a managed array and the level ellipsoid
