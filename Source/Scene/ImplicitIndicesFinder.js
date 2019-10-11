@@ -93,7 +93,7 @@ define([
         this._virtualDims = []; // Cartesian3's, min of worst case dim and treedim
         this._treeDims = []; // Cartesian3's
         this._lastIndices = []; // Cartesian3's tree indices on every level
-        this._invTileDims = []; // Cartesian3's
+        this._invTileDims = []; // Cartesian3's 1/tile dims per level
         this._invLocalTileDims = []; // Cartesian3's
     }
 
@@ -481,7 +481,7 @@ define([
         var icx = Math.floor(cx);
         var icy = Math.floor(cy);
         var icz = Math.floor(cz);
-        // Rel pos in center cell, the frac part
+        // Rel pos in center cell, i.e. the fractionl part
         var rx = cx - icx;
         var ry = cy - icy;
         var rz = cz - icz;
@@ -555,6 +555,7 @@ define([
             }
         }
 
+        // Convert to indices by flooring
         var length = levelEllipsoid.length;
         var indices;
         for (x = 0; x < length; x++) {
