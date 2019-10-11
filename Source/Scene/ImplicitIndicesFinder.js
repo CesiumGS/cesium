@@ -86,6 +86,7 @@ define([
         // since they are in an actual octant.
         this._originEllipsoid = []; // array of cartesian2, 3 if oct.
         this._levelEllipsoids = []; // array of shifted  origin ellipsoids  for every level
+        this._levelEllipsoid = [];  // The ellipsoid indices for current level
 
         // Dim info
         this._worstCaseVirtualDims = new Cartesian3(); // Same for every level
@@ -231,33 +232,54 @@ define([
         return 0;
     };
 
+    // /**
+    //  * Called at the end of a generateOriginEllipsoid to sync the sizes for each level ellipsoid with the origin ellipsoid
+    //  *
+    //  * @private
+    //  */
+    // ImplicitIndicesFinder.prototype.updateLevelEllipsoidsLengths = function() {
+    //     var startLevel = this._startLevel;
+    //     var lastLevel = this._tileset._tilingScheme.lastLevel;
+    //     var originEllipsoidLength = this._originEllipsoid.length;
+    //     var i, levelEllipsoid;
+    //     var levelEllipsoids = this._levelEllipsoids;
+    //     if (this._tileset._isOct) {
+    //         for (i = startLevel; i <= lastLevel; i++) {
+    //             levelEllipsoid = levelEllipsoids[i];
+    //             while(originEllipsoidLength > levelEllipsoid.length) {
+    //                 levelEllipsoid.push(new Cartesian4());
+    //             }
+    //             levelEllipsoid.length = originEllipsoidLength;
+    //         }
+    //     } else {
+    //         for (i = startLevel; i <= lastLevel; i++) {
+    //             levelEllipsoid = levelEllipsoids[i];
+    //             while(originEllipsoidLength > levelEllipsoid.length) {
+    //                 levelEllipsoid.push(new Cartesian3());
+    //             }
+    //             levelEllipsoid.length = originEllipsoidLength;
+    //         }
+    //     }
+    // };
+
     /**
      * Called at the end of a generateOriginEllipsoid to sync the sizes for each level ellipsoid with the origin ellipsoid
      *
      * @private
      */
-    ImplicitIndicesFinder.prototype.updateLevelEllipsoidsLengths = function() {
-        var startLevel = this._startLevel;
-        var lastLevel = this._tileset._tilingScheme.lastLevel;
+    ImplicitIndicesFinder.prototype.updateLevelEllipsoidLength = function() {
         var originEllipsoidLength = this._originEllipsoid.length;
-        var i, levelEllipsoid;
-        var levelEllipsoids = this._levelEllipsoids;
+        var levelEllipsoid = this._levelEllipsoid;
         if (this._tileset._isOct) {
-            for (i = startLevel; i <= lastLevel; i++) {
-                levelEllipsoid = levelEllipsoids[i];
-                while(originEllipsoidLength > levelEllipsoid.length) {
-                    levelEllipsoid.push(new Cartesian4());
-                }
-                levelEllipsoid.length = originEllipsoidLength;
+            while(originEllipsoidLength > levelEllipsoid.length) {
+                levelEllipsoid.push(new Cartesian4());
             }
+            levelEllipsoid.length = originEllipsoidLength;
         } else {
-            for (i = startLevel; i <= lastLevel; i++) {
-                levelEllipsoid = levelEllipsoids[i];
-                while(originEllipsoidLength > levelEllipsoid.length) {
-                    levelEllipsoid.push(new Cartesian3());
-                }
-                levelEllipsoid.length = originEllipsoidLength;
+            while(originEllipsoidLength > levelEllipsoid.length) {
+                levelEllipsoid.push(new Cartesian3());
             }
+            levelEllipsoid.length = originEllipsoidLength;
         }
     };
 
@@ -289,7 +311,8 @@ define([
             originEllipsoid.push(new Cartesian3(x,-y,-x));
         }
 
-        this.updateLevelEllipsoidsLengths();
+        // this.updateLevelEllipsoidsLengths();
+        this.updateLevelEllipsoidLength();
     };
 
     /**
@@ -340,7 +363,8 @@ define([
             }
         }
 
-        this.updateLevelEllipsoidsLengths();
+        // this.updateLevelEllipsoidsLengths();
+        this.updateLevelEllipsoidLength();
     };
 
     /**
@@ -419,7 +443,8 @@ define([
      */
     ImplicitIndicesFinder.prototype.updateLevelEllipsoid = function(level) {
         var centerTilePositionOnLevel = this._centerTilePositions[level];
-        var levelEllipsoid = this._levelEllipsoids[level];
+        // var levelEllipsoid = this._levelEllipsoids[level];
+        var levelEllipsoid = this._levelEllipsoid;
         var originEllipsoid = this._originEllipsoid;
         var i, indexRange;
         var length = levelEllipsoid.length;
@@ -441,6 +466,8 @@ define([
                 indexRange.z = Math.floor(indexRange.z + centerTilePositionOnLevel.x);
             }
         }
+
+        return levelEllipsoid;
     };
 
     // TODO: REMOVE
@@ -464,8 +491,10 @@ define([
         var axesExtentsY = lodDistanceToTileRatio.y;
         var axesExtentsZ = lodDistanceToTileRatio.z;
 
-        this._levelEllipsoids[level] = [];
-        var levelEllipsoid = this._levelEllipsoids[level];
+        // this._levelEllipsoids[level] = [];
+        // var levelEllipsoid = this._levelEllipsoids[level];
+        this._levelEllipsoid = [];
+        var levelEllipsoid = this._levelEllipsoid;
 
         var yToXExtentRatio = axesExtentsY / axesExtentsX;
         var zEnd = Math.ceil(rz + axesExtentsZ);
@@ -535,6 +564,8 @@ define([
             indices.z = Math.floor(indices.z);
             indices.w = Math.floor(indices.w);
         }
+
+        return levelEllipsoid;
     };
 
     // TODO: post process the level ellipsoids to nullify (make the +x component negative) rows that are culled by planes
@@ -657,9 +688,10 @@ define([
             minIndicesOnLevel.z = Math.floor(minTilePositionOnLevel.z);
             Cartesian3.maximumByComponent(minIndicesOnLevel, Cartesian3.ZERO, minIndicesOnLevel);
 
+            // Actually, only have 1 levelEllipsoid to save memory, call this during travesal when you need to know about it.
             // this.updateLevelEllipsoid(i);
-            // TODO: REMOVE
-            this.updateLevelEllipsoidDynamicOct(i);
+            // TODO: FIX the offset version and REMOVE this one.
+            // this.updateLevelEllipsoidDynamicOct(i);
 
             // DEBUG PRINTS
             if (i === tilesetStartLevel) {

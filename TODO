@@ -20,37 +20,26 @@ of the subtree
         then a subtree gets assigned a range into the array that holds all the indices
 
     IndicesFinder
-    * test out dynamic ellipsoid generation and see how it does, or what is wrong with it.
-    * Can't just do 3 perp profiles and intersect them together. see https://evanw.github.io/csg.js/ where you intersect 3 cylinders There needs to be something to handle poke through when the camera offset would cause
-      another layer of the lattice to form (can one be removed from the other end?)
-      have a spill over array for these extra spine bones
-    * Use the levelEllipsoid indices as replacement for distance check.
-        * when loop through the available subtrees for the levels we need,
-          we ignore those that fall ouside of the ellipsoid box, which is nice.
-          now just need to loop through all the level indices using the ones that overlap the subtree
+    * another version of per-frame dynamic ellipsoid generation could be more sphere-like.
+    * for the fixed version, have a spill over array for these extra spine bones
 
-        Maybe (too optimized for now):
-        * use the min max indices per level to find a set of subtrees
-          and group sets of indices with those subtrees
-          for each min max on each level divide each  and see which subtree it falls into
-          if not already in map of subtrees, add it and tack on the indices for the level
+    Maybe (too optimized for now):
+    * use the min max indices per level to find a set of subtrees
+        and group sets of indices with those subtrees
+        for each min max on each level divide each  and see which subtree it falls into
+        if not already in map of subtrees, add it and tack on the indices for the level
 
-          would only have to do this on subtree transition levels since
-          any levels below the transition level would have smaller spheres.
-          so from startLevel to maximumTreversalLevel, skipping by distance to next
-          subtree level, process the min max ranges for that level.
-          basically take the min corner and the max corner, find out what their
-          subtree root indexes are. sift the index ranges into subtree bins?
+        would only have to do this on subtree transition levels since
+        any levels below the transition level would have smaller spheres.
+        so from startLevel to maximumTreversalLevel, skipping by distance to next
+        subtree level, process the min max ranges for that level.
+        basically take the min corner and the max corner, find out what their
+        subtree root indexes are. sift the index ranges into subtree bins?
 
-        * probably only need to trace the lodDistance sphere on each plane face
-         given the camera position within the continuous grid. Then clip
-          index bounds considering the min/max tree indices as well as the
-          min/max lodDistance circle trace indices on each plane face.
-
-        these will eventually be the visibliity indices (which are the request/render inidces for add)
-        replace will have to make sure to extend the loop a little in cases for sibling requests.
-            literally just making sure the loop bounds starts and ends on an even number
-            subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
+    these will eventually be the visibliity indices (which are the request/render inidces for add)
+    REPLACE refine will have to make sure to extend the loop a little in cases for sibling requests.
+        literally just making sure the loop bounds starts and ends on an even number
+        subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
 
 So the data stucture would want to have the seams for the axes that it is managing (x, y for sure and z as well for octree)
 the slab would have a 2d array of tile refs the dims of this array takes the min of the worst case dims for the level and the actual dims of the tree at that level.

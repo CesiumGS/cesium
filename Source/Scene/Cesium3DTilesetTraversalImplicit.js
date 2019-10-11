@@ -242,7 +242,7 @@ define([
 
         var lodDistances = indicesFinder._lodDistances;
 
-        var i, j;
+        var i;
         for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
             var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
 
@@ -253,7 +253,9 @@ define([
             }
 
             var distanceForLevel = lodDistances[contentLevel];
-            var levelEllipsoid = indicesFinder._levelEllipsoids[contentLevel];
+            // var levelEllipsoid = indicesFinder._levelEllipsoids[contentLevel];
+            // var levelEllipsoid = indicesFinder.updateLevelEllipsoid(contentLevel);
+            var levelEllipsoid = indicesFinder.updateLevelEllipsoidDynamicOct(contentLevel);
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
