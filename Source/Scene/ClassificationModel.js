@@ -711,7 +711,6 @@ import PrimitiveCollection from './PrimitiveCollection.js';
                 offset.indices = 0;
             }
 
-
             // Update model triangle count using number of indices
             model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
 
@@ -751,7 +750,6 @@ import PrimitiveCollection from './PrimitiveCollection.js';
             positionsBuffer = arraySlice(positionsBuffer,offset.positions,offset.positions+count*numberOfComponentsForType(positions.type));
             vertexBatchIds = arraySlice(vertexBatchIds,offset.batchIds,offset.batchIds+count*numberOfComponentsForType(batchIDAccessor.type));
             indices = arraySlice(indices, offset.indices, offset.indices + count*numberOfComponentsForType(ix.type));
-
 
             var batchIds = [];
             var indexCounts = [];
