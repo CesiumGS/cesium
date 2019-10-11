@@ -21,8 +21,7 @@ of the subtree
 
     IndicesFinder
     * test out dynamic ellipsoid generation and see how it does, or what is wrong with it.
-    * Can't just do 3 perp profiles and intersect them together. see https://evanw.github.io/csg.js/ where you intersect 3 cylinders
-    * There needs to be something to handle poke through when the camera offset would cause
+    * Can't just do 3 perp profiles and intersect them together. see https://evanw.github.io/csg.js/ where you intersect 3 cylinders There needs to be something to handle poke through when the camera offset would cause
       another layer of the lattice to form (can one be removed from the other end?)
       have a spill over array for these extra spine bones
     * Use the levelEllipsoid indices as replacement for distance check.

@@ -443,20 +443,97 @@ define([
         }
     };
 
-        // TODO: REMOVE
+    // TODO: REMOVE
     ImplicitIndicesFinder.prototype.updateLevelEllipsoidDynamicOct = function(level) {
         var centerTilePositionOnLevel = this._centerTilePositions[level];
+        // Camera center position in grid
+        var cx = centerTilePositionOnLevel.x;
+        var cy = centerTilePositionOnLevel.y;
+        var cz = centerTilePositionOnLevel.z;
+        // The index center cell
+        var icx = Math.floor(cx);
+        var icy = Math.floor(cy);
+        var icz = Math.floor(cz);
+        // Rel pos in center cell, the frac part
+        var rx = cx - icx;
+        var ry = cy - icy;
+        var rz = cz - icz;
+
+        var lodDistanceToTileRatio = this._lodDistanceToTileRatio;
+        var axesExtentsX = lodDistanceToTileRatio.x;
+        var axesExtentsY = lodDistanceToTileRatio.y;
+        var axesExtentsZ = lodDistanceToTileRatio.z;
+
+        this._levelEllipsoids[level] = [];
         var levelEllipsoid = this._levelEllipsoids[level];
-        var i, indexRange;
+
+        var yToXExtentRatio = axesExtentsY / axesExtentsX;
+        var zEnd = Math.ceil(rz + axesExtentsZ);
+        var Mz = axesExtentsX * axesExtentsX;
+        var Nz = Mz / (axesExtentsZ * axesExtentsZ);
+        var x, y, z, zIdx, relZ, relY, yEnd, My, Ny, yExtentForEllipsoidSlice;
+
+        // +z
+        for (z = rz; z < zEnd; z++) {
+            if (z !== rz) { z = Math.floor(z); }
+            relZ = z - rz;
+            x = Math.sqrt(Mz - Nz * relZ * relZ);
+            zIdx = z + icz;
+            levelEllipsoid.push(new Cartesian4(x + cx, cy, zIdx,-x + cx));
+            yExtentForEllipsoidSlice = x*yToXExtentRatio;
+            yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
+            My = x * x;
+            Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
+            for (y = 1; y < yEnd; y++) {
+                relY  = y - ry;
+                x = Math.sqrt(My - Ny * relY * relY);
+                levelEllipsoid.push(new Cartesian4(x + cx, y + icy, zIdx, -x + cx));
+            }
+
+            yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
+            for (y = Math.ceil(ry-1); y > yEnd; y--) {
+                relY = y - ry;
+                x = Math.sqrt(My - Ny * relY * relY);
+                levelEllipsoid.push(new Cartesian4(x + cx, y + icy - 1, zIdx, -x + cx));
+                // The reason for minus 1 in y: you want to rasterize using the
+                // grid line above the cell (which is towards the center of the sphere )
+                // but this counts for the cell with index of -1 that raster line's grid index
+            }
+        }
+
+        // -z
+        zEnd = Math.floor(rz - axesExtentsZ);
+        for (z = Math.ceil(rz-1); z > zEnd; z--) {
+            relZ = z - rz;
+            x = Math.sqrt(Mz - Nz * relZ * relZ);
+            zIdx = z + icz - 1;
+            levelEllipsoid.push(new Cartesian4(x + cx, cy, zIdx,-x + cx));
+            yExtentForEllipsoidSlice = x*yToXExtentRatio;
+            yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
+            My = x * x;
+            Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
+            for (y = 1; y < yEnd; y++) {
+                relY  = y - ry;
+                x = Math.sqrt(My - Ny * relY * relY);
+                levelEllipsoid.push(new Cartesian4(x + cx, y + icy, zIdx, -x + cx));
+            }
+
+            yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
+            for (y = Math.ceil(ry-1); y > yEnd; y--) {
+                relY = y - ry;
+                x = Math.sqrt(My - Ny * relY * relY);
+                levelEllipsoid.push(new Cartesian4(x + cx, y + icy - 1, zIdx, -x + cx));
+            }
+        }
+
         var length = levelEllipsoid.length;
-        if (this._tileset._isOct) {
-            for (i = 0; i < length; i++) {
-                indexRange = levelEllipsoid[i];
-            }
-        } else {
-            for (i = 0; i < length; i++) {
-                indexRange = levelEllipsoid[i];
-            }
+        var indices;
+        for (x = 0; x < length; x++) {
+            indices = levelEllipsoid[x];
+            indices.x = Math.floor(indices.x);
+            indices.y = Math.floor(indices.y);
+            indices.z = Math.floor(indices.z);
+            indices.w = Math.floor(indices.w);
         }
     };
 
@@ -580,9 +657,9 @@ define([
             minIndicesOnLevel.z = Math.floor(minTilePositionOnLevel.z);
             Cartesian3.maximumByComponent(minIndicesOnLevel, Cartesian3.ZERO, minIndicesOnLevel);
 
-            this.updateLevelEllipsoid(i);
+            // this.updateLevelEllipsoid(i);
             // TODO: REMOVE
-            // this.updateLevelEllipsoidDynamicOct(i);
+            this.updateLevelEllipsoidDynamicOct(i);
 
             // DEBUG PRINTS
             if (i === tilesetStartLevel) {
