@@ -297,7 +297,6 @@ describe('Core/Cartesian2', function() {
         expect(cartesian).toEqual(expectedResult);
     });
 
-
     it('multiplyComponents works with a result parameter', function() {
         var left = new Cartesian2(2.0, 3.0);
         var right = new Cartesian2(4.0, 5.0);
