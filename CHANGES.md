@@ -4,7 +4,7 @@ Change Log
 ### 1.6x - 2019-xx-xx
 
 ##### Additions :tada:
-* Update `Cartesian2|Cartesian3|Cartesian4.normalize` to accept Zero vector. [#xxxx](https://github.com/AnalyticalGraphicsInc/cesium/pull/xxxx)
+* Update `Cartesian2|Cartesian3|Cartesian4.normalize` to accept Zero vector. [#8273](https://github.com/AnalyticalGraphicsInc/cesium/pull/8273)
 
 ### 1.62 - 2019-10-01
 
