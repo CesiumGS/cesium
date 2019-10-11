@@ -185,7 +185,7 @@ require({
     var bucketWaiting = false;
 
     xhr.get({
-        url : '../../Build/Documentation/types.txt',
+        url : 'https://cesium.com/docs/cesiumjs-ref-doc/types.txt',
         handleAs : 'json',
         error : function(error) {
             docError = true;
@@ -263,7 +263,7 @@ require({
                 var ele = document.createElement('a');
                 ele.target = '_blank';
                 ele.textContent = member.replace('.html', '').replace('module-', '').replace('#.', '.').replace('#', '.');
-                ele.href = '../../Build/Documentation/' + member;
+                ele.href = 'https://cesium.com/docs/cesiumjs-ref-doc/' + member;
                 ele.onclick = onDocClick;
                 docMessage.appendChild(ele);
             }
