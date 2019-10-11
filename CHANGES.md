@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.6x - 2019-xx-xx
+
+##### Additions :tada:
+* Update `Cartesian2|Cartesian3|Cartesian4.normalize` to accept Zero vector. [#xxxx](https://github.com/AnalyticalGraphicsInc/cesium/pull/xxxx)
+
 ### 1.62 - 2019-10-01
 
 ##### Deprecated :hourglass_flowing_sand:

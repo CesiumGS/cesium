@@ -367,11 +367,6 @@ describe('Core/Cartesian3', function() {
         expect(cartesian).toEqual(expectedResult);
     });
 
-    it('normalize throws with zero vector', function() {
-        expect(function() {
-            Cartesian3.normalize(Cartesian3.ZERO, new Cartesian3());
-        }).toThrowDeveloperError();
-    });
 
     it('multiplyComponents works with a result parameter', function() {
         var left = new Cartesian3(2.0, 3.0, 6.0);

@@ -369,8 +369,13 @@ import CesiumMath from './Math.js';
 
         var magnitude = Cartesian2.magnitude(cartesian);
 
-        result.x = cartesian.x / magnitude;
-        result.y = cartesian.y / magnitude;
+        if (magnitude >0 ) {
+            result.x = cartesian.x / magnitude;
+            result.y = cartesian.y / magnitude;
+        } else {
+            result.x = 0.0;
+            result.y = 0.0;
+        }
 
         //>>includeStart('debug', pragmas.debug);
         if (isNaN(result.x) || isNaN(result.y)) {
