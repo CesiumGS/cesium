@@ -1,8 +1,4 @@
-define([
-        'Core/getStringFromTypedArray'
-    ], function(
-        getStringFromTypedArray) {
-        'use strict';
+import { getStringFromTypedArray } from '../../Source/Cesium.js';
 
 describe('Core/getStringFromTypedArray', function() {
 
@@ -94,5 +90,4 @@ describe('Core/getStringFromTypedArray', function() {
         var arr = new Uint8Array([240, 144, 138, 129]);
         expect(getStringFromTypedArray(arr)).toEqual('𐊁');
     });
-});
 });

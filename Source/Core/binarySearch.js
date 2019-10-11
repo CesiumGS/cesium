@@ -1,8 +1,4 @@
-define([
-        './Check'
-    ], function(
-        Check) {
-    'use strict';
+import Check from './Check.js';
 
     /**
      * Finds an item in a sorted array.
@@ -68,6 +64,4 @@ define([
      *     return a - b;
      * }
      */
-
-    return binarySearch;
-});
+export default binarySearch;

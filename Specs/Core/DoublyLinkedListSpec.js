@@ -1,8 +1,4 @@
-define([
-        'Core/DoublyLinkedList'
-    ], function(
-        DoublyLinkedList) {
-        'use strict';
+import { DoublyLinkedList } from '../../Source/Cesium.js';
 
 describe('Core/DoublyLinkedList', function() {
 
@@ -366,5 +362,4 @@ describe('Core/DoublyLinkedList', function() {
         list.splice(node, node3);
         expectOrder(list, [node, node3, node2, node4]);
     });
-});
 });

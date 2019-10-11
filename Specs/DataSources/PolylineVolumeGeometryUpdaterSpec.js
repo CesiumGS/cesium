@@ -1,38 +1,19 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/CornerType',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/ConstantProperty',
-        'DataSources/Entity',
-        'DataSources/PolylineVolumeGeometryUpdater',
-        'DataSources/PolylineVolumeGraphics',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
-        'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterSpecs',
-        'Specs/createScene'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        CornerType,
-        JulianDate,
-        TimeInterval,
-        TimeIntervalCollection,
-        ConstantProperty,
-        Entity,
-        PolylineVolumeGeometryUpdater,
-        PolylineVolumeGraphics,
-        TimeIntervalCollectionProperty,
-        PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
-        createDynamicProperty,
-        createGeometryUpdaterSpecs,
-        createScene) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CornerType } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { PolylineVolumeGeometryUpdater } from '../../Source/Cesium.js';
+import { PolylineVolumeGraphics } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createDynamicGeometryUpdaterSpecs from '../createDynamicGeometryUpdaterSpecs.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createGeometryUpdaterSpecs from '../createGeometryUpdaterSpecs.js';
+import createScene from '../createScene.js';
 
 describe('DataSources/PolylineVolumeGeometryUpdater', function() {
 
@@ -212,4 +193,3 @@ describe('DataSources/PolylineVolumeGeometryUpdater', function() {
 
     createDynamicGeometryUpdaterSpecs(PolylineVolumeGeometryUpdater, 'polylineVolume', createDynamicPolylineVolume, getScene);
 }, 'WebGL');
-});

@@ -1,12 +1,6 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        './ConstantProperty'
-    ], function(
-        defaultValue,
-        defined,
-        ConstantProperty) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import ConstantProperty from './ConstantProperty.js';
 
     function createProperty(name, privateName, subscriptionName, configurable, createPropertyCallback) {
         return {
@@ -56,6 +50,4 @@ define([
         //The two extra toString calls work around the issue.
         return createProperty(name, '_' + name.toString(), '_' + name.toString() + 'Subscription', defaultValue(configurable, false), defaultValue(createPropertyCallback, createConstantProperty));
     }
-
-    return createPropertyDescriptor;
-});
+export default createPropertyDescriptor;

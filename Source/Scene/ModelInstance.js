@@ -1,10 +1,5 @@
-define([
-        '../Core/defineProperties',
-        '../Core/Matrix4'
-    ], function(
-        defineProperties,
-        Matrix4) {
-    'use strict';
+import defineProperties from '../Core/defineProperties.js';
+import Matrix4 from '../Core/Matrix4.js';
 
     /**
      * @private
@@ -37,6 +32,4 @@ define([
             }
         }
     });
-
-    return ModelInstance;
-});
+export default ModelInstance;

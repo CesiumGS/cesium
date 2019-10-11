@@ -1,82 +1,40 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/CullingVolume',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/destroyObject',
-        '../Core/Ellipsoid',
-        '../Core/getMagic',
-        '../Core/Intersect',
-        '../Core/JulianDate',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
-        '../Core/OrthographicFrustum',
-        '../Core/Rectangle',
-        '../Core/Request',
-        '../Core/RequestScheduler',
-        '../Core/RequestState',
-        '../Core/RequestType',
-        '../Core/Resource',
-        '../Core/RuntimeError',
-        '../Core/Transforms',
-        '../ThirdParty/when',
-        './Cesium3DTileContentFactory',
-        './Cesium3DTileContentState',
-        './Cesium3DTileOptimizationHint',
-        './Cesium3DTilePass',
-        './Cesium3DTileRefine',
-        './Empty3DTileContent',
-        './SceneMode',
-        './TileBoundingRegion',
-        './TileBoundingSphere',
-        './TileOrientedBoundingBox'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        CullingVolume,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        destroyObject,
-        Ellipsoid,
-        getMagic,
-        Intersect,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        OrientedBoundingBox,
-        OrthographicFrustum,
-        Rectangle,
-        Request,
-        RequestScheduler,
-        RequestState,
-        RequestType,
-        Resource,
-        RuntimeError,
-        Transforms,
-        when,
-        Cesium3DTileContentFactory,
-        Cesium3DTileContentState,
-        Cesium3DTileOptimizationHint,
-        Cesium3DTilePass,
-        Cesium3DTileRefine,
-        Empty3DTileContent,
-        SceneMode,
-        TileBoundingRegion,
-        TileBoundingSphere,
-        TileOrientedBoundingBox) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import CullingVolume from '../Core/CullingVolume.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import deprecationWarning from '../Core/deprecationWarning.js';
+import destroyObject from '../Core/destroyObject.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import getMagic from '../Core/getMagic.js';
+import Intersect from '../Core/Intersect.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import Rectangle from '../Core/Rectangle.js';
+import Request from '../Core/Request.js';
+import RequestScheduler from '../Core/RequestScheduler.js';
+import RequestState from '../Core/RequestState.js';
+import RequestType from '../Core/RequestType.js';
+import Resource from '../Core/Resource.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import when from '../ThirdParty/when.js';
+import Cesium3DTileContentFactory from './Cesium3DTileContentFactory.js';
+import Cesium3DTileContentState from './Cesium3DTileContentState.js';
+import Cesium3DTileOptimizationHint from './Cesium3DTileOptimizationHint.js';
+import Cesium3DTilePass from './Cesium3DTilePass.js';
+import Cesium3DTileRefine from './Cesium3DTileRefine.js';
+import Empty3DTileContent from './Empty3DTileContent.js';
+import SceneMode from './SceneMode.js';
+import TileBoundingRegion from './TileBoundingRegion.js';
+import TileBoundingSphere from './TileBoundingSphere.js';
+import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
 
     /**
      * A tile in a {@link Cesium3DTileset}.  When a tile is first created, its content is not loaded;
@@ -1478,6 +1436,4 @@ define([
         this._debugViewerRequestVolume = this._debugViewerRequestVolume && this._debugViewerRequestVolume.destroy();
         return destroyObject(this);
     };
-
-    return Cesium3DTile;
-});
+export default Cesium3DTile;

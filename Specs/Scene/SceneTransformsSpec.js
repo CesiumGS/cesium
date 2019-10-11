@@ -1,26 +1,13 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/OrthographicFrustum',
-        'Core/Rectangle',
-        'Scene/Camera',
-        'Scene/SceneMode',
-        'Scene/SceneTransforms',
-        'Specs/createScene'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        OrthographicFrustum,
-        Rectangle,
-        Camera,
-        SceneMode,
-        SceneTransforms,
-        createScene) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { OrthographicFrustum } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { SceneTransforms } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/SceneTransforms', function() {
 
@@ -242,4 +229,3 @@ describe('Scene/SceneTransforms', function() {
         scene.destroyForSpecs();
     });
 }, 'WebGL');
-});

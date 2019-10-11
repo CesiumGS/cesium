@@ -1,18 +1,9 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/EventHelper',
-        './Property'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        EventHelper,
-        Property) {
-    'use strict';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import EventHelper from '../Core/EventHelper.js';
+import Property from './Property.js';
 
     /**
      * A {@link Property} whose value is an array whose items are the computed value
@@ -148,6 +139,4 @@ define([
     PropertyArray.prototype._raiseDefinitionChanged = function() {
         this._definitionChanged.raiseEvent(this);
     };
-
-    return PropertyArray;
-});
+export default PropertyArray;

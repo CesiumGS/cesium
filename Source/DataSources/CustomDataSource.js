@@ -1,20 +1,10 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './DataSource',
-        './EntityCluster',
-        './EntityCollection'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        DataSource,
-        EntityCluster,
-        EntityCollection) {
-    'use strict';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import DataSource from './DataSource.js';
+import EntityCluster from './EntityCluster.js';
+import EntityCollection from './EntityCollection.js';
 
     /**
      * A {@link DataSource} implementation which can be used to manually manage a group of entities.
@@ -167,6 +157,4 @@ define([
             }
         }
     });
-
-    return CustomDataSource;
-});
+export default CustomDataSource;

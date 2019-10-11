@@ -1,20 +1,10 @@
-define([
-        '../Core/Check',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/loadCRN',
-        '../Core/loadKTX',
-        '../Core/Resource'
-    ], function(
-        Check,
-        defined,
-        defineProperties,
-        DeveloperError,
-        loadCRN,
-        loadKTX,
-        Resource) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import loadCRN from '../Core/loadCRN.js';
+import loadKTX from '../Core/loadKTX.js';
+import Resource from '../Core/Resource.js';
 
     /**
      * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an
@@ -357,6 +347,4 @@ define([
             flipY : true
         });
     };
-
-    return ImageryProvider;
-});
+export default ImageryProvider;

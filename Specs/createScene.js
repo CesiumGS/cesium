@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian2',
-        'Core/clone',
-        'Core/defaultValue',
-        'Core/defined',
-        'Scene/Scene',
-        'Specs/createCanvas',
-        'Specs/getWebGLStub'
-    ], function(
-        Cartesian2,
-        clone,
-        defaultValue,
-        defined,
-        Scene,
-        createCanvas,
-        getWebGLStub) {
-    'use strict';
+import { Cartesian2 } from '../Source/Cesium.js';
+import { clone } from '../Source/Cesium.js';
+import { defaultValue } from '../Source/Cesium.js';
+import { defined } from '../Source/Cesium.js';
+import { Scene } from '../Source/Cesium.js';
+import createCanvas from './createCanvas.js';
+import getWebGLStub from './getWebGLStub.js';
 
     function createScene(options) {
         options = defaultValue(options, {});
@@ -67,6 +57,4 @@ define([
 
         return scene;
     }
-
-    return createScene;
-});
+export default createScene;

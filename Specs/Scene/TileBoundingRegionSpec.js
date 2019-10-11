@@ -1,32 +1,16 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Color',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/Intersect',
-        'Core/Math',
-        'Core/Plane',
-        'Core/Rectangle',
-        'Scene/SceneMode',
-        'Scene/TileBoundingRegion',
-        'Specs/createFrameState'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Color,
-        Ellipsoid,
-        GeographicTilingScheme,
-        Intersect,
-        CesiumMath,
-        Plane,
-        Rectangle,
-        SceneMode,
-        TileBoundingRegion,
-        createFrameState) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Plane } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { TileBoundingRegion } from '../../Source/Cesium.js';
+import createFrameState from '../createFrameState.js';
 
 describe('Scene/TileBoundingRegion', function() {
 
@@ -220,5 +204,4 @@ describe('Scene/TileBoundingRegion', function() {
         var plane = new Plane(normal, -distanceFromCenter);
         expect(tileBoundingRegion.intersectPlane(plane)).toEqual(Intersect.INTERSECTING);
     });
-});
 });

@@ -1,28 +1,14 @@
-define([
-        '../Core/ArcType',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/GeometryInstance',
-        '../Core/Matrix4',
-        '../Core/PolylineGeometry',
-        './PolylineColorAppearance',
-        './Primitive'
-    ], function(
-        ArcType,
-        Cartesian3,
-        Color,
-        defaultValue,
-        defined,
-        destroyObject,
-        GeometryInstance,
-        Matrix4,
-        PolylineGeometry,
-        PolylineColorAppearance,
-        Primitive) {
-    'use strict';
+import ArcType from '../Core/ArcType.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PolylineGeometry from '../Core/PolylineGeometry.js';
+import PolylineColorAppearance from './PolylineColorAppearance.js';
+import Primitive from './Primitive.js';
 
     /**
      * Draws the axes of a reference frame defined by a matrix that transforms to world
@@ -232,6 +218,4 @@ define([
         this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
-
-    return DebugModelMatrixPrimitive;
-});
+export default DebugModelMatrixPrimitive;

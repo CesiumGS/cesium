@@ -1,24 +1,12 @@
-define([
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/GeometryInstance',
-        '../Core/GeometryPipeline',
-        '../Core/Matrix4',
-        './PerInstanceColorAppearance',
-        './Primitive'
-    ], function(
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        defined,
-        DeveloperError,
-        GeometryInstance,
-        GeometryPipeline,
-        Matrix4,
-        PerInstanceColorAppearance,
-        Primitive) {
-    'use strict';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import GeometryPipeline from '../Core/GeometryPipeline.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Primitive from './Primitive.js';
 
     /**
      * Creates a {@link Primitive} to visualize well-known vector vertex attributes:
@@ -105,6 +93,4 @@ define([
 
         return undefined;
     }
-
-    return createTangentSpaceDebugPrimitive;
-});
+export default createTangentSpaceDebugPrimitive;

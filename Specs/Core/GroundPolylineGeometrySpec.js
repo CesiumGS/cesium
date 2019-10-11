@@ -1,28 +1,14 @@
-define([
-        'Core/ApproximateTerrainHeights',
-        'Core/ArcType',
-        'Core/arraySlice',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/GroundPolylineGeometry',
-        'Core/Math',
-        'Core/WebMercatorProjection',
-        'Specs/createPackableSpecs'
-    ], function(
-        ApproximateTerrainHeights,
-        ArcType,
-        arraySlice,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        GeographicProjection,
-        GroundPolylineGeometry,
-        CesiumMath,
-        WebMercatorProjection,
-        createPackableSpecs) {
-        'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { ArcType } from '../../Source/Cesium.js';
+import { arraySlice } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { GroundPolylineGeometry } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/GroundPolylineGeometry', function() {
 
@@ -654,5 +640,4 @@ describe('Core/GroundPolylineGeometry', function() {
     packedInstance.push(0.0); // scene3DModeOnly = false
 
     createPackableSpecs(GroundPolylineGeometry, polyline, packedInstance);
-});
 });

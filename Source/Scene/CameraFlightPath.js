@@ -1,28 +1,14 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/DeveloperError',
-        '../Core/EasingFunction',
-        '../Core/Math',
-        '../Core/PerspectiveFrustum',
-        '../Core/PerspectiveOffCenterFrustum',
-        './SceneMode'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        DeveloperError,
-        EasingFunction,
-        CesiumMath,
-        PerspectiveFrustum,
-        PerspectiveOffCenterFrustum,
-        SceneMode) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import EasingFunction from '../Core/EasingFunction.js';
+import CesiumMath from '../Core/Math.js';
+import PerspectiveFrustum from '../Core/PerspectiveFrustum.js';
+import PerspectiveOffCenterFrustum from '../Core/PerspectiveOffCenterFrustum.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * Creates tweens for camera flights.
@@ -438,6 +424,4 @@ define([
             cancel: cancel
         };
     };
-
-    return CameraFlightPath;
-});
+export default CameraFlightPath;

@@ -1,10 +1,5 @@
-define([
-        '../Core/freezeObject',
-        '../Core/WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
      * Determines how two pixels' values are combined.
@@ -56,6 +51,4 @@ define([
          */
         MAX : WebGLConstants.MAX
     };
-
-    return freezeObject(BlendEquation);
-});
+export default freezeObject(BlendEquation);

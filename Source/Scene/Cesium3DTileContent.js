@@ -1,10 +1,5 @@
-define([
-        '../Core/defineProperties',
-        '../Core/DeveloperError'
-    ], function(
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * The content of a tile in a {@link Cesium3DTileset}.
@@ -341,6 +336,4 @@ define([
     Cesium3DTileContent.prototype.destroy = function() {
         DeveloperError.throwInstantiationError();
     };
-
-    return Cesium3DTileContent;
-});
+export default Cesium3DTileContent;

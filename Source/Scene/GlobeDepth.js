@@ -1,48 +1,23 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Renderer/ClearCommand',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/Sampler',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        '../Shaders/PostProcessStages/DepthViewPacked',
-        '../Shaders/PostProcessStages/PassThrough',
-        '../Shaders/PostProcessStages/PassThroughDepth',
-        './StencilConstants',
-        './StencilFunction',
-        './StencilOperation'
-    ], function(
-        BoundingRectangle,
-        Color,
-        defined,
-        destroyObject,
-        PixelFormat,
-        ClearCommand,
-        Framebuffer,
-        PixelDatatype,
-        RenderState,
-        Sampler,
-        ShaderSource,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        DepthViewPacked,
-        PassThrough,
-        PassThroughDepth,
-        StencilConstants,
-        StencilFunction,
-        StencilOperation) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import ClearCommand from '../Renderer/ClearCommand.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import Sampler from '../Renderer/Sampler.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import PassThrough from '../Shaders/PostProcessStages/PassThrough.js';
+import PassThroughDepth from '../Shaders/PostProcessStages/PassThroughDepth.js';
+import StencilConstants from './StencilConstants.js';
+import StencilFunction from './StencilFunction.js';
+import StencilOperation from './StencilOperation.js';
 
     /**
      * @private
@@ -421,6 +396,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return GlobeDepth;
-});
+export default GlobeDepth;

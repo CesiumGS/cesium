@@ -1,5 +1,3 @@
-define([], function() {
-    'use strict';
 
     /**
      * @private
@@ -14,6 +12,4 @@ define([], function() {
         SOUTHWEST: 6,
         SOUTHEAST: 7
     };
-
-    return TileEdge;
-});
+export default TileEdge;

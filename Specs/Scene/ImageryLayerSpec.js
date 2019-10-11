@@ -1,52 +1,26 @@
-define([
-        'Core/EllipsoidTerrainProvider',
-        'Core/Rectangle',
-        'Core/Request',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Renderer/ComputeEngine',
-        'Renderer/TextureMagnificationFilter',
-        'Renderer/TextureMinificationFilter',
-        'Scene/ArcGisMapServerImageryProvider',
-        'Scene/BingMapsImageryProvider',
-        'Scene/TileMapServiceImageryProvider',
-        'Scene/GlobeSurfaceTile',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryLayerCollection',
-        'Scene/ImageryState',
-        'Scene/NeverTileDiscardPolicy',
-        'Scene/QuadtreeTile',
-        'Scene/SingleTileImageryProvider',
-        'Scene/UrlTemplateImageryProvider',
-        'Scene/WebMapServiceImageryProvider',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        EllipsoidTerrainProvider,
-        Rectangle,
-        Request,
-        RequestScheduler,
-        Resource,
-        ComputeEngine,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        ArcGisMapServerImageryProvider,
-        BingMapsImageryProvider,
-        TileMapServiceImageryProvider,
-        GlobeSurfaceTile,
-        Imagery,
-        ImageryLayer,
-        ImageryLayerCollection,
-        ImageryState,
-        NeverTileDiscardPolicy,
-        QuadtreeTile,
-        SingleTileImageryProvider,
-        UrlTemplateImageryProvider,
-        WebMapServiceImageryProvider,
-        createScene,
-        pollToPromise) {
-        'use strict';
+import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { ComputeEngine } from '../../Source/Cesium.js';
+import { TextureMagnificationFilter } from '../../Source/Cesium.js';
+import { TextureMinificationFilter } from '../../Source/Cesium.js';
+import { ArcGisMapServerImageryProvider } from '../../Source/Cesium.js';
+import { BingMapsImageryProvider } from '../../Source/Cesium.js';
+import { TileMapServiceImageryProvider } from '../../Source/Cesium.js';
+import { GlobeSurfaceTile } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { NeverTileDiscardPolicy } from '../../Source/Cesium.js';
+import { QuadtreeTile } from '../../Source/Cesium.js';
+import { SingleTileImageryProvider } from '../../Source/Cesium.js';
+import { UrlTemplateImageryProvider } from '../../Source/Cesium.js';
+import { WebMapServiceImageryProvider } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/ImageryLayer', function() {
 
@@ -719,4 +693,3 @@ describe('Scene/ImageryLayer', function() {
         });
     });
 }, 'WebGL');
-});

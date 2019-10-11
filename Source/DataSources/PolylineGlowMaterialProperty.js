@@ -1,20 +1,10 @@
-define([
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        './createPropertyDescriptor',
-        './Property'
-    ], function(
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        Event,
-        createPropertyDescriptor,
-        Property) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Event from '../Core/Event.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
+import Property from './Property.js';
 
     var defaultColor = Color.WHITE;
     var defaultGlowPower = 0.25;
@@ -135,6 +125,4 @@ define([
                 Property.equals(this._glowPower, other._glowPower) &&
                 Property.equals(this._taperPower, other._taperPower));
     };
-
-    return PolylineGlowMaterialProperty;
-});
+export default PolylineGlowMaterialProperty;

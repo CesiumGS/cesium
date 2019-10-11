@@ -1,5 +1,4 @@
-define(['./quickselect'], function(quickselect) {
-'use strict';
+import quickselect from './quickselect.js';
 
 function rbush(maxEntries, format) {
     if (!(this instanceof rbush)) return new rbush(maxEntries, format);
@@ -557,5 +556,4 @@ function multiSelect(arr, left, right, n, compare) {
     }
 }
 
-return rbush;
-});
+export default rbush;

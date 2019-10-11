@@ -1,16 +1,8 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/Math'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defineProperties,
-        CesiumMath) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defineProperties from '../Core/defineProperties.js';
+import CesiumMath from '../Core/Math.js';
 
     /**
      * A ParticleEmitter that emits particles from a circle.
@@ -68,6 +60,4 @@ define([
         particle.position = Cartesian3.fromElements(x, y, z, particle.position);
         particle.velocity = Cartesian3.clone(Cartesian3.UNIT_Z, particle.velocity);
     };
-
-    return CircleEmitter;
-});
+export default CircleEmitter;

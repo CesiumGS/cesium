@@ -1,24 +1,12 @@
-define([
-        './Cartesian3',
-        './Cartesian4',
-        './CullingVolume',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Math',
-        './Matrix4'
-    ], function(
-        Cartesian3,
-        Cartesian4,
-        CullingVolume,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        CesiumMath,
-        Matrix4) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartesian4 from './Cartesian4.js';
+import CullingVolume from './CullingVolume.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
+import Matrix4 from './Matrix4.js';
 
     /**
      * The viewing frustum is defined by 6 planes.
@@ -393,6 +381,4 @@ define([
                 CesiumMath.equalsEpsilon(this.near, other.near, relativeEpsilon, absoluteEpsilon) &&
                 CesiumMath.equalsEpsilon(this.far, other.far, relativeEpsilon, absoluteEpsilon));
     };
-
-    return OrthographicOffCenterFrustum;
-});
+export default OrthographicOffCenterFrustum;

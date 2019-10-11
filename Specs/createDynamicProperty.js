@@ -1,12 +1,7 @@
-define([
-        'Core/defineProperties',
-        'DataSources/ConstantProperty'
-    ], function(
-        defineProperties,
-        ConstantProperty) {
-    'use strict';
+import { defineProperties } from '../Source/Cesium.js';
+import { ConstantProperty } from '../Source/Cesium.js';
 
-    return function(value) {
+    function createDynamicProperty(value) {
         var property = new ConstantProperty(value);
         defineProperties(property, {
             isConstant : {
@@ -14,5 +9,5 @@ define([
             }
         });
         return property;
-    };
-});
+    }
+export default createDynamicProperty;

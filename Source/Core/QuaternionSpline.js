@@ -1,18 +1,9 @@
-define([
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Quaternion',
-        './Spline'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Quaternion,
-        Spline) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Quaternion from './Quaternion.js';
+import Spline from './Spline.js';
 
     function createEvaluateFunction(spline) {
         var points = spline.points;
@@ -154,6 +145,4 @@ define([
     QuaternionSpline.prototype.evaluate = function(time, result) {
         return this._evaluateFunction(time, result);
     };
-
-    return QuaternionSpline;
-});
+export default QuaternionSpline;

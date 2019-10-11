@@ -1,8 +1,4 @@
-define([
-        'Widgets/NavigationHelpButton/NavigationHelpButtonViewModel'
-    ], function(
-        NavigationHelpButtonViewModel) {
-        'use strict';
+import { NavigationHelpButtonViewModel } from '../../../Source/Cesium.js';
 
 describe('Widgets/NavigationHelpButton/NavigationHelpButtonViewModel', function() {
 
@@ -21,5 +17,4 @@ describe('Widgets/NavigationHelpButton/NavigationHelpButtonViewModel', function(
         viewModel.command();
         expect(viewModel.showInstructions).toBe(false);
     });
-});
 });

@@ -1,8 +1,4 @@
-define([
-        'Scene/StyleExpression'
-    ], function(
-        StyleExpression) {
-        'use strict';
+import { StyleExpression } from '../../Source/Cesium.js';
 
 describe('Scene/StyleExpression', function() {
 
@@ -25,5 +21,4 @@ describe('Scene/StyleExpression', function() {
             return expression.evaluateColor(feature);
         }).toThrowDeveloperError();
     });
-});
 });

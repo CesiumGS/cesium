@@ -1,20 +1,10 @@
-define([
-        './Cartesian3',
-        './Cartesian4',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Intersect',
-        './Plane'
-    ], function(
-        Cartesian3,
-        Cartesian4,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Intersect,
-        Plane) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartesian4 from './Cartesian4.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Intersect from './Intersect.js';
+import Plane from './Plane.js';
 
     /**
      * The culling volume defined by planes.
@@ -211,6 +201,4 @@ define([
      * @private
      */
     CullingVolume.MASK_INDETERMINATE = 0x7fffffff;
-
-    return CullingVolume;
-});
+export default CullingVolume;

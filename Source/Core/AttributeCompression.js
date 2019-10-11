@@ -1,18 +1,9 @@
-define([
-        './Cartesian2',
-        './Cartesian3',
-        './Check',
-        './defined',
-        './DeveloperError',
-        './Math'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Check,
-        defined,
-        DeveloperError,
-        CesiumMath) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     var RIGHT_SHIFT = 1.0 / 256.0;
     var LEFT_SHIFT = 256.0;
@@ -379,6 +370,4 @@ define([
             }
         }
     };
-
-    return AttributeCompression;
-});
+export default AttributeCompression;

@@ -1,10 +1,5 @@
-define([
-        '../Core/deprecationWarning',
-        './OpenStreetMapImageryProvider'
-    ], function(
-        deprecationWarning,
-        OpenStreetMapImageryProvider) {
-    'use strict';
+import deprecationWarning from '../Core/deprecationWarning.js';
+import OpenStreetMapImageryProvider from './OpenStreetMapImageryProvider.js';
 
     /**
      * Creates a {@link UrlTemplateImageryProvider} instance that provides tiled imagery hosted by OpenStreetMap
@@ -51,6 +46,4 @@ define([
 
         return new OpenStreetMapImageryProvider(options);
     }
-
-    return createOpenStreetMapImageryProvider;
-});
+export default createOpenStreetMapImageryProvider;

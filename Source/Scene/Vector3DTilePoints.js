@@ -1,46 +1,23 @@
-define([
-        '../Core/arraySlice',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DistanceDisplayCondition',
-        '../Core/Ellipsoid',
-        '../Core/NearFarScalar',
-        '../Core/Rectangle',
-        '../Core/TaskProcessor',
-        '../ThirdParty/when',
-        './BillboardCollection',
-        './Cesium3DTilePointFeature',
-        './HorizontalOrigin',
-        './LabelCollection',
-        './LabelStyle',
-        './PolylineCollection',
-        './VerticalOrigin'
-    ], function(
-        arraySlice,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defined,
-        defineProperties,
-        destroyObject,
-        DistanceDisplayCondition,
-        Ellipsoid,
-        NearFarScalar,
-        Rectangle,
-        TaskProcessor,
-        when,
-        BillboardCollection,
-        Cesium3DTilePointFeature,
-        HorizontalOrigin,
-        LabelCollection,
-        LabelStyle,
-        PolylineCollection,
-        VerticalOrigin) {
-    'use strict';
+import arraySlice from '../Core/arraySlice.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import NearFarScalar from '../Core/NearFarScalar.js';
+import Rectangle from '../Core/Rectangle.js';
+import TaskProcessor from '../Core/TaskProcessor.js';
+import when from '../ThirdParty/when.js';
+import BillboardCollection from './BillboardCollection.js';
+import Cesium3DTilePointFeature from './Cesium3DTilePointFeature.js';
+import HorizontalOrigin from './HorizontalOrigin.js';
+import LabelCollection from './LabelCollection.js';
+import LabelStyle from './LabelStyle.js';
+import PolylineCollection from './PolylineCollection.js';
+import VerticalOrigin from './VerticalOrigin.js';
 
     /**
      * Creates a batch of points or billboards and labels.
@@ -503,6 +480,4 @@ define([
         this._polylineCollection = this._polylineCollection && this._polylineCollection.destroy();
         return destroyObject(this);
     };
-
-    return Vector3DTilePoints;
-});
+export default Vector3DTilePoints;

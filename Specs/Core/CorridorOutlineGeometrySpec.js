@@ -1,20 +1,10 @@
-define([
-        'Core/arrayFill',
-        'Core/Cartesian3',
-        'Core/CornerType',
-        'Core/CorridorOutlineGeometry',
-        'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
-        'Specs/createPackableSpecs'
-    ], function(
-        arrayFill,
-        Cartesian3,
-        CornerType,
-        CorridorOutlineGeometry,
-        Ellipsoid,
-        GeometryOffsetAttribute,
-        createPackableSpecs) {
-        'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CornerType } from '../../Source/Cesium.js';
+import { CorridorOutlineGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/CorridorOutlineGeometry', function() {
 
@@ -249,5 +239,4 @@ describe('Core/CorridorOutlineGeometry', function() {
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(30000.0, 0.0, 0.0, 2.0, 0.1, -1);
     createPackableSpecs(CorridorOutlineGeometry, corridor, packedInstance);
-});
 });

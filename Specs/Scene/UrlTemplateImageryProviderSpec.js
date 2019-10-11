@@ -1,40 +1,20 @@
-define([
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/Request',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorProjection',
-        'Core/WebMercatorTilingScheme',
-        'Scene/GetFeatureInfoFormat',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Scene/UrlTemplateImageryProvider',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        Ellipsoid,
-        GeographicTilingScheme,
-        CesiumMath,
-        Rectangle,
-        Request,
-        RequestScheduler,
-        Resource,
-        WebMercatorProjection,
-        WebMercatorTilingScheme,
-        GetFeatureInfoFormat,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        UrlTemplateImageryProvider,
-        pollToPromise,
-        when) {
-        'use strict';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { GetFeatureInfoFormat } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { UrlTemplateImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/UrlTemplateImageryProvider', function() {
 
@@ -808,5 +788,4 @@ describe('Scene/UrlTemplateImageryProvider', function() {
             return provider.pickFeatures();
         }).toThrowDeveloperError();
     });
-});
 });

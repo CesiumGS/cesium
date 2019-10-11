@@ -1,8 +1,4 @@
-define([
-        'Core/Event'
-    ], function(
-        Event) {
-        'use strict';
+import { Event } from '../../Source/Cesium.js';
 
 describe('Core/Event', function() {
 
@@ -222,5 +218,4 @@ describe('Core/Event', function() {
             event.removeEventListener(null);
         }).toThrowDeveloperError();
     });
-});
 });

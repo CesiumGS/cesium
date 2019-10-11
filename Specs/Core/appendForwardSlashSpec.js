@@ -1,8 +1,4 @@
-define([
-        'Core/appendForwardSlash'
-    ], function(
-        appendForwardSlash) {
-        'use strict';
+import { appendForwardSlash } from '../../Source/Cesium.js';
 
 describe('Core/appendForwardSlash', function() {
 
@@ -17,5 +13,4 @@ describe('Core/appendForwardSlash', function() {
     it('Appends to an empty string', function() {
         expect(appendForwardSlash('')).toEqual('/');
     });
-});
 });

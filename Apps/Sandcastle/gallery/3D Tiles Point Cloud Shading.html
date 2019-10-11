@@ -8,15 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="3D Tiles">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -98,7 +91,7 @@ var scene = viewer.scene;
 var viewModelTileset;
 
 if (!Cesium.PointCloudShading.isSupported(scene)) {
-    console.log('This browser does not support point cloud shading');
+    window.alert('This browser does not support point cloud shading');
 }
 
 function reset() {
@@ -265,9 +258,8 @@ Sandcastle.addToggleButton('Enable Eye Dome Lighting', true, function(checked) {
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

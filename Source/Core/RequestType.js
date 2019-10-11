@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * An enum identifying the type of request. Used for finer grained logging and priority sorting.
@@ -42,6 +38,4 @@ define([
          */
         OTHER : 3
     };
-
-    return freezeObject(RequestType);
-});
+export default freezeObject(RequestType);

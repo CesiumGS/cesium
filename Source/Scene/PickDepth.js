@@ -1,24 +1,12 @@
-define([
-        '../Core/Cartesian4',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/PixelFormat',
-        '../Renderer/Framebuffer',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture'
-    ], function(
-        Cartesian4,
-        defined,
-        destroyObject,
-        PixelFormat,
-        Framebuffer,
-        PixelDatatype,
-        RenderState,
-        ShaderSource,
-        Texture) {
-    'use strict';
+import Cartesian4 from '../Core/Cartesian4.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Framebuffer from '../Renderer/Framebuffer.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
 
     /**
      * @private
@@ -178,6 +166,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return PickDepth;
-});
+export default PickDepth;

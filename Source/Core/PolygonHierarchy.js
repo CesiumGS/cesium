@@ -1,8 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from './defined.js';
 
     /**
      * An hierarchy of linear rings which define a polygon and its holes.
@@ -26,6 +22,4 @@ define([
          */
         this.holes = defined(holes) ? holes : [];
     }
-
-    return PolygonHierarchy;
-});
+export default PolygonHierarchy;

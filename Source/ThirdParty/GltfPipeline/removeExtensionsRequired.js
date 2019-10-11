@@ -1,8 +1,4 @@
-define([
-        '../../Core/defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from '../../Core/defined.js'
 
     /**
      * Removes an extension from gltf.extensionsRequired if it is present.
@@ -25,5 +21,4 @@ define([
         }
     }
 
-    return removeExtensionsRequired;
-});
+    export default removeExtensionsRequired;

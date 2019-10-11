@@ -13,8 +13,6 @@
  * @version 1.7.1
  */
 
-(function(define) { 'use strict';
-define(function () {
 	var reduceArray, slice, undef;
 
 	//
@@ -736,13 +734,4 @@ define(function () {
 		return x;
 	}
 
-	return when;
-});
-})(typeof define == 'function' && define.amd
-	? define
-	: function (factory) { typeof exports === 'object'
-		? (module.exports = factory())
-		: (this.when      = factory());
-	}
-	// Boilerplate for AMD, Node, and browser global
-);
+export default when;

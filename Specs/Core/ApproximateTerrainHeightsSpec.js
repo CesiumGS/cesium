@@ -1,14 +1,7 @@
-define([
-        'Core/ApproximateTerrainHeights',
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/Rectangle'
-    ], function(
-        ApproximateTerrainHeights,
-        Cartesian3,
-        CesiumMath,
-        Rectangle) {
-        'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
 
 describe('Core/ApproximateTerrainHeights', function() {
 
@@ -69,5 +62,4 @@ describe('Core/ApproximateTerrainHeights', function() {
         });
         ApproximateTerrainHeights._terrainHeights = heights;
     });
-});
 });

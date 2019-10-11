@@ -1,12 +1,6 @@
-define([
-        'Core/Cartesian3',
-        'Core/HermiteSpline',
-        'Core/Spline'
-    ], function(
-        Cartesian3,
-        HermiteSpline,
-        Spline) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { HermiteSpline } from '../../Source/Cesium.js';
+import { Spline } from '../../Source/Cesium.js';
 
 describe('Core/Spline', function() {
 
@@ -101,5 +95,4 @@ describe('Core/Spline', function() {
         // jump far back
         expect(spline.findTimeInterval(times[0], times.length - 1)).toEqual(0);
     });
-});
 });

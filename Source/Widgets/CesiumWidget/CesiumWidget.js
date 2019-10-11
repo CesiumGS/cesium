@@ -1,52 +1,26 @@
-define([
-        '../../Core/buildModuleUrl',
-        '../../Core/Cartesian3',
-        '../../Core/Clock',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/Ellipsoid',
-        '../../Core/FeatureDetection',
-        '../../Core/formatError',
-        '../../Core/requestAnimationFrame',
-        '../../Core/ScreenSpaceEventHandler',
-        '../../Scene/createWorldImagery',
-        '../../Scene/Globe',
-        '../../Scene/Moon',
-        '../../Scene/Scene',
-        '../../Scene/SceneMode',
-        '../../Scene/ShadowMode',
-        '../../Scene/SkyAtmosphere',
-        '../../Scene/SkyBox',
-        '../../Scene/Sun',
-        '../getElement'
-    ], function(
-        buildModuleUrl,
-        Cartesian3,
-        Clock,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Ellipsoid,
-        FeatureDetection,
-        formatError,
-        requestAnimationFrame,
-        ScreenSpaceEventHandler,
-        createWorldImagery,
-        Globe,
-        Moon,
-        Scene,
-        SceneMode,
-        ShadowMode,
-        SkyAtmosphere,
-        SkyBox,
-        Sun,
-        getElement) {
-    'use strict';
+import buildModuleUrl from '../../Core/buildModuleUrl.js';
+import Cartesian3 from '../../Core/Cartesian3.js';
+import Clock from '../../Core/Clock.js';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import Ellipsoid from '../../Core/Ellipsoid.js';
+import FeatureDetection from '../../Core/FeatureDetection.js';
+import formatError from '../../Core/formatError.js';
+import requestAnimationFrame from '../../Core/requestAnimationFrame.js';
+import ScreenSpaceEventHandler from '../../Core/ScreenSpaceEventHandler.js';
+import createWorldImagery from '../../Scene/createWorldImagery.js';
+import Globe from '../../Scene/Globe.js';
+import Moon from '../../Scene/Moon.js';
+import Scene from '../../Scene/Scene.js';
+import SceneMode from '../../Scene/SceneMode.js';
+import ShadowMode from '../../Scene/ShadowMode.js';
+import SkyAtmosphere from '../../Scene/SkyAtmosphere.js';
+import SkyBox from '../../Scene/SkyBox.js';
+import Sun from '../../Scene/Sun.js';
+import getElement from '../getElement.js';
 
     function getDefaultSkyBoxUrl(suffix) {
         return buildModuleUrl('Assets/Textures/SkyBox/tycho2t3_80_' + suffix + '.jpg');
@@ -111,8 +85,8 @@ define([
         var height = canvas.clientHeight;
         var pixelRatio = configurePixelRatio(widget);
 
-        widget._canvasWidth = width;
-        widget._canvasHeight = height;
+        widget._canvasClientWidth = width;
+        widget._canvasClientHeight = height;
 
         width *= pixelRatio;
         height *= pixelRatio;
@@ -249,8 +223,8 @@ define([
         this._element = element;
         this._container = container;
         this._canvas = canvas;
-        this._canvasWidth = 0;
-        this._canvasHeight = 0;
+        this._canvasClientWidth = 0;
+        this._canvasClientHeight = 0;
         this._lastDevicePixelRatio = 0;
         this._creditViewport = creditViewport;
         this._creditContainer = creditContainer;
@@ -710,9 +684,7 @@ define([
      */
     CesiumWidget.prototype.resize = function() {
         var canvas = this._canvas;
-        var width = canvas.clientWidth;
-        var height = canvas.clientHeight;
-        if (!this._forceResize && this._canvasWidth === width && this._canvasHeight === height && this._lastDevicePixelRatio === window.devicePixelRatio) {
+        if (!this._forceResize && this._canvasClientWidth === canvas.clientWidth && this._canvasClientHeight === canvas.clientHeight && this._lastDevicePixelRatio === window.devicePixelRatio) {
             return;
         }
         this._forceResize = false;
@@ -736,6 +708,4 @@ define([
             this._clock.tick();
         }
     };
-
-    return CesiumWidget;
-});
+export default CesiumWidget;
