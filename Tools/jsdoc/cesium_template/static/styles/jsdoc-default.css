@@ -576,6 +576,7 @@ dd { margin-left: 10px; }
 
 span.attribute-static,
 span.attribute-readonly,
+span.attribute-deprecated,
 span.attribute-constant {
   display: inline-block;
   border-radius: 3px;
@@ -587,6 +588,10 @@ span.attribute-constant {
   margin-bottom: 1px;
   position: relative;
   top: -1px;
+}
+
+span.attribute-deprecated {
+    background-color: #950B02 !important;
 }
 
 .description {
