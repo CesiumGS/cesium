@@ -652,6 +652,7 @@ define([
         var levelEllipsoid = this._levelEllipsoid;
         var length = levelEllipsoid.length;
         var indices, k, planeNormal, planeDistance;
+        var yIdxOffset, xIdxOffset, zIdxOffset;
         for (k = 0; k < length; k++) {
             indices = levelEllipsoid[k];
             if (indices.x < 0) {
@@ -664,6 +665,10 @@ define([
                 planeDistance = localPlane.distance;
                 // Given the plane normal's signs, determine which corner we care about for distance checks
                 // This can simply be a LUT for index modification
+                // TODO: make sure z is up
+                xIdxOffset = planeNormal.x >= 0 ? 0 : 1;
+                yIdxOffset = planeNormal.y >= 0 ? 0 : 1;
+                zIdxOffset = planeNormal.z >= 0 ? 0 : 1;
 
                 // Get the distances for both corners
                 // End corners are both outside, set .x to neg .x
