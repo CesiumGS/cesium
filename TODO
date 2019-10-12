@@ -24,7 +24,7 @@ of the subtree
        1) get the planes in terms of bottom left corner of octree.
        2) each level edits the distance from origin by multiplying by invTileDims
           they also edit the normal by doing the same and renormalizing.
-          yes, planes point outside frustum
+          normals point outside frustum
        3) simplest thing from here is find which corner to test from the plane normal
        then loop through indices testing the "corners" by modifying the index by
        making .x neg or cipping the min or max for each plane
@@ -39,6 +39,7 @@ of the subtree
       for the given level (probably some pow2 manip as usual).
     * another version of per-frame dynamic ellipsoid generation could be more sphere-like.
     * for the fixed version, have a spill over array for these extra spine bones
+        with a managed array you could reserve for worst case and add them to main collection
 
     Maybe (too optimized for now):
     * use the min max indices per level to find a set of subtrees
