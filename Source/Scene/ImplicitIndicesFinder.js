@@ -471,7 +471,7 @@ define([
     };
 
     // TODO: REMOVE
-    ImplicitIndicesFinder.prototype.updateLevelEllipsoidDynamicOct = function(level) {
+    ImplicitIndicesFinder.prototype.updateLevelEllipsoidDynamicOct = function(level, planes) {
         var centerTilePositionOnLevel = this._centerTilePositions[level];
         // Camera center position in grid
         var cx = centerTilePositionOnLevel.x;
@@ -555,20 +555,48 @@ define([
             }
         }
 
-        // Convert to indices by flooring
-        var length = levelEllipsoid.length;
-        var indices;
-        for (x = 0; x < length; x++) {
-            indices = levelEllipsoid[x];
-            indices.x = Math.floor(indices.x);
-            indices.y = Math.floor(indices.y);
-            indices.z = Math.floor(indices.z);
-            indices.w = Math.floor(indices.w);
-        }
+        this.floorIndices();
 
         this.clipIndicesToTree(level);
 
+        this.clipIndicesOutsidePlanes(planes);
+
         return levelEllipsoid;
+    };
+
+    /**
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.clipIndicesOutsidePlanes = function(planes) {
+    };
+
+    /**
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.floorIndices = function() {
+        // Convert to indices by flooring
+        var levelEllipsoid = this._levelEllipsoid;
+        var length = levelEllipsoid.length;
+        var indices;
+        var i;
+        if (this._tileset._isOct) {
+            for (i = 0; i < length; i++) {
+                indices = levelEllipsoid[i];
+                indices.x = Math.floor(indices.x);
+                indices.y = Math.floor(indices.y);
+                indices.z = Math.floor(indices.z);
+                indices.w = Math.floor(indices.w);
+            }
+        } else {
+            for (i = 0; i < length; i++) {
+                indices = levelEllipsoid[i];
+                indices.x = Math.floor(indices.x);
+                indices.y = Math.floor(indices.y);
+                indices.z = Math.floor(indices.z);
+            }
+        }
     };
 
     /**
@@ -581,18 +609,31 @@ define([
         var levelEllipsoid = this._levelEllipsoid;
         var lastIndices = this._lastIndices[level];
         var length = levelEllipsoid.length;
-        var indices, x;
-        for (x = 0; x < length; x++) {
-            indices = levelEllipsoid[x];
-            if (indices.x < 0) {
-                continue;
-            } else if (indices.y < 0 || indices.y > lastIndices.y || indices.z < 0 || indices.z > lastIndices.z) {
-                indices.x = -indices.x;
-                continue;
+        var indices, i;
+        if (this._tileset._isOct) {
+            for (i = 0; i < length; i++) {
+                indices = levelEllipsoid[i];
+                if (indices.x < 0) {
+                    continue;
+                } else if (indices.y < 0 || indices.y > lastIndices.y || indices.z < 0 || indices.z > lastIndices.z) {
+                    indices.x = -indices.x;
+                    continue;
+                }
+                indices.x = Math.min(indices.x, lastIndices.x);
+                indices.w = Math.max(indices.w, 0);
             }
-
-            indices.x = Math.min(indices.x, lastIndices.x);
-            indices.w = Math.max(indices.w, 0);
+        } else {
+            for (i = 0; i < length; i++) {
+                indices = levelEllipsoid[i];
+                if (indices.x < 0) {
+                    continue;
+                } else if (indices.y < 0 || indices.y > lastIndices.y) {
+                    indices.x = -indices.x;
+                    continue;
+                }
+                indices.x = Math.min(indices.x, lastIndices.x);
+                indices.z = Math.max(indices.z, 0);
+            }
         }
     };
 

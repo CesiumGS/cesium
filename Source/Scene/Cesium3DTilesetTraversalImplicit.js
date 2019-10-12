@@ -253,7 +253,7 @@ define([
 
             var distanceForLevel = lodDistances[contentLevel];
             // var levelEllipsoid = indicesFinder.updateLevelEllipsoid(contentLevel);
-            var levelEllipsoid = indicesFinder.updateLevelEllipsoidDynamicOct(contentLevel);
+            var levelEllipsoid = indicesFinder.updateLevelEllipsoidDynamicOct(contentLevel, frameState.cullingVolume.planes);
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
