@@ -569,6 +569,15 @@ define([
      * @private
      */
     ImplicitIndicesFinder.prototype.clipIndicesOutsidePlanes = function(planes) {
+        // 0) which one is far plane? don't need that one.
+        // 1) get the planes in terms of bottom left corner of octree.
+        // 2) each level edits the distance from origin by multiplying by invTileDims
+        //    they also edit the normal by doing the same and renormalizing.
+        //    normals point outside frustum
+        // 3) simplest thing from here is find which corner to test from the plane normal
+        // then loop through indices testing the "corners" by modifying the index by
+        // making .x neg or cipping the min or max for each plane
+        // skipping those which have a negative .x or both corners are passing
     };
 
     /**
