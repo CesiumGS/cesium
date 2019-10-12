@@ -239,7 +239,8 @@ define([
             return;
         }
 
-        var lodDistances = indicesFinder._lodDistances;
+        // var lodDistances = indicesFinder._lodDistances;
+        indicesFinder.determineLocalPlanePositions(frameState.cullingVolume.planes);
 
         var i;
         for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
@@ -251,7 +252,7 @@ define([
                 break;
             }
 
-            var distanceForLevel = lodDistances[contentLevel];
+            // var distanceForLevel = lodDistances[contentLevel];
             // var levelEllipsoid = indicesFinder.updateLevelEllipsoid(contentLevel);
             var levelEllipsoid = indicesFinder.updateLevelEllipsoidDynamicOct(contentLevel, frameState.cullingVolume.planes);
 

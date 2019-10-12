@@ -566,7 +566,15 @@ define([
         return levelEllipsoid;
     };
 
-    var scratchCartesian = new Cartesian3(1, 0, 0);
+    var scratchCartesian = new Cartesian3();
+    var scratchLocalPlanePositions = [
+        new Cartesian3(),
+        new Cartesian3(),
+        new Cartesian3(),
+        new Cartesian3(),
+        new Cartesian3(),
+        new Cartesian3()
+    ];
     var scratchPlane = new Plane(new Cartesian3(1, 0, 0), 0);
     var scratchLocalPlanes = [
         new Plane(new Cartesian3(1, 0, 0), 0),
@@ -576,11 +584,45 @@ define([
         new Plane(new Cartesian3(1, 0, 0), 0),
         new Plane(new Cartesian3(1, 0, 0), 0)
     ];
+    var scratchTranspose = new Matrix3();
+    /**
+     * Done at the top of traversal so get get the info we need about the plane during level processing
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.determineLocalPlanePositions = function(planes) {
+        var planesLength = planes.length;
+        var diff = planesLength - scratchLocalPlanePositions.length;
+        while (diff-- > 0) {
+            scratchLocalPlanePositions.push(new Cartesian3());
+            scratchLocalPlanes.push(new Plane(new Cartesian3(1, 0, 0), 0));
+        }
+
+        var boundsMin = this._boundsMin;
+
+        // TODO: need to save this off somewhere or have an actual scale-less inverse mat4
+        Matrix3.transpose(this._tileset.boxAxes, scratchTranspose);
+
+        // Put the planes in array space
+        var i, plane, pointDistance, planeNormal;
+        for (i = 0; i < planesLength; i++) {
+            plane = planes[i];
+
+            Plane.fromCartesian4(plane, scratchPlane);
+            planeNormal = scratchPlane.normal;
+            pointDistance = Plane.getPointDistance(scratchPlane, boundsMin);
+            // scaled directional vector from boundsMin to point in plane, -pointDistance to flip the normal around
+            Cartesian3.multiplyByScalar(planeNormal, -pointDistance, scratchCartesian);
+            // Same vector but relative to grid frame
+            Matrix3.multiplyByVector(scratchTranspose, scratchCartesian, scratchLocalPlanePositions[i]);
+        }
+    };
+
     /**
      *
      * @private
      */
-    ImplicitIndicesFinder.prototype.clipIndicesOutsidePlanes = function(level, planes) {
+    ImplicitIndicesFinder.prototype.clipIndicesOutsidePlanes = function(level) {
         // Plane order: L,R,B,T,N,F (see PerspectiveOffCenterFrustum)
         // Should ignore far plane but would need bool or something to know the planes are from a frustum.
         // 1) get the planes in terms of bottom left corner of octree.
@@ -592,50 +634,24 @@ define([
         // making .x neg or cipping the min or max for each plane
         // skipping those which have a negative .x or both corners are passing
 
-        var planesLength = planes.length;
-        var diff = planesLength - scratchLocalPlanes.length;
-        while (diff-- > 0) {
-            scratchLocalPlanes.push(new Plane(new Cartesian3(1, 0, 0), 0));
-        }
-
+        var planesLength = scratchLocalPlanePositions.length;
         var invTileDimsOnLevel = this._invTileDims[level];
 
         // Put the planes in array space
-        var i, plane, localPlane, sign, pointDistance, perpVectorToPlane, planeNormal;
+        var i, localPlane;
         for (i = 0; i < planesLength; i++) {
-            plane = planes[i];
             localPlane = scratchLocalPlanes[i];
 
-            // TODO: take a look at Plane.transform(plane, transform, result)
-            // or just do p` = transpose(inverse(M)) * p, where M contains the scale and offset to mincorner
-            // Or do this
-            // vec4 O = (xyz * d, 1)
-            // vec3 N = xyz
-            // O = transpose(M) * O
-            // N = transpose(M) * N
-            // dist = dot(O.xyz, N.xyz)
-            // // scale down
-            // perpTo = N.scale(dist)
-            // d = perpTo.scale(tileDims).magnitude()
-            // xyz = N.scale(tileDims).normalize()
-
-
-            // Get distance from plane to 000 index corner (bottom left for now)
-            Plane.fromCartesian4(plane, scratchPlane);
-
-            pointDistance = Plane.getPointDistance(scratchPlane, this._boundsMin);
-            sign = pointDistance < 0 ? -1 : 1;
-            planeNormal = scratchPlane.normal;
-            perpVectorToPlane = Cartesian3.multiplyByScalar(planeNormal, pointDistance, scratchCartesian);
-            perpVectorToPlane = Cartesian3.multiplyComponents(perpVectorToPlane, invTileDimsOnLevel, perpVectorToPlane);
-            localPlane.distance = Cartesian3.magnitude(perpVectorToPlane) * sign;
-            Cartesian3.multiplyComponents(planeNormal, invTileDimsOnLevel, localPlane.normal);
-            Cartesian3.normalize(localPlane.normal, localPlane.normal);
+            // Make relative to level's grid
+            var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
+            Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDimsOnLevel, scratchCartesian);
+            localPlane.distance = Cartesian3.magnitude(scratchCartesian);
+            Cartesian3.normalize(scratchCartesian, localPlane.normal);
         }
 
         var levelEllipsoid = this._levelEllipsoid;
         var length = levelEllipsoid.length;
-        var indices, k, planeDistance;
+        var indices, k, planeNormal, planeDistance;
         for (k = 0; k < length; k++) {
             indices = levelEllipsoid[k];
             if (indices.x < 0) {
@@ -729,7 +745,6 @@ define([
 
     var scratchLocalCameraPosition = new Cartesian3();
     var scratchMinCornerToCameraPosition = new Cartesian3();
-    var scratchTranspose = new Matrix3();
     var lastmin = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
     var lastminpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
     var lastmax = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
