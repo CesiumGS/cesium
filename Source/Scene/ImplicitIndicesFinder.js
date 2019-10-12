@@ -8,7 +8,8 @@ define([
         '../Core/DeveloperError',
         '../Core/Math',
         '../Core/Matrix3',
-        '../Core/Matrix4'
+        '../Core/Matrix4',
+        '../Core/Plane'
     ], function(
         Cartesian3,
         Cartesian4,
@@ -19,7 +20,8 @@ define([
         DeveloperError,
         CesiumMath,
         Matrix3,
-        Matrix4) {
+        Matrix4,
+        Plane) {
     'use strict';
 
     /**
@@ -559,19 +561,28 @@ define([
 
         this.clipIndicesToTree(level);
 
-        this.clipIndicesOutsidePlanes(planes);
+        this.clipIndicesOutsidePlanes(level, planes);
 
         return levelEllipsoid;
     };
 
+    var scratchCartesian = new Cartesian3(1, 0, 0);
+    var scratchPlane = new Plane(new Cartesian3(1, 0, 0), 0);
+    var scratchLocalPlanes = [
+        new Plane(new Cartesian3(1, 0, 0), 0),
+        new Plane(new Cartesian3(1, 0, 0), 0),
+        new Plane(new Cartesian3(1, 0, 0), 0),
+        new Plane(new Cartesian3(1, 0, 0), 0),
+        new Plane(new Cartesian3(1, 0, 0), 0),
+        new Plane(new Cartesian3(1, 0, 0), 0)
+    ];
     /**
      *
      * @private
      */
-    ImplicitIndicesFinder.prototype.clipIndicesOutsidePlanes = function(planes) {
+    ImplicitIndicesFinder.prototype.clipIndicesOutsidePlanes = function(level, planes) {
         // Plane order: L,R,B,T,N,F (see PerspectiveOffCenterFrustum)
-        // Can ignore far plane
-
+        // Should ignore far plane but would need bool or something to know the planes are from a frustum.
         // 1) get the planes in terms of bottom left corner of octree.
         // 2) each level edits the distance from origin by multiplying by invTileDims
         //    they also edit the normal by doing the same and renormalizing.
@@ -580,6 +591,56 @@ define([
         // then loop through indices testing the "corners" by modifying the index by
         // making .x neg or cipping the min or max for each plane
         // skipping those which have a negative .x or both corners are passing
+
+        var planesLength = planes.length;
+        var diff = planesLength - scratchLocalPlanes.length;
+        while (diff-- > 0) {
+            scratchLocalPlanes.push(new Plane(new Cartesian3(1, 0, 0), 0));
+        }
+
+        var invTileDimsOnLevel = this._invTileDims[level];
+
+        // Put the planes in array space
+        var i, plane, localPlane, sign, pointDistance, perpVectorToPlane, planeNormal;
+        for (i = 0; i < planesLength; i++) {
+            plane = planes[i];
+            localPlane = scratchLocalPlanes[i];
+
+            // Get distance from plane to 000 index corner (bottom left for now)
+            Plane.fromCartesian4(plane, scratchPlane);
+            pointDistance = Plane.getPointDistance(scratchPlane, this._boundsMin);
+            sign = pointDistance < 0 ? -1 : 1;
+            planeNormal = scratchPlane.normal;
+            perpVectorToPlane = Cartesian3.multiplyByScalar(planeNormal, pointDistance, scratchCartesian);
+            perpVectorToPlane = Cartesian3.multiplyComponents(perpVectorToPlane, invTileDimsOnLevel, perpVectorToPlane);
+            localPlane.distance = Cartesian3.magnitude(perpVectorToPlane) * sign;
+            Cartesian3.multiplyComponents(planeNormal, invTileDimsOnLevel, localPlane.normal);
+            Cartesian3.normalize(localPlane.normal, localPlane.normal);
+        }
+
+        var levelEllipsoid = this._levelEllipsoid;
+        var length = levelEllipsoid.length;
+        var indices, k, planeDistance;
+        for (k = 0; k < length; k++) {
+            indices = levelEllipsoid[k];
+            if (indices.x < 0) {
+                continue;
+            }
+
+            for (i = 0; i < planesLength; i++) {
+                localPlane = scratchLocalPlanes[i];
+                planeNormal = localPlane.normal;
+                planeDistance = localPlane.distance;
+                // Given the plane normal's signs, determine which corner we care about for distance checks
+                // This can simply be a LUT for index modification
+
+                // Get the distances for both corners
+                // End corners are both outside, set .x to neg .x
+                // End corners both inside, continue
+                // Starting from the abs closests, corner march to the other corner(or bin search) until fail
+                // keep a count of how far from the starting position you got and use this to update .x or .w
+            }
+        }
     };
 
     /**
@@ -627,7 +688,7 @@ define([
                 if (indices.x < 0) {
                     continue;
                 } else if (indices.y < 0 || indices.y > lastIndices.y || indices.z < 0 || indices.z > lastIndices.z) {
-                    indices.x = -indices.x;
+                    indices.x = indices.x === 0 ? -1 : -indices.x;
                     continue;
                 }
                 indices.x = Math.min(indices.x, lastIndices.x);
@@ -639,7 +700,7 @@ define([
                 if (indices.x < 0) {
                     continue;
                 } else if (indices.y < 0 || indices.y > lastIndices.y) {
-                    indices.x = -indices.x;
+                    indices.x = indices.x === 0 ? -1 : -indices.x;
                     continue;
                 }
                 indices.x = Math.min(indices.x, lastIndices.x);
