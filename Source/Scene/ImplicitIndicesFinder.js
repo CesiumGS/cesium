@@ -606,8 +606,23 @@ define([
             plane = planes[i];
             localPlane = scratchLocalPlanes[i];
 
+            // TODO: take a look at Plane.transform(plane, transform, result)
+            // or just do p` = transpose(inverse(M)) * p, where M contains the scale and offset to mincorner
+            // Or do this
+            // vec4 O = (xyz * d, 1)
+            // vec3 N = xyz
+            // O = transpose(M) * O
+            // N = transpose(M) * N
+            // dist = dot(O.xyz, N.xyz)
+            // // scale down
+            // perpTo = N.scale(dist)
+            // d = perpTo.scale(tileDims).magnitude()
+            // xyz = N.scale(tileDims).normalize()
+
+
             // Get distance from plane to 000 index corner (bottom left for now)
             Plane.fromCartesian4(plane, scratchPlane);
+
             pointDistance = Plane.getPointDistance(scratchPlane, this._boundsMin);
             sign = pointDistance < 0 ? -1 : 1;
             planeNormal = scratchPlane.normal;
