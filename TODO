@@ -60,14 +60,6 @@ Not too sure about a slab of refs quite yet, this could be huge duplication of r
 In either case, generate the array of ranges (could it be an array on every level like? [[xmin, xmax, y, z], [same thing], ...])
 use this pile of ranges to extract the relevant subtrees then use the ranges to request/select tiles in those subtrees.
 
-
-====================================
+=========
 Questions
-===================================
-What pisses the operators off about ATAK.
-how fast are their web connections?
-how much context do they need(chip and ship)
-colorize by confidence level for visibiltiy?
-Talk to sean about view shed primitve where you can just draw a cube.
-
-
+=========

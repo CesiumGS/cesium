@@ -569,7 +569,9 @@ define([
      * @private
      */
     ImplicitIndicesFinder.prototype.clipIndicesOutsidePlanes = function(planes) {
-        // 0) which one is far plane? don't need that one.
+        // Plane order: L,R,B,T,N,F (see PerspectiveOffCenterFrustum)
+        // Can ignore far plane
+
         // 1) get the planes in terms of bottom left corner of octree.
         // 2) each level edits the distance from origin by multiplying by invTileDims
         //    they also edit the normal by doing the same and renormalizing.
