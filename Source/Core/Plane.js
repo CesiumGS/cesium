@@ -169,7 +169,7 @@ define([
      * @param {Cartesian3} point The point.
      * @returns {Number} The signed shortest distance of the point to the plane.
      */
-    Plane.getPointDistanceTwo = function(plane, point) {
+    Plane.getPointDistance2 = function(plane, point) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('plane', plane);
         Check.typeOf.object('point', point);
@@ -181,7 +181,23 @@ define([
         // return Cartesian3.dot(plane.normal, point) + plane.distance;
         Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchPointInPlane);
         Cartesian3.subtract(point, scratchPointInPlane, scratchToPoint);
-        return Cartesian3.dot(plane.normal, scratchToPoint);
+        var result = Cartesian3.dot(plane.normal, scratchToPoint);
+        result = Math.abs(result) < CesiumMath.EPSILON5 ? 0 : result;
+        return result;
+    };
+
+    Plane.getPointDistance3 = function(plane, point) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('plane', plane);
+        Check.typeOf.object('point', point);
+        //>>includeEnd('debug');
+
+        // TODO: how is getPointDistance_ right?
+        // if N = 1,0,0; d = 1; point = 1,0,0; then distance computed is 2 when it should be 0
+        // if N = 1,0,0; d = 1; point = -1,0,0; then distnace computed is 0 when it should be -2
+        var result = Cartesian3.dot(plane.normal, point) - plane.distance;
+        result = Math.abs(result) < CesiumMath.EPSILON5 ? 0 : result;
+        return result;
     };
 
     var scratchCartesian = new Cartesian3();

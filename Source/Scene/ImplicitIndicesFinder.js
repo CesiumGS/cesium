@@ -619,7 +619,8 @@ define([
             Plane.fromCartesian4(plane, scratchPlane);
             planeNormal = scratchPlane.normal;
             pointDistance = Plane.getPointDistance(scratchPlane, boundsMin);
-            // pointDistance = Plane.getPointDistanceTwo(scratchPlane, boundsMin);
+            // pointDistance = Plane.getPointDistance2(scratchPlane, boundsMin);
+            // pointDistance = Plane.getPointDistance3(scratchPlane, boundsMin);
             // scaled directional vector from boundsMin to point in plane, -pointDistance to flip the normal around
             Cartesian3.multiplyByScalar(planeNormal, -pointDistance, scratchCartesian);
             // Same vector but relative to grid frame
@@ -688,11 +689,13 @@ define([
                 scratchCartesian.x = indices.w + xIdxOffset;
                 scratchCartesian.y = indices.y + yIdxOffset;
                 scratchCartesian.z = indices.z + zIdxOffset;
-                d1 = Plane.getPointDistance(localPlane, scratchCartesian);
-                // d1 = Plane.getPointDistanceTwo(localPlane, scratchCartesian);
+                // d1 = Plane.getPointDistance(localPlane, scratchCartesian);
+                // d1 = Plane.getPointDistance2(localPlane, scratchCartesian);
+                d1 = Plane.getPointDistance3(localPlane, scratchCartesian);
                 scratchCartesian.x = indices.x + xIdxOffset;
-                d2 = Plane.getPointDistance(localPlane, scratchCartesian);
-                // d2 = Plane.getPointDistanceTwo(localPlane, scratchCartesian);
+                // d2 = Plane.getPointDistance(localPlane, scratchCartesian);
+                // d2 = Plane.getPointDistance2(localPlane, scratchCartesian);
+                d2 = Plane.getPointDistance3(localPlane, scratchCartesian);
 
                 // End corners are both outside, set .x to neg .x, continue
                 if (d1 > 0 && d2 > 0) {

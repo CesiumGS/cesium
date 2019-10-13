@@ -20,7 +20,9 @@ of the subtree
         then a subtree gets assigned a range into the array that holds all the indices
 
     IndicesFinder
-    * TODO: close but breaks on some zoom in and zoom out angles
+    * TODO: I think the planes are formulated incorrectly(distance is opposite what it should be)
+      at the start but work by happenstance since plane distance is added instead of subtracted
+      when the planes are reformed in array space need to use the correct version of plane distance?
     * OPT: Near is probably the most important to do first since it culls so much, then left right bot top
     * OPT: You could sort the indices by moving all the neg .x to the back and saying how many valid there are.
       look into managed array since i think it has 2 different lengths
