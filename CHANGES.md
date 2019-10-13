@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.63
+
+##### Additions :tada:
+* Add a new hexagonal grid imagery provider `HexagonalGridImageryProvider` for custom rendering effects, inspired by `GridImageryProvider`. [#8280](https://github.com/AnalyticalGraphicsInc/cesium/pull/8280)
+
 ### 1.62 - 2019-10-01
 
 ##### Deprecated :hourglass_flowing_sand:
