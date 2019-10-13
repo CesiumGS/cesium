@@ -11,7 +11,7 @@ of the subtree
 
     looking at the x y z sides of the box and zooming out and making sure min max makes sense
 
-    once radius is found just leoop with the box and not the circle for now
+    once radius is found just loop with the box and not the circle for now
     need a thing to gather subtrees for blob of index ranges
         the subtree root resolve will help but don't run that per idx
         basically every level, it needs to check for subtree boundary jumps
@@ -20,15 +20,19 @@ of the subtree
         then a subtree gets assigned a range into the array that holds all the indices
 
     IndicesFinder
-    * TODO: You could sort the indices by moving all the neg .x to the back and saying how many valid there are.
+    * TODO: close but breaks on some zoom in and zoom out angles
+    * OPT: Near is probably the most important to do first since it culls so much, then left right bot top
+    * OPT: You could sort the indices by moving all the neg .x to the back and saying how many valid there are.
       look into managed array since i think it has 2 different lengths
+    * OPT: during plane culling wait to do the clipping until all planes ahve passed
+      and .x is still not neg, push the distances and the plane indices, for later processing in the success this case
+    * OPT: encorporate availability in index finding?
     * For size/iteration length management, could use a managed array and the level ellipsoid
       is clamped to the dims of the tree on that level. the managed array size is reserved for worst case.
     * Storage for this could be huge: technically only need to bresenham on the maximumTreversalLevel then infer up the tree.
       this lowest level bresenham can be done during finder.updateCameraLevelInfo,
       then when calling updateLevelEllipsoid you derive the vis indices from this lowest level ref
       for the given level (probably some pow2 manip as usual).
-    * another version of per-frame dynamic ellipsoid generation could be more sphere-like.
     * for the fixed version, have a spill over array for these extra spine bones
         with a managed array you could reserve for worst case and add them to main collection
 

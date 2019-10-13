@@ -567,6 +567,14 @@ define([
     };
 
     var scratchCartesian = new Cartesian3();
+    var scratchLocalPlanePositionsSigns = [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+    ];
     var scratchLocalPlanePositions = [
         new Cartesian3(),
         new Cartesian3(),
@@ -595,6 +603,7 @@ define([
         var diff = planesLength - scratchLocalPlanePositions.length;
         while (diff-- > 0) {
             scratchLocalPlanePositions.push(new Cartesian3());
+            scratchLocalPlanePositionsSigns.push(1);
             scratchLocalPlanes.push(new Plane(new Cartesian3(1, 0, 0), 0));
         }
 
@@ -603,7 +612,6 @@ define([
         // TODO: need to save this off somewhere or have an actual scale-less inverse mat4
         Matrix3.transpose(this._tileset.boxAxes, scratchTranspose);
 
-        // Put the planes in array space
         var i, plane, pointDistance, planeNormal;
         for (i = 0; i < planesLength; i++) {
             plane = planes[i];
@@ -611,10 +619,13 @@ define([
             Plane.fromCartesian4(plane, scratchPlane);
             planeNormal = scratchPlane.normal;
             pointDistance = Plane.getPointDistance(scratchPlane, boundsMin);
+            // pointDistance = Plane.getPointDistanceTwo(scratchPlane, boundsMin);
             // scaled directional vector from boundsMin to point in plane, -pointDistance to flip the normal around
             Cartesian3.multiplyByScalar(planeNormal, -pointDistance, scratchCartesian);
             // Same vector but relative to grid frame
             Matrix3.multiplyByVector(scratchTranspose, scratchCartesian, scratchLocalPlanePositions[i]);
+            // Save off the sign of distance for later
+            scratchLocalPlanePositionsSigns[i] = pointDistance > 0 ? 1 : -1;
         }
     };
 
@@ -638,21 +649,25 @@ define([
         var invTileDimsOnLevel = this._invTileDims[level];
 
         // Put the planes in array space
-        var i, localPlane;
+        var i, localPlane, planeNormal;
         for (i = 0; i < planesLength; i++) {
             localPlane = scratchLocalPlanes[i];
+            planeNormal = localPlane.normal;
 
             // Make relative to level's grid
             var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
+            var sign = scratchLocalPlanePositionsSigns[i];
             Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDimsOnLevel, scratchCartesian);
-            localPlane.distance = Cartesian3.magnitude(scratchCartesian);
-            Cartesian3.normalize(scratchCartesian, localPlane.normal);
+            localPlane.distance = Cartesian3.magnitude(scratchCartesian) * sign;
+            Cartesian3.normalize(scratchCartesian, planeNormal);
+            Cartesian3.multiplyByScalar(planeNormal, sign, planeNormal);
         }
 
         var levelEllipsoid = this._levelEllipsoid;
         var length = levelEllipsoid.length;
-        var indices, k, planeNormal, planeDistance;
+        var indices, k, planeDistance;
         var yIdxOffset, xIdxOffset, zIdxOffset;
+        var d1, d2;
         for (k = 0; k < length; k++) {
             indices = levelEllipsoid[k];
             if (indices.x < 0) {
@@ -664,15 +679,32 @@ define([
                 planeNormal = localPlane.normal;
                 planeDistance = localPlane.distance;
                 // Given the plane normal's signs, determine which corner we care about for distance checks
-                // This can simply be a LUT for index modification
-                // TODO: make sure z is up
+                // This can simply be a LUT for index modification, or this
                 xIdxOffset = planeNormal.x >= 0 ? 0 : 1;
                 yIdxOffset = planeNormal.y >= 0 ? 0 : 1;
                 zIdxOffset = planeNormal.z >= 0 ? 0 : 1;
 
                 // Get the distances for both corners
-                // End corners are both outside, set .x to neg .x
+                scratchCartesian.x = indices.w + xIdxOffset;
+                scratchCartesian.y = indices.y + yIdxOffset;
+                scratchCartesian.z = indices.z + zIdxOffset;
+                d1 = Plane.getPointDistance(localPlane, scratchCartesian);
+                // d1 = Plane.getPointDistanceTwo(localPlane, scratchCartesian);
+                scratchCartesian.x = indices.x + xIdxOffset;
+                d2 = Plane.getPointDistance(localPlane, scratchCartesian);
+                // d2 = Plane.getPointDistanceTwo(localPlane, scratchCartesian);
+
+                // End corners are both outside, set .x to neg .x, continue
+                if (d1 > 0 && d2 > 0) {
+                    indices.x = -indices.x - 1; // To handle 0
+                    continue;
+                }
+
                 // End corners both inside, continue
+                if (d1 <= 0 && d2 <= 0) {
+                    continue;
+                }
+
                 // Starting from the abs closests, corner march to the other corner(or bin search) until fail
                 // keep a count of how far from the starting position you got and use this to update .x or .w
             }
@@ -724,7 +756,7 @@ define([
                 if (indices.x < 0) {
                     continue;
                 } else if (indices.y < 0 || indices.y > lastIndices.y || indices.z < 0 || indices.z > lastIndices.z) {
-                    indices.x = indices.x === 0 ? -1 : -indices.x;
+                    indices.x = -indices.x - 1; // To handle 0
                     continue;
                 }
                 indices.x = Math.min(indices.x, lastIndices.x);
@@ -736,7 +768,7 @@ define([
                 if (indices.x < 0) {
                     continue;
                 } else if (indices.y < 0 || indices.y > lastIndices.y) {
-                    indices.x = indices.x === 0 ? -1 : -indices.x;
+                    indices.x = -indices.x - 1;
                     continue;
                 }
                 indices.x = Math.min(indices.x, lastIndices.x);
