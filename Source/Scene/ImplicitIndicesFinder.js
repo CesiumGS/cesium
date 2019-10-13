@@ -526,6 +526,47 @@ define([
         return levelEllipsoid;
     };
 
+    // /**
+    //  * Determines which side of a plane the oriented bounding box is located.
+    //  *
+    //  * @param {OrientedBoundingBox} box The oriented bounding box to test.
+    //  * @param {Plane} plane The plane to test against.
+    //  * @returns {Intersect} {@link Intersect.INSIDE} if the entire box is on the side of the plane
+    //  *                      the normal is pointing, {@link Intersect.OUTSIDE} if the entire box is
+    //  *                      on the opposite side, and {@link Intersect.INTERSECTING} if the box
+    //  *                      intersects the plane.
+    //  */
+    // OrientedBoundingBox.intersectPlane = function(box, plane) {
+    //     //>>includeStart('debug', pragmas.debug);
+    //     if (!defined(box)) {
+    //         throw new DeveloperError('box is required.');
+    //     }
+    //
+    //     if (!defined(plane)) {
+    //         throw new DeveloperError('plane is required.');
+    //     }
+    //     //>>includeEnd('debug');
+    //
+    //     var center = box.center;
+    //     var normal = plane.normal;
+    //     var halfAxes = box.halfAxes;
+    //     var normalX = normal.x, normalY = normal.y, normalZ = normal.z;
+    //     // plane is used as if it is its normal; the first three components are assumed to be normalized
+    //     var radEffective = Math.abs(normalX * halfAxes[Matrix3.COLUMN0ROW0] + normalY * halfAxes[Matrix3.COLUMN0ROW1] + normalZ * halfAxes[Matrix3.COLUMN0ROW2]) +
+    //                        Math.abs(normalX * halfAxes[Matrix3.COLUMN1ROW0] + normalY * halfAxes[Matrix3.COLUMN1ROW1] + normalZ * halfAxes[Matrix3.COLUMN1ROW2]) +
+    //                        Math.abs(normalX * halfAxes[Matrix3.COLUMN2ROW0] + normalY * halfAxes[Matrix3.COLUMN2ROW1] + normalZ * halfAxes[Matrix3.COLUMN2ROW2]);
+    //     var distanceToPlane = Cartesian3.dot(normal, center) + plane.distance;
+    //
+    //     if (distanceToPlane <= -radEffective) {
+    //         // The entire box is on the negative side of the plane normal
+    //         return Intersect.OUTSIDE;
+    //     } else if (distanceToPlane >= radEffective) {
+    //         // The entire box is on the positive side of the plane normal
+    //         return Intersect.INSIDE;
+    //     }
+    //     return Intersect.INTERSECTING;
+    // };
+
     var scratchCartesian = new Cartesian3();
     var scratchLocalPlanePositionsSigns = [
         1,
@@ -591,7 +632,6 @@ define([
             // Produces the same thing as just transforming the normal, with a  neg multiply or sign of distance or whatever
             Cartesian3.normalize(scratchLocalPlanePosition, localNormal);
             Cartesian3.multiplyByScalar(localNormal, sign, localNormal);
-
 
             // Plane.fromCartesian4(plane, scratchPlane);
             // planeNormal = scratchPlane.normal;
@@ -680,12 +720,12 @@ define([
                 scratchCartesian.y = indices.y + yIdxOffset;
                 scratchCartesian.z = indices.z + zIdxOffset;
                 // d1 = Plane.getPointDistance(localPlane, scratchCartesian);
-                // d1 = Plane.getPointDistance2(localPlane, scratchCartesian);
-                d1 = Plane.getPointDistance3(localPlane, scratchCartesian);
+                d1 = Plane.getPointDistance2(localPlane, scratchCartesian);
+                // d1 = Plane.getPointDistance3(localPlane, scratchCartesian);
                 scratchCartesian.x = indices.x + xIdxOffset;
                 // d2 = Plane.getPointDistance(localPlane, scratchCartesian);
-                // d2 = Plane.getPointDistance2(localPlane, scratchCartesian);
-                d2 = Plane.getPointDistance3(localPlane, scratchCartesian);
+                d2 = Plane.getPointDistance2(localPlane, scratchCartesian);
+                // d2 = Plane.getPointDistance3(localPlane, scratchCartesian);
 
                 // End corners are both outside, set .x to neg .x, continue
                 if (d1 > 0 && d2 > 0) {

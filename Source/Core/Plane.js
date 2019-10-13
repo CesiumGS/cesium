@@ -136,6 +136,7 @@ define([
         return result;
     };
 
+    var thresh = CesiumMath.EPSILON5;
     /**
      * Computes the signed shortest distance of a point to a plane.
      * The sign of the distance determines which side of the plane the point
@@ -154,7 +155,36 @@ define([
         //>>includeEnd('debug');
 
         var result = Cartesian3.dot(plane.normal, point) + plane.distance;
-        result = Math.abs(result) < CesiumMath.EPSILON5 ? 0 : result;
+        return Math.abs(result) < thresh ? 0 : result;
+    };
+
+    var scratchPointInPlane = new Cartesian3();
+    var scratchToPoint = new Cartesian3();
+    /**
+     * Computes the signed shortest distance of a point to a plane.
+     * The sign of the distance determines which side of the plane the point
+     * is on.  If the distance is positive, the point is in the half-space
+     * in the direction of the normal; if negative, the point is in the half-space
+     * opposite to the normal; if zero, the plane passes through the point.
+     *
+     * @param {Plane} plane The plane.
+     * @param {Cartesian3} point The point.
+     * @returns {Number} The signed shortest distance of the point to the plane.
+     */
+    Plane.getPointDistance2 = function(plane, point) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('plane', plane);
+        Check.typeOf.object('point', point);
+        //>>includeEnd('debug');
+
+        // TODO: how is getPointDistance_ right?
+        // if N = 1,0,0; d = 1; point = 1,0,0; then distance computed is 2 when it should be 0
+        // if N = 1,0,0; d = 1; point = -1,0,0; then distnace computed is 0 when it should be -2
+        // return Cartesian3.dot(plane.normal, point) + plane.distance;
+        Cartesian3.multiplyByScalar(plane.normal, plane.distance, scratchPointInPlane);
+        Cartesian3.subtract(point, scratchPointInPlane, scratchToPoint);
+        var result = Cartesian3.dot(plane.normal, scratchToPoint);
+        result = Math.abs(result) < thresh ? 0 : result;
         return result;
     };
 
@@ -164,10 +194,11 @@ define([
         Check.typeOf.object('point', point);
         //>>includeEnd('debug');
 
-        // For a plane model where N is a dir and D is just a t value to march along, like a ray.
-        // But the hessian model allows plane transformations like p` = transpose(inverse(M)) * p
+        // TODO: how is getPointDistance_ right?
+        // if N = 1,0,0; d = 1; point = 1,0,0; then distance computed is 2 when it should be 0
+        // if N = 1,0,0; d = 1; point = -1,0,0; then distnace computed is 0 when it should be -2
         var result = Cartesian3.dot(plane.normal, point) - plane.distance;
-        result = Math.abs(result) < CesiumMath.EPSILON5 ? 0 : result;
+        result = Math.abs(result) < thresh ? 0 : result;
         return result;
     };
 
