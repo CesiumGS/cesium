@@ -280,7 +280,6 @@ define([
             originEllipsoid.push(new Cartesian3(x,-y,-x));
         }
 
-        // this.updateLevelEllipsoidsLengths();
         this.updateLevelEllipsoidLength();
     };
 
@@ -332,7 +331,6 @@ define([
             }
         }
 
-        // this.updateLevelEllipsoidsLengths();
         this.updateLevelEllipsoidLength();
     };
 
@@ -436,7 +434,7 @@ define([
         return levelEllipsoid;
     };
 
-    // TODO: REMOVE
+    // TODO: REMOVE BY FIXING THE REFERENCE VERSION
     ImplicitIndicesFinder.prototype.updateLevelEllipsoidDynamicOct = function(level, planes) {
         var centerTilePositionOnLevel = this._centerTilePositions[level];
         // Camera center position in grid
@@ -581,19 +579,40 @@ define([
             Plane.fromCartesian4(plane, scratchPlane);
             planeNormal = scratchPlane.normal;
             pointDistance = Plane.getPointDistance(scratchPlane, boundsMin);
-            // pointDistance = Plane.getPointDistance2(scratchPlane, boundsMin);
-            // pointDistance = Plane.getPointDistance3(scratchPlane, boundsMin);
             // scaled directional vector from boundsMin to point in plane, -pointDistance to flip the normal around
             Cartesian3.multiplyByScalar(planeNormal, -pointDistance, scratchCartesian);
             // Same vector but relative to grid frame
-            Matrix3.multiplyByVector(scratchTranspose, scratchCartesian, scratchLocalPlanePositions[i]);
+            var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
+            Matrix3.multiplyByVector(scratchTranspose, scratchCartesian, scratchLocalPlanePosition);
             // Save off the sign of distance for later
-            scratchLocalPlanePositionsSigns[i] = pointDistance > 0 ? 1 : -1;
+            var sign = pointDistance > 0 ? 1 : -1;
+            scratchLocalPlanePositionsSigns[i] = sign;
+            var localNormal = scratchLocalPlanes[i].normal;
+            // Produces the same thing as just transforming the normal, with a  neg multiply or sign of distance or whatever
+            Cartesian3.normalize(scratchLocalPlanePosition, localNormal);
+            Cartesian3.multiplyByScalar(localNormal, sign, localNormal);
+
+
+            // Plane.fromCartesian4(plane, scratchPlane);
+            // planeNormal = scratchPlane.normal;
+            // scratchPlane.distance = -scratchPlane.distance;
+            // pointDistance = Plane.getPointDistance3(scratchPlane, boundsMin);
+            // // scaled directional vector from boundsMin to point in plane, -pointDistance to flip the normal around
+            // Cartesian3.multiplyByScalar(planeNormal, -pointDistance, scratchCartesian);
+            // // Same vector but relative to grid frame
+            // var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
+            // Matrix3.multiplyByVector(scratchTranspose, scratchCartesian, scratchLocalPlanePosition);
+            // // Save off the sign of distance for later
+            // var sign = pointDistance > 0 ? 1 : -1;
+            // scratchLocalPlanePositionsSigns[i] = sign;
+            // var localNormal = scratchLocalPlanes[i].normal;
+            // // Produces the same thing as just transforming the normal
+            // Cartesian3.normalize(scratchLocalPlanePosition, localNormal);
+            // Cartesian3.multiplyByScalar(localNormal, sign, localNormal);
+            // // Matrix3.multiplyByVector(scratchTranspose, planeNormal, localNormal); // TODO: Why doen't this work
         }
     };
 
-    var oldN = new Cartesian3();
-    var oldD = 0;
     /**
      *
      * @private
@@ -613,6 +632,7 @@ define([
         var planesLength = scratchLocalPlanePositions.length;
         var startLevel = this._startLevel;
         var invTileDims = this._invTileDims[startLevel];
+        var invTileDimsOnLevel = this._invTileDims[level];
 
         // Put the planes in array space
         var i, localPlane, planeNormal;
@@ -622,11 +642,16 @@ define([
 
             // Make relative to level's grid
             var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
-            var sign = scratchLocalPlanePositionsSigns[i];
-            Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDims, scratchCartesian);
-            localPlane.distance = Cartesian3.magnitude(scratchCartesian) * sign;
-            Cartesian3.normalize(scratchCartesian, planeNormal);
-            Cartesian3.multiplyByScalar(planeNormal, sign, planeNormal);
+            // var sign = scratchLocalPlanePositionsSigns[i];
+            // Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDims, scratchCartesian);
+            // Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDimsOnLevel, scratchCartesian);
+            // localPlane.distance = Cartesian3.magnitude(scratchCartesian) * sign;
+            // Cartesian3.normalize(scratchCartesian, planeNormal);
+            // Cartesian3.multiplyByScalar(planeNormal, sign, planeNormal);
+            // Cartesian3.normalize(scratchLocalPlanePosition, planeNormal);
+            // Cartesian3.multiplyByScalar(planeNormal, sign, planeNormal);
+            Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDimsOnLevel, scratchCartesian);
+            localPlane.distance = Cartesian3.dot(planeNormal, scratchCartesian);
         }
 
         var levelEllipsoid = this._levelEllipsoid;
@@ -862,11 +887,6 @@ define([
             minIndicesOnLevel.y = Math.floor(minTilePositionOnLevel.y);
             minIndicesOnLevel.z = Math.floor(minTilePositionOnLevel.z);
             Cartesian3.maximumByComponent(minIndicesOnLevel, Cartesian3.ZERO, minIndicesOnLevel);
-
-            // Actually, only have 1 levelEllipsoid to save memory, call this during travesal when you need to know about it.
-            // this.updateLevelEllipsoid(i);
-            // TODO: FIX the offset version and REMOVE this one.
-            // this.updateLevelEllipsoidDynamicOct(i);
 
             // DEBUG PRINTS
             if (i === tilesetStartLevel) {
