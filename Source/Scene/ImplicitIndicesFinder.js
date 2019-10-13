@@ -701,6 +701,45 @@ define([
                 // Starting from the abs closests, corner march to the other corner(or bin search) until fail
                 // keep a count of how far from the starting position you got and use this to update .x or .w
             }
+
+            // // NOTE: all corner test has same results as testing the closests corner
+            // for (i = 0; i < planesLength; i++) {
+            //     localPlane = scratchLocalPlanes[i];
+            //     planeNormal = localPlane.normal;
+            //     planeDistance = localPlane.distance;
+            //     // Given the plane normal's signs, determine which corner we care about for distance checks
+            //     // This can simply be a LUT for index modification, or this
+            //     var out = 0;
+            //     for (xIdxOffset = 0; xIdxOffset < 2; xIdxOffset++) {
+            //         for (yIdxOffset = 0; yIdxOffset < 2; yIdxOffset++) {
+            //             for (zIdxOffset = 0; zIdxOffset < 2; zIdxOffset++) {
+            //                 // Get the distances for both corners
+            //                 scratchCartesian.x = indices.w + xIdxOffset;
+            //                 scratchCartesian.y = indices.y + yIdxOffset;
+            //                 scratchCartesian.z = indices.z + zIdxOffset;
+            //                 // d1 = Plane.getPointDistance(localPlane, scratchCartesian);
+            //                 // d1 = Plane.getPointDistance2(localPlane, scratchCartesian);
+            //                 d1 = Plane.getPointDistance3(localPlane, scratchCartesian);
+            //                 scratchCartesian.x = indices.x + xIdxOffset;
+            //                 // d2 = Plane.getPointDistance(localPlane, scratchCartesian);
+            //                 // d2 = Plane.getPointDistance2(localPlane, scratchCartesian);
+            //                 d2 = Plane.getPointDistance3(localPlane, scratchCartesian);
+            //                 // End corners are both outside, set .x to neg .x, continue
+            //                 if (d1 > 0 && d2 > 0) {
+            //                     out++;
+            //                 }
+            //             }
+            //         }
+            //     }
+            //     // End corners are both outside, set .x to neg .x, continue
+            //     if (out === 8) {
+            //         indices.x = -indices.x - 1; // To handle 0
+            //         break;
+            //     }
+            //     // Starting from the abs closests, corner march to the other corner(or bin search) until fail
+            //     // keep a count of how far from the starting position you got and use this to update .x or .w
+            // }
+
         }
     };
 
