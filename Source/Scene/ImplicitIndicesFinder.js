@@ -87,7 +87,6 @@ define([
         // The main x axis spine just flips once(two versionn +x and -x), higher x axis spines (further up z) need 4 versions but everything else needs 8 versions
         // since they are in an actual octant.
         this._originEllipsoid = []; // array of cartesian2, 3 if oct.
-        this._levelEllipsoids = []; // array of shifted  origin ellipsoids  for every level
         this._levelEllipsoid = [];  // The ellipsoid indices for current level
 
         // Dim info
@@ -164,7 +163,6 @@ define([
         var virtuaDims =  this._virtualDims;
         var invTileDims =  this._invTileDims;
         var invLocalTileDims =  this._invLocalTileDims;
-        var levelEllipsoids =  this._levelEllipsoids;
 
         var i;
         for (i = 0; i < length; i++) {
@@ -176,7 +174,6 @@ define([
             maxTilePositions.push(new Cartesian3());
             centerTilePositions.push(new Cartesian3());
             virtuaDims.push(new Cartesian3());
-            levelEllipsoids.push([]);
         }
 
         // TODO: don't think these are needed beyond finding the invTileDims per level
@@ -233,36 +230,6 @@ define([
     ImplicitIndicesFinder.prototype.getMaxConeAngle = function() {
         return 0;
     };
-
-    // /**
-    //  * Called at the end of a generateOriginEllipsoid to sync the sizes for each level ellipsoid with the origin ellipsoid
-    //  *
-    //  * @private
-    //  */
-    // ImplicitIndicesFinder.prototype.updateLevelEllipsoidsLengths = function() {
-    //     var startLevel = this._startLevel;
-    //     var lastLevel = this._tileset._tilingScheme.lastLevel;
-    //     var originEllipsoidLength = this._originEllipsoid.length;
-    //     var i, levelEllipsoid;
-    //     var levelEllipsoids = this._levelEllipsoids;
-    //     if (this._tileset._isOct) {
-    //         for (i = startLevel; i <= lastLevel; i++) {
-    //             levelEllipsoid = levelEllipsoids[i];
-    //             while(originEllipsoidLength > levelEllipsoid.length) {
-    //                 levelEllipsoid.push(new Cartesian4());
-    //             }
-    //             levelEllipsoid.length = originEllipsoidLength;
-    //         }
-    //     } else {
-    //         for (i = startLevel; i <= lastLevel; i++) {
-    //             levelEllipsoid = levelEllipsoids[i];
-    //             while(originEllipsoidLength > levelEllipsoid.length) {
-    //                 levelEllipsoid.push(new Cartesian3());
-    //             }
-    //             levelEllipsoid.length = originEllipsoidLength;
-    //         }
-    //     }
-    // };
 
     /**
      * Called at the end of a generateOriginEllipsoid to sync the sizes for each level ellipsoid with the origin ellipsoid
@@ -420,8 +387,6 @@ define([
             treeDimsOnLevel = treeDims[i];
             virtuaDimsOnLevel = virtuaDims[i];
             Cartesian3.minimumByComponent(worstCaseVirtualDims, treeDimsOnLevel, virtuaDimsOnLevel);
-
-            // TODO: setup array of radii
         }
 
         Cartesian3.multiplyByScalar(invTileDims[tilesetStartLevel], lodDistances[tilesetStartLevel], this._lodDistanceToTileRatio);
@@ -445,7 +410,6 @@ define([
      */
     ImplicitIndicesFinder.prototype.updateLevelEllipsoid = function(level) {
         var centerTilePositionOnLevel = this._centerTilePositions[level];
-        // var levelEllipsoid = this._levelEllipsoids[level];
         var levelEllipsoid = this._levelEllipsoid;
         var originEllipsoid = this._originEllipsoid;
         var i, indexRange;
@@ -493,8 +457,6 @@ define([
         var axesExtentsY = lodDistanceToTileRatio.y;
         var axesExtentsZ = lodDistanceToTileRatio.z;
 
-        // this._levelEllipsoids[level] = [];
-        // var levelEllipsoid = this._levelEllipsoids[level];
         this._levelEllipsoid = [];
         var levelEllipsoid = this._levelEllipsoid;
 
@@ -630,6 +592,8 @@ define([
         }
     };
 
+    var oldN = new Cartesian3();
+    var oldD = 0;
     /**
      *
      * @private
@@ -647,7 +611,8 @@ define([
         // skipping those which have a negative .x or both corners are passing
 
         var planesLength = scratchLocalPlanePositions.length;
-        var invTileDimsOnLevel = this._invTileDims[level];
+        var startLevel = this._startLevel;
+        var invTileDims = this._invTileDims[startLevel];
 
         // Put the planes in array space
         var i, localPlane, planeNormal;
@@ -658,7 +623,7 @@ define([
             // Make relative to level's grid
             var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
             var sign = scratchLocalPlanePositionsSigns[i];
-            Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDimsOnLevel, scratchCartesian);
+            Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDims, scratchCartesian);
             localPlane.distance = Cartesian3.magnitude(scratchCartesian) * sign;
             Cartesian3.normalize(scratchCartesian, planeNormal);
             Cartesian3.multiplyByScalar(planeNormal, sign, planeNormal);
@@ -700,7 +665,7 @@ define([
                 // End corners are both outside, set .x to neg .x, continue
                 if (d1 > 0 && d2 > 0) {
                     indices.x = -indices.x - 1; // To handle 0
-                    continue;
+                    break;
                 }
 
                 // End corners both inside, continue
@@ -878,7 +843,6 @@ define([
             // maxIndices, Positions
             maxTilePositionOnLevel = maxTilePositions[i];
             lodDistanceOnLevel = lodDistances[i];
-            Cartesian3.multiplyByScalar(invTileDimsOnLevel, lodDistanceOnLevel, lodDistanceToTileRatio);
             Cartesian3.add(centerTilePositionOnLevel, lodDistanceToTileRatio, maxTilePositionOnLevel);
 
             maxIndicesOnLevel = maxIndices[i];
