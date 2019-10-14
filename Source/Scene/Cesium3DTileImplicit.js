@@ -875,6 +875,31 @@ define([
      *
      * @private
      */
+    Cesium3DTileImplicit.prototype.updateVisibility2 = function(frameState) {
+        var parent = this.parent;
+        var tileset = this._tileset;
+        var parentTransform = defined(parent) ? parent.computedTransform : tileset.modelMatrix;
+        this.updateTransform(parentTransform);
+        this._distanceToCamera = this.distanceToTile(frameState);
+        var parentVisibilityPlaneMask = defined(parent) ? parent._visibilityPlaneMask : CullingVolume.MASK_INDETERMINATE;
+        this._visibilityPlaneMask = this.visibility(frameState, parentVisibilityPlaneMask); // Use parent's plane mask to speed up visibility test
+        this._visible = this._visibilityPlaneMask !== CullingVolume.MASK_OUTSIDE;
+        this._inRequestVolume = this.insideViewerRequestVolume(frameState);
+        // this._visible = true;
+        // this._inRequestVolume = true;
+        // this._centerZDepth = this.distanceToTileCenter(frameState);
+        // this._screenSpaceError = this.getScreenSpaceError(frameState, false);
+        // this._screenSpaceErrorProgressiveResolution = this.getScreenSpaceError(frameState, false, tileset.progressiveResolutionHeightFraction);
+        // this._priorityReverseScreenSpaceError = getPriorityReverseScreenSpaceError(tileset, this);
+        // this._priorityProgressiveResolution = isPriorityProgressiveResolution(tileset, this);
+        // this.priorityDeferred = isPriorityDeferred(this, frameState);
+    };
+
+    /**
+     * Update the tile's visibility.
+     *
+     * @private
+     */
     Cesium3DTileImplicit.prototype.updateVisibility = function(frameState) {
         var parent = this.parent;
         var tileset = this._tileset;

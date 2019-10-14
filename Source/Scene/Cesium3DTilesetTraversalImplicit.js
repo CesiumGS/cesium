@@ -40,7 +40,7 @@ define([
         tileset._emptyTiles.length = 0;
         tileset._hasMixedContent = false;
 
-        updateVisibility(tileset, tileset.root, frameState);
+        updateVisibility2(tileset, tileset.root, frameState);
         tileset._indicesFinder.update(frameState);
 
         // ADD: _maximumTraversalLevel is the max content level we can explicitly check, starting at content root
@@ -117,6 +117,13 @@ define([
 
         tile.updateVisibility(frameState);
         tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
+    }
+
+    function updateVisibility2(tileset, tile, frameState) {
+        if (tile._updatedVisibilityFrame !== tileset._updatedVisibilityFrame) {
+            tile.updateVisibility2(frameState);
+            tile._updatedVisibilityFrame = tileset._updatedVisibilityFrame;
+        }
     }
 
     function hasEmptyContent(tile) {
@@ -201,11 +208,11 @@ define([
                     continue;
                 }
 
-                updateVisibility(tileset, tile, frameState);
-
-                if (!isVisible(tile)) {
-                    continue;
-                }
+                updateVisibility2(tileset, tile, frameState);
+                // updateVisibility(tileset, tile, frameState);
+                // if (!isVisible(tile)) {
+                //     continue;
+                // }
 
                 loadTile(tileset, tile, frameState);
                 selectDesiredTile(tileset, tile, frameState);

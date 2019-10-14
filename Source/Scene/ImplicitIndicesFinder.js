@@ -95,6 +95,7 @@ define([
         this._treeDims = []; // Cartesian3's
         this._lastIndices = []; // Cartesian3's tree indices on every level
         this._invTileDims = []; // Cartesian3's 1/tile dims per level
+        this._tileDims = []; // Cartesian3's tile dims per level
         this._invLocalTileDims = []; // Cartesian3's
     }
 
@@ -162,6 +163,7 @@ define([
         var lastIndices =  this._lastIndices;
         var virtuaDims =  this._virtualDims;
         var invTileDims =  this._invTileDims;
+        var tileDims =  this._tileDims;
         var invLocalTileDims =  this._invLocalTileDims;
 
         var i;
@@ -199,7 +201,7 @@ define([
 
         var isOct = tileset._isOct;
         var rootGridDimensions = tilingScheme.headCount;
-        var treeDimsOnLevel, invTileDimsOnLevel, invLocalTileDimsOnLevel, lastIndicesOnLevel;
+        var treeDimsOnLevel, invTileDimsOnLevel, tileDimsOnLevel, invLocalTileDimsOnLevel, lastIndicesOnLevel;
         for (i = 0; i < length; i++) {
             treeDimsOnLevel = new Cartesian3(
                 (rootGridDimensions[0] << i),
@@ -212,6 +214,9 @@ define([
             lastIndices.push(lastIndicesOnLevel);
 
             invTileDimsOnLevel = new Cartesian3();
+            tileDimsOnLevel = new Cartesian3();
+            Cartesian3.divideComponents(boundsSpan, treeDimsOnLevel, tileDimsOnLevel);
+            tileDims.push(tileDimsOnLevel);
             Cartesian3.divideComponents(treeDimsOnLevel, boundsSpan, invTileDimsOnLevel);
             invTileDims.push(invTileDimsOnLevel);
 
@@ -442,11 +447,9 @@ define([
         var cy = centerTilePositionOnLevel.y;
         var cz = centerTilePositionOnLevel.z;
         // The index center cell
-        var icx = Math.floor(cx);
         var icy = Math.floor(cy);
         var icz = Math.floor(cz);
         // Rel pos in center cell, i.e. the fractionl part
-        var rx = cx - icx;
         var ry = cy - icy;
         var rz = cz - icz;
 
@@ -521,7 +524,8 @@ define([
 
         this.clipIndicesToTree(level);
 
-        this.clipIndicesOutsidePlanes(level, planes);
+        // this.clipIndicesOutsidePlanes(level, planes);
+        this.clipIndicesOutsidePlanes2(level, planes);
 
         return levelEllipsoid;
     };
@@ -567,6 +571,78 @@ define([
     //     return Intersect.INTERSECTING;
     // };
 
+    var scratchPlane = new Plane(new Cartesian3(1, 0, 0), 0);
+    var scratchWorldTileAxes = new Matrix3();
+    var scratchIndicesScaleMin = new Cartesian3();
+    var scratchIndicesScaleMax = new Cartesian3();
+    var scratchTileCenterMin = new Cartesian3();
+    var scratchTileCenterMax = new Cartesian3();
+    var halfAxesScale = new Cartesian3(0.5, 0.5, 0.5);
+    var halfAxes = new Matrix3();
+    /**
+     *
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.clipIndicesOutsidePlanes2 = function(level, planes) {
+        var planesLength = planes.length;
+        var tileDimsOnLevel = this._tileDims[level];
+        var boundsMin = this._boundsMin;
+        var boxAxes = this._tileset.boxAxes; // These are orthonormal
+        Matrix3.multiplyByScale(boxAxes, tileDimsOnLevel, scratchWorldTileAxes);
+        Matrix3.multiplyByScale(scratchWorldTileAxes, halfAxesScale, halfAxes);
+
+        var levelEllipsoid = this._levelEllipsoid;
+        var length = levelEllipsoid.length;
+        var indices, i, k;
+        var d1, d2, radEffective, normal, distance, plane;
+        for (k = 0; k < length; k++) {
+            indices = levelEllipsoid[k];
+            if (indices.x < 0) {
+                continue;
+            }
+
+            scratchIndicesScaleMin.x = indices.w + 0.5;
+            scratchIndicesScaleMin.y = indices.y + 0.5;
+            scratchIndicesScaleMin.z = indices.z + 0.5;
+
+            scratchIndicesScaleMax.x = indices.x + 0.5;
+            scratchIndicesScaleMax.y = scratchIndicesScaleMin.y;
+            scratchIndicesScaleMax.z = scratchIndicesScaleMin.z;
+
+            Matrix3.multiplyByVector(scratchWorldTileAxes, scratchIndicesScaleMin, scratchIndicesScaleMin);
+            Matrix3.multiplyByVector(scratchWorldTileAxes, scratchIndicesScaleMax, scratchIndicesScaleMax);
+
+            for (i = 0; i < planesLength; i++) {
+                plane = planes[i];
+                Plane.fromCartesian4(plane, scratchPlane);
+                normal = scratchPlane.normal;
+                distance = scratchPlane.distance;
+                Cartesian3.add(boundsMin, scratchIndicesScaleMin, scratchTileCenterMin);
+                Cartesian3.add(boundsMin, scratchIndicesScaleMax, scratchTileCenterMax);
+
+                var normalX = normal.x, normalY = normal.y, normalZ = normal.z;
+                // plane is used as if it is its normal; the first three components are assumed to be normalized
+                radEffective = Math.abs(normalX * halfAxes[Matrix3.COLUMN0ROW0] + normalY * halfAxes[Matrix3.COLUMN0ROW1] + normalZ * halfAxes[Matrix3.COLUMN0ROW2]) +
+                               Math.abs(normalX * halfAxes[Matrix3.COLUMN1ROW0] + normalY * halfAxes[Matrix3.COLUMN1ROW1] + normalZ * halfAxes[Matrix3.COLUMN1ROW2]) +
+                               Math.abs(normalX * halfAxes[Matrix3.COLUMN2ROW0] + normalY * halfAxes[Matrix3.COLUMN2ROW1] + normalZ * halfAxes[Matrix3.COLUMN2ROW2]);
+                d1 = Cartesian3.dot(normal, scratchTileCenterMin) + distance;
+                d2 = Cartesian3.dot(normal, scratchTileCenterMax) + distance;
+
+                if (d1 <= -radEffective && d2 <= -radEffective) {
+                    // The entire row is on the negative side of the plane normal
+                    indices.x = -indices.x - 1; // To handle 0
+                    break;
+                } else if (d1 >= radEffective && d2 >= radEffective) {
+                    // The entire row is on the positive side of the plane normal
+                    continue;
+                }
+
+                // Starting from the abs closests, corner march to the other corner(or bin search) until fail
+                // keep a count of how far from the starting position you got and use this to update .x or .w
+            }
+        }
+    };
+
     var scratchCartesian = new Cartesian3();
     var scratchLocalPlanePositionsSigns = [
         1,
@@ -584,7 +660,6 @@ define([
         new Cartesian3(),
         new Cartesian3()
     ];
-    var scratchPlane = new Plane(new Cartesian3(1, 0, 0), 0);
     var scratchLocalPlanes = [
         new Plane(new Cartesian3(1, 0, 0), 0),
         new Plane(new Cartesian3(1, 0, 0), 0),
@@ -670,8 +745,8 @@ define([
         // skipping those which have a negative .x or both corners are passing
 
         var planesLength = scratchLocalPlanePositions.length;
-        var startLevel = this._startLevel;
-        var invTileDims = this._invTileDims[startLevel];
+        // var startLevel = this._startLevel;
+        // var invTileDims = this._invTileDims[startLevel];
         var invTileDimsOnLevel = this._invTileDims[level];
 
         // Put the planes in array space
@@ -696,7 +771,8 @@ define([
 
         var levelEllipsoid = this._levelEllipsoid;
         var length = levelEllipsoid.length;
-        var indices, k, planeDistance;
+        var indices, k;
+        // var planeDistance;
         var yIdxOffset, xIdxOffset, zIdxOffset;
         var d1, d2;
         for (k = 0; k < length; k++) {
@@ -708,7 +784,7 @@ define([
             for (i = 0; i < planesLength; i++) {
                 localPlane = scratchLocalPlanes[i];
                 planeNormal = localPlane.normal;
-                planeDistance = localPlane.distance;
+                // planeDistance = localPlane.distance;
                 // Given the plane normal's signs, determine which corner we care about for distance checks
                 // This can simply be a LUT for index modification, or this
                 xIdxOffset = planeNormal.x >= 0 ? 0 : 1;
@@ -741,45 +817,6 @@ define([
                 // Starting from the abs closests, corner march to the other corner(or bin search) until fail
                 // keep a count of how far from the starting position you got and use this to update .x or .w
             }
-
-            // // NOTE: all corner test has same results as testing the closests corner
-            // for (i = 0; i < planesLength; i++) {
-            //     localPlane = scratchLocalPlanes[i];
-            //     planeNormal = localPlane.normal;
-            //     planeDistance = localPlane.distance;
-            //     // Given the plane normal's signs, determine which corner we care about for distance checks
-            //     // This can simply be a LUT for index modification, or this
-            //     var out = 0;
-            //     for (xIdxOffset = 0; xIdxOffset < 2; xIdxOffset++) {
-            //         for (yIdxOffset = 0; yIdxOffset < 2; yIdxOffset++) {
-            //             for (zIdxOffset = 0; zIdxOffset < 2; zIdxOffset++) {
-            //                 // Get the distances for both corners
-            //                 scratchCartesian.x = indices.w + xIdxOffset;
-            //                 scratchCartesian.y = indices.y + yIdxOffset;
-            //                 scratchCartesian.z = indices.z + zIdxOffset;
-            //                 // d1 = Plane.getPointDistance(localPlane, scratchCartesian);
-            //                 // d1 = Plane.getPointDistance2(localPlane, scratchCartesian);
-            //                 d1 = Plane.getPointDistance3(localPlane, scratchCartesian);
-            //                 scratchCartesian.x = indices.x + xIdxOffset;
-            //                 // d2 = Plane.getPointDistance(localPlane, scratchCartesian);
-            //                 // d2 = Plane.getPointDistance2(localPlane, scratchCartesian);
-            //                 d2 = Plane.getPointDistance3(localPlane, scratchCartesian);
-            //                 // End corners are both outside, set .x to neg .x, continue
-            //                 if (d1 > 0 && d2 > 0) {
-            //                     out++;
-            //                 }
-            //             }
-            //         }
-            //     }
-            //     // End corners are both outside, set .x to neg .x, continue
-            //     if (out === 8) {
-            //         indices.x = -indices.x - 1; // To handle 0
-            //         break;
-            //     }
-            //     // Starting from the abs closests, corner march to the other corner(or bin search) until fail
-            //     // keep a count of how far from the starting position you got and use this to update .x or .w
-            // }
-
         }
     };
 
@@ -854,12 +891,12 @@ define([
 
     var scratchLocalCameraPosition = new Cartesian3();
     var scratchMinCornerToCameraPosition = new Cartesian3();
-    var lastmin = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-    var lastminpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-    var lastmax = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-    var lastmaxpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-    var lastcenter = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
-    var lastcenterpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+    // var lastmin = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+    // var lastminpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+    // var lastmax = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+    // var lastmaxpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+    // var lastcenter = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
+    // var lastcenterpos = new Cartesian3(Number.MAX_VALUE, Number.MAX_VALUE, Number.MAX_VALUE);
 
     /**
      * Updates the _lodDistances array with LOD sphere radii from the camera to
@@ -883,7 +920,8 @@ define([
         var lodDistanceToTileRatio = this._lodDistanceToTileRatio;
 
         var i, invTileDimsOnLevel;
-        var centerIndexOnLevel , centerTilePositionOnLevel, lodDistanceOnLevel;
+        var centerIndexOnLevel , centerTilePositionOnLevel;
+        // var lodDistanceOnLevel;
 
         // Find the distance to the tileset's contentless root and use that that determine maximumTreversalDepth
         // NOTE: updateVisibility is called on root in traversal before this
@@ -941,12 +979,11 @@ define([
 
         var maximumTreversalLevel = this._maximumTraversalLevel;
         for (i = tilesetStartLevel; i <= maximumTreversalLevel; i++) {
-            invTileDimsOnLevel = invTileDims[i];
             centerTilePositionOnLevel = centerTilePositions[i];
 
             // maxIndices, Positions
             maxTilePositionOnLevel = maxTilePositions[i];
-            lodDistanceOnLevel = lodDistances[i];
+            // lodDistanceOnLevel = lodDistances[i];
             Cartesian3.add(centerTilePositionOnLevel, lodDistanceToTileRatio, maxTilePositionOnLevel);
 
             maxIndicesOnLevel = maxIndices[i];
