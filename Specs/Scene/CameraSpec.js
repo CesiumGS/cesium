@@ -2777,7 +2777,7 @@ describe('Scene/Camera', function() {
 
         // Compute expected pixel size
         var distance = camera.distanceToBoundingSphere(sphere);
-        var pixelDimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, scene.pixelRatio, distance, new Cartesian2());
+        var pixelDimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scene.pixelRatio, new Cartesian2());
         var expectedPixelSize = Math.max(pixelDimensions.x, pixelDimensions.y);
 
         var pixelSize = camera.getPixelSize(sphere, drawingBufferWidth, drawingBufferHeight);

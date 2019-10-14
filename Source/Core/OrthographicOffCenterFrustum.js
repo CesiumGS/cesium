@@ -1,3 +1,4 @@
+import Cartesian2 from './Cartesian2.js';
 import Cartesian3 from './Cartesian3.js';
 import Cartesian4 from './Cartesian4.js';
 import CullingVolume from './CullingVolume.js';
@@ -271,8 +272,8 @@ import Matrix4 from './Matrix4.js';
      *
      * @param {Number} drawingBufferWidth The width of the drawing buffer.
      * @param {Number} drawingBufferHeight The height of the drawing buffer.
-     * @param {Number} pixelRatio The scaling factor from pixel space to coordinate space.
      * @param {Number} distance The distance to the near plane in meters.
+     * @param {Number} pixelRatio The scaling factor from pixel space to coordinate space.
      * @param {Cartesian2} result The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
@@ -283,10 +284,16 @@ import Matrix4 from './Matrix4.js';
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, scene.pixelRatio, 0.0, new Cesium.Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
      */
-    OrthographicOffCenterFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, pixelRatio, distance, result) {
+    OrthographicOffCenterFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result) {
         update(this);
+
+        if (pixelRatio instanceof Cartesian2) {
+            result = pixelRatio;
+            pixelRatio = 1.0;
+            deprecationWarning('getPixelDimensions-parameter-change', 'getPixelDimensions now takes a pixelRatio argument before the result argument in Cesium 1.63. The previous function definition will no longer work in 1.65.');
+        }
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
@@ -298,14 +305,14 @@ import Matrix4 from './Matrix4.js';
         if (drawingBufferHeight <= 0) {
             throw new DeveloperError('drawingBufferHeight must be greater than zero.');
         }
+        if (!defined(distance)) {
+            throw new DeveloperError('distance is required.');
+        }
         if (!defined(pixelRatio)) {
             throw new DeveloperError('pixelRatio is required.');
         }
         if (pixelRatio <= 0) {
             throw new DeveloperError('pixelRatio must be greater than zero.');
-        }
-        if (!defined(distance)) {
-            throw new DeveloperError('distance is required.');
         }
         if (!defined(result)) {
             throw new DeveloperError('A result object is required.');

@@ -1,3 +1,4 @@
+import Cartesian2 from './Cartesian2.js';
 import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
@@ -199,8 +200,8 @@ import OrthographicOffCenterFrustum from './OrthographicOffCenterFrustum.js';
      *
      * @param {Number} drawingBufferWidth The width of the drawing buffer.
      * @param {Number} drawingBufferHeight The height of the drawing buffer.
-     * @param {Number} pixelRatio The scaling factor from pixel space to coordinate space.
      * @param {Number} distance The distance to the near plane in meters.
+     * @param {Number} pixelRatio The scaling factor from pixel space to coordinate space.
      * @param {Cartesian2} result The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
@@ -211,11 +212,17 @@ import OrthographicOffCenterFrustum from './OrthographicOffCenterFrustum.js';
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, scene.pixelRatio, 0.0, new Cesium.Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 0.0, scene.pixelRatio, new Cesium.Cartesian2());
      */
-    OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, pixelRatio, distance, result) {
+    OrthographicFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result) {
         update(this);
-        return this._offCenterFrustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, pixelRatio, distance, result);
+
+        if (pixelRatio instanceof Cartesian2) {
+            result = pixelRatio;
+            pixelRatio = 1.0;
+            deprecationWarning('getPixelDimensions-parameter-change', 'getPixelDimensions now takes a pixelRatio argument before the result argument in Cesium 1.63. The previous function definition will no longer work in 1.65.');
+        }
+        return this._offCenterFrustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result);
     };
 
     /**
