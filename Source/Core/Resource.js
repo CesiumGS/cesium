@@ -1024,7 +1024,6 @@ define([
         var request = resource.request;
         request.url = resource.url;
         request.requestFunction = function() {
-            var url = resource.url;
             var crossOrigin = false;
 
             // data URIs can't have crossorigin set.
@@ -1033,7 +1032,7 @@ define([
             }
 
             var deferred = when.defer();
-            Resource._Implementations.createImage(url, crossOrigin, deferred, flipY, preferImageBitmap);
+            Resource._Implementations.createImage(request, crossOrigin, deferred, flipY, preferImageBitmap);
 
             return deferred.promise;
         };
@@ -2050,12 +2049,13 @@ define([
     }
 
     Resource._Implementations.createImage = function(
-        url,
+        request,
         crossOrigin,
         deferred,
         flipY,
         preferImageBitmap
     ) {
+        var url = request.url;
         // Passing an Image to createImageBitmap will force it to run on the main thread
         // since DOM elements don't exist on workers. We convert it to a blob so it's non-blocking.
         // See:
@@ -2069,11 +2069,27 @@ define([
                     loadImageElement(url, crossOrigin, deferred);
                     return;
                 }
+                var responseType = "blob";
+                var method = "GET";
+                var xhrDeferred = when.defer();
+                var xhr = Resource._Implementations.loadWithXhr(
+                    url,
+                    responseType,
+                    method,
+                    undefined,
+                    undefined,
+                    xhrDeferred,
+                    undefined,
+                    undefined,
+                    undefined
+                );
 
-                return Resource.fetchBlob({
-                    url: url
-                })
-                .then(function(blob) {
+                if (defined(xhr) && defined(xhr.abort)) {
+                    request.cancelFunction = function() {
+                        xhr.abort();
+                    };
+                }
+                return xhrDeferred.promise.then(function(blob) {
                     if (!defined(blob)) {
                         deferred.reject(new RuntimeError('Successfully retrieved ' + url + ' but it contained no content.'));
                         return;
@@ -2299,7 +2315,7 @@ define([
                 return;
             }
 
-            // give everything back when that is the callers preference 
+            // give everything back when that is the callers preference
             if (returnType !== undefined) {
                 var returnValue = {};
 
@@ -2312,10 +2328,10 @@ define([
 
                     returnValue = {
                         //status number not in xhr.getAllResponseHeaders()
-                        status: xhr.status, 
+                        status: xhr.status,
                         headers: responseHeaders,
                         response: response
-                    } 
+                    }
                 }
                 // else if anyone wants to add more
                 else {
