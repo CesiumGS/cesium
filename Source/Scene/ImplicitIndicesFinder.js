@@ -88,6 +88,7 @@ define([
         // since they are in an actual octant.
         this._originEllipsoid = []; // array of cartesian2, 3 if oct.
         this._levelEllipsoid = [];  // The ellipsoid indices for current level
+        this._radEffectivePerPlanePerLevel = [];  // The ellipsoid indices for current level
 
         // Dim info
         this._worstCaseVirtualDims = new Cartesian3(); // Same for every level
@@ -165,6 +166,7 @@ define([
         var invTileDims =  this._invTileDims;
         var tileDims =  this._tileDims;
         var invLocalTileDims =  this._invLocalTileDims;
+        var radEffectivePerPlanePerLevel = this._radEffectivePerPlanePerLevel;
 
         var i;
         for (i = 0; i < length; i++) {
@@ -176,6 +178,7 @@ define([
             maxTilePositions.push(new Cartesian3());
             centerTilePositions.push(new Cartesian3());
             virtuaDims.push(new Cartesian3());
+            radEffectivePerPlanePerLevel.push([0,0,0,0,0,0]);
         }
 
         // TODO: don't think these are needed beyond finding the invTileDims per level
@@ -583,13 +586,43 @@ define([
      *
      * @private
      */
+    ImplicitIndicesFinder.prototype.determineRadEffectivePerPlanePerLevel = function(planes) {
+        var radEffectivePerPlanePerLevel = this._radEffectivePerPlanePerLevel;
+        var startLevel =  this._startLevel;
+        var maximumTreversalLevel =  this._maximumTraversalLevel;
+        var boxAxes = this._tileset.boxAxes; // These are orthonormal
+        var i;
+        for (i = startLevel; i <= maximumTreversalLevel; i++) {
+            var radEffectivePerPlaneOnLevel = radEffectivePerPlanePerLevel[i];
+            var tileDimsOnLevel = this._tileDims[i];
+            Matrix3.multiplyByScale(boxAxes, tileDimsOnLevel, scratchWorldTileAxes);
+            Matrix3.multiplyByScale(scratchWorldTileAxes, halfAxesScale, halfAxes);
+            for (var k = 0; k < 6; k++) {
+                var plane = planes[k];
+                Plane.fromCartesian4(plane, scratchPlane);
+                var normal = scratchPlane.normal;
+                var distance = scratchPlane.distance;
+                var normalX = normal.x, normalY = normal.y, normalZ = normal.z;
+                // plane is used as if it is its normal; the first three components are assumed to be normalized
+                radEffectivePerPlaneOnLevel[k] = Math.abs(normalX * halfAxes[Matrix3.COLUMN0ROW0] + normalY * halfAxes[Matrix3.COLUMN0ROW1] + normalZ * halfAxes[Matrix3.COLUMN0ROW2]) +
+                                                 Math.abs(normalX * halfAxes[Matrix3.COLUMN1ROW0] + normalY * halfAxes[Matrix3.COLUMN1ROW1] + normalZ * halfAxes[Matrix3.COLUMN1ROW2]) +
+                                                 Math.abs(normalX * halfAxes[Matrix3.COLUMN2ROW0] + normalY * halfAxes[Matrix3.COLUMN2ROW1] + normalZ * halfAxes[Matrix3.COLUMN2ROW2]);
+            }
+        }
+    };
+
+    /**
+     *
+     * @private
+     */
     ImplicitIndicesFinder.prototype.clipIndicesOutsidePlanes2 = function(level, planes) {
         var planesLength = planes.length;
         var tileDimsOnLevel = this._tileDims[level];
         var boundsMin = this._boundsMin;
         var boxAxes = this._tileset.boxAxes; // These are orthonormal
         Matrix3.multiplyByScale(boxAxes, tileDimsOnLevel, scratchWorldTileAxes);
-        Matrix3.multiplyByScale(scratchWorldTileAxes, halfAxesScale, halfAxes);
+        // Matrix3.multiplyByScale(scratchWorldTileAxes, halfAxesScale, halfAxes);
+        var radEffectivePerPlaneOnLevel = this._radEffectivePerPlanePerLevel[level];
 
         var levelEllipsoid = this._levelEllipsoid;
         var length = levelEllipsoid.length;
@@ -620,11 +653,12 @@ define([
                 Cartesian3.add(boundsMin, scratchIndicesScaleMin, scratchTileCenterMin);
                 Cartesian3.add(boundsMin, scratchIndicesScaleMax, scratchTileCenterMax);
 
-                var normalX = normal.x, normalY = normal.y, normalZ = normal.z;
+                // var normalX = normal.x, normalY = normal.y, normalZ = normal.z;
                 // plane is used as if it is its normal; the first three components are assumed to be normalized
-                radEffective = Math.abs(normalX * halfAxes[Matrix3.COLUMN0ROW0] + normalY * halfAxes[Matrix3.COLUMN0ROW1] + normalZ * halfAxes[Matrix3.COLUMN0ROW2]) +
-                               Math.abs(normalX * halfAxes[Matrix3.COLUMN1ROW0] + normalY * halfAxes[Matrix3.COLUMN1ROW1] + normalZ * halfAxes[Matrix3.COLUMN1ROW2]) +
-                               Math.abs(normalX * halfAxes[Matrix3.COLUMN2ROW0] + normalY * halfAxes[Matrix3.COLUMN2ROW1] + normalZ * halfAxes[Matrix3.COLUMN2ROW2]);
+                // radEffective = Math.abs(normalX * halfAxes[Matrix3.COLUMN0ROW0] + normalY * halfAxes[Matrix3.COLUMN0ROW1] + normalZ * halfAxes[Matrix3.COLUMN0ROW2]) +
+                //                Math.abs(normalX * halfAxes[Matrix3.COLUMN1ROW0] + normalY * halfAxes[Matrix3.COLUMN1ROW1] + normalZ * halfAxes[Matrix3.COLUMN1ROW2]) +
+                //                Math.abs(normalX * halfAxes[Matrix3.COLUMN2ROW0] + normalY * halfAxes[Matrix3.COLUMN2ROW1] + normalZ * halfAxes[Matrix3.COLUMN2ROW2]);
+                radEffective = radEffectivePerPlaneOnLevel[i];
                 d1 = Cartesian3.dot(normal, scratchTileCenterMin) + distance;
                 d2 = Cartesian3.dot(normal, scratchTileCenterMax) + distance;
 

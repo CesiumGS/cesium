@@ -247,7 +247,8 @@ define([
         }
 
         // var lodDistances = indicesFinder._lodDistances;
-        indicesFinder.determineLocalPlanePositions(frameState.cullingVolume.planes);
+        // indicesFinder.determineLocalPlanePositions(frameState.cullingVolume.planes);
+        indicesFinder.determineRadEffectivePerPlanePerLevel(frameState.cullingVolume.planes);
 
         var i;
         for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
