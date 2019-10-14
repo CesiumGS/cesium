@@ -173,7 +173,6 @@ define([
         var levelEllipsoidLength = levelEllipsoid.length;
         var xRowRange;
         for (i = 0; i < levelEllipsoidLength; i++) {
-            // xRowRange = levelEllipsoid[i];
             xRowRange = levelEllipsoid.get(i);
             if (xRowRange.x < subtreeMinTreeIndicesForLevel.x ||
                 xRowRange.w > subtreeMaxTreeIndicesForLevel.x ||

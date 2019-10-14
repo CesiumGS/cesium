@@ -737,7 +737,6 @@ define([
         var indices, i, k;
         var d1, d2, radEffective, normal, distance, plane;
         for (k = 0; k < levelEllipsoid.length; k++) {
-            // indices = levelEllipsoid[k];
             indices = levelEllipsoid.get(k);
             if (indices.x < 0) {
                 levelEllipsoid.remove(k);
@@ -923,7 +922,6 @@ define([
         var yIdxOffset, xIdxOffset, zIdxOffset;
         var d1, d2;
         for (k = 0; k < levelEllipsoid.length; k++) {
-            // indices = levelEllipsoid[k];
             indices = levelEllipsoid.get(k);
             if (indices.x < 0) {
                 levelEllipsoid.remove(k);
