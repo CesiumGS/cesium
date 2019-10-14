@@ -173,7 +173,8 @@ define([
         var levelEllipsoidLength = levelEllipsoid.length;
         var xRowRange;
         for (i = 0; i < levelEllipsoidLength; i++) {
-            xRowRange = levelEllipsoid[i];
+            // xRowRange = levelEllipsoid[i];
+            xRowRange = levelEllipsoid.get(i);
             if (xRowRange.x < 0 || // Culled by frustum or outside tree entirely
                 xRowRange.x < subtreeMinTreeIndicesForLevel.x ||
                 xRowRange.w > subtreeMaxTreeIndicesForLevel.x ||

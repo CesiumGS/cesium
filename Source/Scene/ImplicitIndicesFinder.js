@@ -6,6 +6,7 @@ define([
         '../Core/defineProperties',
         '../Core/destroyObject',
         '../Core/DeveloperError',
+        '../Core/ManagedArray',
         '../Core/Math',
         '../Core/Matrix3',
         '../Core/Matrix4',
@@ -18,6 +19,7 @@ define([
         defineProperties,
         destroyObject,
         DeveloperError,
+        ManagedArray,
         CesiumMath,
         Matrix3,
         Matrix4,
@@ -87,11 +89,12 @@ define([
         // The main x axis spine just flips once(two versionn +x and -x), higher x axis spines (further up z) need 4 versions but everything else needs 8 versions
         // since they are in an actual octant.
         this._originEllipsoid = []; // array of cartesian2, 3 if oct.
-        this._levelEllipsoid = [];  // The ellipsoid indices for current level
-        this._radEffectivePerPlanePerLevel = [];  // The ellipsoid indices for current level
+        this._levelEllipsoid = new ManagedArray();  // The ellipsoid indices for current level
+        this._radEffectivePerPlanePerLevel = [];  // Precaculations for some plane culling
 
         // Dim info
         this._worstCaseVirtualDims = new Cartesian3(); // Same for every level
+        this._worstCaseIndicesLength = 0;
         this._virtualDims = []; // Cartesian3's, min of worst case dim and treedim
         this._treeDims = []; // Cartesian3's
         this._lastIndices = []; // Cartesian3's tree indices on every level
@@ -245,19 +248,41 @@ define([
      * @private
      */
     ImplicitIndicesFinder.prototype.updateLevelEllipsoidLength = function() {
-        var originEllipsoidLength = this._originEllipsoid.length;
+        // var originEllipsoidLength = this._originEllipsoid.length;
+        // var levelEllipsoid = this._levelEllipsoid;
+        // if (this._tileset._isOct) {
+        //     while(originEllipsoidLength > levelEllipsoid.length) {
+        //         levelEllipsoid.push(new Cartesian4());
+        //     }
+        //     levelEllipsoid.length = originEllipsoidLength;
+        // } else {
+        //     while(originEllipsoidLength > levelEllipsoid.length) {
+        //         levelEllipsoid.push(new Cartesian3());
+        //     }
+        //     levelEllipsoid.length = originEllipsoidLength;
+        // }
+
+        // TODO: use virtuaDims on last level since that is the actual max it will ever need to be
+        var worstCaseIndicesLength = this._worstCaseIndicesLength;
         var levelEllipsoid = this._levelEllipsoid;
+        var internalArray = levelEllipsoid.values;
+        var internalArrayLength = internalArray.length;
+        if (internalArrayLength > worstCaseIndicesLength) {
+            levelEllipsoid.trim(worstCaseIndicesLength);
+            return;
+        }
+        var diff = worstCaseIndicesLength - internalArrayLength;
+        levelEllipsoid.resize(internalArrayLength); // puts it back to its internal array length
         if (this._tileset._isOct) {
-            while(originEllipsoidLength > levelEllipsoid.length) {
+            while(diff-- > 0) {
                 levelEllipsoid.push(new Cartesian4());
             }
-            levelEllipsoid.length = originEllipsoidLength;
         } else {
-            while(originEllipsoidLength > levelEllipsoid.length) {
+            while(diff-- > 0) {
                 levelEllipsoid.push(new Cartesian3());
             }
-            levelEllipsoid.length = originEllipsoidLength;
         }
+        levelEllipsoid.resize(0);
     };
 
     /**
@@ -270,7 +295,7 @@ define([
         var axesExtentsX = lodDistanceToTileRatio.x;
         var axesExtentsY = lodDistanceToTileRatio.y;
         // For quad, we only care about x extents at every y tick.
-        this._originEllipsoid = []; // reset
+        this._originEllipsoid = []; // TODO: use managedarray
         var originEllipsoid = this._originEllipsoid;
 
         // The x axis for the ellipsoid only needs 1 pair of start/stop along x axis
@@ -302,7 +327,7 @@ define([
         var axesExtentsY = lodDistanceToTileRatio.y;
         var axesExtentsZ = lodDistanceToTileRatio.z;
 
-        this._originEllipsoid = []; // Reset
+        this._originEllipsoid = []; // TODO: use managedarray
         var originEllipsoid = this._originEllipsoid;
 
         // The x axis for the ellipsoid only needs 1 pair of start/stop along x axis
@@ -383,6 +408,7 @@ define([
         worstCaseVirtualDims.x = Math.ceil(worstCaseVirtualDims.x) + 1;
         worstCaseVirtualDims.y = Math.ceil(worstCaseVirtualDims.y) + 1;
         worstCaseVirtualDims.z = Math.ceil(worstCaseVirtualDims.z) + 1;
+        this._worstCaseIndicesLength = worstCaseVirtualDims.x * worstCaseVirtualDims.y * worstCaseVirtualDims.z;
 
         for (i = tilesetStartLevel; i < length; i++) {
             gErrorOnLevel = startingGError / Math.pow(base, i - tilesetStartLevel);
@@ -409,40 +435,40 @@ define([
         console.log('lodDistanceToTileRatio ' + this._lodDistanceToTileRatio);
     };
 
-    /**
-     * Updates an ellipsoid for the given level using the origin ellipsoid and the cameraCenterPosition
-     *
-     * @private
-     */
-    ImplicitIndicesFinder.prototype.updateLevelEllipsoid = function(level) {
-        var centerTilePositionOnLevel = this._centerTilePositions[level];
-        var levelEllipsoid = this._levelEllipsoid;
-        var originEllipsoid = this._originEllipsoid;
-        var i, indexRange;
-        var length = levelEllipsoid.length;
-        if (this._tileset._isOct) {
-            for (i = 0; i < length; i++) {
-                indexRange = levelEllipsoid[i];
-                Cartesian4.clone(originEllipsoid[i], indexRange);
-                indexRange.x = Math.floor(indexRange.x + centerTilePositionOnLevel.x);
-                indexRange.y = Math.floor(indexRange.y + centerTilePositionOnLevel.y);
-                indexRange.z = Math.floor(indexRange.z + centerTilePositionOnLevel.z);
-                indexRange.w = Math.floor(indexRange.w + centerTilePositionOnLevel.x);
-            }
-        } else {
-            for (i = 0; i < length; i++) {
-                indexRange = levelEllipsoid[i];
-                Cartesian3.clone(originEllipsoid[i], indexRange);
-                indexRange.x = Math.floor(indexRange.x + centerTilePositionOnLevel.x);
-                indexRange.y = Math.floor(indexRange.y + centerTilePositionOnLevel.y);
-                indexRange.z = Math.floor(indexRange.z + centerTilePositionOnLevel.x);
-            }
-        }
+    // /**
+    //  * Updates an ellipsoid for the given level using the origin ellipsoid and the cameraCenterPosition
+    //  *
+    //  * @private
+    //  */
+    // ImplicitIndicesFinder.prototype.updateLevelEllipsoid = function(level) {
+    //     var centerTilePositionOnLevel = this._centerTilePositions[level];
+    //     var levelEllipsoid = this._levelEllipsoid;
+    //     var originEllipsoid = this._originEllipsoid;
+    //     var i, indexRange;
+    //     var length = levelEllipsoid.length;
+    //     if (this._tileset._isOct) {
+    //         for (i = 0; i < length; i++) {
+    //             indexRange = levelEllipsoid[i];
+    //             Cartesian4.clone(originEllipsoid[i], indexRange);
+    //             indexRange.x = Math.floor(indexRange.x + centerTilePositionOnLevel.x);
+    //             indexRange.y = Math.floor(indexRange.y + centerTilePositionOnLevel.y);
+    //             indexRange.z = Math.floor(indexRange.z + centerTilePositionOnLevel.z);
+    //             indexRange.w = Math.floor(indexRange.w + centerTilePositionOnLevel.x);
+    //         }
+    //     } else {
+    //         for (i = 0; i < length; i++) {
+    //             indexRange = levelEllipsoid[i];
+    //             Cartesian3.clone(originEllipsoid[i], indexRange);
+    //             indexRange.x = Math.floor(indexRange.x + centerTilePositionOnLevel.x);
+    //             indexRange.y = Math.floor(indexRange.y + centerTilePositionOnLevel.y);
+    //             indexRange.z = Math.floor(indexRange.z + centerTilePositionOnLevel.x);
+    //         }
+    //     }
+    //     return levelEllipsoid;
+    // };
 
-        return levelEllipsoid;
-    };
-
-    // TODO: REMOVE BY FIXING THE REFERENCE VERSION
+    // TODO: REMOVE BY FIXING THE REFERENCE VERSION(reference version needs to know where the fast switch is
+    // and start taking samples so that there is no more than a change of 1 (0.5?) along the "x" dir between samples)
     ImplicitIndicesFinder.prototype.updateLevelEllipsoidDynamicOct = function(level, planes) {
         var centerTilePositionOnLevel = this._centerTilePositions[level];
         // Camera center position in grid
@@ -461,7 +487,7 @@ define([
         var axesExtentsY = lodDistanceToTileRatio.y;
         var axesExtentsZ = lodDistanceToTileRatio.z;
 
-        this._levelEllipsoid = [];
+        // this._levelEllipsoid = [];
         var levelEllipsoid = this._levelEllipsoid;
 
         var yToXExtentRatio = axesExtentsY / axesExtentsX;
@@ -470,13 +496,19 @@ define([
         var Nz = Mz / (axesExtentsZ * axesExtentsZ);
         var x, y, z, zIdx, relZ, relY, yEnd, My, Ny, yExtentForEllipsoidSlice;
 
+        levelEllipsoid.length = 0;
+        var index = 0;
+        var item;
+
         // +z
         for (z = rz; z < zEnd; z++) {
             if (z !== rz) { z = Math.floor(z); }
             relZ = z - rz;
             x = Math.sqrt(Mz - Nz * relZ * relZ);
             zIdx = z + icz;
-            levelEllipsoid.push(new Cartesian4(x + cx, cy, zIdx,-x + cx));
+            // levelEllipsoid.push(new Cartesian4(x + cx, cy, zIdx,-x + cx));
+            item = levelEllipsoid.get(index++);
+            item.x = x + cx; item.y = cy; item.z = zIdx; item.w = -x + cx;
             yExtentForEllipsoidSlice = x*yToXExtentRatio;
             yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
             My = x * x;
@@ -484,14 +516,18 @@ define([
             for (y = 1; y < yEnd; y++) {
                 relY  = y - ry;
                 x = Math.sqrt(My - Ny * relY * relY);
-                levelEllipsoid.push(new Cartesian4(x + cx, y + icy, zIdx, -x + cx));
+                // levelEllipsoid.push(new Cartesian4(x + cx, y + icy, zIdx, -x + cx));
+                item = levelEllipsoid.get(index++);
+                item.x = x + cx; item.y = y + icy; item.z = zIdx; item.w = -x + cx;
             }
 
             yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
             for (y = Math.ceil(ry-1); y > yEnd; y--) {
                 relY = y - ry;
                 x = Math.sqrt(My - Ny * relY * relY);
-                levelEllipsoid.push(new Cartesian4(x + cx, y + icy - 1, zIdx, -x + cx));
+                // levelEllipsoid.push(new Cartesian4(x + cx, y + icy - 1, zIdx, -x + cx));
+                item = levelEllipsoid.get(index++);
+                item.x = x + cx; item.y = y + icy - 1; item.z = zIdx; item.w = -x + cx;
                 // The reason for minus 1 in y: you want to rasterize using the
                 // grid line above the cell (which is towards the center of the sphere )
                 // but this counts for the cell with index of -1 that raster line's grid index
@@ -504,7 +540,9 @@ define([
             relZ = z - rz;
             x = Math.sqrt(Mz - Nz * relZ * relZ);
             zIdx = z + icz - 1;
-            levelEllipsoid.push(new Cartesian4(x + cx, cy, zIdx,-x + cx));
+            // levelEllipsoid.push(new Cartesian4(x + cx, cy, zIdx,-x + cx));
+            item = levelEllipsoid.get(index++);
+            item.x = x + cx; item.y = cy; item.z = zIdx; item.w = -x + cx;
             yExtentForEllipsoidSlice = x*yToXExtentRatio;
             yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
             My = x * x;
@@ -512,16 +550,22 @@ define([
             for (y = 1; y < yEnd; y++) {
                 relY  = y - ry;
                 x = Math.sqrt(My - Ny * relY * relY);
-                levelEllipsoid.push(new Cartesian4(x + cx, y + icy, zIdx, -x + cx));
+                // levelEllipsoid.push(new Cartesian4(x + cx, y + icy, zIdx, -x + cx));
+                item = levelEllipsoid.get(index++);
+                item.x = x + cx; item.y = y + icy; item.z = zIdx; item.w = -x + cx;
             }
 
             yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
             for (y = Math.ceil(ry-1); y > yEnd; y--) {
                 relY = y - ry;
                 x = Math.sqrt(My - Ny * relY * relY);
-                levelEllipsoid.push(new Cartesian4(x + cx, y + icy - 1, zIdx, -x + cx));
+                // levelEllipsoid.push(new Cartesian4(x + cx, y + icy - 1, zIdx, -x + cx));
+                item = levelEllipsoid.get(index++);
+                item.x = x + cx; item.y = y + icy - 1; item.z = zIdx; item.w = -x + cx;
             }
         }
+
+        levelEllipsoid.length = index;
 
         this.floorIndices();
 
@@ -629,7 +673,8 @@ define([
         var indices, i, k;
         var d1, d2, radEffective, normal, distance, plane;
         for (k = 0; k < length; k++) {
-            indices = levelEllipsoid[k];
+            // indices = levelEllipsoid[k];
+            indices = levelEllipsoid.get(k);
             if (indices.x < 0) {
                 continue;
             }
@@ -810,7 +855,8 @@ define([
         var yIdxOffset, xIdxOffset, zIdxOffset;
         var d1, d2;
         for (k = 0; k < length; k++) {
-            indices = levelEllipsoid[k];
+            // indices = levelEllipsoid[k];
+            indices = levelEllipsoid.get(k);
             if (indices.x < 0) {
                 continue;
             }
@@ -866,7 +912,8 @@ define([
         var i;
         if (this._tileset._isOct) {
             for (i = 0; i < length; i++) {
-                indices = levelEllipsoid[i];
+                // indices = levelEllipsoid[i];
+                indices = levelEllipsoid.get(i);
                 indices.x = Math.floor(indices.x);
                 indices.y = Math.floor(indices.y);
                 indices.z = Math.floor(indices.z);
@@ -874,7 +921,8 @@ define([
             }
         } else {
             for (i = 0; i < length; i++) {
-                indices = levelEllipsoid[i];
+                // indices = levelEllipsoid[i];
+                indices = levelEllipsoid.get(i);
                 indices.x = Math.floor(indices.x);
                 indices.y = Math.floor(indices.y);
                 indices.z = Math.floor(indices.z);
@@ -885,7 +933,7 @@ define([
     /**
      * Updates the _lodDistances array with LOD sphere radii from the camera to
      * pull in tiles on different levels of the tree
-     *
+     * TODO: perform swap with end, dynamic generation doesn't need to call this if it's early terminating and starting its loop where the tree exists
      * @private
      */
     ImplicitIndicesFinder.prototype.clipIndicesToTree = function(level) {
@@ -895,7 +943,8 @@ define([
         var indices, i;
         if (this._tileset._isOct) {
             for (i = 0; i < length; i++) {
-                indices = levelEllipsoid[i];
+                // indices = levelEllipsoid[i];
+                indices = levelEllipsoid.get(i);
                 if (indices.x < 0) {
                     continue;
                 } else if (indices.y < 0 || indices.y > lastIndices.y || indices.z < 0 || indices.z > lastIndices.z) {
@@ -907,7 +956,8 @@ define([
             }
         } else {
             for (i = 0; i < length; i++) {
-                indices = levelEllipsoid[i];
+                // indices = levelEllipsoid[i];
+                indices = levelEllipsoid.get(i);
                 if (indices.x < 0) {
                     continue;
                 } else if (indices.y < 0 || indices.y > lastIndices.y) {
