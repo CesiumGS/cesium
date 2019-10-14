@@ -483,10 +483,16 @@ define([
         var Mz = axesExtentsX * axesExtentsX;
         var Nz = Mz / (axesExtentsZ * axesExtentsZ);
         var x, y, z, yIdx, zIdx, relZ, relY, yEnd, My, Ny, yExtentForEllipsoidSlice;
+        var goBack, goForward;
 
         levelEllipsoid.length = 0;
         var index = 0;
         var item;
+
+        var middleYIdx = Math.floor(cy);
+        goBack = middleYIdx > 0;
+        goForward = middleYIdx < lastY;
+        var middleY = middleYIdx >= 0 && middleYIdx <= lastY;
 
         // TODO: setup zEnd for + and -
         // TODO: bail if zEnd for + and - doesnt touch the tree grid for this level
@@ -509,49 +515,54 @@ define([
             relZ = z - rz;
             x = Math.sqrt(Mz - Nz * relZ * relZ);
 
-            // levelEllipsoid.push(new Cartesian4(x + cx, cy, zIdx,-x + cx));
-            item = levelEllipsoid.get(index++);
-            item.x = x + cx; item.y = cy; item.z = zIdx; item.w = -x + cx;
-            yExtentForEllipsoidSlice = x*yToXExtentRatio;
-            yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
-            My = x * x;
-            Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
-            for (y = 1; y < yEnd; y++) {
-                yIdx = Math.floor(y + icy);
-                if (yIdx < 0) {
-                    continue;
-                } else if (yIdx > lastY) {
-                    break;
-                }
-
-                relY  = y - ry;
-                x = Math.sqrt(My - Ny * relY * relY);
-
-                // levelEllipsoid.push(new Cartesian4(x + cx, y + icy, zIdx, -x + cx));
+            if (middleY) {
                 item = levelEllipsoid.get(index++);
-                // item.x = x + cx; item.y = y + icy; item.z = zIdx; item.w = -x + cx;
-                item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
+                item.x = x + cx; item.y = middleYIdx; item.z = zIdx; item.w = -x + cx;
             }
 
-            yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
-            for (y = Math.ceil(ry-1); y > yEnd; y--) {
-                yIdx = Math.floor(y + icy - 1);
-                if (yIdx > lastY) {
-                    continue;
-                } else if (yIdx < 0) {
-                    break;
+            yExtentForEllipsoidSlice = x*yToXExtentRatio;
+            My = x * x;
+            Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
+
+            if (goForward) {
+                yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
+                for (y = 1; y < yEnd; y++) {
+                    yIdx = Math.floor(y + icy);
+                    if (yIdx < 0) {
+                        continue;
+                    } else if (yIdx > lastY) {
+                        break;
+                    }
+
+                    relY  = y - ry;
+                    x = Math.sqrt(My - Ny * relY * relY);
+
+                    item = levelEllipsoid.get(index++);
+                    // item.x = x + cx; item.y = y + icy; item.z = zIdx; item.w = -x + cx;
+                    item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
                 }
+            }
 
-                relY = y - ry;
-                x = Math.sqrt(My - Ny * relY * relY);
+            if (goBack) {
+                yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
+                for (y = Math.ceil(ry-1); y > yEnd; y--) {
+                    yIdx = Math.floor(y + icy - 1);
+                    if (yIdx > lastY) {
+                        continue;
+                    } else if (yIdx < 0) {
+                        break;
+                    }
 
-                // levelEllipsoid.push(new Cartesian4(x + cx, y + icy - 1, zIdx, -x + cx));
-                item = levelEllipsoid.get(index++);
-                // item.x = x + cx; item.y = y + icy - 1; item.z = zIdx; item.w = -x + cx;
-                item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
-                // The reason for minus 1 in y: you want to rasterize using the
-                // grid line above the cell (which is towards the center of the sphere )
-                // but this counts for the cell with index of -1 that raster line's grid index
+                    relY = y - ry;
+                    x = Math.sqrt(My - Ny * relY * relY);
+
+                    item = levelEllipsoid.get(index++);
+                    // item.x = x + cx; item.y = y + icy - 1; item.z = zIdx; item.w = -x + cx;
+                    item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
+                    // The reason for minus 1 in y: you want to rasterize using the
+                    // grid line above the cell (which is towards the center of the sphere )
+                    // but this counts for the cell with index of -1 that raster line's grid index
+                }
             }
         }
 
@@ -568,46 +579,52 @@ define([
             relZ = z - rz;
             x = Math.sqrt(Mz - Nz * relZ * relZ);
 
-            // levelEllipsoid.push(new Cartesian4(x + cx, cy, zIdx,-x + cx));
-            item = levelEllipsoid.get(index++);
-            item.x = x + cx; item.y = cy; item.z = zIdx; item.w = -x + cx;
-            yExtentForEllipsoidSlice = x*yToXExtentRatio;
-            yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
-            My = x * x;
-            Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
-            for (y = 1; y < yEnd; y++) {
-                yIdx = Math.floor(y + icy);
-                if (yIdx < 0) {
-                    continue;
-                } else if (yIdx > lastY) {
-                    break;
-                }
-
-                relY  = y - ry;
-                x = Math.sqrt(My - Ny * relY * relY);
-
-                // levelEllipsoid.push(new Cartesian4(x + cx, y + icy, zIdx, -x + cx));
+            if (middleY) {
                 item = levelEllipsoid.get(index++);
-                // item.x = x + cx; item.y = y + icy; item.z = zIdx; item.w = -x + cx;
-                item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
+                item.x = x + cx; item.y = middleYIdx; item.z = zIdx; item.w = -x + cx;
             }
 
-            yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
-            for (y = Math.ceil(ry-1); y > yEnd; y--) {
-                yIdx = Math.floor(y + icy - 1);
-                if (yIdx > lastY) {
-                    continue;
-                } else if (yIdx < 0) {
-                    break;
+            yExtentForEllipsoidSlice = x*yToXExtentRatio;
+            My = x * x;
+            Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
+
+            if (goForward) {
+                yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
+                for (y = 1; y < yEnd; y++) {
+                    yIdx = Math.floor(y + icy);
+                    if (yIdx < 0) {
+                        continue;
+                    } else if (yIdx > lastY) {
+                        break;
+                    }
+
+                    relY  = y - ry;
+                    x = Math.sqrt(My - Ny * relY * relY);
+
+                    item = levelEllipsoid.get(index++);
+                    // item.x = x + cx; item.y = y + icy; item.z = zIdx; item.w = -x + cx;
+                    item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
                 }
 
-                relY = y - ry;
-                x = Math.sqrt(My - Ny * relY * relY);
+            }
 
-                // levelEllipsoid.push(new Cartesian4(x + cx, y + icy - 1, zIdx, -x + cx));
-                item = levelEllipsoid.get(index++);
-                // item.x = x + cx; item.y = y + icy - 1; item.z = zIdx; item.w = -x + cx;
-                item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
+            if (goBack) {
+                yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
+                for (y = Math.ceil(ry-1); y > yEnd; y--) {
+                    yIdx = Math.floor(y + icy - 1);
+                    if (yIdx > lastY) {
+                        continue;
+                    } else if (yIdx < 0) {
+                        break;
+                    }
+
+                    relY = y - ry;
+                    x = Math.sqrt(My - Ny * relY * relY);
+
+                    item = levelEllipsoid.get(index++);
+                    // item.x = x + cx; item.y = y + icy - 1; item.z = zIdx; item.w = -x + cx;
+                    item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
+                }
             }
         }
 
@@ -615,8 +632,8 @@ define([
 
         this.floorIndices();
 
-        // TODO: Shouldn't need this if doing controlling loop bounds correctly.
-        this.clipIndicesToTree(level);
+        // this.clipIndicesToTree(level);
+        this.clipIndicesToTree2(level);
 
         // this.clipIndicesOutsidePlanes(level, planes);
         this.clipIndicesOutsidePlanes2(level, planes);
@@ -716,13 +733,15 @@ define([
         var radEffectivePerPlaneOnLevel = this._radEffectivePerPlanePerLevel[level];
 
         var levelEllipsoid = this._levelEllipsoid;
-        var length = levelEllipsoid.length;
+        // var length = levelEllipsoid.length;
         var indices, i, k;
         var d1, d2, radEffective, normal, distance, plane;
-        for (k = 0; k < length; k++) {
+        for (k = 0; k < levelEllipsoid.length; k++) {
             // indices = levelEllipsoid[k];
             indices = levelEllipsoid.get(k);
             if (indices.x < 0) {
+                levelEllipsoid.remove(k);
+                k--;
                 continue;
             }
 
@@ -757,6 +776,8 @@ define([
                 if (d1 <= -radEffective && d2 <= -radEffective) {
                     // The entire row is on the negative side of the plane normal
                     indices.x = -indices.x - 1; // To handle 0
+                    levelEllipsoid.remove(k);
+                    k--;
                     break;
                 } else if (d1 >= radEffective && d2 >= radEffective) {
                     // The entire row is on the positive side of the plane normal
@@ -896,15 +917,17 @@ define([
         }
 
         var levelEllipsoid = this._levelEllipsoid;
-        var length = levelEllipsoid.length;
+        // var length = levelEllipsoid.length;
         var indices, k;
         // var planeDistance;
         var yIdxOffset, xIdxOffset, zIdxOffset;
         var d1, d2;
-        for (k = 0; k < length; k++) {
+        for (k = 0; k < levelEllipsoid.length; k++) {
             // indices = levelEllipsoid[k];
             indices = levelEllipsoid.get(k);
             if (indices.x < 0) {
+                levelEllipsoid.remove(k);
+                k--;
                 continue;
             }
 
@@ -933,6 +956,8 @@ define([
                 // End corners are both outside, set .x to neg .x, continue
                 if (d1 > 0 && d2 > 0) {
                     indices.x = -indices.x - 1; // To handle 0
+                    levelEllipsoid.remove(k);
+                    k--;
                     break;
                 }
 
@@ -971,6 +996,44 @@ define([
                 indices.x = Math.floor(indices.x);
                 indices.y = Math.floor(indices.y);
                 indices.z = Math.floor(indices.z);
+            }
+        }
+    };
+
+    /**
+     * Updates the _lodDistances array with LOD sphere radii from the camera to
+     * pull in tiles on different levels of the tree
+     * TODO: perform swap with end, dynamic generation doesn't need to call this if it's early terminating and starting its loop where the tree exists
+     * @private
+     */
+    ImplicitIndicesFinder.prototype.clipIndicesToTree2 = function(level) {
+        var levelEllipsoid = this._levelEllipsoid;
+        var lastIndices = this._lastIndices[level];
+        // var length = levelEllipsoid.length;
+        var indices, i;
+        if (this._tileset._isOct) {
+            for (i = 0; i < levelEllipsoid.length; i++) {
+                indices = levelEllipsoid.get(i);
+                if (indices.x < 0) {
+                    // swap to back
+                    levelEllipsoid.remove(i);
+                    i--; // Decrement to not skip the item that was swapped in place
+                    continue;
+                }
+                indices.x = Math.min(indices.x, lastIndices.x);
+                indices.w = Math.max(indices.w, 0);
+            }
+        } else {
+            for (i = 0; i < levelEllipsoid.length; i++) {
+                indices = levelEllipsoid.get(i);
+                if (indices.x < 0) {
+                    // swap to back
+                    levelEllipsoid.remove(i);
+                    i--; // Decrement to not skip the item that was swapped in place
+                    continue;
+                }
+                indices.x = Math.min(indices.x, lastIndices.x);
+                indices.z = Math.max(indices.z, 0);
             }
         }
     };

@@ -116,6 +116,20 @@ define([
     };
 
     /**
+     * Removes item by swapping with back element and decrementing length
+     *
+     * @returns {*} The item that was swapped in its place
+     */
+    ManagedArray.prototype.remove = function(index) {
+        var atIndex = this._array[index];
+        var lastIndex = this._length - 1;
+        var last = this._array[--this.length];
+        this._array[lastIndex] = atIndex;
+        this._array[index] = last;
+        return last;
+    };
+
+    /**
      * Resize the internal array if length > _array.length.
      *
      * @param {Number} length The length.
