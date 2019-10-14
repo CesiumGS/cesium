@@ -5,6 +5,10 @@ of the subtree
     I don't think you absolutely need 0 sse in the leaves, since there're examples working
 
     IndicesFinder
+    REPLACE refine will have to make sure to extend the loop a little in cases for sibling requests.
+        literally just making sure the loop bounds starts and ends on an even number
+        subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
+
     PLANE DIST CALC:
     Experiment: local vesion of radEffective?
     Experiment: play around with root level printing out when what plane fails
@@ -33,10 +37,6 @@ of the subtree
         subtree root indexes are. sift the index ranges into subtree bins?
 
     these will eventually be the visibliity indices (which are the request/render indices for add)
-
-    REPLACE refine will have to make sure to extend the loop a little in cases for sibling requests.
-        literally just making sure the loop bounds starts and ends on an even number
-        subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
 
 So the data stucture would want to have the seams for the axes that it is managing (x, y for sure and z as well for octree)
 the slab would have a 2d array of tile refs the dims of this array takes the min of the worst case dims for the level and the actual dims of the tree at that level.
