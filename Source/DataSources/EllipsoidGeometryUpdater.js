@@ -40,7 +40,7 @@ import Property from './Property.js';
         this.id = entity;
         this.vertexFormat = undefined;
         this.radii = undefined;
-        this.innerRadii =  undefined;
+        this.innerRadii = undefined;
         this.minimumClock = undefined;
         this.maximumClock = undefined;
         this.minimumCone = undefined;
@@ -84,8 +84,8 @@ import Property from './Property.js';
          * @memberof EllipsoidGeometryUpdater.prototype
          * @readonly
          */
-        terrainOffsetProperty: {
-            get: function() {
+        terrainOffsetProperty : {
+            get : function() {
                 return this._terrainOffsetProperty;
             }
         }
@@ -118,7 +118,7 @@ import Property from './Property.js';
             show : show,
             distanceDisplayCondition : distanceDisplayConditionAttribute,
             color : undefined,
-            offset: undefined
+            offset : undefined
         };
 
         if (this._materialProperty instanceof ColorMaterialProperty) {
@@ -340,7 +340,7 @@ import Property from './Property.js';
             if (defined(innerRadii)) {
                 if (in3D) {
                     var mag = Cartesian3.magnitude(radii);
-                    options.innerRadii = Cartesian3.fromElements(innerRadii.x/mag, innerRadii.y/mag, innerRadii.z/mag, options.innerRadii);
+                    options.innerRadii = Cartesian3.fromElements(innerRadii.x / mag, innerRadii.y / mag, innerRadii.z / mag, options.innerRadii);
                 } else {
                     options.innerRadii = Cartesian3.clone(innerRadii, options.innerRadii);
                 }
@@ -431,7 +431,7 @@ import Property from './Property.js';
 
             if (!Cartesian3.equals(offset, this._lastOffset)) {
                 attributes.offset = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
-                outlineAttributes.offset  = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
+                outlineAttributes.offset = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
                 Cartesian3.clone(offset, this._lastOffset);
             }
         }
