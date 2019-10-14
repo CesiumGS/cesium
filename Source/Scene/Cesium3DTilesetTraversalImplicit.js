@@ -160,7 +160,7 @@ define([
         }
     }
 
-    function additiveTileChecks_vis_OCT(
+    function additiveTileChecks_OCT(
         tileset,
         subtree,
         subtreeMinTreeIndicesForLevel,
@@ -282,9 +282,7 @@ define([
 
                 // Using traditional visbility and distance
                 // additiveTileChecks_visAndDist(tileset, subtree, contentLevel, distanceForLevel, frameState);
-
-                // Using traditional visibility but using level ellipsoid indices in place of distance check
-                additiveTileChecks_vis_OCT(tileset, subtree, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel, contentLevel, levelEllipsoid, frameState);
+                additiveTileChecks_OCT(tileset, subtree, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel, contentLevel, levelEllipsoid, frameState);
             } // for i
         } // for contentLevel
     }
