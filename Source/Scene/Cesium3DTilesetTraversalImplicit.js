@@ -160,7 +160,7 @@ define([
         }
     }
 
-    function additiveTileChecks_OCT(
+    function additiveTileChecks(
         tileset,
         subtree,
         subtreeMinTreeIndicesForLevel,
@@ -261,7 +261,7 @@ define([
 
             // var distanceForLevel = lodDistances[contentLevel];
             // var levelEllipsoid = indicesFinder.updateLevelEllipsoid(contentLevel);
-            var levelEllipsoid = indicesFinder.updateLevelEllipsoidDynamicOct(contentLevel, frameState.cullingVolume.planes);
+            var levelEllipsoid = indicesFinder.updateLevelEllipsoidDynamic(contentLevel, frameState.cullingVolume.planes);
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
@@ -282,7 +282,7 @@ define([
 
                 // Using traditional visbility and distance
                 // additiveTileChecks_visAndDist(tileset, subtree, contentLevel, distanceForLevel, frameState);
-                additiveTileChecks_OCT(tileset, subtree, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel, contentLevel, levelEllipsoid, frameState);
+                additiveTileChecks(tileset, subtree, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel, contentLevel, levelEllipsoid, frameState);
             } // for i
         } // for contentLevel
     }

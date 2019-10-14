@@ -455,7 +455,7 @@ define([
 
     // TODO: REMOVE BY FIXING THE REFERENCE VERSION(reference version needs to know where the fast switch is
     // and start taking samples so that there is no more than a change of 1 (0.5?) along the "x" dir between samples)
-    ImplicitIndicesFinder.prototype.updateLevelEllipsoidDynamicOct = function(level, planes) {
+    ImplicitIndicesFinder.prototype.updateLevelEllipsoidDynamic = function(level, planes) {
         var centerTilePositionOnLevel = this._centerTilePositions[level];
         // Camera center position in grid
         var cx = centerTilePositionOnLevel.x;
@@ -1036,43 +1036,43 @@ define([
         }
     };
 
-    /**
-     * Updates the _lodDistances array with LOD sphere radii from the camera to
-     * pull in tiles on different levels of the tree
-     * TODO: perform swap with end, dynamic generation doesn't need to call this if it's early terminating and starting its loop where the tree exists
-     * @private
-     */
-    ImplicitIndicesFinder.prototype.clipIndicesToTree = function(level) {
-        var levelEllipsoid = this._levelEllipsoid;
-        var lastIndices = this._lastIndices[level];
-        var length = levelEllipsoid.length;
-        var indices, i;
-        if (this._tileset._isOct) {
-            for (i = 0; i < length; i++) {
-                indices = levelEllipsoid.get(i);
-                if (indices.x < 0) {
-                    continue;
-                } else if (indices.y < 0 || indices.y > lastIndices.y || indices.z < 0 || indices.z > lastIndices.z) {
-                    indices.x = -indices.x - 1; // To handle 0
-                    continue;
-                }
-                indices.x = Math.min(indices.x, lastIndices.x);
-                indices.w = Math.max(indices.w, 0);
-            }
-        } else {
-            for (i = 0; i < length; i++) {
-                indices = levelEllipsoid.get(i);
-                if (indices.x < 0) {
-                    continue;
-                } else if (indices.y < 0 || indices.y > lastIndices.y) {
-                    indices.x = -indices.x - 1;
-                    continue;
-                }
-                indices.x = Math.min(indices.x, lastIndices.x);
-                indices.z = Math.max(indices.z, 0);
-            }
-        }
-    };
+    // /**
+    //  * Updates the _lodDistances array with LOD sphere radii from the camera to
+    //  * pull in tiles on different levels of the tree
+    //  * TODO: perform swap with end, dynamic generation doesn't need to call this if it's early terminating and starting its loop where the tree exists
+    //  * @private
+    //  */
+    // ImplicitIndicesFinder.prototype.clipIndicesToTree = function(level) {
+    //     var levelEllipsoid = this._levelEllipsoid;
+    //     var lastIndices = this._lastIndices[level];
+    //     var length = levelEllipsoid.length;
+    //     var indices, i;
+    //     if (this._tileset._isOct) {
+    //         for (i = 0; i < length; i++) {
+    //             indices = levelEllipsoid.get(i);
+    //             if (indices.x < 0) {
+    //                 continue;
+    //             } else if (indices.y < 0 || indices.y > lastIndices.y || indices.z < 0 || indices.z > lastIndices.z) {
+    //                 indices.x = -indices.x - 1; // To handle 0
+    //                 continue;
+    //             }
+    //             indices.x = Math.min(indices.x, lastIndices.x);
+    //             indices.w = Math.max(indices.w, 0);
+    //         }
+    //     } else {
+    //         for (i = 0; i < length; i++) {
+    //             indices = levelEllipsoid.get(i);
+    //             if (indices.x < 0) {
+    //                 continue;
+    //             } else if (indices.y < 0 || indices.y > lastIndices.y) {
+    //                 indices.x = -indices.x - 1;
+    //                 continue;
+    //             }
+    //             indices.x = Math.min(indices.x, lastIndices.x);
+    //             indices.z = Math.max(indices.z, 0);
+    //         }
+    //     }
+    // };
 
     // TODO: post process the level ellipsoids to nullify (make the +x component negative) rows that are culled by planes
     // or modify rows where the planes cut into them.
