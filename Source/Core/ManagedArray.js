@@ -121,11 +121,12 @@ define([
      * @returns {*} The item that was swapped in its place
      */
     ManagedArray.prototype.remove = function(index) {
-        var atIndex = this._array[index];
+        var array = this._array;
+        var atIndex = array[index];
         var lastIndex = this._length - 1;
-        var last = this._array[--this.length];
-        this._array[lastIndex] = atIndex;
-        this._array[index] = last;
+        var last = array[--this.length];
+        array[lastIndex] = atIndex;
+        array[index] = last;
         return last;
     };
 
