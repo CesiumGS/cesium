@@ -1033,7 +1033,7 @@ define([
                     continue;
                 }
                 indices.x = Math.min(indices.x, lastIndices.x);
-                indices.z = Math.max(indices.z, 0);
+                indices.z = Math.max(indices.z, 0); // the min x index is stored in z for quad
             }
         }
     };
