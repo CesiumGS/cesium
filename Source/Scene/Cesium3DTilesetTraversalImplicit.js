@@ -343,7 +343,6 @@ define([
         }
 
         indicesFinder.determineRadEffectivePerPlanePerLevel(frameState.cullingVolume.planes);
-
         var finalRefinementIndices = [];
         for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
             var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
@@ -355,6 +354,10 @@ define([
             }
 
             var levelEllipsoid = indicesFinder.updateLevelEllipsoidDynamic(contentLevel, frameState.cullingVolume.planes);
+                // 1) process the pre-clipped levelElliposoid to add the sibling indices directly to levelEllipsoid (extending x ranges and adding rows)
+                // 2) clip the indices with the planes as normal
+                // 3) post-process the clipped levelElliposoid to generate set of indices that need to be requested but not rendered
+                //   (this will be the end siblings or entire rows (range copied from visible sibling row))
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
@@ -379,6 +382,63 @@ define([
                 // replacementTileChecks(tileset, subtree, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel, contentLevel, levelEllipsoid, finalRefinementIndices, frameState);
             } // for i
         } // for contentLevel
+    }
+
+    function replacementTileChecks(
+        tileset,
+        subtree,
+        subtreeMinTreeIndicesForLevel,
+        subtreeMaxTreeIndicesForLevel,
+        contentLevel,
+        levelEllipsoid,
+        finalRefinementIndices,
+        frameState) {
+
+        var i, j, tile, xRowRange, notInBlockedRefinementRegion;
+        var levelEllipsoidLength = levelEllipsoid.length;
+        for (i = 0; i < levelEllipsoidLength; i++) {
+            xRowRange = levelEllipsoid.get(i);
+            if (xRowRange.x < subtreeMinTreeIndicesForLevel.x ||
+                xRowRange.w > subtreeMaxTreeIndicesForLevel.x ||
+                xRowRange.y < subtreeMinTreeIndicesForLevel.y ||
+                xRowRange.y > subtreeMaxTreeIndicesForLevel.y ||
+                xRowRange.z < subtreeMinTreeIndicesForLevel.z ||
+                xRowRange.z > subtreeMaxTreeIndicesForLevel.z) {
+                continue;
+            }
+
+            // Clamp the xRowRange start and end to the subtrees indices for level
+            var xStart = Math.max(subtreeMinTreeIndicesForLevel.x, xRowRange.w);
+            var xEnd = Math.min(subtreeMaxTreeIndicesForLevel.x, xRowRange.x);
+
+            // Find the begin and end in the tiles array for this x row stretch
+            var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
+            var offset = indexRange.begin;
+
+            var relXInSubtreeLevelGrid = xStart      - subtreeMinTreeIndicesForLevel.x;
+            var relYInSubtreeLevelGrid = xRowRange.y - subtreeMinTreeIndicesForLevel.y;
+            var relZInSubtreeLevelGrid = xRowRange.z - subtreeMinTreeIndicesForLevel.z;
+            var subtreeLevelDim = subtreeMaxTreeIndicesForLevel.x - subtreeMinTreeIndicesForLevel.x + 1;
+            var begin = offset + relZInSubtreeLevelGrid*subtreeLevelDim*subtreeLevelDim + relYInSubtreeLevelGrid*subtreeLevelDim + relXInSubtreeLevelGrid;
+            var end = begin + xEnd - xStart;
+
+            var tiles = subtree._tiles;
+            for (j = begin; j <= end; j++) {
+                tile = tiles[j];
+
+                if (!defined(tile)) {
+                    continue;
+                }
+
+                updateVisibility2(tileset, tile, frameState);
+                // updateVisibility(tileset, tile, frameState);
+                // if (!isVisible(tile)) {
+                //     continue;
+                // }
+
+                notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
+            }
+        }
     }
 
     function replacementTileChecks_visAndDist(tileset, subtree, contentLevel, finalRefinementIndices, frameState) {
