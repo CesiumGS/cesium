@@ -94,7 +94,6 @@ define([
 
         // Dim info
         this._worstCaseVirtualDims = new Cartesian3(); // Same for every level
-        this._worstCaseIndicesLength = 0;
         this._virtualDims = []; // Cartesian3's, min of worst case dim and treedim
         this._treeDims = []; // Cartesian3's
         this._lastIndices = []; // Cartesian3's tree indices on every level
@@ -165,7 +164,7 @@ define([
         var centerTilePositions =  this._centerTilePositions;
         var treeDims =  this._treeDims;
         var lastIndices =  this._lastIndices;
-        var virtuaDims =  this._virtualDims;
+        var virtualDims =  this._virtualDims;
         var invTileDims =  this._invTileDims;
         var tileDims =  this._tileDims;
         var invLocalTileDims =  this._invLocalTileDims;
@@ -180,7 +179,7 @@ define([
             minTilePositions.push(new Cartesian3());
             maxTilePositions.push(new Cartesian3());
             centerTilePositions.push(new Cartesian3());
-            virtuaDims.push(new Cartesian3());
+            virtualDims.push(new Cartesian3());
             radEffectivePerPlanePerLevel.push([0,0,0,0,0,0]);
         }
 
@@ -248,22 +247,10 @@ define([
      * @private
      */
     ImplicitIndicesFinder.prototype.updateLevelEllipsoidLength = function() {
-        // var originEllipsoidLength = this._originEllipsoid.length;
-        // var levelEllipsoid = this._levelEllipsoid;
-        // if (this._tileset._isOct) {
-        //     while(originEllipsoidLength > levelEllipsoid.length) {
-        //         levelEllipsoid.push(new Cartesian4());
-        //     }
-        //     levelEllipsoid.length = originEllipsoidLength;
-        // } else {
-        //     while(originEllipsoidLength > levelEllipsoid.length) {
-        //         levelEllipsoid.push(new Cartesian3());
-        //     }
-        //     levelEllipsoid.length = originEllipsoidLength;
-        // }
-
-        // TODO: use virtuaDims on last level since that is the actual max it will ever need to be
-        var worstCaseIndicesLength = this._worstCaseIndicesLength;
+        var virtualDims = this._virtualDims;
+        var virtualDimsOnLastLevel = virtualDims[virtualDims.length - 1];
+        var isOct = this._tileset._isOct;
+        var worstCaseIndicesLength = isOct ? virtualDimsOnLastLevel.y * virtualDimsOnLastLevel.z : virtualDimsOnLastLevel.y;
         var levelEllipsoid = this._levelEllipsoid;
         var internalArray = levelEllipsoid.values;
         var internalArrayLength = internalArray.length;
@@ -273,7 +260,7 @@ define([
         }
         var diff = worstCaseIndicesLength - internalArrayLength;
         levelEllipsoid.resize(internalArrayLength); // puts it back to its internal array length
-        if (this._tileset._isOct) {
+        if (isOct) {
             while(diff-- > 0) {
                 levelEllipsoid.push(new Cartesian4());
             }
@@ -394,7 +381,7 @@ define([
         var i, lodDistance, gErrorOnLevel;
         var treeDimsOnLevel, virtuaDimsOnLevel;
         var treeDims = this._treeDims;
-        var virtuaDims = this._virtualDims;
+        var virtualDims = this._virtualDims;
         var invTileDims = this._invTileDims;
 
         // Worst case dims, they're the same for every level
@@ -408,16 +395,15 @@ define([
         worstCaseVirtualDims.x = Math.ceil(worstCaseVirtualDims.x) + 1;
         worstCaseVirtualDims.y = Math.ceil(worstCaseVirtualDims.y) + 1;
         worstCaseVirtualDims.z = Math.ceil(worstCaseVirtualDims.z) + 1;
-        this._worstCaseIndicesLength = worstCaseVirtualDims.x * worstCaseVirtualDims.y * worstCaseVirtualDims.z;
 
         for (i = tilesetStartLevel; i < length; i++) {
             gErrorOnLevel = startingGError / Math.pow(base, i - tilesetStartLevel);
             lodDistance = gErrorOnLevel * factor;
             lodDistances[i] = lodDistance;
 
-            // virtuaDims, i.e. min of worst and treeDimsOnLevel, or what the actual virtual grid would store
+            // virtualDims, i.e. min of worst and treeDimsOnLevel, or what the actual virtual grid would store
             treeDimsOnLevel = treeDims[i];
-            virtuaDimsOnLevel = virtuaDims[i];
+            virtuaDimsOnLevel = virtualDims[i];
             Cartesian3.minimumByComponent(worstCaseVirtualDims, treeDimsOnLevel, virtuaDimsOnLevel);
         }
 
@@ -487,7 +473,6 @@ define([
         var axesExtentsY = lodDistanceToTileRatio.y;
         var axesExtentsZ = lodDistanceToTileRatio.z;
 
-        // this._levelEllipsoid = [];
         var levelEllipsoid = this._levelEllipsoid;
         // var treeDimsOnLevel = this._treeDims[level];
         var lastIndices = this._lastIndices[level];
@@ -503,19 +488,26 @@ define([
         var index = 0;
         var item;
 
+        // TODO: setup zEnd for + and -
+        // TODO: bail if zEnd for + and - doesnt touch the tree grid for this level
+        // TODO: setup yEnd for + and -
+        // TODO: bail if yEnd for + and - doesnt touch the tree grid for this level
+        // TODO: setup zStart for + and -
+        // TODO: setup yStart for + and -
+
         // +z
         for (z = rz; z < zEnd; z++) {
             if (z !== rz) { z = Math.floor(z); }
-            relZ = z - rz;
-            x = Math.sqrt(Mz - Nz * relZ * relZ);
 
             zIdx = Math.floor(z + icz);
-
             if (zIdx < 0) {
                 continue;
             } else if (zIdx > lastZ) {
                 break;
             }
+
+            relZ = z - rz;
+            x = Math.sqrt(Mz - Nz * relZ * relZ);
 
             // levelEllipsoid.push(new Cartesian4(x + cx, cy, zIdx,-x + cx));
             item = levelEllipsoid.get(index++);
@@ -525,15 +517,15 @@ define([
             My = x * x;
             Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
             for (y = 1; y < yEnd; y++) {
-                relY  = y - ry;
-                x = Math.sqrt(My - Ny * relY * relY);
                 yIdx = Math.floor(y + icy);
-
                 if (yIdx < 0) {
                     continue;
                 } else if (yIdx > lastY) {
                     break;
                 }
+
+                relY  = y - ry;
+                x = Math.sqrt(My - Ny * relY * relY);
 
                 // levelEllipsoid.push(new Cartesian4(x + cx, y + icy, zIdx, -x + cx));
                 item = levelEllipsoid.get(index++);
@@ -543,16 +535,15 @@ define([
 
             yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
             for (y = Math.ceil(ry-1); y > yEnd; y--) {
-                relY = y - ry;
-                x = Math.sqrt(My - Ny * relY * relY);
-
                 yIdx = Math.floor(y + icy - 1);
-
                 if (yIdx > lastY) {
                     continue;
                 } else if (yIdx < 0) {
                     break;
                 }
+
+                relY = y - ry;
+                x = Math.sqrt(My - Ny * relY * relY);
 
                 // levelEllipsoid.push(new Cartesian4(x + cx, y + icy - 1, zIdx, -x + cx));
                 item = levelEllipsoid.get(index++);
@@ -567,16 +558,15 @@ define([
         // -z
         zEnd = Math.floor(rz - axesExtentsZ);
         for (z = Math.ceil(rz-1); z > zEnd; z--) {
-            relZ = z - rz;
-            x = Math.sqrt(Mz - Nz * relZ * relZ);
-
             zIdx = Math.floor(z + icz - 1);
-
             if (zIdx > lastZ) {
                 continue;
             } else if (zIdx < 0) {
                 break;
             }
+
+            relZ = z - rz;
+            x = Math.sqrt(Mz - Nz * relZ * relZ);
 
             // levelEllipsoid.push(new Cartesian4(x + cx, cy, zIdx,-x + cx));
             item = levelEllipsoid.get(index++);
@@ -586,16 +576,16 @@ define([
             My = x * x;
             Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
             for (y = 1; y < yEnd; y++) {
-                relY  = y - ry;
-                x = Math.sqrt(My - Ny * relY * relY);
-
                 yIdx = Math.floor(y + icy);
-
                 if (yIdx < 0) {
                     continue;
                 } else if (yIdx > lastY) {
                     break;
                 }
+
+                relY  = y - ry;
+                x = Math.sqrt(My - Ny * relY * relY);
+
                 // levelEllipsoid.push(new Cartesian4(x + cx, y + icy, zIdx, -x + cx));
                 item = levelEllipsoid.get(index++);
                 // item.x = x + cx; item.y = y + icy; item.z = zIdx; item.w = -x + cx;
@@ -604,16 +594,15 @@ define([
 
             yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
             for (y = Math.ceil(ry-1); y > yEnd; y--) {
-                relY = y - ry;
-                x = Math.sqrt(My - Ny * relY * relY);
-
                 yIdx = Math.floor(y + icy - 1);
-
                 if (yIdx > lastY) {
                     continue;
                 } else if (yIdx < 0) {
                     break;
                 }
+
+                relY = y - ry;
+                x = Math.sqrt(My - Ny * relY * relY);
 
                 // levelEllipsoid.push(new Cartesian4(x + cx, y + icy - 1, zIdx, -x + cx));
                 item = levelEllipsoid.get(index++);

@@ -6,8 +6,7 @@ of the subtree
 
     IndicesFinder
     TODO:
-    look for spots to early return durning update,
-    then try to allocate the _levelEllipsoid using virtuaDims on last level
+    then try to allocate the _levelEllipsoid using virtuaDims on last level (y*z for oct, just y for quad)
 
     PLANE DIST CALC:
     Experiment: local vesion of radEffective?
