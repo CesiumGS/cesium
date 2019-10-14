@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian2',
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'DataSources/ConstantProperty',
-        'DataSources/ImageMaterialProperty',
-        'DataSources/TimeIntervalCollectionProperty'
-    ], function(
-        Cartesian2,
-        Color,
-        JulianDate,
-        TimeInterval,
-        ConstantProperty,
-        ImageMaterialProperty,
-        TimeIntervalCollectionProperty) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { ImageMaterialProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
 
 describe('DataSources/ImageMaterialProperty', function() {
 
@@ -174,5 +164,4 @@ describe('DataSources/ImageMaterialProperty', function() {
         }));
         expect(property.isConstant).toBe(false);
     });
-});
 });

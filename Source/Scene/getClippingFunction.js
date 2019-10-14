@@ -1,14 +1,6 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Check',
-        '../Renderer/PixelDatatype',
-        './ClippingPlaneCollection'
-    ], function(
-        Cartesian2,
-        Check,
-        PixelDatatype,
-        ClippingPlaneCollection) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Check from '../Core/Check.js';
+import ClippingPlaneCollection from './ClippingPlaneCollection.js';
 
     var textureResolutionScratch = new Cartesian2();
     /**
@@ -166,6 +158,4 @@ define([
             '}\n';
         return functionString;
     }
-
-    return getClippingFunction;
-});
+export default getClippingFunction;

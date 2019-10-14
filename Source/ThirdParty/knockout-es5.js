@@ -5,9 +5,6 @@
  * MIT license
  */
 
-define(function() {
-    'use strict';
-
     var OBSERVABLES_PROPERTY = '__knockoutObservables';
     var SUBSCRIBABLE_PROPERTY = '__knockoutSubscribable';
 
@@ -280,7 +277,6 @@ define(function() {
         ko.defineProperty = defineComputedProperty;
     }
 
-    return {
+    export default {
         attachToKo : attachToKo
     };
-});

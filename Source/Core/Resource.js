@@ -1,58 +1,29 @@
-define([
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './appendForwardSlash',
-        './Check',
-        './clone',
-        './combine',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './freezeObject',
-        './getAbsoluteUri',
-        './getBaseUri',
-        './getExtensionFromUri',
-        './isBlobUri',
-        './isCrossOriginUrl',
-        './isDataUri',
-        './loadAndExecuteScript',
-        './objectToQuery',
-        './queryToObject',
-        './Request',
-        './RequestErrorEvent',
-        './RequestScheduler',
-        './RequestState',
-        './RuntimeError',
-        './TrustedServers'
-    ], function(
-        Uri,
-        when,
-        appendForwardSlash,
-        Check,
-        clone,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        freezeObject,
-        getAbsoluteUri,
-        getBaseUri,
-        getExtensionFromUri,
-        isBlobUri,
-        isCrossOriginUrl,
-        isDataUri,
-        loadAndExecuteScript,
-        objectToQuery,
-        queryToObject,
-        Request,
-        RequestErrorEvent,
-        RequestScheduler,
-        RequestState,
-        RuntimeError,
-        TrustedServers) {
-    'use strict';
+import Uri from '../ThirdParty/Uri.js';
+import when from '../ThirdParty/when.js';
+import appendForwardSlash from './appendForwardSlash.js';
+import Check from './Check.js';
+import clone from './clone.js';
+import combine from './combine.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import getAbsoluteUri from './getAbsoluteUri.js';
+import getBaseUri from './getBaseUri.js';
+import getExtensionFromUri from './getExtensionFromUri.js';
+import isBlobUri from './isBlobUri.js';
+import isCrossOriginUrl from './isCrossOriginUrl.js';
+import isDataUri from './isDataUri.js';
+import loadAndExecuteScript from './loadAndExecuteScript.js';
+import objectToQuery from './objectToQuery.js';
+import queryToObject from './queryToObject.js';
+import Request from './Request.js';
+import RequestErrorEvent from './RequestErrorEvent.js';
+import RequestScheduler from './RequestScheduler.js';
+import RequestState from './RequestState.js';
+import RuntimeError from './RuntimeError.js';
+import TrustedServers from './TrustedServers.js';
 
     var xhrBlobSupported = (function() {
         try {
@@ -2093,6 +2064,4 @@ define([
      * @param {Error} [error] The error that occurred during the loading of the resource.
      * @returns {Boolean|Promise<Boolean>} If true or a promise that resolved to true, the resource will be retried. Otherwise the failure will be returned.
      */
-
-    return Resource;
-});
+export default Resource;

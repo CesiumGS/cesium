@@ -1,8 +1,4 @@
-define([
-        'Core/defaultValue'
-    ], function(
-        defaultValue) {
-    'use strict';
+import { defaultValue } from '../Source/Cesium.js';
 
     var canvasCount = 0;
 
@@ -21,6 +17,4 @@ define([
 
         return canvas;
     }
-
-    return createCanvas;
-});
+export default createCanvas;

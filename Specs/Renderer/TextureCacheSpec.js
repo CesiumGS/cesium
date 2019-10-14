@@ -1,12 +1,6 @@
-define([
-        'Renderer/Texture',
-        'Renderer/TextureCache',
-        'Specs/createContext'
-    ], function(
-        Texture,
-        TextureCache,
-        createContext) {
-        'use strict';
+import { Texture } from '../../Source/Cesium.js';
+import { TextureCache } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
 describe('Renderer/TextureCache', function() {
 
@@ -126,4 +120,3 @@ describe('Renderer/TextureCache', function() {
         expect(cache.isDestroyed()).toEqual(false);
     });
 }, 'WebGL');
-});

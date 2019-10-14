@@ -1,16 +1,8 @@
-define([
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/PolylinePipeline',
-        'Core/Transforms'
-    ], function(
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        PolylinePipeline,
-        Transforms) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PolylinePipeline } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
 
 describe('Core/PolylinePipeline', function() {
 
@@ -167,5 +159,4 @@ describe('Core/PolylinePipeline', function() {
         expect(newPositions.length).toEqual(3);
         expect(newPositions).toEqual([0,0,1]);
     });
-});
 });

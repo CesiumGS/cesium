@@ -1,28 +1,14 @@
-define([
-        '../../Core/binarySearch',
-        '../../Core/ClockRange',
-        '../../Core/ClockStep',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/DeveloperError',
-        '../../Core/JulianDate',
-        '../../ThirdParty/knockout',
-        '../../ThirdParty/sprintf',
-        '../createCommand',
-        '../ToggleButtonViewModel'
-    ], function(
-        binarySearch,
-        ClockRange,
-        ClockStep,
-        defined,
-        defineProperties,
-        DeveloperError,
-        JulianDate,
-        knockout,
-        sprintf,
-        createCommand,
-        ToggleButtonViewModel) {
-    'use strict';
+import binarySearch from '../../Core/binarySearch.js';
+import ClockRange from '../../Core/ClockRange.js';
+import ClockStep from '../../Core/ClockStep.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import JulianDate from '../../Core/JulianDate.js';
+import knockout from '../../ThirdParty/knockout.js';
+import sprintf from '../../ThirdParty/sprintf.js';
+import createCommand from '../createCommand.js';
+import ToggleButtonViewModel from '../ToggleButtonViewModel.js';
 
     var monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     var realtimeShuttleRingAngle = 15;
@@ -588,6 +574,4 @@ define([
      * @param {AnimationViewModel} viewModel The AnimationViewModel instance requesting formatting.
      * @returns {String} The string representation of the time portion of the provided date.
      */
-
-    return AnimationViewModel;
-});
+export default AnimationViewModel;

@@ -1,10 +1,5 @@
-define([
-        'Core/destroyObject',
-        'Scene/OrderedGroundPrimitiveCollection'
-    ], function(
-        destroyObject,
-        OrderedGroundPrimitiveCollection) {
-        'use strict';
+import { destroyObject } from '../../Source/Cesium.js';
+import { OrderedGroundPrimitiveCollection } from '../../Source/Cesium.js';
 
 describe('Scene/OrderedGroundPrimitiveCollection', function() {
 
@@ -268,5 +263,4 @@ describe('Scene/OrderedGroundPrimitiveCollection', function() {
         collection.destroy();
         expect(collection.isDestroyed()).toBe(true);
     });
-});
 });

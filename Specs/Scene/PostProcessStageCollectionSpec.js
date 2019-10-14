@@ -1,16 +1,8 @@
-define([
-        'Scene/PostProcessStage',
-        'Scene/PostProcessStageCollection',
-        'Scene/Tonemapper',
-        'Specs/createScene',
-        'Specs/ViewportPrimitive'
-    ], function(
-        PostProcessStage,
-        PostProcessStageCollection,
-        Tonemapper,
-        createScene,
-        ViewportPrimitive) {
-        'use strict';
+import { PostProcessStage } from '../../Source/Cesium.js';
+import { PostProcessStageCollection } from '../../Source/Cesium.js';
+import { Tonemapper } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import ViewportPrimitive from '../ViewportPrimitive.js';
 
 describe('Scene/PostProcessStageCollection', function() {
 
@@ -357,4 +349,3 @@ describe('Scene/PostProcessStageCollection', function() {
     });
 
 }, 'WebGL');
-});

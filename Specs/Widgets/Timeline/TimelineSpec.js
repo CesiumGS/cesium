@@ -1,10 +1,5 @@
-define([
-        'Core/Clock',
-        'Widgets/Timeline/Timeline'
-    ], function(
-        Clock,
-        Timeline) {
-        'use strict';
+import { Clock } from '../../../Source/Cesium.js';
+import { Timeline } from '../../../Source/Cesium.js';
 
 describe('Widgets/Timeline/Timeline', function() {
 
@@ -28,5 +23,4 @@ describe('Widgets/Timeline/Timeline', function() {
         timeline.destroy();
         expect(timeline.isDestroyed()).toEqual(true);
     });
-});
 });

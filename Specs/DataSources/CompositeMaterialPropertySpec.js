@@ -1,20 +1,10 @@
-define([
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/CompositeMaterialProperty',
-        'DataSources/GridMaterialProperty'
-    ], function(
-        Color,
-        JulianDate,
-        TimeInterval,
-        TimeIntervalCollection,
-        ColorMaterialProperty,
-        CompositeMaterialProperty,
-        GridMaterialProperty) {
-        'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { CompositeMaterialProperty } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
 
 describe('DataSources/CompositeMaterialProperty', function() {
 
@@ -186,5 +176,4 @@ describe('DataSources/CompositeMaterialProperty', function() {
             property.getType(undefined);
         }).toThrowDeveloperError();
     });
-});
 });

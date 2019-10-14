@@ -1,30 +1,15 @@
-define([
-        'Core/MapboxApi',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorTilingScheme',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Scene/MapboxStyleImageryProvider',
-        'Specs/pollToPromise'
-    ], function(
-        MapboxApi,
-        CesiumMath,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        WebMercatorTilingScheme,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        MapboxStyleImageryProvider,
-        pollToPromise) {
-        'use strict';
+import { MapboxApi } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { MapboxStyleImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/MapboxStyleImageryProvider', function() {
 
@@ -359,5 +344,4 @@ describe('Scene/MapboxStyleImageryProvider', function() {
             return provider.requestImage(0, 0, 0);
         });
     });
-});
 });

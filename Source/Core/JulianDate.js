@@ -1,26 +1,13 @@
-define([
-        '../ThirdParty/sprintf',
-        './binarySearch',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './GregorianDate',
-        './isLeapYear',
-        './LeapSecond',
-        './TimeConstants',
-        './TimeStandard'
-    ], function(
-        sprintf,
-        binarySearch,
-        defaultValue,
-        defined,
-        DeveloperError,
-        GregorianDate,
-        isLeapYear,
-        LeapSecond,
-        TimeConstants,
-        TimeStandard) {
-    'use strict';
+import sprintf from '../ThirdParty/sprintf.js';
+import binarySearch from './binarySearch.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import GregorianDate from './GregorianDate.js';
+import isLeapYear from './isLeapYear.js';
+import LeapSecond from './LeapSecond.js';
+import TimeConstants from './TimeConstants.js';
+import TimeStandard from './TimeStandard.js';
 
     var gregorianDateScratch = new GregorianDate();
     var daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -1073,6 +1060,4 @@ define([
                                new LeapSecond(new JulianDate(2457204, 43236.0, TimeStandard.TAI), 36), // July 1, 2015 00:00:00 UTC
                                new LeapSecond(new JulianDate(2457754, 43237.0, TimeStandard.TAI), 37)  // January 1, 2017 00:00:00 UTC
                              ];
-
-    return JulianDate;
-});
+export default JulianDate;

@@ -1,14 +1,7 @@
-define([
-        '../../Core/buildModuleUrl',
-        '../../Core/createWorldTerrain',
-        '../../Core/EllipsoidTerrainProvider',
-        '../BaseLayerPicker/ProviderViewModel'
-    ], function(
-        buildModuleUrl,
-        createWorldTerrain,
-        EllipsoidTerrainProvider,
-        ProviderViewModel) {
-    'use strict';
+import buildModuleUrl from '../../Core/buildModuleUrl.js';
+import createWorldTerrain from '../../Core/createWorldTerrain.js';
+import EllipsoidTerrainProvider from '../../Core/EllipsoidTerrainProvider.js';
+import ProviderViewModel from '../BaseLayerPicker/ProviderViewModel.js';
 
     /**
      * @private
@@ -40,6 +33,4 @@ define([
 
         return providerViewModels;
     }
-
-    return createDefaultTerrainProviderViewModels;
-});
+export default createDefaultTerrainProviderViewModels;

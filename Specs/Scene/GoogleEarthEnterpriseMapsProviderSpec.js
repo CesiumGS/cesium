@@ -1,28 +1,14 @@
-define([
-        'Core/GeographicTilingScheme',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorTilingScheme',
-        'Scene/GoogleEarthEnterpriseMapsProvider',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise'
-    ], function(
-        GeographicTilingScheme,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        WebMercatorTilingScheme,
-        GoogleEarthEnterpriseMapsProvider,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise) {
-        'use strict';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseMapsProvider } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Scene/GoogleEarthEnterpriseMapsProvider', function() {
 
@@ -507,5 +493,4 @@ describe('Scene/GoogleEarthEnterpriseMapsProvider', function() {
             expect(errorEventRaised).toEqual(true);
         });
     });
-});
 });

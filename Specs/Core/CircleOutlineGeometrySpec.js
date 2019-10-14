@@ -1,14 +1,7 @@
-define([
-        'Core/Cartesian3',
-        'Core/CircleOutlineGeometry',
-        'Core/Ellipsoid',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian3,
-        CircleOutlineGeometry,
-        Ellipsoid,
-        createPackableSpecs) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CircleOutlineGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/CircleOutlineGeometry', function() {
 
@@ -120,5 +113,4 @@ describe('Core/CircleOutlineGeometry', function() {
     });
     packedInstance = [center.x, center.y, center.z, ellipsoid.radii.x, ellipsoid.radii.y, ellipsoid.radii.z, 2, 2, 0, 5, 1, 5, 4, -1];
     createPackableSpecs(CircleOutlineGeometry, packableInstance, packedInstance, 'at height');
-});
 });

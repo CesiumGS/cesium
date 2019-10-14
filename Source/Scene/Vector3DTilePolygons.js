@@ -1,38 +1,19 @@
-define([
-        '../Core/arraySlice',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/Ellipsoid',
-        '../Core/IndexDatatype',
-        '../Core/OrientedBoundingBox',
-        '../Core/Rectangle',
-        '../Core/TaskProcessor',
-        '../ThirdParty/when',
-        './ClassificationType',
-        './Vector3DTileBatch',
-        './Vector3DTilePrimitive'
-    ], function(
-        arraySlice,
-        Cartesian3,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        Ellipsoid,
-        IndexDatatype,
-        OrientedBoundingBox,
-        Rectangle,
-        TaskProcessor,
-        when,
-        ClassificationType,
-        Vector3DTileBatch,
-        Vector3DTilePrimitive) {
-    'use strict';
+import arraySlice from '../Core/arraySlice.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import Rectangle from '../Core/Rectangle.js';
+import TaskProcessor from '../Core/TaskProcessor.js';
+import when from '../ThirdParty/when.js';
+import ClassificationType from './ClassificationType.js';
+import Vector3DTileBatch from './Vector3DTileBatch.js';
+import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
 
     /**
      * Creates a batch of pre-triangulated polygons draped on terrain and/or 3D Tiles.
@@ -451,6 +432,4 @@ define([
         this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
-
-    return Vector3DTilePolygons;
-});
+export default Vector3DTilePolygons;

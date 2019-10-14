@@ -1,36 +1,18 @@
-define([
-        './AxisAlignedBoundingBox',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartesian4',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Ellipsoid',
-        './IntersectionTests',
-        './Matrix4',
-        './Plane',
-        './Ray',
-        './Transforms'
-    ], function(
-        AxisAlignedBoundingBox,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Ellipsoid,
-        IntersectionTests,
-        Matrix4,
-        Plane,
-        Ray,
-        Transforms) {
-    'use strict';
+import AxisAlignedBoundingBox from './AxisAlignedBoundingBox.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartesian4 from './Cartesian4.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import IntersectionTests from './IntersectionTests.js';
+import Matrix4 from './Matrix4.js';
+import Plane from './Plane.js';
+import Ray from './Ray.js';
+import Transforms from './Transforms.js';
 
     var scratchCart4 = new Cartesian4();
     /**
@@ -348,6 +330,4 @@ define([
 
         return result;
     };
-
-    return EllipsoidTangentPlane;
-});
+export default EllipsoidTangentPlane;

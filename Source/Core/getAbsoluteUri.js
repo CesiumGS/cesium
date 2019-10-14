@@ -1,14 +1,7 @@
-define([
-        '../ThirdParty/Uri',
-        './defaultValue',
-        './defined',
-        './DeveloperError'
-    ], function(
-        Uri,
-        defaultValue,
-        defined,
-        DeveloperError) {
-    'use strict';
+import Uri from '../ThirdParty/Uri.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Given a relative Uri and a base Uri, returns the absolute Uri of the relative Uri.
@@ -49,6 +42,4 @@ define([
         var relativeUri = new Uri(relative);
         return relativeUri.resolve(baseUri).toString();
     };
-
-    return getAbsoluteUri;
-});
+export default getAbsoluteUri;

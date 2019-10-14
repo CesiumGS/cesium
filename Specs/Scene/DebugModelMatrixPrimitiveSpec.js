@@ -1,14 +1,7 @@
-define([
-        'Core/Cartesian3',
-        'Core/Matrix4',
-        'Scene/DebugModelMatrixPrimitive',
-        'Specs/createScene'
-    ], function(
-        Cartesian3,
-        Matrix4,
-        DebugModelMatrixPrimitive,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { DebugModelMatrixPrimitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/DebugModelMatrixPrimitive', function() {
 
@@ -90,4 +83,3 @@ describe('Scene/DebugModelMatrixPrimitive', function() {
         expect(p.isDestroyed()).toEqual(true);
     });
 }, 'WebGL');
-});

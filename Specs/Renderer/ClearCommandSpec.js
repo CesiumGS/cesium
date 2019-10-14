@@ -1,10 +1,5 @@
-define([
-        'Core/Color',
-        'Renderer/ClearCommand'
-    ], function(
-        Color,
-        ClearCommand) {
-        'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { ClearCommand } from '../../Source/Cesium.js';
 
 describe('Renderer/ClearCommand', function() {
 
@@ -41,5 +36,4 @@ describe('Renderer/ClearCommand', function() {
         expect(ClearCommand.ALL.renderState).toBeUndefined();
         expect(ClearCommand.ALL.framebuffer).toBeUndefined();
     });
-});
 });

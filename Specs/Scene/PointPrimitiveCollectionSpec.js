@@ -1,32 +1,16 @@
-define([
-        'Core/BoundingRectangle',
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/Math',
-        'Core/NearFarScalar',
-        'Core/Rectangle',
-        'Scene/BlendOption',
-        'Scene/PointPrimitive',
-        'Scene/PointPrimitiveCollection',
-        'Specs/createScene'
-    ], function(
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        CesiumMath,
-        NearFarScalar,
-        Rectangle,
-        BlendOption,
-        PointPrimitive,
-        PointPrimitiveCollection,
-        createScene) {
-        'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { BlendOption } from '../../Source/Cesium.js';
+import { PointPrimitive } from '../../Source/Cesium.js';
+import { PointPrimitiveCollection } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/PointPrimitiveCollection', function() {
 
@@ -945,4 +929,3 @@ describe('Scene/PointPrimitiveCollection', function() {
         expect(actual.radius).toBeGreaterThan(expected.radius);
     });
 }, 'WebGL');
-});

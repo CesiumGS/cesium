@@ -1,44 +1,22 @@
-define([
-        './arrayFill',
-        './arrayRemoveDuplicates',
-        './BoundingSphere',
-        './Cartesian3',
-        './Check',
-        './ComponentDatatype',
-        './CornerType',
-        './CorridorGeometryLibrary',
-        './defaultValue',
-        './defined',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryOffsetAttribute',
-        './IndexDatatype',
-        './Math',
-        './PolygonPipeline',
-        './PrimitiveType'
-    ], function(
-        arrayFill,
-        arrayRemoveDuplicates,
-        BoundingSphere,
-        Cartesian3,
-        Check,
-        ComponentDatatype,
-        CornerType,
-        CorridorGeometryLibrary,
-        defaultValue,
-        defined,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryOffsetAttribute,
-        IndexDatatype,
-        CesiumMath,
-        PolygonPipeline,
-        PrimitiveType) {
-    'use strict';
+import arrayFill from './arrayFill.js';
+import arrayRemoveDuplicates from './arrayRemoveDuplicates.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import CornerType from './CornerType.js';
+import CorridorGeometryLibrary from './CorridorGeometryLibrary.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Ellipsoid from './Ellipsoid.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryOffsetAttribute from './GeometryOffsetAttribute.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import PolygonPipeline from './PolygonPipeline.js';
+import PrimitiveType from './PrimitiveType.js';
 
     var cartesian1 = new Cartesian3();
     var cartesian2 = new Cartesian3();
@@ -550,6 +528,4 @@ define([
             offsetAttribute : corridorOutlineGeometry._offsetAttribute
         });
     };
-
-    return CorridorOutlineGeometry;
-});
+export default CorridorOutlineGeometry;

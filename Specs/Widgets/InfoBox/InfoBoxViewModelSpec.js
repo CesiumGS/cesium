@@ -1,8 +1,4 @@
-define([
-        'Widgets/InfoBox/InfoBoxViewModel'
-    ], function(
-        InfoBoxViewModel) {
-        'use strict';
+import { InfoBoxViewModel } from '../../../Source/Cesium.js';
 
 describe('Widgets/InfoBox/InfoBoxViewModel', function() {
 
@@ -50,5 +46,4 @@ describe('Widgets/InfoBox/InfoBoxViewModel', function() {
         viewModel.isCameraTracking = true;
         expect(viewModel.cameraIconPath).toBe(disableTrackingPath);
     });
-});
 });

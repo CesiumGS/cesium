@@ -1,20 +1,10 @@
-define([
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/Event',
-        '../Core/GeographicTilingScheme',
-        '../ThirdParty/when'
-    ], function(
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        Event,
-        GeographicTilingScheme,
-        when) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import Event from '../Core/Event.js';
+import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * An {@link ImageryProvider} that draws a box around every rendered tile in the tiling scheme, and draws
@@ -284,6 +274,4 @@ define([
     TileCoordinatesImageryProvider.prototype.pickFeatures = function(x, y, level, longitude, latitude) {
         return undefined;
     };
-
-    return TileCoordinatesImageryProvider;
-});
+export default TileCoordinatesImageryProvider;

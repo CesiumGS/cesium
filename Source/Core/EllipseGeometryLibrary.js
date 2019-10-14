@@ -1,14 +1,7 @@
-define([
-        './Cartesian3',
-        './Math',
-        './Matrix3',
-        './Quaternion'
-    ], function(
-        Cartesian3,
-        CesiumMath,
-        Matrix3,
-        Quaternion) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import Quaternion from './Quaternion.js';
 
     var EllipseGeometryLibrary = {};
 
@@ -267,6 +260,4 @@ define([
 
         return r;
     };
-
-    return EllipseGeometryLibrary;
-});
+export default EllipseGeometryLibrary;

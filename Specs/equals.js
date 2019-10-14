@@ -1,8 +1,4 @@
-define([
-        'Core/FeatureDetection'
-    ], function(
-        FeatureDetection) {
-    'use strict';
+import { FeatureDetection } from '../Source/Cesium.js';
 
     function isTypedArray(o) {
         return FeatureDetection.typedArrayTypes.some(function(type) {
@@ -22,6 +18,4 @@ define([
         b = typedArrayToArray(b);
         return util.equals(a, b, customEqualiyTesters);
     }
-
-    return equals;
-});
+export default equals;

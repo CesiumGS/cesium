@@ -1,28 +1,14 @@
-define([
-        './Cartesian3',
-        './Cartesian4',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './deprecationWarning',
-        './freezeObject',
-        './Math',
-        './Matrix3',
-        './RuntimeError'
-    ], function(
-        Cartesian3,
-        Cartesian4,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        freezeObject,
-        CesiumMath,
-        Matrix3,
-        RuntimeError) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartesian4 from './Cartesian4.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import deprecationWarning from './deprecationWarning.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import RuntimeError from './RuntimeError.js';
 
     /**
      * A 4x4 matrix, indexable as a column-major order array.
@@ -2643,6 +2629,4 @@ define([
                '(' + this[2] + ', ' + this[6] + ', ' + this[10] + ', ' + this[14] + ')\n' +
                '(' + this[3] + ', ' + this[7] + ', ' + this[11] + ', ' + this[15] + ')';
     };
-
-    return Matrix4;
-});
+export default Matrix4;

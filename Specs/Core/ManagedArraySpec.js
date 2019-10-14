@@ -1,8 +1,4 @@
-define([
-        'Core/ManagedArray'
-    ], function(
-        ManagedArray) {
-        'use strict';
+import { ManagedArray } from '../../Source/Cesium.js';
 
 describe('Core/ManagedArray', function() {
 
@@ -149,5 +145,4 @@ describe('Core/ManagedArray', function() {
         expect(array.length).toEqual(2);
         expect(array.values.length).toEqual(3);
     });
-});
 });

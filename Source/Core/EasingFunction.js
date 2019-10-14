@@ -1,10 +1,5 @@
-define([
-        '../ThirdParty/Tween',
-        './freezeObject'
-    ], function(
-        Tween,
-        freezeObject) {
-    'use strict';
+import Tween from '../ThirdParty/Tween.js';
+import freezeObject from './freezeObject.js';
 
     /**
      * Easing functions for use with {@link TweenCollection}.  These function are from
@@ -259,6 +254,4 @@ define([
      *     return time * (2.0 - time);
      * }
      */
-
-    return freezeObject(EasingFunction);
-});
+export default freezeObject(EasingFunction);

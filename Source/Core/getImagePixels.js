@@ -1,8 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from './defined.js';
 
     var context2DsByWidthAndHeight = {};
 
@@ -44,6 +40,4 @@ define([
         context2d.drawImage(image, 0, 0, width, height);
         return context2d.getImageData(0, 0, width, height).data;
     }
-
-    return getImagePixels;
-});
+export default getImagePixels;

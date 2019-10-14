@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/PerspectiveOffCenterFrustum'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        CesiumMath,
-        Matrix4,
-        PerspectiveOffCenterFrustum) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PerspectiveOffCenterFrustum } from '../../Source/Cesium.js';
 
 describe('Core/PerspectiveOffCenterFrustum', function() {
 
@@ -266,5 +257,4 @@ describe('Core/PerspectiveOffCenterFrustum', function() {
         expect(frustum2).toBe(result);
         expect(frustum).toEqual(frustum2);
     });
-});
 });

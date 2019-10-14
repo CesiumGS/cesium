@@ -1,12 +1,6 @@
-define([
-        'Core/loadImageFromTypedArray',
-        'Core/Resource',
-        'ThirdParty/when'
-    ], function(
-        loadImageFromTypedArray,
-        Resource,
-        when) {
-        'use strict';
+import { loadImageFromTypedArray } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Core/loadImageFromTypedArray', function() {
 
@@ -119,5 +113,4 @@ describe('Core/loadImageFromTypedArray', function() {
             });
         }).toThrowDeveloperError();
     });
-});
 });

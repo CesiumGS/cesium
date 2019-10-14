@@ -1,5 +1,3 @@
-define([], function() {
-    'use strict';
 
     /**
      * Parses the result of XMLHttpRequest's getAllResponseHeaders() method into
@@ -37,6 +35,4 @@ define([], function() {
 
         return headers;
     }
-
-    return parseResponseHeaders;
-});
+export default parseResponseHeaders;

@@ -1,34 +1,17 @@
-define([
-        './BoundingSphere',
-        './Cartesian3',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './IndexDatatype',
-        './Math',
-        './PrimitiveType',
-        './WallGeometryLibrary'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        IndexDatatype,
-        CesiumMath,
-        PrimitiveType,
-        WallGeometryLibrary) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import PrimitiveType from './PrimitiveType.js';
+import WallGeometryLibrary from './WallGeometryLibrary.js';
 
     var scratchCartesian3Position1 = new Cartesian3();
     var scratchCartesian3Position2 = new Cartesian3();
@@ -412,6 +395,4 @@ define([
             boundingSphere : new BoundingSphere.fromVertices(positions)
         });
     };
-
-    return WallOutlineGeometry;
-});
+export default WallOutlineGeometry;

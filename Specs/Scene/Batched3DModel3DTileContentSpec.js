@@ -1,30 +1,15 @@
-define([
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'Core/Matrix4',
-        'Core/Transforms',
-        'Scene/Batched3DModel3DTileContent',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/Model',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
-    ], function(
-        Cartesian3,
-        Color,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        Matrix4,
-        Transforms,
-        Batched3DModel3DTileContent,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        Model,
-        Cesium3DTilesTester,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { Batched3DModel3DTileContent } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { Model } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createScene from '../createScene.js';
 
 describe('Scene/Batched3DModel3DTileContent', function() {
 
@@ -381,4 +366,3 @@ describe('Scene/Batched3DModel3DTileContent', function() {
     });
 
 }, 'WebGL');
-});

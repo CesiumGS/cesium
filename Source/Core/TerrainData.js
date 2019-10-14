@@ -1,10 +1,5 @@
-define([
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Terrain data for a single tile.  This type describes an
@@ -112,6 +107,4 @@ define([
      * @returns {Boolean} True if this instance was created by upsampling; otherwise, false.
      */
     TerrainData.prototype.wasCreatedByUpsampling = DeveloperError.throwInstantiationError;
-
-    return TerrainData;
-});
+export default TerrainData;

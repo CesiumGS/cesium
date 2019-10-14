@@ -1,24 +1,12 @@
-define([
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/EventHelper',
-        '../../Scene/SceneMode',
-        '../../ThirdParty/knockout',
-        '../createCommand'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        EventHelper,
-        SceneMode,
-        knockout,
-        createCommand) {
-    'use strict';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import EventHelper from '../../Core/EventHelper.js';
+import SceneMode from '../../Scene/SceneMode.js';
+import knockout from '../../ThirdParty/knockout.js';
+import createCommand from '../createCommand.js';
 
     /**
      * The view model for {@link SceneModePicker}.
@@ -218,6 +206,4 @@ define([
 
         destroyObject(this);
     };
-
-    return SceneModePickerViewModel;
-});
+export default SceneModePickerViewModel;

@@ -1,28 +1,14 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/ReferenceFrame',
-        './PositionProperty',
-        './Property',
-        './SampledProperty'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        ReferenceFrame,
-        PositionProperty,
-        Property,
-        SampledProperty) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import PositionProperty from './PositionProperty.js';
+import Property from './Property.js';
+import SampledProperty from './SampledProperty.js';
 
     /**
      * A {@link SampledProperty} which is also a {@link PositionProperty}.
@@ -307,6 +293,4 @@ define([
                 Property.equals(this._property, other._property) && //
                 this._referenceFrame === other._referenceFrame);
     };
-
-    return SampledPositionProperty;
-});
+export default SampledPositionProperty;

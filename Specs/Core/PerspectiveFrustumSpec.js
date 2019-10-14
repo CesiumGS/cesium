@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/PerspectiveFrustum',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        CesiumMath,
-        Matrix4,
-        PerspectiveFrustum,
-        createPackableSpecs) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/PerspectiveFrustum', function() {
 
@@ -284,5 +274,4 @@ describe('Core/PerspectiveFrustum', function() {
         xOffset : 5.0,
         yOffset : 6.0
     }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
-});
 });

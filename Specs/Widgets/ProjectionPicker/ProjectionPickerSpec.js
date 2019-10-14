@@ -1,14 +1,7 @@
-define([
-        'Core/FeatureDetection',
-        'Specs/createScene',
-        'Specs/DomEventSimulator',
-        'Widgets/ProjectionPicker/ProjectionPicker'
-    ], function(
-        FeatureDetection,
-        createScene,
-        DomEventSimulator,
-        ProjectionPicker) {
-        'use strict';
+import { FeatureDetection } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
+import DomEventSimulator from '../../DomEventSimulator.js';
+import { ProjectionPicker } from '../../../Source/Cesium.js';
 
 describe('Widgets/ProjectionPicker/ProjectionPicker', function() {
 
@@ -127,4 +120,3 @@ describe('Widgets/ProjectionPicker/ProjectionPicker', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

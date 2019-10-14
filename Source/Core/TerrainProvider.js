@@ -1,14 +1,7 @@
-define([
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Math'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        CesiumMath) {
-    'use strict';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
 
     /**
      * Provides terrain or other geometry for the surface of an ellipsoid.  The surface geometry is
@@ -241,6 +234,4 @@ define([
      * @returns {undefined|Promise} Undefined if nothing need to be loaded or a Promise that resolves when all required tiles are loaded
      */
     TerrainProvider.prototype.loadTileDataAvailability = DeveloperError.throwInstantiationError;
-
-    return TerrainProvider;
-});
+export default TerrainProvider;
