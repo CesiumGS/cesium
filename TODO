@@ -4,24 +4,10 @@ of the subtree
 *** only real reason to do the above is if 0 sse is really important and can't get rid of it
     I don't think you absolutely need 0 sse in the leaves, since there're examples working
 
-[ ] Box array traversal
-    [ ] Toroidial array stack (or whatever it will be)
-    debug case: look down at teh tileset, print the center idx.
-    successive levels should update at twice the rate.
-
-    looking at the x y z sides of the box and zooming out and making sure min max makes sense
-
-    once radius is found just loop with the box and not the circle for now
-    need a thing to gather subtrees for blob of index ranges
-        the subtree root resolve will help but don't run that per idx
-        basically every level, it needs to check for subtree boundary jumps
-        and bin the index ranges per subtree
-        could do a swap-back or whatever
-        then a subtree gets assigned a range into the array that holds all the indices
-
     IndicesFinder
-    TODO: try to allocate the _levelEllipsoid using worstCaseDims
-    then use ManagedArray, look for spots to early return durning update.
+    TODO:
+    look for spots to early return durning update,
+    then try to allocate the _levelEllipsoid using virtuaDims on last level
 
     PLANE DIST CALC:
     Experiment: local vesion of radEffective?
@@ -35,12 +21,8 @@ of the subtree
     * OPT: encorporate availability in index finding? done later in traversal,
       but the earlier you do it (culling rows that don't exist or clipping them down)
       the more needless calcs there are
-    * For size/iteration length management, could use a managed array and the level ellipsoid
-      is clamped to the dims of the tree on that level. the managed array size is reserved for worst case.
     * Storage for this could be huge:
         * Do bresenham on the maximumTreversalLevel then infer up the tree.
-    * For the fixed levelEllipsoid version, have a spill over array for these extra spine bones
-        with a managed array you could reserve for worst case and add them to main collection
 
     Maybe (too optimized for now):
     * use the min max indices per level to find a set of subtrees
