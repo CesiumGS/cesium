@@ -1,6 +1,12 @@
 Change Log
 ==========
 
+### 1.63 - 2019-11-01
+
+##### Fixes :wrench:
+
+* Fixed a bug where `scene.sampleHeightMostDetailed` and `scene.clampToHeightMostDetailed` would not resolve in request render mode. [#8281](https://github.com/AnalyticalGraphicsInc/cesium/issues/8281)
+
 ### 1.62 - 2019-10-01
 
 ##### Deprecated :hourglass_flowing_sand:
