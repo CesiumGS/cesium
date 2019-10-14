@@ -5,16 +5,12 @@ of the subtree
     I don't think you absolutely need 0 sse in the leaves, since there're examples working
 
     IndicesFinder
-    TODO:
-    then try to allocate the _levelEllipsoid using virtuaDims on last level (y*z for oct, just y for quad)
-
     PLANE DIST CALC:
     Experiment: local vesion of radEffective?
     Experiment: play around with root level printing out when what plane fails
-    what the offset were what the distsances were
+    what the offset were what the distances were
 
     * OPT: no reason to check far plane
-    * OPT: when setting neg .x, swap to back and decriment managedarray length
     * OPT: during plane culling wait to do the clipping until all planes ahve passed
       and .x is still not neg, push the distances and the plane indices, for later processing in the success this case
     * OPT: encorporate availability in index finding? done later in traversal,
@@ -36,7 +32,7 @@ of the subtree
         basically take the min corner and the max corner, find out what their
         subtree root indexes are. sift the index ranges into subtree bins?
 
-    these will eventually be the visibliity indices (which are the request/render inidces for add)
+    these will eventually be the visibliity indices (which are the request/render indices for add)
 
     REPLACE refine will have to make sure to extend the loop a little in cases for sibling requests.
         literally just making sure the loop bounds starts and ends on an even number
