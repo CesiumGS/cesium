@@ -5,9 +5,9 @@ of the subtree
     I don't think you absolutely need 0 sse in the leaves, since there're examples working
 
     IndicesFinder
-    REPLACE refine will have to make sure to extend the loop a little in cases for sibling requests.
-        literally just making sure the loop bounds starts and ends on an even number
-        subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
+    REPLACE: refine will have to make sure to extend the loop a little in cases for sibling requests.
+    literally just making sure the loop bounds starts and ends on an even number
+    subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
 
     PLANE DIST CALC:
     Experiment: local vesion of radEffective?
@@ -48,10 +48,13 @@ Not too sure about a slab of refs quite yet, this could be huge duplication of r
 In either case, generate the array of ranges (could it be an array on every level like? [[xmin, xmax, y, z], [same thing], ...])
 use this pile of ranges to extract the relevant subtrees then use the ranges to request/select tiles in those subtrees.
 
+Finish replace refine.
+Work spec again.
+Ignore global for now, keep working toward skipLOD.
+
 =========
 Questions
 =========
 What are the most frustrating aspects of the current solution
 Imagine the perfect app, what are its top 3 features,? how do you interact with it? (voice  commands?  one hand?)
-is it party aware? can party members place markers or other indicators to communicate to other party members?
 how fast does the data need to update/re-scan?

@@ -134,31 +134,31 @@ define([
         return !hasEmptyContent(tile) && tile.contentUnloaded;
     }
 
-    function additiveTileChecks_visAndDist(tileset, subtree, contentLevel, distanceForLevel, frameState) {
-        var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
-        var begin = indexRange.begin;
-        var end = indexRange.end;
-        var tiles = subtree._tiles;
-        var j, tile;
-        for (j = begin; j < end; j++) {
-            tile = tiles[j];
-
-            if (!defined(tile)) {
-                continue;
-            }
-
-            updateVisibility(tileset, tile, frameState);
-
-            if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
-                continue;
-            }
-
-            loadTile(tileset, tile, frameState);
-            selectDesiredTile(tileset, tile, frameState);
-            visitTile(tileset, tile, frameState);
-            touchTile(tileset, tile, frameState);
-        }
-    }
+    // function additiveTileChecks_visAndDist(tileset, subtree, contentLevel, distanceForLevel, frameState) {
+    //     var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
+    //     var begin = indexRange.begin;
+    //     var end = indexRange.end;
+    //     var tiles = subtree._tiles;
+    //     var j, tile;
+    //     for (j = begin; j < end; j++) {
+    //         tile = tiles[j];
+    //
+    //         if (!defined(tile)) {
+    //             continue;
+    //         }
+    //
+    //         updateVisibility(tileset, tile, frameState);
+    //
+    //         if (!isVisible(tile) || tile._distanceToCamera > distanceForLevel) {
+    //             continue;
+    //         }
+    //
+    //         loadTile(tileset, tile, frameState);
+    //         selectDesiredTile(tileset, tile, frameState);
+    //         visitTile(tileset, tile, frameState);
+    //         touchTile(tileset, tile, frameState);
+    //     }
+    // }
 
     function additiveTileChecks(
         tileset,
@@ -312,7 +312,7 @@ define([
         var children = tilesetRoot.children;
         var childrenLength = children.length;
         var child;
-        var i, j, k;
+        var i;
         for (i = 0; i < childrenLength; ++i) {
             child = children[i];
             updateVisibility(tileset, child, frameState);
@@ -342,6 +342,8 @@ define([
             return;
         }
 
+        indicesFinder.determineRadEffectivePerPlanePerLevel(frameState.cullingVolume.planes);
+
         var finalRefinementIndices = [];
         for (var contentLevel = contentStartLevel; contentLevel <= lastContentLevelToCheck; contentLevel++) {
             var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
@@ -352,8 +354,7 @@ define([
                 break;
             }
 
-            var distanceForParent = lodDistances[contentLevel];
-            distanceForLevel = lodDistances[contentLevel + 1];
+            var levelEllipsoid = indicesFinder.updateLevelEllipsoidDynamic(contentLevel, frameState.cullingVolume.planes);
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
@@ -373,68 +374,83 @@ define([
                     continue;
                 }
 
-                var tiles = subtree._tiles;
-                var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
-                var begin = indexRange.begin;
-                var end = indexRange.end;
-                for (j = begin; j < end; j++) {
-                    var tile = tiles[j];
-
-                    if (!defined(tile)) {
-                        continue;
-                    }
-
-                    updateVisibility(tileset, tile, frameState);
-                    if (!isVisible(tile))  {
-                        continue;
-                    }
-
-                    var notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
-                    if (tile._distanceToCamera > distanceForLevel) {
-                        if ((tile.parent._distanceToCamera <= distanceForParent) &&
-                            contentLevel !== contentStartLevel &&
-                            notInBlockedRefinementRegion) {
-                            // TODO: This might be ok to call load vist touch select and
-                            // get rid of the content level check and root content loop above
-                            selectDesiredTile(tileset, tile, frameState);
-                            finalRefinementIndices.push(tile.treeKey);
-                        }
-                        continue;
-                    }
-
-                    // Replacement is child based
-                    children = tile.children;
-                    childrenLength = children.length;
-                    var visibleChildrenReady = childrenLength > 0 ? true : false;
-                    for (k = 0; k < childrenLength; ++k) {
-                        child = children[k];
-
-                        if (notInBlockedRefinementRegion) {
-                            updateVisibility(tileset, child, frameState);
-                            if (isVisible(child) && (!child.contentAvailable && !child.hasEmptyContent)) {
-                                visibleChildrenReady = false;
-                            }
-                        }
-
-                        loadTile(tileset, child, frameState);
-                        visitTile(tileset, child, frameState);
-                        touchTile(tileset, child, frameState);
-                    }
-
-                    if (notInBlockedRefinementRegion) {
-                        if (!visibleChildrenReady) {
-                            selectDesiredTile(tileset, tile, frameState);
-                            finalRefinementIndices.push(tile.treeKey);
-                        } else if (contentLevel === lastContentLevelToCheck) {
-                            // can only call this on children that pass their
-                            // parents radius check but fail their own (or are
-                            // on the last level)
-                            selectVisibleChildren(tileset, tile, frameState);
-                        }
-                    }
-                } // for j
+                // Using traditional visbility and distance
+                replacementTileChecks_visAndDist(tileset, subtree, contentLevel, finalRefinementIndices, frameState);
+                // replacementTileChecks(tileset, subtree, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel, contentLevel, levelEllipsoid, finalRefinementIndices, frameState);
             } // for i
         } // for contentLevel
+    }
+
+    function replacementTileChecks_visAndDist(tileset, subtree, contentLevel, finalRefinementIndices, frameState) {
+        var indicesFinder = tileset._indicesFinder;
+        var lodDistances = indicesFinder._lodDistances;
+        var distanceForParent = lodDistances[contentLevel];
+        var distanceForLevel = lodDistances[contentLevel + 1];
+        var contentStartLevel = indicesFinder._startLevel;
+        var lastContentLevelToCheck = indicesFinder._maximumTraversalLevel - 1;
+
+        var tiles = subtree._tiles;
+        var indexRange = subtree.arrayIndexRangeForLevel(contentLevel);
+        var begin = indexRange.begin;
+        var end = indexRange.end;
+        var j, k, tile, child, children, childrenLength;
+        var notInBlockedRefinementRegion, visibleChildrenReady;
+        for (j = begin; j < end; j++) {
+            tile = tiles[j];
+
+            if (!defined(tile)) {
+                continue;
+            }
+
+            updateVisibility(tileset, tile, frameState);
+            if (!isVisible(tile))  {
+                continue;
+            }
+
+            notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
+            if (tile._distanceToCamera > distanceForLevel) {
+                if ((tile.parent._distanceToCamera <= distanceForParent) &&
+                    contentLevel !== contentStartLevel &&
+                    notInBlockedRefinementRegion) {
+                    // TODO: This might be ok to call load vist touch select and
+                    // get rid of the content level check and root content loop above
+                    selectDesiredTile(tileset, tile, frameState);
+                    finalRefinementIndices.push(tile.treeKey);
+                }
+                continue;
+            }
+
+            // Replacement is child based
+            children = tile.children;
+            childrenLength = children.length;
+            visibleChildrenReady = childrenLength > 0 ? true : false;
+            for (k = 0; k < childrenLength; ++k) {
+                child = children[k];
+
+                if (notInBlockedRefinementRegion) {
+                    updateVisibility(tileset, child, frameState);
+                    if (isVisible(child) && (!child.contentAvailable && !child.hasEmptyContent)) {
+                        visibleChildrenReady = false;
+                    }
+                }
+
+                loadTile(tileset, child, frameState);
+                visitTile(tileset, child, frameState);
+                touchTile(tileset, child, frameState);
+            } // for k
+
+            if (notInBlockedRefinementRegion) {
+                if (!visibleChildrenReady) {
+                    selectDesiredTile(tileset, tile, frameState);
+                    finalRefinementIndices.push(tile.treeKey);
+                } else if (contentLevel === lastContentLevelToCheck) {
+                    // can only call this on children that pass their
+                    // parents radius check but fail their own (or are
+                    // on the last level)
+                    selectVisibleChildren(tileset, tile, frameState);
+                }
+            }
+        } // for j
     }
 
     function inBlockedRefinementRegion(keys, treeKey) {
