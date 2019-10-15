@@ -1,20 +1,10 @@
-define([
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/Matrix4',
-        'Scene/Cesium3DTile',
-        'Scene/Cesium3DTileContentState',
-        'Scene/Cesium3DTilesetHeatmap',
-        'Specs/createScene'
-    ], function(
-        Color,
-        JulianDate,
-        Matrix4,
-        Cesium3DTile,
-        Cesium3DTileContentState,
-        Cesium3DTilesetHeatmap,
-        createScene) {
-        'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Cesium3DTile } from '../../Source/Cesium.js';
+import { Cesium3DTileContentState } from '../../Source/Cesium.js';
+import { Cesium3DTilesetHeatmap } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/Cesium3DTilesetHeatmap', function() {
 
@@ -119,5 +109,4 @@ describe('Scene/Cesium3DTilesetHeatmap', function() {
         var expectedColor = Color.BLACK;
         verifyColor(tile._debugColor, expectedColor);
     });
-});
 });

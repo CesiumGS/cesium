@@ -1,18 +1,9 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/getStringFromTypedArray',
-        '../Core/RuntimeError',
-        '../ThirdParty/when'
-    ], function(
-        defaultValue,
-        defineProperties,
-        destroyObject,
-        getStringFromTypedArray,
-        RuntimeError,
-        when) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * Represents content for a tile in a
@@ -161,6 +152,4 @@ define([
     Tileset3DTileContent.prototype.destroy = function() {
         return destroyObject(this);
     };
-
-    return Tileset3DTileContent;
-});
+export default Tileset3DTileContent;

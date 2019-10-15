@@ -1,12 +1,6 @@
-define([
-        'Core/Cartesian4',
-        'Core/Color',
-        'Scene/ConditionsExpression'
-    ], function(
-        Cartesian4,
-        Color,
-        ConditionsExpression) {
-        'use strict';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ConditionsExpression } from '../../Source/Cesium.js';
 
 describe('Scene/ConditionsExpression', function() {
 
@@ -119,5 +113,4 @@ describe('Scene/ConditionsExpression', function() {
         var shaderFunction = expression.getShaderFunction('getColor', '', {}, 'vec4');
         expect(shaderFunction).toBeUndefined();
     });
-});
 });

@@ -1,28 +1,13 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/JulianDate',
-        '../Core/Math',
-        './ModelAnimation',
-        './ModelAnimationLoop',
-        './ModelAnimationState'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        DeveloperError,
-        Event,
-        JulianDate,
-        CesiumMath,
-        ModelAnimation,
-        ModelAnimationLoop,
-        ModelAnimationState) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import JulianDate from '../Core/JulianDate.js';
+import CesiumMath from '../Core/Math.js';
+import ModelAnimation from './ModelAnimation.js';
+import ModelAnimationLoop from './ModelAnimationLoop.js';
+import ModelAnimationState from './ModelAnimationState.js';
 
     /**
      * A collection of active model animations.  Access this using {@link Model#activeAnimations}.
@@ -469,6 +454,4 @@ define([
 
         return animationOccured;
     };
-
-    return ModelAnimationCollection;
-});
+export default ModelAnimationCollection;

@@ -1,14 +1,7 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
 
     /**
      * Represents a ray that extends infinitely from the provided origin in the provided direction.
@@ -84,6 +77,4 @@ define([
         result = Cartesian3.multiplyByScalar(ray.direction, t, result);
         return Cartesian3.add(ray.origin, result, result);
     };
-
-    return Ray;
-});
+export default Ray;

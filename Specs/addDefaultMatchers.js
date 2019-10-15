@@ -1,36 +1,18 @@
-define([
-        './equals',
-        'Core/Cartesian2',
-        'Core/defaultValue',
-        'Core/defined',
-        'Core/DeveloperError',
-        'Core/FeatureDetection',
-        'Core/Math',
-        'Core/PrimitiveType',
-        'Core/RuntimeError',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Renderer/ClearCommand',
-        'Renderer/DrawCommand',
-        'Renderer/ShaderProgram',
-        'Renderer/VertexArray'
-    ], function(
-        equals,
-        Cartesian2,
-        defaultValue,
-        defined,
-        DeveloperError,
-        FeatureDetection,
-        CesiumMath,
-        PrimitiveType,
-        RuntimeError,
-        Buffer,
-        BufferUsage,
-        ClearCommand,
-        DrawCommand,
-        ShaderProgram,
-        VertexArray) {
-    'use strict';
+import equals from './equals.js';
+import { Cartesian2 } from '../Source/Cesium.js';
+import { defaultValue } from '../Source/Cesium.js';
+import { defined } from '../Source/Cesium.js';
+import { DeveloperError } from '../Source/Cesium.js';
+import { FeatureDetection } from '../Source/Cesium.js';
+import { Math as CesiumMath } from '../Source/Cesium.js';
+import { PrimitiveType } from '../Source/Cesium.js';
+import { RuntimeError } from '../Source/Cesium.js';
+import { Buffer } from '../Source/Cesium.js';
+import { BufferUsage } from '../Source/Cesium.js';
+import { ClearCommand } from '../Source/Cesium.js';
+import { DrawCommand } from '../Source/Cesium.js';
+import { ShaderProgram } from '../Source/Cesium.js';
+import { VertexArray } from '../Source/Cesium.js';
 
     function createMissingFunctionMessageFunction(item, actualPrototype, expectedInterfacePrototype) {
         return function() {
@@ -889,9 +871,9 @@ define([
         };
     }
 
-    return function(debug) {
+    function addDefaultMatchers(debug) {
         return function() {
             this.addMatchers(createDefaultMatchers(debug));
         };
-    };
-});
+    }
+export default addDefaultMatchers;

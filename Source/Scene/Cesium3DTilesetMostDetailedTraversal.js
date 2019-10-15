@@ -1,12 +1,6 @@
-define([
-        '../Core/Intersect',
-        '../Core/ManagedArray',
-        './Cesium3DTileRefine'
-    ], function(
-        Intersect,
-        ManagedArray,
-        Cesium3DTileRefine) {
-    'use strict';
+import Intersect from '../Core/Intersect.js';
+import ManagedArray from '../Core/ManagedArray.js';
+import Cesium3DTileRefine from './Cesium3DTileRefine.js';
 
     /**
      * Traversal that loads all leaves that intersect the camera frustum.
@@ -137,6 +131,4 @@ define([
             tileset._selectedTiles.push(tile);
         }
     }
-
-    return Cesium3DTilesetMostDetailedTraversal;
-});
+export default Cesium3DTilesetMostDetailedTraversal;

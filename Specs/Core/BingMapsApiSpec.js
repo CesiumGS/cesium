@@ -1,8 +1,4 @@
-define([
-        'Core/BingMapsApi'
-    ], function(
-        BingMapsApi) {
-        'use strict';
+import { BingMapsApi } from '../../Source/Cesium.js';
 
 describe('Core/BingMapsApi', function() {
 
@@ -16,5 +12,4 @@ describe('Core/BingMapsApi', function() {
         expect(BingMapsApi.getKey(undefined)).toEqual('somekey');
         BingMapsApi.defaultKey = oldKey;
     });
-});
 });

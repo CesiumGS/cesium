@@ -1,40 +1,19 @@
-define([
-        './ArcType',
-        './BoundingSphere',
-        './Cartesian3',
-        './Color',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './deprecationWarning',
-        './DeveloperError',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './IndexDatatype',
-        './Math',
-        './PolylinePipeline',
-        './PrimitiveType'
-    ], function(
-        ArcType,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        deprecationWarning,
-        DeveloperError,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        IndexDatatype,
-        CesiumMath,
-        PolylinePipeline,
-        PrimitiveType) {
-    'use strict';
+import ArcType from './ArcType.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Color from './Color.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import PolylinePipeline from './PolylinePipeline.js';
+import PrimitiveType from './PrimitiveType.js';
 
     function interpolateColors(p0, p1, color0, color1, minDistance, array, offset) {
         var numPoints = PolylinePipeline.numberOfPoints(p0, p1, minDistance);
@@ -442,6 +421,4 @@ define([
             boundingSphere : BoundingSphere.fromPoints(positions)
         });
     };
-
-    return SimplePolylineGeometry;
-});
+export default SimplePolylineGeometry;

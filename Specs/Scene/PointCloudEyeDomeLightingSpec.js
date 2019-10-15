@@ -1,20 +1,10 @@
-define([
-        'Core/Cartesian3',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/PerspectiveFrustum',
-        'Scene/PointCloudEyeDomeLighting',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
-    ], 'Scene/PointCloudEyeDomeLighting', function(
-        Cartesian3,
-        HeadingPitchRange,
-        CesiumMath,
-        PerspectiveFrustum,
-        PointCloudEyeDomeLighting,
-        Cesium3DTilesTester,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { PointCloudEyeDomeLighting } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createScene from '../createScene.js';
 
 describe('Scene/PointCloudEyeDomeLighting', function() {
 
@@ -84,4 +74,3 @@ describe('Scene/PointCloudEyeDomeLighting', function() {
     });
 
 }, 'WebGL');
-});

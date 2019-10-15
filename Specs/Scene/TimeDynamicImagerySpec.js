@@ -1,24 +1,12 @@
-define([
-        'Core/Clock',
-        'Core/ClockStep',
-        'Core/JulianDate',
-        'Core/Request',
-        'Core/RequestScheduler',
-        'Core/RequestType',
-        'Core/TimeIntervalCollection',
-        'Scene/TimeDynamicImagery',
-        'ThirdParty/when'
-    ], function(
-        Clock,
-        ClockStep,
-        JulianDate,
-        Request,
-        RequestScheduler,
-        RequestType,
-        TimeIntervalCollection,
-        TimeDynamicImagery,
-        when) {
-        'use strict';
+import { Clock } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { RequestType } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { TimeDynamicImagery } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
 
 describe('Scene/TimeDynamicImagery', function() {
 
@@ -234,5 +222,4 @@ describe('Scene/TimeDynamicImagery', function() {
         }
 
     });
-});
 });

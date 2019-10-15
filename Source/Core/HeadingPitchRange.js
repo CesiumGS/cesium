@@ -1,10 +1,5 @@
-define([
-        './defaultValue',
-        './defined'
-    ], function(
-        defaultValue,
-        defined) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
 
     /**
      * Defines a heading angle, pitch angle, and range in a local frame.
@@ -59,6 +54,4 @@ define([
         result.range = hpr.range;
         return result;
     };
-
-    return HeadingPitchRange;
-});
+export default HeadingPitchRange;

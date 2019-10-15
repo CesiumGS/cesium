@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian3',
-        'Core/Math',
-        'Scene/DeviceOrientationCameraController',
-        'Specs/createCamera',
-        'Specs/createCanvas',
-        'Specs/DomEventSimulator'
-    ], function(
-        Cartesian3,
-        CesiumMath,
-        DeviceOrientationCameraController,
-        createCamera,
-        createCanvas,
-        DomEventSimulator) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { DeviceOrientationCameraController } from '../../Source/Cesium.js';
+import createCamera from '../createCamera.js';
+import createCanvas from '../createCanvas.js';
+import DomEventSimulator from '../DomEventSimulator.js';
 
 describe('Scene/DeviceOrientationCameraController', function() {
 
@@ -109,5 +100,4 @@ describe('Scene/DeviceOrientationCameraController', function() {
         controller.destroy();
         expect(controller.isDestroyed()).toEqual(true);
     });
-});
 });

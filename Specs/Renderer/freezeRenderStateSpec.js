@@ -1,8 +1,4 @@
-define([
-        'Renderer/freezeRenderState'
-    ], function(
-        freezeRenderState) {
-        'use strict';
+import { freezeRenderState } from '../../Source/Cesium.js';
 
 describe('Renderer/freezeRenderState', function() {
 
@@ -22,5 +18,4 @@ describe('Renderer/freezeRenderState', function() {
         expect(Object.isFrozen(frozen.c)).toBe(true);
         expect(Object.isFrozen(frozen._applyFunctions)).toBe(false);
     });
-});
 });

@@ -1,22 +1,11 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        './TextureMagnificationFilter',
-        './TextureMinificationFilter',
-        './TextureWrap'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import TextureMagnificationFilter from './TextureMagnificationFilter.js';
+import TextureMinificationFilter from './TextureMinificationFilter.js';
+import TextureWrap from './TextureWrap.js';
 
     /**
      * @private
@@ -95,6 +84,4 @@ define([
                 (left._magnificationFilter === right._magnificationFilter) &&
                 (left._maximumAnisotropy === right._maximumAnisotropy));
     };
-
-    return Sampler;
-});
+export default Sampler;

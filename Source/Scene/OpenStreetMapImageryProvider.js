@@ -1,48 +1,11 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/appendForwardSlash',
-        '../Core/clone',
-        '../Core/combine',
-        '../Core/Credit',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/GeographicTilingScheme',
-        '../Core/isArray',
-        '../Core/Math',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Core/WebMercatorTilingScheme',
-        '../ThirdParty/when',
-        './UrlTemplateImageryProvider'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        appendForwardSlash,
-        clone,
-        combine,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        DeveloperError,
-        Event,
-        GeographicTilingScheme,
-        isArray,
-        CesiumMath,
-        Rectangle,
-        Resource,
-        WebMercatorTilingScheme,
-        when,
-        UrlTemplateImageryProvider) {
-    'use strict';
+import Credit from '../Core/Credit.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
+import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
     var defaultCredit = new Credit('MapQuest, Open Street Map and contributors, CC-BY-SA');
 
@@ -136,5 +99,4 @@ define([
         OpenStreetMapImageryProvider.prototype.constructor = OpenStreetMapImageryProvider;
     }
 
-    return OpenStreetMapImageryProvider;
-});
+export default OpenStreetMapImageryProvider;

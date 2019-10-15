@@ -1,40 +1,20 @@
-define([
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './IndexDatatype',
-        './Intersections2D',
-        './Math',
-        './OrientedBoundingBox',
-        './QuantizedMeshTerrainData',
-        './Rectangle',
-        './TaskProcessor',
-        './TerrainEncoding',
-        './TerrainMesh'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        IndexDatatype,
-        Intersections2D,
-        CesiumMath,
-        OrientedBoundingBox,
-        QuantizedMeshTerrainData,
-        Rectangle,
-        TaskProcessor,
-        TerrainEncoding,
-        TerrainMesh) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import IndexDatatype from './IndexDatatype.js';
+import Intersections2D from './Intersections2D.js';
+import CesiumMath from './Math.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import QuantizedMeshTerrainData from './QuantizedMeshTerrainData.js';
+import Rectangle from './Rectangle.js';
+import TaskProcessor from './TaskProcessor.js';
+import TerrainEncoding from './TerrainEncoding.js';
+import TerrainMesh from './TerrainMesh.js';
 
     /**
      * Terrain data for a single tile from a Google Earth Enterprise server.
@@ -511,6 +491,4 @@ define([
         // Position does not lie in any triangle in this mesh.
         return undefined;
     }
-
-    return GoogleEarthEnterpriseTerrainData;
-});
+export default GoogleEarthEnterpriseTerrainData;

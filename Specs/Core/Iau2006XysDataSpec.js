@@ -1,16 +1,8 @@
-define([
-        'Core/buildModuleUrl',
-        'Core/defined',
-        'Core/Iau2006XysData',
-        'Core/Iau2006XysSample',
-        'Specs/pollToPromise'
-    ], function(
-        buildModuleUrl,
-        defined,
-        Iau2006XysData,
-        Iau2006XysSample,
-        pollToPromise) {
-        'use strict';
+import { buildModuleUrl } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { Iau2006XysData } from '../../Source/Cesium.js';
+import { Iau2006XysSample } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
 
 describe('Core/Iau2006XysData', function() {
 
@@ -67,5 +59,4 @@ describe('Core/Iau2006XysData', function() {
             return defined(xys.computeXysRadians(2442398, 1234.56));
         });
     });
-});
 });

@@ -1,20 +1,10 @@
-define([
-        'Core/loadKTX',
-        'Core/PixelFormat',
-        'Core/Request',
-        'Core/RequestErrorEvent',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/RuntimeError'
-    ], function(
-        loadKTX,
-        PixelFormat,
-        Request,
-        RequestErrorEvent,
-        RequestScheduler,
-        Resource,
-        RuntimeError) {
-        'use strict';
+import { loadKTX } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
 
 describe('Core/loadKTX', function() {
 
@@ -431,5 +421,4 @@ describe('Core/loadKTX', function() {
 
         RequestScheduler.maximumRequests = oldMaximumRequests;
     });
-});
 });

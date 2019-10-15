@@ -1,5 +1,3 @@
-define([], function() {
-    'use strict';
     /**
      * @alias KmlLookAt
      * @constructor
@@ -11,6 +9,4 @@ define([], function() {
         this.position = position;
         this.headingPitchRange = headingPitchRange;
     }
-
-    return KmlLookAt;
-});
+export default KmlLookAt;

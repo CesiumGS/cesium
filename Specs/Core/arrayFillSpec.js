@@ -1,8 +1,4 @@
-define([
-        'Core/arrayFill'
-    ], function(
-        arrayFill) {
-        'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
 
 describe('Core/arrayFill', function() {
 
@@ -55,5 +51,4 @@ describe('Core/arrayFill', function() {
             arrayFill(array, 1, 1, array);
         }).toThrowDeveloperError('end must be a valid index.');
     });
-});
 });

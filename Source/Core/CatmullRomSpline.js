@@ -1,24 +1,12 @@
-define([
-        './Cartesian3',
-        './Cartesian4',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './HermiteSpline',
-        './Matrix4',
-        './Spline'
-    ], function(
-        Cartesian3,
-        Cartesian4,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        HermiteSpline,
-        Matrix4,
-        Spline) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartesian4 from './Cartesian4.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import HermiteSpline from './HermiteSpline.js';
+import Matrix4 from './Matrix4.js';
+import Spline from './Spline.js';
 
     var scratchTimeVec = new Cartesian4();
     var scratchTemp0 = new Cartesian3();
@@ -299,6 +287,4 @@ define([
     CatmullRomSpline.prototype.evaluate = function(time, result) {
         return this._evaluateFunction(time, result);
     };
-
-    return CatmullRomSpline;
-});
+export default CatmullRomSpline;

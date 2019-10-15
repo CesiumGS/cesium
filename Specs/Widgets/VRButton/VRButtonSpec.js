@@ -1,10 +1,5 @@
-define([
-        'Specs/createScene',
-        'Widgets/VRButton/VRButton'
-    ], function(
-        createScene,
-        VRButton) {
-        'use strict';
+import createScene from '../../createScene.js';
+import { VRButton } from '../../../Source/Cesium.js';
 
 describe('Widgets/VRButton/VRButton', function() {
 
@@ -62,5 +57,4 @@ describe('Widgets/VRButton/VRButton', function() {
             return new VRButton(document.body, undefined);
         }).toThrowDeveloperError();
     });
-});
 });

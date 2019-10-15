@@ -1,32 +1,16 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/LinearSpline',
-        '../Core/Matrix4',
-        '../Core/Quaternion',
-        '../Core/QuaternionSpline',
-        '../Core/WebGLConstants',
-        '../Core/WeightSpline',
-        '../ThirdParty/GltfPipeline/getAccessorByteStride',
-        '../ThirdParty/GltfPipeline/numberOfComponentsForType',
-        './AttributeType'
-    ], function(
-        Cartesian3,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        LinearSpline,
-        Matrix4,
-        Quaternion,
-        QuaternionSpline,
-        WebGLConstants,
-        WeightSpline,
-        getAccessorByteStride,
-        numberOfComponentsForType,
-        AttributeType) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import LinearSpline from '../Core/LinearSpline.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Quaternion from '../Core/Quaternion.js';
+import QuaternionSpline from '../Core/QuaternionSpline.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import WeightSpline from '../Core/WeightSpline.js';
+import getAccessorByteStride from '../ThirdParty/GltfPipeline/getAccessorByteStride.js';
+import numberOfComponentsForType from '../ThirdParty/GltfPipeline/numberOfComponentsForType.js';
+import AttributeType from './AttributeType.js';
 
     /**
      * @private
@@ -201,6 +185,4 @@ define([
 
         return matrices;
     };
-
-    return ModelAnimationCache;
-});
+export default ModelAnimationCache;

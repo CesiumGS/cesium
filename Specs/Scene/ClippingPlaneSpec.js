@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/Plane',
-        'Scene/ClippingPlane'
-    ], function(
-        Cartesian3,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        Plane,
-        ClippingPlane) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Plane } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
 
 describe('Scene/ClippingPlane', function() {
 
@@ -96,5 +87,4 @@ describe('Scene/ClippingPlane', function() {
         expect(transformedPlane.normal.y).toEqual(clippingPlane.normal.y);
         expect(transformedPlane.normal.z).toEqual(-clippingPlane.normal.z);
     });
-});
 });

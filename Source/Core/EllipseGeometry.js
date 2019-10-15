@@ -1,60 +1,30 @@
-define([
-        './arrayFill',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './EllipseGeometryLibrary',
-        './Ellipsoid',
-        './GeographicProjection',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryInstance',
-        './GeometryOffsetAttribute',
-        './GeometryPipeline',
-        './IndexDatatype',
-        './Math',
-        './Matrix3',
-        './PrimitiveType',
-        './Quaternion',
-        './Rectangle',
-        './VertexFormat'
-    ], function(
-        arrayFill,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        EllipseGeometryLibrary,
-        Ellipsoid,
-        GeographicProjection,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryInstance,
-        GeometryOffsetAttribute,
-        GeometryPipeline,
-        IndexDatatype,
-        CesiumMath,
-        Matrix3,
-        PrimitiveType,
-        Quaternion,
-        Rectangle,
-        VertexFormat) {
-    'use strict';
+import arrayFill from './arrayFill.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import EllipseGeometryLibrary from './EllipseGeometryLibrary.js';
+import Ellipsoid from './Ellipsoid.js';
+import GeographicProjection from './GeographicProjection.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryInstance from './GeometryInstance.js';
+import GeometryOffsetAttribute from './GeometryOffsetAttribute.js';
+import GeometryPipeline from './GeometryPipeline.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import PrimitiveType from './PrimitiveType.js';
+import Quaternion from './Quaternion.js';
+import Rectangle from './Rectangle.js';
+import VertexFormat from './VertexFormat.js';
 
     var scratchCartesian1 = new Cartesian3();
     var scratchCartesian2 = new Cartesian3();
@@ -1101,6 +1071,4 @@ define([
             }
         }
     });
-
-    return EllipseGeometry;
-});
+export default EllipseGeometry;

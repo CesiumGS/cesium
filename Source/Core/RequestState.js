@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * State of the request.
@@ -58,6 +54,4 @@ define([
          */
         FAILED : 5
     };
-
-    return freezeObject(RequestState);
-});
+export default freezeObject(RequestState);

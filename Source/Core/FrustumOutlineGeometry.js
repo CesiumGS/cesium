@@ -1,34 +1,17 @@
-define([
-        './BoundingSphere',
-        './Cartesian3',
-        './Check',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './FrustumGeometry',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './OrthographicFrustum',
-        './PerspectiveFrustum',
-        './PrimitiveType',
-        './Quaternion'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        FrustumGeometry,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        OrthographicFrustum,
-        PerspectiveFrustum,
-        PrimitiveType,
-        Quaternion) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import FrustumGeometry from './FrustumGeometry.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import OrthographicFrustum from './OrthographicFrustum.js';
+import PerspectiveFrustum from './PerspectiveFrustum.js';
+import PrimitiveType from './PrimitiveType.js';
+import Quaternion from './Quaternion.js';
 
     var PERSPECTIVE = 0;
     var ORTHOGRAPHIC = 1;
@@ -248,6 +231,4 @@ define([
             boundingSphere : BoundingSphere.fromVertices(positions)
         });
     };
-
-    return FrustumOutlineGeometry;
-});
+export default FrustumOutlineGeometry;

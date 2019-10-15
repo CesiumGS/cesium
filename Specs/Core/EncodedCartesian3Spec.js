@@ -1,10 +1,5 @@
-define([
-        'Core/Cartesian3',
-        'Core/EncodedCartesian3'
-    ], function(
-        Cartesian3,
-        EncodedCartesian3) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { EncodedCartesian3 } from '../../Source/Cesium.js';
 
 describe('Core/EncodedCartesian3', function() {
 
@@ -105,5 +100,4 @@ describe('Core/EncodedCartesian3', function() {
           EncodedCartesian3.writeElements(new Cartesian3(), new Float32Array(6), -1);
       }).toThrowDeveloperError();
   });
-});
 });

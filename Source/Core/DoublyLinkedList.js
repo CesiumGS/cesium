@@ -1,10 +1,5 @@
-define([
-        './defined',
-        './defineProperties'
-    ], function(
-        defined,
-        defineProperties) {
-    'use strict';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
 
     /**
      * @private
@@ -115,6 +110,4 @@ define([
         nextNode.next = oldNodeNext;
         nextNode.previous = node;
     };
-
-    return DoublyLinkedList;
-});
+export default DoublyLinkedList;

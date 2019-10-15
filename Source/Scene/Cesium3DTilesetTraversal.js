@@ -1,20 +1,8 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defined',
-        '../Core/Intersect',
-        '../Core/ManagedArray',
-        '../Core/Math',
-        './Cesium3DTileOptimizationHint',
-        './Cesium3DTileRefine'
-    ], function(
-        Cartesian3,
-        defined,
-        Intersect,
-        ManagedArray,
-        CesiumMath,
-        Cesium3DTileOptimizationHint,
-        Cesium3DTileRefine) {
-    'use strict';
+import defined from '../Core/defined.js';
+import Intersect from '../Core/Intersect.js';
+import ManagedArray from '../Core/ManagedArray.js';
+import Cesium3DTileOptimizationHint from './Cesium3DTileOptimizationHint.js';
+import Cesium3DTileRefine from './Cesium3DTileRefine.js';
 
     /**
      * @private
@@ -664,6 +652,4 @@ define([
             }
         }
     }
-
-    return Cesium3DTilesetTraversal;
-});
+export default Cesium3DTilesetTraversal;

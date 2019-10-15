@@ -1,28 +1,14 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/freezeObject',
-        '../Core/GeographicTilingScheme',
-        '../Core/Resource',
-        '../Core/WebMercatorProjection',
-        './GetFeatureInfoFormat',
-        './TimeDynamicImagery',
-        './UrlTemplateImageryProvider'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        freezeObject,
-        GeographicTilingScheme,
-        Resource,
-        WebMercatorProjection,
-        GetFeatureInfoFormat,
-        TimeDynamicImagery,
-        UrlTemplateImageryProvider) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import freezeObject from '../Core/freezeObject.js';
+import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
+import Resource from '../Core/Resource.js';
+import WebMercatorProjection from '../Core/WebMercatorProjection.js';
+import GetFeatureInfoFormat from './GetFeatureInfoFormat.js';
+import TimeDynamicImagery from './TimeDynamicImagery.js';
+import UrlTemplateImageryProvider from './UrlTemplateImageryProvider.js';
 
     /**
      * Provides tiled imagery hosted by a Web Map Service (WMS) server.
@@ -576,6 +562,4 @@ define([
         }
         return result;
     }
-
-    return WebMapServiceImageryProvider;
-});
+export default WebMapServiceImageryProvider;

@@ -1,8 +1,4 @@
-define([
-        'Core/getFilenameFromUri'
-    ], function(
-        getFilenameFromUri) {
-        'use strict';
+import { getFilenameFromUri } from '../../Source/Cesium.js';
 
 describe('Core/getFilenameFromUri', function() {
 
@@ -19,5 +15,4 @@ describe('Core/getFilenameFromUri', function() {
             getFilenameFromUri(undefined);
         }).toThrowDeveloperError();
     });
-});
 });

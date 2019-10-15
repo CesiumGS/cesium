@@ -1,12 +1,6 @@
-define([
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined'
-    ], function(
-        ComponentDatatype,
-        defaultValue,
-        defined) {
-    'use strict';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
 
     /**
      * @private
@@ -87,6 +81,4 @@ define([
 
         return result;
     };
-
-    return Cesium3DTileFeatureTable;
-});
+export default Cesium3DTileFeatureTable;

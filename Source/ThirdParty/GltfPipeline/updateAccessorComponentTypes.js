@@ -1,16 +1,8 @@
-define([
-        './addBuffer',
-        './ForEach',
-        './readAccessorPacked',
-        '../../Core/ComponentDatatype',
-        '../../Core/WebGLConstants'
-    ], function(
-        addBuffer,
-        ForEach,
-        readAccessorPacked,
-        ComponentDatatype,
-        WebGLConstants) {
-    'use strict';
+import addBuffer from './addBuffer.js'
+import ForEach from './ForEach.js'
+import readAccessorPacked from './readAccessorPacked.js'
+import ComponentDatatype from '../../Core/ComponentDatatype.js'
+import WebGLConstants from '../../Core/WebGLConstants.js'
 
     /**
      * Update accessors referenced by JOINTS_0 and WEIGHTS_0 attributes to use correct component types.
@@ -53,5 +45,4 @@ define([
         accessor.byteOffset = 0;
     }
 
-    return updateAccessorComponentTypes;
-});
+    export default updateAccessorComponentTypes;

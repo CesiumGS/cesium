@@ -1,52 +1,26 @@
-define([
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartesian4',
-        'Core/Cartographic',
-        'Core/defaultValue',
-        'Core/Ellipsoid',
-        'Core/GeographicProjection',
-        'Core/HeadingPitchRange',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/Matrix4',
-        'Core/OrthographicFrustum',
-        'Core/OrthographicOffCenterFrustum',
-        'Core/PerspectiveFrustum',
-        'Core/Rectangle',
-        'Core/Transforms',
-        'Core/WebMercatorProjection',
-        'Scene/Camera',
-        'Scene/CameraFlightPath',
-        'Scene/MapMode2D',
-        'Scene/SceneMode',
-        'Scene/TweenCollection'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        defaultValue,
-        Ellipsoid,
-        GeographicProjection,
-        HeadingPitchRange,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
-        Rectangle,
-        Transforms,
-        WebMercatorProjection,
-        Camera,
-        CameraFlightPath,
-        MapMode2D,
-        SceneMode,
-        TweenCollection) {
-        'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartesian4 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { OrthographicFrustum } from '../../Source/Cesium.js';
+import { OrthographicOffCenterFrustum } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { CameraFlightPath } from '../../Source/Cesium.js';
+import { MapMode2D } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { TweenCollection } from '../../Source/Cesium.js';
 
 describe('Scene/Camera', function() {
 
@@ -3080,5 +3054,4 @@ describe('Scene/Camera', function() {
         expect(camera.positionWCDeltaMagnitude).toEqual(0);
         expect(camera.positionWCDeltaMagnitudeLastFrame).toEqualEpsilon(moveAmount, CesiumMath.EPSILON10);
     });
-});
 });

@@ -1,22 +1,11 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/JulianDate',
-        './Property'
-    ], function(
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        JulianDate,
-        Property) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import JulianDate from '../Core/JulianDate.js';
+import Property from './Property.js';
 
     /**
      * A {@link Property} which evaluates to a {@link Cartesian3} vector
@@ -206,6 +195,4 @@ define([
                (other instanceof VelocityVectorProperty &&
                 Property.equals(this._position, other._position));
     };
-
-    return VelocityVectorProperty;
-});
+export default VelocityVectorProperty;

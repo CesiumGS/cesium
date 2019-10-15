@@ -1,26 +1,13 @@
-define([
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './freezeObject',
-        './Math',
-        './scaleToGeodeticSurface'
-    ], function(
-        Cartesian3,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        freezeObject,
-        CesiumMath,
-        scaleToGeodeticSurface) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
+import scaleToGeodeticSurface from './scaleToGeodeticSurface.js';
 
     function initialize(ellipsoid, x, y, z) {
         x = defaultValue(x, 0.0);
@@ -647,6 +634,4 @@ define([
 
         return result;
     };
-
-    return Ellipsoid;
-});
+export default Ellipsoid;

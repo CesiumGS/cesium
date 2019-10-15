@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -43,6 +38,11 @@ var viewer = new Cesium.Viewer('cesiumContainer',  {
     infoBox : false,
     terrainProvider : Cesium.createWorldTerrain()
 });
+
+if (!viewer.scene.pickPositionSupported) {
+    window.alert('This browser does not support pickPosition.');
+}
+
 viewer.cesiumWidget.screenSpaceEventHandler.removeInputAction(Cesium.ScreenSpaceEventType.LEFT_DOUBLE_CLICK);
 function createPoint(worldPosition) {
     var point = viewer.entities.add({
@@ -82,10 +82,6 @@ var activeShape;
 var floatingPoint;
 var handler = new Cesium.ScreenSpaceEventHandler(viewer.canvas);
 handler.setInputAction(function(event) {
-    if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
-        console.log('This browser does not support polylines on terrain.');
-        return;
-    }
     // We use `viewer.scene.pickPosition` here instead of `viewer.camera.pickEllipsoid` so that
     // we get the correct point when mousing over terrain.
     var earthPosition = viewer.scene.pickPosition(event.position);
@@ -134,6 +130,10 @@ handler.setInputAction(function(event) {
 var options = [{
     text : 'Draw Lines',
     onselect : function() {
+        if (!Cesium.Entity.supportsPolylinesOnTerrain(viewer.scene)) {
+            window.alert('This browser does not support polylines on terrain.');
+        }
+
         terminateShape();
         drawingMode = 'line';
     }
@@ -153,9 +153,8 @@ viewer.camera.lookAtTransform(Cesium.Matrix4.IDENTITY);
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

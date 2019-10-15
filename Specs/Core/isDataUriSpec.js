@@ -1,8 +1,4 @@
-define([
-        'Core/isDataUri'
-    ], function(
-        isDataUri) {
-        'use strict';
+import { isDataUri } from '../../Source/Cesium.js';
 
 describe('Core/isDataUri', function() {
 
@@ -20,5 +16,4 @@ describe('Core/isDataUri', function() {
         var uri = 'data:text/plain;base64,' + btoa('a data uri');
         expect(isDataUri(uri)).toEqual(true);
     });
-});
 });

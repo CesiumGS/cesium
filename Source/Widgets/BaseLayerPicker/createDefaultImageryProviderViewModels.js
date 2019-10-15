@@ -1,24 +1,12 @@
-define([
-        '../../Core/buildModuleUrl',
-        '../../Scene/ArcGisMapServerImageryProvider',
-        '../../Scene/OpenStreetMapImageryProvider',
-        '../../Scene/TileMapServiceImageryProvider',
-        '../../Scene/createWorldImagery',
-        '../../Scene/IonImageryProvider',
-        '../../Scene/IonWorldImageryStyle',
-        '../../Scene/MapboxStyleImageryProvider',
-        '../BaseLayerPicker/ProviderViewModel'
-    ], function(
-        buildModuleUrl,
-        ArcGisMapServerImageryProvider,
-        OpenStreetMapImageryProvider,
-        TileMapServiceImageryProvider,
-        createWorldImagery,
-        IonImageryProvider,
-        IonWorldImageryStyle,
-        MapboxStyleImageryProvider,
-        ProviderViewModel) {
-    'use strict';
+import buildModuleUrl from '../../Core/buildModuleUrl.js';
+import ArcGisMapServerImageryProvider from '../../Scene/ArcGisMapServerImageryProvider.js';
+import createWorldImagery from '../../Scene/createWorldImagery.js';
+import IonImageryProvider from '../../Scene/IonImageryProvider.js';
+import IonWorldImageryStyle from '../../Scene/IonWorldImageryStyle.js';
+import MapboxStyleImageryProvider from '../../Scene/MapboxStyleImageryProvider.js';
+import OpenStreetMapImageryProvider from '../../Scene/OpenStreetMapImageryProvider.js';
+import TileMapServiceImageryProvider from '../../Scene/TileMapServiceImageryProvider.js';
+import ProviderViewModel from '../BaseLayerPicker/ProviderViewModel.js';
 
     /**
      * @private
@@ -234,6 +222,4 @@ area washes and organic edges over a paper texture to add warm pop to any map.\n
 
         return providerViewModels;
     }
-
-    return createDefaultImageryProviderViewModels;
-});
+export default createDefaultImageryProviderViewModels;
