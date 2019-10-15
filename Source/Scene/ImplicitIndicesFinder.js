@@ -453,9 +453,55 @@ define([
     //     return levelEllipsoid;
     // };
 
+    ImplicitIndicesFinder.prototype.generateSlab = function(zIdx, x, ry, cx, icy, yToXExtentRatio, goForward, goBack, lastY, index) {
+        var yExtentForEllipsoidSlice = x*yToXExtentRatio;
+        var My = x * x;
+        var Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
+        var levelEllipsoid = this._levelEllipsoid;
+
+        var y,yEnd, yIdx, relY, item;
+        if (goForward) {
+            yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
+            for (y = 1; y < yEnd; y++) {
+                yIdx = Math.floor(y + icy);
+                if (yIdx < 0) {
+                    continue;
+                } else if (yIdx > lastY) {
+                    break;
+                }
+                relY  = y - ry;
+                x = Math.sqrt(My - Ny * relY * relY);
+                item = levelEllipsoid.get(index++);
+                item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
+            }
+        }
+
+        // The reason for minus 1 in y: you want to rasterize using the
+        // grid line above the cell (which is towards the center of the sphere )
+        // but this counts for the cell with index of -1 that raster line's grid index
+        if (goBack) {
+            yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
+            for (y = Math.ceil(ry-1); y > yEnd; y--) {
+                yIdx = Math.floor(y + icy - 1);
+                if (yIdx > lastY) {
+                    continue;
+                } else if (yIdx < 0) {
+                    break;
+                }
+                relY = y - ry;
+                x = Math.sqrt(My - Ny * relY * relY);
+                item = levelEllipsoid.get(index++);
+                item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
+            }
+        }
+
+        return index;
+    };
     // TODO: REMOVE BY FIXING THE REFERENCE VERSION(reference version needs to know where the fast switch is
     // and start taking samples so that there is no more than a change of 1 (0.5?) along the "x" dir between samples)
     ImplicitIndicesFinder.prototype.updateLevelEllipsoidDynamic = function(level, planes) {
+        var replace  = !this._tileset._allTilesAdditive;
+
         var centerTilePositionOnLevel = this._centerTilePositions[level];
         // Camera center position in grid
         var cx = centerTilePositionOnLevel.x;
@@ -482,7 +528,7 @@ define([
         var zEnd = Math.ceil(rz + axesExtentsZ);
         var Mz = axesExtentsX * axesExtentsX;
         var Nz = Mz / (axesExtentsZ * axesExtentsZ);
-        var x, y, z, yIdx, zIdx, relZ, relY, yEnd, My, Ny, yExtentForEllipsoidSlice;
+        var x, z, zIdx, relZ;
         var goBack, goForward;
 
         levelEllipsoid.length = 0;
@@ -512,58 +558,16 @@ define([
                 break;
             }
 
+            // This can go in the function too buts a fair bit more args
+            // its also really part of teh z loop so  dont logically separate it
             relZ = z - rz;
             x = Math.sqrt(Mz - Nz * relZ * relZ);
-
             if (middleY) {
                 item = levelEllipsoid.get(index++);
                 item.x = x + cx; item.y = middleYIdx; item.z = zIdx; item.w = -x + cx;
             }
 
-            yExtentForEllipsoidSlice = x*yToXExtentRatio;
-            My = x * x;
-            Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
-
-            if (goForward) {
-                yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
-                for (y = 1; y < yEnd; y++) {
-                    yIdx = Math.floor(y + icy);
-                    if (yIdx < 0) {
-                        continue;
-                    } else if (yIdx > lastY) {
-                        break;
-                    }
-
-                    relY  = y - ry;
-                    x = Math.sqrt(My - Ny * relY * relY);
-
-                    item = levelEllipsoid.get(index++);
-                    // item.x = x + cx; item.y = y + icy; item.z = zIdx; item.w = -x + cx;
-                    item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
-                }
-            }
-
-            if (goBack) {
-                yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
-                for (y = Math.ceil(ry-1); y > yEnd; y--) {
-                    yIdx = Math.floor(y + icy - 1);
-                    if (yIdx > lastY) {
-                        continue;
-                    } else if (yIdx < 0) {
-                        break;
-                    }
-
-                    relY = y - ry;
-                    x = Math.sqrt(My - Ny * relY * relY);
-
-                    item = levelEllipsoid.get(index++);
-                    // item.x = x + cx; item.y = y + icy - 1; item.z = zIdx; item.w = -x + cx;
-                    item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
-                    // The reason for minus 1 in y: you want to rasterize using the
-                    // grid line above the cell (which is towards the center of the sphere )
-                    // but this counts for the cell with index of -1 that raster line's grid index
-                }
-            }
+            index = this.generateSlab(zIdx, x, ry, cx, icy, yToXExtentRatio, goForward, goBack, lastY, index);
         }
 
         // -z
@@ -576,59 +580,26 @@ define([
                 break;
             }
 
+            // This can go in the function too buts a fair bit more args
+            // its also really part of teh z loop so  dont logically separate it
             relZ = z - rz;
             x = Math.sqrt(Mz - Nz * relZ * relZ);
-
             if (middleY) {
                 item = levelEllipsoid.get(index++);
                 item.x = x + cx; item.y = middleYIdx; item.z = zIdx; item.w = -x + cx;
             }
 
-            yExtentForEllipsoidSlice = x*yToXExtentRatio;
-            My = x * x;
-            Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
-
-            if (goForward) {
-                yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
-                for (y = 1; y < yEnd; y++) {
-                    yIdx = Math.floor(y + icy);
-                    if (yIdx < 0) {
-                        continue;
-                    } else if (yIdx > lastY) {
-                        break;
-                    }
-
-                    relY  = y - ry;
-                    x = Math.sqrt(My - Ny * relY * relY);
-
-                    item = levelEllipsoid.get(index++);
-                    // item.x = x + cx; item.y = y + icy; item.z = zIdx; item.w = -x + cx;
-                    item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
-                }
-
-            }
-
-            if (goBack) {
-                yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
-                for (y = Math.ceil(ry-1); y > yEnd; y--) {
-                    yIdx = Math.floor(y + icy - 1);
-                    if (yIdx > lastY) {
-                        continue;
-                    } else if (yIdx < 0) {
-                        break;
-                    }
-
-                    relY = y - ry;
-                    x = Math.sqrt(My - Ny * relY * relY);
-
-                    item = levelEllipsoid.get(index++);
-                    // item.x = x + cx; item.y = y + icy - 1; item.z = zIdx; item.w = -x + cx;
-                    item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
-                }
-            }
+            index = this.generateSlab(zIdx, x, ry, cx, icy, yToXExtentRatio, goForward, goBack, lastY, index);
         }
 
         levelEllipsoid.length = index;
+
+        // TODO:
+        // 1) process the pre-clipped levelElliposoid to add the sibling indices directly to levelEllipsoid (extending x ranges and adding rows)
+            // the x should be simple enough, the y and z must make sure they continue on, clipped to the tree bounds
+        // 2) clip the indices with the planes as normal
+        // 3) post-process the clipped levelElliposoid to generate set of indices that need to be requested but not rendered
+        //   (this will be the end siblings or entire rows (range copied from visible sibling row))
 
         this.floorIndices();
 
@@ -709,7 +680,6 @@ define([
                 var plane = planes[k];
                 Plane.fromCartesian4(plane, scratchPlane);
                 var normal = scratchPlane.normal;
-                var distance = scratchPlane.distance;
                 var normalX = normal.x, normalY = normal.y, normalZ = normal.z;
                 // plane is used as if it is its normal; the first three components are assumed to be normalized
                 radEffectivePerPlaneOnLevel[k] = Math.abs(normalX * halfAxes[Matrix3.COLUMN0ROW0] + normalY * halfAxes[Matrix3.COLUMN0ROW1] + normalZ * halfAxes[Matrix3.COLUMN0ROW2]) +
@@ -763,11 +733,6 @@ define([
                 Cartesian3.add(boundsMin, scratchIndicesScaleMin, scratchTileCenterMin);
                 Cartesian3.add(boundsMin, scratchIndicesScaleMax, scratchTileCenterMax);
 
-                // var normalX = normal.x, normalY = normal.y, normalZ = normal.z;
-                // plane is used as if it is its normal; the first three components are assumed to be normalized
-                // radEffective = Math.abs(normalX * halfAxes[Matrix3.COLUMN0ROW0] + normalY * halfAxes[Matrix3.COLUMN0ROW1] + normalZ * halfAxes[Matrix3.COLUMN0ROW2]) +
-                //                Math.abs(normalX * halfAxes[Matrix3.COLUMN1ROW0] + normalY * halfAxes[Matrix3.COLUMN1ROW1] + normalZ * halfAxes[Matrix3.COLUMN1ROW2]) +
-                //                Math.abs(normalX * halfAxes[Matrix3.COLUMN2ROW0] + normalY * halfAxes[Matrix3.COLUMN2ROW1] + normalZ * halfAxes[Matrix3.COLUMN2ROW2]);
                 radEffective = radEffectivePerPlaneOnLevel[i];
                 d1 = Cartesian3.dot(normal, scratchTileCenterMin) + distance;
                 d2 = Cartesian3.dot(normal, scratchTileCenterMax) + distance;

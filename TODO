@@ -8,6 +8,13 @@ of the subtree
     REPLACE: refine will have to make sure to extend the loop a little in cases for sibling requests.
     literally just making sure the loop bounds starts and ends on an even number
     subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
+        // TODO:
+        // 1) process the pre-clipped levelElliposoid to add the sibling indices directly to levelEllipsoid (extending x ranges and adding rows)
+            // the x should be simple enough, the y and z must make sure they continue on, clipped to the tree bounds
+        // 2) clip the indices with the planes as normal
+        // 3) post-process the clipped levelElliposoid to generate set of indices that need to be requested but not rendered
+        //   (this will be the end siblings or entire rows (range copied from visible sibling row))
+
 
     PLANE DIST CALC:
     Experiment: local vesion of radEffective?

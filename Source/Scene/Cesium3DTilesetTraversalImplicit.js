@@ -354,10 +354,6 @@ define([
             }
 
             var levelEllipsoid = indicesFinder.updateLevelEllipsoidDynamic(contentLevel, frameState.cullingVolume.planes);
-                // 1) process the pre-clipped levelElliposoid to add the sibling indices directly to levelEllipsoid (extending x ranges and adding rows)
-                // 2) clip the indices with the planes as normal
-                // 3) post-process the clipped levelElliposoid to generate set of indices that need to be requested but not rendered
-                //   (this will be the end siblings or entire rows (range copied from visible sibling row))
 
             for (i = 0; i < length; i++) {
                 var subtree = subtreesForThisLevel[i];
