@@ -31,7 +31,6 @@ var yargs = require('yargs');
 var AWS = require('aws-sdk');
 var mime = require('mime');
 var rollup = require('rollup');
-var rollupPluginBanner = require('rollup-plugin-banner');
 var rollupPluginStripPragma = require('rollup-plugin-strip-pragma');
 var rollupPluginExternalGlobals = require('rollup-plugin-external-globals');
 var rollupPluginUglify = require('rollup-plugin-uglify');
@@ -109,6 +108,14 @@ var filesToConvertES6 = ['Source/**/*.js',
                          '!Specs/TestWorkers/**'
                         ];
 
+function rollupWarning(message) {
+    // Ignore eval warnings in third-party code we don't have control over
+    if (message.code === 'EVAL' && /(protobuf-minimal|crunch)\.js$/.test(message.loc.file)) {
+        return;
+    }
+    console.log(message);
+}
+
 function createWorkers() {
     rimraf.sync('Build/createWorkers');
 
@@ -126,10 +133,11 @@ function createWorkers() {
 
     return rollup.rollup({
         input: workers,
-        plugins: [rollupPluginBanner.default('This file is automatically rebuilt by the Cesium build process.')]
+        onwarn: rollupWarning
     }).then(function(bundle) {
         return bundle.write({
             dir: 'Build/createWorkers',
+            banner: '/* This file is automatically rebuilt by the Cesium build process. */',
             format: 'amd'
         });
     }).then(function(){
@@ -176,7 +184,8 @@ gulp.task('build-specs', function buildSpecs() {
     var promise = Promise.join(
         rollup.rollup({
             input: 'Specs/SpecList.js',
-            plugins: [externalCesium]
+            plugins: [externalCesium],
+            onwarn: rollupWarning
         }).then(function(bundle) {
             return bundle.write({
                 file: 'Build/Specs/Specs.js',
@@ -195,7 +204,8 @@ gulp.task('build-specs', function buildSpecs() {
         }).then(function(){
             return rollup.rollup({
                 input: 'Specs/karma-main.js',
-                plugins: [removePragmas, externalCesium]
+                plugins: [removePragmas, externalCesium],
+                onwarn: rollupWarning
             }).then(function(bundle) {
                 return bundle.write({
                     file: 'Build/Specs/karma-main.js',
@@ -1003,7 +1013,8 @@ function combineCesium(debug, optimizer, combineOutput) {
 
     return rollup.rollup({
         input: 'Source/Cesium.js',
-        plugins: plugins
+        plugins: plugins,
+        onwarn: rollupWarning
     }).then(function(bundle) {
         return bundle.write({
             format: 'umd',
@@ -1053,7 +1064,8 @@ function combineWorkers(debug, optimizer, combineOutput) {
 
             return rollup.rollup({
                 input: files,
-                plugins: plugins
+                plugins: plugins,
+                onwarn: rollupWarning
             }).then(function(bundle) {
                 return bundle.write({
                     dir: path.join(combineOutput, 'Workers'),
@@ -1389,7 +1401,8 @@ function buildCesiumViewer() {
                     pragmas: ['debug']
                 }),
                 rollupPluginUglify.uglify()
-            ]
+            ],
+            onwarn: rollupWarning
         }).then(function(bundle) {
             return bundle.write({
                 file: 'Build/Apps/CesiumViewer/CesiumViewer.js',

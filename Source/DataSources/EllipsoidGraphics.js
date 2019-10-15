@@ -13,15 +13,13 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @constructor
      *
      * @param {Object} [options] Object with the following properties:
-     * @param {Property} [options.heightReference] A Property specifying what the height from the entity position is relative to.
+     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
      * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
      * @param {Property} [options.innerRadii] A {@link Cartesian3} Property specifying the inner radii of the ellipsoid.
      * @param {Property} [options.minimumClock=0.0] A Property specifying the minimum clock angle of the ellipsoid.
      * @param {Property} [options.maximumClock=2*PI] A Property specifying the maximum clock angle of the ellipsoid.
      * @param {Property} [options.minimumCone=0.0] A Property specifying the minimum cone angle of the ellipsoid.
      * @param {Property} [options.maximumCone=PI] A Property specifying the maximum cone angle of the ellipsoid.
-     * @param {Property} [options.show=true] A boolean Property specifying the visibility of the ellipsoid.
-     * @param {Property} [options.radii] A {@link Cartesian3} Property specifying the radii of the ellipsoid.
      * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height from the entity position is relative to.
      * @param {Property} [options.fill=true] A boolean Property specifying whether the ellipsoid is filled with the provided material.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to fill the ellipsoid.
@@ -43,10 +41,15 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
         this._radii = undefined;
         this._radiiSubscription = undefined;
         this._innerRadii = undefined;
+        this._innerRadiiSubscription = undefined;
         this._minimumClock = undefined;
+        this._minimumClockSubscription = undefined;
         this._maximumClock = undefined;
+        this._maximumClockSubscription = undefined;
         this._minimumCone = undefined;
+        this._minimumConeSubscription = undefined;
         this._maximumCone = undefined;
+        this._maximumConeSubscription = undefined;
         this._heightReference = undefined;
         this._heightReferenceSubscription = undefined;
         this._fill = undefined;
