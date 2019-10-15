@@ -32,7 +32,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 if (!Cesium.GroundPrimitive.supportsMaterials(viewer.scene)) {
-    throw new Cesium.RuntimeError('GroundPrimitive materials are not supported on this platform.');
+    window.alert('GroundPrimitive materials are not supported on this platform.');
 }
 
 var rectangle;

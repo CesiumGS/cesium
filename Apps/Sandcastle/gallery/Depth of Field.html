@@ -89,7 +89,7 @@ for (var name in viewModel) {
 }
 
 if (!Cesium.PostProcessStageLibrary.isDepthOfFieldSupported(viewer.scene)) {
-    console.log('This browser does not support the depth of field post process.');
+    window.alert('This browser does not support the depth of field post process.');
 }
 
 var depthOfField = viewer.scene.postProcessStages.add(Cesium.PostProcessStageLibrary.createDepthOfFieldStage());

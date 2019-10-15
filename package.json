@@ -29,6 +29,9 @@
     "url": "https://github.com/AnalyticalGraphicsInc/cesium/issues",
     "email": "cesium-dev@googlegroups.com"
   },
+  "main": "index.js",
+  "module": "Source/Cesium.js",
+  "type": "module",
   "dependencies": {
     "esm": "^3.2.25"
   },
@@ -72,7 +75,6 @@
     "request": "^2.79.0",
     "rimraf": "^3.0.0",
     "rollup": "^1.21.4",
-    "rollup-plugin-banner": "^0.2.1",
     "rollup-plugin-external-globals": "^0.4.0",
     "rollup-plugin-strip-pragma": "^1.0.0",
     "rollup-plugin-uglify": "^6.0.3",

@@ -42,7 +42,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 if (!Cesium.GroundPolylinePrimitive.isSupported(viewer.scene)) {
-    throw new Cesium.RuntimeError('Polylines on terrain are not supported on this platform.');
+    window.alert('Polylines on terrain are not supported on this platform.');
 }
 
 var polylineIds = ['polyline1', 'polyline2'];

@@ -24,6 +24,7 @@ import Property from './Property.js';
      * @alias DynamicGeometryUpdater
      * @constructor
      * @private
+     * @abstract
      */
     function DynamicGeometryUpdater(geometryUpdater, primitives, orderedGroundPrimitives) {
         //>>includeStart('debug', pragmas.debug);
