@@ -619,7 +619,7 @@ import View from './View.js';
 
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
-            usePrimitiveFramebuffer : false,
+            separatePrimitiveFramebuffer : false,
             useOIT : false,
             useInvertClassification : false,
             usePostProcess : false,
@@ -2198,7 +2198,7 @@ import View from './View.js';
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
         var useDepthPlane = environmentState.useDepthPlane;
-        var usePrimitiveFramebuffer = environmentState.usePrimitiveFramebuffer = (numFrustums > 1) && clearGlobeDepth && environmentState.useGlobeDepthFramebuffer;
+        var separatePrimitiveFramebuffer = environmentState.separatePrimitiveFramebuffer = (numFrustums > 1) && clearGlobeDepth && environmentState.useGlobeDepthFramebuffer;
         var clearDepth = scene._depthClearCommand;
         var clearStencil = scene._stencilClearCommand;
         var clearClassificationStencil = scene._classificationStencilClearCommand;
@@ -2230,7 +2230,7 @@ import View from './View.js';
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : view.globeDepth;
 
-            if (usePrimitiveFramebuffer) {
+            if (separatePrimitiveFramebuffer) {
                 // Render to globe framebuffer in GLOBE pass
                 passState.framebuffer = globeDepth.framebuffer;
             }
@@ -2279,7 +2279,7 @@ import View from './View.js';
                 }
             }
 
-            if (usePrimitiveFramebuffer) {
+            if (separatePrimitiveFramebuffer) {
                 // Render to primitive framebuffer in all other passes
                 passState.framebuffer = globeDepth.primitiveFramebuffer;
             }
@@ -2426,7 +2426,7 @@ import View from './View.js';
                 pickDepth.executeCopyDepth(context, passState);
             }
 
-            if (usePrimitiveFramebuffer) {
+            if (separatePrimitiveFramebuffer) {
                 // Reset framebuffer
                 passState.framebuffer = globeDepth.framebuffer;
             }
@@ -3099,7 +3099,7 @@ import View from './View.js';
         var sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
         var idFramebuffer = view.sceneFramebuffer.getIdFramebuffer();
 
-        if (environmentState.usePrimitiveFramebuffer) {
+        if (environmentState.separatePrimitiveFramebuffer) {
             // Merge primitive framebuffer into globe framebuffer
             globeDepth.executeMergeColor(context, passState);
         }

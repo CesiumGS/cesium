@@ -1,6 +1,7 @@
 import BoundingRectangle from '../Core/BoundingRectangle.js';
 import Color from '../Core/Color.js';
 import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import PixelFormat from '../Core/PixelFormat.js';
 import ClearCommand from '../Renderer/ClearCommand.js';
@@ -15,6 +16,7 @@ import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js'
 import TextureWrap from '../Renderer/TextureWrap.js';
 import PassThrough from '../Shaders/PostProcessStages/PassThrough.js';
 import PassThroughDepth from '../Shaders/PostProcessStages/PassThroughDepth.js';
+import BlendingState from './BlendingState.js';
 import StencilConstants from './StencilConstants.js';
 import StencilFunction from './StencilFunction.js';
 import StencilOperation from './StencilOperation.js';
