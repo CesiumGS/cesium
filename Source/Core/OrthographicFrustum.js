@@ -3,6 +3,7 @@ import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import defineProperties from './defineProperties.js';
+import deprecationWarning from './deprecationWarning.js';
 import DeveloperError from './DeveloperError.js';
 import CesiumMath from './Math.js';
 import OrthographicOffCenterFrustum from './OrthographicOffCenterFrustum.js';
