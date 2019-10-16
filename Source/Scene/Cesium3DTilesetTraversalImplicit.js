@@ -49,7 +49,8 @@ define([
         if (tileset._allTilesAdditive) {
             additiveTraversal(tileset, frameState);
         } else {
-            replacementTraversal(tileset, frameState);
+            // replacementTraversal(tileset, frameState);
+            replacementTraversal2(tileset, frameState);
         }
 
         // Update the priority for any requests found during traversal
@@ -453,13 +454,20 @@ define([
         frameState) {
 
         var thisFrame = frameState.frameNumber;
+        var startLevel = indicesFinder._startLevel;
         var levelEllipsoid = indicesFinder._levelEllipsoid;
         var maxTraversalLevel = indicesFinder._maximumTraversalLevel;
         var i, j, tile, xRowRange, notInBlockedRefinementRegion;
         var levelEllipsoidLength = levelEllipsoid.length;
+        var lodDistances = indicesFinder._lodDistances;
+        var distanceForLevel = lodDistances[contentLevel + 1];
+        var tiles = subtree._tiles;
+        var subtreeLevelDim = subtreeMaxTreeIndicesForLevel.x - subtreeMinTreeIndicesForLevel.x + 1;
+        var notStartLevel = contentLevel !== startLevel;
+        var lastLevel = contentLevel === maxTraversalLevel;
         for (i = 0; i < levelEllipsoidLength; i++) {
             xRowRange = levelEllipsoid.get(i);
-            // NOTE: All siblings are in the same subtree
+            // NOTE: A sibling is in the same subtree.
             if (xRowRange.x < subtreeMinTreeIndicesForLevel.x ||
                 xRowRange.w > subtreeMaxTreeIndicesForLevel.x ||
                 xRowRange.y < subtreeMinTreeIndicesForLevel.y ||
@@ -480,11 +488,9 @@ define([
             var relXInSubtreeLevelGrid = xStart      - subtreeMinTreeIndicesForLevel.x;
             var relYInSubtreeLevelGrid = xRowRange.y - subtreeMinTreeIndicesForLevel.y;
             var relZInSubtreeLevelGrid = xRowRange.z - subtreeMinTreeIndicesForLevel.z;
-            var subtreeLevelDim = subtreeMaxTreeIndicesForLevel.x - subtreeMinTreeIndicesForLevel.x + 1;
             var begin = offset + relZInSubtreeLevelGrid*subtreeLevelDim*subtreeLevelDim + relYInSubtreeLevelGrid*subtreeLevelDim + relXInSubtreeLevelGrid;
             var end = begin + xEnd - xStart;
 
-            var tiles = subtree._tiles;
             for (j = begin; j <= end; j++) {
                 tile = tiles[j];
 
@@ -510,15 +516,21 @@ define([
                 visitTile(tileset, tile, frameState);
                 touchTile(tileset, tile, frameState);
 
-                notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
-                if (!tile.contentAvailable && notInBlockedRefinementRegion && parentDefined && parent._selectedFrame !== thisFrame) {
-                    selectDesiredTile(tileset, parent, frameState);
-                    finalRefinementIndices.push(parent.treeKey);
+                if (!inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey) && notStartLevel) {
+                    if (!tile.contentAvailable &&
+                        parentDefined &&
+                        parent._selectedFrame !== thisFrame) {
+                        selectDesiredTile(tileset, parent, frameState);
+                        finalRefinementIndices.push(parent.treeKey);
+                    } else if (tile._distanceToCamera > distanceForLevel && !lastLevel) {
+                        selectDesiredTile(tileset, tile, frameState);
+                        finalRefinementIndices.push(tile.treeKey);
+                    }
                 }
             }
 
-            // If last level, can't select up so run through tiles and select those not in blocked region
-            if (contentLevel === maxTraversalLevel) {
+            // If last level, run through tiles and select those not in blocked region
+            if (lastLevel) {
                 for (j = begin; j <= end; j++) {
                     tile = tiles[j];
                     if (!defined(tile) || !isVisible(tile)) {
@@ -559,6 +571,7 @@ define([
             }
 
             notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
+            tile.notInBlockedRefinementRegion = notInBlockedRefinementRegion;
             if (tile._distanceToCamera > distanceForLevel) {
                 if ((tile.parent._distanceToCamera <= distanceForParent) &&
                     contentLevel !== contentStartLevel &&

@@ -9,18 +9,10 @@ of the subtree
     literally just making sure the loop bounds starts and ends on an even number
     subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
         // TODO:
-        // 1) process the pre-clipped levelElliposoid to add the sibling indices directly to levelEllipsoid (extending x ranges and adding rows)
-            // the x should be simple enough, the y and z must make sure they continue on if you come to the end of the range too soon, clipped to the tree bounds
-            // try seeing where the starting idx is (when y=0) if its even or odd
-            // if its even and in the level range we need to note it and copy it up then set the starting point for y goForward as y = 2, skip = 2 and note the indices
-            // goBack loop in this case will start on odd so we will skip by 2 and copy the indices.
-            // in the case that y = 0 idx is odd, the roles are reversed,i.e. the goForward loop starts normally, skip = 2 and we copy the indices,
-            // the goBack loop needs to first copy the y = 0 row y = 2 skip 2 and copy the indices
-            // xy slab copying for the z dir needs to mimic what y row copying did
-
-        // 2) use updateVisibility() to do visibliity. if a tile isn't vis but it's parent is then it should still be requested (but not rendered)
-        // ... 2) clip the indices with the planes as normal
-        // ... 3) post-process the clipped levelElliposoid to generate set of indices that need to be requested but not rendered
+        // for replacement how do I know if a non-last level tile is dangling?
+        // be nice to know if tile is artificial (tile outside range)
+        //  clip the indices with the planes as normal
+        //  post-process the clipped levelElliposoid to generate set of indices that need to be requested but not rendered
         //   (this will be the end siblings or entire rows (range copied from visible sibling row))
 
     * The ellipsoid index generation could be scrapped for a little more simple dsqrd <= rsqrd
