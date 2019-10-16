@@ -24,7 +24,6 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
-var gulpJsonTransform = require('gulp-json-transform');
 var Promise = require('bluebird');
 var Karma = require('karma');
 var yargs = require('yargs');
