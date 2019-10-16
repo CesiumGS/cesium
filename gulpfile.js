@@ -24,7 +24,6 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
-var gulpJsonTransform = require('gulp-json-transform');
 var Promise = require('bluebird');
 var Karma = require('karma');
 var yargs = require('yargs');
@@ -225,27 +224,6 @@ gulp.task('clean', function(done) {
         rimraf.sync(file);
     });
     done();
-});
-
-// optimizeApproximateTerrainHeights can be used to regenerate the approximateTerrainHeights
-// file from an overly precise terrain heights file to reduce bandwidth
-// the approximate terrain heights are only used when the terrain provider does not have this
-// information and not a high level of precision is required
-gulp.task('optimizeApproximateTerrainHeights', function() {
-    var argv = yargs.usage('Usage: optimizeApproximateTerrainHeights -p [degree of precision]').argv;
-    var precision = typeof argv.p !== undefined ? argv.p : 1;
-    precision = Math.pow(10, precision);
-    return gulp.src('Source/Assets/approximateTerrainHeightsPrecise.json')
-        .pipe(gulpJsonTransform(function(data, file) {
-            Object.entries(data).forEach(function(entry) {
-                var values = entry[1];
-                data[entry[0]] = [Math.floor(values[0] * precision) / precision,
-                                  Math.ceil(values[1] * precision) / precision ];
-            });
-            return data;
-        }))
-        .pipe(gulpRename('approximateTerrainHeights.json'))
-        .pipe(gulp.dest('Source/Assets/'));
 });
 
 function cloc() {
