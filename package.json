@@ -99,7 +99,6 @@
     "makeZipFile": "gulp makeZipFile",
     "minify": "gulp minify",
     "minifyRelease": "gulp minifyRelease",
-    "optimizeApproximateTerrainHeights": "gulp optimizeApproximateTerrainHeights -p 2",
     "release": "gulp release",
     "build-specs": "gulp build-specs",
     "test": "gulp test",
