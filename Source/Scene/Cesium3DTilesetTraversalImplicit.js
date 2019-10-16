@@ -80,6 +80,7 @@ define([
 
     function selectDesiredTile(tileset, tile, frameState) {
         if (tile.contentAvailable) {
+        // if (tile.contentAvailable && tile._selectedFrame !== frameState.frameNumber) {
             // The tile can be selected right away and does not require traverseAndSelect
             selectTile(tileset, tile, frameState);
         }
@@ -321,11 +322,11 @@ define([
             }
 
             loadTile(tileset, child, frameState);
+            visitTile(tileset, child, frameState);
+            touchTile(tileset, child, frameState);
             if (onlyContentRootTiles) {
                 selectDesiredTile(tileset, child, frameState);
             }
-            visitTile(tileset, child, frameState);
-            touchTile(tileset, child, frameState);
         }
 
         // This is possible for the replacement case since lastContentLevelToCheck is defined in terms of
@@ -375,7 +376,68 @@ define([
 
                 // Using traditional visbility and distance
                 replacementTileChecks_visAndDist(tileset, subtree, contentLevel, finalRefinementIndices, frameState);
-                // replacementTileChecks(tileset, subtree, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel, contentLevel, levelEllipsoid, finalRefinementIndices, frameState);
+            } // for i
+        } // for contentLevel
+    }
+
+    function replacementTraversal2(tileset, frameState) {
+        // Must request all content roots for REPLACE refinement, so it's slightly different than the main loop
+        // Access through the tileset's subtreeInfo database, add accessor functions for pulling all subtrees for a given level
+        // You then loop over all tiles on the subtree level that we care about.
+        // 1. call updateTile, if not vis continue to next tile, otherwise call loadTile
+        // Just make the requests, let priority handle the ordering / shoving onto requeset queue
+        // Selection is what cares about blocked indices, loading does not
+
+        var indicesFinder = tileset._indicesFinder;
+        var contentStartLevel = indicesFinder._startLevel;
+        var maxTraversalLevel = indicesFinder._maximumTraversalLevel;
+
+        if (maxTraversalLevel < contentStartLevel) {
+            return;
+        }
+
+        var i;
+        var minIndices = indicesFinder._minIndices;
+        var maxIndices = indicesFinder._maxIndices;
+        var allSubtrees = tileset._subtreeInfo.subtreesInRange(contentStartLevel, maxTraversalLevel/* , minIndices, maxIndices */);
+        if (allSubtrees.length === 0) {
+            // None available yet
+            return;
+        }
+
+        indicesFinder.determineRadEffectivePerPlanePerLevel(frameState.cullingVolume.planes);
+        var finalRefinementIndices = [];
+        for (var contentLevel = contentStartLevel; contentLevel <= maxTraversalLevel; contentLevel++) {
+            var subtreesForThisLevel = SubtreeInfo.subtreesContainingLevel(allSubtrees, contentLevel, contentStartLevel);
+
+            var length = subtreesForThisLevel.length;
+            if (length === 0) {
+                // None available yet
+                break;
+            }
+
+            indicesFinder.updateLevelEllipsoidDynamic(contentLevel, frameState.cullingVolume.planes);
+
+            for (i = 0; i < length; i++) {
+                var subtree = subtreesForThisLevel[i];
+
+                subtree.treeIndexRangeForTreeLevel(contentLevel, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel);
+                // if any of the min from indices finder for the level are greater than any of the max you can break (sphere ranges get smaller as you go down levels)
+                // vice versa for max vs min
+                var minTraversalIndicesForLevel = minIndices[contentLevel];
+                var maxTraversalIndicesForLevel = maxIndices[contentLevel];
+
+                if (subtreeMaxTreeIndicesForLevel.x < minTraversalIndicesForLevel.x ||
+                    subtreeMaxTreeIndicesForLevel.y < minTraversalIndicesForLevel.y ||
+                    subtreeMaxTreeIndicesForLevel.z < minTraversalIndicesForLevel.z ||
+                    subtreeMinTreeIndicesForLevel.x > maxTraversalIndicesForLevel.x ||
+                    subtreeMinTreeIndicesForLevel.y > maxTraversalIndicesForLevel.y ||
+                    subtreeMinTreeIndicesForLevel.z > maxTraversalIndicesForLevel.z) {
+                    continue;
+                }
+
+                // Using traditional visbility and distance
+                replacementTileChecks(tileset, subtree, subtreeMinTreeIndicesForLevel, subtreeMaxTreeIndicesForLevel, contentLevel, indicesFinder, finalRefinementIndices, frameState);
             } // for i
         } // for contentLevel
     }
@@ -386,14 +448,18 @@ define([
         subtreeMinTreeIndicesForLevel,
         subtreeMaxTreeIndicesForLevel,
         contentLevel,
-        levelEllipsoid,
+        indicesFinder,
         finalRefinementIndices,
         frameState) {
 
+        var thisFrame = frameState.frameNumber;
+        var levelEllipsoid = indicesFinder._levelEllipsoid;
+        var maxTraversalLevel = indicesFinder._maximumTraversalLevel;
         var i, j, tile, xRowRange, notInBlockedRefinementRegion;
         var levelEllipsoidLength = levelEllipsoid.length;
         for (i = 0; i < levelEllipsoidLength; i++) {
             xRowRange = levelEllipsoid.get(i);
+            // NOTE: All siblings are in the same subtree
             if (xRowRange.x < subtreeMinTreeIndicesForLevel.x ||
                 xRowRange.w > subtreeMaxTreeIndicesForLevel.x ||
                 xRowRange.y < subtreeMinTreeIndicesForLevel.y ||
@@ -426,54 +492,42 @@ define([
                     continue;
                 }
 
+                var parent = tile.parent;
+                var parentDefined = defined(parent);
                 // updateVisibility2(tileset, tile, frameState);
                 updateVisibility(tileset, tile, frameState);
                 if (!isVisible(tile)) {
+                    // Only load non-vis if parent vis
+                    if (defined(parent) && isVisible(parent)) {
+                        loadTile(tileset, tile, frameState);
+                        visitTile(tileset, tile, frameState);
+                        touchTile(tileset, tile, frameState);
+                    }
                     continue;
                 }
 
-                // TODO: Replace this
-                // notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
-                // if (tile._distanceToCamera > distanceForLevel) {
-                //     if ((tile.parent._distanceToCamera <= distanceForParent) &&
-                //         contentLevel !== contentStartLevel &&
-                //         notInBlockedRefinementRegion) {
-                //         // TODO: This might be ok to call load vist touch select and
-                //         // get rid of the content level check and root content loop above
-                //         selectDesiredTile(tileset, tile, frameState);
-                //         finalRefinementIndices.push(tile.treeKey);
-                //     }
-                //     continue;
-                // }
-                // // Replacement is child based
-                // children = tile.children;
-                // childrenLength = children.length;
-                // visibleChildrenReady = childrenLength > 0 ? true : false;
-                // for (k = 0; k < childrenLength; ++k) {
-                //     child = children[k];
-                //
-                //     if (notInBlockedRefinementRegion) {
-                //         updateVisibility(tileset, child, frameState);
-                //         if (isVisible(child) && (!child.contentAvailable && !child.hasEmptyContent)) {
-                //             visibleChildrenReady = false;
-                //         }
-                //     }
-                //
-                //     loadTile(tileset, child, frameState);
-                //     visitTile(tileset, child, frameState);
-                //     touchTile(tileset, child, frameState);
-                // } // for k
-                // if (notInBlockedRefinementRegion) {
-                //     if (!visibleChildrenReady) {
-                //         selectDesiredTile(tileset, tile, frameState);
-                //         finalRefinementIndices.push(tile.treeKey);
-                //     } else if (contentLevel === lastContentLevelToCheck) {
-                //         // can only call this on children that pass their
-                //         // parents radius check but fail their own (or are
-                //         // on the last level)
-                //         selectVisibleChildren(tileset, tile, frameState);
-                //     }
-                // }
+                loadTile(tileset, tile, frameState);
+                visitTile(tileset, tile, frameState);
+                touchTile(tileset, tile, frameState);
+
+                notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
+                if (!tile.contentAvailable && notInBlockedRefinementRegion && parentDefined && parent._selectedFrame !== thisFrame) {
+                    selectDesiredTile(tileset, parent, frameState);
+                    finalRefinementIndices.push(parent.treeKey);
+                }
+            }
+
+            // If last level, can't select up so run through tiles and select those not in blocked region
+            if (contentLevel === maxTraversalLevel) {
+                for (j = begin; j <= end; j++) {
+                    tile = tiles[j];
+                    if (!defined(tile) || !isVisible(tile)) {
+                        continue;
+                    }
+                    if (!inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey)) {
+                        selectDesiredTile(tileset, tile, frameState);
+                    }
+                }
             }
         }
     }
