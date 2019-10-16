@@ -16,6 +16,7 @@ of the subtree
             // goBack loop in this case will start on odd so we will skip by 2 and copy the indices.
             // in the case that y = 0 idx is odd, the roles are reversed,i.e. the goForward loop starts normally, skip = 2 and we copy the indices,
             // the goBack loop needs to first copy the y = 0 row y = 2 skip 2 and copy the indices
+            // xy slab copying for the z dir needs to mimic what y row copying did
 
         // 2) use updateVisibility() to do visibliity. if a tile isn't vis but it's parent is then it should still be requested (but not rendered)
         // ... 2) clip the indices with the planes as normal
@@ -26,9 +27,9 @@ of the subtree
     * checks since the fixed ellipsoid idea isn't going to work out.
 
     PLANE DIST CALC:
-    Experiment: local vesion of radEffective?
-    Experiment: play around with root level printing out when what plane fails
-    what the offset were what the distances were
+    Experiment: Something like dot with closest corner to view dir and compare with cos of fov angles
+    Experiment: Local vesion of radEffective?
+    Experiment: Play around with root level printing out when what plane fails, What the offset were what the distances were
 
     * OPT: no reason to check far plane
     * OPT: during plane culling wait to do the clipping until all planes ahve passed

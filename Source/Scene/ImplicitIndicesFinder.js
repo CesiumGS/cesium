@@ -458,14 +458,14 @@ define([
         var My = x * x;
         var Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
         var levelEllipsoid = this._levelEllipsoid;
-        // var replace = !this._tileset._allTilesAdditive;
-        var replace = true;
+        var replace = !this._tileset._allTilesAdditive;
+        // var replace = true;
 
         var copyStart = -1;
         var copyEnd = -1;
         var startLevel = this._startLevel;
         var editForReplaceRefine = replace && level !== startLevel;  // startLevel are not children so no need for replacement refine editing
-        var skip = editForReplaceRefine ? 2 : 1;
+        var step = editForReplaceRefine ? 2 : 1;
         var start = 1;
 
         var middleY = icy >= 0 && icy <= lastY;
@@ -483,7 +483,7 @@ define([
                 start = middleYEven ? 2 : 1;
             }
 
-            for (y = start; y < yEnd; y += skip) {
+            for (y = start; y < yEnd; y += step) {
                 yIdx = Math.floor(y + icy);
                 if (yIdx < 0) {
                     continue;
@@ -528,7 +528,7 @@ define([
                 start = !middleYEven ? 2 : 1;
             }
 
-            for (y = Math.ceil(ry-start); y > yEnd; y -= skip) {
+            for (y = Math.ceil(ry-start); y > yEnd; y -= step) {
                 yIdx = Math.floor(y + icy - 1);
                 if (yIdx > lastY) {
                     continue;
@@ -584,8 +584,8 @@ define([
     // TODO: REMOVE BY FIXING THE REFERENCE VERSION(reference version needs to know where the fast switch is
     // and start taking samples so that there is no more than a change of 1 (0.5?) along the "x" dir between samples)
     ImplicitIndicesFinder.prototype.updateLevelEllipsoidDynamic = function(level, planes) {
-        // var replace = !this._tileset._allTilesAdditive;
-        var replace = true;
+        var replace = !this._tileset._allTilesAdditive;
+        // var replace = true;
 
         var centerTilePositionOnLevel = this._centerTilePositions[level];
         // Camera center position in grid
@@ -631,22 +631,23 @@ define([
         // TODO: setup zStart for + and -
         // TODO: setup yStart for + and -
 
-        var copyLastSlab = false;
-        var lastIter, recordCopyIndices;
+        // var copyLastSlab = false;
+        // var lastIter, recordCopyIndices;
         var copyStart = -1;
         var copyEnd = -1;
         var startLevel =  this._startLevel;
-        var editForReplaceRefine = replace && level !== startLevel;
+        var editForReplaceRefine = replace && level !== startLevel;  // startLevel are not children so no need for replacement refine editing
+        var step = editForReplaceRefine ? 2 : 1;
+        var start = 0;
 
+        var middleZEven = (icz & 1) === 0;
+
+        // +z
         zIdx = Math.floor(zEnd -1 + icz);
         if (zIdx >= 0) {
-            if (editForReplaceRefine) {
-                zIdx = Math.min(zIdx, lastZ);
-                copyLastSlab = ((zIdx & 1) === 0); // copy last xy slab if ends on even zIdx
-                lastIter = zEnd - 1;
-            }
-            // +z
-            for (z = rz; z < zEnd; z++) {
+            start = editForReplaceRefine && !middleZEven ? 1 : 0;
+
+            for (z = rz + start; z < zEnd; z += step) {
                 if (z !== rz) { z = Math.floor(z); }
 
                 zIdx = Math.floor(z + icz);
@@ -656,6 +657,8 @@ define([
                     break;
                 }
 
+                copyStart = index;
+
                 // This can go in the function too buts a fair bit more args
                 // its also really part of teh z loop so  dont logically separate it
                 relZ = z - rz;
@@ -671,37 +674,23 @@ define([
                     item.x = xIdxMax; item.y = icy; item.z = zIdx; item.w = xIdxMin;
                 }
 
-                recordCopyIndices = copyLastSlab && z === lastIter;
-                if (recordCopyIndices) {
-                    copyStart = index;
-                }
-
                 index = this.generateSlab(zIdx, x, ry, cx, icy, yToXExtentRatio, goForward, goBack, lastY, level, index);
 
-                if (recordCopyIndices) {
-                    copyEnd = index;
+                copyEnd = index;
+
+                if (editForReplaceRefine && copyStart !== -1) {
+                    index = this.copyRows(copyStart, copyEnd, index, 0, 1);
                 }
+                copyStart = -1;
             }
         }
-
-        if (copyStart !== -1) {
-            // index = this.copyRows(copyStart, copyEnd, index, 0, 1);
-            copyLastSlab = false;
-        }
-        copyLastSlab = false;
-        copyStart = -1;
 
         // -z
         zEnd = Math.floor(rz - axesExtentsZ);
         zIdx = Math.floor(zEnd+1 + icz - 1);
         if (zIdx <= lastZ) {
-            if (editForReplaceRefine) {
-                zIdx = Math.max(zIdx, 0);
-                copyLastSlab = ((zIdx & 1) === 1); // copy last xy slab if ends on odd zIdx
-                lastIter = zEnd + 1;
-            }
-
-            for (z = Math.ceil(rz-1); z > zEnd; z--) {
+            start = editForReplaceRefine && !middleZEven ? 0 : 1;
+            for (z = Math.ceil(rz-start); z > zEnd; z -= step) {
                 zIdx = Math.floor(z + icz - 1);
                 if (zIdx > lastZ) {
                     continue;
@@ -709,6 +698,8 @@ define([
                     break;
                 }
 
+                copyStart = index;
+
                 // This can go in the function too buts a fair bit more args
                 // its also really part of teh z loop so  dont logically separate it
                 relZ = z - rz;
@@ -724,21 +715,15 @@ define([
                     item.x = xIdxMax; item.y = icy; item.z = zIdx; item.w = xIdxMin;
                 }
 
-                recordCopyIndices = copyLastSlab && z === lastIter;
-                if (recordCopyIndices) {
-                    copyStart = index;
-                }
-
                 index = this.generateSlab(zIdx, x, ry, cx, icy, yToXExtentRatio, goForward, goBack, lastY, level, index);
 
-                if (recordCopyIndices) {
-                    copyEnd = index;
-                }
-            }
-        }
+                copyEnd = index;
 
-        if (copyStart !== -1) {
-            // index = this.copyRows(copyStart, copyEnd, index, 0, -1);
+                if (editForReplaceRefine && copyStart !== -1) {
+                    index = this.copyRows(copyStart, copyEnd, index, 0, -1);
+                }
+                copyStart = -1;
+            }
         }
 
         levelEllipsoid.length = index;
