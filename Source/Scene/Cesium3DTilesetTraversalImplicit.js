@@ -207,11 +207,11 @@ define([
                     continue;
                 }
 
-                updateVisibility2(tileset, tile, frameState);
-                // updateVisibility(tileset, tile, frameState);
-                // if (!isVisible(tile)) {
-                //     continue;
-                // }
+                // updateVisibility2(tileset, tile, frameState);
+                updateVisibility(tileset, tile, frameState);
+                if (!isVisible(tile)) {
+                    continue;
+                }
 
                 loadTile(tileset, tile, frameState);
                 selectDesiredTile(tileset, tile, frameState);
@@ -426,13 +426,54 @@ define([
                     continue;
                 }
 
-                updateVisibility2(tileset, tile, frameState);
-                // updateVisibility(tileset, tile, frameState);
-                // if (!isVisible(tile)) {
+                // updateVisibility2(tileset, tile, frameState);
+                updateVisibility(tileset, tile, frameState);
+                if (!isVisible(tile)) {
+                    continue;
+                }
+
+                // TODO: Replace this
+                // notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
+                // if (tile._distanceToCamera > distanceForLevel) {
+                //     if ((tile.parent._distanceToCamera <= distanceForParent) &&
+                //         contentLevel !== contentStartLevel &&
+                //         notInBlockedRefinementRegion) {
+                //         // TODO: This might be ok to call load vist touch select and
+                //         // get rid of the content level check and root content loop above
+                //         selectDesiredTile(tileset, tile, frameState);
+                //         finalRefinementIndices.push(tile.treeKey);
+                //     }
                 //     continue;
                 // }
-
-                notInBlockedRefinementRegion = !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey);
+                // // Replacement is child based
+                // children = tile.children;
+                // childrenLength = children.length;
+                // visibleChildrenReady = childrenLength > 0 ? true : false;
+                // for (k = 0; k < childrenLength; ++k) {
+                //     child = children[k];
+                //
+                //     if (notInBlockedRefinementRegion) {
+                //         updateVisibility(tileset, child, frameState);
+                //         if (isVisible(child) && (!child.contentAvailable && !child.hasEmptyContent)) {
+                //             visibleChildrenReady = false;
+                //         }
+                //     }
+                //
+                //     loadTile(tileset, child, frameState);
+                //     visitTile(tileset, child, frameState);
+                //     touchTile(tileset, child, frameState);
+                // } // for k
+                // if (notInBlockedRefinementRegion) {
+                //     if (!visibleChildrenReady) {
+                //         selectDesiredTile(tileset, tile, frameState);
+                //         finalRefinementIndices.push(tile.treeKey);
+                //     } else if (contentLevel === lastContentLevelToCheck) {
+                //         // can only call this on children that pass their
+                //         // parents radius check but fail their own (or are
+                //         // on the last level)
+                //         selectVisibleChildren(tileset, tile, frameState);
+                //     }
+                // }
             }
         }
     }

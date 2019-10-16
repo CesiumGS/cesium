@@ -453,54 +453,139 @@ define([
     //     return levelEllipsoid;
     // };
 
-    ImplicitIndicesFinder.prototype.generateSlab = function(zIdx, x, ry, cx, icy, yToXExtentRatio, goForward, goBack, lastY, index) {
+    ImplicitIndicesFinder.prototype.generateSlab = function(zIdx, x, ry, cx, icy, yToXExtentRatio, goForward, goBack, lastY, level, index) {
         var yExtentForEllipsoidSlice = x*yToXExtentRatio;
         var My = x * x;
         var Ny = My / (yExtentForEllipsoidSlice * yExtentForEllipsoidSlice);
         var levelEllipsoid = this._levelEllipsoid;
+        // var replace = !this._tileset._allTilesAdditive;
+        var replace = true;
 
-        var y,yEnd, yIdx, relY, item;
-        if (goForward) {
-            yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
-            for (y = 1; y < yEnd; y++) {
+        var copyStart = -1;
+        var copyEnd = -1;
+        var startLevel = this._startLevel;
+        var editForReplaceRefine = replace && level !== startLevel;  // startLevel are not children so no need for replacement refine editing
+        var skip = editForReplaceRefine ? 2 : 1;
+        var start = 1;
+
+        var middleY = icy >= 0 && icy <= lastY;
+        var middleYEven = (icy & 1) === 0;
+        var middleYIdx = index - 1;
+
+        var y,yEnd, yIdx, xIdxMin, xIdxMax, relY, item;
+        yEnd = Math.ceil(ry + yExtentForEllipsoidSlice);
+        yIdx = Math.floor(yEnd-1 + icy);
+        if (goForward && yIdx >= 0) {
+            if (editForReplaceRefine) {
+                if (middleY && middleYEven) {
+                    index = this.copyRows(middleYIdx, middleYIdx + 1, index, 1, 0);
+                }
+                start = middleYEven ? 2 : 1;
+            }
+
+            for (y = start; y < yEnd; y += skip) {
                 yIdx = Math.floor(y + icy);
                 if (yIdx < 0) {
                     continue;
                 } else if (yIdx > lastY) {
                     break;
                 }
+
                 relY  = y - ry;
                 x = Math.sqrt(My - Ny * relY * relY);
+
+                if (copyStart === -1) {
+                    copyStart = index;
+                }
                 item = levelEllipsoid.get(index++);
-                item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
+                copyEnd = index;
+
+                xIdxMin = Math.floor(-x + cx);
+                xIdxMax = Math.floor( x + cx);
+                if (editForReplaceRefine) {
+                    xIdxMin -= (xIdxMin & 1); // minus 1 if odd
+                    xIdxMax += ((xIdxMax & 1) ^ 1); // add 1 if even
+                }
+                item.x = xIdxMax; item.y = yIdx; item.z = zIdx; item.w = xIdxMin;
             }
         }
+
+        if (editForReplaceRefine && copyStart !== -1) {
+            index = this.copyRows(copyStart, copyEnd, index, 1, 0);
+        }
+        copyStart = -1;
 
         // The reason for minus 1 in y: you want to rasterize using the
         // grid line above the cell (which is towards the center of the sphere )
         // but this counts for the cell with index of -1 that raster line's grid index
-        if (goBack) {
-            yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
-            for (y = Math.ceil(ry-1); y > yEnd; y--) {
+        yEnd = Math.floor(ry - yExtentForEllipsoidSlice);
+        yIdx = Math.floor(yEnd+1 + icy - 1);
+        if (goBack && yIdx <= lastY) {
+            if (editForReplaceRefine) {
+                if (middleY && !middleYEven) {
+                    index = this.copyRows(middleYIdx, middleYIdx + 1, index, -1, 0);
+                }
+                start = !middleYEven ? 2 : 1;
+            }
+
+            for (y = Math.ceil(ry-start); y > yEnd; y -= skip) {
                 yIdx = Math.floor(y + icy - 1);
                 if (yIdx > lastY) {
                     continue;
                 } else if (yIdx < 0) {
                     break;
                 }
+
                 relY = y - ry;
                 x = Math.sqrt(My - Ny * relY * relY);
+
+                if (copyStart === -1) {
+                    copyStart = index;
+                }
                 item = levelEllipsoid.get(index++);
-                item.x = x + cx; item.y = yIdx; item.z = zIdx; item.w = -x + cx;
+                copyEnd = index;
+
+                xIdxMin = Math.floor(-x + cx);
+                xIdxMax = Math.floor( x + cx);
+                if (editForReplaceRefine) {
+                    xIdxMin -= (xIdxMin & 1); // minus 1 if odd
+                    xIdxMax += ((xIdxMax & 1) ^ 1); // add 1 if even
+                }
+                item.x = xIdxMax; item.y = yIdx; item.z = zIdx; item.w = xIdxMin;
             }
+        }
+
+        if (editForReplaceRefine && copyStart !== -1) {
+            index = this.copyRows(copyStart, copyEnd, index, -1,  0);
         }
 
         return index;
     };
+
+    ImplicitIndicesFinder.prototype.copyRows = function(startIdx, endIdx, toIdx, yOffset, zOffset) {
+        var levelEllipsoid = this._levelEllipsoid;
+        var i, from, to;
+        var isOct = this._tileset._isOct;
+        for (i = startIdx; i < endIdx; i++) {
+            from = levelEllipsoid.get(i);
+            to = levelEllipsoid.get(toIdx++);
+            to.x = from.x;
+            to.y = from.y + yOffset;
+            if (isOct) {
+                to.z = from.z + zOffset;
+                to.w = from.w;
+            } else {
+                to.z = from.z;
+            }
+        }
+        return toIdx;
+    };
+
     // TODO: REMOVE BY FIXING THE REFERENCE VERSION(reference version needs to know where the fast switch is
     // and start taking samples so that there is no more than a change of 1 (0.5?) along the "x" dir between samples)
     ImplicitIndicesFinder.prototype.updateLevelEllipsoidDynamic = function(level, planes) {
-        var replace  = !this._tileset._allTilesAdditive;
+        // var replace = !this._tileset._allTilesAdditive;
+        var replace = true;
 
         var centerTilePositionOnLevel = this._centerTilePositions[level];
         // Camera center position in grid
@@ -528,17 +613,16 @@ define([
         var zEnd = Math.ceil(rz + axesExtentsZ);
         var Mz = axesExtentsX * axesExtentsX;
         var Nz = Mz / (axesExtentsZ * axesExtentsZ);
-        var x, z, zIdx, relZ;
+        var x, z, zIdx, relZ, xIdxMin, xIdxMax;
         var goBack, goForward;
 
         levelEllipsoid.length = 0;
         var index = 0;
         var item;
 
-        var middleYIdx = Math.floor(cy);
-        goBack = middleYIdx > 0;
-        goForward = middleYIdx < lastY;
-        var middleY = middleYIdx >= 0 && middleYIdx <= lastY;
+        goBack = icy > 0;
+        goForward = icy < lastY;
+        var middleY = icy >= 0 && icy <= lastY;
 
         // TODO: setup zEnd for + and -
         // TODO: bail if zEnd for + and - doesnt touch the tree grid for this level
@@ -547,58 +631,123 @@ define([
         // TODO: setup zStart for + and -
         // TODO: setup yStart for + and -
 
-        // +z
-        for (z = rz; z < zEnd; z++) {
-            if (z !== rz) { z = Math.floor(z); }
+        var copyLastSlab = false;
+        var lastIter, recordCopyIndices;
+        var copyStart = -1;
+        var copyEnd = -1;
 
-            zIdx = Math.floor(z + icz);
-            if (zIdx < 0) {
-                continue;
-            } else if (zIdx > lastZ) {
-                break;
+        zIdx = Math.floor(zEnd -1 + icz);
+        if (zIdx >= 0) {
+            if (replace) {
+                zIdx = Math.min(zIdx, lastZ);
+                copyLastSlab = level !== 0 && ((zIdx & 1) === 0); // copy last xy slab if ends on even zIdx
+                lastIter = zEnd - 1;
             }
+            // +z
+            for (z = rz; z < zEnd; z++) {
+                if (z !== rz) { z = Math.floor(z); }
 
-            // This can go in the function too buts a fair bit more args
-            // its also really part of teh z loop so  dont logically separate it
-            relZ = z - rz;
-            x = Math.sqrt(Mz - Nz * relZ * relZ);
-            if (middleY) {
-                item = levelEllipsoid.get(index++);
-                item.x = x + cx; item.y = middleYIdx; item.z = zIdx; item.w = -x + cx;
+                zIdx = Math.floor(z + icz);
+                if (zIdx < 0) {
+                    continue;
+                } else if (zIdx > lastZ) {
+                    break;
+                }
+
+                // This can go in the function too buts a fair bit more args
+                // its also really part of teh z loop so  dont logically separate it
+                relZ = z - rz;
+                x = Math.sqrt(Mz - Nz * relZ * relZ);
+                if (middleY) {
+                    item = levelEllipsoid.get(index++);
+                    xIdxMin = Math.floor(-x + cx);
+                    xIdxMax = Math.floor( x + cx);
+                    if (replace) {
+                        xIdxMin -= (xIdxMin & 1); // minus 1 if odd
+                        xIdxMax += ((xIdxMax & 1) ^ 1); // add 1 if even
+                    }
+                    item.x = xIdxMax; item.y = icy; item.z = zIdx; item.w = xIdxMin;
+                }
+
+                recordCopyIndices = copyLastSlab && z === lastIter;
+                if (recordCopyIndices) {
+                    copyStart = index;
+                }
+
+                index = this.generateSlab(zIdx, x, ry, cx, icy, yToXExtentRatio, goForward, goBack, lastY, level, index);
+
+                if (recordCopyIndices) {
+                    copyEnd = index;
+                }
             }
-
-            index = this.generateSlab(zIdx, x, ry, cx, icy, yToXExtentRatio, goForward, goBack, lastY, index);
         }
+
+        if (copyStart !== -1) {
+            // index = this.copyRows(copyStart, copyEnd, index, 0, 1);
+            copyLastSlab = false;
+        }
+        copyLastSlab = false;
+        copyStart = -1;
 
         // -z
         zEnd = Math.floor(rz - axesExtentsZ);
-        for (z = Math.ceil(rz-1); z > zEnd; z--) {
-            zIdx = Math.floor(z + icz - 1);
-            if (zIdx > lastZ) {
-                continue;
-            } else if (zIdx < 0) {
-                break;
+        zIdx = Math.floor(zEnd+1 + icz - 1);
+        if (zIdx <= lastZ) {
+            if (replace) {
+                zIdx = Math.max(zIdx, 0);
+                copyLastSlab = level !== 0 && ((zIdx & 1) === 1); // copy last xy slab if ends on odd zIdx
+                lastIter = zEnd + 1;
             }
 
-            // This can go in the function too buts a fair bit more args
-            // its also really part of teh z loop so  dont logically separate it
-            relZ = z - rz;
-            x = Math.sqrt(Mz - Nz * relZ * relZ);
-            if (middleY) {
-                item = levelEllipsoid.get(index++);
-                item.x = x + cx; item.y = middleYIdx; item.z = zIdx; item.w = -x + cx;
-            }
+            for (z = Math.ceil(rz-1); z > zEnd; z--) {
+                zIdx = Math.floor(z + icz - 1);
+                if (zIdx > lastZ) {
+                    continue;
+                } else if (zIdx < 0) {
+                    break;
+                }
 
-            index = this.generateSlab(zIdx, x, ry, cx, icy, yToXExtentRatio, goForward, goBack, lastY, index);
+                // This can go in the function too buts a fair bit more args
+                // its also really part of teh z loop so  dont logically separate it
+                relZ = z - rz;
+                x = Math.sqrt(Mz - Nz * relZ * relZ);
+                if (middleY) {
+                    item = levelEllipsoid.get(index++);
+                    xIdxMin = Math.floor(-x + cx);
+                    xIdxMax = Math.floor( x + cx);
+                    if (replace) {
+                        xIdxMin -= (xIdxMin & 1); // minus 1 if odd
+                        xIdxMax += ((xIdxMax & 1) ^ 1); // add 1 if even
+                    }
+                    item.x = xIdxMax; item.y = icy; item.z = zIdx; item.w = xIdxMin;
+                }
+
+                recordCopyIndices = copyLastSlab && z === lastIter;
+                if (recordCopyIndices) {
+                    copyStart = index;
+                }
+
+                index = this.generateSlab(zIdx, x, ry, cx, icy, yToXExtentRatio, goForward, goBack, lastY, level, index);
+
+                if (recordCopyIndices) {
+                    copyEnd = index;
+                }
+            }
+        }
+
+        if (copyStart !== -1) {
+            // index = this.copyRows(copyStart, copyEnd, index, 0, -1);
         }
 
         levelEllipsoid.length = index;
 
         // TODO:
         // 1) process the pre-clipped levelElliposoid to add the sibling indices directly to levelEllipsoid (extending x ranges and adding rows)
-            // the x should be simple enough, the y and z must make sure they continue on, clipped to the tree bounds
-        // 2) clip the indices with the planes as normal
-        // 3) post-process the clipped levelElliposoid to generate set of indices that need to be requested but not rendered
+            // x mins must be even, x max must be odd, both clipped to tree bounds(happens later though)
+            // y and z loops can track what the start and stop ranges were, tacking on another identical row if need be
+        // 2) use updateVisibility in traversal, if a tile isn't vis but it's parent is then it should still be requested (but not rendered)
+        // ... 2) clip the indices with the planes as normal
+        // ... 3) post-process the clipped levelElliposoid to generate set of indices that need to be requested but not rendered
         //   (this will be the end siblings or entire rows (range copied from visible sibling row))
 
         this.floorIndices();
@@ -607,7 +756,7 @@ define([
         this.clipIndicesToTree2(level);
 
         // this.clipIndicesOutsidePlanes(level, planes);
-        this.clipIndicesOutsidePlanes2(level, planes);
+        // this.clipIndicesOutsidePlanes2(level, planes);
 
         return levelEllipsoid;
     };
@@ -754,186 +903,186 @@ define([
         }
     };
 
-    var scratchCartesian = new Cartesian3();
-    var scratchLocalPlanePositionsSigns = [
-        1,
-        1,
-        1,
-        1,
-        1,
-        1
-    ];
-    var scratchLocalPlanePositions = [
-        new Cartesian3(),
-        new Cartesian3(),
-        new Cartesian3(),
-        new Cartesian3(),
-        new Cartesian3(),
-        new Cartesian3()
-    ];
-    var scratchLocalPlanes = [
-        new Plane(new Cartesian3(1, 0, 0), 0),
-        new Plane(new Cartesian3(1, 0, 0), 0),
-        new Plane(new Cartesian3(1, 0, 0), 0),
-        new Plane(new Cartesian3(1, 0, 0), 0),
-        new Plane(new Cartesian3(1, 0, 0), 0),
-        new Plane(new Cartesian3(1, 0, 0), 0)
-    ];
     var scratchTranspose = new Matrix3();
-    /**
-     * Done at the top of traversal so get get the info we need about the plane during level processing
-     *
-     * @private
-     */
-    ImplicitIndicesFinder.prototype.determineLocalPlanePositions = function(planes) {
-        var planesLength = planes.length;
-        var diff = planesLength - scratchLocalPlanePositions.length;
-        while (diff-- > 0) {
-            scratchLocalPlanePositions.push(new Cartesian3());
-            scratchLocalPlanePositionsSigns.push(1);
-            scratchLocalPlanes.push(new Plane(new Cartesian3(1, 0, 0), 0));
-        }
-
-        var boundsMin = this._boundsMin;
-
-        // TODO: need to save this off somewhere or have an actual scale-less inverse mat4
-        Matrix3.transpose(this._tileset.boxAxes, scratchTranspose);
-
-        var i, plane, pointDistance, planeNormal;
-        for (i = 0; i < planesLength; i++) {
-            plane = planes[i];
-
-            Plane.fromCartesian4(plane, scratchPlane);
-            planeNormal = scratchPlane.normal;
-            pointDistance = Plane.getPointDistance(scratchPlane, boundsMin);
-            // scaled directional vector from boundsMin to point in plane, -pointDistance to flip the normal around
-            Cartesian3.multiplyByScalar(planeNormal, -pointDistance, scratchCartesian);
-            // Same vector but relative to grid frame
-            var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
-            Matrix3.multiplyByVector(scratchTranspose, scratchCartesian, scratchLocalPlanePosition);
-            // Save off the sign of distance for later
-            var sign = pointDistance > 0 ? 1 : -1;
-            scratchLocalPlanePositionsSigns[i] = sign;
-            var localNormal = scratchLocalPlanes[i].normal;
-            // Produces the same thing as just transforming the normal, with a  neg multiply or sign of distance or whatever
-            Cartesian3.normalize(scratchLocalPlanePosition, localNormal);
-            Cartesian3.multiplyByScalar(localNormal, sign, localNormal);
-
-            // Plane.fromCartesian4(plane, scratchPlane);
-            // planeNormal = scratchPlane.normal;
-            // scratchPlane.distance = -scratchPlane.distance;
-            // pointDistance = Plane.getPointDistance3(scratchPlane, boundsMin);
-            // // scaled directional vector from boundsMin to point in plane, -pointDistance to flip the normal around
-            // Cartesian3.multiplyByScalar(planeNormal, -pointDistance, scratchCartesian);
-            // // Same vector but relative to grid frame
-            // var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
-            // Matrix3.multiplyByVector(scratchTranspose, scratchCartesian, scratchLocalPlanePosition);
-            // // Save off the sign of distance for later
-            // var sign = pointDistance > 0 ? 1 : -1;
-            // scratchLocalPlanePositionsSigns[i] = sign;
-            // var localNormal = scratchLocalPlanes[i].normal;
-            // // Produces the same thing as just transforming the normal
-            // Cartesian3.normalize(scratchLocalPlanePosition, localNormal);
-            // Cartesian3.multiplyByScalar(localNormal, sign, localNormal);
-            // // Matrix3.multiplyByVector(scratchTranspose, planeNormal, localNormal); // TODO: Why doen't this work
-        }
-    };
-
-    /**
-     *
-     * @private
-     */
-    ImplicitIndicesFinder.prototype.clipIndicesOutsidePlanes = function(level) {
-        // Plane order: L,R,B,T,N,F (see PerspectiveOffCenterFrustum)
-        // Should ignore far plane but would need bool or something to know the planes are from a frustum.
-        // 1) get the planes in terms of bottom left corner of octree.
-        // 2) each level edits the distance from origin by multiplying by invTileDims
-        //    they also edit the normal by doing the same and renormalizing.
-        //    normals point outside frustum
-        // 3) simplest thing from here is find which corner to test from the plane normal
-        // then loop through indices testing the "corners" by modifying the index by
-        // making .x neg or cipping the min or max for each plane
-        // skipping those which have a negative .x or both corners are passing
-
-        var planesLength = scratchLocalPlanePositions.length;
-        // var startLevel = this._startLevel;
-        // var invTileDims = this._invTileDims[startLevel];
-        var invTileDimsOnLevel = this._invTileDims[level];
-
-        // Put the planes in array space
-        var i, localPlane, planeNormal;
-        for (i = 0; i < planesLength; i++) {
-            localPlane = scratchLocalPlanes[i];
-            planeNormal = localPlane.normal;
-
-            // Make relative to level's grid
-            var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
-            // var sign = scratchLocalPlanePositionsSigns[i];
-            // Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDims, scratchCartesian);
-            // Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDimsOnLevel, scratchCartesian);
-            // localPlane.distance = Cartesian3.magnitude(scratchCartesian) * sign;
-            // Cartesian3.normalize(scratchCartesian, planeNormal);
-            // Cartesian3.multiplyByScalar(planeNormal, sign, planeNormal);
-            // Cartesian3.normalize(scratchLocalPlanePosition, planeNormal);
-            // Cartesian3.multiplyByScalar(planeNormal, sign, planeNormal);
-            Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDimsOnLevel, scratchCartesian);
-            localPlane.distance = Cartesian3.dot(planeNormal, scratchCartesian);
-        }
-
-        var levelEllipsoid = this._levelEllipsoid;
-        // var length = levelEllipsoid.length;
-        var indices, k;
-        // var planeDistance;
-        var yIdxOffset, xIdxOffset, zIdxOffset;
-        var d1, d2;
-        for (k = 0; k < levelEllipsoid.length; k++) {
-            indices = levelEllipsoid.get(k);
-            if (indices.x < 0) {
-                levelEllipsoid.remove(k);
-                k--;
-                continue;
-            }
-
-            for (i = 0; i < planesLength; i++) {
-                localPlane = scratchLocalPlanes[i];
-                planeNormal = localPlane.normal;
-                // planeDistance = localPlane.distance;
-                // Given the plane normal's signs, determine which corner we care about for distance checks
-                // This can simply be a LUT for index modification, or this
-                xIdxOffset = planeNormal.x >= 0 ? 0 : 1;
-                yIdxOffset = planeNormal.y >= 0 ? 0 : 1;
-                zIdxOffset = planeNormal.z >= 0 ? 0 : 1;
-
-                // Get the distances for both corners
-                scratchCartesian.x = indices.w + xIdxOffset;
-                scratchCartesian.y = indices.y + yIdxOffset;
-                scratchCartesian.z = indices.z + zIdxOffset;
-                // d1 = Plane.getPointDistance(localPlane, scratchCartesian);
-                d1 = Plane.getPointDistance2(localPlane, scratchCartesian);
-                // d1 = Plane.getPointDistance3(localPlane, scratchCartesian);
-                scratchCartesian.x = indices.x + xIdxOffset;
-                // d2 = Plane.getPointDistance(localPlane, scratchCartesian);
-                d2 = Plane.getPointDistance2(localPlane, scratchCartesian);
-                // d2 = Plane.getPointDistance3(localPlane, scratchCartesian);
-
-                // End corners are both outside, set .x to neg .x, continue
-                if (d1 > 0 && d2 > 0) {
-                    indices.x = -indices.x - 1; // To handle 0
-                    levelEllipsoid.remove(k);
-                    k--;
-                    break;
-                }
-
-                // End corners both inside, continue
-                if (d1 <= 0 && d2 <= 0) {
-                    continue;
-                }
-
-                // Starting from the abs closests, corner march to the other corner(or bin search) until fail
-                // keep a count of how far from the starting position you got and use this to update .x or .w
-            }
-        }
-    };
+    // var scratchCartesian = new Cartesian3();
+    // var scratchLocalPlanePositionsSigns = [
+    //     1,
+    //     1,
+    //     1,
+    //     1,
+    //     1,
+    //     1
+    // ];
+    // var scratchLocalPlanePositions = [
+    //     new Cartesian3(),
+    //     new Cartesian3(),
+    //     new Cartesian3(),
+    //     new Cartesian3(),
+    //     new Cartesian3(),
+    //     new Cartesian3()
+    // ];
+    // var scratchLocalPlanes = [
+    //     new Plane(new Cartesian3(1, 0, 0), 0),
+    //     new Plane(new Cartesian3(1, 0, 0), 0),
+    //     new Plane(new Cartesian3(1, 0, 0), 0),
+    //     new Plane(new Cartesian3(1, 0, 0), 0),
+    //     new Plane(new Cartesian3(1, 0, 0), 0),
+    //     new Plane(new Cartesian3(1, 0, 0), 0)
+    // ];
+    // /**
+    //  * Done at the top of traversal so get get the info we need about the plane during level processing
+    //  *
+    //  * @private
+    //  */
+    // ImplicitIndicesFinder.prototype.determineLocalPlanePositions = function(planes) {
+    //     var planesLength = planes.length;
+    //     var diff = planesLength - scratchLocalPlanePositions.length;
+    //     while (diff-- > 0) {
+    //         scratchLocalPlanePositions.push(new Cartesian3());
+    //         scratchLocalPlanePositionsSigns.push(1);
+    //         scratchLocalPlanes.push(new Plane(new Cartesian3(1, 0, 0), 0));
+    //     }
+    //
+    //     var boundsMin = this._boundsMin;
+    //
+    //     // TODO: need to save this off somewhere or have an actual scale-less inverse mat4
+    //     Matrix3.transpose(this._tileset.boxAxes, scratchTranspose);
+    //
+    //     var i, plane, pointDistance, planeNormal;
+    //     for (i = 0; i < planesLength; i++) {
+    //         plane = planes[i];
+    //
+    //         Plane.fromCartesian4(plane, scratchPlane);
+    //         planeNormal = scratchPlane.normal;
+    //         pointDistance = Plane.getPointDistance(scratchPlane, boundsMin);
+    //         // scaled directional vector from boundsMin to point in plane, -pointDistance to flip the normal around
+    //         Cartesian3.multiplyByScalar(planeNormal, -pointDistance, scratchCartesian);
+    //         // Same vector but relative to grid frame
+    //         var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
+    //         Matrix3.multiplyByVector(scratchTranspose, scratchCartesian, scratchLocalPlanePosition);
+    //         // Save off the sign of distance for later
+    //         var sign = pointDistance > 0 ? 1 : -1;
+    //         scratchLocalPlanePositionsSigns[i] = sign;
+    //         var localNormal = scratchLocalPlanes[i].normal;
+    //         // Produces the same thing as just transforming the normal, with a  neg multiply or sign of distance or whatever
+    //         Cartesian3.normalize(scratchLocalPlanePosition, localNormal);
+    //         Cartesian3.multiplyByScalar(localNormal, sign, localNormal);
+    //
+    //         // Plane.fromCartesian4(plane, scratchPlane);
+    //         // planeNormal = scratchPlane.normal;
+    //         // scratchPlane.distance = -scratchPlane.distance;
+    //         // pointDistance = Plane.getPointDistance3(scratchPlane, boundsMin);
+    //         // // scaled directional vector from boundsMin to point in plane, -pointDistance to flip the normal around
+    //         // Cartesian3.multiplyByScalar(planeNormal, -pointDistance, scratchCartesian);
+    //         // // Same vector but relative to grid frame
+    //         // var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
+    //         // Matrix3.multiplyByVector(scratchTranspose, scratchCartesian, scratchLocalPlanePosition);
+    //         // // Save off the sign of distance for later
+    //         // var sign = pointDistance > 0 ? 1 : -1;
+    //         // scratchLocalPlanePositionsSigns[i] = sign;
+    //         // var localNormal = scratchLocalPlanes[i].normal;
+    //         // // Produces the same thing as just transforming the normal
+    //         // Cartesian3.normalize(scratchLocalPlanePosition, localNormal);
+    //         // Cartesian3.multiplyByScalar(localNormal, sign, localNormal);
+    //         // // Matrix3.multiplyByVector(scratchTranspose, planeNormal, localNormal); // TODO: Why doen't this work
+    //     }
+    // };
+    //
+    // /**
+    //  *
+    //  * @private
+    //  */
+    // ImplicitIndicesFinder.prototype.clipIndicesOutsidePlanes = function(level) {
+    //     // Plane order: L,R,B,T,N,F (see PerspectiveOffCenterFrustum)
+    //     // Should ignore far plane but would need bool or something to know the planes are from a frustum.
+    //     // 1) get the planes in terms of bottom left corner of octree.
+    //     // 2) each level edits the distance from origin by multiplying by invTileDims
+    //     //    they also edit the normal by doing the same and renormalizing.
+    //     //    normals point outside frustum
+    //     // 3) simplest thing from here is find which corner to test from the plane normal
+    //     // then loop through indices testing the "corners" by modifying the index by
+    //     // making .x neg or cipping the min or max for each plane
+    //     // skipping those which have a negative .x or both corners are passing
+    //
+    //     var planesLength = scratchLocalPlanePositions.length;
+    //     // var startLevel = this._startLevel;
+    //     // var invTileDims = this._invTileDims[startLevel];
+    //     var invTileDimsOnLevel = this._invTileDims[level];
+    //
+    //     // Put the planes in array space
+    //     var i, localPlane, planeNormal;
+    //     for (i = 0; i < planesLength; i++) {
+    //         localPlane = scratchLocalPlanes[i];
+    //         planeNormal = localPlane.normal;
+    //
+    //         // Make relative to level's grid
+    //         var scratchLocalPlanePosition = scratchLocalPlanePositions[i];
+    //         // var sign = scratchLocalPlanePositionsSigns[i];
+    //         // Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDims, scratchCartesian);
+    //         // Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDimsOnLevel, scratchCartesian);
+    //         // localPlane.distance = Cartesian3.magnitude(scratchCartesian) * sign;
+    //         // Cartesian3.normalize(scratchCartesian, planeNormal);
+    //         // Cartesian3.multiplyByScalar(planeNormal, sign, planeNormal);
+    //         // Cartesian3.normalize(scratchLocalPlanePosition, planeNormal);
+    //         // Cartesian3.multiplyByScalar(planeNormal, sign, planeNormal);
+    //         Cartesian3.multiplyComponents(scratchLocalPlanePosition, invTileDimsOnLevel, scratchCartesian);
+    //         localPlane.distance = Cartesian3.dot(planeNormal, scratchCartesian);
+    //     }
+    //
+    //     var levelEllipsoid = this._levelEllipsoid;
+    //     // var length = levelEllipsoid.length;
+    //     var indices, k;
+    //     // var planeDistance;
+    //     var yIdxOffset, xIdxOffset, zIdxOffset;
+    //     var d1, d2;
+    //     for (k = 0; k < levelEllipsoid.length; k++) {
+    //         indices = levelEllipsoid.get(k);
+    //         if (indices.x < 0) {
+    //             levelEllipsoid.remove(k);
+    //             k--;
+    //             continue;
+    //         }
+    //
+    //         for (i = 0; i < planesLength; i++) {
+    //             localPlane = scratchLocalPlanes[i];
+    //             planeNormal = localPlane.normal;
+    //             // planeDistance = localPlane.distance;
+    //             // Given the plane normal's signs, determine which corner we care about for distance checks
+    //             // This can simply be a LUT for index modification, or this
+    //             xIdxOffset = planeNormal.x >= 0 ? 0 : 1;
+    //             yIdxOffset = planeNormal.y >= 0 ? 0 : 1;
+    //             zIdxOffset = planeNormal.z >= 0 ? 0 : 1;
+    //
+    //             // Get the distances for both corners
+    //             scratchCartesian.x = indices.w + xIdxOffset;
+    //             scratchCartesian.y = indices.y + yIdxOffset;
+    //             scratchCartesian.z = indices.z + zIdxOffset;
+    //             // d1 = Plane.getPointDistance(localPlane, scratchCartesian);
+    //             d1 = Plane.getPointDistance2(localPlane, scratchCartesian);
+    //             // d1 = Plane.getPointDistance3(localPlane, scratchCartesian);
+    //             scratchCartesian.x = indices.x + xIdxOffset;
+    //             // d2 = Plane.getPointDistance(localPlane, scratchCartesian);
+    //             d2 = Plane.getPointDistance2(localPlane, scratchCartesian);
+    //             // d2 = Plane.getPointDistance3(localPlane, scratchCartesian);
+    //
+    //             // End corners are both outside, set .x to neg .x, continue
+    //             if (d1 > 0 && d2 > 0) {
+    //                 indices.x = -indices.x - 1; // To handle 0
+    //                 levelEllipsoid.remove(k);
+    //                 k--;
+    //                 break;
+    //             }
+    //
+    //             // End corners both inside, continue
+    //             if (d1 <= 0 && d2 <= 0) {
+    //                 continue;
+    //             }
+    //
+    //             // Starting from the abs closests, corner march to the other corner(or bin search) until fail
+    //             // keep a count of how far from the starting position you got and use this to update .x or .w
+    //         }
+    //     }
+    // };
 
     /**
      *

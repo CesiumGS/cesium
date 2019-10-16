@@ -10,11 +10,20 @@ of the subtree
     subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
         // TODO:
         // 1) process the pre-clipped levelElliposoid to add the sibling indices directly to levelEllipsoid (extending x ranges and adding rows)
-            // the x should be simple enough, the y and z must make sure they continue on, clipped to the tree bounds
-        // 2) clip the indices with the planes as normal
-        // 3) post-process the clipped levelElliposoid to generate set of indices that need to be requested but not rendered
+            // the x should be simple enough, the y and z must make sure they continue on if you come to the end of the range too soon, clipped to the tree bounds
+            // try seeing where the starting idx is (when y=0) if its even or odd
+            // if its even and in the level range we need to note it and copy it up then set the starting point for y goForward as y = 2, skip = 2 and note the indices
+            // goBack loop in this case will start on odd so we will skip by 2 and copy the indices.
+            // in the case that y = 0 idx is odd, the roles are reversed,i.e. the goForward loop starts normally, skip = 2 and we copy the indices,
+            // the goBack loop needs to first copy the y = 0 row y = 2 skip 2 and copy the indices
+
+        // 2) use updateVisibility() to do visibliity. if a tile isn't vis but it's parent is then it should still be requested (but not rendered)
+        // ... 2) clip the indices with the planes as normal
+        // ... 3) post-process the clipped levelElliposoid to generate set of indices that need to be requested but not rendered
         //   (this will be the end siblings or entire rows (range copied from visible sibling row))
 
+    * The ellipsoid index generation could be scrapped for a little more simple dsqrd <= rsqrd
+    * checks since the fixed ellipsoid idea isn't going to work out.
 
     PLANE DIST CALC:
     Experiment: local vesion of radEffective?
@@ -29,6 +38,10 @@ of the subtree
       the more needless calcs there are
     * Storage for this could be huge:
         * Do bresenham on the maximumTreversalLevel then infer up the tree.
+
+    // Not sure a fixed version is possible?
+    // TODO: REMOVE BY FIXING THE REFERENCE VERSION(reference version needs to know where the fast switch is
+    // and start taking samples so that there is no more than a change of 1 (0.5?) along the "x" dir between samples)
 
     Maybe (too optimized for now):
     * use the min max indices per level to find a set of subtrees
