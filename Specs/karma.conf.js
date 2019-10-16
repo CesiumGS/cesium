@@ -89,7 +89,11 @@ module.exports = function(config) {
             }
         },
 
-        browserNoActivityTimeout : 30000,
+        // Rediculous large values because travis is slow.
+        captureTimeout: 120000,
+        browserDisconnectTolerance: 3,
+        browserDisconnectTimeout: 120000,
+        browserNoActivityTimeout: 120000,
 
         // Continuous Integration mode
         // if true, Karma captures browsers, runs the tests and exits
