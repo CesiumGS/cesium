@@ -635,12 +635,14 @@ define([
         var lastIter, recordCopyIndices;
         var copyStart = -1;
         var copyEnd = -1;
+        var startLevel =  this._startLevel;
+        var editForReplaceRefine = replace && level !== startLevel;
 
         zIdx = Math.floor(zEnd -1 + icz);
         if (zIdx >= 0) {
-            if (replace) {
+            if (editForReplaceRefine) {
                 zIdx = Math.min(zIdx, lastZ);
-                copyLastSlab = level !== 0 && ((zIdx & 1) === 0); // copy last xy slab if ends on even zIdx
+                copyLastSlab = ((zIdx & 1) === 0); // copy last xy slab if ends on even zIdx
                 lastIter = zEnd - 1;
             }
             // +z
@@ -662,7 +664,7 @@ define([
                     item = levelEllipsoid.get(index++);
                     xIdxMin = Math.floor(-x + cx);
                     xIdxMax = Math.floor( x + cx);
-                    if (replace) {
+                    if (editForReplaceRefine) {
                         xIdxMin -= (xIdxMin & 1); // minus 1 if odd
                         xIdxMax += ((xIdxMax & 1) ^ 1); // add 1 if even
                     }
@@ -693,9 +695,9 @@ define([
         zEnd = Math.floor(rz - axesExtentsZ);
         zIdx = Math.floor(zEnd+1 + icz - 1);
         if (zIdx <= lastZ) {
-            if (replace) {
+            if (editForReplaceRefine) {
                 zIdx = Math.max(zIdx, 0);
-                copyLastSlab = level !== 0 && ((zIdx & 1) === 1); // copy last xy slab if ends on odd zIdx
+                copyLastSlab = ((zIdx & 1) === 1); // copy last xy slab if ends on odd zIdx
                 lastIter = zEnd + 1;
             }
 
@@ -715,7 +717,7 @@ define([
                     item = levelEllipsoid.get(index++);
                     xIdxMin = Math.floor(-x + cx);
                     xIdxMax = Math.floor( x + cx);
-                    if (replace) {
+                    if (editForReplaceRefine) {
                         xIdxMin -= (xIdxMin & 1); // minus 1 if odd
                         xIdxMax += ((xIdxMax & 1) ^ 1); // add 1 if even
                     }
