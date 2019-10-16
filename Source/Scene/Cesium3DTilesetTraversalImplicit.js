@@ -80,8 +80,8 @@ define([
     }
 
     function selectDesiredTile(tileset, tile, frameState) {
-        if (tile.contentAvailable) {
-        // if (tile.contentAvailable && tile._selectedFrame !== frameState.frameNumber) {
+        // if (tile.contentAvailable) {
+        if (tile.contentAvailable && tile._selectedFrame !== frameState.frameNumber) {
             // The tile can be selected right away and does not require traverseAndSelect
             selectTile(tileset, tile, frameState);
         }
@@ -453,17 +453,16 @@ define([
         finalRefinementIndices,
         frameState) {
 
-        var thisFrame = frameState.frameNumber;
         var startLevel = indicesFinder._startLevel;
         var levelEllipsoid = indicesFinder._levelEllipsoid;
         var maxTraversalLevel = indicesFinder._maximumTraversalLevel;
-        var i, j, tile, xRowRange, notInBlockedRefinementRegion;
+        var i, j, tile, xRowRange;
         var levelEllipsoidLength = levelEllipsoid.length;
         var lodDistances = indicesFinder._lodDistances;
         var distanceForLevel = lodDistances[contentLevel + 1];
         var tiles = subtree._tiles;
         var subtreeLevelDim = subtreeMaxTreeIndicesForLevel.x - subtreeMinTreeIndicesForLevel.x + 1;
-        var notStartLevel = contentLevel !== startLevel;
+        var isStartLevel = contentLevel === startLevel;
         var lastLevel = contentLevel === maxTraversalLevel;
         for (i = 0; i < levelEllipsoidLength; i++) {
             xRowRange = levelEllipsoid.get(i);
@@ -516,32 +515,44 @@ define([
                 visitTile(tileset, tile, frameState);
                 touchTile(tileset, tile, frameState);
 
-                if (!inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey) && notStartLevel) {
-                    if (!tile.contentAvailable &&
-                        parentDefined &&
-                        parent._selectedFrame !== thisFrame) {
-                        selectDesiredTile(tileset, parent, frameState);
-                        finalRefinementIndices.push(parent.treeKey);
-                    } else if (tile._distanceToCamera > distanceForLevel && !lastLevel) {
-                        selectDesiredTile(tileset, tile, frameState);
-                        finalRefinementIndices.push(tile.treeKey);
-                    }
-                }
-            }
+                if (!inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey)) {
+                    if (lastLevel) {
+                        if (isStartLevel) {
+                            selectDesiredTile(tileset, tile, frameState);
+                        } else {
+                            var children = tile.parent.children;
+                            var childrenLength = children.length;
+                            var k, child;
+                            var visibleChildrenReady = true;
+                            for (k = 0; k < childrenLength; k++) {
+                                child = children[k];
 
-            // If last level, run through tiles and select those not in blocked region
-            if (lastLevel) {
-                for (j = begin; j <= end; j++) {
-                    tile = tiles[j];
-                    if (!defined(tile) || !isVisible(tile)) {
-                        continue;
-                    }
-                    if (!inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey)) {
-                        selectDesiredTile(tileset, tile, frameState);
+                                updateVisibility(tileset, child, frameState);
+                                if (isVisible(child) && !child.contentAvailable) {
+                                    visibleChildrenReady = false;
+                                }
+                            }
+
+                            if (visibleChildrenReady) {
+                                selectVisibleChildren(tileset, parent, frameState);
+                            } else {
+                                selectDesiredTile(tileset, parent, frameState);
+                            }
+                            finalRefinementIndices.push(parent.treeKey);
+                        }
+                    } else if (!isStartLevel) {
+                        if (!tile.contentAvailable && parentDefined) {
+                            selectDesiredTile(tileset, parent, frameState);
+                            finalRefinementIndices.push(parent.treeKey);
+                        } else if (tile.contentAvailable && tile._distanceToCamera > distanceForLevel && !lastLevel) {
+                            selectDesiredTile(tileset, tile, frameState);
+                            finalRefinementIndices.push(tile.treeKey);
+                        }
                     }
                 }
-            }
-        }
+
+            } // j
+        } // i
     }
 
     function replacementTileChecks_visAndDist(tileset, subtree, contentLevel, finalRefinementIndices, frameState) {
