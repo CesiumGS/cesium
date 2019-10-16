@@ -5,18 +5,8 @@ of the subtree
     I don't think you absolutely need 0 sse in the leaves, since there're examples working
 
     IndicesFinder
-    REPLACE: refine will have to make sure to extend the loop a little in cases for sibling requests.
-    literally just making sure the loop bounds starts and ends on an even number
-    subtracting 1 for the loop start and adding 1 for the loop end if they were odd.
-        // TODO:
-        // for replacement how do I know if a non-last level tile is dangling?
-        // be nice to know if tile is artificial (tile outside range)
-        //  clip the indices with the planes as normal
-        //  post-process the clipped levelElliposoid to generate set of indices that need to be requested but not rendered
-        //   (this will be the end siblings or entire rows (range copied from visible sibling row))
-
     * The ellipsoid index generation could be scrapped for a little more simple dsqrd <= rsqrd
-    * checks since the fixed ellipsoid idea isn't going to work out.
+      checks since the fixed ellipsoid idea isn't going to work out(the conservative sampling idea wont work)
 
     PLANE DIST CALC:
     Experiment: Something like dot with closest corner to view dir and compare with cos of fov angles
@@ -31,10 +21,6 @@ of the subtree
       the more needless calcs there are
     * Storage for this could be huge:
         * Do bresenham on the maximumTreversalLevel then infer up the tree.
-
-    // Not sure a fixed version is possible?
-    // TODO: REMOVE BY FIXING THE REFERENCE VERSION(reference version needs to know where the fast switch is
-    // and start taking samples so that there is no more than a change of 1 (0.5?) along the "x" dir between samples)
 
     Maybe (too optimized for now):
     * use the min max indices per level to find a set of subtrees

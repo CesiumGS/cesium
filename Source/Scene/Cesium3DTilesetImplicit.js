@@ -39,6 +39,7 @@ define([
         './Cesium3DTilesetHeatmap',
         './Cesium3DTilesetMostDetailedTraversal',
         './Cesium3DTilesetStatistics',
+        './Cesium3DTilesetTraversal',
         './Cesium3DTilesetTraversalImplicit',
         './Cesium3DTileStyleEngine',
         './ClippingPlaneCollection',
@@ -94,6 +95,7 @@ define([
         Cesium3DTilesetHeatmap,
         Cesium3DTilesetMostDetailedTraversal,
         Cesium3DTilesetStatistics,
+        Cesium3DTilesetTraversal,
         Cesium3DTilesetTraversalImplicit,
         Cesium3DTileStyleEngine,
         ClippingPlaneCollection,
@@ -328,12 +330,13 @@ define([
 
         this._requestedTilesInFlight = [];
 
-        // this._maximumPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE, reverseScreenSpaceError: -Number.MAX_VALUE };
-        // this._minimumPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, reverseScreenSpaceError: Number.MAX_VALUE };
+        this._maximumPriority = { foveatedFactor: -Number.MAX_VALUE, depth: -Number.MAX_VALUE, distance: -Number.MAX_VALUE, reverseScreenSpaceError: -Number.MAX_VALUE };
+        this._minimumPriority = { foveatedFactor: Number.MAX_VALUE, depth: Number.MAX_VALUE, distance: Number.MAX_VALUE, reverseScreenSpaceError: Number.MAX_VALUE };
         this._heatmap = new Cesium3DTilesetHeatmap(options.debugHeatmapTilePropertyName);
 
         this._traversals = [
             Cesium3DTilesetTraversalImplicit,
+            // Cesium3DTilesetTraversal,
             Cesium3DTilesetMostDetailedTraversal
         ];
 
@@ -994,6 +997,8 @@ define([
                 var tilingScheme = that._tilingScheme;
                 that._allTilesAdditive = tilingScheme.refine === 'ADD' || tilingScheme.refine === 'add';
                 that._properties = tilesetJson.properties;
+                // that._geometricError = tilesetJson.geometricError * 4;
+                // that._geometricErrorContentRoot = tilesetJson.geometricError * 2;
                 that._geometricError = tilesetJson.geometricError * 2;
                 that._geometricErrorContentRoot = tilesetJson.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
@@ -2205,7 +2210,6 @@ define([
         };
 
         var rootTile = hasParent ? parentTile : new Cesium3DTileImplicit(this, resource, rootInfo, undefined);
-        // var rootTile = new Cesium3DTileImplicit(this, resource, rootInfo, parentTile);
 
         // If there is a parentTile, add the root of the currently loading tileset
         // to parentTile's children, and update its _depth.
@@ -2363,68 +2367,68 @@ define([
         return rootTile;
     };
 
-    /**
-     * Loads the main tileset JSON file or a tileset JSON file referenced from a tile.
-     *
-     * @private
-     */
-    Cesium3DTilesetImplicit.prototype.loadTileset = function(resource, tilesetJson, parentTile) {
-        var asset = tilesetJson.asset;
-        if (!defined(asset)) {
-            throw new RuntimeError('Tileset must have an asset property.');
-        }
-        if (asset.version !== '0.0' && asset.version !== '1.0') {
-            throw new RuntimeError('The tileset must be 3D Tiles version 0.0 or 1.0.');
-        }
-
-        var statistics = this._statistics;
-
-        var tilesetVersion = asset.tilesetVersion;
-        if (defined(tilesetVersion)) {
-            // Append the tileset version to the resource
-            this._basePath += '?v=' + tilesetVersion;
-            resource.setQueryParameters({ v: tilesetVersion });
-        } else {
-            delete resource.queryParameters.v;
-        }
-
-        // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
-        // Get the basePath relative to the external tileset.
-        var rootTile = new Cesium3DTileImplicit(this, resource, tilesetJson.root, parentTile);
-
-        // If there is a parentTile, add the root of the currently loading tileset
-        // to parentTile's children, and update its _depth.
-        if (defined(parentTile)) {
-            parentTile.children.push(rootTile);
-            rootTile._depth = parentTile._depth + 1;
-        }
-
-        var stack = [];
-        stack.push(rootTile);
-
-        while (stack.length > 0) {
-            var tile = stack.pop();
-            ++statistics.numberOfTilesTotal;
-            this._allTilesAdditive = this._allTilesAdditive && (tile.refine === Cesium3DTileRefine.ADD);
-            var children = tile._header.children;
-            if (defined(children)) {
-                var length = children.length;
-                for (var i = 0; i < length; ++i) {
-                    var childHeader = children[i];
-                    var childTile = new Cesium3DTileImplicit(this, resource, childHeader, tile);
-                    tile.children.push(childTile);
-                    childTile._depth = tile._depth + 1;
-                    stack.push(childTile);
-                }
-            }
-
-            if (this._cullWithChildrenBounds) {
-                Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
-            }
-        }
-
-        return rootTile;
-    };
+    // /**
+    //  * Loads the main tileset JSON file or a tileset JSON file referenced from a tile.
+    //  *
+    //  * @private
+    //  */
+    // Cesium3DTilesetImplicit.prototype.loadTileset = function(resource, tilesetJson, parentTile) {
+    //     var asset = tilesetJson.asset;
+    //     if (!defined(asset)) {
+    //         throw new RuntimeError('Tileset must have an asset property.');
+    //     }
+    //     if (asset.version !== '0.0' && asset.version !== '1.0') {
+    //         throw new RuntimeError('The tileset must be 3D Tiles version 0.0 or 1.0.');
+    //     }
+    //
+    //     var statistics = this._statistics;
+    //
+    //     var tilesetVersion = asset.tilesetVersion;
+    //     if (defined(tilesetVersion)) {
+    //         // Append the tileset version to the resource
+    //         this._basePath += '?v=' + tilesetVersion;
+    //         resource.setQueryParameters({ v: tilesetVersion });
+    //     } else {
+    //         delete resource.queryParameters.v;
+    //     }
+    //
+    //     // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
+    //     // Get the basePath relative to the external tileset.
+    //     // var rootTile = new Cesium3DTileImplicit(this, resource, tilesetJson.root, parentTile);
+    //
+    //     // If there is a parentTile, add the root of the currently loading tileset
+    //     // to parentTile's children, and update its _depth.
+    //     if (defined(parentTile)) {
+    //         parentTile.children.push(rootTile);
+    //         rootTile._depth = parentTile._depth + 1;
+    //     }
+    //
+    //     var stack = [];
+    //     stack.push(rootTile);
+    //
+    //     while (stack.length > 0) {
+    //         var tile = stack.pop();
+    //         ++statistics.numberOfTilesTotal;
+    //         this._allTilesAdditive = this._allTilesAdditive && (tile.refine === Cesium3DTileRefine.ADD);
+    //         var children = tile._header.children;
+    //         if (defined(children)) {
+    //             var length = children.length;
+    //             for (var i = 0; i < length; ++i) {
+    //                 var childHeader = children[i];
+    //                 var childTile = new Cesium3DTileImplicit(this, resource, childHeader, tile);
+    //                 tile.children.push(childTile);
+    //                 childTile._depth = tile._depth + 1;
+    //                 stack.push(childTile);
+    //             }
+    //         }
+    //
+    //         if (this._cullWithChildrenBounds) {
+    //             Cesium3DTileOptimizations.checkChildrenWithinParent(tile);
+    //         }
+    //     }
+    //
+    //     return rootTile;
+    // };
 
     var scratchPositionNormal = new Cartesian3();
     var scratchCartographic = new Cartographic();
@@ -3031,14 +3035,14 @@ define([
 
     function resetMinimumMaximum(tileset) {
         tileset._heatmap.resetMinimumMaximum();
-        // tileset._minimumPriority.depth = Number.MAX_VALUE;
-        // tileset._maximumPriority.depth = -Number.MAX_VALUE;
-        // tileset._minimumPriority.foveatedFactor = Number.MAX_VALUE;
-        // tileset._maximumPriority.foveatedFactor = -Number.MAX_VALUE;
-        // tileset._minimumPriority.distance = Number.MAX_VALUE;
-        // tileset._maximumPriority.distance = -Number.MAX_VALUE;
-        // tileset._minimumPriority.reverseScreenSpaceError = Number.MAX_VALUE;
-        // tileset._maximumPriority.reverseScreenSpaceError = -Number.MAX_VALUE;
+        tileset._minimumPriority.depth = Number.MAX_VALUE;
+        tileset._maximumPriority.depth = -Number.MAX_VALUE;
+        tileset._minimumPriority.foveatedFactor = Number.MAX_VALUE;
+        tileset._maximumPriority.foveatedFactor = -Number.MAX_VALUE;
+        tileset._minimumPriority.distance = Number.MAX_VALUE;
+        tileset._maximumPriority.distance = -Number.MAX_VALUE;
+        tileset._minimumPriority.reverseScreenSpaceError = Number.MAX_VALUE;
+        tileset._maximumPriority.reverseScreenSpaceError = -Number.MAX_VALUE;
     }
 
     ///////////////////////////////////////////////////////////////////////////
