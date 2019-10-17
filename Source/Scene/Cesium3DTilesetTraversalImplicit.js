@@ -453,6 +453,8 @@ define([
         finalRefinementIndices,
         frameState) {
 
+        // NOTE: A sibling is in the same subtree.
+
         var startLevel = indicesFinder._startLevel;
         var levelEllipsoid = indicesFinder._levelEllipsoid;
         var maxTraversalLevel = indicesFinder._maximumTraversalLevel;
@@ -463,10 +465,9 @@ define([
         var tiles = subtree._tiles;
         var subtreeLevelDim = subtreeMaxTreeIndicesForLevel.x - subtreeMinTreeIndicesForLevel.x + 1;
         var isStartLevel = contentLevel === startLevel;
-        var lastLevel = contentLevel === maxTraversalLevel;
+        var isLastLevel = contentLevel === maxTraversalLevel;
         for (i = 0; i < levelEllipsoidLength; i++) {
             xRowRange = levelEllipsoid.get(i);
-            // NOTE: A sibling is in the same subtree.
             if (xRowRange.x < subtreeMinTreeIndicesForLevel.x ||
                 xRowRange.w > subtreeMaxTreeIndicesForLevel.x ||
                 xRowRange.y < subtreeMinTreeIndicesForLevel.y ||
@@ -489,21 +490,29 @@ define([
             var relZInSubtreeLevelGrid = xRowRange.z - subtreeMinTreeIndicesForLevel.z;
             var begin = offset + relZInSubtreeLevelGrid*subtreeLevelDim*subtreeLevelDim + relYInSubtreeLevelGrid*subtreeLevelDim + relXInSubtreeLevelGrid;
             var end = begin + xEnd - xStart;
+            var parent, parentDefined;
+            var subtreeLevel = contentLevel - subtree._subtreeRootKey.w;
 
             for (j = begin; j <= end; j++) {
                 tile = tiles[j];
 
                 if (!defined(tile)) {
+                    parent = subtree.getParentFromSubtreeIndex(relXInSubtreeLevelGrid + j - begin, relYInSubtreeLevelGrid, relZInSubtreeLevelGrid, subtreeLevel);
+                    if (defined(parent) && parent.children.length === 0) {
+                        selectDesiredTile(tileset, parent, frameState);
+                        finalRefinementIndices.push(parent.treeKey);
+                    }
                     continue;
                 }
 
-                var parent = tile.parent;
-                var parentDefined = defined(parent);
+                parent = tile.parent;
+                parentDefined = defined(parent);
+
                 // updateVisibility2(tileset, tile, frameState);
                 updateVisibility(tileset, tile, frameState);
                 if (!isVisible(tile)) {
                     // Only load non-vis if parent vis
-                    if (defined(parent) && isVisible(parent)) {
+                    if (parentDefined && isVisible(parent)) {
                         loadTile(tileset, tile, frameState);
                         visitTile(tileset, tile, frameState);
                         touchTile(tileset, tile, frameState);
@@ -516,14 +525,14 @@ define([
                 touchTile(tileset, tile, frameState);
 
                 if (!inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey)) {
-                    if (lastLevel) {
+                    if (isLastLevel) {
                         if (isStartLevel) {
                             selectDesiredTile(tileset, tile, frameState);
                         } else {
                             var children = tile.parent.children;
                             var childrenLength = children.length;
                             var k, child;
-                            var visibleChildrenReady = true;
+                            var visibleChildrenReady = childrenLength > 0;
                             for (k = 0; k < childrenLength; k++) {
                                 child = children[k];
 
@@ -544,7 +553,7 @@ define([
                         if (!tile.contentAvailable && parentDefined) {
                             selectDesiredTile(tileset, parent, frameState);
                             finalRefinementIndices.push(parent.treeKey);
-                        } else if (tile.contentAvailable && tile._distanceToCamera > distanceForLevel && !lastLevel) {
+                        } else if (tile.contentAvailable && tile._distanceToCamera > distanceForLevel && !isLastLevel) {
                             selectDesiredTile(tileset, tile, frameState);
                             finalRefinementIndices.push(tile.treeKey);
                         }

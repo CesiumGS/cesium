@@ -27,7 +27,7 @@ define([
         this._subtreesMap = undefined;
         this._subtreeLastTreeLevel0Indexed = -1;
 
-        // TODO: keys not needed
+        // TODO: keys not needed?
         this._subtreeRootKeyString = undefined;
         this._subtreeRootKey = subtreeRootKey;
 
@@ -145,11 +145,32 @@ define([
     };
 
     /**
-     * Given ancestor and descendant tree keys, determine if the descenand is in
-     * face a descendant of the ancestor key.
+     * Given the xyz level subtree Index return the parent tile in the subtree
      *
-     * @param {Cartesian4} level the tree level for which to filter.
-     * @param {Cartesian4} contentStartLevel where the content root starts in the tileset. Needed for a check.
+     * @returns {Boolean} True if the descenant key is a descendant of the ancestor key
+     */
+    SubtreeInfo.prototype.getParentFromSubtreeIndex = function(x, y, z, level) {
+        if (level === 0) {
+            throw new DeveloperError('DEBUG: shouldnt happen for where this call is needed');
+        }
+
+        var parentX = x >> 1;
+        var parentY = y >> 1;
+        var parentZ = z >> 1;
+        var parentLevel = level - 1;
+
+        // Get subtree array index from subtree index
+        var sizesArray = this._tileset._unpackedArraySizes;
+        var levelOffset = sizesArray[parentLevel];
+        var tiles = this._tiles;
+        var dim = (1 << level);
+        var index = levelOffset + parentZ*dim*dim + parentY*dim + parentX;
+        return tiles[index];
+    };
+
+    /**
+     * Given ancestor and descendant tree keys, determine if the descendant is in the shadow of ancestor.
+     *
      * @returns {Boolean} True if the descenant key is a descendant of the ancestor key
      */
     SubtreeInfo.isDescendant = function(ancestorTreeIndex, descendantTreeIndex) {
@@ -318,7 +339,7 @@ define([
     };
 
     /**
-     * Adds a subtree
+     * searches down for a nearest parent (for search up, a subtreeInfo should just link to it's parent)
      *
      * @param {Cartesian4} subtreeRootKey The tree key of the root of the subtree
      * @returns {SubtreeInfo} The SubtreeInfo whose root matches the key
@@ -329,17 +350,18 @@ define([
         var subtreeLastLevel0Indexed = this._subtreeLastTreeLevel0Indexed;
 
         if (subtreeLastLevel0Indexed === -1) {
-            throw new DeveloperError('Unit subtree in subtreeInfo.');
+            throw new DeveloperError('Uninit subtree in subtreeInfo.');
         }
 
         if (subtreeLastLevel0Indexed === subtreeRootKey.w) {
             if (!this._subtreesMap.has(subtreeRootKeyString)) {
-                throw new DeveloperError('Unit subtree in subtreeInfo.');
+                throw new DeveloperError('Uninit subtree in subtreeInfo.');
             }
 
             return this;
         }
 
+        // Take this subtreesRootKey and find the next subtree rootkey up
         // Find the treekey on this subtrees lastlevel that subtreeRootKey resolves to on this subtrees last level
         var result = tileset.getSubtreeInfoFromTreeKey(subtreeRootKey.x, subtreeRootKey.y, subtreeRootKey.z, subtreeRootKey.w);
         var resultRootKey = result.subtreeRootKey;
