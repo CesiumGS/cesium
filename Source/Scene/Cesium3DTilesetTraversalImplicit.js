@@ -497,11 +497,11 @@ define([
                 tile = tiles[j];
 
                 if (!defined(tile)) {
-                    parent = subtree.getParentFromSubtreeIndex(relXInSubtreeLevelGrid + j - begin, relYInSubtreeLevelGrid, relZInSubtreeLevelGrid, subtreeLevel);
-                    if (defined(parent) && parent.children.length === 0) {
-                        selectDesiredTile(tileset, parent, frameState);
-                        finalRefinementIndices.push(parent.treeKey);
-                    }
+                    // parent = subtree.getParentFromSubtreeIndex(relXInSubtreeLevelGrid + j - begin, relYInSubtreeLevelGrid, relZInSubtreeLevelGrid, subtreeLevel);
+                    // if (defined(parent) && parent.children.length === 0) {
+                    //     selectDesiredTile(tileset, parent, frameState);
+                    //     finalRefinementIndices.push(parent.treeKey);
+                    // }
                     continue;
                 }
 
@@ -550,12 +550,16 @@ define([
                             finalRefinementIndices.push(parent.treeKey);
                         }
                     } else if (!isStartLevel) {
-                        if (!tile.contentAvailable && parentDefined) {
+                        if (tile.contentAvailable && !isLastLevel) {
+                            if (tile._distanceToCamera > distanceForLevel) {
+                                selectDesiredTile(tileset, tile, frameState);
+                                finalRefinementIndices.push(tile.treeKey);
+                            } else {
+
+                            }
+                        } else if (parentDefined){
                             selectDesiredTile(tileset, parent, frameState);
                             finalRefinementIndices.push(parent.treeKey);
-                        } else if (tile.contentAvailable && tile._distanceToCamera > distanceForLevel && !isLastLevel) {
-                            selectDesiredTile(tileset, tile, frameState);
-                            finalRefinementIndices.push(tile.treeKey);
                         }
                     }
                 }
