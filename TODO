@@ -1,10 +1,13 @@
-    TODO: determine source of missing the subtree (level=1, xyz = 0)
+    May need a better representation of availability for tree that's more concise
+    it would be nice if there was a maximum of 2 subtrees that spans the tree.
+
     IndicesFinder
     * The ellipsoid index generation could be scrapped for a little more simple dsqrd <= rsqrd
       checks since the fixed ellipsoid idea isn't going to work out(the conservative sampling idea won't work)
-    * integer based ellipsoid tracing could work if we are ok with some level of error, i.e
-        * we "render" to a higher resolution screen but then upsample the resulting indices by the 
-        factor of resolution mulipier.  maybe this "error" is configurable. like are we ok with being a 64th of a "pixel" off.
+    * integer based ellipsoid tracing (bresenham) could work if we are ok with some level of error, i.e
+        we "render" to a higher resolution screen but then upsample the resulting indices by the
+        factor of resolution mulipier. Maybe this "error" is configurable. like are we ok with being off by 64th (or whatever) of a tile.
+        only raster the rows closest the actual grid line
 
     PLANE DIST CALC:
     Experiment: Something like dot with closest corner to view dir and compare with cos of fov angles

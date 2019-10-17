@@ -972,6 +972,12 @@ define([
         };
     }
 
+    function createPriorityFunctionSubtree(tile) {
+        return function() {
+            return -1;
+        };
+    }
+
     // TODO: Do I need to duplicate this for the subtree?
     /**
      * Requests the tile's subtree content.
@@ -995,7 +1001,7 @@ define([
             throttle : true,
             throttleByServer : true,
             type : RequestType.TILES3D,
-            priorityFunction : createPriorityFunction(this),
+            priorityFunction : createPriorityFunctionSubtree(this),// TODO; There's a bug if the tile and the subtree have same priority? maybe the rx scheduler sees them as the same and it gets lost somehow?
             serverKey : this._serverKeySubtree
         });
 

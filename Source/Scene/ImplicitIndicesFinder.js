@@ -415,10 +415,10 @@ define([
             this.generateOriginEllipsoidQuad();
         }
 
-        for (i = 0; i < length; i++) {
-            console.log('lodDistance ' + i + ' ' + lodDistances[i]);
-        }
-        console.log('lodDistanceToTileRatio ' + this._lodDistanceToTileRatio);
+        // for (i = 0; i < length; i++) {
+        //     console.log('lodDistance ' + i + ' ' + lodDistances[i]);
+        // }
+        // console.log('lodDistanceToTileRatio ' + this._lodDistanceToTileRatio);
     };
 
     // /**
@@ -657,10 +657,10 @@ define([
                     break;
                 }
 
+                // Below can go in the function too buts a fair bit more args
+                // its also really part of teh z loop so  dont logically separate it
                 copyStart = index;
 
-                // This can go in the function too buts a fair bit more args
-                // its also really part of teh z loop so  dont logically separate it
                 relZ = z - rz;
                 x = Math.sqrt(Mz - Nz * relZ * relZ);
                 if (middleY) {
@@ -700,7 +700,7 @@ define([
 
                 copyStart = index;
 
-                // This can go in the function too buts a fair bit more args
+                // Below can go in the function too buts a fair bit more args
                 // its also really part of teh z loop so  dont logically separate it
                 relZ = z - rz;
                 x = Math.sqrt(Mz - Nz * relZ * relZ);

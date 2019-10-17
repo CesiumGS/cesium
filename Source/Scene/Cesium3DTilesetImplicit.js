@@ -202,6 +202,7 @@ define([
      * @see {@link https://github.com/AnalyticalGraphicsInc/3d-tiles/tree/master/specification|3D Tiles specification}
      */
 
+        // TODO: put this in subtreeinfo
     var subtreesPackedUint8ArraySizesQuad = [
         0,          // 0  Levels
         1,          // 1  Levels
@@ -284,7 +285,7 @@ define([
         this._isOct = true;
         this._packedSubtrees = false;
 
-        this._availabilityFolder = 'availability/'; // Pick something easier to spell, maybe a/
+        this._availabilityFolder = 'availability/'; // Maybe pick something less prone to spelling errors, maybe 'a/'
         this._asset = undefined; // Metadata for the entire tileset
         this._properties = undefined; // Metadata for per-model/point/etc properties
         this._geometricError = undefined; // Geometric error when the tree is not rendered at all
@@ -2520,8 +2521,8 @@ define([
         var expired = tile.contentExpired;
         var requested = tile.requestContent();
         // TODO: uncommenting this will cause some content on level 1 (1 past root) to become undefined
-        tile.requestSubtreeContent();
-        // var requstedSubtree = tile.requestSubtreeContent();
+        // tile.requestSubtreeContent();
+        var requstedSubtree = tile.requestSubtreeContent();
 
         if (!requested) {
             ++statistics.numberOfAttemptedRequests;
