@@ -144,29 +144,29 @@ define([
         };
     };
 
-    /**
-     * Given the xyz level subtree Index return the parent tile in the subtree
-     *
-     * @returns {Boolean} True if the descenant key is a descendant of the ancestor key
-     */
-    SubtreeInfo.prototype.getParentFromSubtreeIndex = function(x, y, z, level) {
-        if (level === 0) {
-            throw new DeveloperError('DEBUG: shouldnt happen for where this call is needed');
-        }
-
-        var parentX = x >> 1;
-        var parentY = y >> 1;
-        var parentZ = z >> 1;
-        var parentLevel = level - 1;
-
-        // Get subtree array index from subtree index
-        var sizesArray = this._tileset._unpackedArraySizes;
-        var levelOffset = sizesArray[parentLevel];
-        var tiles = this._tiles;
-        var dim = (1 << level);
-        var index = levelOffset + parentZ*dim*dim + parentY*dim + parentX;
-        return tiles[index];
-    };
+    // /**
+    //  * Given the xyz level subtree Index return the parent tile in the subtree
+    //  *
+    //  * @returns {Boolean} True if the descenant key is a descendant of the ancestor key
+    //  */
+    // SubtreeInfo.prototype.getParentFromSubtreeIndex = function(x, y, z, level) {
+    //     if (level === 0) {
+    //         throw new DeveloperError('DEBUG: shouldnt happen for where this call is needed');
+    //     }
+    //
+    //     var parentX = x >> 1;
+    //     var parentY = y >> 1;
+    //     var parentZ = z >> 1;
+    //     var parentLevel = level - 1;
+    //
+    //     // Get subtree array index from subtree index
+    //     var sizesArray = this._tileset._unpackedArraySizes;
+    //     var levelOffset = sizesArray[parentLevel];
+    //     var tiles = this._tiles;
+    //     var dim = (1 << level);
+    //     var index = levelOffset + parentZ*dim*dim + parentY*dim + parentX;
+    //     return tiles[index];
+    // };
 
     /**
      * Given ancestor and descendant tree keys, determine if the descendant is in the shadow of ancestor.
