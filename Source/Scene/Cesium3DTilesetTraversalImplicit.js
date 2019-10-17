@@ -497,11 +497,6 @@ define([
                 tile = tiles[j];
 
                 if (!defined(tile)) {
-                    // parent = subtree.getParentFromSubtreeIndex(relXInSubtreeLevelGrid + j - begin, relYInSubtreeLevelGrid, relZInSubtreeLevelGrid, subtreeLevel);
-                    // if (defined(parent) && parent.children.length === 0) {
-                    //     selectDesiredTile(tileset, parent, frameState);
-                    //     finalRefinementIndices.push(parent.treeKey);
-                    // }
                     continue;
                 }
 
@@ -535,13 +530,11 @@ define([
                             var visibleChildrenReady = childrenLength > 0;
                             for (k = 0; k < childrenLength; k++) {
                                 child = children[k];
-
                                 updateVisibility(tileset, child, frameState);
                                 if (isVisible(child) && !child.contentAvailable) {
                                     visibleChildrenReady = false;
                                 }
                             }
-
                             if (visibleChildrenReady) {
                                 selectVisibleChildren(tileset, parent, frameState);
                             } else {
@@ -550,14 +543,12 @@ define([
                             finalRefinementIndices.push(parent.treeKey);
                         }
                     } else if (!isStartLevel) {
-                        if (tile.contentAvailable && !isLastLevel) {
-                            if (tile._distanceToCamera > distanceForLevel) {
-                                selectDesiredTile(tileset, tile, frameState);
-                                finalRefinementIndices.push(tile.treeKey);
-                            } else {
-
-                            }
-                        } else if (parentDefined){
+                        if (tile.contentAvailable &&
+                            (tile._distanceToCamera > distanceForLevel || tile.children.length === 0)
+                            && !isLastLevel) {
+                            selectDesiredTile(tileset, tile, frameState);
+                            finalRefinementIndices.push(tile.treeKey);
+                        } else if (!tile.contentAvailable && parentDefined) {
                             selectDesiredTile(tileset, parent, frameState);
                             finalRefinementIndices.push(parent.treeKey);
                         }
