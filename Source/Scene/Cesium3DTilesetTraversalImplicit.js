@@ -454,18 +454,21 @@ define([
         frameState) {
 
         // NOTE: A sibling is in the same subtree.
-
-        var startLevel = indicesFinder._startLevel;
         var levelEllipsoid = indicesFinder._levelEllipsoid;
-        var maxTraversalLevel = indicesFinder._maximumTraversalLevel;
         var i, j, tile, xRowRange;
         var levelEllipsoidLength = levelEllipsoid.length;
         var lodDistances = indicesFinder._lodDistances;
         var distanceForLevel = lodDistances[contentLevel + 1];
         var tiles = subtree._tiles;
         var subtreeLevelDim = subtreeMaxTreeIndicesForLevel.x - subtreeMinTreeIndicesForLevel.x + 1;
+        var startLevel = indicesFinder._startLevel;
         var isStartLevel = contentLevel === startLevel;
+        var maxTraversalLevel = indicesFinder._maximumTraversalLevel;
         var isLastLevel = contentLevel === maxTraversalLevel;
+        // only make requests/selects on a skipLevel, unless the tree stops early on the level.
+        var skipLength = tileset._skipLength;
+        var isSkipLevel = isStartLevel || isLastLevel || (((contentLevel - startLevel) % skipLength) === 0);
+        var previousLevelIsSkipLevel = contentLevel - 1 >= startLevel && (((contentLevel - 1 - startLevel) % skipLength) === 0);
         for (i = 0; i < levelEllipsoidLength; i++) {
             xRowRange = levelEllipsoid.get(i);
             if (xRowRange.x < subtreeMinTreeIndicesForLevel.x ||
@@ -507,7 +510,8 @@ define([
                 updateVisibility(tileset, tile, frameState);
                 if (!isVisible(tile)) {
                     // Only load non-vis if parent vis
-                    if (parentDefined && isVisible(parent)) {
+                    // In addtion, need to request if on a skipLevel or a sibling stops early
+                    if (parentDefined && isVisible(parent) && (isSkipLevel || visibleSiblingStopped(tileset, parent, frameState))) {
                         loadTile(tileset, tile, frameState);
                         visitTile(tileset, tile, frameState);
                         touchTile(tileset, tile, frameState);
@@ -515,48 +519,67 @@ define([
                     continue;
                 }
 
-                loadTile(tileset, tile, frameState);
-                visitTile(tileset, tile, frameState);
-                touchTile(tileset, tile, frameState);
+                if (isSkipLevel) {
+                    loadTile(tileset, tile, frameState);
+                    visitTile(tileset, tile, frameState);
+                    touchTile(tileset, tile, frameState);
+                }
 
-                if (!inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey)) {
+                var siblings = tile.parent.children;
+                var siblingsLength = siblings.length;
+                var k, sibling;
+                var visibleSiblingsReady = siblingsLength > 0;
+                if (siblingsLength > 0)  {
+                    for (k = 0; k < siblingsLength; k++) {
+                        sibling = siblings[k];
+                        updateVisibility(tileset, sibling, frameState);
+                        if (isVisible(sibling) && !sibling.contentAvailable) {
+                            visibleSiblingsReady = false;
+                        }
+                    }
+                }
+
+                // notInBlockedRefinementRegion could also return true if skipLength > 1 && ancestorWithContentAvailable
+                if (skipLength > 0 || !inBlockedRefinementRegion(finalRefinementIndices, tile.treeKey)) {
                     if (isLastLevel) {
                         if (isStartLevel) {
                             selectDesiredTile(tileset, tile, frameState);
                         } else {
-                            var children = tile.parent.children;
-                            var childrenLength = children.length;
-                            var k, child;
-                            var visibleChildrenReady = childrenLength > 0;
-                            for (k = 0; k < childrenLength; k++) {
-                                child = children[k];
-                                updateVisibility(tileset, child, frameState);
-                                if (isVisible(child) && !child.contentAvailable) {
-                                    visibleChildrenReady = false;
-                                }
-                            }
-                            if (visibleChildrenReady) {
+                            if (visibleSiblingsReady) {
                                 selectVisibleChildren(tileset, parent, frameState);
-                            } else {
+                            } else if (previousLevelIsSkipLevel) {
+                                // Actually, this is an 'else' and it needs to select ancestor.
                                 selectDesiredTile(tileset, parent, frameState);
                             }
-                            finalRefinementIndices.push(parent.treeKey);
+                            if (skipLength === 1) { finalRefinementIndices.push(parent.treeKey); }
                         }
                     } else if (!isStartLevel) {
-                        if (tile.contentAvailable &&
-                            (tile._distanceToCamera > distanceForLevel || tile.children.length === 0)
-                            && !isLastLevel) {
+                        if (tile.contentAvailable && (tile._distanceToCamera > distanceForLevel || tile.children.length === 0)) {
                             selectDesiredTile(tileset, tile, frameState);
-                            finalRefinementIndices.push(tile.treeKey);
-                        } else if (!tile.contentAvailable && parentDefined) {
+                            if (skipLength === 1) { finalRefinementIndices.push(tile.treeKey); }
+                        } else if (!tile.contentAvailable && parentDefined && previousLevelIsSkipLevel) {
                             selectDesiredTile(tileset, parent, frameState);
-                            finalRefinementIndices.push(parent.treeKey);
+                            if (skipLevel === 1) { finalRefinementIndices.push(parent.treeKey); }
                         }
                     }
                 }
 
             } // j
         } // i
+    }
+
+    function visibleSiblingStopped(tileset, parent, frameState) {
+        var siblings = parent.children;
+        var siblingsLength = siblings.length;
+        var k, sibling;
+        for (k = 0; k < siblingsLength; k++) {
+            sibling = siblings[k];
+            updateVisibility(tileset, sibling, frameState);
+            if (isVisible(sibling) && sibling.children.length === 0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     function replacementTileChecks_visAndDist(tileset, subtree, contentLevel, finalRefinementIndices, frameState) {

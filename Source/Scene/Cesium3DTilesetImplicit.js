@@ -274,6 +274,7 @@ define([
         // this._tiles = new Map(); // Holds the subtree tiles, Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is an Array of tiles (undefined spots are unavailable)
         this._subtreeInfo = undefined; // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
         this._indicesFinder = new ImplicitIndicesFinder(this); // Holds the subtree availabilities. Key is the subtree's root 'd/x/y/z' (z==0 for quad tiles) in the tree and value is the Uint8Array subtree
+        this._skipLength = 1;
         // this._subtreeViewer = new ImplicitSubtreeViewer(this); // TODO: Make class with the toroidial multi dimensional array to make iteration easier, needs to update small portions every frame
         // I think there are two portions? ancestor portion 1d array and the normal portion which is a 3d array (fixed sizes on each level?) toroidial array?
         // what happens when sse changes? re-init the fixed size arrays? prevent going below some value in tileset (during the set)?
