@@ -1,5 +1,15 @@
     May need a better representation of availability for tree that's more concise
     it would be nice if there was a maximum of 2 subtrees that spans the tree.
+    A level 12 subtree can span levels 0-22
+    Box style availability, while it has really bad worst case, its size is variable.
+    and the common case should be quite small. It has early termination advantage.
+    Not sure how well it compresses, but it's about as good as text (which looked to be 4x worse than the binary subtree)
+    The terrain layer.json covers 16 levels(0-15) with 16K boxes which is 65KB uncompressed.
+    Worst case is checkboard last level, would this show up in practice? Most trees are mostly full or mostly empty.
+    Even if it doesn't compress well 65K uncompressed is still not a problem.
+    The point is covering the tree in at most 2 subtrees so that skipLOD can just pull down a subtree and get rigth to work.
+    If 2 isn't feasible, with 3 you could start prefetching subtrees below, so that the info is ready to go so you know which subtrees in
+    the last layer of subtrees are available or not.
 
     IndicesFinder
     * The ellipsoid index generation could be scrapped for a little more simple dsqrd <= rsqrd
