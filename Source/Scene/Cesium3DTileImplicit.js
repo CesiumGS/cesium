@@ -946,6 +946,12 @@ define([
         };
     }
 
+    function createPriorityFunctionSubtree(tile) {
+        return function() {
+            return -1;
+        };
+    }
+
     // TODO: Do I need to duplicate this for the subtree?
     /**
      * Requests the tile's subtree content.
@@ -966,10 +972,10 @@ define([
         var resource = this._contentSubtreeResource.clone();
 
         var request = new Request({
-            throttle : true,
+            throttle : false,
             throttleByServer : true,
             type : RequestType.TILES3D,
-            priorityFunction : createPriorityFunction(this),
+            priorityFunction : createPriorityFunctionSubtree(this),
             serverKey : this._serverKeySubtree
         });
 

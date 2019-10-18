@@ -96,7 +96,6 @@ define([
 
     // var scratchCartesian = new Cartesian4();
 
-
     /**
      * Adds the subtree to the subtree cache
      *
@@ -142,6 +141,7 @@ define([
         var sizesArray = tileset._unpackedArraySizes;
         var subtreeSize = sizesArray[subtreeLevels];
         var tilesArray = [];
+        var i;
         for (i = 0; i < subtreeSize; i++) {
             tilesArray.push(undefined);
         }
@@ -166,7 +166,7 @@ define([
         var numTilesOnLastLevel = subtreeSize - lastLevelOffset;
 
         var map = new Map();
-        var i, result, keyString, subtreeIndex, treeKey;
+        var result, keyString, subtreeIndex, treeKey;
         for (i = 0; i < numTilesOnLastLevel; i++) {
             subtreeIndex = i + lastLevelOffset;
             if (subtree[i + lastLevelOffset] === 1) {
@@ -198,7 +198,6 @@ define([
             throw new DeveloperError('Unit subtree in subtreeInfo.');
         }
 
-        var index;
         if (subtreeLastLevel0Indexed === subtreeRootKey.w) {
             if (!this._subtreesMap.has(subtreeRootKeyString)) {
                 throw new DeveloperError('Unit subtree in subtreeInfo.');
