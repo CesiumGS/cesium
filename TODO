@@ -1,6 +1,13 @@
+
+
 Boxes:
 If subtree availability is many levels,
 break into 2 layers of subtrees(each can have differnt umber of levels)
+
+For now just take the subtree thing and build a tree, no subtree arrays.
+
+TODO: for multi grid you want to just take all the tilingScheme.roots
+and make tiles(hasTilesetContent) for those off the contentless root.
 
 Need a version that just builds a tree with out all the subtreeinfo stuff, could do dfs or bfs
 

@@ -113,7 +113,7 @@ define([
     });
 
     function initialize(content, arrayBuffer, byteOffset) {
-        content._tileset.updateTilesetFromSubtree(content._resource, arrayBuffer, content._tile.treeKey, content._tile);
+        content._tileset.updateTilesetFromSubtreeNoSubtreeInfo(content._resource, arrayBuffer, content._tile.treeKey, content._tile);
         content._readyPromise.resolve(content);
     }
 
