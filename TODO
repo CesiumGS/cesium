@@ -1,0 +1,7 @@
+Boxes:
+If subtree availability is many levels,
+break into 2 layers of subtrees(each can have differnt umber of levels)
+
+Need a version that just builds a tree with out all the subtreeinfo stuff, could do dfs or bfs
+
+maybe if not needed save off the relative boxes for subtree so that it can be constructed later
