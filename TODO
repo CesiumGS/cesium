@@ -1,6 +1,2 @@
 If subtree availability is many levels, break into 2 layers of subtrees(each can have differnt umber of levels)
 maybe if not needed save off the relative boxes for subtree so that it can be constructed later.
-
-TODO: for multi grid you want to just take all the tilingScheme.roots
-and make tiles(hasTilesetContent, don't know if roots of those subtrees are actuall available)
-for those off the contentless root.
