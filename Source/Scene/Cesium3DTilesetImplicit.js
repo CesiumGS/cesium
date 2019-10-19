@@ -1007,40 +1007,43 @@ define([
                     }
                 }
             })
+            // .then(function() {
+            //     if (!defined(that._tilingScheme)) {
+            //         return undefined;
+            //     }
+            //
+            //     // TODO: get rid of this after root grid loading works
+            //     var regex = /tileset\.json/;
+            //     var isOct = that._tilingScheme.type === 'oct';
+            //     that._isOct = isOct;
+            //     that._packedArraySizes = isOct ? subtreesPackedUint8ArraySizesOct : subtreesPackedUint8ArraySizesQuad;
+            //     that._unpackedArraySizes = isOct ? subtreesUint8ArraySizesOct : subtreesUint8ArraySizesQuad;
+            //     var subtreeLevels = that._tilingScheme.subtreeLevels;
+            //     that._unpackedSize = that._unpackedArraySizes[subtreeLevels];
+            //     that._packedSize = that._packedArraySizes[subtreeLevels];
+            //
+            //     var rootSubtreeUrls = that.getRootSubtreeUrls();
+            //     //  TODO: support processing all root subtrees at the start
+            //     var subtreeUrl = that._url.replace(regex, rootSubtreeUrls[0]);
+            //     // var subtreeResource = Resource.createIfNeeded(subtreeUrl);
+            //     // return Cesium3DTilesetImplicit.loadJson(subtreeResource);
+            //     rootKey = that._tilingScheme.roots[0];
+            //     if (!isOct) {
+            //         rootKey.push(0);
+            //     }
+            //     rootKey = new Cartesian4(rootKey[1], rootKey[2], rootKey[3], rootKey[0]);
+            //     return Cesium3DTilesetImplicit.loadArrayBuffer(subtreeUrl);
+            // })
+            // .then(function(result) {
             .then(function() {
-                if (!defined(that._tilingScheme)) {
-                    return undefined;
-                }
+                // var subtreeArrayBuffer = result;
+                // var hasSubtreeArray = defined(subtreeArrayBuffer);
 
-                var regex = /tileset\.json/;
-                var isOct = that._tilingScheme.type === 'oct';
-                that._isOct = isOct;
-                that._packedArraySizes = isOct ? subtreesPackedUint8ArraySizesOct : subtreesPackedUint8ArraySizesQuad;
-                that._unpackedArraySizes = isOct ? subtreesUint8ArraySizesOct : subtreesUint8ArraySizesQuad;
-                var subtreeLevels = that._tilingScheme.subtreeLevels;
-                that._unpackedSize = that._unpackedArraySizes[subtreeLevels];
-                that._packedSize = that._packedArraySizes[subtreeLevels];
-
-                var rootSubtreeUrls = that.getRootSubtreeUrls();
-                //  TODO: support processing all root subtrees at the start
-                var subtreeUrl = that._url.replace(regex, rootSubtreeUrls[0]);
-                // var subtreeResource = Resource.createIfNeeded(subtreeUrl);
-                // return Cesium3DTilesetImplicit.loadJson(subtreeResource);
-                rootKey = that._tilingScheme.roots[0];
-                if (!isOct) {
-                    rootKey.push(0);
-                }
-                rootKey = new Cartesian4(rootKey[1], rootKey[2], rootKey[3], rootKey[0]);
-                return Cesium3DTilesetImplicit.loadArrayBuffer(subtreeUrl);
-            })
-            .then(function(result) {
-                var subtreeArrayBuffer = result;
-                var hasSubtreeArray = defined(subtreeArrayBuffer);
-
-                if (hasSubtreeArray) {
+                var implicit = defined(that._tilingScheme);
+                if (implicit) {
                     // TODO: add check to  make sure length correct given subdivision type and subtreeLevels
-                    var tilingScheme = that._tilingScheme;
-                    that._allTilesAdditive = tilingScheme.refine === Cesium3DTileRefine.ADD;
+                    // var tilingScheme = that._tilingScheme;
+                    // that._allTilesAdditive = tilingScheme.refine === Cesium3DTileRefine.ADD;
                     // A tileset JSON file referenced from a tile may exist in a different directory than the root tileset.
                     // Get the basePath relative to the external tileset.
                     // var rootInfo = {
@@ -1050,16 +1053,15 @@ define([
                     //     refine: tilingScheme.refine,
                     // };
 
-                    // that._subtreeCache = new SubtreeInfo(that);
-                    // that._root = that.updateTilesetFromSubtree(resource, subtreeArrayBuffer, rootKey);
-                    that._root = that.updateTilesetFromSubtreeNoSubtreeInfo(resource, subtreeArrayBuffer, rootKey);
+                    // that._root = that.updateTilesetFromSubtreeNoSubtreeInfo(resource, subtreeArrayBuffer, rootKey);
+                    that._root = that.initImplicitTileset(resource); // Just need to take the roots and attach them to the tileset contentless root as hasTilesetContent tiles
                 } else {
                     that._root = that.loadTileset(resource, tilesetJson);
                 }
 
                 // Save the original, untransformed bounding volume position so we can apply
                 // the tile transform and model matrix at run time
-                var rootBoundingVolume = hasSubtreeArray ? that._tilingScheme.boundingVolume : tilesetJson.root.boundingVolume;
+                var rootBoundingVolume = implicit ? that._tilingScheme.boundingVolume : tilesetJson.root.boundingVolume;
                 var boundingVolume = that._root.createBoundingVolume(rootBoundingVolume, Matrix4.IDENTITY);
                 var clippingPlanesOrigin = boundingVolume.boundingSphere.center;
                 // If this origin is above the surface of the earth
@@ -2249,15 +2251,15 @@ define([
         return subtree;
     };
 
-
-
     /**
      * Updates the _subtreeCache arrays as well as updates the metadata view of
      * the tileset tree given a layerJson
      *
      * @private
      */
-    Cesium3DTilesetImplicit.prototype.createChildAndPush = function(treeKey, subtreeKey, subtreeRootKey, subtreeIndex, tile, tilesetRoot, resource, stack) {
+    // Cesium3DTilesetImplicit.prototype.createChildAndPush = function(treeKey, subtreeKey, subtreeRootKey, subtreeIndex, tile, tilesetRoot, resource, stack) {
+    Cesium3DTilesetImplicit.prototype.createChildAndPush = function(treeKey, subtreeKey, subtreeRootKey, subtreeIndex, tile, resource, stack) {
+        var tilesetRoot = this._root;
         var tilingScheme = this._tilingScheme;
         var subtreeLevels = tilingScheme.subtreeLevels;
         var subtreeLevels0Indexed = subtreeLevels -  1;
@@ -2301,21 +2303,19 @@ define([
      *
      * @private
      */
-    Cesium3DTilesetImplicit.prototype.updateTilesetFromSubtreeNoSubtreeInfo = function(resource, subtreeArrayBuffer, subtreeRootKey, parentTile) {
-        if (!defined(subtreeArrayBuffer)) {
-            throw new RuntimeError('DEBUG: Subtree ArrayBuffer is undefined.');
-        }
-        if (subtreeArrayBuffer.byteLength === 0) {
-            throw new RuntimeError('DBUG: Subtree ArrayBuffer is empty?');
-        }
-
-        // TODO: leave packed since we throw away
-        var subtree = this.unpackSubtreeBits(subtreeArrayBuffer);
-
-        var statistics = this._statistics;
-        var hasParent = defined(parentTile);
-
+    Cesium3DTilesetImplicit.prototype.initImplicitTileset = function(resource) {
+        // TODO: get rid of this after root grid loading works
         var tilingScheme = this._tilingScheme;
+        this._allTilesAdditive = tilingScheme.refine === Cesium3DTileRefine.ADD;
+        var isOct = tilingScheme.type === 'oct';
+        this._isOct = isOct;
+        this._packedArraySizes = isOct ? subtreesPackedUint8ArraySizesOct : subtreesPackedUint8ArraySizesQuad;
+        this._unpackedArraySizes = isOct ? subtreesUint8ArraySizesOct : subtreesUint8ArraySizesQuad;
+        var subtreeLevels = tilingScheme.subtreeLevels;
+        this._unpackedSize = this._unpackedArraySizes[subtreeLevels];
+        this._packedSize = this._packedArraySizes[subtreeLevels];
+
+        // Make the tilesetRoot tile
         if (defined(tilingScheme.boundingVolume.region) && defined(tilingScheme.transform)) {
             // No transforms for region contexts
             tilingScheme.transform = Matrix4.clone(Matrix4.IDENTITY);
@@ -2332,16 +2332,79 @@ define([
 
         // TODO: if !hasParent create tilsetcontent tiles from tilingScheme.roots and exit
 
-        var rootTile = hasParent ? parentTile : new Cesium3DTileImplicit(this, resource, rootInfo, undefined);
-        var subtreeLevelStart = hasParent ? 0 : this.findSubtreeLevelStart(subtree);
+        var rootTile = new Cesium3DTileImplicit(this, resource, rootInfo, undefined);
+        rootTile._depth = 0;
 
-        if (!hasParent) {
-            this._startLevel = subtreeRootKey.w + subtreeLevelStart;
-            rootTile._depth = 0;
+        var rootKeys = tilingScheme.roots;
+        var rootKeysLength = rootKeys.length;
+        var availabilityFolder = this._availabilityFolder;
+        var key, url, i, x,y,z,depth;
+
+        var regex = /tileset\.json/;
+        for (i = 0; i< rootKeysLength; i++) {
+            key = rootKeys[i];
+            depth = key[0];
+            x = key[1];
+            y = key[2];
+            z = isOct ? key[3] : 0;
+            url = isOct ?  availabilityFolder + depth + '/' + x + '/' + y + '/' + z :
+                           availabilityFolder + depth + '/' + x + '/' + y;
+
+            // Make the tileInfo, create a tile as a 'hasTilesetContent tile' and push as child of tileset root tile
+            var subtreeUrl = this._url.replace(regex, url);
+            var rootGridTileInfo = {
+                boundingVolume: tilingScheme.boundingVolume,
+                geometricError: rootTile._geometricError,
+                content: {
+                    uri: undefined,
+                    uriSubtree: subtreeUrl
+                },
+                treeKey: new Cartesian4(x, y, z, depth),
+                // subtreeKey: subtreeKey,
+                // subtreeIndex: subtreeIndex,
+                // subtreeRootKey: new Cartesian4(x, y, z, depth),
+                refine: tilingScheme.refine
+            };
+            var rootGridTile = new Cesium3DTileImplicit(this, resource, rootGridTileInfo, rootTile);
+            rootTile._depth = depth;
+            rootTile.children.push(rootGridTile);
         }
 
-        // main layer.json, construct child tiles of contentless root
-        var tilesetRoot = defined(this._root) ? this._root : rootTile;
+        return rootTile;
+    };
+
+    /**
+     * Updates the _subtreeCache arrays as well as updates the metadata view of
+     * the tileset tree given a layerJson
+     *
+     * @private
+     */
+    Cesium3DTilesetImplicit.prototype.updateTilesetFromSubtreeNoSubtreeInfo = function(resource, subtreeArrayBuffer, parentTile) {
+        var subtreeRootKey = parentTile.treeKey;
+        if (!defined(subtreeArrayBuffer)) {
+            throw new RuntimeError('DEBUG: Subtree ArrayBuffer is undefined.');
+        }
+        if (subtreeArrayBuffer.byteLength === 0) {
+            throw new RuntimeError('DBUG: Subtree ArrayBuffer is empty?');
+        }
+
+        // TODO: leave packed since we throw away, would need to convert subtree index to byte and bit index
+        var subtree = this.unpackSubtreeBits(subtreeArrayBuffer);
+
+        var statistics = this._statistics;
+
+        var tilingScheme = this._tilingScheme;
+        if (defined(tilingScheme.boundingVolume.region) && defined(tilingScheme.transform)) {
+            // No transforms for region contexts
+            tilingScheme.transform = Matrix4.clone(Matrix4.IDENTITY);
+        }
+
+        var tilesetRoot = this._root;
+        var isRootGridTile = parentTile.parent === tilesetRoot;
+        var subtreeLevelStart = !isRootGridTile ? 0 : this.findSubtreeLevelStart(subtree);
+        if (isRootGridTile) {
+            this._startLevel = subtreeRootKey.w + subtreeLevelStart;
+        }
 
         // Init the tiles array
         var unpackedArraySizes = this._unpackedArraySizes;
@@ -2350,10 +2413,10 @@ define([
         var isOct = this._isOct;
         var stack = [];
         var i;
-        stack.push(rootTile);
+        stack.push(parentTile);
         while(stack.length > 0) {
             tile = stack.pop();
-            if (!defined(tile.treeKey)) {
+            if (tile.parent === tilesetRoot) {
                 var nextLevel = subtreeLevelStart + 1;
                 var end = unpackedArraySizes[nextLevel];
                 for (i = unpackedArraySizes[subtreeLevelStart]; i < end ; i++) {
@@ -2362,7 +2425,7 @@ define([
                     }
 
                     result = this.getSubtreeInfoFromSubtreeIndexAndRootKey(i, subtreeRootKey);
-                    this.createChildAndPush(result.treeKey, result.subtreeKey, subtreeRootKey, i, tile, tilesetRoot, resource, stack);
+                    this.createChildAndPush(result.treeKey, result.subtreeKey, subtreeRootKey, i, tile, resource, stack);
                 }
 
                 continue;
@@ -2388,7 +2451,7 @@ define([
                         }
 
                         var childTreeKey = new Cartesian4(childX, childY, childZ, childW);
-                        this.createChildAndPush(childTreeKey, result.subtreeKey, subtreeRootKey, result.subtreeIndex, tile, tilesetRoot, resource, stack);
+                        this.createChildAndPush(childTreeKey, result.subtreeKey, subtreeRootKey, result.subtreeIndex, tile, resource, stack);
                     }
                 }
             }
