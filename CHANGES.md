@@ -4,6 +4,8 @@ Change Log
 ### 1.63 - 2019-11-01
 
 ##### Fixes :wrench:
+
+* Fixed seam artifacts when log depth is disabled, `scene.globe.depthTestAgainstTerrain` is false, and primitives are under the globe. [#8205](https://github.com/AnalyticalGraphicsInc/cesium/pull/8205)
 * Fix dynamic ellipsoids using `innerRadii`, `minimumClock`, `maximumClock`, `minimumCone` or `maximumCone`. [#8277](https://github.com/AnalyticalGraphicsInc/cesium/pull/8277)
 
 ### 1.62 - 2019-10-01
