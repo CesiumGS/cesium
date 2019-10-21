@@ -187,6 +187,9 @@ require({
     xhr.get({
         url : 'https://cesium.com/docs/cesiumjs-ref-doc/types.txt',
         handleAs : 'json',
+        headers: {
+            "X-Requested-With": null // Set by default, unsetting it is required to ensure simple CORS request.
+        },
         error : function(error) {
             docError = true;
         }
