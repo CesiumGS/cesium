@@ -3,6 +3,14 @@ Change Log
 
 ### 1.63 - 2019-11-01
 
+##### Additions :tada:
+* We’ve consolidated all of our website content from cesiumjs.org and cesium.com into one home on cesium.com.  Here’s where you can now find:
+  * [Sandcastle](https://sandcastle.cesium.com) - `https://sandcastle.cesium.com`
+  * [API Docs](https://cesium.com/docs/cesiumjs-ref-doc/) - `https://cesium.com/docs/cesiumjs-ref-doc/`
+  * [Downloads](https://cesium.com/downloads/) - `https://cesium.com/downloads/`
+  * Hosted releases can be found at `https://cesium.com/downloads/cesiumjs/releases/<CesiumJS Version Number>/Build/Cesium/Cesium.js`
+  * See our [Blog post](https://cesium.com/blog/2019/10/15/cesiumjs-migration/) for more information.
+
 ##### Fixes :wrench:
 
 * Fixed seam artifacts when log depth is disabled, `scene.globe.depthTestAgainstTerrain` is false, and primitives are under the globe. [#8205](https://github.com/AnalyticalGraphicsInc/cesium/pull/8205)
