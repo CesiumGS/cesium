@@ -13,6 +13,7 @@ Change Log
 * Fixed a bug where Cesium would draw parent content whenever a child tile had no content.
 * Added the ability to enable/disable shadows on an Instanced 3D Model tileset.
 * Added support for the `TERRIA_solid_outlines` extension to glTF.
+* Avoided double-counting of `createImageBitmap` requests. There is an open Cesium PR: https://github.com/AnalyticalGraphicsInc/cesium/pull/8163
 
 ### 1.61 - 2019-09-03
 
