@@ -76,6 +76,9 @@ describe('Core/Color', function() {
         expect(Color.floatToByte(0)).toEqual(0);
         expect(Color.floatToByte(1.0)).toEqual(255);
         expect(Color.floatToByte(127 / 255)).toEqual(127);
+        expect(Color.floatToByte(0.749)).toEqual(191);
+        expect(Color.floatToByte(0.75)).toEqual(191);
+        expect(Color.floatToByte(0.751)).toEqual(192);
     });
 
     it('fromCartesian4 returns a color with corrrect values', function(){
