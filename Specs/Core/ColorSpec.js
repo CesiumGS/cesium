@@ -60,7 +60,7 @@ describe('Core/Color', function() {
     it('toBytes works with a result parameter', function() {
         var color = new Color(0.1, 0.2, 0.3, 0.4);
         var result = [];
-        var expectedResult = [25, 51, 76, 102];
+        var expectedResult = [26, 51, 77, 102];
         var returnedResult = color.toBytes(result);
         expect(returnedResult).toBe(result);
         expect(returnedResult).toEqual(expectedResult);
@@ -154,7 +154,7 @@ describe('Core/Color', function() {
         expect(Color.BLUE.toCssColorString()).toEqual('rgb(0,0,255)');
         expect(Color.LIME.toCssColorString()).toEqual('rgb(0,255,0)');
         expect(new Color(0.0, 0.0, 0.0, 1.0).toCssColorString()).toEqual('rgb(0,0,0)');
-        expect(new Color(0.1, 0.2, 0.3, 0.4).toCssColorString()).toEqual('rgba(25,51,76,0.4)');
+        expect(new Color(0.1, 0.2, 0.3, 0.4).toCssColorString()).toEqual('rgba(26,51,77,0.4)');
     });
 
     it('fromCssColorString supports transparent', function() {
