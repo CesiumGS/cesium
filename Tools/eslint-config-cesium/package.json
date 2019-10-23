@@ -1,6 +1,6 @@
 {
   "name": "eslint-config-cesium",
-  "version": "8.0.0",
+  "version": "8.0.1",
   "description": "ESLint shareable configs for Cesium",
   "homepage": "http://cesiumjs.org",
   "license": "Apache-2.0",

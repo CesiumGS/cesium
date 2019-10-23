@@ -1,6 +1,9 @@
 Change Log
 ==========
 
+### 8.0.1 - 2019-10-23
+* [no-prototype-builtins](https://eslint.org/docs/rules/no-prototype-builtins) should be disabled for both Node and Browser.
+
 ### 8.0.0 - 2019-10-23
 * Update Browser ecmaVersion to '2015'.
 * Update Browser to use ES6 modules by default.

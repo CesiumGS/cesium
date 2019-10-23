@@ -10,7 +10,6 @@ module.exports = {
         sourceType: "module"
     },
     rules: {
-        'no-implicit-globals': 'error',
-        'no-prototype-builtins': 'off'
+        'no-implicit-globals': 'error'
     }
 };

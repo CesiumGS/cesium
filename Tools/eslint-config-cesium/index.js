@@ -36,6 +36,7 @@ module.exports = {
         'no-loop-func': 'error',
         'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 1 }],
         'no-new': 'error',
+        'no-prototype-builtins': 'off',
         'no-sequences': 'error',
         'no-tabs': 'error',
         'no-trailing-spaces': 'error',
