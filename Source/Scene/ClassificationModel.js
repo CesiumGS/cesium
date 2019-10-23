@@ -33,6 +33,7 @@ import SceneMode from './SceneMode.js';
 import Vector3DTileBatch from './Vector3DTileBatch.js';
 import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
 import PrimitiveCollection from './PrimitiveCollection.js';
+import DracoLoader from './DracoLoader.js';
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = ModelUtility.ModelState;
@@ -180,6 +181,7 @@ import PrimitiveCollection from './PrimitiveCollection.js';
         this._mode = undefined;
         this._dirty = false;                       // true when the model was transformed this frame
 
+        this._decodedData = {};
         this._nodeMatrix=[];
         this._primitiveNodeIds=[];
 
@@ -440,6 +442,9 @@ import PrimitiveCollection from './PrimitiveCollection.js';
         // through glTF accessors to create the bufferview's index buffer.
         ForEach.accessor(model.gltf, function(accessor) {
             var bufferViewId = accessor.bufferView;
+            if (!defined(bufferViewId)) {
+                return;
+            }
             var bufferView = bufferViews[bufferViewId];
 
             if ((bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) && !defined(indexBufferIds[bufferViewId])) {
@@ -456,6 +461,10 @@ import PrimitiveCollection from './PrimitiveCollection.js';
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
+        // Use bufferView created at runtime
+        if (!defined(bufferView)) {
+            bufferView = loadResources.createdBufferViews[bufferViewId];
+        }
         var vertexBuffer = loadResources.getBuffer(bufferView);
         model._buffers[bufferViewId] = vertexBuffer;
         model._geometryByteLength += vertexBuffer.byteLength;
@@ -465,6 +474,10 @@ import PrimitiveCollection from './PrimitiveCollection.js';
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
+        // Use bufferView created at runtime
+        if (!defined(bufferView)) {
+            bufferView = loadResources.createdBufferViews[bufferViewId];
+        }
         var indexBuffer = {
             typedArray : loadResources.getBuffer(bufferView),
             indexDatatype : componentType
@@ -493,11 +506,22 @@ import PrimitiveCollection from './PrimitiveCollection.js';
         }
     }
 
-    function modifyShaderForQuantizedAttributes(shader, model) {
-        var primitive = model.gltf.meshes[0].primitives[0];
+    function modifyShaderForQuantizedAttributes(shader, model,meshId,primitiveId) {
+        var primitive = model.gltf.meshes[meshId].primitives[primitiveId];
         var result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
         model._quantizedUniforms = result.uniforms;
         return result.shader;
+    }
+
+    function modifyShaderForDracoQuantizedAttributes(shader, model,meshId,primitiveId) {
+        var primitive = model.gltf.meshes[meshId].primitives[primitiveId];
+        var decodedData = model._decodedData[meshId+".primitive."+primitiveId];
+        if (defined(decodedData)) {
+            var result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
+            return result.shader;
+        } else {
+            return shader;
+        }
     }
 
     function modifyShader(shader, callback) {
@@ -558,10 +582,6 @@ import PrimitiveCollection from './PrimitiveCollection.js';
             '    czm_writeDepthClampedToFarPlane();\n' +
             '}\n';
 
-        if (model.extensionsUsed.WEB3D_quantized_attributes) {
-            vs = modifyShaderForQuantizedAttributes(vs, model);
-        }
-
         var drawVS = modifyShader(vs, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, model._classificationShaderLoaded);
 
@@ -597,11 +617,32 @@ import PrimitiveCollection from './PrimitiveCollection.js';
         var primitive = primitives[primitiveId];
         var attributeLocations = getAttributeLocations();
         var attributes = {};
+
+        //Retreive decoded data in case of Draco encoded primitives.
+        var decodedData = model._decodedData[meshId + '.primitive.' + primitiveId];
+
         ForEach.meshPrimitiveAttribute(primitive, function(accessorId, attributeName) {
             // Skip if the attribute is not used by the material, e.g., because the asset
             // was exported with an attribute that wasn't used and the asset wasn't optimized.
             var attributeLocation = attributeLocations[attributeName];
             if (defined(attributeLocation)) {
+                if (defined(decodedData)) {
+                    var decodedAttributes = decodedData.attributes;
+                    if (decodedAttributes.hasOwnProperty(attributeName)) {
+                        var decodedAttribute = decodedAttributes[attributeName];
+                        attributes[attributeName]={
+                            index: attributeLocation,
+                            vertexBuffer: rendererBuffers[decodedAttribute.bufferView],
+                            componentsPerAttribute: decodedAttribute.componentsPerAttribute,
+                            componentDatatype: decodedAttribute.componentDatatype,
+                            normalize: decodedAttribute.normalized,
+                            offsetInBytes: decodedAttribute.byteOffset,
+                            strideInBytes: decodedAttribute.byteStride
+                        };
+
+                        return;
+                    }
+                }
                 var a = accessors[accessorId];
                 attributes[attributeName] = {
                     index: attributeLocation,
@@ -617,7 +658,12 @@ import PrimitiveCollection from './PrimitiveCollection.js';
         var indexBuffer;
         if (defined(primitive.indices)) {
             var accessor = accessors[primitive.indices];
-            indexBuffer = rendererBuffers[accessor.bufferView];
+            var bufferView = accessor.bufferView;
+            // Use buffer of previously decoded draco geometry
+            if (defined(decodedData)) {
+                bufferView = decodedData.bufferView;
+            }
+            indexBuffer = rendererBuffers[bufferView];
         }
         return {
             attributes : attributes,
@@ -663,6 +709,10 @@ import PrimitiveCollection from './PrimitiveCollection.js';
         return ModelUtility.createUniformsForQuantizedAttributes(model.gltf, primitive, model._quantizedUniforms);
     }
 
+    function createUniformsForDracoQuantizedAttributes(decodedData) {
+        return ModelUtility.createUniformsForDracoQuantizedAttributes(decodedData.attributes);
+    }
+
     function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
         switch (primitive.mode) {
             case PrimitiveType.TRIANGLES:
@@ -697,12 +747,23 @@ import PrimitiveCollection from './PrimitiveCollection.js';
             var offset ={};
             var count;
 
-            var positions = accessors[primitive.attributes.POSITION];
-            offset.positions=(positions.byteOffset / ComponentDatatype.getSizeInBytes(positions.componentType));
+            var decodedData = model._decodedData[meshId + '.primitive.' + primitiveId];
+
+            var positions;
+            if (defined(decodedData)) {
+                positions = decodedData.attributes.POSITION;
+                offset.positions=(positions.byteOffset / ComponentDatatype.getSizeInBytes(positions.componentDatatype));
+            } else {
+                positions = accessors[primitive.attributes.POSITION];
+                offset.positions=(positions.byteOffset / ComponentDatatype.getSizeInBytes(positions.componentType));
+            }
             var batchIDAccessor = accessors[primitive.attributes._BATCHID];
             offset.batchIds=(batchIDAccessor.byteOffset / ComponentDatatype.getSizeInBytes(batchIDAccessor.componentType));
 
-            if (defined(ix)) {
+            if (defined(decodedData)) {
+                count = decodedData.numberOfIndices;
+                offset.indices = 0;
+            } else if (defined(ix)) {
                 count = ix.count;
                 offset.indices = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
             }
@@ -720,10 +781,14 @@ import PrimitiveCollection from './PrimitiveCollection.js';
             }
 
             // Add uniforms for decoding quantized attributes if used
+            var quantizedUniformMap = {};
             if (model.extensionsUsed.WEB3D_quantized_attributes) {
-                var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive);
+                quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive);
                 uniformMap = combine(uniformMap, quantizedUniformMap);
+            } else if (model._dequantizeInShader && defined(decodedData)) {
+                quantizedUniformMap = createUniformsForDracoQuantizedAttributes(decodedData);
             }
+            uniformMap = combine(uniformMap, quantizedUniformMap);
 
             var attribute = vertexArray.attributes.POSITION;
             var componentDatatype = attribute.componentDatatype;
@@ -747,7 +812,8 @@ import PrimitiveCollection from './PrimitiveCollection.js';
                 indices = new Uint32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint32Array.BYTES_PER_ELEMENT);
             }
 
-            positionsBuffer = arraySlice(positionsBuffer,offset.positions,offset.positions+count*numberOfComponentsForType(positions.type));
+            const componentsPerAttribute_Position = (defined(positions.componentsPerAttribute)) ? positions.componentsPerAttribute : numberOfComponentsForType(positions.type);
+            positionsBuffer = arraySlice(positionsBuffer,offset.positions,offset.positions+count*componentsPerAttribute_Position);
             vertexBatchIds = arraySlice(vertexBatchIds,offset.batchIds,offset.batchIds+count*numberOfComponentsForType(batchIDAccessor.type));
             indices = arraySlice(indices, offset.indices, offset.indices + count*numberOfComponentsForType(ix.type));
 
@@ -801,6 +867,12 @@ import PrimitiveCollection from './PrimitiveCollection.js';
             var fragmentShaderSource = shader.fragmentShaderSource;
             var attributeLocations = shader.attributeLocations;
             var pickId = defined(model._pickIdLoaded) ? model._pickIdLoaded() : undefined;
+
+            if (model.extensionsUsed.WEB3D_quantized_attributes) {
+                shader.vertexShaderSource = modifyShaderForQuantizedAttributes(shader.vertexShaderSource, model,meshId,primitiveId);
+            } else {
+                shader.vertexShaderSource = modifyShaderForDracoQuantizedAttributes(shader.vertexShaderSource, model,meshId,primitiveId);
+            }
 
             model._primitive.add(new Vector3DTilePrimitive({
                 classificationType : model._classificationType,
@@ -915,6 +987,8 @@ import PrimitiveCollection from './PrimitiveCollection.js';
             return;
         }
 
+        var context = frameState.context;
+
         if (!FeatureDetection.supportsWebP.initialized) {
             FeatureDetection.supportsWebP.initialize();
             return;
@@ -959,9 +1033,25 @@ import PrimitiveCollection from './PrimitiveCollection.js';
                 addBuffersToLoadResources(this);
                 parseBufferViews(this);
 
-                this._boundingSphere = ModelUtility.computeBoundingSphere(this);
-                this._initialRadius = this._boundingSphere.radius;
-                createResources(this, frameState);
+                if (!loadResources.initialized) {
+                    // Start draco decoding
+                    DracoLoader.parse(this, context);
+                    loadResources.initialized = true;
+                }
+
+                if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
+                    this._boundingSphere = ModelUtility.computeBoundingSphere(this);
+                    this._initialRadius = this._boundingSphere.radius;
+                    loadResources.resourcesParsed = true;
+                }
+                if (loadResources.resourcesParsed) {
+                    createResources(this, frameState);
+                }
+
+            }
+            if (!loadResources.finishedDecoding()) {
+                DracoLoader.decodeModel(this, context)
+                    .otherwise(ModelUtility.getFailedLoadFunction(this, 'model', this.basePath));
             }
             if (loadResources.finished()) {
                 this._state = ModelState.LOADED;
