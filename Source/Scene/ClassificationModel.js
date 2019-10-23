@@ -515,13 +515,13 @@ import DracoLoader from './DracoLoader.js';
 
     function modifyShaderForDracoQuantizedAttributes(shader, model,meshId,primitiveId) {
         var primitive = model.gltf.meshes[meshId].primitives[primitiveId];
-        var decodedData = model._decodedData[meshId+".primitive."+primitiveId];
-        if (defined(decodedData)) {
-            var result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
-            return result.shader;
-        } else {
+        var decodedData = model._decodedData[meshId+'.primitive.'+primitiveId];
+        if (!defined(decodedData)) {
             return shader;
         }
+        var result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
+        return result.shader;
+
     }
 
     function modifyShader(shader, callback) {
