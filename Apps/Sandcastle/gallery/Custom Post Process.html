@@ -42,7 +42,7 @@ var fragmentShaderSource =
     'const int KERNEL_WIDTH = 16; \n' +
     'void main(void) \n' +
     '{ \n' +
-    '    vec2 step = czm_pixelRatio / czm_viewport.zw; \n' +
+    '    vec2 step = 1.0 / czm_viewport.zw; \n' +
     '    vec2 integralPos = v_textureCoordinates - mod(v_textureCoordinates, 8.0 * step); \n' +
     '    vec3 averageValue = vec3(0.0); \n' +
     '    for (int i = 0; i < KERNEL_WIDTH; i++) \n' +

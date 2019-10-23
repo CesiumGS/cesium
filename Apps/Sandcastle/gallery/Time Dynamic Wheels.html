@@ -27,7 +27,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 //Make sure viewer is at the desired time.
-var start = Cesium.JulianDate.fromDate(new Date(2018, 11, 12, 15));
+var start = Cesium.JulianDate.fromDate(new Date(2018, 11, 12));
 var totalSeconds = 10;
 var stop = Cesium.JulianDate.addSeconds(start, totalSeconds, new Cesium.JulianDate());
 viewer.clock.startTime = start.clone();

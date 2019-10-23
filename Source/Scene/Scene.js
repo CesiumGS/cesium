@@ -619,7 +619,6 @@ import View from './View.js';
 
             originalFramebuffer : undefined,
             useGlobeDepthFramebuffer : false,
-            separatePrimitiveFramebuffer : false,
             useOIT : false,
             useInvertClassification : false,
             usePostProcess : false,
@@ -2193,12 +2192,8 @@ import View from './View.js';
             executeTranslucentCommands = executeTranslucentCommandsFrontToBack;
         }
 
-        var frustumCommandsList = view.frustumCommandsList;
-        var numFrustums = frustumCommandsList.length;
-
         var clearGlobeDepth = environmentState.clearGlobeDepth;
         var useDepthPlane = environmentState.useDepthPlane;
-        var separatePrimitiveFramebuffer = environmentState.separatePrimitiveFramebuffer = (numFrustums > 1) && clearGlobeDepth && environmentState.useGlobeDepthFramebuffer;
         var clearDepth = scene._depthClearCommand;
         var clearStencil = scene._stencilClearCommand;
         var clearClassificationStencil = scene._classificationStencilClearCommand;
@@ -2209,6 +2204,9 @@ import View from './View.js';
 
         // Execute commands in each frustum in back to front order
         var j;
+        var frustumCommandsList = view.frustumCommandsList;
+        var numFrustums = frustumCommandsList.length;
+
         for (var i = 0; i < numFrustums; ++i) {
             var index = numFrustums - i - 1;
             var frustumCommands = frustumCommandsList[index];
@@ -2230,14 +2228,9 @@ import View from './View.js';
 
             var globeDepth = scene.debugShowGlobeDepth ? getDebugGlobeDepth(scene, index) : view.globeDepth;
 
-            if (separatePrimitiveFramebuffer) {
-                // Render to globe framebuffer in GLOBE pass
-                passState.framebuffer = globeDepth.framebuffer;
-            }
-
             var fb;
             if (scene.debugShowGlobeDepth && defined(globeDepth) && environmentState.useGlobeDepthFramebuffer) {
-                globeDepth.update(context, passState, view.viewport, scene._hdr, clearGlobeDepth);
+                globeDepth.update(context, passState, view.viewport);
                 globeDepth.clear(context, passState, scene._clearColorCommand.color);
                 fb = passState.framebuffer;
                 passState.framebuffer = globeDepth.framebuffer;
@@ -2277,11 +2270,6 @@ import View from './View.js';
                 if (useDepthPlane) {
                     depthPlane.execute(context, passState);
                 }
-            }
-
-            if (separatePrimitiveFramebuffer) {
-                // Render to primitive framebuffer in all other passes
-                passState.framebuffer = globeDepth.primitiveFramebuffer;
             }
 
             if (!environmentState.useInvertClassification || picking) {
@@ -2424,11 +2412,6 @@ import View from './View.js';
                 var pickDepth = scene._picking.getPickDepth(scene, index);
                 pickDepth.update(context, depthStencilTexture);
                 pickDepth.executeCopyDepth(context, passState);
-            }
-
-            if (separatePrimitiveFramebuffer) {
-                // Reset framebuffer
-                passState.framebuffer = globeDepth.framebuffer;
             }
 
             if (picking || !usePostProcessSelected) {
@@ -3015,7 +2998,7 @@ import View from './View.js';
         // Globe depth is copied for the pick pass to support picking batched geometries in GroundPrimitives.
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer = defined(view.globeDepth);
         if (useGlobeDepthFramebuffer) {
-            view.globeDepth.update(context, passState, view.viewport, scene._hdr, environmentState.clearGlobeDepth);
+            view.globeDepth.update(context, passState, view.viewport, scene._hdr);
             view.globeDepth.clear(context, passState, clearColor);
         }
 
@@ -3088,21 +3071,15 @@ import View from './View.js';
         var frameState = this._frameState;
         var environmentState = this._environmentState;
         var view = this._view;
-        var globeDepth = view.globeDepth;
 
         var useOIT = environmentState.useOIT;
         var useGlobeDepthFramebuffer = environmentState.useGlobeDepthFramebuffer;
         var usePostProcess = environmentState.usePostProcess;
 
         var defaultFramebuffer = environmentState.originalFramebuffer;
-        var globeFramebuffer = useGlobeDepthFramebuffer ? globeDepth.framebuffer : undefined;
+        var globeFramebuffer = useGlobeDepthFramebuffer ? view.globeDepth.framebuffer : undefined;
         var sceneFramebuffer = view.sceneFramebuffer.getFramebuffer();
         var idFramebuffer = view.sceneFramebuffer.getIdFramebuffer();
-
-        if (environmentState.separatePrimitiveFramebuffer) {
-            // Merge primitive framebuffer into globe framebuffer
-            globeDepth.executeMergeColor(context, passState);
-        }
 
         if (useOIT) {
             passState.framebuffer = usePostProcess ? sceneFramebuffer : defaultFramebuffer;
@@ -3125,7 +3102,7 @@ import View from './View.js';
 
         if (!useOIT && !usePostProcess && useGlobeDepthFramebuffer) {
             passState.framebuffer = defaultFramebuffer;
-            globeDepth.executeCopyColor(context, passState);
+            view.globeDepth.executeCopyColor(context, passState);
         }
 
         var useLogDepth = frameState.useLogDepth;

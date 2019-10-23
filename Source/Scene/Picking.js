@@ -671,7 +671,6 @@ import  View from './View.js';
                 deferred.resolve(result);
                 removeCallback();
             });
-            scene.requestRender();
         }).otherwise(function(error) {
             deferred.reject(error);
         });

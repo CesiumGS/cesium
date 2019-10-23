@@ -40,7 +40,7 @@ var modelCzml = [{
         "cartographicDegrees" : [-77, 37, 0]
     },
     "model": {
-        "gltf" : "../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb"
+        "gltf" : "../../../../Apps/SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb"
     }
 }];
 
@@ -64,11 +64,11 @@ function reset() {
 
 // We fetch the resources that will be embedded in the KMZ file.
 var daeModelPromise = Cesium.Resource.fetchBlob({
-    url: '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.dae'
+    url: '../../../../Apps/SampleData/models/CesiumMilkTruck/CesiumMilkTruck.dae'
 });
 
 var texturePromise = Cesium.Resource.fetchBlob({
-    url: '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.png'
+    url: '../../../../Apps/SampleData/models/CesiumMilkTruck/CesiumMilkTruck.png'
 });
 
 // This callback allows us to set the URL of the model to use

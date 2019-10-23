@@ -111,56 +111,6 @@ describe('DataSources/EllipsoidGeometryUpdater', function() {
         expect(updater.isDynamic).toBe(true);
     });
 
-    it('A time-varying innerRadii causes geometry to be dynamic', function() {
-        var entity = createBasicEllipsoid();
-        var updater = new EllipsoidGeometryUpdater(entity, scene);
-        entity.ellipsoid.innerRadii = new SampledProperty(Cartesian3);
-        entity.ellipsoid.innerRadii.addSample(time, new Cartesian3(1, 2, 3));
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-
-        expect(updater.isDynamic).toBe(true);
-    });
-
-    it('A time-varying minimumClock causes geometry to be dynamic', function() {
-        var entity = createBasicEllipsoid();
-        var updater = new EllipsoidGeometryUpdater(entity, scene);
-        entity.ellipsoid.minimumClock = new SampledProperty(Number);
-        entity.ellipsoid.minimumClock.addSample(time, 1);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-
-        expect(updater.isDynamic).toBe(true);
-    });
-
-    it('A time-varying maximumClock causes geometry to be dynamic', function() {
-        var entity = createBasicEllipsoid();
-        var updater = new EllipsoidGeometryUpdater(entity, scene);
-        entity.ellipsoid.maximumClock = new SampledProperty(Number);
-        entity.ellipsoid.maximumClock.addSample(time, 1);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-
-        expect(updater.isDynamic).toBe(true);
-    });
-
-    it('A time-varying minimumCone causes geometry to be dynamic', function() {
-        var entity = createBasicEllipsoid();
-        var updater = new EllipsoidGeometryUpdater(entity, scene);
-        entity.ellipsoid.minimumCone = new SampledProperty(Number);
-        entity.ellipsoid.minimumCone.addSample(time, 1);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-
-        expect(updater.isDynamic).toBe(true);
-    });
-
-    it('A time-varying maximumCone causes geometry to be dynamic', function() {
-        var entity = createBasicEllipsoid();
-        var updater = new EllipsoidGeometryUpdater(entity, scene);
-        entity.ellipsoid.maximumCone = new SampledProperty(Number);
-        entity.ellipsoid.maximumCone.addSample(time, 1);
-        updater._onEntityPropertyChanged(entity, 'ellipsoid');
-
-        expect(updater.isDynamic).toBe(true);
-    });
-
     it('Creates geometry with expected properties', function() {
         var options = {
             radii : new Cartesian3(1, 2, 3),

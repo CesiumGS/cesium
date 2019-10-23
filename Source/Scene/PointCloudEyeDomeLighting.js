@@ -1,4 +1,4 @@
-import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
 import Color from '../Core/Color.js';
 import defined from '../Core/defined.js';
 import destroyObject from '../Core/destroyObject.js';
@@ -111,7 +111,7 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
         processor._depthTexture = depthTexture;
     }
 
-    var distanceAndEdlStrengthScratch = new Cartesian2();
+    var distancesAndEdlStrengthScratch = new Cartesian3();
 
     function createCommands(processor, context) {
         var blendFS = PointCloudEyeDomeLightingShader;
@@ -123,10 +123,11 @@ import PointCloudEyeDomeLightingShader from '../Shaders/PostProcessStages/PointC
             u_pointCloud_depthGBuffer : function() {
                 return processor._depthGBuffer;
             },
-            u_distanceAndEdlStrength : function() {
-                distanceAndEdlStrengthScratch.x = processor._radius;
-                distanceAndEdlStrengthScratch.y = processor._strength;
-                return distanceAndEdlStrengthScratch;
+            u_distancesAndEdlStrength : function() {
+                distancesAndEdlStrengthScratch.x = processor._radius / context.drawingBufferWidth;
+                distancesAndEdlStrengthScratch.y = processor._radius / context.drawingBufferHeight;
+                distancesAndEdlStrengthScratch.z = processor._strength;
+                return distancesAndEdlStrengthScratch;
             }
         };
 

@@ -32,7 +32,6 @@ import Property from './Property.js';
 
     var offsetScratch = new Cartesian3();
     var radiiScratch = new Cartesian3();
-    var innerRadiiScratch = new Cartesian3();
     var scratchColor = new Color();
     var unitSphere = new Cartesian3(1, 1, 1);
 
@@ -84,8 +83,8 @@ import Property from './Property.js';
          * @memberof EllipsoidGeometryUpdater.prototype
          * @readonly
          */
-        terrainOffsetProperty : {
-            get : function() {
+        terrainOffsetProperty: {
+            get: function() {
                 return this._terrainOffsetProperty;
             }
         }
@@ -118,7 +117,7 @@ import Property from './Property.js';
             show : show,
             distanceDisplayCondition : distanceDisplayConditionAttribute,
             color : undefined,
-            offset : undefined
+            offset: undefined
         };
 
         if (this._materialProperty instanceof ColorMaterialProperty) {
@@ -195,14 +194,9 @@ import Property from './Property.js';
         return !entity.position.isConstant || //
                !Property.isConstant(entity.orientation) || //
                !ellipsoid.radii.isConstant || //
-               !Property.isConstant(ellipsoid.innerRadii) || //
                !Property.isConstant(ellipsoid.stackPartitions) || //
                !Property.isConstant(ellipsoid.slicePartitions) || //
                !Property.isConstant(ellipsoid.outlineWidth) || //
-               !Property.isConstant(ellipsoid.minimumClock) || //
-               !Property.isConstant(ellipsoid.maximumClock) || //
-               !Property.isConstant(ellipsoid.minimumCone) || //
-               !Property.isConstant(ellipsoid.maximumCone) || //
                !Property.isConstant(ellipsoid.subdivisions);
     };
 
@@ -288,11 +282,6 @@ import Property from './Property.js';
         var material = MaterialProperty.getValue(time, defaultValue(ellipsoid.material, defaultMaterial), this._material);
 
         // Check properties that could trigger a primitive rebuild.
-        var innerRadii = Property.getValueOrUndefined(ellipsoid.innerRadii, time, innerRadiiScratch);
-        var minimumClock = Property.getValueOrUndefined(ellipsoid.minimumClock, time);
-        var maximumClock = Property.getValueOrUndefined(ellipsoid.maximumClock, time);
-        var minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, time);
-        var maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, time);
         var stackPartitions = Property.getValueOrUndefined(ellipsoid.stackPartitions, time);
         var slicePartitions = Property.getValueOrUndefined(ellipsoid.slicePartitions, time);
         var subdivisions = Property.getValueOrUndefined(ellipsoid.subdivisions, time);
@@ -318,10 +307,7 @@ import Property from './Property.js';
         //For the radii, we use unit sphere and then deform it with a scale matrix.
         var rebuildPrimitives = !in3D || this._lastSceneMode !== sceneMode || !defined(this._primitive) || //
                                 options.stackPartitions !== stackPartitions || options.slicePartitions !== slicePartitions || //
-                                defined(innerRadii) && !Cartesian3.equals(options.innerRadii !== innerRadii) || options.minimumClock !== minimumClock || //
-                                options.maximumClock !== maximumClock || options.minimumCone !== minimumCone || //
-                                options.maximumCone !== maximumCone || options.subdivisions !== subdivisions || //
-                                this._lastOutlineWidth !== outlineWidth || options.offsetAttribute !== offsetAttribute;
+                                options.subdivisions !== subdivisions || this._lastOutlineWidth !== outlineWidth || options.offsetAttribute !== offsetAttribute;
 
         if (rebuildPrimitives) {
             var primitives = this._primitives;
@@ -336,21 +322,19 @@ import Property from './Property.js';
             options.slicePartitions = slicePartitions;
             options.subdivisions = subdivisions;
             options.offsetAttribute = offsetAttribute;
-            options.radii = Cartesian3.clone(in3D ? unitSphere : radii, options.radii);
-            if (defined(innerRadii)) {
-                if (in3D) {
-                    var mag = Cartesian3.magnitude(radii);
-                    options.innerRadii = Cartesian3.fromElements(innerRadii.x / mag, innerRadii.y / mag, innerRadii.z / mag, options.innerRadii);
-                } else {
-                    options.innerRadii = Cartesian3.clone(innerRadii, options.innerRadii);
-                }
+            options.radii = in3D ? unitSphere : radii;
+            var innerRadii = Property.getValueOrDefault(ellipsoid.innerRadii, time, radii, new Cartesian3());
+            if (in3D) {
+               var mag = Cartesian3.magnitude(radii);
+               var innerRadiiUnit = new Cartesian3(innerRadii.x/mag, innerRadii.y/mag, innerRadii.z/mag);
+               options.innerRadii = innerRadiiUnit;
             } else {
-                options.innerRadii = undefined;
+               options.innerRadii = innerRadii;
             }
-            options.minimumClock = minimumClock;
-            options.maximumClock = maximumClock;
-            options.minimumCone = minimumCone;
-            options.maximumCone = maximumCone;
+            options.minimumClock = Property.getValueOrUndefined(ellipsoid.minimumClock, time);
+            options.maximumClock = Property.getValueOrUndefined(ellipsoid.maximumClock, time);
+            options.minimumCone = Property.getValueOrUndefined(ellipsoid.minimumCone, time);
+            options.maximumCone = Property.getValueOrUndefined(ellipsoid.maximumCone, time);
 
             var appearance = new MaterialAppearance({
                 material : material,
@@ -431,7 +415,7 @@ import Property from './Property.js';
 
             if (!Cartesian3.equals(offset, this._lastOffset)) {
                 attributes.offset = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
-                outlineAttributes.offset = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
+                outlineAttributes.offset  = OffsetGeometryInstanceAttribute.toValue(offset, attributes.offset);
                 Cartesian3.clone(offset, this._lastOffset);
             }
         }

@@ -13,7 +13,6 @@ import Transforms from '../Core/Transforms.js';
      *
      * @alias PositionProperty
      * @constructor
-     * @abstract
      *
      * @see CompositePositionProperty
      * @see ConstantPositionProperty

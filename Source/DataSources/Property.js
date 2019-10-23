@@ -9,7 +9,6 @@ import DeveloperError from '../Core/DeveloperError.js';
      *
      * @alias Property
      * @constructor
-     * @abstract
      *
      * @see CompositeProperty
      * @see ConstantProperty

@@ -35,6 +35,7 @@ var tmp = {};
 // https://github.com/topojson/topojson Version 3.0.2. Copyright 2017 Mike Bostock.
 (function (global, factory) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
+	typeof define === 'function' && define.amd ? define(['exports'], factory) :
 	(factory((global.topojson = global.topojson || {})));
 }(tmp, (function (exports) { 'use strict';
 
