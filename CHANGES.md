@@ -6,6 +6,14 @@ Change Log
 ##### Additions :tada:
 * Extension of the use cases to classify a tileset with a B3DM tileset. [#8274](https://github.com/AnalyticalGraphicsInc/cesium/pull/8274)
 
+### 1.63 - 2019-11-01
+
+##### Fixes :wrench:
+
+* Fixed a bug where `scene.sampleHeightMostDetailed` and `scene.clampToHeightMostDetailed` would not resolve in request render mode. [#8281](https://github.com/AnalyticalGraphicsInc/cesium/issues/8281)
+* Fixed seam artifacts when log depth is disabled, `scene.globe.depthTestAgainstTerrain` is false, and primitives are under the globe. [#8205](https://github.com/AnalyticalGraphicsInc/cesium/pull/8205)
+* Fix dynamic ellipsoids using `innerRadii`, `minimumClock`, `maximumClock`, `minimumCone` or `maximumCone`. [#8277](https://github.com/AnalyticalGraphicsInc/cesium/pull/8277)
+
 ### 1.62 - 2019-10-01
 
 ##### Deprecated :hourglass_flowing_sand:
