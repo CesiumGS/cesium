@@ -812,7 +812,7 @@ import DracoLoader from './DracoLoader.js';
                 indices = new Uint32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint32Array.BYTES_PER_ELEMENT);
             }
 
-            const componentsPerAttribute_Position = (defined(positions.componentsPerAttribute)) ? positions.componentsPerAttribute : numberOfComponentsForType(positions.type);
+            var componentsPerAttribute_Position = (defined(positions.componentsPerAttribute)) ? positions.componentsPerAttribute : numberOfComponentsForType(positions.type);
             positionsBuffer = arraySlice(positionsBuffer,offset.positions,offset.positions+count*componentsPerAttribute_Position);
             vertexBatchIds = arraySlice(vertexBatchIds,offset.batchIds,offset.batchIds+count*numberOfComponentsForType(batchIDAccessor.type));
             indices = arraySlice(indices, offset.indices, offset.indices + count*numberOfComponentsForType(ix.type));
