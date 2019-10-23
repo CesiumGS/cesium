@@ -47,6 +47,7 @@ module.exports = {
         'no-useless-escape': 'off',
         'no-use-before-define': ['error', 'nofunc'],
         'quotes': ['error', 'single', {avoidEscape: true}],
+        'require-atomic-updates': 'off',
         'semi': 'error',
         'strict': 'error',
         'wrap-iife': ['error', 'any']
