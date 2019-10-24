@@ -986,10 +986,13 @@ define([
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
                 var asset = tilesetJson.asset;
                 that._asset = asset;
-                that._tilingScheme = tilesetJson.tilingScheme;
+                var tilingScheme = tilesetJson.tilingScheme;
+                that._tilingScheme = tilingScheme;
                 that._properties = tilesetJson.properties;
-                that._geometricError = tilesetJson.geometricError * 2;
-                that._geometricErrorContentRoot = tilesetJson.geometricError;
+                // that._geometricError = tilesetJson.geometricError * 2;
+                // that._geometricErrorContentRoot = tilesetJson.geometricError;
+                that._geometricError = tilesetJson.geometricError;
+                that._geometricErrorContentRoot = tilingScheme.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
@@ -2274,7 +2277,7 @@ define([
         var hasSubtree = onLastSubtreeLevel && level !== tilesetLastLevel;
         var uriSubtree = hasSubtree ? this._availabilityFolder + uri : undefined;
         var levelDiff = level - this._startLevel;
-        var base = isOct ? 2 : 2;
+        var base = 2;
         var gerrorDenom = isOct ? Math.pow(base, levelDiff) : Math.pow(base, levelDiff);
         var contentRootGeometricError = this._geometricErrorContentRoot;
         var childTileInfo = {
