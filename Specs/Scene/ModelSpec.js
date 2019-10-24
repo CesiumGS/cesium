@@ -3071,7 +3071,7 @@ describe('Scene/Model', function() {
             };
 
             expect(sceneArgs).toRenderAndCall(function(rgba) {
-                expect(rgba).toEqualEpsilon([153, 6, 5, 255], 5);
+                expect(rgba).toEqualEpsilon([119, 6, 5, 255], 5);
             });
 
             model.imageBasedLightingFactor = new Cartesian2(0.0, 0.0);
