@@ -3,8 +3,14 @@ Change Log
 
 ### 1.63 - 2019-11-01
 
-##### Fixes :wrench:
+##### Deprecated :hourglass_flowing_sand:
+* `OrthographicFrustum.getPixelDimensions`, `OrthographicOffCenterFrustum.getPixelDimensions`, `PerspectiveFrustum.getPixelDimensions`, and `PerspectiveOffCenterFrustum.getPixelDimensions` now take a `pixelRatio` argument before the `result` argument. The previous function definition will no longer work in 1.65. [#8237](https://github.com/AnalyticalGraphicsInc/cesium/pull/8237)
 
+##### Additions :tada:
+* Added `pixelRatio` parameter to `OrthographicFrustum.getPixelDimensions`, `OrthographicOffCenterFrustum.getPixelDimensions`, `PerspectiveFrustum.getPixelDimensions`, and `PerspectiveOffCenterFrustum.getPixelDimensions`. Pass in `scene.pixelRatio` for dimensions in CSS pixel units or `1.0` for dimensions in native device pixel units. [#8237](https://github.com/AnalyticalGraphicsInc/cesium/pull/8237)
+
+##### Fixes :wrench:
+* Fixed css pixel usage for polylines, point clouds, models, primitives, and post-processing. [#8113](https://github.com/AnalyticalGraphicsInc/cesium/issues/8113)
 * Fixed a bug where `scene.sampleHeightMostDetailed` and `scene.clampToHeightMostDetailed` would not resolve in request render mode. [#8281](https://github.com/AnalyticalGraphicsInc/cesium/issues/8281)
 * Fixed seam artifacts when log depth is disabled, `scene.globe.depthTestAgainstTerrain` is false, and primitives are under the globe. [#8205](https://github.com/AnalyticalGraphicsInc/cesium/pull/8205)
 * Fix dynamic ellipsoids using `innerRadii`, `minimumClock`, `maximumClock`, `minimumCone` or `maximumCone`. [#8277](https://github.com/AnalyticalGraphicsInc/cesium/pull/8277)
