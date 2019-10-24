@@ -15,5 +15,11 @@ if (__karma__.config.args) {
     release = __karma__.config.args[4];
 }
 
+if (release) {
+    window.CESIUM_BASE_URL = 'base/Build/Cesium';
+} else {
+    window.CESIUM_BASE_URL = 'base/Source';
+}
+
 jasmine.DEFAULT_TIMEOUT_INTERVAL = 30000;
 customizeJasmine(jasmine.getEnv(), included, excluded, webglValidation, webglStub, release);
