@@ -1111,11 +1111,13 @@ import DracoLoader from './DracoLoader.js';
         }
 
         if (show && !this._ignoreCommands) {
-            for (var index = 0; index < this._primitive.length; index++) {
-                var primitive = this._primitive.get(index);
-                primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
-                primitive.debugWireframe = this.debugWireframe;
-                primitive.update(frameState);
+            if (defined(this._primitive)){
+                for (var index = 0; index < this._primitive.length; index++) {
+                    var primitive = this._primitive.get(index);
+                    primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
+                    primitive.debugWireframe = this.debugWireframe;
+                    primitive.update(frameState);
+                }
             }
         }
     };
