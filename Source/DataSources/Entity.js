@@ -91,7 +91,7 @@ import WallGraphics from './WallGraphics.js';
      * @param {RectangleGraphics} [options.rectangle] A rectangle to associate with this entity.
      * @param {WallGraphics} [options.wall] A wall to associate with this entity.
      *
-     * @see {@link https://https://cesium.com/docs/tutorials/creating-entities/|Creating Entities}
+     * @see {@link https://cesium.com/docs/tutorials/creating-entities/|Creating Entities}
      */
     function Entity(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

@@ -27,7 +27,7 @@ Everyone is welcome to contribute to CesiumJS!
 In addition to contributing core CesiumJS code, we appreciate many types of contributions:
 
 * Being active on the [Cesium forum](https://groups.google.com/forum/?hl=en#!forum/cesium-dev) by answering questions and providing input on Cesium's direction.
-* Showcasing your Cesium apps on [Cesium blog](https://cesium.com/blog/categories/userstories/).  Contact [Sarah Chow](https://cesium.com/team/SarahChow/), sarah@cesium.com.
+* Showcasing your Cesium apps on [Cesium blog](https://cesium.com/blog/categories/userstories/).  Contact us at hello@cesium.com.
 * Writing tutorials, creating examples, and improving the reference documentation.  See the issues labeled [doc](https://github.com/AnalyticalGraphicsInc/cesium/labels/doc).
 * Submitting issues as [described above](#submitting-an-issue).
 * Triaging issues.  Browse the [issues](https://github.com/AnalyticalGraphicsInc/cesium/issues) and comment on issues that are no longer reproducible or on issues which you have additional information.
