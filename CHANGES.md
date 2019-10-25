@@ -3,8 +3,12 @@ Change Log
 
 ### 1.63 - 2019-11-01
 
-##### Deprecated :hourglass_flowing_sand:
-* `OrthographicFrustum.getPixelDimensions`, `OrthographicOffCenterFrustum.getPixelDimensions`, `PerspectiveFrustum.getPixelDimensions`, and `PerspectiveOffCenterFrustum.getPixelDimensions` now take a `pixelRatio` argument before the `result` argument. The previous function definition will no longer work in 1.65. [#8237](https://github.com/AnalyticalGraphicsInc/cesium/pull/8237)
+We’ve consolidated all of our website content from cesiumjs.org and cesium.com into one home on cesium.com.  Here’s where you can now find:
+  * [Sandcastle](https://sandcastle.cesium.com) - `https://sandcastle.cesium.com`
+  * [API Docs](https://cesium.com/docs/cesiumjs-ref-doc/) - `https://cesium.com/docs/cesiumjs-ref-doc/`
+  * [Downloads](https://cesium.com/downloads/) - `https://cesium.com/downloads/`
+  * Hosted releases can be found at `https://cesium.com/downloads/cesiumjs/releases/<CesiumJS Version Number>/Build/Cesium/Cesium.js`
+  * See our [Blog post](https://cesium.com/blog/2019/10/15/cesiumjs-migration/) for more information.
 
 ##### Additions :tada:
 * Added full UTF-8 support to labels, greatly improving support for non-latin alphabets and emoji. [#7280](https://github.com/AnalyticalGraphicsInc/cesium/pull/7280)
@@ -15,6 +19,10 @@ Change Log
 * Fixed a bug where `scene.sampleHeightMostDetailed` and `scene.clampToHeightMostDetailed` would not resolve in request render mode. [#8281](https://github.com/AnalyticalGraphicsInc/cesium/issues/8281)
 * Fixed seam artifacts when log depth is disabled, `scene.globe.depthTestAgainstTerrain` is false, and primitives are under the globe. [#8205](https://github.com/AnalyticalGraphicsInc/cesium/pull/8205)
 * Fix dynamic ellipsoids using `innerRadii`, `minimumClock`, `maximumClock`, `minimumCone` or `maximumCone`. [#8277](https://github.com/AnalyticalGraphicsInc/cesium/pull/8277)
+
+##### Deprecated :hourglass_flowing_sand:
+* `OrthographicFrustum.getPixelDimensions`, `OrthographicOffCenterFrustum.getPixelDimensions`, `PerspectiveFrustum.getPixelDimensions`, and `PerspectiveOffCenterFrustum.getPixelDimensions` now take a `pixelRatio` argument before the `result` argument. The previous function definition will no longer work in 1.65. [#8237](https://github.com/AnalyticalGraphicsInc/cesium/pull/8237)
+
 
 ### 1.62 - 2019-10-01
 

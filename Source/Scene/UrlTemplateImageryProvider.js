@@ -144,7 +144,7 @@ import ImageryProvider from './ImageryProvider.js';
      * @example
      * // Access Natural Earth II imagery, which uses a TMS tiling scheme and Geographic (EPSG:4326) project
      * var tms = new Cesium.UrlTemplateImageryProvider({
-     *     url : 'https://cesiumjs.org/tilesets/imagery/naturalearthii/{z}/{x}/{reverseY}.jpg',
+     *     url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII') + '/{z}/{x}/{reverseY}.jpg',
      *     credit : '© Analytical Graphics, Inc.',
      *     tilingScheme : new Cesium.GeographicTilingScheme(),
      *     maximumLevel : 5

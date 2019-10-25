@@ -226,7 +226,7 @@ import Property from './Property.js';
         },
         /**
          * Gets a value indicating if the geometry is time-varying.
-         * If true, all visualization is delegated to the {@link DynamicGeometryUpdater}
+         * If true, all visualization is delegated to a DynamicGeometryUpdater
          * returned by GeometryUpdater#createDynamicUpdater.
          * @memberof GeometryUpdater.prototype
          *

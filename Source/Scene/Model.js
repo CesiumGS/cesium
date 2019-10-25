@@ -219,7 +219,7 @@ import ShadowMode from './ShadowMode.js';
      *
      * @see Model.fromGltf
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle Models Demo}
      */
     function Model(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -641,8 +641,7 @@ import ShadowMode from './ShadowMode.js';
         /**
          * When <code>true</code>, the glTF JSON is not stored with the model once the model is
          * loaded (when {@link Model#ready} is <code>true</code>).  This saves memory when
-         * geometry, textures, and animations are embedded in the .gltf file, which is the
-         * default for the {@link https://cesiumjs.org/convertmodel.html|Cesium model converter}.
+         * geometry, textures, and animations are embedded in the .gltf file.
          * This is especially useful for cases like 3D buildings, where each .gltf model is unique
          * and caching the glTF JSON is not effective.
          *
@@ -1100,7 +1099,7 @@ import ShadowMode from './ShadowMode.js';
          *
          * @memberof Model.prototype
          *
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {Number}
          * @default 0.2
          */
@@ -1127,13 +1126,13 @@ import ShadowMode from './ShadowMode.js';
          * </p>
          *
          * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
-         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
          * supplied to {@link Model#specularEnvironmentMaps}.
          *
          * @memberof Model.prototype
          *
          * @type {Cartesian3[]}
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
          */
         sphericalHarmonicCoefficients : {
@@ -1158,7 +1157,7 @@ import ShadowMode from './ShadowMode.js';
          * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
          *
          * @memberof Model.prototype
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {String}
          * @see Model#sphericalHarmonicCoefficients
          */
@@ -1265,7 +1264,7 @@ import ShadowMode from './ShadowMode.js';
      * @param {Boolean} [options.asynchronous=true] Determines if model WebGL resource creation will be spread out over several frames or block until completion once all glTF files are loaded.
      * @param {Boolean} [options.clampAnimations=true] Determines if the model's animations should hold a pose over frames where no keyframes are specified.
      * @param {ShadowMode} [options.shadows=ShadowMode.ENABLED] Determines whether the model casts or receives shadows from each light source.
-     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each {@link DrawCommand} in the model.
+     * @param {Boolean} [options.debugShowBoundingVolume=false] For debugging only. Draws the bounding sphere for each draw command in the model.
      * @param {Boolean} [options.debugWireframe=false] For debugging only. Draws the model in wireframe.
      * @param {HeightReference} [options.heightReference=HeightReference.NONE] Determines how the model is drawn relative to terrain.
      * @param {Scene} [options.scene] Must be passed in for models that use the height reference property.
@@ -3905,7 +3904,7 @@ import ShadowMode from './ShadowMode.js';
 
     function updatePerNodeShow(model) {
         // Totally not worth it, but we could optimize this:
-        // http://blogs.agi.com/insight3d/index.php/2008/02/13/deletion-in-bounding-volume-hierarchies/
+        // http://help.agi.com/AGIComponents/html/BlogDeletionInBoundingVolumeHierarchies.htm
 
         var rootNodes = model._runtime.rootNodes;
         var length = rootNodes.length;

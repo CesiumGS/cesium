@@ -783,7 +783,7 @@ import VertexFormat from './VertexFormat.js';
      * @see CorridorGeometry.createGeometry
      * @see Packable
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Corridor.html|Cesium Sandcastle Corridor Demo}
      *
      * @example
      * var corridor = new Cesium.CorridorGeometry({

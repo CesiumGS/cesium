@@ -47,7 +47,7 @@ import WallGeometryLibrary from './WallGeometryLibrary.js';
      * @see WallGeometry#createGeometry
      * @see WallGeometry#fromConstantHeight
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
      *
      * @example
      * // create a wall that spans from ground level to 10000 meters

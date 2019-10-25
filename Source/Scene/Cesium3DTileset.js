@@ -673,11 +673,11 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
          * </p>
          *
          * These values can be obtained by preprocessing the environment map using the <code>cmgen</code> tool of
-         * {@link https://github.com/google/filament/releases | Google's Filament project}. This will also generate a KTX file that can be
+         * {@link https://github.com/google/filament/releases|Google's Filament project}. This will also generate a KTX file that can be
          * supplied to {@link Cesium3DTileset#specularEnvironmentMaps}.
          *
          * @type {Cartesian3[]}
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @see {@link https://graphics.stanford.edu/papers/envmap/envmap.pdf|An Efficient Representation for Irradiance Environment Maps}
          */
         this.sphericalHarmonicCoefficients = options.sphericalHarmonicCoefficients;
@@ -685,7 +685,7 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
         /**
          * A URL to a KTX file that contains a cube map of the specular lighting and the convoluted specular mipmaps.
          *
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Image-Based Lighting.html|Sandcastle Image Based Lighting Demo}
          * @type {String}
          * @see Cesium3DTileset#sphericalHarmonicCoefficients
          */
