@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.6x - 2019-xx-xx
+
+##### Additions :tada:
+* Extension of the use cases to classify a tileset with a B3DM tileset. [#8274](https://github.com/AnalyticalGraphicsInc/cesium/pull/8274)
+
 ### 1.63 - 2019-11-01
 
 ##### Deprecated :hourglass_flowing_sand:

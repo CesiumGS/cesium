@@ -32,7 +32,8 @@ import processPbrMaterials from './processPbrMaterials.js';
 import SceneMode from './SceneMode.js';
 import Vector3DTileBatch from './Vector3DTileBatch.js';
 import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
-
+import PrimitiveCollection from './PrimitiveCollection.js';
+import DracoLoader from './DracoLoader.js';
     var boundingSphereCartesian3Scratch = new Cartesian3();
 
     var ModelState = ModelUtility.ModelState;
@@ -58,11 +59,8 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
      *
      * @exception {RuntimeError} Only binary glTF is supported.
      * @exception {RuntimeError} Buffer data must be embedded in the binary glTF.
-     * @exception {RuntimeError} Only one node is supported for classification and it must have a mesh.
-     * @exception {RuntimeError} Only one mesh is supported when using b3dm for classification.
-     * @exception {RuntimeError} Only one primitive per mesh is supported when using b3dm for classification.
-     * @exception {RuntimeError} The mesh must have a position attribute.
-     * @exception {RuntimeError} The mesh must have a batch id attribute.
+     * @exception {RuntimeError} The mesh primitive must have a position attribute.
+     * @exception {RuntimeError} The mesh primitive must have a batch id attribute.
      */
     function ClassificationModel(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -89,33 +87,20 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
             }
         });
 
-        var gltfNodes = gltf.nodes;
-        var gltfMeshes = gltf.meshes;
+        ForEach.mesh(gltf, function(mesh) {
+            ForEach.meshPrimitive(mesh,function(primitive,primitiveId) {
+                var gltfPositionAttribute = primitive.attributes.POSITION;
+                if (!defined(gltfPositionAttribute)) {
+                    throw new RuntimeError('The mesh primitive '+primitiveId+' must have a position attribute.');
+                }
 
-        var gltfNode = gltfNodes[0];
-        var meshId = gltfNode.mesh;
-        if (gltfNodes.length !== 1 || !defined(meshId)) {
-            throw new RuntimeError('Only one node is supported for classification and it must have a mesh.');
-        }
+                var gltfBatchIdAttribute = primitive.attributes._BATCHID;
+                if (!defined(gltfBatchIdAttribute)) {
+                    throw new RuntimeError('The mesh primitive '+primitiveId+' must have a batch id attribute.');
+                }
 
-        if (gltfMeshes.length !== 1) {
-            throw new RuntimeError('Only one mesh is supported when using b3dm for classification.');
-        }
-
-        var gltfPrimitives = gltfMeshes[0].primitives;
-        if (gltfPrimitives.length !== 1) {
-            throw new RuntimeError('Only one primitive per mesh is supported when using b3dm for classification.');
-        }
-
-        var gltfPositionAttribute = gltfPrimitives[0].attributes.POSITION;
-        if (!defined(gltfPositionAttribute)) {
-            throw new RuntimeError('The mesh must have a position attribute.');
-        }
-
-        var gltfBatchIdAttribute = gltfPrimitives[0].attributes._BATCHID;
-        if (!defined(gltfBatchIdAttribute)) {
-            throw new RuntimeError('The mesh must have a batch id attribute.');
-        }
+            });
+        });
 
         this._gltf = gltf;
 
@@ -196,7 +181,10 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         this._mode = undefined;
         this._dirty = false;                       // true when the model was transformed this frame
 
-        this._nodeMatrix = new Matrix4();
+        this._decodedData = {};
+        this._nodeMatrix=[];
+        this._primitiveNodeIds=[];
+
         this._primitive = undefined;
 
         this._extensionsUsed = undefined;     // Cached used glTF extensions
@@ -204,7 +192,6 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         this._quantizedUniforms = undefined;  // Quantized uniforms for WEB3D_quantized_attributes
 
         this._buffers = {};
-        this._vertexArray = undefined;
         this._shaderProgram = undefined;
         this._uniformMap = undefined;
 
@@ -455,6 +442,9 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         // through glTF accessors to create the bufferview's index buffer.
         ForEach.accessor(model.gltf, function(accessor) {
             var bufferViewId = accessor.bufferView;
+            if (!defined(bufferViewId)) {
+                return;
+            }
             var bufferView = bufferViews[bufferViewId];
 
             if ((bufferView.target === WebGLConstants.ELEMENT_ARRAY_BUFFER) && !defined(indexBufferIds[bufferViewId])) {
@@ -471,6 +461,10 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
+        // Use bufferView created at runtime
+        if (!defined(bufferView)) {
+            bufferView = loadResources.createdBufferViews[bufferViewId];
+        }
         var vertexBuffer = loadResources.getBuffer(bufferView);
         model._buffers[bufferViewId] = vertexBuffer;
         model._geometryByteLength += vertexBuffer.byteLength;
@@ -480,6 +474,10 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         var loadResources = model._loadResources;
         var bufferViews = model.gltf.bufferViews;
         var bufferView = bufferViews[bufferViewId];
+        // Use bufferView created at runtime
+        if (!defined(bufferView)) {
+            bufferView = loadResources.createdBufferViews[bufferViewId];
+        }
         var indexBuffer = {
             typedArray : loadResources.getBuffer(bufferView),
             indexDatatype : componentType
@@ -508,11 +506,22 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         }
     }
 
-    function modifyShaderForQuantizedAttributes(shader, model) {
-        var primitive = model.gltf.meshes[0].primitives[0];
+    function modifyShaderForQuantizedAttributes(shader, model,meshId,primitiveId) {
+        var primitive = model.gltf.meshes[meshId].primitives[primitiveId];
         var result = ModelUtility.modifyShaderForQuantizedAttributes(model.gltf, primitive, shader);
         model._quantizedUniforms = result.uniforms;
         return result.shader;
+    }
+
+    function modifyShaderForDracoQuantizedAttributes(shader, model,meshId,primitiveId) {
+        var primitive = model.gltf.meshes[meshId].primitives[primitiveId];
+        var decodedData = model._decodedData[meshId+'.primitive.'+primitiveId];
+        if (!defined(decodedData)) {
+            return shader;
+        }
+        var result = ModelUtility.modifyShaderForDracoQuantizedAttributes(model.gltf, primitive, shader, decodedData.attributes);
+        return result.shader;
+
     }
 
     function modifyShader(shader, callback) {
@@ -573,10 +582,6 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
             '    czm_writeDepthClampedToFarPlane();\n' +
             '}\n';
 
-        if (model.extensionsUsed.WEB3D_quantized_attributes) {
-            vs = modifyShaderForQuantizedAttributes(vs, model);
-        }
-
         var drawVS = modifyShader(vs, model._vertexShaderLoaded);
         var drawFS = modifyShader(fs, model._classificationShaderLoaded);
 
@@ -597,9 +602,9 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         };
     }
 
-    function createVertexArray(model) {
+    function createVertexArray(model,meshId,primitiveId) {
         var loadResources = model._loadResources;
-        if (!loadResources.finishedBuffersCreation() || defined(model._vertexArray)) {
+        if (!loadResources.finishedBuffersCreation() ) {
             return;
         }
 
@@ -607,16 +612,37 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var meshes = gltf.meshes;
-        var primitives = meshes[0].primitives;
+        var primitives = meshes[meshId].primitives;
 
-        var primitive = primitives[0];
+        var primitive = primitives[primitiveId];
         var attributeLocations = getAttributeLocations();
         var attributes = {};
+
+        //Retreive decoded data in case of Draco encoded primitives.
+        var decodedData = model._decodedData[meshId + '.primitive.' + primitiveId];
+
         ForEach.meshPrimitiveAttribute(primitive, function(accessorId, attributeName) {
             // Skip if the attribute is not used by the material, e.g., because the asset
             // was exported with an attribute that wasn't used and the asset wasn't optimized.
             var attributeLocation = attributeLocations[attributeName];
             if (defined(attributeLocation)) {
+                if (defined(decodedData)) {
+                    var decodedAttributes = decodedData.attributes;
+                    if (decodedAttributes.hasOwnProperty(attributeName)) {
+                        var decodedAttribute = decodedAttributes[attributeName];
+                        attributes[attributeName]={
+                            index: attributeLocation,
+                            vertexBuffer: rendererBuffers[decodedAttribute.bufferView],
+                            componentsPerAttribute: decodedAttribute.componentsPerAttribute,
+                            componentDatatype: decodedAttribute.componentDatatype,
+                            normalize: decodedAttribute.normalized,
+                            offsetInBytes: decodedAttribute.byteOffset,
+                            strideInBytes: decodedAttribute.byteStride
+                        };
+
+                        return;
+                    }
+                }
                 var a = accessors[accessorId];
                 attributes[attributeName] = {
                     index: attributeLocation,
@@ -632,9 +658,14 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         var indexBuffer;
         if (defined(primitive.indices)) {
             var accessor = accessors[primitive.indices];
-            indexBuffer = rendererBuffers[accessor.bufferView];
+            var bufferView = accessor.bufferView;
+            // Use buffer of previously decoded draco geometry
+            if (defined(decodedData)) {
+                bufferView = decodedData.bufferView;
+            }
+            indexBuffer = rendererBuffers[bufferView];
         }
-        model._vertexArray = {
+        return {
             attributes : attributes,
             indexBuffer : indexBuffer
         };
@@ -678,6 +709,10 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         return ModelUtility.createUniformsForQuantizedAttributes(model.gltf, primitive, model._quantizedUniforms);
     }
 
+    function createUniformsForDracoQuantizedAttributes(decodedData) {
+        return ModelUtility.createUniformsForDracoQuantizedAttributes(decodedData.attributes);
+    }
+
     function triangleCountFromPrimitiveIndices(primitive, indicesCount) {
         switch (primitive.mode) {
             case PrimitiveType.TRIANGLES:
@@ -690,150 +725,179 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         }
     }
 
-    function createPrimitive(model) {
+    function createPrimitive(model,nodeId) {
         var batchTable = model._batchTable;
 
         var uniformMap = model._uniformMap;
-        var vertexArray = model._vertexArray;
 
         var gltf = model.gltf;
         var accessors = gltf.accessors;
         var gltfMeshes = gltf.meshes;
-        var primitive = gltfMeshes[0].primitives[0];
-        var ix = accessors[primitive.indices];
+        var nodes = gltf.nodes;
+        var meshId = nodes[nodeId].mesh;
+        var mesh = gltfMeshes[meshId];
 
-        var positionAccessor = primitive.attributes.POSITION;
-        var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
-        var boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
+        ForEach.meshPrimitive(mesh, function(primitive, primitiveId) {
+            var ix = accessors[primitive.indices];
+            var vertexArray = createVertexArray(model,meshId,primitiveId);
+            var positionAccessor = primitive.attributes.POSITION;
+            var minMax = ModelUtility.getAccessorMinMax(gltf, positionAccessor);
+            var boundingSphere = BoundingSphere.fromCornerPoints(Cartesian3.fromArray(minMax.min), Cartesian3.fromArray(minMax.max));
 
-        var offset;
-        var count;
-        if (defined(ix)) {
-            count = ix.count;
-            offset = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
-        }
-        else {
-            var positions = accessors[primitive.attributes.POSITION];
-            count = positions.count;
-            offset = 0;
-        }
+            var offset ={};
+            var count;
 
-        // Update model triangle count using number of indices
-        model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
+            var decodedData = model._decodedData[meshId + '.primitive.' + primitiveId];
 
-        // Allow callback to modify the uniformMap
-        if (defined(model._uniformMapLoaded)) {
-            uniformMap = model._uniformMapLoaded(uniformMap);
-        }
-
-        // Add uniforms for decoding quantized attributes if used
-        if (model.extensionsUsed.WEB3D_quantized_attributes) {
-            var quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive);
-            uniformMap = combine(uniformMap, quantizedUniformMap);
-        }
-
-        var attribute = vertexArray.attributes.POSITION;
-        var componentDatatype = attribute.componentDatatype;
-        var typedArray = attribute.vertexBuffer;
-        var byteOffset = typedArray.byteOffset;
-        var bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
-        var positionsBuffer = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
-
-        attribute = vertexArray.attributes._BATCHID;
-        componentDatatype = attribute.componentDatatype;
-        typedArray = attribute.vertexBuffer;
-        byteOffset = typedArray.byteOffset;
-        bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
-        var vertexBatchIds = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
-
-        var buffer = vertexArray.indexBuffer.typedArray;
-        var indices;
-        if (vertexArray.indexBuffer.indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
-            indices = new Uint16Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint16Array.BYTES_PER_ELEMENT);
-        } else {
-            indices = new Uint32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint32Array.BYTES_PER_ELEMENT);
-        }
-
-        positionsBuffer = arraySlice(positionsBuffer);
-        vertexBatchIds = arraySlice(vertexBatchIds);
-        indices = arraySlice(indices, offset, offset + count);
-
-        var batchIds = [];
-        var indexCounts = [];
-        var indexOffsets = [];
-        var batchedIndices = [];
-
-        var currentId = vertexBatchIds[indices[0]];
-        batchIds.push(currentId);
-        indexOffsets.push(0);
-
-        var batchId;
-        var indexOffset;
-        var indexCount;
-        var indicesLength = indices.length;
-        for (var j = 1; j < indicesLength; ++j) {
-            batchId = vertexBatchIds[indices[j]];
-            if (batchId !== currentId) {
-                indexOffset = indexOffsets[indexOffsets.length - 1];
-                indexCount = j - indexOffset;
-
-                batchIds.push(batchId);
-                indexCounts.push(indexCount);
-                indexOffsets.push(j);
-
-                batchedIndices.push(new Vector3DTileBatch({
-                    offset : indexOffset,
-                    count : indexCount,
-                    batchIds : [currentId],
-                    color : Color.WHITE
-                }));
-
-                currentId = batchId;
+            var positions;
+            if (defined(decodedData)) {
+                positions = decodedData.attributes.POSITION;
+                offset.positions=(positions.byteOffset / ComponentDatatype.getSizeInBytes(positions.componentDatatype));
+            } else {
+                positions = accessors[primitive.attributes.POSITION];
+                offset.positions=(positions.byteOffset / ComponentDatatype.getSizeInBytes(positions.componentType));
             }
-        }
+            var batchIDAccessor = accessors[primitive.attributes._BATCHID];
+            offset.batchIds=(batchIDAccessor.byteOffset / ComponentDatatype.getSizeInBytes(batchIDAccessor.componentType));
 
-        indexOffset = indexOffsets[indexOffsets.length - 1];
-        indexCount = indicesLength - indexOffset;
+            if (defined(decodedData)) {
+                count = decodedData.numberOfIndices;
+                offset.indices = 0;
+            } else if (defined(ix)) {
+                count = ix.count;
+                offset.indices = (ix.byteOffset / IndexDatatype.getSizeInBytes(ix.componentType));  // glTF has offset in bytes.  Cesium has offsets in indices
+            }
+            else {
+                count = positions.count;
+                offset.indices = 0;
+            }
 
-        indexCounts.push(indexCount);
-        batchedIndices.push(new Vector3DTileBatch({
-            offset : indexOffset,
-            count : indexCount,
-            batchIds : [currentId],
-            color : Color.WHITE
-        }));
+            // Update model triangle count using number of indices
+            model._trianglesLength += triangleCountFromPrimitiveIndices(primitive, count);
 
-        var shader = model._shaderProgram;
-        var vertexShaderSource = shader.vertexShaderSource;
-        var fragmentShaderSource = shader.fragmentShaderSource;
-        var attributeLocations = shader.attributeLocations;
-        var pickId = defined(model._pickIdLoaded) ? model._pickIdLoaded() : undefined;
+            // Allow callback to modify the uniformMap
+            if (defined(model._uniformMapLoaded)) {
+                uniformMap = model._uniformMapLoaded(uniformMap);
+            }
 
-        model._primitive = new Vector3DTilePrimitive({
-            classificationType : model._classificationType,
-            positions : positionsBuffer,
-            indices : indices,
-            indexOffsets : indexOffsets,
-            indexCounts : indexCounts,
-            batchIds : batchIds,
-            vertexBatchIds : vertexBatchIds,
-            batchedIndices : batchedIndices,
-            batchTable : batchTable,
-            boundingVolume : new BoundingSphere(), // updated in update()
-            _vertexShaderSource : vertexShaderSource,
-            _fragmentShaderSource : fragmentShaderSource,
-            _attributeLocations : attributeLocations,
-            _uniformMap : uniformMap,
-            _pickId : pickId,
-            _modelMatrix : new Matrix4(), // updated in update()
-            _boundingSphere : boundingSphere // used to update boundingVolume
+            // Add uniforms for decoding quantized attributes if used
+            var quantizedUniformMap = {};
+            if (model.extensionsUsed.WEB3D_quantized_attributes) {
+                quantizedUniformMap = createUniformsForQuantizedAttributes(model, primitive);
+                uniformMap = combine(uniformMap, quantizedUniformMap);
+            } else if (model._dequantizeInShader && defined(decodedData)) {
+                quantizedUniformMap = createUniformsForDracoQuantizedAttributes(decodedData);
+            }
+            uniformMap = combine(uniformMap, quantizedUniformMap);
+
+            var attribute = vertexArray.attributes.POSITION;
+            var componentDatatype = attribute.componentDatatype;
+            var typedArray = attribute.vertexBuffer;
+            var byteOffset = typedArray.byteOffset;
+            var bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
+            var positionsBuffer = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
+
+            attribute = vertexArray.attributes._BATCHID;
+            componentDatatype = attribute.componentDatatype;
+            typedArray = attribute.vertexBuffer;
+            byteOffset = typedArray.byteOffset;
+            bufferLength = typedArray.byteLength / ComponentDatatype.getSizeInBytes(componentDatatype);
+            var vertexBatchIds = ComponentDatatype.createArrayBufferView(componentDatatype, typedArray.buffer, byteOffset, bufferLength);
+
+            var buffer = vertexArray.indexBuffer.typedArray;
+            var indices;
+            if (vertexArray.indexBuffer.indexDatatype === IndexDatatype.UNSIGNED_SHORT) {
+                indices = new Uint16Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint16Array.BYTES_PER_ELEMENT);
+            } else {
+                indices = new Uint32Array(buffer.buffer, buffer.byteOffset, buffer.byteLength / Uint32Array.BYTES_PER_ELEMENT);
+            }
+
+            var componentsPerAttribute_Position = (defined(positions.componentsPerAttribute)) ? positions.componentsPerAttribute : numberOfComponentsForType(positions.type);
+            positionsBuffer = arraySlice(positionsBuffer,offset.positions,offset.positions+count*componentsPerAttribute_Position);
+            vertexBatchIds = arraySlice(vertexBatchIds,offset.batchIds,offset.batchIds+count*numberOfComponentsForType(batchIDAccessor.type));
+            indices = arraySlice(indices, offset.indices, offset.indices + count*numberOfComponentsForType(ix.type));
+
+            var batchIds = [];
+            var indexCounts = [];
+            var indexOffsets = [];
+            var batchedIndices = [];
+
+            var currentId = vertexBatchIds[indices[0]];
+            batchIds.push(currentId);
+            indexOffsets.push(0);
+
+            var batchId;
+            var indexOffset;
+            var indexCount;
+            var indicesLength = indices.length;
+            for (var j = 1; j < indicesLength; ++j) {
+                batchId = vertexBatchIds[indices[j]];
+                if (batchId !== currentId) {
+                    indexOffset = indexOffsets[indexOffsets.length - 1];
+                    indexCount = j - indexOffset;
+
+                    batchIds.push(batchId);
+                    indexCounts.push(indexCount);
+                    indexOffsets.push(j);
+
+                    batchedIndices.push(new Vector3DTileBatch({
+                        offset : indexOffset,
+                        count : indexCount,
+                        batchIds : [currentId],
+                        color : Color.WHITE
+                    }));
+
+                    currentId = batchId;
+                }
+            }
+
+            indexOffset = indexOffsets[indexOffsets.length - 1];
+            indexCount = indicesLength - indexOffset;
+
+            indexCounts.push(indexCount);
+            batchedIndices.push(new Vector3DTileBatch({
+                offset : indexOffset,
+                count : indexCount,
+                batchIds : [currentId],
+                color : Color.WHITE
+            }));
+
+            var shader = model._shaderProgram;
+            var vertexShaderSource = shader.vertexShaderSource;
+            var fragmentShaderSource = shader.fragmentShaderSource;
+            var attributeLocations = shader.attributeLocations;
+            var pickId = defined(model._pickIdLoaded) ? model._pickIdLoaded() : undefined;
+
+            if (model.extensionsUsed.WEB3D_quantized_attributes) {
+                shader.vertexShaderSource = modifyShaderForQuantizedAttributes(shader.vertexShaderSource, model,meshId,primitiveId);
+            } else {
+                shader.vertexShaderSource = modifyShaderForDracoQuantizedAttributes(shader.vertexShaderSource, model,meshId,primitiveId);
+            }
+
+            model._primitive.add(new Vector3DTilePrimitive({
+                classificationType : model._classificationType,
+                positions : positionsBuffer,
+                indices : indices,
+                indexOffsets : indexOffsets,
+                indexCounts : indexCounts,
+                batchIds : batchIds,
+                vertexBatchIds : vertexBatchIds,
+                batchedIndices : batchedIndices,
+                batchTable : batchTable,
+                boundingVolume : new BoundingSphere(), // updated in update()
+                _vertexShaderSource : vertexShaderSource,
+                _fragmentShaderSource : fragmentShaderSource,
+                _attributeLocations : attributeLocations,
+                _uniformMap : uniformMap,
+                _pickId : pickId,
+                _modelMatrix : new Matrix4(), // updated in update()
+                _boundingSphere : boundingSphere // used to update boundingVolume
+            }));
+            //Add reference to the associated node.
+            model._primitiveNodeIds.push(nodeId);
+
         });
 
-        // Release CPU resources
-        model._buffers = undefined;
-        model._vertexArray = undefined;
-        model._shaderProgram = undefined;
-        model._uniformMap = undefined;
     }
 
     function createRuntimeNodes(model) {
@@ -846,12 +910,19 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
             return;
         }
 
+        model._primitive = new PrimitiveCollection();
         var gltf = model.gltf;
-        var nodes = gltf.nodes;
-        var gltfNode = nodes[0];
-        model._nodeMatrix = ModelUtility.getTransform(gltfNode, model._nodeMatrix);
+        ForEach.node(gltf, function(node, nodeId) {
+            model._nodeMatrix[nodeId]=ModelUtility.getTransform(node, new Matrix4());
+            createPrimitive(model,nodeId);
 
-        createPrimitive(model);
+        });
+
+        // Release CPU resources
+        model._buffers = undefined;
+        model._shaderProgram = undefined;
+        model._uniformMap = undefined;
+
     }
 
     function createResources(model, frameState) {
@@ -860,7 +931,6 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         ModelUtility.checkSupportedGlExtensions(model.gltf.glExtensionsUsed, context);
         createBuffers(model); // using glTF bufferViews
         createProgram(model);
-        createVertexArray(model); // using glTF meshes
         createUniformMap(model, context);  // using glTF materials/techniques
         createRuntimeNodes(model); // using glTF scene
     }
@@ -890,28 +960,34 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
             }
         }
 
-        var primitive = model._primitive;
+        for (var index = 0; index < model._primitive.length; index++) {
+            var primitive = model._primitive.get(index);
+            var nodeId = model._primitiveNodeIds[index];
+            if (modelTransformChanged || justLoaded) {
+                Matrix4.multiplyTransformation(computedModelMatrix, model._nodeMatrix[nodeId], primitive._modelMatrix);
+                BoundingSphere.transform(primitive._boundingSphere, primitive._modelMatrix, primitive._boundingVolume);
 
-        if (modelTransformChanged || justLoaded) {
-            Matrix4.multiplyTransformation(computedModelMatrix, model._nodeMatrix, primitive._modelMatrix);
-            BoundingSphere.transform(primitive._boundingSphere, primitive._modelMatrix, primitive._boundingVolume);
-
-            if (defined(model._rtcCenter)) {
-                Cartesian3.add(model._rtcCenter, primitive._boundingVolume.center, primitive._boundingVolume.center);
+                if (defined(model._rtcCenter)) {
+                    Cartesian3.add(model._rtcCenter, primitive._boundingVolume.center, primitive._boundingVolume.center);
+                }
             }
         }
-    }
 
+    }
     ///////////////////////////////////////////////////////////////////////////
 
     ClassificationModel.prototype.updateCommands = function(batchId, color) {
-        this._primitive.updateCommands(batchId, color);
+        for (var index = 0; index < this._primitive.length; index++) {
+            this._primitive.get(index).updateCommands(batchId, color);
+        }
     };
 
     ClassificationModel.prototype.update = function(frameState) {
         if (frameState.mode === SceneMode.MORPHING) {
             return;
         }
+
+        var context = frameState.context;
 
         if (!FeatureDetection.supportsWebP.initialized) {
             FeatureDetection.supportsWebP.initialize();
@@ -957,9 +1033,25 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
                 addBuffersToLoadResources(this);
                 parseBufferViews(this);
 
-                this._boundingSphere = ModelUtility.computeBoundingSphere(this);
-                this._initialRadius = this._boundingSphere.radius;
-                createResources(this, frameState);
+                if (!loadResources.initialized) {
+                    // Start draco decoding
+                    DracoLoader.parse(this, context);
+                    loadResources.initialized = true;
+                }
+
+                if (loadResources.finishedDecoding() && !loadResources.resourcesParsed) {
+                    this._boundingSphere = ModelUtility.computeBoundingSphere(this);
+                    this._initialRadius = this._boundingSphere.radius;
+                    loadResources.resourcesParsed = true;
+                }
+                if (loadResources.resourcesParsed) {
+                    createResources(this, frameState);
+                }
+
+            }
+            if (!loadResources.finishedDecoding()) {
+                DracoLoader.decodeModel(this, context)
+                    .otherwise(ModelUtility.getFailedLoadFunction(this, 'model', this.basePath));
             }
             if (loadResources.finished()) {
                 this._state = ModelState.LOADED;
@@ -1019,9 +1111,14 @@ import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
         }
 
         if (show && !this._ignoreCommands) {
-            this._primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
-            this._primitive.debugWireframe = this.debugWireframe;
-            this._primitive.update(frameState);
+            if (defined(this._primitive)){
+                for (var index = 0; index < this._primitive.length; index++) {
+                    var primitive = this._primitive.get(index);
+                    primitive.debugShowBoundingVolume = this.debugShowBoundingVolume;
+                    primitive.debugWireframe = this.debugWireframe;
+                    primitive.update(frameState);
+                }
+            }
         }
     };
 

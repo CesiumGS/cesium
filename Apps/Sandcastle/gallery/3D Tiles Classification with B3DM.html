@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Sample 3D Tiles classification with an another 3D Tiles (B3DM only).">
+    <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+    @import url(../templates/bucket.css);
+</style>
+<div id="cesiumContainer" class="fullSize"></div>
+<div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
+<script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+// An example of using a b3dm tilset to classify another b3dm tileset.
+var viewer = new Cesium.Viewer('cesiumContainer', {
+    terrainProvider: Cesium.createWorldTerrain()
+});
+
+// A normal b3dm tileset of photogrammetry
+var tileset = new Cesium.Cesium3DTileset({
+    url: Cesium.IonResource.fromAssetId(40866)
+});
+viewer.scene.primitives.add(tileset);
+viewer.zoomTo(tileset);
+
+var classificationTilesetUrl = '../../SampleData/Cesium3DTiles/Classification/Photogrammetry_b3dm/tileset.json';
+// A b3dm tileset used to classify the photogrammetry tileset
+/*
+    Restrictions:
+    B3DM should be binary (Draco compressed dataset is allowed.)
+    Buffer data must be embedded in the binary glTF.
+    The mesh primitive must have a position attribute.
+    The mesh primitive must have a batch id attribute.
+
+    Removed restrictions:
+    Only one node is supported for classification and it must have a mesh.
+    Only one mesh is supported when using b3dm for classification.
+    Only one primitive per mesh is supported when using b3dm for classification.
+*/
+var classificationTileset = new Cesium.Cesium3DTileset({
+    url: classificationTilesetUrl,
+    classificationType: Cesium.ClassificationType.CESIUM_3D_TILE
+});
+classificationTileset.style = new Cesium.Cesium3DTileStyle(
+      {
+        color : {
+          conditions:[
+            ["${name}==='A'", "color('RED',0.5)"],
+            ["${name}==='B'", "color('ORANGE',0.5)"],
+            ["true", "color('WHITE',0.5)"]
+          ]
+        }
+    });
+viewer.scene.primitives.add(classificationTileset);
+
+// The same b3dm tileset used for classification, but rendered normally for comparison.
+var nonClassificationTileset = new Cesium.Cesium3DTileset({
+    url: classificationTilesetUrl,
+    show: false
+});
+nonClassificationTileset.style = new Cesium.Cesium3DTileStyle(
+      {
+        color : {
+          conditions:[
+            ["${name}==='A'", "color('RED',0.5)"],
+            ["${name}==='B'", "color('ORANGE',0.5)"],
+            ["true", "color('WHITE',0.5)"]
+          ]
+        }
+    });
+viewer.scene.primitives.add(nonClassificationTileset);
+
+Sandcastle.addToggleButton('Show classification', false, function(checked) {
+    classificationTileset.show = !checked;
+    nonClassificationTileset.show = checked;
+});
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
+    startup(Cesium);
+}
+</script>
+</body>
+</html>
