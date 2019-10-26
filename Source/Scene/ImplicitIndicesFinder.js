@@ -375,7 +375,8 @@ define([
         // NOTE: if lodFactor changed, you must also update the other infomation about the levels.
 
         this._lodFactor = factor;
-        var startingGError = tileset._geometricErrorContentRoot;
+        var contentRootError = tileset._geometricErrorContentRoot;
+        var tilesetError = tileset._geometricError;
         var base = tileset.getGeomtricErrorBase();
         var tilesetStartLevel = this._startLevel;
         var i, lodDistance, gErrorOnLevel;
@@ -386,7 +387,8 @@ define([
 
         // Worst case dims, they're the same for every level
         var worstCaseVirtualDims = this._worstCaseVirtualDims;
-        lodDistance = startingGError * factor;
+        // lodDistance = contentRootError * factor;
+        lodDistance = tilesetError * factor;
         // TODO: The calc is different for 2D Map, it would be the max cone angle between the two sphere intersections tile dims is in radians in that case
         // TODO: also not sure if worstCaseVirtualDims the same on every level in the 2D map case
         // var radius = defined(this._region) ? this.getMaxConeAngle() : lodDistance;
@@ -395,9 +397,14 @@ define([
         worstCaseVirtualDims.x = Math.ceil(worstCaseVirtualDims.x) + 1;
         worstCaseVirtualDims.y = Math.ceil(worstCaseVirtualDims.y) + 1;
         worstCaseVirtualDims.z = Math.ceil(worstCaseVirtualDims.z) + 1;
+        var diff = 0;
+        var refError = 0;
 
         for (i = tilesetStartLevel; i < length; i++) {
-            gErrorOnLevel = startingGError / Math.pow(base, i - tilesetStartLevel);
+            diff = i - tilesetStartLevel;
+            // refError = diff === 0 ? tilesetError : contentRootError;
+            refError =  tilesetError;
+            gErrorOnLevel = refError / Math.pow(base, diff);
             lodDistance = gErrorOnLevel * factor;
             lodDistances[i] = lodDistance;
 

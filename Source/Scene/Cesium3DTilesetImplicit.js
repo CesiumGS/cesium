@@ -999,10 +999,8 @@ define([
                 var tilingScheme = that._tilingScheme;
                 that._allTilesAdditive = tilingScheme.refine === 'ADD' || tilingScheme.refine === 'add';
                 that._properties = tilesetJson.properties;
-                // that._geometricError = tilesetJson.geometricError * 4;
-                // that._geometricErrorContentRoot = tilesetJson.geometricError * 2;
-                that._geometricError = tilesetJson.geometricError * 2;
-                that._geometricErrorContentRoot = tilesetJson.geometricError;
+                that._geometricError = tilesetJson.geometricError / 2;
+                that._geometricErrorContentRoot = tilingScheme.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
@@ -1979,8 +1977,8 @@ define([
     // Cesium3DTilesetImplicit.prototype.getSubtreeRootKey = function(x, y, z, level) {
     //     // Given the xyz level find the nearest subtree root key
     //     var subtreeLevels = this._tilingScheme.subtreeLevels;
-    //     var subtreeLevels0Indexed = subtreeLevels -  1;
-    //     var subtreeRootLevel = Math.floor(level / subtreeLevels0Indexed);
+    //     var subtreeLastLevelIndex = subtreeLevels -  1;
+    //     var subtreeRootLevel = Math.floor(level / subtreeLastLevelIndex);
     //     subtreeRootLevel -= (level % subtreeLevels === 0) ? 1 : 0; // Because there is overlap between subtree roots and their parents last level, take the previous subtree when on the overlap level
     //     var subtreeLevel = level - subtreeRootLevel;
     //     var subtreeRootKey = {
@@ -2037,11 +2035,11 @@ define([
     Cesium3DTilesetImplicit.prototype.getSubtreeInfoFromTreeKey = function(x, y, z, level) {
         // Given the xyz level find the nearest subtree root key
         var subtreeLevels = this._tilingScheme.subtreeLevels;
-        var subtreeLevels0Indexed = subtreeLevels -  1;
-        var subtreesDownTree = Math.floor(level / subtreeLevels0Indexed);
-        var subtreeRootLevel = subtreesDownTree * subtreeLevels0Indexed;
-        var onLastLevel = (level % subtreeLevels0Indexed) === 0 && (level !== 0) && (subtreeRootLevel !== 0);
-        subtreeRootLevel -= onLastLevel ? 1 : 0; // Because there is overlap between subtree roots and their parents last level, take the previous subtree when on the overlap level
+        var subtreeLastLevelIndex = subtreeLevels -  1;
+        var subtreesDownTree = Math.floor(level / subtreeLastLevelIndex);
+        var onLastLevel = (level % subtreeLastLevelIndex) === 0 && (level !== 0);
+        subtreesDownTree -= onLastLevel ? 1 : 0; // Because there is overlap between subtree roots and their parents last level, take the previous subtree when on the overlap level
+        var subtreeRootLevel = subtreesDownTree * subtreeLastLevelIndex;
         subtreeRootLevel = Math.max(subtreeRootLevel, this._tilingScheme.roots[0][0]);
         var subtreeLevel = level - subtreeRootLevel;
 
@@ -2253,7 +2251,7 @@ define([
         // For finding all heads in the root or finding the start tile in a subtree (if the tileset root doesn't start at the root of the subtree)
 
         var subtreeLevels = tilingScheme.subtreeLevels;
-        var subtreeLevels0Indexed = subtreeLevels -  1;
+        var subtreeLastLevelIndex = subtreeLevels -  1;
         var treeKey, subtreeKey, subtreeIndex, result, hasSubtree, onLastSubtreeLevel, levelDiff, gerrorDenom;
         var x, y, z, uri, uriSubtree, tileInfo, tile;
         var tilesetStartLevel = this._indicesFinder._startLevel;
@@ -2261,7 +2259,7 @@ define([
         var tilesetLastLevel = tilingScheme.lastLevel;
         var oneBitMode = defined(tilesetLastLevel);
         var contentRootGeometricError = this._geometricErrorContentRoot;
-        // var lastSubtreeLevelStartIndex = this._unpackedArraySizes[subtreeLevels0Indexed];
+        // var lastSubtreeLevelStartIndex = this._unpackedArraySizes[subtreeLastLevelIndex];
         var base = this.getGeomtricErrorBase();
         // This loop is just to create the tiles in the right spots in the _tiles array
         for (subtreeIndex = 0; subtreeIndex < unpackedSize; subtreeIndex++) {
@@ -2287,7 +2285,7 @@ define([
             uri = isOct ? level + '/' + x + '/'+ y + '/' + z : level + '/' + x + '/' + y;
 
             subtreeKey = result.subtreeKey;
-            onLastSubtreeLevel = subtreeKey.w === subtreeLevels0Indexed;
+            onLastSubtreeLevel = subtreeKey.w === subtreeLastLevelIndex;
             hasSubtree = onLastSubtreeLevel && ((oneBitMode && level !== tilesetLastLevel) || (!oneBitMode && twoBitModeHasExtSub));
             uriSubtree = hasSubtree ? this._availabilityFolder + uri : undefined;
             levelDiff = level - tilesetStartLevel;
