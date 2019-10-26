@@ -1973,37 +1973,37 @@ define([
     Cesium3DTilesetImplicit.prototype.getSubtreeInfoFromTreeKey = function(x, y, z, level) {
         // Given the xyz level find the nearest subtree root key
         var subtreeLevels = this._tilingScheme.subtreeLevels;
-        var subtreeLevels0Indexed = subtreeLevels -  1;
-        var subtreesDownTree = Math.floor(level / subtreeLevels0Indexed);
-        var subtreeRootLevel = subtreesDownTree * subtreeLevels0Indexed;
-        var onLastLevel = (level % subtreeLevels0Indexed) === 0 && (level !== 0) && (subtreeRootLevel !== 0);
-        subtreeRootLevel -= onLastLevel ? 1 : 0; // Because there is overlap between subtree roots and their parents last level, take the previous subtree when on the overlap level
+        var subtreeLastLevelIndex = subtreeLevels -  1;
+        var onLastSubtreeLevel = (level % subtreeLastLevelIndex) === 0 && (level !== 0);
+        var subtreesDownTree = Math.floor(level / subtreeLastLevelIndex);
+        subtreesDownTree -= onLastSubtreeLevel ? 1 : 0; // Because there is overlap between subtree roots and their parents last level, take the previous subtree when on the overlap level
+        var subtreeRootLevel = subtreesDownTree * subtreeLastLevelIndex;
         subtreeRootLevel = Math.max(subtreeRootLevel, this._tilingScheme.roots[0][0]);
-        var subtreeLevel = level - subtreeRootLevel;
+        var levelWithinSubtree = level - subtreeRootLevel;
 
         var subtreeRootKey = new Cartesian4(
-            x >> subtreeLevel,
-            y >> subtreeLevel,
-            z >> subtreeLevel,
+            x >> levelWithinSubtree,
+            y >> levelWithinSubtree,
+            z >> levelWithinSubtree,
             subtreeRootLevel
         );
-        var shiftX = (subtreeRootKey.x << subtreeLevel);
-        var shiftY = (subtreeRootKey.y << subtreeLevel);
-        var shiftZ = (subtreeRootKey.z << subtreeLevel);
+        var shiftX = (subtreeRootKey.x << levelWithinSubtree);
+        var shiftY = (subtreeRootKey.y << levelWithinSubtree);
+        var shiftZ = (subtreeRootKey.z << levelWithinSubtree);
         var subtreeKey = new Cartesian4(
             ((x - shiftX)),
             ((y - shiftY)),
             ((z - shiftZ)),
-            subtreeLevel
+            levelWithinSubtree
         );
 
-        var dimOnLevel = (1 << subtreeLevel);
+        var dimOnLevel = (1 << levelWithinSubtree);
         var dimOnLevelSqrd = dimOnLevel * dimOnLevel;
 
         var arraySizes = this._unpackedArraySizes;
 
         // Update the bit that corresponds to this rel subtree key (d, x, y, z)
-        var indexOffsetToFirstByteOnLevel = arraySizes[subtreeLevel];
+        var indexOffsetToFirstByteOnLevel = arraySizes[levelWithinSubtree];
         // Treating the level as a linear array, what is the tiles index on this subtree level
         var tileIndexOnLevel = subtreeKey.z * dimOnLevelSqrd + subtreeKey.y * dimOnLevel + subtreeKey.x;
         var index = indexOffsetToFirstByteOnLevel + tileIndexOnLevel;
