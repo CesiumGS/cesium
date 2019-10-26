@@ -999,7 +999,7 @@ define([
                 var tilingScheme = that._tilingScheme;
                 that._allTilesAdditive = tilingScheme.refine === 'ADD' || tilingScheme.refine === 'add';
                 that._properties = tilesetJson.properties;
-                that._geometricError = tilesetJson.geometricError / 2;
+                that._geometricError = tilesetJson.geometricError / 64;
                 that._geometricErrorContentRoot = tilingScheme.geometricError;
                 that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
