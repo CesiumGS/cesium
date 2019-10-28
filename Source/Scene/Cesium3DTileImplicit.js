@@ -991,7 +991,7 @@ define([
         var that = this;
         var tileset = this._tileset;
 
-        if (!defined(this._contentSubtreeResource)) {
+        if (!defined(this._contentSubtreeResource) || this._contentSubtreeState !== Cesium3DTileContentState.UNLOADED) {
             return false;
         }
 
