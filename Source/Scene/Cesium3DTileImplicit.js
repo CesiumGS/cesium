@@ -948,7 +948,7 @@ define([
 
     function createPriorityFunctionSubtree(tile) {
         return function() {
-            return -1;
+            return tile._priority - 1;
         };
     }
 
@@ -966,6 +966,10 @@ define([
         var tileset = this._tileset;
 
         if (!defined(this._contentSubtreeResource)) {
+            return false;
+        }
+
+        if (this._contentSubtreeState !== Cesium3DTileContentState.UNLOADED) {
             return false;
         }
 

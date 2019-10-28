@@ -2162,6 +2162,56 @@ define([
     //     };
     // };
 
+    Cesium3DTilesetImplicit.prototype.getPackedSubtreeValue = function(subtree, index) {
+        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        var unpackedArraySizes = this._unpackedArraySizes;
+        var packedArraySizes = this._packedArraySizes;
+
+        var startLevel = 0;
+
+        var i;
+        for (i = 0; i < subtreeLevels; i++) {
+            if (index < unpackedArraySizes[i+1]) {
+                startLevel = i;
+                break;
+            }
+        }
+
+        var bitsBeforeThisLevel = unpackedArraySizes[startLevel];
+        var startByte = packedArraySizes[startLevel];
+        var bitOnLevel = index - bitsBeforeThisLevel;
+        var byteOnLevel = bitOnLevel >> 3;
+        var bitInByte = bitOnLevel & 7;
+        var value = subtree[startByte + byteOnLevel] & (1 << bitInByte);
+
+        return value;
+    };
+
+    Cesium3DTilesetImplicit.prototype.findPackedSubtreeLevelStart = function(subtree) {
+        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        // var isOct = this._isOct;
+        var unpackedSize = this._unpackedSize;
+        var unpackedArraySizes = this._unpackedArraySizes;
+
+        var i;
+
+        var firstIndex = 0;
+        for (i = 0; i < unpackedSize; i++) {
+            if (this.getPackedSubtreeValue(subtree, i) === 1) {
+                firstIndex = i;
+                break;
+            }
+        }
+
+        for (i = 0; i < subtreeLevels; i++) {
+            if (firstIndex < unpackedArraySizes[i+1]) {
+                return i;
+            }
+        }
+
+        return 0;
+    };
+
     Cesium3DTilesetImplicit.prototype.findSubtreeLevelStart = function(subtree) {
         var subtreeLevels = this._tilingScheme.subtreeLevels;
         // var isOct = this._isOct;
@@ -2392,7 +2442,8 @@ define([
         }
 
         // TODO: leave packed since we throw away, would need to convert subtree index to byte and bit index
-        var subtree = this.unpackSubtreeBits(subtreeArrayBuffer);
+        // var subtree = this.unpackSubtreeBits(subtreeArrayBuffer);
+        var subtree = new Uint8Array(subtreeArrayBuffer);
 
         var statistics = this._statistics;
 
@@ -2404,7 +2455,8 @@ define([
 
         var tilesetRoot = this._root;
         var isRootGridTile = parentTile.parent === tilesetRoot;
-        var subtreeLevelStart = !isRootGridTile ? 0 : this.findSubtreeLevelStart(subtree);
+        // var subtreeLevelStart = !isRootGridTile ? 0 : this.findSubtreeLevelStart(subtree);
+        var subtreeLevelStart = !isRootGridTile ? 0 : this.findPackedSubtreeLevelStart(subtree);
         if (isRootGridTile) {
             this._startLevel = subtreeRootKey.w + subtreeLevelStart;
         }
@@ -2423,7 +2475,8 @@ define([
                 var nextLevel = subtreeLevelStart + 1;
                 var end = unpackedArraySizes[nextLevel];
                 for (i = unpackedArraySizes[subtreeLevelStart]; i < end ; i++) {
-                    if (subtree[i] === 0) {
+                    // if (subtree[i] === 0) {
+                    if (this.getPackedSubtreeValue(subtree, i) === 0) {
                         continue;
                     }
 
@@ -2449,7 +2502,8 @@ define([
                         var childZ = childBaseZ + z;
 
                         result = this.getSubtreeInfoFromTreeKey(childX, childY, childZ, childW);
-                        if (tile.childSubtreeRootKeys[0].w !== subtreeRootKey.w || subtree[result.subtreeIndex] === 0) {
+                        // if (tile.childSubtreeRootKeys[0].w !== subtreeRootKey.w || subtree[result.subtreeIndex] === 0) {
+                        if (tile.childSubtreeRootKeys[0].w !== subtreeRootKey.w || this.getPackedSubtreeValue(subtree, result.subtreeIndex) === 0) {
                             continue;
                         }
 
@@ -2461,8 +2515,7 @@ define([
         }
 
         // console.log(rootTile);
-
-        return rootTile;
+        return rootTile; // removing this will cause issues even though its not used
     };
 
     // /**
@@ -2837,9 +2890,6 @@ define([
         var statistics = tileset._statistics;
         var expired = tile.contentExpired;
         var requested = tile.requestContent();
-        // TODO: uncommenting this will cause some content on level 1 (1 past root) to become undefined
-        tile.requestSubtreeContent();
-        // var requstedSubtree = tile.requestSubtreeContent();
 
         if (!requested) {
             ++statistics.numberOfAttemptedRequests;
@@ -2854,6 +2904,10 @@ define([
                 --statistics.numberOfTilesWithContentReady;
             }
         }
+
+        // TODO: uncommenting this will cause some content on level 1 (1 past root) to become undefined
+        tile.requestSubtreeContent();
+        // var requstedSubtree = tile.requestSubtreeContent();
 
         ++statistics.numberOfPendingRequests;
         tileset._requestedTilesInFlight.push(tile);
