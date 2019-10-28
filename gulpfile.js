@@ -1394,6 +1394,7 @@ function buildCesiumViewer() {
         var stream = mergeStream(
             gulp.src('Build/Apps/CesiumViewer/CesiumViewer.js')
                 .pipe(gulpInsert.prepend(copyrightHeader))
+                .pipe(gulpReplace('../../Source', '.'))
                 .pipe(gulp.dest(cesiumViewerOutputDirectory)),
 
             gulp.src('Apps/CesiumViewer/CesiumViewer.css')

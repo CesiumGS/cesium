@@ -1,3 +1,5 @@
+window.CESIUM_BASE_URL = '../../Source/';
+
 import {
     Cartesian3,
     createWorldTerrain,
