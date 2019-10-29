@@ -986,14 +986,18 @@ define([
                 var gltfUpAxis = defined(tilesetJson.asset.gltfUpAxis) ? Axis.fromName(tilesetJson.asset.gltfUpAxis) : Axis.Y;
                 var asset = tilesetJson.asset;
                 that._asset = asset;
-                var tilingScheme = tilesetJson.tilingScheme;
-                that._tilingScheme = tilingScheme;
+                that._extensionsUsed = tilesetJson.extensionsUsed;
+                if (that.hasExtension('3DTILES_implicit_tiling')) {
+                    var tilingScheme = tilesetJson.extensions['3DTILES_implicit_tiling'];
+                    // tilingScheme.refine = tilingScheme.refine === 'ADD' ? Cesium3DTileRefine.ADD : Cesium3DTileRefine.REPLACE;
+                    that._allTilesAdditive = tilingScheme.refine === 'ADD';
+                    that._geometricErrorContentRoot = tilingScheme.geometricError;
+                    that._tilingScheme = tilingScheme;
+                }
                 that._properties = tilesetJson.properties;
                 // that._geometricError = tilesetJson.geometricError * 2;
                 // that._geometricErrorContentRoot = tilesetJson.geometricError;
                 that._geometricError = tilesetJson.geometricError;
-                that._geometricErrorContentRoot = tilingScheme.geometricError;
-                that._extensionsUsed = tilesetJson.extensionsUsed;
                 that._gltfUpAxis = gltfUpAxis;
                 that._extras = tilesetJson.extras;
                 var extras = asset.extras;
@@ -1017,7 +1021,7 @@ define([
             //
             //     // TODO: get rid of this after root grid loading works
             //     var regex = /tileset\.json/;
-            //     var isOct = that._tilingScheme.type === 'oct';
+            //     var isOct = that._tilingScheme.splitAxes === 3;
             //     that._isOct = isOct;
             //     that._packedArraySizes = isOct ? subtreesPackedUint8ArraySizesOct : subtreesPackedUint8ArraySizesQuad;
             //     that._unpackedArraySizes = isOct ? subtreesUint8ArraySizesOct : subtreesUint8ArraySizesQuad;
@@ -1695,7 +1699,8 @@ define([
     Cesium3DTilesetImplicit.prototype.getRootSubtreeUrls = function() {
         var tilingScheme =  this._tilingScheme;
         var isOct = this._isOct;
-        var rootKeys = tilingScheme.roots;
+        // var rootKeys = tilingScheme.roots;
+        var rootKeys = tilingScheme.firstSubtreesWithContent;
         var rootKeysLength = rootKeys.length;
         var rootSubtreeUrls = [];
         var availabilityFolder = this._availabilityFolder;
@@ -1753,10 +1758,11 @@ define([
 
     Cesium3DTilesetImplicit.prototype.deriveImplicitBounds = function(rootTile, x, y, z, level) {
         var tilingScheme = this._tilingScheme;
-        var headCount = tilingScheme.headCount;
-        var rootXCount = headCount[0];
-        var rootYCount = headCount[1];
-        var rootZCount = headCount[2];
+        // var rootGridDimensions = tilingScheme.headCount;
+        var rootGridDimensions = tilingScheme.rootGridDimensions;
+        var rootXCount = rootGridDimensions[0];
+        var rootYCount = rootGridDimensions[1];
+        var rootZCount = rootGridDimensions[2];
         var xTiles = rootXCount * (1 << level);
         var yTiles = rootYCount * (1 << level);
 
@@ -1935,7 +1941,8 @@ define([
         var i = 0;
         var indexOffsetToFirstByteOnLevel = 0;
 
-        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        // var subtreeLevels = this._tilingScheme.subtreeLevels;
+        var subtreeLevels = this._tilingScheme.completeSubtreeLevels;
         for (i = 0; i <= subtreeLevels; i++) {
             if (subtreeIndex < arraySizes[i]) {
                 subtreeLevel = Math.max(i - 1, 0);
@@ -1972,13 +1979,15 @@ define([
 
     Cesium3DTilesetImplicit.prototype.getSubtreeInfoFromTreeKey = function(x, y, z, level) {
         // Given the xyz level find the nearest subtree root key
-        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        // var subtreeLevels = this._tilingScheme.subtreeLevels;
+        var subtreeLevels = this._tilingScheme.completeSubtreeLevels;
         var subtreeLastLevelIndex = subtreeLevels -  1;
         var onLastSubtreeLevel = (level % subtreeLastLevelIndex) === 0 && (level !== 0);
         var subtreesDownTree = Math.floor(level / subtreeLastLevelIndex);
         subtreesDownTree -= onLastSubtreeLevel ? 1 : 0; // Because there is overlap between subtree roots and their parents last level, take the previous subtree when on the overlap level
         var subtreeRootLevel = subtreesDownTree * subtreeLastLevelIndex;
-        subtreeRootLevel = Math.max(subtreeRootLevel, this._tilingScheme.roots[0][0]);
+        // subtreeRootLevel = Math.max(subtreeRootLevel, this._tilingScheme.roots[0][0]);
+        subtreeRootLevel = Math.max(subtreeRootLevel, this._tilingScheme.firstSubtreesWithContent[0][0]);
         var levelWithinSubtree = level - subtreeRootLevel;
 
         var subtreeRootKey = new Cartesian4(
@@ -2163,7 +2172,8 @@ define([
     // };
 
     Cesium3DTilesetImplicit.prototype.getPackedSubtreeValue = function(subtree, index) {
-        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        // var subtreeLevels = this._tilingScheme.subtreeLevels;
+        var subtreeLevels = this._tilingScheme.completeSubtreeLevels;
         var unpackedArraySizes = this._unpackedArraySizes;
         var packedArraySizes = this._packedArraySizes;
 
@@ -2188,7 +2198,8 @@ define([
     };
 
     Cesium3DTilesetImplicit.prototype.findPackedSubtreeLevelStart = function(subtree) {
-        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        // var subtreeLevels = this._tilingScheme.subtreeLevels;
+        var subtreeLevels = this._tilingScheme.completeSubtreeLevels;
         // var isOct = this._isOct;
         var unpackedSize = this._unpackedSize;
         var unpackedArraySizes = this._unpackedArraySizes;
@@ -2213,7 +2224,8 @@ define([
     };
 
     Cesium3DTilesetImplicit.prototype.findSubtreeLevelStart = function(subtree) {
-        var subtreeLevels = this._tilingScheme.subtreeLevels;
+        // var subtreeLevels = this._tilingScheme.subtreeLevels;
+        var subtreeLevels = this._tilingScheme.completeSubtreeLevels;
         // var isOct = this._isOct;
         var unpackedSize = this._unpackedSize;
         var unpackedArraySizes = this._unpackedArraySizes;
@@ -2277,7 +2289,6 @@ define([
     Cesium3DTilesetImplicit.prototype.unpackSubtreeBits = function(subtreeArrayBuffer) {
         // Unpack subtreeArrayBuffer payload into a byte array
         var payload = new Uint8Array(subtreeArrayBuffer);
-        // var subtreeLevels = this._tilingScheme.subtreeLevels;
         var isOct = this._isOct;
         var packedSize = this._packedSize;
         var unpackedSize = this._unpackedSize;
@@ -2314,7 +2325,8 @@ define([
     Cesium3DTilesetImplicit.prototype.createChildAndPush = function(treeKey, subtreeKey, subtreeRootKey, subtreeIndex, tile, resource, stack) {
         var tilesetRoot = this._root;
         var tilingScheme = this._tilingScheme;
-        var subtreeLevels = tilingScheme.subtreeLevels;
+        // var subtreeLevels = tilingScheme.subtreeLevels;
+        var subtreeLevels = tilingScheme.completeSubtreeLevels;
         var subtreeLevels0Indexed = subtreeLevels -  1;
         var level = treeKey.w;
         var x = treeKey.x;
@@ -2359,12 +2371,13 @@ define([
     Cesium3DTilesetImplicit.prototype.initImplicitTileset = function(resource) {
         // TODO: get rid of this after root grid loading works
         var tilingScheme = this._tilingScheme;
-        this._allTilesAdditive = tilingScheme.refine === Cesium3DTileRefine.ADD;
-        var isOct = tilingScheme.type === 'oct';
+        // var isOct = tilingScheme.type === 'oct';
+        var isOct = tilingScheme.splitAxes === 3;
         this._isOct = isOct;
         this._packedArraySizes = isOct ? subtreesPackedUint8ArraySizesOct : subtreesPackedUint8ArraySizesQuad;
         this._unpackedArraySizes = isOct ? subtreesUint8ArraySizesOct : subtreesUint8ArraySizesQuad;
-        var subtreeLevels = tilingScheme.subtreeLevels;
+        // var subtreeLevels = tilingScheme.subtreeLevels;
+        var subtreeLevels = tilingScheme.completeSubtreeLevels;
         this._unpackedSize = this._unpackedArraySizes[subtreeLevels];
         this._packedSize = this._packedArraySizes[subtreeLevels];
 
@@ -2388,7 +2401,8 @@ define([
         var rootTile = new Cesium3DTileImplicit(this, resource, rootInfo, undefined);
         rootTile._depth = 0;
 
-        var rootKeys = tilingScheme.roots;
+        // var rootKeys = tilingScheme.roots;
+        var rootKeys = tilingScheme.firstSubtreesWithContent;
         var rootKeysLength = rootKeys.length;
         var availabilityFolder = this._availabilityFolder;
         var key, url, i, x,y,z,depth;
@@ -2407,7 +2421,7 @@ define([
             var subtreeUrl = this._url.replace(regex, url);
             var rootGridTileInfo = {
                 boundingVolume: tilingScheme.boundingVolume,
-                geometricError: rootTile._geometricError,
+                geometricError: rootTile.geometricError,
                 content: {
                     uri: undefined,
                     uriSubtree: subtreeUrl
@@ -2558,7 +2572,7 @@ define([
     //
     //     // Maybe don't worry about the external tileset case quite yet
     //     // var boundingVolume = hasParent ? deriveImplicitBoundsFromParent(parentTile) : this._tilingScheme.boundingVolume;
-    //     // var geometricError = hasParent ? parentTile._geometricError / 2 : this._geometricError;
+    //     // var geometricError = hasParent ? parentTile.geometricError / 2 : this._geometricError;
     //     // var content = // TODO: put the { uri : "0/0/0" } or whatever the level/x/y is for the tile unless its the contentless root
     //     // TODO: for quad/oct lat/long spllitting, I think you must construct empty tiles all the way up to the
     //     // lvl 0 root(s) or until you get to a single tile. In either case still
