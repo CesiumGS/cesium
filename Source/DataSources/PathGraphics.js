@@ -14,8 +14,8 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      *
      * @param {Object} [options] Object with the following properties:
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the path.
-     * @param {Property} [options.leadTime] A Property specifying the number of seconds behind the object to show.
-     * @param {Property} [options.trailTime] A Property specifying the number of seconds in front of the object to show.
+     * @param {Property} [options.leadTime] A Property specifying the number of seconds in front the object to show.
+     * @param {Property} [options.trailTime] A Property specifying the number of seconds behind of the object to show.
      * @param {Property} [options.width=1.0] A numeric Property specifying the width in pixels.
      * @param {Property} [options.resolution=60] A numeric Property specifying the maximum number of seconds to step when sampling the position.
      * @param {MaterialProperty} [options.material=Color.WHITE] A Property specifying the material used to draw the path.
