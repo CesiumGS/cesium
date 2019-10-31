@@ -932,7 +932,8 @@ http://raphaeljs.com/license.html
 
 ### Mouse and gesture vector icons made by Freepik from Flaticon.com
 
-http://www.flaticon.com/authors/freepik
+Creative Commons Attribution 3.0
+https://web.archive.org/web/20140419110558/http://www.flaticon.com/terms-of-use
 
 ### Maki icon set from Mapbox
 
