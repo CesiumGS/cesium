@@ -33,7 +33,7 @@ scene.debugShowFramesPerSecond = true;
 var instancedArraysExtension = context._instancedArrays;
 var count = 1024;
 var spacing = 0.0002;
-var url = '../../SampleData/models/CesiumAir/Cesium_Air.gltf';
+var url = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 var useCollection = true;
 
 var centerLongitude = -75.61209431;
@@ -181,7 +181,7 @@ Sandcastle.addToolbarMenu([ {
 Sandcastle.addToolbarMenu([ {
     text : 'Aircraft',
     onselect : function() {
-        url = '../../SampleData/models/CesiumAir/Cesium_Air.gltf';
+        url = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
         spacing = 0.0002;
         reset();
     }
@@ -195,14 +195,14 @@ Sandcastle.addToolbarMenu([ {
 }, {
     text : 'Milk Truck',
     onselect : function() {
-        url = '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.gltf';
+        url = '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb';
         spacing = 0.00008;
         reset();
     }
 }, {
     text : 'Skinned Character',
     onselect : function() {
-        url = '../../SampleData/models/CesiumMan/Cesium_Man.gltf';
+        url = '../../SampleData/models/CesiumMan/Cesium_Man.glb';
         spacing = 0.00001;
         reset();
     }

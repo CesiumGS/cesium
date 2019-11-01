@@ -18,6 +18,7 @@ import LabelStyle from './LabelStyle.js';
 import SDFSettings from './SDFSettings.js';
 import TextureAtlas from './TextureAtlas.js';
 import VerticalOrigin from './VerticalOrigin.js';
+import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
 
     // A glyph represents a single character in a particular label.  It may or may
     // not have a billboard, depending on whether the texture info has an index into
@@ -109,9 +110,12 @@ import VerticalOrigin from './VerticalOrigin.js';
         });
     }
 
+    var splitter = new GraphemeSplitter();
+
     function rebindAllGlyphs(labelCollection, label) {
         var text = label._renderedText;
-        var textLength = text.length;
+        var graphemes = splitter.splitGraphemes(text);
+        var textLength = graphemes.length;
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
 
@@ -173,7 +177,7 @@ import VerticalOrigin from './VerticalOrigin.js';
         // walk the text looking for new characters (creating new glyphs for each)
         // or changed characters (rebinding existing glyphs)
         for (textIndex = 0; textIndex < textLength; ++textIndex) {
-            var character = text.charAt(textIndex);
+            var character = graphemes[textIndex];
             var verticalOrigin = label._verticalOrigin;
 
             var id = JSON.stringify([
@@ -521,7 +525,7 @@ import VerticalOrigin from './VerticalOrigin.js';
      * @see Label
      * @see BillboardCollection
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      *
      * @example
      * // Create a label collection with two labels

@@ -1305,7 +1305,7 @@ import WebGLConstants from '../Core/WebGLConstants.js';
         /**
          * An automatic GLSL uniform representing the high bits of the camera position in model
          * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
-         * as described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
+         * as described in {@link http://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
          *
          * @alias czm_encodedCameraPositionMCHigh
          * @namespace
@@ -1330,7 +1330,7 @@ import WebGLConstants from '../Core/WebGLConstants.js';
         /**
          * An automatic GLSL uniform representing the low bits of the camera position in model
          * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
-         * as described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
+         * as described in {@linkhttp://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
          *
          * @alias czm_encodedCameraPositionMCLow
          * @namespace

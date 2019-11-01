@@ -304,12 +304,13 @@ import VertexArray from './VertexArray.js';
             destroyVA(this);
             var va = this.va = [];
 
-            var numberOfVertexArrays = defined(indexBuffer) ? Math.ceil(this._size / (CesiumMath.SIXTY_FOUR_KILOBYTES - 1)) : 1;
+            var chunkSize = CesiumMath.SIXTY_FOUR_KILOBYTES - 4; // The 65535 index is reserved for primitive restart. Reserve the last 4 indices so that billboard quads are not broken up.
+            var numberOfVertexArrays = (defined(indexBuffer) && !this._instanced) ? Math.ceil(this._size / chunkSize) : 1;
             for ( var k = 0; k < numberOfVertexArrays; ++k) {
                 var attributes = [];
                 for (i = 0, length = allBuffers.length; i < length; ++i) {
                     buffer = allBuffers[i];
-                    var offset = k * (buffer.vertexSizeInBytes * (CesiumMath.SIXTY_FOUR_KILOBYTES - 1));
+                    var offset = k * (buffer.vertexSizeInBytes * chunkSize);
                     VertexArrayFacade._appendAttributes(attributes, buffer, offset, this._instanced);
                 }
 
@@ -321,7 +322,7 @@ import VertexArray from './VertexArray.js';
                         attributes : attributes,
                         indexBuffer : indexBuffer
                     }),
-                    indicesCount : 1.5 * ((k !== (numberOfVertexArrays - 1)) ? (CesiumMath.SIXTY_FOUR_KILOBYTES - 1) : (this._size % (CesiumMath.SIXTY_FOUR_KILOBYTES - 1)))
+                    indicesCount : 1.5 * ((k !== (numberOfVertexArrays - 1)) ? chunkSize : (this._size % chunkSize))
                 // TODO: not hardcode 1.5, this assumes 6 indices per 4 vertices (as for Billboard quads).
                 });
             }

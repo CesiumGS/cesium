@@ -63,7 +63,7 @@ import Rectangle from './Rectangle.js';
      * @param {BoundingSphere} [result] The object onto which to store the result.
      * @returns {BoundingSphere} The modified result parameter or a new BoundingSphere instance if one was not provided.
      *
-     * @see {@link http://blogs.agi.com/insight3d/index.php/2008/02/04/a-bounding/|Bounding Sphere computation article}
+     * @see {@link http://help.agi.com/AGIComponents/html/BlogBoundingSphere.htm|Bounding Sphere computation article}
      */
     BoundingSphere.fromPoints = function(positions, result) {
         if (!defined(result)) {
@@ -477,7 +477,7 @@ import Rectangle from './Rectangle.js';
     };
 
     /**
-     * Computes a tight-fitting bounding sphere enclosing a list of {@link EncodedCartesian3}s, where the points are
+     * Computes a tight-fitting bounding sphere enclosing a list of EncodedCartesian3s, where the points are
      * stored in parallel flat arrays in X, Y, Z, order.  The bounding sphere is computed by running two
      * algorithms, a naive algorithm and Ritter's algorithm. The smaller of the two spheres is used to
      * ensure a tight fit.

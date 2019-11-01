@@ -237,3 +237,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Qiming Zhang](https://github.com/bbbbx)
 * [Chris Wingler](https://github.com/chriswingler)
 * [Tinco Andringa](https://github.com/tinco)
+* [André Borud](https://github.com/andreborud)
