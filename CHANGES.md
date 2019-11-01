@@ -5,7 +5,6 @@ Change Log
 
 ##### Major Announcements :loudspeaker:
 * Cesium has migrated to ES6 modules. This may or may not be a breaking change for your application depending on how you use Cesium.  See our [blog post](https://cesium.com/blog/2019/10/31/cesiumjs-es6/) for the full details.
-
 * We’ve consolidated all of our website content from cesiumjs.org and cesium.com into one home on cesium.com.  Here’s where you can now find:
   * [Sandcastle](https://sandcastle.cesium.com) - `https://sandcastle.cesium.com`
   * [API Docs](https://cesium.com/docs/cesiumjs-ref-doc/) - `https://cesium.com/docs/cesiumjs-ref-doc/`
