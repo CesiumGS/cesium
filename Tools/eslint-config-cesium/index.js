@@ -36,6 +36,7 @@ module.exports = {
         'no-loop-func': 'error',
         'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 1 }],
         'no-new': 'error',
+        'no-prototype-builtins': 'off',
         'no-sequences': 'error',
         'no-tabs': 'error',
         'no-trailing-spaces': 'error',
@@ -47,6 +48,7 @@ module.exports = {
         'no-useless-escape': 'off',
         'no-use-before-define': ['error', 'nofunc'],
         'quotes': ['error', 'single', {avoidEscape: true}],
+        'require-atomic-updates': 'off',
         'semi': 'error',
         'strict': 'error',
         'wrap-iife': ['error', 'any']

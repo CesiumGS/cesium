@@ -24,14 +24,12 @@ var gulpInsert = require('gulp-insert');
 var gulpZip = require('gulp-zip');
 var gulpRename = require('gulp-rename');
 var gulpReplace = require('gulp-replace');
-var gulpJsonTransform = require('gulp-json-transform');
 var Promise = require('bluebird');
 var Karma = require('karma');
 var yargs = require('yargs');
 var AWS = require('aws-sdk');
 var mime = require('mime');
 var rollup = require('rollup');
-var rollupPluginBanner = require('rollup-plugin-banner');
 var rollupPluginStripPragma = require('rollup-plugin-strip-pragma');
 var rollupPluginExternalGlobals = require('rollup-plugin-external-globals');
 var rollupPluginUglify = require('rollup-plugin-uglify');
@@ -109,6 +107,14 @@ var filesToConvertES6 = ['Source/**/*.js',
                          '!Specs/TestWorkers/**'
                         ];
 
+function rollupWarning(message) {
+    // Ignore eval warnings in third-party code we don't have control over
+    if (message.code === 'EVAL' && /(protobuf-minimal|crunch)\.js$/.test(message.loc.file)) {
+        return;
+    }
+    console.log(message);
+}
+
 function createWorkers() {
     rimraf.sync('Build/createWorkers');
 
@@ -126,10 +132,11 @@ function createWorkers() {
 
     return rollup.rollup({
         input: workers,
-        plugins: [rollupPluginBanner.default('This file is automatically rebuilt by the Cesium build process.')]
+        onwarn: rollupWarning
     }).then(function(bundle) {
         return bundle.write({
             dir: 'Build/createWorkers',
+            banner: '/* This file is automatically rebuilt by the Cesium build process. */',
             format: 'amd'
         });
     }).then(function(){
@@ -176,7 +183,8 @@ gulp.task('build-specs', function buildSpecs() {
     var promise = Promise.join(
         rollup.rollup({
             input: 'Specs/SpecList.js',
-            plugins: [externalCesium]
+            plugins: [externalCesium],
+            onwarn: rollupWarning
         }).then(function(bundle) {
             return bundle.write({
                 file: 'Build/Specs/Specs.js',
@@ -195,7 +203,8 @@ gulp.task('build-specs', function buildSpecs() {
         }).then(function(){
             return rollup.rollup({
                 input: 'Specs/karma-main.js',
-                plugins: [removePragmas, externalCesium]
+                plugins: [removePragmas, externalCesium],
+                onwarn: rollupWarning
             }).then(function(bundle) {
                 return bundle.write({
                     file: 'Build/Specs/karma-main.js',
@@ -215,27 +224,6 @@ gulp.task('clean', function(done) {
         rimraf.sync(file);
     });
     done();
-});
-
-// optimizeApproximateTerrainHeights can be used to regenerate the approximateTerrainHeights
-// file from an overly precise terrain heights file to reduce bandwidth
-// the approximate terrain heights are only used when the terrain provider does not have this
-// information and not a high level of precision is required
-gulp.task('optimizeApproximateTerrainHeights', function() {
-    var argv = yargs.usage('Usage: optimizeApproximateTerrainHeights -p [degree of precision]').argv;
-    var precision = typeof argv.p !== undefined ? argv.p : 1;
-    precision = Math.pow(10, precision);
-    return gulp.src('Source/Assets/approximateTerrainHeightsPrecise.json')
-        .pipe(gulpJsonTransform(function(data, file) {
-            Object.entries(data).forEach(function(entry) {
-                var values = entry[1];
-                data[entry[0]] = [Math.floor(values[0] * precision) / precision,
-                                  Math.ceil(values[1] * precision) / precision ];
-            });
-            return data;
-        }))
-        .pipe(gulpRename('approximateTerrainHeights.json'))
-        .pipe(gulp.dest('Source/Assets/'));
 });
 
 function cloc() {
@@ -926,7 +914,8 @@ function combineCesium(debug, optimizer, combineOutput) {
 
     return rollup.rollup({
         input: 'Source/Cesium.js',
-        plugins: plugins
+        plugins: plugins,
+        onwarn: rollupWarning
     }).then(function(bundle) {
         return bundle.write({
             format: 'umd',
@@ -976,7 +965,8 @@ function combineWorkers(debug, optimizer, combineOutput) {
 
             return rollup.rollup({
                 input: files,
-                plugins: plugins
+                plugins: plugins,
+                onwarn: rollupWarning
             }).then(function(bundle) {
                 return bundle.write({
                     dir: path.join(combineOutput, 'Workers'),
@@ -1326,7 +1316,8 @@ function buildCesiumViewer() {
                     pragmas: ['debug']
                 }),
                 rollupPluginUglify.uglify()
-            ]
+            ],
+            onwarn: rollupWarning
         }).then(function(bundle) {
             return bundle.write({
                 file: 'Build/CesiumViewer/CesiumViewer.js',

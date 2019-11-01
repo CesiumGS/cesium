@@ -2652,7 +2652,7 @@ import SceneMode from './SceneMode.js';
         //>>includeEnd('debug');
 
         var distance = this.distanceToBoundingSphere(boundingSphere);
-        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scratchPixelSize);
+        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, this._scene.pixelRatio, scratchPixelSize);
         return Math.max(pixelSize.x, pixelSize.y);
     };
 

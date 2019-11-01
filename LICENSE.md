@@ -1,4 +1,4 @@
-Copyright 2011-2018 CesiumJS Contributors
+Copyright 2011-2019 CesiumJS Contributors
 
                                  Apache License
                            Version 2.0, January 2004

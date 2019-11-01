@@ -1,9 +1,11 @@
+import Cartesian2 from './Cartesian2.js';
 import Cartesian3 from './Cartesian3.js';
 import Cartesian4 from './Cartesian4.js';
 import CullingVolume from './CullingVolume.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import defineProperties from './defineProperties.js';
+import deprecationWarning from './deprecationWarning.js';
 import DeveloperError from './DeveloperError.js';
 import CesiumMath from './Math.js';
 import Matrix4 from './Matrix4.js';
@@ -311,16 +313,18 @@ import Matrix4 from './Matrix4.js';
      * @param {Number} drawingBufferWidth The width of the drawing buffer.
      * @param {Number} drawingBufferHeight The height of the drawing buffer.
      * @param {Number} distance The distance to the near plane in meters.
+     * @param {Number} pixelRatio The scaling factor from pixel space to coordinate space.
      * @param {Cartesian2} result The object onto which to store the result.
      * @returns {Cartesian2} The modified result parameter or a new instance of {@link Cartesian2} with the pixel's width and height in the x and y properties, respectively.
      *
      * @exception {DeveloperError} drawingBufferWidth must be greater than zero.
      * @exception {DeveloperError} drawingBufferHeight must be greater than zero.
+     * @exception {DeveloperError} pixelRatio must be greater than zero.
      *
      * @example
      * // Example 1
      * // Get the width and height of a pixel.
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, new Cesium.Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, 1.0, scene.pixelRatio, new Cesium.Cartesian2());
      *
      * @example
      * // Example 2
@@ -331,10 +335,16 @@ import Matrix4 from './Matrix4.js';
      * var toCenter = Cesium.Cartesian3.subtract(primitive.boundingVolume.center, position, new Cesium.Cartesian3());      // vector from camera to a primitive
      * var toCenterProj = Cesium.Cartesian3.multiplyByScalar(direction, Cesium.Cartesian3.dot(direction, toCenter), new Cesium.Cartesian3()); // project vector onto camera direction vector
      * var distance = Cesium.Cartesian3.magnitude(toCenterProj);
-     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, new Cesium.Cartesian2());
+     * var pixelSize = camera.frustum.getPixelDimensions(scene.drawingBufferWidth, scene.drawingBufferHeight, distance, scene.pixelRatio, new Cesium.Cartesian2());
      */
-    PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, result) {
+    PerspectiveOffCenterFrustum.prototype.getPixelDimensions = function(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, result) {
         update(this);
+
+        if (pixelRatio instanceof Cartesian2) {
+            result = pixelRatio;
+            pixelRatio = 1.0;
+            deprecationWarning('getPixelDimensions-parameter-change', 'getPixelDimensions now takes a pixelRatio argument before the result argument in Cesium 1.63. The previous function definition will no longer work in 1.65.');
+        }
 
         //>>includeStart('debug', pragmas.debug);
         if (!defined(drawingBufferWidth) || !defined(drawingBufferHeight)) {
@@ -349,6 +359,12 @@ import Matrix4 from './Matrix4.js';
         if (!defined(distance)) {
             throw new DeveloperError('distance is required.');
         }
+        if (!defined(pixelRatio)) {
+            throw new DeveloperError('pixelRatio is required');
+        }
+        if (pixelRatio <= 0) {
+            throw new DeveloperError('pixelRatio must be greater than zero.');
+        }
         if (!defined(result)) {
             throw new DeveloperError('A result object is required.');
         }
@@ -356,9 +372,9 @@ import Matrix4 from './Matrix4.js';
 
         var inverseNear = 1.0 / this.near;
         var tanTheta = this.top * inverseNear;
-        var pixelHeight = 2.0 * distance * tanTheta / drawingBufferHeight;
+        var pixelHeight = 2.0 * pixelRatio * distance * tanTheta / drawingBufferHeight;
         tanTheta = this.right * inverseNear;
-        var pixelWidth = 2.0 * distance * tanTheta / drawingBufferWidth;
+        var pixelWidth = 2.0 * pixelRatio * distance * tanTheta / drawingBufferWidth;
 
         result.x = pixelWidth;
         result.y = pixelHeight;

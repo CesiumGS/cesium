@@ -1,6 +1,15 @@
 Change Log
 ==========
 
+### 8.0.1 - 2019-10-23
+* [no-prototype-builtins](https://eslint.org/docs/rules/no-prototype-builtins) should be disabled for both Node and Browser.
+
+### 8.0.0 - 2019-10-23
+* Update Browser ecmaVersion to '2015'.
+* Update Browser to use ES6 modules by default.
+* Disable default rule [no-prototype-builtins](https://eslint.org/docs/rules/no-prototype-builtins) because it's not useful.
+* Disable default rule [require-atomic-updates](https://eslint.org/docs/rules/require-atomic-updates) because it generates false positives.
+
 ### 7.0.0 - 2019-05-03
 * Update Node ecmaVersion to '2019'.
 * Enable [no-tabs](https://eslint.org/docs/rules/no-tabs).
