@@ -1357,7 +1357,9 @@ function buildCesiumViewer() {
                     base : 'Build/Sandcastle/CesiumUnminified',
                     nodir : true
                 }),
-
+            gulp.src(['Build/Sandcastle/CesiumUnminified/Widgets/shared.css'], {
+                base : 'Build/Sandcastle/CesiumUnminified'
+            }),
             gulp.src(['Build/Sandcastle/CesiumUnminified/Widgets/InfoBox/InfoBoxDescription.css'], {
                 base : 'Build/Sandcastle/CesiumUnminified'
             }),
