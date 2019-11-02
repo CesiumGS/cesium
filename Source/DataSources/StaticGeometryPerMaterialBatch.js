@@ -130,7 +130,7 @@ import Property from './Property.js';
                     geometryInstances : geometries,
                     appearance : new this.appearanceType({
                         material : this.material,
-                        translucent : this.material.isTranslucent(),
+                        // omitting translucent property to override it
                         closed : this.closed
                     }),
                     depthFailAppearance : depthFailAppearance,
