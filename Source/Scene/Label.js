@@ -1133,12 +1133,11 @@ import VerticalOrigin from './VerticalOrigin.js';
         var width = 0;
         var height = 0;
         var scale = label.totalScale;
-        var resolutionScale = label._labelCollection._resolutionScale;
 
         var backgroundBillboard = label._backgroundBillboard;
         if (defined(backgroundBillboard)) {
-            x = screenSpacePosition.x + (backgroundBillboard._translate.x / resolutionScale);
-            y = screenSpacePosition.y - (backgroundBillboard._translate.y / resolutionScale);
+            x = screenSpacePosition.x + (backgroundBillboard._translate.x);
+            y = screenSpacePosition.y - (backgroundBillboard._translate.y);
             width = backgroundBillboard.width * scale;
             height = backgroundBillboard.height * scale;
 
@@ -1161,8 +1160,8 @@ import VerticalOrigin from './VerticalOrigin.js';
                     continue;
                 }
 
-                var glyphX = screenSpacePosition.x + (billboard._translate.x / resolutionScale);
-                var glyphY = screenSpacePosition.y - (billboard._translate.y / resolutionScale);
+                var glyphX = screenSpacePosition.x + (billboard._translate.x);
+                var glyphY = screenSpacePosition.y - (billboard._translate.y);
                 var glyphWidth = glyph.dimensions.width * scale;
                 var glyphHeight = glyph.dimensions.height * scale;
 
