@@ -272,7 +272,7 @@ define([
         // this._subtreeViewer = new ImplicitSubtreeViewer(this); // TODO: Make class with the toroidial multi dimensional array to make iteration easier, needs to update small portions every frame
         // I think there are two portions? ancestor portion 1d array and the normal portion which is a 3d array (fixed sizes on each level?) toroidial array?
         // what happens when sse changes? re-init the fixed size arrays? prevent going below some value in tileset (during the set)?
-        //
+
         this._packedArraySizes = undefined;
         this._unpackedArraySizes = undefined;
         this._packedSize = 0;
@@ -2405,7 +2405,7 @@ define([
         var rootKeys = tilingScheme.firstSubtreesWithContent;
         var rootKeysLength = rootKeys.length;
         var availabilityFolder = this._availabilityFolder;
-        var key, url, i, x,y,z,depth;
+        var key, url, i, x, y, z, depth;
 
         var regex = /tileset\.json/;
         for (i = 0; i< rootKeysLength; i++) {
@@ -2432,6 +2432,7 @@ define([
                 // subtreeRootKey: new Cartesian4(x, y, z, depth),
                 refine: tilingScheme.refine
             };
+
             var rootGridTile = new Cesium3DTileImplicit(this, resource, rootGridTileInfo, rootTile);
             rootTile._depth = depth;
             rootTile.children.push(rootGridTile);
@@ -2456,8 +2457,8 @@ define([
         }
 
         // TODO: leave packed since we throw away, would need to convert subtree index to byte and bit index
-        // var subtree = this.unpackSubtreeBits(subtreeArrayBuffer);
-        var subtree = new Uint8Array(subtreeArrayBuffer);
+        var subtree = this.unpackSubtreeBits(subtreeArrayBuffer);
+        // var subtree = new Uint8Array(subtreeArrayBuffer);
 
         var statistics = this._statistics;
 
@@ -2469,8 +2470,8 @@ define([
 
         var tilesetRoot = this._root;
         var isRootGridTile = parentTile.parent === tilesetRoot;
-        // var subtreeLevelStart = !isRootGridTile ? 0 : this.findSubtreeLevelStart(subtree);
-        var subtreeLevelStart = !isRootGridTile ? 0 : this.findPackedSubtreeLevelStart(subtree);
+        var subtreeLevelStart = !isRootGridTile ? 0 : this.findSubtreeLevelStart(subtree);
+        // var subtreeLevelStart = !isRootGridTile ? 0 : this.findPackedSubtreeLevelStart(subtree);
         if (isRootGridTile) {
             this._startLevel = subtreeRootKey.w + subtreeLevelStart;
         }
@@ -2489,8 +2490,8 @@ define([
                 var nextLevel = subtreeLevelStart + 1;
                 var end = unpackedArraySizes[nextLevel];
                 for (i = unpackedArraySizes[subtreeLevelStart]; i < end ; i++) {
-                    // if (subtree[i] === 0) {
-                    if (this.getPackedSubtreeValue(subtree, i) === 0) {
+                    if (subtree[i] === 0) {
+                    // if (this.getPackedSubtreeValue(subtree, i) === 0) {
                         continue;
                     }
 
@@ -2516,8 +2517,8 @@ define([
                         var childZ = childBaseZ + z;
 
                         result = this.getSubtreeInfoFromTreeKey(childX, childY, childZ, childW);
-                        // if (tile.childSubtreeRootKeys[0].w !== subtreeRootKey.w || subtree[result.subtreeIndex] === 0) {
-                        if (tile.childSubtreeRootKeys[0].w !== subtreeRootKey.w || this.getPackedSubtreeValue(subtree, result.subtreeIndex) === 0) {
+                        if (tile.childSubtreeRootKeys[0].w !== subtreeRootKey.w || subtree[result.subtreeIndex] === 0) {
+                        // if (tile.childSubtreeRootKeys[0].w !== subtreeRootKey.w || this.getPackedSubtreeValue(subtree, result.subtreeIndex) === 0) {
                             continue;
                         }
 
