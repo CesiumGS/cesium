@@ -1767,19 +1767,22 @@ define([
         var yTiles = rootYCount * (1 << level);
 
         var isOct = this._isOct;
+        var mercator = tilingScheme.projection === 1; // Maybe use official EPSG strings (however, might convey that they're all supported when they won't be)
         var zTiles = isOct ? rootZCount * (1 << level) : 1;
 
         var bounds = tilingScheme.boundingVolume;
         if (defined(bounds.region)) {
+            // TODO: no reason to keep computing these
             var TWO_PI = Math.PI * 2;
-            var PI_OVER_TWO = Math.PI / 2;
+            var yRange = mercator ? 1.48442223321 * 2 : Math.PI;
+            var halfYRange = yRange * 0.5;
 
             var west = ((x / xTiles) * TWO_PI) - Math.PI;
             var east = (((x + 1) / xTiles) * TWO_PI) - Math.PI;
 
             // XY origin starts in upper left of the 2D map so north south calc is slightly different
-            var north = ((y / yTiles) * -Math.PI) + PI_OVER_TWO;
-            var south = (((y + 1) / yTiles) * -Math.PI) + PI_OVER_TWO;
+            var north = ((y / yTiles) * -yRange) + halfYRange;
+            var south = (((y + 1) / yTiles) * -yRange) + halfYRange;
 
             var boundsMinimumHeight = bounds.region[4];
             var boundsMaximumHeight = bounds.region[5];
