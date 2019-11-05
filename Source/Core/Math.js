@@ -1,16 +1,8 @@
-define([
-        '../ThirdParty/mersenne-twister',
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError'
-    ], function(
-        MersenneTwister,
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError) {
-    'use strict';
+import MersenneTwister from '../ThirdParty/mersenne-twister.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Math functions.
@@ -1052,6 +1044,4 @@ define([
         t = y < 0.0 ? -t : t;
         return t;
     };
-
-    return CesiumMath;
-});
+export default CesiumMath;

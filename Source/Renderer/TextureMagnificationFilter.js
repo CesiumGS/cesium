@@ -1,10 +1,5 @@
-define([
-        '../Core/freezeObject',
-        '../Core/WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
      * Enumerates all possible filters used when magnifying WebGL textures.
@@ -42,6 +37,4 @@ define([
                     (textureMagnificationFilter === TextureMagnificationFilter.LINEAR));
         }
     };
-
-    return freezeObject(TextureMagnificationFilter);
-});
+export default freezeObject(TextureMagnificationFilter);

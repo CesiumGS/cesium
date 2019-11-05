@@ -1,10 +1,5 @@
-define([
-        '../Core/defined',
-        '../Renderer/ShaderSource'
-    ], function(
-        defined,
-        ShaderSource) {
-    'use strict';
+import defined from '../Core/defined.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
 
     /**
      * @private
@@ -374,6 +369,4 @@ define([
             sources : sources
         });
     };
-
-    return ShadowMapShader;
-});
+export default ShadowMapShader;

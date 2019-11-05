@@ -1,36 +1,18 @@
-define([
-        'Core/Clock',
-        'Core/defaultValue',
-        'Core/EllipsoidTerrainProvider',
-        'Core/ScreenSpaceEventHandler',
-        'Core/WebMercatorProjection',
-        'Scene/Camera',
-        'Scene/ImageryLayerCollection',
-        'Scene/Scene',
-        'Scene/SceneMode',
-        'Scene/SkyBox',
-        'Scene/TileCoordinatesImageryProvider',
-        'Specs/DomEventSimulator',
-        'Specs/getWebGLStub',
-        'Specs/pollToPromise',
-        'Widgets/CesiumWidget/CesiumWidget'
-    ], function(
-        Clock,
-        defaultValue,
-        EllipsoidTerrainProvider,
-        ScreenSpaceEventHandler,
-        WebMercatorProjection,
-        Camera,
-        ImageryLayerCollection,
-        Scene,
-        SceneMode,
-        SkyBox,
-        TileCoordinatesImageryProvider,
-        DomEventSimulator,
-        getWebGLStub,
-        pollToPromise,
-        CesiumWidget) {
-        'use strict';
+import { Clock } from '../../../Source/Cesium.js';
+import { defaultValue } from '../../../Source/Cesium.js';
+import { EllipsoidTerrainProvider } from '../../../Source/Cesium.js';
+import { ScreenSpaceEventHandler } from '../../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../../Source/Cesium.js';
+import { Camera } from '../../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../../Source/Cesium.js';
+import { Scene } from '../../../Source/Cesium.js';
+import { SceneMode } from '../../../Source/Cesium.js';
+import { SkyBox } from '../../../Source/Cesium.js';
+import { TileCoordinatesImageryProvider } from '../../../Source/Cesium.js';
+import DomEventSimulator from '../../DomEventSimulator.js';
+import getWebGLStub from '../../getWebGLStub.js';
+import pollToPromise from '../../pollToPromise.js';
+import { CesiumWidget } from '../../../Source/Cesium.js';
 
 describe('Widgets/CesiumWidget/CesiumWidget', function() {
 
@@ -273,6 +255,35 @@ describe('Widgets/CesiumWidget/CesiumWidget', function() {
         expect(widget.resolutionScale).toBe(0.5);
     });
 
+    it('can enable useBrowserRecommendedResolution', function() {
+        widget = createCesiumWidget(container, {
+            useBrowserRecommendedResolution : true
+        });
+
+        expect(widget.useBrowserRecommendedResolution).toBe(true);
+    });
+
+    it('useBrowserRecommendedResolution ignores devicePixelRatio', function() {
+        var oldDevicePixelRatio = window.devicePixelRatio;
+        window.devicePixelRatio = 2.0;
+
+        widget = createCesiumWidget(container, {
+            useDefaultRenderLoop : false
+        });
+
+        widget.resolutionScale = 0.5;
+
+        widget.useBrowserRecommendedResolution = true;
+        widget.resize();
+        expect(widget.scene.pixelRatio).toEqual(0.5);
+
+        widget.useBrowserRecommendedResolution = false;
+        widget.resize();
+        expect(widget.scene.pixelRatio).toEqual(1.0);
+
+        window.devicePixelRatio = oldDevicePixelRatio;
+    });
+
     it('throws if resolutionScale is less than 0', function() {
         widget = createCesiumWidget(container);
         expect(function() {
@@ -367,4 +378,3 @@ describe('Widgets/CesiumWidget/CesiumWidget', function() {
         });
     });
 }, 'WebGL');
-});

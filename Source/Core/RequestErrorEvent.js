@@ -1,10 +1,5 @@
-define([
-        './defined',
-        './parseResponseHeaders'
-    ], function(
-        defined,
-        parseResponseHeaders) {
-    'use strict';
+import defined from './defined.js';
+import parseResponseHeaders from './parseResponseHeaders.js';
 
     /**
      * An event that is raised when a request encounters an error.
@@ -60,6 +55,4 @@ define([
         }
         return str;
     };
-
-    return RequestErrorEvent;
-});
+export default RequestErrorEvent;

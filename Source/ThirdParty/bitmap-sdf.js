@@ -3,9 +3,6 @@
 * Calculate SDF for image/bitmap/bw data
 * This project is a fork of MapBox's TinySDF that works directly on an input Canvas instead of generating the glyphs themselves.
 */
-define([], function() {
-
-    'use strict'
 
     var INF = 1e20;
 
@@ -144,5 +141,4 @@ define([], function() {
         }
     }
 
-    return calcSDF;
-});
+    export default calcSDF;

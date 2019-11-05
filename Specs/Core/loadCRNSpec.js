@@ -1,18 +1,9 @@
-define([
-        'Core/loadCRN',
-        'Core/PixelFormat',
-        'Core/Request',
-        'Core/RequestErrorEvent',
-        'Core/RequestScheduler',
-        'Core/Resource'
-    ], function(
-        loadCRN,
-        PixelFormat,
-        Request,
-        RequestErrorEvent,
-        RequestScheduler,
-        Resource) {
-        'use strict';
+import { loadCRN } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { RequestErrorEvent } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
 
 describe('Core/loadCRN', function() {
 
@@ -224,5 +215,4 @@ describe('Core/loadCRN', function() {
 
         RequestScheduler.maximumRequests = oldMaximumRequests;
     });
-});
 });

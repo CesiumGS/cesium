@@ -1,20 +1,10 @@
-define([
-        'Core/arrayFill',
-        'Core/AxisAlignedBoundingBox',
-        'Core/BoxGeometry',
-        'Core/Cartesian3',
-        'Core/GeometryOffsetAttribute',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        arrayFill,
-        AxisAlignedBoundingBox,
-        BoxGeometry,
-        Cartesian3,
-        GeometryOffsetAttribute,
-        VertexFormat,
-        createPackableSpecs) {
-        'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { AxisAlignedBoundingBox } from '../../Source/Cesium.js';
+import { BoxGeometry } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/BoxGeometry', function() {
 
@@ -141,5 +131,4 @@ describe('Core/BoxGeometry', function() {
         maximum : new Cartesian3(4.0, 5.0, 6.0),
         vertexFormat : VertexFormat.POSITION_AND_NORMAL
     }), [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, -1.0]);
-});
 });

@@ -56,7 +56,7 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
 {
     // Note the halfSize cannot be computed in JavaScript because it is sent via
     // compressed vertex attributes that coerce it to an integer.
-    vec2 halfSize = imageSize * scale * czm_resolutionScale * 0.5;
+    vec2 halfSize = imageSize * scale * 0.5;
     halfSize *= ((direction * 2.0) - 1.0);
 
     vec2 originTranslate = origin * abs(halfSize);
@@ -102,7 +102,7 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
     }
 
     positionEC.xy += translate * mpp;
-    positionEC.xy += (pixelOffset * czm_resolutionScale) * mpp;
+    positionEC.xy += pixelOffset * mpp;
     return positionEC;
 }
 

@@ -1,10 +1,5 @@
-define([
-        '../../Core/defaultValue',
-        '../../Core/JulianDate'
-    ], function(
-        defaultValue,
-        JulianDate) {
-    'use strict';
+import defaultValue from '../../Core/defaultValue.js';
+import JulianDate from '../../Core/JulianDate.js';
 
     /**
      * @private
@@ -58,6 +53,4 @@ define([
         }
         return range;
     };
-
-    return TimelineHighlightRange;
-});
+export default TimelineHighlightRange;

@@ -1,10 +1,5 @@
-define([
-        './defineProperties',
-        './DeveloperError'
-    ], function(
-        defineProperties,
-        DeveloperError) {
-    'use strict';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Defines how geodetic ellipsoid coordinates ({@link Cartographic}) project to a
@@ -64,6 +59,4 @@ define([
      *          created and returned.
      */
     MapProjection.prototype.unproject = DeveloperError.throwInstantiationError;
-
-    return MapProjection;
-});
+export default MapProjection;

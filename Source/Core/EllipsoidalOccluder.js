@@ -1,20 +1,10 @@
-define([
-        './BoundingSphere',
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './Rectangle'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        Rectangle) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import Rectangle from './Rectangle.js';
 
     /**
      * Determine whether or not other objects are visible or hidden behind the visible horizon defined by
@@ -76,7 +66,7 @@ define([
                 return this._cameraPosition;
             },
             set : function(cameraPosition) {
-                // See https://cesiumjs.org/2013/04/25/Horizon-culling/
+                // See https://cesium.com/blog/2013/04/25/Horizon-culling/
                 var ellipsoid = this._ellipsoid;
                 var cv = ellipsoid.transformPositionToScaledSpace(cameraPosition, this._cameraPositionInScaledSpace);
                 var vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
@@ -126,7 +116,7 @@ define([
      * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
-        // See https://cesiumjs.org/2013/04/25/Horizon-culling/
+        // See https://cesium.com/blog/2013/04/25/Horizon-culling/
         var cv = this._cameraPositionInScaledSpace;
         var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
         var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);
@@ -297,6 +287,4 @@ define([
         ellipsoid.transformPositionToScaledSpace(directionToPoint, directionToPointScratch);
         return Cartesian3.normalize(directionToPointScratch, directionToPointScratch);
     }
-
-    return EllipsoidalOccluder;
-});
+export default EllipsoidalOccluder;

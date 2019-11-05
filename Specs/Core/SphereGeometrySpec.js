@@ -1,16 +1,8 @@
-define([
-        'Core/Cartesian3',
-        'Core/Math',
-        'Core/SphereGeometry',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian3,
-        CesiumMath,
-        SphereGeometry,
-        VertexFormat,
-        createPackableSpecs) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { SphereGeometry } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/SphereGeometry', function() {
 
@@ -111,5 +103,4 @@ describe('Core/SphereGeometry', function() {
     // Adding TWO_PI and PI here for maximum clock/cone and other options from partial ellipsoids
     var packedInstance = [1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, CesiumMath.TWO_PI, 0.0, CesiumMath.PI, 3.0, 3.0, -1.0];
     createPackableSpecs(SphereGeometry, sphere, packedInstance);
-});
 });

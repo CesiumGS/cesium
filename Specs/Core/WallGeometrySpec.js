@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/VertexFormat',
-        'Core/WallGeometry',
-        'Specs/createPackableSpecs'
-    ], function(
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        VertexFormat,
-        WallGeometry,
-        createPackableSpecs) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import { WallGeometry } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/WallGeometry', function() {
 
@@ -305,6 +296,4 @@ describe('Core/WallGeometry', function() {
     });
     var packedInstance = [3.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.01];
     createPackableSpecs(WallGeometry, wall, packedInstance);
-});
-
 });

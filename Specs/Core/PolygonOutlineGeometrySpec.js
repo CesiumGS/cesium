@@ -1,24 +1,12 @@
-define([
-        'Core/ArcType',
-        'Core/arrayFill',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
-        'Core/Math',
-        'Core/PolygonOutlineGeometry',
-        'Specs/createPackableSpecs'
-    ], function(
-        ArcType,
-        arrayFill,
-        BoundingSphere,
-        Cartesian3,
-        Ellipsoid,
-        GeometryOffsetAttribute,
-        CesiumMath,
-        PolygonOutlineGeometry,
-        createPackableSpecs) {
-        'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { arrayFill } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PolygonOutlineGeometry } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/PolygonOutlineGeometry', function() {
 
@@ -613,5 +601,4 @@ describe('Core/PolygonOutlineGeometry', function() {
     packedInstance.push(Ellipsoid.WGS84.radii.x, Ellipsoid.WGS84.radii.y, Ellipsoid.WGS84.radii.z);
     packedInstance.push(0.0, 0.0, CesiumMath.PI_OVER_THREE, 0.0, 1.0, ArcType.GEODESIC, -1, 44);
     createPackableSpecs(PolygonOutlineGeometry, polygon, packedInstance);
-});
 });

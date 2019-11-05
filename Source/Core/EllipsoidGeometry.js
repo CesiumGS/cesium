@@ -1,40 +1,20 @@
-define([
-        './arrayFill',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Ellipsoid',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryOffsetAttribute',
-        './IndexDatatype',
-        './Math',
-        './PrimitiveType',
-        './VertexFormat'
-    ], function(
-        arrayFill,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryOffsetAttribute,
-        IndexDatatype,
-        CesiumMath,
-        PrimitiveType,
-        VertexFormat) {
-    'use strict';
+import arrayFill from './arrayFill.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryOffsetAttribute from './GeometryOffsetAttribute.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import PrimitiveType from './PrimitiveType.js';
+import VertexFormat from './VertexFormat.js';
 
     var scratchPosition = new Cartesian3();
     var scratchNormal = new Cartesian3();
@@ -317,8 +297,8 @@ define([
 
         var vertexCount = numThetas * numPhis * vertexMultiplier;
         var positions = new Float64Array(vertexCount * 3);
-        var isInner = new Array(vertexCount).fill(false);
-        var negateNormal = new Array(vertexCount).fill(false);
+        var isInner = arrayFill(new Array(vertexCount), false);
+        var negateNormal = arrayFill(new Array(vertexCount), false);
 
         // Multiply by 6 because there are two triangles per sector
         var indexCount = slicePartitions * stackPartitions * vertexMultiplier;
@@ -619,6 +599,4 @@ define([
         }
         return unitEllipsoidGeometry;
     };
-
-    return EllipsoidGeometry;
-});
+export default EllipsoidGeometry;

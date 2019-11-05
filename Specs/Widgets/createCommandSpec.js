@@ -1,12 +1,6 @@
-define([
-        'Specs/getArguments',
-        'ThirdParty/knockout',
-        'Widgets/createCommand'
-    ], function(
-        getArguments,
-        knockout,
-        createCommand) {
-        'use strict';
+import getArguments from '../getArguments.js';
+import { knockout } from '../../Source/Cesium.js';
+import { createCommand } from '../../Source/Cesium.js';
 
 describe('Widgets/createCommand', function() {
 
@@ -94,5 +88,4 @@ describe('Widgets/createCommand', function() {
         expect(beforeExecuteSpy.calls.count()).toEqual(1);
         expect(afterExecuteSpy).not.toHaveBeenCalled();
     });
-});
 });

@@ -1,8 +1,4 @@
-define([
-        'Core/queryToObject'
-    ], function(
-        queryToObject) {
-        'use strict';
+import { queryToObject } from '../../Source/Cesium.js';
 
 describe('Core/queryToObject', function() {
 
@@ -59,5 +55,4 @@ describe('Core/queryToObject', function() {
             queryToObject();
         }).toThrowDeveloperError();
     });
-});
 });

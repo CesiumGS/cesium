@@ -1,18 +1,9 @@
-define([
-        'Core/defaultValue',
-        'Core/Iso8601',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'Core/TimeStandard'
-    ], function(
-        defaultValue,
-        Iso8601,
-        JulianDate,
-        TimeInterval,
-        TimeIntervalCollection,
-        TimeStandard) {
-        'use strict';
+import { defaultValue } from '../../Source/Cesium.js';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { TimeStandard } from '../../Source/Cesium.js';
 
 describe('Core/TimeIntervalCollection', function() {
 
@@ -1905,5 +1896,4 @@ describe('Core/TimeIntervalCollection', function() {
         // Remove leading interval and check the rest
         checkIntervals(intervals, julianDates, false, false, dataCallback);
     });
-});
 });

@@ -11,10 +11,11 @@
 /.travis.yml
 /.vscode
 /Apps
+/Build/Apps
 /Build/Coverage
 /Build/minifyShaders.state
-/Build/Stubs
 /Build/Documentation
+/Build/Specs
 /Cesium-*.zip
 /Documentation
 /favicon.ico
@@ -24,7 +25,6 @@
 /launches
 /server.js
 /Source/copyrightHeader.js
-/Source/main.js
 /Specs
 /ThirdParty
 /Tools

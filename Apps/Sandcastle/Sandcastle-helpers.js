@@ -11,9 +11,8 @@
            '    Sandcastle.finishedLoading();\n' +
            '}\n' +
            'if (typeof Cesium !== \'undefined\') {\n' +
+           '    window.startupCalled = true;\n' +
            '    startup(Cesium);\n' +
-           '} else if (typeof require === \'function\') {\n' +
-           '    require([\'Cesium\'], startup);\n' +
            '}\n';
     };
     window.decodeBase64Data = function(base64String, pako) {

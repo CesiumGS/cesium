@@ -1,22 +1,12 @@
-define([
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/HeightmapTessellator',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/WebMercatorProjection'
-    ], function(
-        Cartesian2,
-        Cartesian3,
-        Ellipsoid,
-        HeightmapTessellator,
-        CesiumMath,
-        Rectangle,
-        WebMercatorProjection) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { HeightmapTessellator } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
 
-describe('Core/HeightmapTessellator', function() {
+describe('Scene/HeightmapTessellator', function() {
 
     it('throws when heightmap is not provided', function() {
         expect(function() {
@@ -441,5 +431,4 @@ describe('Core/HeightmapTessellator', function() {
             }
         }
     });
-});
 });

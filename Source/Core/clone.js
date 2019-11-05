@@ -1,8 +1,4 @@
-define([
-        './defaultValue'
-    ], function(
-        defaultValue) {
-    'use strict';
+import defaultValue from './defaultValue.js';
 
     /**
      * Clones an object, returning a new object containing the same properties.
@@ -33,6 +29,4 @@ define([
 
         return result;
     }
-
-    return clone;
-});
+export default clone;

@@ -1,38 +1,19 @@
-define([
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Ellipsoid',
-        './EllipsoidTangentPlane',
-        './Intersect',
-        './Interval',
-        './Math',
-        './Matrix3',
-        './Plane',
-        './Rectangle'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Ellipsoid,
-        EllipsoidTangentPlane,
-        Intersect,
-        Interval,
-        CesiumMath,
-        Matrix3,
-        Plane,
-        Rectangle) {
-    'use strict';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Ellipsoid from './Ellipsoid.js';
+import EllipsoidTangentPlane from './EllipsoidTangentPlane.js';
+import Intersect from './Intersect.js';
+import Interval from './Interval.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import Plane from './Plane.js';
+import Rectangle from './Rectangle.js';
 
     /**
      * Creates an instance of an OrientedBoundingBox.
@@ -778,6 +759,4 @@ define([
     OrientedBoundingBox.prototype.equals = function(right) {
         return OrientedBoundingBox.equals(this, right);
     };
-
-    return OrientedBoundingBox;
-});
+export default OrientedBoundingBox;

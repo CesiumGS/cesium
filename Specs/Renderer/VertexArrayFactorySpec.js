@@ -1,32 +1,17 @@
-define([
-        'Core/ComponentDatatype',
-        'Core/Geometry',
-        'Core/GeometryAttribute',
-        'Core/GeometryPipeline',
-        'Core/IndexDatatype',
-        'Core/PrimitiveType',
-        'Renderer/BufferUsage',
-        'Renderer/ClearCommand',
-        'Renderer/DrawCommand',
-        'Renderer/ShaderProgram',
-        'Renderer/VertexArray',
-        'Specs/createContext'
-    ], 'Renderer/VertexArrayFactory', function(
-        ComponentDatatype,
-        Geometry,
-        GeometryAttribute,
-        GeometryPipeline,
-        IndexDatatype,
-        PrimitiveType,
-        BufferUsage,
-        ClearCommand,
-        DrawCommand,
-        ShaderProgram,
-        VertexArray,
-        createContext) {
-        'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { Geometry } from '../../Source/Cesium.js';
+import { GeometryAttribute } from '../../Source/Cesium.js';
+import { GeometryPipeline } from '../../Source/Cesium.js';
+import { IndexDatatype } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import { ClearCommand } from '../../Source/Cesium.js';
+import { DrawCommand } from '../../Source/Cesium.js';
+import { ShaderProgram } from '../../Source/Cesium.js';
+import { VertexArray } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
-describe('Core/ComponentDatatype', function() {
+describe('Renderer/VertexArrayFactory', function() {
 
     var context;
     var va;
@@ -677,4 +662,3 @@ describe('Core/ComponentDatatype', function() {
         }).toThrowDeveloperError();
     });
 }, 'WebGL');
-});

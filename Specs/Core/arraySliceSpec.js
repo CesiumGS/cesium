@@ -1,10 +1,5 @@
-define([
-        'Core/arraySlice',
-        'Core/FeatureDetection'
-    ], function(
-        arraySlice,
-        FeatureDetection) {
-        'use strict';
+import { arraySlice } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
 
 describe('Core/arraySlice', function() {
 
@@ -51,5 +46,4 @@ describe('Core/arraySlice', function() {
             return arraySlice(array, undefined, {});
         }).toThrowDeveloperError();
     });
-});
 });

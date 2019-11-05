@@ -1,62 +1,31 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/ComponentDatatype',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/IndexDatatype',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/PixelFormat',
-        '../Core/PrimitiveType',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/ComputeCommand',
-        '../Renderer/DrawCommand',
-        '../Renderer/PixelDatatype',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/Texture',
-        '../Renderer/VertexArray',
-        '../Shaders/SunFS',
-        '../Shaders/SunTextureFS',
-        '../Shaders/SunVS',
-        './BlendingState',
-        './SceneMode',
-        './SceneTransforms'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        ComponentDatatype,
-        defined,
-        defineProperties,
-        destroyObject,
-        IndexDatatype,
-        CesiumMath,
-        Matrix4,
-        PixelFormat,
-        PrimitiveType,
-        Buffer,
-        BufferUsage,
-        ComputeCommand,
-        DrawCommand,
-        PixelDatatype,
-        RenderState,
-        ShaderProgram,
-        Texture,
-        VertexArray,
-        SunFS,
-        SunTextureFS,
-        SunVS,
-        BlendingState,
-        SceneMode,
-        SceneTransforms) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import ComputeCommand from '../Renderer/ComputeCommand.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import Texture from '../Renderer/Texture.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import SunFS from '../Shaders/SunFS.js';
+import SunTextureFS from '../Shaders/SunTextureFS.js';
+import SunVS from '../Shaders/SunVS.js';
+import BlendingState from './BlendingState.js';
+import SceneMode from './SceneMode.js';
+import SceneTransforms from './SceneTransforms.js';
 
     /**
      * Draws a sun billboard.
@@ -306,8 +275,9 @@ define([
         var limbCC = Matrix4.multiplyByVector(projMatrix, positionEC, scratchCartesian4);
         var limbWC = SceneTransforms.clipToGLWindowCoordinates(passState.viewport, limbCC, scratchLimbWC);
 
-        this._size = Math.ceil(Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4)));
+        this._size = Cartesian2.magnitude(Cartesian2.subtract(limbWC, positionWC, scratchCartesian4));
         this._size = 2.0 * this._size * (1.0 + 2.0 * this._glowLengthTS);
+        this._size = Math.ceil(this._size);
 
         return this._commands;
     };
@@ -351,6 +321,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return Sun;
-});
+export default Sun;

@@ -1,42 +1,21 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/ComponentDatatype',
-        '../Core/defined',
-        '../Core/FeatureDetection',
-        '../Core/Geometry',
-        '../Core/GeometryAttribute',
-        '../Core/PrimitiveType',
-        '../Renderer/BufferUsage',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArray',
-        '../Shaders/DepthPlaneFS',
-        '../Shaders/DepthPlaneVS',
-        './SceneMode'
-    ], function(
-        BoundingSphere,
-        Cartesian3,
-        ComponentDatatype,
-        defined,
-        FeatureDetection,
-        Geometry,
-        GeometryAttribute,
-        PrimitiveType,
-        BufferUsage,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArray,
-        DepthPlaneFS,
-        DepthPlaneVS,
-        SceneMode) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defined from '../Core/defined.js';
+import FeatureDetection from '../Core/FeatureDetection.js';
+import Geometry from '../Core/Geometry.js';
+import GeometryAttribute from '../Core/GeometryAttribute.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import DepthPlaneFS from '../Shaders/DepthPlaneFS.js';
+import DepthPlaneVS from '../Shaders/DepthPlaneVS.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * @private
@@ -217,6 +196,4 @@ define([
         this._sp = this._sp && this._sp.destroy();
         this._va = this._va && this._va.destroy();
     };
-
-    return DepthPlane;
-});
+export default DepthPlane;

@@ -1,16 +1,9 @@
-define([
-        'Core/Cartesian3',
-        'Core/HeadingPitchRange',
-        'Specs/Cesium3DTilesTester',
-        'Specs/createScene'
-    ], 'Scene/Tileset3DTileContent', function(
-        Cartesian3,
-        HeadingPitchRange,
-        Cesium3DTilesTester,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import Cesium3DTilesTester from '../Cesium3DTilesTester.js';
+import createScene from '../createScene.js';
 
-describe('Core/Cartesian3', function() {
+describe('Scene/Tileset3DTileContent', function() {
 
     var scene;
     var centerLongitude = -1.31968;
@@ -64,4 +57,3 @@ describe('Core/Cartesian3', function() {
     });
 
 }, 'WebGL');
-});

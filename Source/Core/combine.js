@@ -1,10 +1,5 @@
-define([
-        './defaultValue',
-        './defined'
-    ], function(
-        defaultValue,
-        defined) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
 
     /**
      * Merges two objects, copying their properties onto a new combined object. When two objects have the same
@@ -74,6 +69,4 @@ define([
         }
         return result;
     }
-
-    return combine;
-});
+export default combine;

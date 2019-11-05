@@ -1,10 +1,5 @@
-define([
-        '../Core/defineProperties',
-        '../Core/destroyObject'
-    ], function(
-        defineProperties,
-        destroyObject) {
-    'use strict';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
 
     /**
      * Represents empty content for tiles in a
@@ -132,6 +127,4 @@ define([
     Empty3DTileContent.prototype.destroy = function() {
         return destroyObject(this);
     };
-
-    return Empty3DTileContent;
-});
+export default Empty3DTileContent;

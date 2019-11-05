@@ -1,38 +1,19 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Matrix4',
-        '../Core/Resource',
-        '../Scene/ColorBlendMode',
-        '../Scene/HeightReference',
-        '../Scene/Model',
-        '../Scene/ModelAnimationLoop',
-        '../Scene/ShadowMode',
-        './BoundingSphereState',
-        './Property'
-    ], function(
-        AssociativeArray,
-        BoundingSphere,
-        Cartesian2,
-        Color,
-        defined,
-        destroyObject,
-        DeveloperError,
-        Matrix4,
-        Resource,
-        ColorBlendMode,
-        HeightReference,
-        Model,
-        ModelAnimationLoop,
-        ShadowMode,
-        BoundingSphereState,
-        Property) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Resource from '../Core/Resource.js';
+import ColorBlendMode from '../Scene/ColorBlendMode.js';
+import HeightReference from '../Scene/HeightReference.js';
+import Model from '../Scene/Model.js';
+import ModelAnimationLoop from '../Scene/ModelAnimationLoop.js';
+import ShadowMode from '../Scene/ShadowMode.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import Property from './Property.js';
 
     var defaultScale = 1.0;
     var defaultMinimumPixelSize = 0.0;
@@ -351,6 +332,4 @@ define([
             modelHash[entity.id].loadFail = true;
         });
     }
-
-    return ModelVisualizer;
-});
+export default ModelVisualizer;

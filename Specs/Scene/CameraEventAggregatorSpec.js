@@ -1,22 +1,11 @@
-define([
-        'Core/Cartesian2',
-        'Core/combine',
-        'Core/FeatureDetection',
-        'Core/KeyboardEventModifier',
-        'Scene/CameraEventAggregator',
-        'Scene/CameraEventType',
-        'Specs/createCanvas',
-        'Specs/DomEventSimulator'
-    ], function(
-        Cartesian2,
-        combine,
-        FeatureDetection,
-        KeyboardEventModifier,
-        CameraEventAggregator,
-        CameraEventType,
-        createCanvas,
-        DomEventSimulator) {
-        'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { combine } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { KeyboardEventModifier } from '../../Source/Cesium.js';
+import { CameraEventAggregator } from '../../Source/Cesium.js';
+import { CameraEventType } from '../../Source/Cesium.js';
+import createCanvas from '../createCanvas.js';
+import DomEventSimulator from '../DomEventSimulator.js';
 
 describe('Scene/CameraEventAggregator', function() {
 
@@ -311,5 +300,4 @@ describe('Scene/CameraEventAggregator', function() {
         handler.destroy();
         expect(handler.isDestroyed()).toEqual(true);
     });
-});
 });

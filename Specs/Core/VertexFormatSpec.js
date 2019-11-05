@@ -1,10 +1,5 @@
-define([
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        VertexFormat,
-        createPackableSpecs) {
-        'use strict';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
 
 describe('Core/VertexFormat', function() {
 
@@ -30,5 +25,4 @@ describe('Core/VertexFormat', function() {
     });
 
     createPackableSpecs(VertexFormat, VertexFormat.POSITION_AND_NORMAL, [1.0, 1.0, 0.0, 0.0, 0.0, 0.0]);
-});
 });

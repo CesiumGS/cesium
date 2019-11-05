@@ -1,14 +1,7 @@
-define([
-        'Core/GeographicTilingScheme',
-        'Core/HeightmapEncoding',
-        'Core/HeightmapTerrainData',
-        'Core/TerrainData'
-    ], function(
-        GeographicTilingScheme,
-        HeightmapEncoding,
-        HeightmapTerrainData,
-        TerrainData) {
-        'use strict';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { HeightmapEncoding } from '../../Source/Cesium.js';
+import { HeightmapTerrainData } from '../../Source/Cesium.js';
+import { TerrainData } from '../../Source/Cesium.js';
 
 describe('Core/HeightmapTerrainData', function() {
 
@@ -328,5 +321,4 @@ describe('Core/HeightmapTerrainData', function() {
              }).toThrowDeveloperError();
          });
      });
-});
 });

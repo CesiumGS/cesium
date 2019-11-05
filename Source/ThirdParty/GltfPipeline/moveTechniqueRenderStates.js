@@ -1,16 +1,8 @@
-define([
-        './addExtensionsUsed',
-        './ForEach',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/WebGLConstants'
-    ], function(
-        addExtensionsUsed,
-        ForEach,
-        defaultValue,
-        defined,
-        WebGLConstants) {
-    'use strict';
+import addExtensionsUsed from './addExtensionsUsed.js'
+import ForEach from './ForEach.js'
+import defaultValue from '../../Core/defaultValue.js'
+import defined from '../../Core/defined.js'
+import WebGLConstants from '../../Core/WebGLConstants.js'
 
     var defaultBlendEquation = [
         WebGLConstants.FUNC_ADD,
@@ -134,5 +126,4 @@ define([
         return gltf;
     }
 
-    return moveTechniqueRenderStates;
-});
+    export default moveTechniqueRenderStates;

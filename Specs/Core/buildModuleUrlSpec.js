@@ -1,12 +1,6 @@
-define([
-        'Core/buildModuleUrl',
-        'Core/Resource',
-        'ThirdParty/Uri'
-    ], function(
-        buildModuleUrl,
-        Resource,
-        Uri) {
-        'use strict';
+import { buildModuleUrl } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Uri } from '../../Source/Cesium.js';
 
 describe('Core/buildModuleUrl', function() {
 
@@ -24,7 +18,6 @@ describe('Core/buildModuleUrl', function() {
         var r = buildModuleUrl._cesiumScriptRegex;
 
         expect(r.exec('Cesium.js')[1]).toEqual('');
-        expect(r.exec('assets/foo/Cesium-b16.js')[1]).toEqual('assets/foo/');
         expect(r.exec('assets/foo/Cesium.js')[1]).toEqual('assets/foo/');
         expect(r.exec('http://example.invalid/Cesium/assets/foo/Cesium.js')[1]).toEqual('http://example.invalid/Cesium/assets/foo/');
 
@@ -60,5 +53,4 @@ describe('Core/buildModuleUrl', function() {
         window.CESIUM_BASE_URL = oldCESIUM_BASE_URL;
         buildModuleUrl._clearBaseResource();
     });
-});
 });

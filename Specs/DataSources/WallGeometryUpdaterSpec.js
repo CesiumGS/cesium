@@ -1,42 +1,21 @@
-define([
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/ConstantProperty',
-        'DataSources/Entity',
-        'DataSources/PropertyArray',
-        'DataSources/SampledPositionProperty',
-        'DataSources/SampledProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'DataSources/WallGeometryUpdater',
-        'DataSources/WallGraphics',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
-        'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterSpecs',
-        'Specs/createScene'
-    ], function(
-        Cartesian3,
-        Color,
-        JulianDate,
-        TimeInterval,
-        TimeIntervalCollection,
-        ConstantProperty,
-        Entity,
-        PropertyArray,
-        SampledPositionProperty,
-        SampledProperty,
-        TimeIntervalCollectionProperty,
-        WallGeometryUpdater,
-        WallGraphics,
-        PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
-        createDynamicProperty,
-        createGeometryUpdaterSpecs,
-        createScene) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { PropertyArray } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { WallGeometryUpdater } from '../../Source/Cesium.js';
+import { WallGraphics } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createDynamicGeometryUpdaterSpecs from '../createDynamicGeometryUpdaterSpecs.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createGeometryUpdaterSpecs from '../createGeometryUpdaterSpecs.js';
+import createScene from '../createScene.js';
 
 describe('DataSources/WallGeometryUpdater', function() {
 
@@ -226,4 +205,3 @@ describe('DataSources/WallGeometryUpdater', function() {
 
     createDynamicGeometryUpdaterSpecs(WallGeometryUpdater, 'wall', createDynamicWall, getScene);
 }, 'WebGL');
-});

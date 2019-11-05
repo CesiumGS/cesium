@@ -1,46 +1,24 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Matrix4',
-        '../Core/writeTextToCanvas',
-        '../ThirdParty/bitmap-sdf',
-        './BillboardCollection',
-        './BlendOption',
-        './HeightReference',
-        './HorizontalOrigin',
-        './Label',
-        './LabelStyle',
-        './SDFSettings',
-        './TextureAtlas',
-        './VerticalOrigin'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Matrix4,
-        writeTextToCanvas,
-        bitmapSDF,
-        BillboardCollection,
-        BlendOption,
-        HeightReference,
-        HorizontalOrigin,
-        Label,
-        LabelStyle,
-        SDFSettings,
-        TextureAtlas,
-        VerticalOrigin) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Matrix4 from '../Core/Matrix4.js';
+import writeTextToCanvas from '../Core/writeTextToCanvas.js';
+import bitmapSDF from '../ThirdParty/bitmap-sdf.js';
+import BillboardCollection from './BillboardCollection.js';
+import BlendOption from './BlendOption.js';
+import HeightReference from './HeightReference.js';
+import HorizontalOrigin from './HorizontalOrigin.js';
+import Label from './Label.js';
+import LabelStyle from './LabelStyle.js';
+import SDFSettings from './SDFSettings.js';
+import TextureAtlas from './TextureAtlas.js';
+import VerticalOrigin from './VerticalOrigin.js';
+import GraphemeSplitter from '../ThirdParty/graphemesplitter.js';
 
     // A glyph represents a single character in a particular label.  It may or may
     // not have a billboard, depending on whether the texture info has an index into
@@ -132,9 +110,12 @@ define([
         });
     }
 
+    var splitter = new GraphemeSplitter();
+
     function rebindAllGlyphs(labelCollection, label) {
         var text = label._renderedText;
-        var textLength = text.length;
+        var graphemes = splitter.splitGraphemes(text);
+        var textLength = graphemes.length;
         var glyphs = label._glyphs;
         var glyphsLength = glyphs.length;
 
@@ -196,7 +177,7 @@ define([
         // walk the text looking for new characters (creating new glyphs for each)
         // or changed characters (rebinding existing glyphs)
         for (textIndex = 0; textIndex < textLength; ++textIndex) {
-            var character = text.charAt(textIndex);
+            var character = graphemes[textIndex];
             var verticalOrigin = label._verticalOrigin;
 
             var id = JSON.stringify([
@@ -544,7 +525,7 @@ define([
      * @see Label
      * @see BillboardCollection
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      *
      * @example
      * // Create a label collection with two labels
@@ -864,7 +845,7 @@ define([
         }
 
         var uniformState = context.uniformState;
-        var resolutionScale = uniformState.resolutionScale;
+        var resolutionScale = uniformState.pixelRatio;
         var resolutionChanged = this._resolutionScale !== resolutionScale;
         this._resolutionScale = resolutionScale;
 
@@ -949,6 +930,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return LabelCollection;
-});
+export default LabelCollection;

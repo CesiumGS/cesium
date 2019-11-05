@@ -1,12 +1,6 @@
-define([
-        '../../Core/defineProperties',
-        '../../ThirdParty/knockout',
-        '../createCommand'
-    ], function(
-        defineProperties,
-        knockout,
-        createCommand) {
-    'use strict';
+import defineProperties from '../../Core/defineProperties.js';
+import knockout from '../../ThirdParty/knockout.js';
+import createCommand from '../createCommand.js';
 
     /**
      * The view model for {@link NavigationHelpButton}.
@@ -81,6 +75,4 @@ define([
             }
         }
     });
-
-    return NavigationHelpButtonViewModel;
-});
+export default NavigationHelpButtonViewModel;

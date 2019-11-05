@@ -1,8 +1,4 @@
-define([
-        '../Core/DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from '../Core/DeveloperError.js';
 
     /**
      * <p>
@@ -35,6 +31,4 @@ define([
     ParticleEmitter.prototype.emit = function(particle) {
         DeveloperError.throwInstantiationError();
     };
-
-    return ParticleEmitter;
-});
+export default ParticleEmitter;

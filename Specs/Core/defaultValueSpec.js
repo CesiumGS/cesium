@@ -1,8 +1,4 @@
-define([
-        'Core/defaultValue'
-    ], function(
-        defaultValue) {
-        'use strict';
+import { defaultValue } from '../../Source/Cesium.js';
 
 describe('Core/defaultValue', function() {
 
@@ -18,5 +14,4 @@ describe('Core/defaultValue', function() {
         expect(defaultValue(1, 5)).toEqual(1);
     });
 
-});
 });

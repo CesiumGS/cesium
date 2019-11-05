@@ -1,18 +1,9 @@
-define([
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/CompositeProperty',
-        'DataSources/ConstantProperty'
-    ], function(
-        Cartesian3,
-        JulianDate,
-        TimeInterval,
-        TimeIntervalCollection,
-        CompositeProperty,
-        ConstantProperty) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { CompositeProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
 
 describe('DataSources/CompositeProperty', function() {
 
@@ -173,5 +164,4 @@ describe('DataSources/CompositeProperty', function() {
             property.getValue(undefined);
         }).toThrowDeveloperError();
     });
-});
 });

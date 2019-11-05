@@ -1,20 +1,10 @@
-define([
-        'Core/Color',
-        'Core/IndexDatatype',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Renderer/Context',
-        'Renderer/ContextLimits',
-        'Specs/createContext'
-    ], function(
-        Color,
-        IndexDatatype,
-        Buffer,
-        BufferUsage,
-        Context,
-        ContextLimits,
-        createContext) {
-        'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { IndexDatatype } from '../../Source/Cesium.js';
+import { Buffer } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import { Context } from '../../Source/Cesium.js';
+import { ContextLimits } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
 
 describe('Renderer/Context', function() {
 
@@ -173,6 +163,10 @@ describe('Renderer/Context', function() {
         expect(context.floatingPointTexture).toBeDefined();
     });
 
+    it('gets whether the texture float has 6 places of precision', function() {
+        expect(context.floatTextureSixPlaces).toBeDefined();
+    });
+
     it('gets texture filter anisotropic extension', function() {
         expect(context.textureFilterAnisotropic).toBeDefined();
     });
@@ -316,4 +310,3 @@ describe('Renderer/Context', function() {
         c.destroyForSpecs();
     });
 }, 'WebGL');
-});

@@ -1,8 +1,4 @@
-define([
-        'Core/createGuid'
-    ], function(
-        createGuid) {
-        'use strict';
+import { createGuid } from '../../Source/Cesium.js';
 
 describe('Core/createGuid', function() {
 
@@ -29,5 +25,4 @@ describe('Core/createGuid', function() {
         expect(isGuidRegex.test(guid3)).toEqual(true);
         expect(guid3.length).toEqual(36);
     });
-});
 });

@@ -1,12 +1,6 @@
-define([
-        'Core/Cartesian3',
-        'Scene/Particle',
-        'Scene/SphereEmitter'
-    ], function(
-        Cartesian3,
-        Particle,
-        SphereEmitter) {
-        'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Particle } from '../../Source/Cesium.js';
+import { SphereEmitter } from '../../Source/Cesium.js';
 
 describe('Scene/SphereEmitter', function() {
 
@@ -60,5 +54,4 @@ describe('Scene/SphereEmitter', function() {
             expect(particle.velocity).toEqual(Cartesian3.normalize(particle.position, new Cartesian3()));
         }
     });
-});
 });

@@ -1,28 +1,14 @@
-define([
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/defaultValue',
-        'Core/GeometryInstance',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Scene/Appearance',
-        'Scene/Material',
-        'Scene/MaterialAppearance',
-        'Scene/Primitive',
-        'Specs/createScene'
-    ], function(
-        Color,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        GeometryInstance,
-        Rectangle,
-        RectangleGeometry,
-        Appearance,
-        Material,
-        MaterialAppearance,
-        Primitive,
-        createScene) {
-        'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { Appearance } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { MaterialAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
 
 describe('Scene/MaterialAppearance', function() {
 
@@ -127,4 +113,3 @@ describe('Scene/MaterialAppearance', function() {
     });
 
 }, 'WebGL');
-});

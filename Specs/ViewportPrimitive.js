@@ -1,14 +1,7 @@
-define([
-        'Core/defined',
-        'Core/destroyObject',
-        'Renderer/Pass',
-        'Renderer/RenderState'
-    ], function(
-        defined,
-        destroyObject,
-        Pass,
-        RenderState) {
-    'use strict';
+import { defined } from '../Source/Cesium.js';
+import { destroyObject } from '../Source/Cesium.js';
+import { Pass } from '../Source/Cesium.js';
+import { RenderState } from '../Source/Cesium.js';
 
     var ViewportPrimitive = function(fragmentShader) {
         this._fs = fragmentShader;
@@ -35,6 +28,4 @@ define([
         }
         return destroyObject(this);
     };
-
-    return ViewportPrimitive;
-});
+export default ViewportPrimitive;

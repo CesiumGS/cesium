@@ -1,24 +1,12 @@
-define([
-        './ClockRange',
-        './ClockStep',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Event',
-        './getTimestamp',
-        './JulianDate'
-    ], function(
-        ClockRange,
-        ClockStep,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        getTimestamp,
-        JulianDate) {
-    'use strict';
+import ClockRange from './ClockRange.js';
+import ClockStep from './ClockStep.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Event from './Event.js';
+import getTimestamp from './getTimestamp.js';
+import JulianDate from './JulianDate.js';
 
     /**
      * A simple clock for keeping track of simulated time.
@@ -314,6 +302,4 @@ define([
         this.onTick.raiseEvent(this);
         return currentTime;
     };
-
-    return Clock;
-});
+export default Clock;
