@@ -42,7 +42,7 @@ var resetCameraFunction = function() {
 resetCameraFunction();
 
 // snow
-var snowParticleSize = scene.drawingBufferWidth / 100.0;
+var snowParticleSize = 12.0;
 var snowRadius = 100000.0;
 var minimumSnowImageSize = new Cesium.Cartesian2(snowParticleSize, snowParticleSize);
 var maximumSnowImageSize = new Cesium.Cartesian2(snowParticleSize * 2.0, snowParticleSize * 2.0);
@@ -81,7 +81,7 @@ snowSystem = new Cesium.ParticleSystem({
 scene.primitives.add(snowSystem);
 
 // rain
-var rainParticleSize = scene.drawingBufferWidth / 80.0;
+var rainParticleSize = 15.0;
 var rainRadius = 100000.0;
 var rainImageSize = new Cesium.Cartesian2(rainParticleSize, rainParticleSize * 2.0);
 
