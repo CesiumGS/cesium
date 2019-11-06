@@ -84,7 +84,7 @@ vec4 addScreenSpaceOffset(vec4 positionEC, vec2 imageSize, float scale, vec2 dir
 #endif
 
     mpp = czm_metersPerPixel(positionEC);
-    positionEC.xy += (originTranslate + halfSize) * (sizeInMeters ? 1.0 : mpp);
+    positionEC.xy += (originTranslate + halfSize) * czm_branchFreeTernary(sizeInMeters, 1.0, mpp);
     positionEC.xy += (translate + pixelOffset) * mpp;
 
     return positionEC;

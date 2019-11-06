@@ -1,6 +1,11 @@
 Change Log
 ==========
 
+### 1.63.1 - 2019-11-06
+
+##### Fixes :wrench:
+* Fixed globe lighting and labels under different resolution scales.
+
 ### 1.63 - 2019-11-01
 
 ##### Major Announcements :loudspeaker:
