@@ -1772,17 +1772,32 @@ define([
 
         var bounds = tilingScheme.boundingVolume;
         if (defined(bounds.region)) {
+            var globalBounds = tilingScheme.globalContext.boundingVolume.region;
             // TODO: no reason to keep computing these
-            var TWO_PI = Math.PI * 2;
-            var yRange = mercator ? 1.48442223321 * 2 : Math.PI;
-            var halfYRange = yRange * 0.5;
+            // Pull grom global region, compute span and start points
+            var xSpan = globalBounds[2] - globalBounds[0]; // east - west
+            var ySpan = globalBounds[3] - globalBounds[1]; // north - south
+            var xStart = globalBounds[0];
+            var yStart = globalBounds[3];
 
-            var west = ((x / xTiles) * TWO_PI) - Math.PI;
-            var east = (((x + 1) / xTiles) * TWO_PI) - Math.PI;
+            var west = ((x / xTiles) * xSpan) + xStart;
+            var east = (((x + 1) / xTiles) * xSpan) + xStart;
 
             // XY origin starts in upper left of the 2D map so north south calc is slightly different
-            var north = ((y / yTiles) * -yRange) + halfYRange;
-            var south = (((y + 1) / yTiles) * -yRange) + halfYRange;
+            // y = yTiles - 1 - y; // Y index goes bottom to top for roadhouse uniform grid
+            var north = ((y / yTiles) * -ySpan) + yStart;
+            var south = (((y + 1) / yTiles) * -ySpan) + yStart;
+
+            // var TWO_PI = Math.PI * 2;
+            // var yRange = mercator ? 1.48442223321 * 2 : Math.PI;
+            // var halfYRange = yRange * 0.5;
+            //
+            // var west = ((x / xTiles) * TWO_PI) - Math.PI;
+            // var east = (((x + 1) / xTiles) * TWO_PI) - Math.PI;
+            //
+            // // XY origin starts in upper left of the 2D map so north south calc is slightly different
+            // var north = ((y / yTiles) * -yRange) + halfYRange;
+            // var south = (((y + 1) / yTiles) * -yRange) + halfYRange;
 
             var boundsMinimumHeight = bounds.region[4];
             var boundsMaximumHeight = bounds.region[5];
