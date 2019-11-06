@@ -1,50 +1,27 @@
-defineSuite([
-        'Scene/QuadtreePrimitive',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/defined',
-        'Core/defineProperties',
-        'Core/Ellipsoid',
-        'Core/EventHelper',
-        'Core/GeographicProjection',
-        'Core/GeographicTilingScheme',
-        'Core/Intersect',
-        'Core/Rectangle',
-        'Core/Visibility',
-        'Scene/Camera',
-        'Scene/GlobeSurfaceTileProvider',
-        'Scene/ImageryLayerCollection',
-        'Scene/QuadtreeTileLoadState',
-        'Scene/SceneMode',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when',
-        '../MockTerrainProvider',
-        '../TerrainTileProcessor'
-    ], function(
-        QuadtreePrimitive,
-        Cartesian3,
-        Cartographic,
-        defined,
-        defineProperties,
-        Ellipsoid,
-        EventHelper,
-        GeographicProjection,
-        GeographicTilingScheme,
-        Intersect,
-        Rectangle,
-        Visibility,
-        Camera,
-        GlobeSurfaceTileProvider,
-        ImageryLayerCollection,
-        QuadtreeTileLoadState,
-        SceneMode,
-        createScene,
-        pollToPromise,
-        when,
-        MockTerrainProvider,
-        TerrainTileProcessor) {
-    'use strict';
+import MockTerrainProvider from '../MockTerrainProvider.js';
+import TerrainTileProcessor from '../TerrainTileProcessor.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { defineProperties } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EventHelper } from '../../Source/Cesium.js';
+import { GeographicProjection } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Visibility } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { GlobeSurfaceTileProvider } from '../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../Source/Cesium.js';
+import { QuadtreePrimitive } from '../../Source/Cesium.js';
+import { QuadtreeTileLoadState } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/QuadtreePrimitive', function() {
 
     describe('selectTilesForRendering', function() {
         var scene;
@@ -83,7 +60,8 @@ defineSuite([
                 mode: SceneMode.SCENE3D,
                 commandList: [],
                 cullingVolume: jasmine.createSpyObj('CullingVolume', ['computeVisibility']),
-                afterRender: []
+                afterRender: [],
+                pixelRatio: 1.0
             };
 
             frameState.cullingVolume.computeVisibility.and.returnValue(Intersect.INTERSECTING);

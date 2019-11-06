@@ -1,66 +1,34 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/EasingFunction',
-        '../Core/Ellipsoid',
-        '../Core/EllipsoidGeodesic',
-        '../Core/Event',
-        '../Core/HeadingPitchRange',
-        '../Core/HeadingPitchRoll',
-        '../Core/Intersect',
-        '../Core/IntersectionTests',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/OrthographicFrustum',
-        '../Core/OrthographicOffCenterFrustum',
-        '../Core/PerspectiveFrustum',
-        '../Core/Quaternion',
-        '../Core/Ray',
-        '../Core/Rectangle',
-        '../Core/Transforms',
-        './CameraFlightPath',
-        './MapMode2D',
-        './SceneMode'
-    ], function(
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        EasingFunction,
-        Ellipsoid,
-        EllipsoidGeodesic,
-        Event,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        Intersect,
-        IntersectionTests,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        OrthographicFrustum,
-        OrthographicOffCenterFrustum,
-        PerspectiveFrustum,
-        Quaternion,
-        Ray,
-        Rectangle,
-        Transforms,
-        CameraFlightPath,
-        MapMode2D,
-        SceneMode) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import EasingFunction from '../Core/EasingFunction.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import EllipsoidGeodesic from '../Core/EllipsoidGeodesic.js';
+import Event from '../Core/Event.js';
+import getTimestamp from '../Core/getTimestamp.js';
+import HeadingPitchRange from '../Core/HeadingPitchRange.js';
+import HeadingPitchRoll from '../Core/HeadingPitchRoll.js';
+import Intersect from '../Core/Intersect.js';
+import IntersectionTests from '../Core/IntersectionTests.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import OrthographicOffCenterFrustum from '../Core/OrthographicOffCenterFrustum.js';
+import PerspectiveFrustum from '../Core/PerspectiveFrustum.js';
+import Quaternion from '../Core/Quaternion.js';
+import Ray from '../Core/Ray.js';
+import Rectangle from '../Core/Rectangle.js';
+import Transforms from '../Core/Transforms.js';
+import CameraFlightPath from './CameraFlightPath.js';
+import MapMode2D from './MapMode2D.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * The camera is defined by a position, orientation, and view frustum.
@@ -78,8 +46,8 @@ define([
      *
      * @param {Scene} scene The scene.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="https://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="https://cesium.com/docs/tutorials/camera/|Camera Tutorial}
      *
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
@@ -115,6 +83,29 @@ define([
         this._position = new Cartesian3();
         this._positionWC = new Cartesian3();
         this._positionCartographic = new Cartographic();
+        this._oldPositionWC = undefined;
+
+        /**
+         * The position delta magnitude.
+         *
+         * @private
+         */
+        this.positionWCDeltaMagnitude = 0.0;
+
+        /**
+         * The position delta magnitude last frame.
+         *
+         * @private
+         */
+        this.positionWCDeltaMagnitudeLastFrame = 0.0;
+
+        /**
+         * How long in seconds since the camera has stopped moving
+         *
+         * @private
+         */
+        this.timeSinceMoved = 0.0;
+        this._lastMovedTimestamp = 0.0;
 
         /**
          * The view direction of the camera.
@@ -275,8 +266,42 @@ define([
         Matrix4.inverseTransformation(camera._viewMatrix, camera._invViewMatrix);
     }
 
+    function updateCameraDeltas(camera) {
+        if (!defined(camera._oldPositionWC)) {
+            camera._oldPositionWC = Cartesian3.clone(camera.positionWC, camera._oldPositionWC);
+        } else {
+            camera.positionWCDeltaMagnitudeLastFrame = camera.positionWCDeltaMagnitude;
+            var delta = Cartesian3.subtract(camera.positionWC, camera._oldPositionWC, camera._oldPositionWC);
+            camera.positionWCDeltaMagnitude = Cartesian3.magnitude(delta);
+            camera._oldPositionWC = Cartesian3.clone(camera.positionWC, camera._oldPositionWC);
+
+            // Update move timers
+            if (camera.positionWCDeltaMagnitude > 0.0) {
+                camera.timeSinceMoved = 0.0;
+                camera._lastMovedTimestamp = getTimestamp();
+            } else {
+                camera.timeSinceMoved = Math.max(getTimestamp() - camera._lastMovedTimestamp, 0.0) / 1000.0;
+            }
+        }
+    }
+
+    /**
+     * Checks if there's a camera flight for this camera.
+     *
+     * @returns {Boolean} Whether or not this camera has a current flight with a valid preloadFlightCamera in scene.
+     *
+     * @private
+     *
+     */
+    Camera.prototype.hasCurrentFlight = function() {
+        // The preload flight camera defined check only here since it can be set to undefined when not 3D mode.
+        return defined(this._currentFlight) && defined(this._scene.preloadFlightCamera);
+    };
+
     Camera.prototype._updateCameraChanged = function() {
         var camera = this;
+
+        updateCameraDeltas(camera);
 
         if (camera._changed.numberOfListeners === 0) {
             return;
@@ -1181,6 +1206,7 @@ define([
      * towards the center of the frame in 3D and in the negative z direction in Columbus view. The up direction will point towards local north in 3D and in the positive
      * y direction in Columbus view. Orientation is not used in 2D when in infinite scrolling mode.
      * @param {Matrix4} [options.endTransform] Transform matrix representing the reference frame of the camera.
+     * @param {Boolean} [options.convert] Whether to convert the destination from world coordinates to scene coordinates (only relevant when not using 3D). Defaults to <code>true</code>.
      *
      * @example
      * // 1. Set position with a top-down view
@@ -1781,8 +1807,8 @@ define([
     var rotateVertScratchNegate = new Cartesian3();
     function rotateVertical(camera, angle) {
         var position = camera.position;
-        var p = Cartesian3.normalize(position, rotateVertScratchP);
-        if (defined(camera.constrainedAxis)) {
+        if (defined(camera.constrainedAxis) && !Cartesian3.equalsEpsilon(camera.position, Cartesian3.ZERO, CesiumMath.EPSILON2)) {
+            var p = Cartesian3.normalize(position, rotateVertScratchP);
             var northParallel = Cartesian3.equalsEpsilon(p, camera.constrainedAxis, CesiumMath.EPSILON2);
             var southParallel = Cartesian3.equalsEpsilon(p, Cartesian3.negate(camera.constrainedAxis, rotateVertScratchNegate), CesiumMath.EPSILON2);
             if ((!northParallel && !southParallel)) {
@@ -2332,12 +2358,20 @@ define([
     var viewRectangle2DSouthWest = new Cartesian3();
     function rectangleCameraPosition2D(camera, rectangle, result) {
         var projection = camera._projection;
+
+        // Account for the rectangle crossing the International Date Line in 2D mode
+        var east = rectangle.east;
         if (rectangle.west > rectangle.east) {
-            rectangle = Rectangle.MAX_VALUE;
+            if(camera._scene.mapMode2D === MapMode2D.INFINITE_SCROLL) {
+                east += CesiumMath.TWO_PI;
+            } else {
+                rectangle = Rectangle.MAX_VALUE;
+                east = rectangle.east;
+            }
         }
 
         var cart = viewRectangle2DCartographic;
-        cart.longitude = rectangle.east;
+        cart.longitude = east;
         cart.latitude = rectangle.north;
         var northEast = projection.project(cart, viewRectangle2DNorthEast);
         cart.longitude = rectangle.west;
@@ -2618,7 +2652,7 @@ define([
         //>>includeEnd('debug');
 
         var distance = this.distanceToBoundingSphere(boundingSphere);
-        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scratchPixelSize);
+        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, this._scene.pixelRatio, scratchPixelSize);
         return Math.max(pixelSize.x, pixelSize.y);
     };
 
@@ -2756,6 +2790,7 @@ define([
      * @param {Number} [options.pitchAdjustHeight] If camera flyes higher than that value, adjust pitch duiring the flight to look down, and keep Earth in viewport.
      * @param {Number} [options.flyOverLongitude] There are always two ways between 2 points on globe. This option force camera to choose fight direction to fly over that longitude.
      * @param {Number} [options.flyOverLongitudeWeight] Fly over the lon specifyed via flyOverLongitude only if that way is not longer than short way times flyOverLongitudeWeight.
+     * @param {Boolean} [options.convert] Whether to convert the destination from world coordinates to scene coordinates (only relevant when not using 3D). Defaults to <code>true</code>.
      * @param {EasingFunction|EasingFunction~Callback} [options.easingFunction] Controls how the time is interpolated over the duration of the flight.
      *
      * @exception {DeveloperError} If either direction or up is given, then both are required.
@@ -2859,6 +2894,19 @@ define([
         var scene = this._scene;
         flightTween = scene.tweens.add(CameraFlightPath.createTween(scene, newOptions));
         this._currentFlight = flightTween;
+
+        // Save the final destination view information for the PRELOAD_FLIGHT pass.
+        var preloadFlightCamera = this._scene.preloadFlightCamera;
+        if (this._mode !== SceneMode.SCENE2D) {
+            if (!defined(preloadFlightCamera)) {
+                preloadFlightCamera = Camera.clone(this);
+            }
+            preloadFlightCamera.setView({ destination: destination, orientation: orientation });
+
+            this._scene.preloadFlightCullingVolume = preloadFlightCamera.frustum.computeCullingVolume(preloadFlightCamera.positionWC, preloadFlightCamera.directionWC, preloadFlightCamera.upWC);
+        } else {
+            preloadFlightCamera = undefined;
+        }
     };
 
     function distanceToBoundingSphere3D(camera, radius) {
@@ -3246,6 +3294,4 @@ define([
      * A function that will execute when a flight is cancelled.
      * @callback Camera~FlightCancelledCallback
      */
-
-    return Camera;
-});
+export default Camera;

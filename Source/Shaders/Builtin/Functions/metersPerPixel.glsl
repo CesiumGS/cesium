@@ -37,5 +37,5 @@ float czm_metersPerPixel(vec4 positionEC)
         pixelWidth = 2.0 * distanceToPixel * tanTheta / width;
     }
 
-    return max(pixelWidth, pixelHeight);
+    return max(pixelWidth, pixelHeight) * czm_pixelRatio;
 }

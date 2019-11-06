@@ -1,22 +1,11 @@
-define([
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        './ContextLimits',
-        './RenderbufferFormat'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        ContextLimits,
-        RenderbufferFormat) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import ContextLimits from './ContextLimits.js';
+import RenderbufferFormat from './RenderbufferFormat.js';
 
     /**
      * @private
@@ -95,6 +84,4 @@ define([
         this._gl.deleteRenderbuffer(this._renderbuffer);
         return destroyObject(this);
     };
-
-    return Renderbuffer;
-});
+export default Renderbuffer;

@@ -1,50 +1,27 @@
-defineSuite([
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/defaultValue',
-        'Core/GeometryInstance',
-        'Core/Math',
-        'Core/PerspectiveFrustum',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/Resource',
-        'Core/Transforms',
-        'Scene/BillboardCollection',
-        'Scene/Globe',
-        'Scene/HorizontalOrigin',
-        'Scene/LabelCollection',
-        'Scene/Material',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/PolylineCollection',
-        'Scene/Primitive',
-        'Scene/SceneMode',
-        'Scene/VerticalOrigin',
-        'Specs/createScene'
-    ], 'Scene/PrimitiveCulling', function(
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defaultValue,
-        GeometryInstance,
-        CesiumMath,
-        PerspectiveFrustum,
-        Rectangle,
-        RectangleGeometry,
-        Resource,
-        Transforms,
-        BillboardCollection,
-        Globe,
-        HorizontalOrigin,
-        LabelCollection,
-        Material,
-        PerInstanceColorAppearance,
-        PolylineCollection,
-        Primitive,
-        SceneMode,
-        VerticalOrigin,
-        createScene) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { BillboardCollection } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { LabelCollection } from '../../Source/Cesium.js';
+import { Material } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { PolylineCollection } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { SceneMode } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/PrimitiveCulling', function() {
 
     var scene;
     var rectangle = Rectangle.fromDegrees(-100.0, 30.0, -93.0, 37.0);

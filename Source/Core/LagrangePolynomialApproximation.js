@@ -1,8 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from './defined.js';
 
     /**
      * An {@link InterpolationAlgorithm} for performing Lagrange interpolation.
@@ -66,6 +62,4 @@ define([
 
         return result;
     };
-
-    return LagrangePolynomialApproximation;
-});
+export default LagrangePolynomialApproximation;

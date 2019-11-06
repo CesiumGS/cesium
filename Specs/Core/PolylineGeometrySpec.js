@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/PolylineGeometry',
-        'Core/ArcType',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/Ellipsoid',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        PolylineGeometry,
-        ArcType,
-        Cartesian3,
-        Color,
-        Ellipsoid,
-        VertexFormat,
-        createPackableSpecs) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { PolylineGeometry } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/PolylineGeometry', function() {
 
     it('constructor throws with no positions', function() {
         expect(function() {
@@ -37,24 +29,6 @@ defineSuite([
                 colors : []
             });
         }).toThrowDeveloperError();
-    });
-
-    it('constructor converts followSurface to arcType', function() {
-        var line = new PolylineGeometry({
-            positions: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
-            followSurface: false
-        });
-
-        expect(line._followSurface).toBe(false);
-        expect(line._arcType).toBe(ArcType.NONE);
-
-        line = new PolylineGeometry({
-            positions: [Cartesian3.ZERO, Cartesian3.UNIT_X, Cartesian3.UNIT_Y],
-            followSurface: true
-        });
-
-        expect(line._followSurface).toBe(true);
-        expect(line._arcType).toBe(ArcType.GEODESIC);
     });
 
     it('constructor returns undefined when line width is negative', function() {

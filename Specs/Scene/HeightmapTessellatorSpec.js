@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/HeightmapTessellator',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/WebMercatorProjection'
-    ], function(
-        HeightmapTessellator,
-        Cartesian2,
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        Rectangle,
-        WebMercatorProjection) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { HeightmapTessellator } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+
+describe('Scene/HeightmapTessellator', function() {
 
     it('throws when heightmap is not provided', function() {
         expect(function() {

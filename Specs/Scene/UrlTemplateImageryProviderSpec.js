@@ -1,40 +1,21 @@
-defineSuite([
-        'Scene/UrlTemplateImageryProvider',
-        'Core/DefaultProxy',
-        'Core/Ellipsoid',
-        'Core/GeographicTilingScheme',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorProjection',
-        'Core/WebMercatorTilingScheme',
-        'Scene/GetFeatureInfoFormat',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        UrlTemplateImageryProvider,
-        DefaultProxy,
-        Ellipsoid,
-        GeographicTilingScheme,
-        CesiumMath,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        WebMercatorProjection,
-        WebMercatorTilingScheme,
-        GetFeatureInfoFormat,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { GetFeatureInfoFormat } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import { UrlTemplateImageryProvider } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/UrlTemplateImageryProvider', function() {
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
@@ -117,7 +98,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -164,7 +145,7 @@ defineSuite([
 
             return provider.requestImage(0, 0, 0).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -226,7 +207,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });
@@ -252,7 +233,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -281,7 +262,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -310,7 +291,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -339,7 +320,7 @@ defineSuite([
 
             return provider.requestImage(12, 10, 5).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -362,7 +343,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -385,7 +366,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -408,7 +389,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -431,7 +412,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -454,7 +435,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -476,7 +457,7 @@ defineSuite([
 
             return provider.requestImage(3, 0, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -498,7 +479,7 @@ defineSuite([
 
             return provider.requestImage(0, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -520,7 +501,7 @@ defineSuite([
 
             return provider.requestImage(1, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -550,7 +531,7 @@ defineSuite([
 
             return provider.requestImage(1, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -572,7 +553,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -595,7 +576,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -618,7 +599,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -646,7 +627,7 @@ defineSuite([
 
             return provider.requestImage(3, 1, 2).then(function(image) {
                 expect(Resource._Implementations.createImage).toHaveBeenCalled();
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });

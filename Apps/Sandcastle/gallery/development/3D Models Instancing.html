@@ -8,15 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Development">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -40,7 +33,7 @@ scene.debugShowFramesPerSecond = true;
 var instancedArraysExtension = context._instancedArrays;
 var count = 1024;
 var spacing = 0.0002;
-var url = '../../SampleData/models/CesiumAir/Cesium_Air.gltf';
+var url = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
 var useCollection = true;
 
 var centerLongitude = -75.61209431;
@@ -188,7 +181,7 @@ Sandcastle.addToolbarMenu([ {
 Sandcastle.addToolbarMenu([ {
     text : 'Aircraft',
     onselect : function() {
-        url = '../../SampleData/models/CesiumAir/Cesium_Air.gltf';
+        url = '../../SampleData/models/CesiumAir/Cesium_Air.glb';
         spacing = 0.0002;
         reset();
     }
@@ -202,14 +195,14 @@ Sandcastle.addToolbarMenu([ {
 }, {
     text : 'Milk Truck',
     onselect : function() {
-        url = '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.gltf';
+        url = '../../SampleData/models/CesiumMilkTruck/CesiumMilkTruck.glb';
         spacing = 0.00008;
         reset();
     }
 }, {
     text : 'Skinned Character',
     onselect : function() {
-        url = '../../SampleData/models/CesiumMan/Cesium_Man.gltf';
+        url = '../../SampleData/models/CesiumMan/Cesium_Man.glb';
         spacing = 0.00001;
         reset();
     }
@@ -253,9 +246,8 @@ Sandcastle.addToolbarButton('3D', function() {
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

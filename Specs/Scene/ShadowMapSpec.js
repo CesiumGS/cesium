@@ -1,68 +1,36 @@
-defineSuite([
-        'Scene/ShadowMap',
-        'Core/BoundingSphere',
-        'Core/BoxGeometry',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/ComponentDatatype',
-        'Core/EllipsoidTerrainProvider',
-        'Core/GeometryInstance',
-        'Core/HeadingPitchRange',
-        'Core/HeadingPitchRoll',
-        'Core/HeightmapTerrainData',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/OrthographicOffCenterFrustum',
-        'Core/PixelFormat',
-        'Core/Transforms',
-        'Core/WebGLConstants',
-        'Renderer/Context',
-        'Renderer/Framebuffer',
-        'Renderer/PixelDatatype',
-        'Renderer/Texture',
-        'Scene/Camera',
-        'Scene/Globe',
-        'Scene/Model',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
-        'Scene/ShadowMode',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        ShadowMap,
-        BoundingSphere,
-        BoxGeometry,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        ComponentDatatype,
-        EllipsoidTerrainProvider,
-        GeometryInstance,
-        HeadingPitchRange,
-        HeadingPitchRoll,
-        HeightmapTerrainData,
-        JulianDate,
-        CesiumMath,
-        OrthographicOffCenterFrustum,
-        PixelFormat,
-        Transforms,
-        WebGLConstants,
-        Context,
-        Framebuffer,
-        PixelDatatype,
-        Texture,
-        Camera,
-        Globe,
-        Model,
-        PerInstanceColorAppearance,
-        Primitive,
-        ShadowMode,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { BoxGeometry } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { HeightmapTerrainData } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { OrthographicOffCenterFrustum } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { WebGLConstants } from '../../Source/Cesium.js';
+import { Context } from '../../Source/Cesium.js';
+import { Framebuffer } from '../../Source/Cesium.js';
+import { PixelDatatype } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import { Camera } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { Model } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { ShadowMap } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/ShadowMap', function() {
 
     var scene;
     var sunShadowMap;

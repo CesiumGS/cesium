@@ -1,58 +1,27 @@
-define([
-        '../ThirdParty/Uri',
-        '../ThirdParty/when',
-        './AttributeCompression',
-        './BoundingSphere',
-        './Cartesian2',
-        './Cartesian3',
-        './Credit',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './DeveloperError',
-        './Event',
-        './GeographicTilingScheme',
-        './getStringFromTypedArray',
-        './HeightmapTerrainData',
-        './IndexDatatype',
-        './Math',
-        './OrientedBoundingBox',
-        './QuantizedMeshTerrainData',
-        './Request',
-        './RequestType',
-        './Resource',
-        './RuntimeError',
-        './TerrainProvider',
-        './TileAvailability',
-        './TileProviderError'
-    ], function(
-        Uri,
-        when,
-        AttributeCompression,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Credit,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        GeographicTilingScheme,
-        getStringFromTypedArray,
-        HeightmapTerrainData,
-        IndexDatatype,
-        CesiumMath,
-        OrientedBoundingBox,
-        QuantizedMeshTerrainData,
-        Request,
-        RequestType,
-        Resource,
-        RuntimeError,
-        TerrainProvider,
-        TileAvailability,
-        TileProviderError) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import AttributeCompression from './AttributeCompression.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Credit from './Credit.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import Event from './Event.js';
+import GeographicTilingScheme from './GeographicTilingScheme.js';
+import getStringFromTypedArray from './getStringFromTypedArray.js';
+import HeightmapTerrainData from './HeightmapTerrainData.js';
+import IndexDatatype from './IndexDatatype.js';
+import CesiumMath from './Math.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
+import QuantizedMeshTerrainData from './QuantizedMeshTerrainData.js';
+import Request from './Request.js';
+import RequestType from './RequestType.js';
+import Resource from './Resource.js';
+import RuntimeError from './RuntimeError.js';
+import TerrainProvider from './TerrainProvider.js';
+import TileAvailability from './TileAvailability.js';
+import TileProviderError from './TileProviderError.js';
 
     function LayerInformation(layer) {
         this.resource = layer.resource;
@@ -72,7 +41,6 @@ define([
 
     /**
      * A {@link TerrainProvider} that accesses terrain data in a Cesium terrain format.
-     * The supported formats are described on the {@link https://cesiumjs.org/data-and-assets/terrain/formats/|Terrain Formats page}.
      *
      * @alias CesiumTerrainProvider
      * @constructor
@@ -1073,6 +1041,4 @@ define([
 
     // Used for testing
     CesiumTerrainProvider._getAvailabilityTile = getAvailabilityTile;
-
-    return CesiumTerrainProvider;
-});
+export default CesiumTerrainProvider;

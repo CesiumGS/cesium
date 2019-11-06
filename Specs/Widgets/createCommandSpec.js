@@ -1,12 +1,8 @@
-defineSuite([
-        'Widgets/createCommand',
-        'Specs/getArguments',
-        'ThirdParty/knockout'
-    ], function(
-        createCommand,
-        getArguments,
-        knockout) {
-    'use strict';
+import getArguments from '../getArguments.js';
+import { knockout } from '../../Source/Cesium.js';
+import { createCommand } from '../../Source/Cesium.js';
+
+describe('Widgets/createCommand', function() {
 
     var spyFunction;
     var spyFunctionReturnValue = 5;

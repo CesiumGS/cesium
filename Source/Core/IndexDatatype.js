@@ -1,16 +1,8 @@
-define([
-        './defined',
-        './DeveloperError',
-        './freezeObject',
-        './Math',
-        './WebGLConstants'
-    ], function(
-        defined,
-        DeveloperError,
-        freezeObject,
-        CesiumMath,
-        WebGLConstants) {
-    'use strict';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
+import WebGLConstants from './WebGLConstants.js';
 
     /**
      * Constants for WebGL index datatypes.  These corresponds to the
@@ -166,6 +158,4 @@ define([
 
         return new Uint16Array(sourceArray, byteOffset, length);
     };
-
-    return freezeObject(IndexDatatype);
-});
+export default freezeObject(IndexDatatype);

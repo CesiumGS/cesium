@@ -4,7 +4,7 @@
     },
     "source": {
         "include": ["Source"],
-        "exclude": ["Source/ThirdParty", "Source/Workers/cesiumWorkerBootstrapper.js"],
+        "exclude": ["Source/ThirdParty", "Source/Workers"],
         "includePattern": ".+\\.js(doc)?$",
         "excludePattern": "(^|\\/|\\\\)_"
     },

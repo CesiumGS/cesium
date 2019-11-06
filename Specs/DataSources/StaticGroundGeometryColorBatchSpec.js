@@ -1,44 +1,23 @@
-defineSuite([
-        'DataSources/StaticGroundGeometryColorBatch',
-        'Core/defaultValue',
-        'Core/ApproximateTerrainHeights',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/CallbackProperty',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/EllipseGeometryUpdater',
-        'DataSources/Entity',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/ClassificationType',
-        'Scene/GroundPrimitive',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        StaticGroundGeometryColorBatch,
-        defaultValue,
-        ApproximateTerrainHeights,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        JulianDate,
-        CesiumMath,
-        TimeInterval,
-        TimeIntervalCollection,
-        CallbackProperty,
-        ColorMaterialProperty,
-        EllipseGeometryUpdater,
-        Entity,
-        TimeIntervalCollectionProperty,
-        ClassificationType,
-        GroundPrimitive,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+import { EllipseGeometryUpdater } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { StaticGroundGeometryColorBatch } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { GroundPrimitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/StaticGroundGeometryColorBatch', function() {
 
     var time = JulianDate.now();
     var scene;

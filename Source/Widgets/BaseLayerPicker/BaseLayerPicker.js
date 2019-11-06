@@ -1,22 +1,11 @@
-define([
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/FeatureDetection',
-        '../../ThirdParty/knockout',
-        '../getElement',
-        './BaseLayerPickerViewModel'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        FeatureDetection,
-        knockout,
-        getElement,
-        BaseLayerPickerViewModel) {
-    'use strict';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import FeatureDetection from '../../Core/FeatureDetection.js';
+import knockout from '../../ThirdParty/knockout.js';
+import getElement from '../getElement.js';
+import BaseLayerPickerViewModel from './BaseLayerPickerViewModel.js';
 
     /**
      * <span style="display: block; text-align: center;">
@@ -59,7 +48,7 @@ define([
      *      tooltip : 'OpenStreetMap (OSM) is a collaborative project to create a free editable \
      * map of the world.\nhttp://www.openstreetmap.org',
      *      creationFunction : function() {
-     *          return Cesium.createOpenStreetMapImageryProvider({
+     *          return new Cesium.OpenStreetMapImageryProvider({
      *              url : 'https://a.tile.openstreetmap.org/'
      *          });
      *      }
@@ -80,7 +69,7 @@ define([
      *      iconUrl : Cesium.buildModuleUrl('Widgets/Images/ImageryProviders/naturalEarthII.png'),
      *      tooltip : 'Natural Earth II, darkened for contrast.\nhttp://www.naturalearthdata.com/',
      *      creationFunction : function() {
-     *          return Cesium.createTileMapServiceImageryProvider({
+     *          return new Cesium.TileMapServiceImageryProvider({
      *              url : Cesium.buildModuleUrl('Assets/Textures/NaturalEarthII')
      *          });
      *      }
@@ -295,6 +284,4 @@ click: function($data) { $parents[1].selectedTerrain = $data; }');
         this._container.removeChild(this._dropPanel);
         return destroyObject(this);
     };
-
-    return BaseLayerPicker;
-});
+export default BaseLayerPicker;

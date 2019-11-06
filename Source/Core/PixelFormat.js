@@ -1,12 +1,6 @@
-define([
-        '../Renderer/PixelDatatype',
-        './freezeObject',
-        './WebGLConstants'
-    ], function(
-        PixelDatatype,
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import freezeObject from './freezeObject.js';
+import WebGLConstants from './WebGLConstants.js';
 
     /**
      * The format of a pixel, i.e., the number of components it has and what they represent.
@@ -285,6 +279,14 @@ define([
         /**
          * @private
          */
+        alignmentInBytes : function(pixelFormat, pixelDatatype, width) {
+            var mod = PixelFormat.textureSizeInBytes(pixelFormat, pixelDatatype, width, 1) % 4;
+            return mod === 0 ? 4 : (mod === 2 ? 2 : 1);
+        },
+
+        /**
+         * @private
+         */
         createTypedArray : function(pixelFormat, pixelDatatype, width, height) {
             var constructor;
             var sizeInBytes = PixelDatatype.sizeInBytes(pixelDatatype);
@@ -322,6 +324,4 @@ define([
             return flipped;
         }
     };
-
-    return freezeObject(PixelFormat);
-});
+export default freezeObject(PixelFormat);

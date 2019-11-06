@@ -8,15 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        if(typeof require === 'function') {
-            require.config({
-                baseUrl : '../../../Source',
-                waitSeconds : 120
-            });
-        }
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -200,8 +193,8 @@ function updateMaterial() {
         if (selectedShading === 'elevation') {
             material = getElevationContourMaterial();
             shadingUniforms = material.materials.elevationRampMaterial.uniforms;
-            shadingUniforms.minHeight = minHeight;
-            shadingUniforms.maxHeight = maxHeight;
+            shadingUniforms.minimumHeight = minHeight;
+            shadingUniforms.maximumHeight = maxHeight;
             contourUniforms = material.materials.contourMaterial.uniforms;
         } else if (selectedShading === 'slope') {
             material = getSlopeContourMaterial();
@@ -221,8 +214,8 @@ function updateMaterial() {
     } else if (selectedShading === 'elevation') {
         material = Cesium.Material.fromType('ElevationRamp');
         shadingUniforms = material.uniforms;
-        shadingUniforms.minHeight = minHeight;
-        shadingUniforms.maxHeight = maxHeight;
+        shadingUniforms.minimumHeight = minHeight;
+        shadingUniforms.maximumHeight = maxHeight;
     } else if (selectedShading === 'slope') {
         material = Cesium.Material.fromType('SlopeRamp');
         shadingUniforms = material.uniforms;
@@ -313,9 +306,8 @@ Sandcastle.addToolbarMenu([{
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

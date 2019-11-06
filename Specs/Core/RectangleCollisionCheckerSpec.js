@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/RectangleCollisionChecker',
-        'Core/Rectangle'
-    ], function(
-        RectangleCollisionChecker,
-        Rectangle) {
-    'use strict';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleCollisionChecker } from '../../Source/Cesium.js';
+
+describe('Core/RectangleCollisionChecker', function() {
 
     var testRectangle1 = new Rectangle(0.0, 0.0, 1.0, 1.0);
     var testRectangle2 = new Rectangle(1.1, 1.1, 2.1, 2.1);

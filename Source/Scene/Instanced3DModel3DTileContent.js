@@ -1,66 +1,28 @@
-define([
-        '../Core/AttributeCompression',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/FeatureDetection',
-        '../Core/getBaseUri',
-        '../Core/getStringFromTypedArray',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/Quaternion',
-        '../Core/RequestType',
-        '../Core/RuntimeError',
-        '../Core/Transforms',
-        '../Core/TranslationRotationScale',
-        '../Renderer/Pass',
-        './Axis',
-        './Cesium3DTileBatchTable',
-        './Cesium3DTileFeature',
-        './Cesium3DTileFeatureTable',
-        './ModelInstanceCollection'
-    ], function(
-        AttributeCompression,
-        Cartesian3,
-        Color,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        destroyObject,
-        DeveloperError,
-        Ellipsoid,
-        FeatureDetection,
-        getBaseUri,
-        getStringFromTypedArray,
-        Matrix3,
-        Matrix4,
-        Quaternion,
-        RequestType,
-        RuntimeError,
-        Transforms,
-        TranslationRotationScale,
-        Pass,
-        Axis,
-        Cesium3DTileBatchTable,
-        Cesium3DTileFeature,
-        Cesium3DTileFeatureTable,
-        ModelInstanceCollection) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import AttributeCompression from '../Core/AttributeCompression.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import deprecationWarning from '../Core/deprecationWarning.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Quaternion from '../Core/Quaternion.js';
+import RequestType from '../Core/RequestType.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import Transforms from '../Core/Transforms.js';
+import TranslationRotationScale from '../Core/TranslationRotationScale.js';
+import Pass from '../Renderer/Pass.js';
+import Axis from './Axis.js';
+import Cesium3DTileBatchTable from './Cesium3DTileBatchTable.js';
+import Cesium3DTileFeature from './Cesium3DTileFeature.js';
+import Cesium3DTileFeatureTable from './Cesium3DTileFeatureTable.js';
+import ModelInstanceCollection from './ModelInstanceCollection.js';
 
     /**
      * Represents the contents of a
@@ -378,7 +340,7 @@ define([
                     hasCustomOrientation = true;
                 } else if (eastNorthUp) {
                     Transforms.eastNorthUpToFixedFrame(instancePosition, Ellipsoid.WGS84, instanceTransform);
-                    Matrix4.getRotation(instanceTransform, instanceRotation);
+                    Matrix4.getMatrix3(instanceTransform, instanceRotation);
                 } else {
                     Matrix3.clone(Matrix3.IDENTITY, instanceRotation);
                 }
@@ -515,5 +477,4 @@ define([
 
         return destroyObject(this);
     };
-    return Instanced3DModel3DTileContent;
-});
+export default Instanced3DModel3DTileContent;

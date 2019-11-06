@@ -1,12 +1,8 @@
-defineSuite([
-        'Widgets/VRButton/VRButtonViewModel',
-        'Core/Fullscreen',
-        'Specs/createScene'
-    ], function(
-        VRButtonViewModel,
-        Fullscreen,
-        createScene) {
-    'use strict';
+import { Fullscreen } from '../../../Source/Cesium.js';
+import createScene from '../../createScene.js';
+import { VRButtonViewModel } from '../../../Source/Cesium.js';
+
+describe('Widgets/VRButton/VRButtonViewModel', function() {
 
     var scene;
 

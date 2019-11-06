@@ -1,10 +1,5 @@
-define([
-    'Core/defined',
-    'Core/DeveloperError'
-], function(
-    defined,
-    DeveloperError) {
-   'use strict';
+import { defined } from '../Source/Cesium.js';
+import { DeveloperError } from '../Source/Cesium.js';
 
     function createTileKey(xOrTile, y, level) {
         if (!defined(xOrTile)) {
@@ -19,6 +14,4 @@ define([
         }
         return 'L' + level + 'X' + xOrTile + 'Y' + y;
     }
-
-    return createTileKey;
-});
+export default createTileKey;

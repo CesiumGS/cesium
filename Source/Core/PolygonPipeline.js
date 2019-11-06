@@ -1,36 +1,18 @@
-define([
-        '../ThirdParty/earcut-2.1.1',
-        './Cartesian2',
-        './Cartesian3',
-        './Cartographic',
-        './Check',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './Ellipsoid',
-        './EllipsoidRhumbLine',
-        './Geometry',
-        './GeometryAttribute',
-        './Math',
-        './PrimitiveType',
-        './WindingOrder'
-    ], function(
-        earcut,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        Ellipsoid,
-        EllipsoidRhumbLine,
-        Geometry,
-        GeometryAttribute,
-        CesiumMath,
-        PrimitiveType,
-        WindingOrder) {
-    'use strict';
+import earcut from '../ThirdParty/earcut-2.1.1.js';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Cartographic from './Cartographic.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Ellipsoid from './Ellipsoid.js';
+import EllipsoidRhumbLine from './EllipsoidRhumbLine.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import CesiumMath from './Math.js';
+import PrimitiveType from './PrimitiveType.js';
+import WindingOrder from './WindingOrder.js';
 
     var scaleToGeodeticHeightN = new Cartesian3();
     var scaleToGeodeticHeightP = new Cartesian3();
@@ -424,6 +406,4 @@ define([
 
         return positions;
     };
-
-    return PolygonPipeline;
-});
+export default PolygonPipeline;

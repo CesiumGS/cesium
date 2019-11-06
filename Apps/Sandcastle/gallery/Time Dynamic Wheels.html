@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -32,7 +27,7 @@ var viewer = new Cesium.Viewer('cesiumContainer', {
 });
 
 //Make sure viewer is at the desired time.
-var start = Cesium.JulianDate.fromDate(new Date(2018, 11, 12));
+var start = Cesium.JulianDate.fromDate(new Date(2018, 11, 12, 15));
 var totalSeconds = 10;
 var stop = Cesium.JulianDate.addSeconds(start, totalSeconds, new Cesium.JulianDate());
 viewer.clock.startTime = start.clone();
@@ -99,7 +94,7 @@ var vehicleEntity = viewer.entities.add({
     position : position,
     orientation : new Cesium.VelocityOrientationProperty(position), // Automatically set the vehicle's orientation to the direction it's facing.
     model : {
-        uri : '../../../../Apps/SampleData/models/GroundVehicle/GroundVehicle.glb',
+        uri : '../../SampleData/models/GroundVehicle/GroundVehicle.glb',
         runAnimations : false,
         nodeTransformations : nodeTransformations
     },
@@ -118,9 +113,8 @@ vehicleEntity.viewFrom = new Cesium.Cartesian3(-10.0, 7.0, 4.0);
     Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

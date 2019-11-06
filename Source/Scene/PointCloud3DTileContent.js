@@ -1,38 +1,18 @@
-define([
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/FeatureDetection',
-        '../Core/Math',
-        '../Renderer/Pass',
-        '../Renderer/ShaderSource',
-        './Cesium3DTileBatchTable',
-        './Cesium3DTileFeature',
-        './Cesium3DTileRefine',
-        './PointCloud',
-        './SceneMode'
-    ], function(
-        Color,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        FeatureDetection,
-        CesiumMath,
-        Pass,
-        ShaderSource,
-        Cesium3DTileBatchTable,
-        Cesium3DTileFeature,
-        Cesium3DTileRefine,
-        PointCloud,
-        SceneMode) {
-    'use strict';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import CesiumMath from '../Core/Math.js';
+import Pass from '../Renderer/Pass.js';
+import Cesium3DTileBatchTable from './Cesium3DTileBatchTable.js';
+import Cesium3DTileFeature from './Cesium3DTileFeature.js';
+import Cesium3DTileRefine from './Cesium3DTileRefine.js';
+import PointCloud from './PointCloud.js';
+import PointCloudShading from './PointCloudShading.js';
+import SceneMode from './SceneMode.js';
 
     /**
      * Represents the contents of a
@@ -270,9 +250,11 @@ define([
         }
     };
 
+    var defaultShading = new PointCloudShading();
+
     PointCloud3DTileContent.prototype.update = function(tileset, frameState) {
         var pointCloud = this._pointCloud;
-        var pointCloudShading = tileset.pointCloudShading;
+        var pointCloudShading = defaultValue(tileset.pointCloudShading, defaultShading);
         var tile = this._tile;
         var batchTable = this._batchTable;
         var mode = frameState.mode;
@@ -300,7 +282,6 @@ define([
         this._styleDirty = false;
 
         pointCloud.clippingPlanesOriginMatrix = tileset.clippingPlanesOriginMatrix;
-
         pointCloud.style = defined(batchTable) ? undefined : tileset.style;
         pointCloud.styleDirty = styleDirty;
         pointCloud.modelMatrix = tile.computedTransform;
@@ -310,9 +291,11 @@ define([
         pointCloud.clippingPlanes = clippingPlanes;
         pointCloud.isClipped = defined(clippingPlanes) && clippingPlanes.enabled && tile._isClipped;
         pointCloud.clippingPlanesDirty = tile.clippingPlanesDirty;
-        pointCloud.attenuation = defined(pointCloudShading) ? pointCloudShading.attenuation : false;
+        pointCloud.attenuation = pointCloudShading.attenuation;
+        pointCloud.backFaceCulling = pointCloudShading.backFaceCulling;
+        pointCloud.normalShading = pointCloudShading.normalShading;
         pointCloud.geometricError = getGeometricError(this);
-        pointCloud.geometricErrorScale = defined(pointCloudShading) ? pointCloudShading.geometricErrorScale : 1.0;
+        pointCloud.geometricErrorScale = pointCloudShading.geometricErrorScale;
         if (defined(pointCloudShading) && defined(pointCloudShading.maximumAttenuation)) {
             pointCloud.maximumAttenuation = pointCloudShading.maximumAttenuation;
         } else if (tile.refine === Cesium3DTileRefine.ADD) {
@@ -334,6 +317,4 @@ define([
         this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };
-
-    return PointCloud3DTileContent;
-});
+export default PointCloud3DTileContent;

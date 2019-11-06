@@ -1,14 +1,7 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './Math'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        CesiumMath) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import CesiumMath from './Math.js';
 
     var removeDuplicatesEpsilon = CesiumMath.EPSILON10;
 
@@ -93,6 +86,4 @@ define([
 
         return cleanedvalues;
     }
-
-    return arrayRemoveDuplicates;
-});
+export default arrayRemoveDuplicates;

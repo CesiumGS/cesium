@@ -1,22 +1,13 @@
-defineSuite([
-        'Core/EllipsoidalOccluder',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/IntersectionTests',
-        'Core/Math',
-        'Core/Ray',
-        'Core/Rectangle'
-    ], function(
-        EllipsoidalOccluder,
-        BoundingSphere,
-        Cartesian3,
-        Ellipsoid,
-        IntersectionTests,
-        CesiumMath,
-        Ray,
-        Rectangle) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidalOccluder } from '../../Source/Cesium.js';
+import { IntersectionTests } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Ray } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+
+describe('Core/EllipsoidalOccluder', function() {
 
     it('uses ellipsoid', function() {
         var ellipsoid = new Ellipsoid(2.0, 3.0, 4.0);

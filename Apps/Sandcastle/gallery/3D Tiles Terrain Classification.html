@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Showcases, 3D Tiles">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        require.config({
-            baseUrl : '../../../Source',
-            waitSeconds : 60
-        });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -22,6 +17,7 @@
 </style>
 <div id="cesiumContainer" class="fullSize"></div>
 <div id="loadingOverlay"><h1>Loading...</h1></div>
+<div id="toolbar"></div>
 <script id="cesium_sandcastle_script">
 function startup(Cesium) {
     'use strict';
@@ -74,9 +70,8 @@ viewer.screenSpaceEventHandler.setInputAction(function onMouseMove(movement) {
 Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

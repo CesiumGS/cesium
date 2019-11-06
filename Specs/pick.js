@@ -1,24 +1,12 @@
-define([
-        'Core/BoundingRectangle',
-        'Core/Color',
-        'Core/defined',
-        'Renderer/ClearCommand',
-        'Renderer/Pass',
-        'Scene/CreditDisplay',
-        'Scene/FrameState',
-        'Scene/JobScheduler',
-        'Scene/PickFramebuffer'
-    ], function(
-        BoundingRectangle,
-        Color,
-        defined,
-        ClearCommand,
-        Pass,
-        CreditDisplay,
-        FrameState,
-        JobScheduler,
-        PickFramebuffer) {
-    'use strict';
+import { BoundingRectangle } from '../Source/Cesium.js';
+import { Color } from '../Source/Cesium.js';
+import { defined } from '../Source/Cesium.js';
+import { ClearCommand } from '../Source/Cesium.js';
+import { Pass } from '../Source/Cesium.js';
+import { CreditDisplay } from '../Source/Cesium.js';
+import { FrameState } from '../Source/Cesium.js';
+import { JobScheduler } from '../Source/Cesium.js';
+import { PickFramebuffer } from '../Source/Cesium.js';
 
     function executeCommands(context, passState, commands) {
         var length = commands.length;
@@ -74,6 +62,4 @@ define([
 
         return p;
     }
-
-    return pick;
-});
+export default pick;

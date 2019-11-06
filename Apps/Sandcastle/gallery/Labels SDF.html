@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, minimum-scale=1, user-scalable=no">
+    <meta name="description" content="Create and style textual labels.">
+    <meta name="cesium-sandcastle-labels" content="Showcases">
+    <title>Cesium Demo</title>
+    <script type="text/javascript" src="../Sandcastle-header.js"></script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
+</head>
+<body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
+<style>
+        @import url(../templates/bucket.css);
+
+        #toolbar {
+            background: rgba(42, 42, 42, 0.8);
+            padding: 4px;
+            border-radius: 4px;
+        }
+    </style>
+    <div id="cesiumContainer" class="fullSize"></div>
+    <div id="loadingOverlay">
+        <h1>Loading...</h1>
+    </div>
+    <div id="toolbar">
+        <table>
+            <tbody>
+                <tr>
+                    <td>Outline</td>
+                    <td>
+                        <input type="range" min="0.0" max="8.0" step="0.01" data-bind="value: outlineWidth, valueUpdate: 'input'">
+                        <input type="text" size="5" data-bind="value: outlineWidth">
+                    </td>
+                </tr>
+                <tr>
+                    <td>Scale</td>
+                    <td>
+                        <input type="range" min="0.1" max="20.0" step="0.01" data-bind="value: scale, valueUpdate: 'input'">
+                        <input type="text" size="5" data-bind="value: scale">
+                    </td>
+                </tr>
+                <tr>
+                    <td class="header">Outline Color</td>
+                </tr>
+                <tr>
+                    <td>Color</td>
+                    <td><select data-bind="options: outlineColors, value: outlineColor"></select></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script id="cesium_sandcastle_script">
+function startup(Cesium) {
+    'use strict';
+//Sandcastle_Begin
+function getColor(colorName, alpha) {
+    var color = Cesium.Color[colorName.toUpperCase()];
+    return Cesium.Color.fromAlpha(color, parseFloat(alpha));
+}
+
+var viewer = new Cesium.Viewer('cesiumContainer');
+
+// The viewModel tracks the state of our mini application.
+var viewModel = {
+    outlineWidth: 1.0,
+    scale: 1.0,
+    outlineColor: 'Red',
+    outlineColors: ['Red', 'Green', 'Blue', 'Yellow', 'Gray', 'Black']
+};
+
+// Convert the viewModel members into knockout observables.
+Cesium.knockout.track(viewModel);
+// Bind the viewModel to the DOM elements of the UI that call for it.
+var toolbar = document.getElementById('toolbar');
+Cesium.knockout.applyBindings(viewModel, toolbar);
+
+// Create a label collection with two labels
+var labels = viewer.scene.primitives.add(new Cesium.LabelCollection());
+var label = labels.add({
+    position: Cesium.Cartesian3.fromDegrees(-75.1641667, 39.9522222),
+    text: 'Philadelphia',
+    fillColor: Cesium.Color.WHITE,
+    outlineColor: getColor(viewModel.outlineColor, 1.0),
+    font: '48px Calibri',
+    outlineWidth: 1.0,
+    scale: viewModel.scale,
+    style: Cesium.LabelStyle.FILL_AND_OUTLINE
+});
+
+var morgantown = labels.add({
+    position: Cesium.Cartesian3.fromDegrees(-79.9559, 39.6295),
+    text: 'Morgantown',
+    fillColor: Cesium.Color.YELLOW,
+    font: '24px Calibri',
+    outlineColor: Cesium.Color.BLUE,
+    outlineWidth: 2.0,
+    style: Cesium.LabelStyle.FILL_AND_OUTLINE
+});
+
+Cesium.knockout.getObservable(viewModel, 'outlineWidth').subscribe(function(newValue) {
+    label.outlineWidth = parseFloat(newValue);
+});
+
+Cesium.knockout.getObservable(viewModel, 'scale').subscribe(function(newValue) {
+    label.scale = parseFloat(newValue);
+});
+
+Cesium.knockout.getObservable(viewModel, 'outlineColor').subscribe(function(newValue) {
+    label.outlineColor = getColor(newValue, 1.0);
+});
+
+var outlineDelta = 0.1;
+var fontDelta = -1.0;
+var fontSize = 48.0;
+var minFontSize = 1.0;
+var maxFontSize = 48.0;
+
+viewer.scene.preUpdate.addEventListener(function(scene, time) {
+    morgantown.outlineWidth += outlineDelta;
+    if (morgantown.outlineWidth >= 4.0 || morgantown.outlineWidth <= 0.0) {
+        outlineDelta *= -1.0;
+    }
+
+    fontSize += fontDelta;
+    if (fontSize >= maxFontSize || fontSize <= minFontSize) {
+        fontDelta *= -1.0;
+    }
+    morgantown.font = fontSize + 'px Calibri';
+});
+//Sandcastle_End
+    Sandcastle.finishedLoading();
+}
+if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
+    startup(Cesium);
+}
+</script>
+</body>
+</html>

@@ -1,30 +1,15 @@
-define([
-        '../Core/arrayRemoveDuplicates',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayCondition',
-        '../Core/Matrix4',
-        '../Core/PolylinePipeline',
-        './Material'
-    ], function(
-        arrayRemoveDuplicates,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        DistanceDisplayCondition,
-        Matrix4,
-        PolylinePipeline,
-        Material) {
-    'use strict';
+import arrayRemoveDuplicates from '../Core/arrayRemoveDuplicates.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayCondition from '../Core/DistanceDisplayCondition.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PolylinePipeline from '../Core/PolylinePipeline.js';
+import Material from './Material.js';
 
     /**
      * A renderable polyline. Create this by calling {@link PolylineCollection#add}
@@ -386,6 +371,4 @@ define([
         this._material = this._material && this._material.destroy();
         this._polylineCollection = undefined;
     };
-
-    return Polyline;
-});
+export default Polyline;

@@ -2,7 +2,7 @@
 //     JSEP may be freely distributed under the MIT License
 //     http://jsep.from.so/
 
-define(function() {
+var tmp = {};
 
 /*global module: true, exports: true, console: true */
 (function (root) {
@@ -658,30 +658,7 @@ define(function() {
 		return this;
 	};
 
-	// In desktop environments, have a way to restore the old value for `jsep`
-	if (typeof exports === 'undefined') {
-		var old_jsep = root.jsep;
-		// The star of the show! It's a function!
-		root.jsep = jsep;
-		// And a courteous function willing to move out of the way for other similarly-named objects!
-		jsep.noConflict = function() {
-			if(root.jsep === jsep) {
-				root.jsep = old_jsep;
-			}
-			return jsep;
-		};
-	} else {
-		// In Node.JS environments
-		if (typeof module !== 'undefined' && module.exports) {
-			exports = module.exports = jsep;
-		} else {
-			exports.parse = jsep;
-		}
-	}
-}(this));
+    root.jsep = jsep;
+}(tmp));
 
-    // `jsep` only exists when running in the browser
-    if (typeof jsep !== 'undefined') {
-        return jsep.noConflict();
-    }
-});
+export default tmp.jsep;

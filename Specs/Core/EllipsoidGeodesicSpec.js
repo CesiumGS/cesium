@@ -1,14 +1,9 @@
-defineSuite([
-        'Core/EllipsoidGeodesic',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/Math'
-    ], function(
-        EllipsoidGeodesic,
-        Cartographic,
-        Ellipsoid,
-        CesiumMath) {
-    'use strict';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { EllipsoidGeodesic } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+
+describe('Core/EllipsoidGeodesic', function() {
 
     it('throws without start', function() {
         expect(function() {

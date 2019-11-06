@@ -1,22 +1,13 @@
-defineSuite([
-        'DataSources/NodeTransformationProperty',
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'Core/Quaternion',
-        'Core/TimeInterval',
-        'DataSources/ConstantProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Specs/testDefinitionChanged'
-    ], function(
-        NodeTransformationProperty,
-        Cartesian3,
-        JulianDate,
-        Quaternion,
-        TimeInterval,
-        ConstantProperty,
-        TimeIntervalCollectionProperty,
-        testDefinitionChanged) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { NodeTransformationProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
+
+describe('DataSources/NodeTransformationProperty', function() {
 
     it('default constructor sets expected values', function() {
         var property = new NodeTransformationProperty();

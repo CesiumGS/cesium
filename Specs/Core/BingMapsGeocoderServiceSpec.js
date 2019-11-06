@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/BingMapsGeocoderService',
-        'Core/Rectangle',
-        'Core/Resource'
-    ], function(
-        BingMapsGeocoderService,
-        Rectangle,
-        Resource) {
-    'use strict';
+import { BingMapsGeocoderService } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+
+describe('Core/BingMapsGeocoderService', function() {
 
     afterAll(function() {
         Resource._Implementations.loadAndExecuteScript = Resource._DefaultImplementations.loadAndExecuteScript;

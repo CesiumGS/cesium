@@ -1,48 +1,26 @@
-defineSuite([
-        'DataSources/BillboardVisualizer',
-        'Core/BoundingRectangle',
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defined',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/NearFarScalar',
-        'DataSources/BillboardGraphics',
-        'DataSources/BoundingSphereState',
-        'DataSources/ConstantProperty',
-        'DataSources/EntityCluster',
-        'DataSources/EntityCollection',
-        'Scene/HeightReference',
-        'Scene/HorizontalOrigin',
-        'Scene/VerticalOrigin',
-        'Specs/createGlobe',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        BillboardVisualizer,
-        BoundingRectangle,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defined,
-        DistanceDisplayCondition,
-        JulianDate,
-        NearFarScalar,
-        BillboardGraphics,
-        BoundingSphereState,
-        ConstantProperty,
-        EntityCluster,
-        EntityCollection,
-        HeightReference,
-        HorizontalOrigin,
-        VerticalOrigin,
-        createGlobe,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { BillboardGraphics } from '../../Source/Cesium.js';
+import { BillboardVisualizer } from '../../Source/Cesium.js';
+import { BoundingSphereState } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EntityCluster } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+import createGlobe from '../createGlobe.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/BillboardVisualizer', function() {
 
     var scene;
     var entityCluster;

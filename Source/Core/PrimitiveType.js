@@ -1,10 +1,5 @@
-define([
-        './freezeObject',
-        './WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import freezeObject from './freezeObject.js';
+import WebGLConstants from './WebGLConstants.js';
 
     /**
      * The type of a geometric primitive, i.e., points, lines, and triangles.
@@ -85,6 +80,4 @@ define([
                    primitiveType === PrimitiveType.TRIANGLE_FAN;
         }
     };
-
-    return freezeObject(PrimitiveType);
-});
+export default freezeObject(PrimitiveType);

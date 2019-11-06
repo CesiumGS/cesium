@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/ManagedArray'
-    ], function(
-        ManagedArray) {
-    'use strict';
+import { ManagedArray } from '../../Source/Cesium.js';
+
+describe('Core/ManagedArray', function() {
 
     it('constructor has expected default values', function() {
         var array = new ManagedArray();

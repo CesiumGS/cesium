@@ -1,60 +1,30 @@
-define([
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/combine',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/GeometryInstance',
-        '../Core/isArray',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Shaders/ShadowVolumeFS',
-        '../Shaders/ShadowVolumeAppearanceVS',
-        '../ThirdParty/when',
-        './BlendingState',
-        './ClassificationType',
-        './DepthFunction',
-        './PerInstanceColorAppearance',
-        './Primitive',
-        './SceneMode',
-        './ShadowVolumeAppearance',
-        './StencilConstants',
-        './StencilFunction',
-        './StencilOperation'
-    ], function(
-        ColorGeometryInstanceAttribute,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        GeometryInstance,
-        isArray,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        ShadowVolumeFS,
-        ShadowVolumeAppearanceVS,
-        when,
-        BlendingState,
-        ClassificationType,
-        DepthFunction,
-        PerInstanceColorAppearance,
-        Primitive,
-        SceneMode,
-        ShadowVolumeAppearance,
-        StencilConstants,
-        StencilFunction,
-        StencilOperation) {
-    'use strict';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import combine from '../Core/combine.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import isArray from '../Core/isArray.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import ShadowVolumeAppearanceVS from '../Shaders/ShadowVolumeAppearanceVS.js';
+import ShadowVolumeFS from '../Shaders/ShadowVolumeFS.js';
+import when from '../ThirdParty/when.js';
+import BlendingState from './BlendingState.js';
+import ClassificationType from './ClassificationType.js';
+import DepthFunction from './DepthFunction.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Primitive from './Primitive.js';
+import SceneMode from './SceneMode.js';
+import ShadowVolumeAppearance from './ShadowVolumeAppearance.js';
+import StencilConstants from './StencilConstants.js';
+import StencilFunction from './StencilFunction.js';
+import StencilOperation from './StencilOperation.js';
 
     var ClassificationPrimitiveReadOnlyInstanceAttributes = ['color'];
 
@@ -578,7 +548,7 @@ define([
         });
         var attributeLocations = classificationPrimitive._primitive._attributeLocations;
 
-        var shadowVolumeAppearance = new ShadowVolumeAppearance(cullFragmentsUsingExtents, planarExtents, classificationPrimitive.appearance);
+        var shadowVolumeAppearance = new ShadowVolumeAppearance(cullFragmentsUsingExtents, planarExtents, classificationPrimitive.appearance, context.floatTextureSixPlaces);
 
         classificationPrimitive._spStencil = ShaderProgram.replaceCache({
             context : context,
@@ -1253,6 +1223,4 @@ define([
         this._spColor2D = undefined;
         return destroyObject(this);
     };
-
-    return ClassificationPrimitive;
-});
+export default ClassificationPrimitive;

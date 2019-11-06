@@ -1,34 +1,17 @@
-define([
-        './arrayFill',
-        './BoundingSphere',
-        './Cartesian3',
-        './Check',
-        './ComponentDatatype',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './Geometry',
-        './GeometryAttribute',
-        './GeometryAttributes',
-        './GeometryOffsetAttribute',
-        './PrimitiveType',
-        './VertexFormat'
-    ], function(
-        arrayFill,
-        BoundingSphere,
-        Cartesian3,
-        Check,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        DeveloperError,
-        Geometry,
-        GeometryAttribute,
-        GeometryAttributes,
-        GeometryOffsetAttribute,
-        PrimitiveType,
-        VertexFormat) {
-    'use strict';
+import arrayFill from './arrayFill.js';
+import BoundingSphere from './BoundingSphere.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import ComponentDatatype from './ComponentDatatype.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import Geometry from './Geometry.js';
+import GeometryAttribute from './GeometryAttribute.js';
+import GeometryAttributes from './GeometryAttributes.js';
+import GeometryOffsetAttribute from './GeometryOffsetAttribute.js';
+import PrimitiveType from './PrimitiveType.js';
+import VertexFormat from './VertexFormat.js';
 
     var diffScratch = new Cartesian3();
 
@@ -47,7 +30,7 @@ define([
      * @see BoxGeometry.createGeometry
      * @see Packable
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Box.html|Cesium Sandcastle Box Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Box.html|Cesium Sandcastle Box Demo}
      *
      * @example
      * var box = new Cesium.BoxGeometry({
@@ -872,6 +855,4 @@ define([
         }
         return unitBoxGeometry;
     };
-
-    return BoxGeometry;
-});
+export default BoxGeometry;

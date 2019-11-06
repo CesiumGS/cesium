@@ -1,14 +1,9 @@
-defineSuite([
-        'Renderer/Renderbuffer',
-        'Renderer/ContextLimits',
-        'Renderer/RenderbufferFormat',
-        'Specs/createContext'
-    ], function(
-        Renderbuffer,
-        ContextLimits,
-        RenderbufferFormat,
-        createContext) {
-    'use strict';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { Renderbuffer } from '../../Source/Cesium.js';
+import { RenderbufferFormat } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/Renderbuffer', function() {
 
     var context;
     var renderbuffer;

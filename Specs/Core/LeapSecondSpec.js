@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/LeapSecond',
-        'Core/JulianDate'
-    ], function(
-        LeapSecond,
-        JulianDate) {
-    'use strict';
+import { JulianDate } from '../../Source/Cesium.js';
+import { LeapSecond } from '../../Source/Cesium.js';
+
+describe('Core/LeapSecond', function() {
 
     it('default constructor sets expected values', function() {
         var leapSecond = new LeapSecond();

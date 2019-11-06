@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/isDataUri'
-    ], function(
-        isDataUri) {
-    'use strict';
+import { isDataUri } from '../../Source/Cesium.js';
+
+describe('Core/isDataUri', function() {
 
     it('Throws if url is undefined', function() {
         expect(function() {

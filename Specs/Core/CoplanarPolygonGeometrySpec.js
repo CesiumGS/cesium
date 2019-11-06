@@ -1,18 +1,11 @@
-defineSuite([
-    'Core/CoplanarPolygonGeometry',
-    'Core/Cartesian3',
-    'Core/Ellipsoid',
-    'Core/Math',
-    'Core/VertexFormat',
-    'Specs/createPackableSpecs'
-], function(
-    CoplanarPolygonGeometry,
-    Cartesian3,
-    Ellipsoid,
-    CesiumMath,
-    VertexFormat,
-    createPackableSpecs) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CoplanarPolygonGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/CoplanarPolygonGeometry', function() {
 
     it('throws with no hierarchy', function() {
         expect(function() {
@@ -171,4 +164,3 @@ defineSuite([
     packedInstance.push(1, 0, 0, 0, 0, 0, 0, 44);
     createPackableSpecs(CoplanarPolygonGeometry, polygon, packedInstance);
 });
-

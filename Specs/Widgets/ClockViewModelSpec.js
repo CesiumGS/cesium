@@ -1,16 +1,10 @@
-defineSuite([
-        'Widgets/ClockViewModel',
-        'Core/Clock',
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/JulianDate'
-    ], function(
-        ClockViewModel,
-        Clock,
-        ClockRange,
-        ClockStep,
-        JulianDate) {
-    'use strict';
+import { Clock } from '../../Source/Cesium.js';
+import { ClockRange } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ClockViewModel } from '../../Source/Cesium.js';
+
+describe('Widgets/ClockViewModel', function() {
 
     it('default constructor creates a clock', function() {
         var clockViewModel = new ClockViewModel();

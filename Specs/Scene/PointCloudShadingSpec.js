@@ -1,10 +1,7 @@
-defineSuite([
-        'Scene/PointCloudShading',
-        'Specs/createScene'
-    ], function(
-        PointCloudShading,
-        createScene) {
-    'use strict';
+import { PointCloudShading } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/PointCloudShading', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var pointCloudShading = new PointCloudShading();
@@ -15,13 +12,17 @@ defineSuite([
         expect(pointCloudShading.eyeDomeLighting).toEqual(true);
         expect(pointCloudShading.eyeDomeLightingStrength).toEqual(1.0);
         expect(pointCloudShading.eyeDomeLightingRadius).toEqual(1.0);
+        expect(pointCloudShading.backFaceCulling).toEqual(false);
+        expect(pointCloudShading.normalShading).toEqual(true);
 
         var options = {
             geometricErrorScale : 2.0,
             maximumAttenuation : 16,
             baseResolution : 0.1,
             eyeDomeLightingStrength : 0.1,
-            eyeDomeLightingRadius : 2.0
+            eyeDomeLightingRadius : 2.0,
+            backFaceCulling : true,
+            normalShading : false
         };
         pointCloudShading = new PointCloudShading(options);
         expect(pointCloudShading.attenuation).toEqual(false);
@@ -31,6 +32,8 @@ defineSuite([
         expect(pointCloudShading.eyeDomeLighting).toEqual(true);
         expect(pointCloudShading.eyeDomeLightingStrength).toEqual(options.eyeDomeLightingStrength);
         expect(pointCloudShading.eyeDomeLightingRadius).toEqual(options.eyeDomeLightingRadius);
+        expect(pointCloudShading.backFaceCulling).toEqual(options.backFaceCulling);
+        expect(pointCloudShading.normalShading).toEqual(options.normalShading);
     });
 
     it('provides a method for checking if point cloud shading is supported', function() {

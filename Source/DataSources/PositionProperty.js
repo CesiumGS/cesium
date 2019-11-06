@@ -1,20 +1,10 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Matrix3',
-        '../Core/ReferenceFrame',
-        '../Core/Transforms'
-    ], function(
-        Cartesian3,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Matrix3,
-        ReferenceFrame,
-        Transforms) {
-    'use strict';
+import Cartesian3 from '../Core/Cartesian3.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Matrix3 from '../Core/Matrix3.js';
+import ReferenceFrame from '../Core/ReferenceFrame.js';
+import Transforms from '../Core/Transforms.js';
 
     /**
      * The interface for all {@link Property} objects that define a world
@@ -23,6 +13,7 @@ define([
      *
      * @alias PositionProperty
      * @constructor
+     * @abstract
      *
      * @see CompositePositionProperty
      * @see ConstantPositionProperty
@@ -126,6 +117,4 @@ define([
             return Matrix3.multiplyByVector(Matrix3.transpose(icrfToFixed, scratchMatrix3), value, result);
         }
     };
-
-    return PositionProperty;
-});
+export default PositionProperty;

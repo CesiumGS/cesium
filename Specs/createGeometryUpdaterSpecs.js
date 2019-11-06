@@ -1,36 +1,18 @@
-define([
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/DistanceDisplayCondition',
-        'Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        'Core/JulianDate',
-        'Core/ShowGeometryInstanceAttribute',
-        'Core/TimeInterval',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EllipsoidGeometryUpdater',
-        'DataSources/Entity',
-        'DataSources/GridMaterialProperty',
-        'DataSources/SampledProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/ShadowMode'
-    ], function(
-        Color,
-        ColorGeometryInstanceAttribute,
-        DistanceDisplayCondition,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        JulianDate,
-        ShowGeometryInstanceAttribute,
-        TimeInterval,
-        ColorMaterialProperty,
-        ConstantProperty,
-        EllipsoidGeometryUpdater,
-        Entity,
-        GridMaterialProperty,
-        SampledProperty,
-        TimeIntervalCollectionProperty,
-        ShadowMode) {
-    'use strict';
+import { Color } from '../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../Source/Cesium.js';
+import { DistanceDisplayConditionGeometryInstanceAttribute } from '../Source/Cesium.js';
+import { JulianDate } from '../Source/Cesium.js';
+import { ShowGeometryInstanceAttribute } from '../Source/Cesium.js';
+import { TimeInterval } from '../Source/Cesium.js';
+import { ColorMaterialProperty } from '../Source/Cesium.js';
+import { ConstantProperty } from '../Source/Cesium.js';
+import { EllipsoidGeometryUpdater } from '../Source/Cesium.js';
+import { Entity } from '../Source/Cesium.js';
+import { GridMaterialProperty } from '../Source/Cesium.js';
+import { SampledProperty } from '../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../Source/Cesium.js';
+import { ShadowMode } from '../Source/Cesium.js';
 
     function createGeometryUpdaterSpecs(Updater, geometryPropertyName, createEntity, getScene) {
         var time = JulianDate.now();
@@ -418,6 +400,4 @@ define([
             expect(attributes.color.value).toEqual(ColorGeometryInstanceAttribute.toValue(Color.BLACK));
         });
     }
-
-    return createGeometryUpdaterSpecs;
-});
+export default createGeometryUpdaterSpecs;

@@ -1,14 +1,7 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        defineProperties) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
 
     /**
      * Array implementation of a heap.
@@ -229,6 +222,4 @@ define([
      * @param {*} b An element in the heap.
      * @returns {Number} If the result of the comparison is less than 0, sort a to a lower index than b, otherwise sort to a higher index.
      */
-
-    return Heap;
-});
+export default Heap;

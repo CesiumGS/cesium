@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/isLeapYear'
-    ], function(
-        isLeapYear) {
-    'use strict';
+import { isLeapYear } from '../../Source/Cesium.js';
+
+describe('Core/isLeapYear', function() {
 
     it('Check for valid leap years', function() {
         expect(isLeapYear(2000)).toEqual(true);

@@ -1,50 +1,26 @@
-defineSuite([
-        'DataSources/CorridorGeometryUpdater',
-        'Core/ApproximateTerrainHeights',
-        'Core/Cartesian3',
-        'Core/CornerType',
-        'Core/GeometryOffsetAttribute',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/ConstantProperty',
-        'DataSources/CorridorGraphics',
-        'DataSources/Entity',
-        'DataSources/PropertyArray',
-        'DataSources/SampledPositionProperty',
-        'DataSources/SampledProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/PrimitiveCollection',
-        'Specs/createDynamicGeometryUpdaterSpecs',
-        'Specs/createDynamicProperty',
-        'Specs/createGeometryUpdaterGroundGeometrySpecs',
-        'Specs/createGeometryUpdaterSpecs',
-        'Specs/createScene'
-    ], function(
-        CorridorGeometryUpdater,
-        ApproximateTerrainHeights,
-        Cartesian3,
-        CornerType,
-        GeometryOffsetAttribute,
-        JulianDate,
-        CesiumMath,
-        TimeInterval,
-        TimeIntervalCollection,
-        ConstantProperty,
-        CorridorGraphics,
-        Entity,
-        PropertyArray,
-        SampledPositionProperty,
-        SampledProperty,
-        TimeIntervalCollectionProperty,
-        PrimitiveCollection,
-        createDynamicGeometryUpdaterSpecs,
-        createDynamicProperty,
-        createGeometryUpdaterGroundGeometrySpecs,
-        createGeometryUpdaterSpecs,
-        createScene) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CornerType } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { CorridorGeometryUpdater } from '../../Source/Cesium.js';
+import { CorridorGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { PropertyArray } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { PrimitiveCollection } from '../../Source/Cesium.js';
+import createDynamicGeometryUpdaterSpecs from '../createDynamicGeometryUpdaterSpecs.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createGeometryUpdaterGroundGeometrySpecs from '../createGeometryUpdaterGroundGeometrySpecs.js';
+import createGeometryUpdaterSpecs from '../createGeometryUpdaterSpecs.js';
+import createScene from '../createScene.js';
+
+describe('DataSources/CorridorGeometryUpdater', function() {
 
     var scene;
     var time;

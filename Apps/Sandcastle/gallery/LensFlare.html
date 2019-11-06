@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Showcases, Post Processing">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-    require.config({
-        baseUrl : '../../../Source',
-        waitSeconds : 60
-    });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -44,6 +39,10 @@
         <td>Halo Width</td>
         <td><input type="range" min="0" max="1" step="0.01" data-bind="value: haloWidth, valueUpdate: 'input'"></td>
     </tr>
+    <tr>
+        <td>Dirt Amount</td>
+        <td><input type="range" min="0" max="1" step="0.01" data-bind="value: dirtAmount, valueUpdate: 'input'"></td>
+    </tr>
     </tbody></table>
 </div>
 <script id="cesium_sandcastle_script">
@@ -53,11 +52,12 @@ function startup(Cesium) {
 var viewer = new Cesium.Viewer('cesiumContainer');
 
 var viewModel = {
-    show: true,
-    intensity: 2.0,
-    distortion: 10.0,
-    dispersion: 0.4,
-    haloWidth: 0.4
+    show : true,
+    intensity : 2.0,
+    distortion : 10.0,
+    dispersion : 0.4,
+    haloWidth : 0.4,
+    dirtAmount : 0.4
 };
 
 Cesium.knockout.track(viewModel);
@@ -77,6 +77,7 @@ function updatePostProcess() {
     lensFlare.uniforms.distortion = Number(viewModel.distortion);
     lensFlare.uniforms.ghostDispersal = Number(viewModel.dispersion);
     lensFlare.uniforms.haloWidth = Number(viewModel.haloWidth);
+    lensFlare.uniforms.dirtAmount = Number(viewModel.dirtAmount);
     lensFlare.uniforms.earthRadius = Cesium.Ellipsoid.WGS84.maximumRadius;
 }
 updatePostProcess();
@@ -92,9 +93,8 @@ viewer.clock.currentTime = new Cesium.JulianDate(2458047, 27399.860215000022);
 Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
+    window.startupCalled = true;
     startup(Cesium);
-} else if (typeof require === 'function') {
-    require(['Cesium'], startup);
 }
 </script>
 </body>

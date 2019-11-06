@@ -1,18 +1,11 @@
-defineSuite([
-        'Scene/DeviceOrientationCameraController',
-        'Core/Cartesian3',
-        'Core/Math',
-        'Specs/createCamera',
-        'Specs/createCanvas',
-        'Specs/DomEventSimulator'
-    ], function(
-        DeviceOrientationCameraController,
-        Cartesian3,
-        CesiumMath,
-        createCamera,
-        createCanvas,
-        DomEventSimulator) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { DeviceOrientationCameraController } from '../../Source/Cesium.js';
+import createCamera from '../createCamera.js';
+import createCanvas from '../createCanvas.js';
+import DomEventSimulator from '../DomEventSimulator.js';
+
+describe('Scene/DeviceOrientationCameraController', function() {
 
     var scene;
     var canvas;

@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/PolygonPipeline',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/WindingOrder'
-    ], function(
-        PolygonPipeline,
-        Cartesian2,
-        Cartesian3,
-        Ellipsoid,
-        CesiumMath,
-        WindingOrder) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PolygonPipeline } from '../../Source/Cesium.js';
+import { WindingOrder } from '../../Source/Cesium.js';
+
+describe('Core/PolygonPipeline', function() {
 
     beforeEach(function() {
         CesiumMath.setRandomNumberSeed(0.0);

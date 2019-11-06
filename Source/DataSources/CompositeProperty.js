@@ -1,20 +1,10 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/EventHelper',
-        '../Core/TimeIntervalCollection',
-        './Property'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        EventHelper,
-        TimeIntervalCollection,
-        Property) {
-    'use strict';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import EventHelper from '../Core/EventHelper.js';
+import TimeIntervalCollection from '../Core/TimeIntervalCollection.js';
+import Property from './Property.js';
 
     function subscribeAll(property, eventHelper, definitionChanged, intervals) {
         function callback() {
@@ -152,6 +142,4 @@ define([
         subscribeAll(this, this._eventHelper, this._definitionChanged, this._intervals);
         this._definitionChanged.raiseEvent(this);
     };
-
-    return CompositeProperty;
-});
+export default CompositeProperty;

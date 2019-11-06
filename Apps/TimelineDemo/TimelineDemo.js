@@ -1,33 +1,21 @@
-/*global document,window,define*/
 define([
-        'Core/Clock',
-        'Core/ClockRange',
-        'Core/Color',
-        'Core/defined',
-        'Core/JulianDate',
-        'Core/requestAnimationFrame',
-        'Core/TimeInterval',
         'dijit/dijit',
-        'dojo',
-        'Widgets/Animation/Animation',
-        'Widgets/Animation/AnimationViewModel',
-        'Widgets/ClockViewModel',
-        'Widgets/Timeline/Timeline'
+        'dojo'
     ], function(
-        Clock,
-        ClockRange,
-        Color,
-        defined,
-        JulianDate,
-        requestAnimationFrame,
-        TimeInterval,
         dijit,
-        dojo,
-        Animation,
-        AnimationViewModel,
-        ClockViewModel,
-        Timeline) {
+        dojo) {
     'use strict';
+    /* global Cesium */
+
+    var defined = Cesium.defined;
+    var Clock = Cesium.Clock;
+    var ClockRange = Cesium.ClockRange;
+    var Timeline = Cesium.Timeline;
+    var TimeInterval = Cesium.TimeInterval;
+    var JulianDate = Cesium.JulianDate;
+    var Color = Cesium.Color;
+    var ClockViewModel = Cesium.ClockViewModel;
+    var AnimationViewModel = Cesium.AnimationViewModel;
 
     var startDatePart, endDatePart, startTimePart, endTimePart;
     var timeline, clock, endBeforeStart, containerElement, animationViewModel, animation;

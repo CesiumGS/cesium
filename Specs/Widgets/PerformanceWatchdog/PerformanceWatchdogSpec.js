@@ -1,10 +1,7 @@
-defineSuite([
-        'Widgets/PerformanceWatchdog/PerformanceWatchdog',
-        'Specs/createScene'
-    ], function(
-        PerformanceWatchdog,
-        createScene) {
-    'use strict';
+import createScene from '../../createScene.js';
+import { PerformanceWatchdog } from '../../../Source/Cesium.js';
+
+describe('Widgets/PerformanceWatchdog/PerformanceWatchdog', function() {
 
     var scene;
     beforeAll(function() {

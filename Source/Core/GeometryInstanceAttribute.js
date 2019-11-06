@@ -1,12 +1,6 @@
-define([
-        './defaultValue',
-        './defined',
-        './DeveloperError'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Values and type information for per-instance geometry attributes.
@@ -136,6 +130,4 @@ define([
          */
         this.value = options.value;
     }
-
-    return GeometryInstanceAttribute;
-});
+export default GeometryInstanceAttribute;

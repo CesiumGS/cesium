@@ -1,8 +1,4 @@
-define([
-        './SceneMode'
-    ], function(
-        SceneMode) {
-    'use strict';
+import SceneMode from './SceneMode.js';
 
     /**
      * State information about the current frame.  An instance of this class
@@ -93,6 +89,14 @@ define([
         this.frameNumber = 0;
 
         /**
+         * <code>true</code> if a new frame has been issued and the frame number has been updated.
+         *
+         * @type {Boolean}
+         * @default false
+         */
+        this.newFrame = false;
+
+        /**
          * The scene's current time.
          *
          * @type {JulianDate}
@@ -148,6 +152,15 @@ define([
          */
         this.maximumScreenSpaceError = undefined;
 
+        /**
+         * Ratio between a pixel and a density-independent pixel. Provides a standard unit of
+         * measure for real pixel measurements appropriate to a particular device.
+         *
+         * @type {Number}
+         * @default 1.0
+         */
+        this.pixelRatio = 1.0;
+
         this.passes = {
             /**
              * <code>true</code> if the primitive should update for a render pass, <code>false</code> otherwise.
@@ -184,14 +197,7 @@ define([
              * @type {Boolean}
              * @default false
              */
-            offscreen : false,
-
-            /**
-             * <code>true</code> if the primitive should update for an asynchronous pass, <code>false</code> otherwise.
-             * @type {Boolean}
-             * @default false
-             */
-            asynchronous : false
+            offscreen : false
         };
 
         /**
@@ -378,6 +384,13 @@ define([
          * @default false
          */
         this.useLogDepth = false;
+
+        /**
+         * Additional state used to update 3D Tilesets.
+         *
+         * @type {Cesium3DTilePassState}
+         */
+        this.tilesetPassState = undefined;
     }
 
     /**
@@ -385,6 +398,4 @@ define([
      *
      * @callback FrameState~AfterRenderCallback
      */
-
-    return FrameState;
-});
+export default FrameState;

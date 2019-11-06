@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/BingMapsApi'
-    ], function(
-        BingMapsApi) {
-    'use strict';
+import { BingMapsApi } from '../../Source/Cesium.js';
+
+describe('Core/BingMapsApi', function() {
 
     it('getKey returns provided key if one is provided', function() {
         expect(BingMapsApi.getKey('foo')).toEqual('foo');

@@ -1,64 +1,32 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/buildModuleUrl',
-        '../Core/Cartesian3',
-        '../Core/Cartographic',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/EllipsoidTerrainProvider',
-        '../Core/Event',
-        '../Core/IntersectionTests',
-        '../Core/Ray',
-        '../Core/Rectangle',
-        '../Core/Resource',
-        '../Renderer/ShaderSource',
-        '../Renderer/Texture',
-        '../Shaders/GlobeFS',
-        '../Shaders/GlobeVS',
-        '../Shaders/GroundAtmosphere',
-        '../ThirdParty/when',
-        './GlobeSurfaceShaderSet',
-        './GlobeSurfaceTileProvider',
-        './ImageryLayerCollection',
-        './QuadtreePrimitive',
-        './SceneMode',
-        './ShadowMode',
-        './TileSelectionResult'
-    ], function(
-        BoundingSphere,
-        buildModuleUrl,
-        Cartesian3,
-        Cartographic,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Ellipsoid,
-        EllipsoidTerrainProvider,
-        Event,
-        IntersectionTests,
-        Ray,
-        Rectangle,
-        Resource,
-        ShaderSource,
-        Texture,
-        GlobeFS,
-        GlobeVS,
-        GroundAtmosphere,
-        when,
-        GlobeSurfaceShaderSet,
-        GlobeSurfaceTileProvider,
-        ImageryLayerCollection,
-        QuadtreePrimitive,
-        SceneMode,
-        ShadowMode,
-        TileSelectionResult) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import buildModuleUrl from '../Core/buildModuleUrl.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartographic from '../Core/Cartographic.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import EllipsoidTerrainProvider from '../Core/EllipsoidTerrainProvider.js';
+import Event from '../Core/Event.js';
+import IntersectionTests from '../Core/IntersectionTests.js';
+import Ray from '../Core/Ray.js';
+import Rectangle from '../Core/Rectangle.js';
+import Resource from '../Core/Resource.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import Texture from '../Renderer/Texture.js';
+import GlobeFS from '../Shaders/GlobeFS.js';
+import GlobeVS from '../Shaders/GlobeVS.js';
+import GroundAtmosphere from '../Shaders/GroundAtmosphere.js';
+import when from '../ThirdParty/when.js';
+import GlobeSurfaceShaderSet from './GlobeSurfaceShaderSet.js';
+import GlobeSurfaceTileProvider from './GlobeSurfaceTileProvider.js';
+import ImageryLayerCollection from './ImageryLayerCollection.js';
+import QuadtreePrimitive from './QuadtreePrimitive.js';
+import SceneMode from './SceneMode.js';
+import ShadowMode from './ShadowMode.js';
+import TileSelectionResult from './TileSelectionResult.js';
 
     /**
      * The globe rendered in the scene, including its terrain ({@link Globe#terrainProvider})
@@ -175,14 +143,14 @@ define([
          * Enable lighting the globe with the sun as a light source.
          *
          * @type {Boolean}
-         * @default true
+         * @default false
          */
         this.enableLighting = false;
 
         /**
          * Enable the ground atmosphere, which is drawn over the globe when viewed from a distance between <code>lightingFadeInDistance</code> and <code>lightingFadeOutDistance</code>.
          *
-         * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Ground%20Atmosphere.html|Ground atmosphere demo in Sandcastle}
+         * @demo {@link https://sandcastle.cesium.com/index.html?src=Ground%20Atmosphere.html|Ground atmosphere demo in Sandcastle}
          *
          * @type {Boolean}
          * @default true
@@ -675,7 +643,11 @@ define([
         if (!defined(rayOrigin)) {
             // intersection point is outside the ellipsoid, try other value
             // minimum height (-11500.0) for the terrain set, need to get this information from the terrain provider
-            var magnitude = Math.min(defaultValue(tile.data.minimumHeight, 0.0), -11500.0);
+            var minimumHeight;
+            if (defined(tile.data.tileBoundingRegion)) {
+                minimumHeight = tile.data.tileBoundingRegion.minimumHeight;
+            }
+            var magnitude = Math.min(defaultValue(minimumHeight, 0.0), -11500.0);
 
             // multiply by the *positive* value of the magnitude
             var vectorToMinimumPoint = Cartesian3.multiplyByScalar(surfaceNormal, Math.abs(magnitude) + 1, scratchGetHeightIntersection);
@@ -784,16 +756,7 @@ define([
             this._material.update(frameState.context);
         }
 
-        var surface = this._surface;
-        var pass = frameState.passes;
-
-        if (pass.render) {
-            surface.render(frameState);
-        }
-
-        if (pass.pick) {
-            surface.render(frameState);
-        }
+        this._surface.render(frameState);
     };
 
     /**
@@ -845,6 +808,4 @@ define([
         this._oceanNormalMap = this._oceanNormalMap && this._oceanNormalMap.destroy();
         return destroyObject(this);
     };
-
-    return Globe;
-});
+export default Globe;

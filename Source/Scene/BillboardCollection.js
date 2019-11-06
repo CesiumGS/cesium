@@ -1,76 +1,39 @@
-define([
-        '../Core/AttributeCompression',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/ComponentDatatype',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/EncodedCartesian3',
-        '../Core/IndexDatatype',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/WebGLConstants',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/ShaderProgram',
-        '../Renderer/ShaderSource',
-        '../Renderer/VertexArrayFacade',
-        '../Shaders/BillboardCollectionFS',
-        '../Shaders/BillboardCollectionVS',
-        './Billboard',
-        './BlendingState',
-        './BlendOption',
-        './HeightReference',
-        './HorizontalOrigin',
-        './SceneMode',
-        './TextureAtlas',
-        './VerticalOrigin'
-    ], function(
-        AttributeCompression,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        ComponentDatatype,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        EncodedCartesian3,
-        IndexDatatype,
-        CesiumMath,
-        Matrix4,
-        WebGLConstants,
-        Buffer,
-        BufferUsage,
-        ContextLimits,
-        DrawCommand,
-        Pass,
-        RenderState,
-        ShaderProgram,
-        ShaderSource,
-        VertexArrayFacade,
-        BillboardCollectionFS,
-        BillboardCollectionVS,
-        Billboard,
-        BlendingState,
-        BlendOption,
-        HeightReference,
-        HorizontalOrigin,
-        SceneMode,
-        TextureAtlas,
-        VerticalOrigin) {
-    'use strict';
+import AttributeCompression from '../Core/AttributeCompression.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import ComponentDatatype from '../Core/ComponentDatatype.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import ShaderSource from '../Renderer/ShaderSource.js';
+import VertexArrayFacade from '../Renderer/VertexArrayFacade.js';
+import BillboardCollectionFS from '../Shaders/BillboardCollectionFS.js';
+import BillboardCollectionVS from '../Shaders/BillboardCollectionVS.js';
+import Billboard from './Billboard.js';
+import BlendingState from './BlendingState.js';
+import BlendOption from './BlendOption.js';
+import HeightReference from './HeightReference.js';
+import HorizontalOrigin from './HorizontalOrigin.js';
+import SceneMode from './SceneMode.js';
+import SDFSettings from './SDFSettings.js';
+import TextureAtlas from './TextureAtlas.js';
+import VerticalOrigin from './VerticalOrigin.js';
 
     var SHOW_INDEX = Billboard.SHOW_INDEX;
     var POSITION_INDEX = Billboard.POSITION_INDEX;
@@ -89,6 +52,7 @@ define([
     var DISTANCE_DISPLAY_CONDITION_INDEX = Billboard.DISTANCE_DISPLAY_CONDITION;
     var DISABLE_DEPTH_DISTANCE = Billboard.DISABLE_DEPTH_DISTANCE;
     var TEXTURE_COORDINATE_BOUNDS = Billboard.TEXTURE_COORDINATE_BOUNDS;
+    var SDF_INDEX = Billboard.SDF_INDEX;
     var NUMBER_OF_PROPERTIES = Billboard.NUMBER_OF_PROPERTIES;
 
     var attributeLocations;
@@ -104,7 +68,8 @@ define([
         pixelOffsetScaleByDistance : 7,
         compressedAttribute3 : 8,
         textureCoordinateBoundsOrLabelTranslate : 9,
-        a_batchId : 10
+        a_batchId : 10,
+        sdf: 11
     };
 
     var attributeLocationsInstanced = {
@@ -119,7 +84,8 @@ define([
         pixelOffsetScaleByDistance : 8,
         compressedAttribute3 : 9,
         textureCoordinateBoundsOrLabelTranslate : 10,
-        a_batchId : 11
+        a_batchId : 11,
+        sdf: 12
     };
 
     /**
@@ -157,7 +123,7 @@ define([
      * @see Billboard
      * @see LabelCollection
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      *
      * @example
      * // Create a billboard collection with two billboards
@@ -280,6 +246,18 @@ define([
          * @default false
          */
         this.debugShowBoundingVolume = defaultValue(options.debugShowBoundingVolume, false);
+
+        /**
+         * This property is for debugging only; it is not for production use nor is it optimized.
+         * <p>
+         * Draws the texture atlas for this BillboardCollection as a fullscreen quad.
+         * </p>
+         *
+         * @type {Boolean}
+         *
+         * @default false
+         */
+        this.debugShowTextureAtlas = defaultValue(options.debugShowTextureAtlas, false);
 
         /**
          * The billboard blending option. The default is used for rendering both opaque and translucent billboards.
@@ -419,7 +397,7 @@ define([
      * Creates and adds a billboard with the specified initial properties to the collection.
      * The added billboard is returned so it can be modified or removed from the collection later.
      *
-     * @param {Object}[billboard] A template describing the billboard's properties as shown in Example 1.
+     * @param {Object}[options] A template describing the billboard's properties as shown in Example 1.
      * @returns {Billboard} The billboard that was added to the collection.
      *
      * @performance Calling <code>add</code> is expected constant time.  However, the collection's vertex buffer
@@ -464,8 +442,8 @@ define([
      * @see BillboardCollection#remove
      * @see BillboardCollection#removeAll
      */
-    BillboardCollection.prototype.add = function(billboard) {
-        var b = new Billboard(billboard, this);
+    BillboardCollection.prototype.add = function(options) {
+        var b = new Billboard(options, this);
         b._index = this._billboards.length;
 
         this._billboards.push(b);
@@ -699,7 +677,7 @@ define([
         return usageChanged;
     };
 
-    function createVAF(context, numberOfBillboards, buffersUsage, instanced, batchTable) {
+    function createVAF(context, numberOfBillboards, buffersUsage, instanced, batchTable, sdf) {
         var attributes = [{
             index : attributeLocations.positionHighAndScale,
             componentsPerAttribute : 4,
@@ -768,6 +746,15 @@ define([
                 componentsPerAttribute : 1,
                 componentDatatyps : ComponentDatatype.FLOAT,
                 bufferUsage : BufferUsage.STATIC_DRAW
+            });
+        }
+
+        if (sdf) {
+            attributes.push({
+                index : attributeLocations.sdf,
+                componentsPerAttribute : 2,
+                componentDatatype : ComponentDatatype.FLOAT,
+                usage : buffersUsage[SDF_INDEX]
             });
         }
 
@@ -1336,6 +1323,38 @@ define([
         }
     }
 
+    function writeSDF(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
+        if (!billboardCollection._sdf) {
+            return;
+        }
+
+        var i;
+        var writer = vafWriters[attributeLocations.sdf];
+
+        var outlineColor = billboard.outlineColor;
+        var outlineWidth = billboard.outlineWidth;
+
+        var red = Color.floatToByte(outlineColor.red);
+        var green = Color.floatToByte(outlineColor.green);
+        var blue = Color.floatToByte(outlineColor.blue);
+        var compressed0 = red * LEFT_SHIFT16 + green * LEFT_SHIFT8 + blue;
+
+        // Compute the relative outline distance
+        var outlineDistance = outlineWidth / SDFSettings.RADIUS;
+        var compressed1 = Color.floatToByte(outlineColor.alpha) * LEFT_SHIFT16 + Color.floatToByte(outlineDistance) * LEFT_SHIFT8;
+
+        if (billboardCollection._instanced) {
+            i = billboard._index;
+            writer(i, compressed0, compressed1);
+        } else {
+            i = billboard._index * 4;
+            writer(i + 0, compressed0 + LOWER_LEFT, compressed1);
+            writer(i + 1, compressed0 + LOWER_RIGHT, compressed1);
+            writer(i + 2, compressed0 + UPPER_RIGHT, compressed1);
+            writer(i + 3, compressed0 + UPPER_LEFT, compressed1);
+        }
+    }
+
     function writeBillboard(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard) {
         writePositionScaleAndRotation(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeCompressedAttrib0(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
@@ -1347,6 +1366,7 @@ define([
         writeCompressedAttribute3(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeTextureCoordinateBoundsOrLabelTranslate(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
         writeBatchId(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
+        writeSDF(billboardCollection, context, textureAtlasCoordinates, vafWriters, billboard);
     }
 
     function recomputeActualPositions(billboardCollection, billboards, length, frameState, modelMatrix, recomputeBoundingVolume) {
@@ -1420,6 +1440,26 @@ define([
         boundingVolume.radius += size + offset;
     }
 
+    function createDebugCommand(billboardCollection, context) {
+        var fs;
+        fs = 'uniform sampler2D billboard_texture; \n' +
+             'varying vec2 v_textureCoordinates; \n' +
+             'void main() \n' +
+             '{ \n' +
+             '    gl_FragColor = texture2D(billboard_texture, v_textureCoordinates); \n' +
+             '} \n';
+
+        var drawCommand = context.createViewportQuadCommand(fs, {
+            uniformMap : {
+                billboard_texture : function() {
+                    return billboardCollection._textureAtlas.texture;
+                }
+            }
+        });
+        drawCommand.pass = Pass.OVERLAY;
+        return drawCommand;
+    }
+
     var scratchWriterArray = [];
 
     /**
@@ -1489,7 +1529,7 @@ define([
 
             if (billboardsLength > 0) {
                 // PERFORMANCE_IDEA:  Instead of creating a new one, resize like std::vector.
-                this._vaf = createVAF(context, billboardsLength, this._buffersUsage, this._instanced, this._batchTable);
+                this._vaf = createVAF(context, billboardsLength, this._buffersUsage, this._instanced, this._batchTable, this._sdf);
                 vafWriters = this._vaf.writers;
 
                 // Rewrite entire buffer if billboards were added or removed.
@@ -1547,6 +1587,10 @@ define([
 
             if (properties[IMAGE_INDEX_INDEX] || properties[POSITION_INDEX]) {
                 writers.push(writeTextureCoordinateBoundsOrLabelTranslate);
+            }
+
+            if (properties[SDF_INDEX]) {
+                writers.push(writeSDF);
             }
 
             var numWriters = writers.length;
@@ -1667,7 +1711,8 @@ define([
             (this._shaderPixelOffsetScaleByDistance !== this._compiledShaderPixelOffsetScaleByDistance) ||
             (this._shaderDistanceDisplayCondition !== this._compiledShaderDistanceDisplayCondition) ||
             (this._shaderDisableDepthDistance !== this._compiledShaderDisableDepthDistance) ||
-            (this._shaderClampToGround !== this._compiledShaderClampToGround)) {
+            (this._shaderClampToGround !== this._compiledShaderClampToGround) ||
+            (this._sdf !== this._compiledSDF)) {
 
             vsSource = BillboardCollectionVS;
             fsSource = BillboardCollectionFS;
@@ -1715,6 +1760,12 @@ define([
                 }
             }
 
+            var sdfEdge = 1.0 - SDFSettings.CUTOFF;
+
+            if (this._sdf) {
+                vs.defines.push('SDF');
+            }
+
             var vectorFragDefine = defined(this._batchTable) ? 'VECTOR_TILE' : '';
 
             if (this._blendOption === BlendOption.OPAQUE_AND_TRANSLUCENT) {
@@ -1729,6 +1780,12 @@ define([
                         fs.defines.push('FRAGMENT_DEPTH_CHECK');
                     }
                 }
+
+                if (this._sdf) {
+                    fs.defines.push('SDF');
+                    fs.defines.push('SDF_EDGE ' + sdfEdge);
+                }
+
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._sp,
@@ -1747,6 +1804,10 @@ define([
                     } else {
                         fs.defines.push('FRAGMENT_DEPTH_CHECK');
                     }
+                }
+                if (this._sdf) {
+                    fs.defines.push('SDF');
+                    fs.defines.push('SDF_EDGE ' + sdfEdge);
                 }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,
@@ -1769,6 +1830,10 @@ define([
                         fs.defines.push('FRAGMENT_DEPTH_CHECK');
                     }
                 }
+                if (this._sdf) {
+                    fs.defines.push('SDF');
+                    fs.defines.push('SDF_EDGE ' + sdfEdge);
+                }
                 this._sp = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._sp,
@@ -1790,6 +1855,10 @@ define([
                         fs.defines.push('FRAGMENT_DEPTH_CHECK');
                     }
                 }
+                if (this._sdf) {
+                    fs.defines.push('SDF');
+                    fs.defines.push('SDF_EDGE ' + sdfEdge);
+                }
                 this._spTranslucent = ShaderProgram.replaceCache({
                     context : context,
                     shaderProgram : this._spTranslucent,
@@ -1807,6 +1876,7 @@ define([
             this._compiledShaderDistanceDisplayCondition = this._shaderDistanceDisplayCondition;
             this._compiledShaderDisableDepthDistance = this._shaderDisableDepthDistance;
             this._compiledShaderClampToGround = this._shaderClampToGround;
+            this._compiledSDF = this._sdf;
         }
 
         var commandList = frameState.commandList;
@@ -1860,6 +1930,14 @@ define([
 
                 commandList.push(command);
             }
+
+            if (this.debugShowTextureAtlas) {
+                if (!defined(this.debugCommand)) {
+                    this.debugCommand = createDebugCommand(this, frameState.context);
+                }
+
+                commandList.push(this.debugCommand);
+            }
         }
     };
 
@@ -1907,6 +1985,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return BillboardCollection;
-});
+export default BillboardCollection;

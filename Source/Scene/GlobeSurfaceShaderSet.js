@@ -1,18 +1,9 @@
-define([
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/TerrainQuantization',
-        '../Renderer/ShaderProgram',
-        './getClippingFunction',
-        './SceneMode'
-    ], function(
-        defined,
-        destroyObject,
-        TerrainQuantization,
-        ShaderProgram,
-        getClippingFunction,
-        SceneMode) {
-    'use strict';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import TerrainQuantization from '../Core/TerrainQuantization.js';
+import ShaderProgram from '../Renderer/ShaderProgram.js';
+import getClippingFunction from './getClippingFunction.js';
+import SceneMode from './SceneMode.js';
 
     function GlobeSurfaceShader(numberOfDayTextures, flags, material, shaderProgram, clippingShaderState) {
         this.numberOfDayTextures = numberOfDayTextures;
@@ -91,6 +82,7 @@ define([
         var hasImageryLayerCutout = options.hasImageryLayerCutout;
         var colorCorrect = options.colorCorrect;
         var highlightFillTile = options.highlightFillTile;
+        var colorToAlpha = options.colorToAlpha;
 
         var quantization = 0;
         var quantizationDefine = '';
@@ -147,7 +139,8 @@ define([
                     (cartographicLimitRectangleFlag << 20) |
                     (imageryCutoutFlag << 21) |
                     (colorCorrect << 22) |
-                    (highlightFillTile << 23);
+                    (highlightFillTile << 23) |
+                    (colorToAlpha << 24);
 
         var currentClippingShaderState = 0;
         if (defined(clippingPlanes) && clippingPlanes.length > 0) {
@@ -206,6 +199,9 @@ define([
             }
             if (showOceanWaves) {
                 fs.defines.push('SHOW_OCEAN_WAVES');
+            }
+            if (colorToAlpha) {
+                fs.defines.push('APPLY_COLOR_TO_ALPHA');
             }
 
             if (enableLighting) {
@@ -283,7 +279,8 @@ define([
             ' + (applyHue ? 'u_dayTextureHue[' + i + ']' : '0.0') + ',\n\
             ' + (applySaturation ? 'u_dayTextureSaturation[' + i + ']' : '0.0') + ',\n\
             ' + (applyGamma ? 'u_dayTextureOneOverGamma[' + i + ']' : '0.0') + ',\n\
-            ' + (applySplit ? 'u_dayTextureSplit[' + i + ']' : '0.0') + '\n\
+            ' + (applySplit ? 'u_dayTextureSplit[' + i + ']' : '0.0') + ',\n\
+            ' + (colorToAlpha ? 'u_colorsToAlpha[' + i + ']' : 'vec4(0.0)') + '\n\
         );\n';
                 if (hasImageryLayerCutout) {
                     computeDayColor += '\
@@ -339,6 +336,4 @@ define([
 
         return destroyObject(this);
     };
-
-    return GlobeSurfaceShaderSet;
-});
+export default GlobeSurfaceShaderSet;

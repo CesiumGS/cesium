@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/oneTimeWarning'
-    ], function(
-        oneTimeWarning) {
-    'use strict';
+import { oneTimeWarning } from '../../Source/Cesium.js';
+
+describe('Core/oneTimeWarning', function() {
 
     it('logs a warning', function() {
         spyOn(console, 'warn');
