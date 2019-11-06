@@ -4,7 +4,7 @@ Change Log
 ### 1.63.1 - 2019-11-06
 
 ##### Fixes :wrench:
-* Fixed globe lighting and labels under different resolution scales.
+* Fixed regression in 1.63 where ground atmosphere and labels rendered incorrectly on displays with `window.devicePixelRatio` greater than 1.0. [#8351](https://github.com/AnalyticalGraphicsInc/cesium/pull/8351)
 
 ### 1.63 - 2019-11-01
 
