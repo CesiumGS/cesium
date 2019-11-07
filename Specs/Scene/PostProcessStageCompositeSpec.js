@@ -1,20 +1,12 @@
-defineSuite([
-        'Scene/PostProcessStageComposite',
-        'Core/Color',
-        'Core/defined',
-        'Scene/PostProcessStage',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        PostProcessStageComposite,
-        Color,
-        defined,
-        PostProcessStage,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { PostProcessStage } from '../../Source/Cesium.js';
+import { PostProcessStageComposite } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/PostProcessStageComposite', function() {
 
     var scene;
 
@@ -181,6 +173,13 @@ defineSuite([
         }
 
         expect(s).toRender([0, 0, 0, 255]);
+        // Dummy Stage
+        var bgColor = 51; // Choose a factor of 255 to make sure there aren't rounding issues
+        s.postProcessStages.add(new PostProcessStage({
+            fragmentShader : 'void main() { gl_FragColor = vec4(vec3(' + (bgColor / 255) + '), 1.0); }'
+        }));
+
+        //Stage we expect to not run
         var stage = s.postProcessStages.add(new PostProcessStageComposite({
             stages : [new PostProcessStage({
                 fragmentShader : 'uniform sampler2D depthTexture; void main() { gl_FragColor = vec4(1.0); }'
@@ -190,7 +189,7 @@ defineSuite([
             s.renderForSpecs();
             return stage.ready;
         }).then(function() {
-            expect(s).toRender([0, 0, 0, 255]);
+            expect(s).toRender([bgColor, bgColor, bgColor, 255]);
         }).always(function(e) {
             s.destroyForSpecs();
             if (e) {

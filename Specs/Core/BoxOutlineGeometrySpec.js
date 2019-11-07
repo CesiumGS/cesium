@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/BoxOutlineGeometry',
-        'Core/arrayFill',
-        'Core/AxisAlignedBoundingBox',
-        'Core/Cartesian3',
-        'Core/GeometryOffsetAttribute',
-        'Specs/createPackableSpecs'
-    ], function(
-        BoxOutlineGeometry,
-        arrayFill,
-        AxisAlignedBoundingBox,
-        Cartesian3,
-        GeometryOffsetAttribute,
-        createPackableSpecs) {
-    'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { AxisAlignedBoundingBox } from '../../Source/Cesium.js';
+import { BoxOutlineGeometry } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/BoxOutlineGeometry', function() {
 
     it('constructor throws without maximum corner', function() {
         expect(function() {

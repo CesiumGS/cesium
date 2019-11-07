@@ -1,18 +1,9 @@
-define([
-    'Core/clone',
-    'Renderer/Texture',
-    'Scene/GlobeSurfaceTile',
-    'Scene/ImageryLayer',
-    'Scene/TerrainState',
-    'ThirdParty/when'
-], function(
-    clone,
-    Texture,
-    GlobeSurfaceTile,
-    ImageryLayer,
-    TerrainState,
-    when) {
-    'use strict';
+import { clone } from '../Source/Cesium.js';
+import { Texture } from '../Source/Cesium.js';
+import { GlobeSurfaceTile } from '../Source/Cesium.js';
+import { ImageryLayer } from '../Source/Cesium.js';
+import { TerrainState } from '../Source/Cesium.js';
+import { when } from '../Source/Cesium.js';
 
     function TerrainTileProcessor(frameState, terrainProvider, imageryLayerCollection) {
         this.frameState = frameState;
@@ -117,7 +108,4 @@ define([
             return result;
         });
     };
-
-    return TerrainTileProcessor;
-});
-
+export default TerrainTileProcessor;

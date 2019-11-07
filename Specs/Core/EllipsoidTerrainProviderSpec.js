@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/EllipsoidTerrainProvider',
-        'Core/TerrainProvider',
-        'Specs/createContext'
-    ], function(
-        EllipsoidTerrainProvider,
-        TerrainProvider,
-        createContext) {
-    'use strict';
+import { EllipsoidTerrainProvider } from '../../Source/Cesium.js';
+import { TerrainProvider } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Core/EllipsoidTerrainProvider', function() {
 
     var context;
 

@@ -1,36 +1,20 @@
-defineSuite([
-        'DataSources/StaticOutlineGeometryBatch',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/CallbackProperty',
-        'DataSources/EllipseGeometryUpdater',
-        'DataSources/Entity',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/ShadowMode',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        StaticOutlineGeometryBatch,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        JulianDate,
-        CesiumMath,
-        TimeInterval,
-        TimeIntervalCollection,
-        CallbackProperty,
-        EllipseGeometryUpdater,
-        Entity,
-        TimeIntervalCollectionProperty,
-        ShadowMode,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+import { EllipseGeometryUpdater } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { StaticOutlineGeometryBatch } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/StaticOutlineGeometryBatch', function() {
 
     var time = JulianDate.now();
     var scene;

@@ -1,8 +1,4 @@
-define([
-        './DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Determines if a given date is a leap year.
@@ -24,6 +20,4 @@ define([
 
         return ((year % 4 === 0) && (year % 100 !== 0)) || (year % 400 === 0);
     }
-
-    return isLeapYear;
-});
+export default isLeapYear;

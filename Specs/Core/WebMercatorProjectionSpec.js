@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/WebMercatorProjection',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/Ellipsoid',
-        'Core/Math'
-    ], function(
-        WebMercatorProjection,
-        Cartesian2,
-        Cartesian3,
-        Cartographic,
-        Ellipsoid,
-        CesiumMath) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+
+describe('Core/WebMercatorProjection', function() {
 
     it('construct0', function() {
         var projection = new WebMercatorProjection();

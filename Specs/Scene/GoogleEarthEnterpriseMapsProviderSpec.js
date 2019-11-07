@@ -1,30 +1,26 @@
-defineSuite([
-        'Scene/GoogleEarthEnterpriseMapsProvider',
-        'Core/DefaultProxy',
-        'Core/GeographicTilingScheme',
-        'Core/Rectangle',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/WebMercatorTilingScheme',
-        'Scene/Imagery',
-        'Scene/ImageryLayer',
-        'Scene/ImageryProvider',
-        'Scene/ImageryState',
-        'Specs/pollToPromise'
-    ], function(
-        GoogleEarthEnterpriseMapsProvider,
-        DefaultProxy,
-        GeographicTilingScheme,
-        Rectangle,
-        RequestScheduler,
-        Resource,
-        WebMercatorTilingScheme,
-        Imagery,
-        ImageryLayer,
-        ImageryProvider,
-        ImageryState,
-        pollToPromise) {
-    'use strict';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseMapsProvider } from '../../Source/Cesium.js';
+import { Imagery } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { ImageryState } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/GoogleEarthEnterpriseMapsProvider', function() {
+
+    var supportsImageBitmapOptions;
+    beforeAll(function() {
+        // This suite spies on requests. Resource.supportsImageBitmapOptions needs to make a request to a data URI.
+        // We run it here to avoid interfering with the tests.
+        return Resource.supportsImageBitmapOptions()
+            .then(function(result) {
+                supportsImageBitmapOptions = result;
+            });
+    });
 
     afterEach(function() {
         Resource._Implementations.createImage = Resource._DefaultImplementations.createImage;
@@ -172,9 +168,9 @@ defineSuite([
             expect(provider.credit).toBeInstanceOf(Object);
 
             Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-                if (/^blob:/.test(url)) {
-                    // load blob url normally
-                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+                if (/^blob:/.test(url) || supportsImageBitmapOptions) {
+                    // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+                    Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
                 } else {
                     expect(url).toEqual('http://example.invalid/query?request=ImageryMaps&channel=1234&version=1&x=0&y=0&z=1');
 
@@ -191,7 +187,7 @@ defineSuite([
             };
 
             return provider.requestImage(0, 0, 0).then(function(image) {
-                expect(image).toBeInstanceOf(Image);
+                expect(image).toBeImageOrImageBitmap();
             });
         });
     });
@@ -290,9 +286,9 @@ defineSuite([
         });
 
         Resource._Implementations.createImage = function(url, crossOrigin, deferred) {
-            if (/^blob:/.test(url)) {
-                // load blob url normally
-                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred);
+            if (/^blob:/.test(url) || supportsImageBitmapOptions) {
+                // If ImageBitmap is supported, we expect a loadWithXhr request to fetch it as a blob.
+                Resource._DefaultImplementations.createImage(url, crossOrigin, deferred, true, true);
             } else if (tries === 2) {
                 // Succeed after 2 tries
                 Resource._DefaultImplementations.createImage('Data/Images/Red16x16.png', crossOrigin, deferred);
@@ -327,7 +323,7 @@ defineSuite([
             return pollToPromise(function() {
                 return imagery.state === ImageryState.RECEIVED;
             }).then(function() {
-                expect(imagery.image).toBeInstanceOf(Image);
+                expect(imagery.image).toBeImageOrImageBitmap();
                 expect(tries).toEqual(2);
                 imagery.releaseReference();
             });

@@ -1,10 +1,5 @@
-define([
-        './Check',
-        './RuntimeError'
-    ], function(
-        Check,
-        RuntimeError) {
-    'use strict';
+import Check from './Check.js';
+import RuntimeError from './RuntimeError.js';
 
     var compressedMagic = 0x7468dead;
     var compressedMagicSwap = 0xadde6874;
@@ -85,6 +80,4 @@ define([
     }
 
     decodeGoogleEarthEnterpriseData.passThroughDataForTesting = false;
-
-    return decodeGoogleEarthEnterpriseData;
-});
+export default decodeGoogleEarthEnterpriseData;

@@ -1,40 +1,22 @@
-defineSuite([
-        'Scene/IonImageryProvider',
-        'Core/Credit',
-        'Core/defaultValue',
-        'Core/IonResource',
-        'Core/RequestScheduler',
-        'Core/Resource',
-        'Core/RuntimeError',
-        'Scene/ArcGisMapServerImageryProvider',
-        'Scene/BingMapsImageryProvider',
-        'Scene/GoogleEarthEnterpriseMapsProvider',
-        'Scene/ImageryProvider',
-        'Scene/MapboxImageryProvider',
-        'Scene/SingleTileImageryProvider',
-        'Scene/UrlTemplateImageryProvider',
-        'Scene/WebMapServiceImageryProvider',
-        'Scene/WebMapTileServiceImageryProvider',
-        'ThirdParty/when'
-    ], function(
-        IonImageryProvider,
-        Credit,
-        defaultValue,
-        IonResource,
-        RequestScheduler,
-        Resource,
-        RuntimeError,
-        ArcGisMapServerImageryProvider,
-        BingMapsImageryProvider,
-        GoogleEarthEnterpriseMapsProvider,
-        ImageryProvider,
-        MapboxImageryProvider,
-        SingleTileImageryProvider,
-        UrlTemplateImageryProvider,
-        WebMapServiceImageryProvider,
-        WebMapTileServiceImageryProvider,
-        when) {
-    'use strict';
+import { Credit } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { IonResource } from '../../Source/Cesium.js';
+import { RequestScheduler } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { ArcGisMapServerImageryProvider } from '../../Source/Cesium.js';
+import { BingMapsImageryProvider } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseMapsProvider } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import { IonImageryProvider } from '../../Source/Cesium.js';
+import { MapboxImageryProvider } from '../../Source/Cesium.js';
+import { SingleTileImageryProvider } from '../../Source/Cesium.js';
+import { UrlTemplateImageryProvider } from '../../Source/Cesium.js';
+import { WebMapServiceImageryProvider } from '../../Source/Cesium.js';
+import { WebMapTileServiceImageryProvider } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/IonImageryProvider', function() {
 
     function createTestProvider(endpointData) {
         endpointData = defaultValue(endpointData, {
@@ -59,6 +41,7 @@ defineSuite([
 
     beforeEach(function() {
         RequestScheduler.clearForSpecs();
+        IonImageryProvider._endpointCache = {};
     });
 
     it('conforms to ImageryProvider interface', function() {
@@ -114,6 +97,40 @@ defineSuite([
                 expect(provider.errorEvent).toBeDefined();
                 expect(provider.ready).toBe(true);
                 expect(provider._imageryProvider).toBeInstanceOf(UrlTemplateImageryProvider);
+            });
+    });
+
+    it('Uses previously fetched endpoint cache', function() {
+        var endpointData = {
+            type: 'IMAGERY',
+            url: 'http://test.invalid/layer',
+            accessToken: 'not_really_a_refresh_token',
+            attributions: []
+        };
+
+        var assetId = 12335;
+        var options = { assetId: assetId, accessToken: 'token', server: 'http://test.invalid' };
+        var endpointResource = IonResource._createEndpointResource(assetId, options);
+        spyOn(IonResource, '_createEndpointResource').and.returnValue(endpointResource);
+        spyOn(endpointResource, 'fetchJson').and.returnValue(when.resolve(endpointData));
+
+        expect(endpointResource.fetchJson.calls.count()).toBe(0);
+        var provider = new IonImageryProvider(options);
+        var provider2;
+        return provider.readyPromise
+            .then(function() {
+                expect(provider.ready).toBe(true);
+                expect(endpointResource.fetchJson.calls.count()).toBe(1);
+
+                // Same as options but in a different order to verify cache is order independant.
+                var options2 = { accessToken: 'token', server: 'http://test.invalid', assetId: assetId };
+                provider2 = new IonImageryProvider(options2);
+                return provider2.readyPromise;
+            })
+            .then(function() {
+                //Since the data is cached, fetchJson is not called again.
+                expect(endpointResource.fetchJson.calls.count()).toBe(1);
+                expect(provider2.ready).toBe(true);
             });
     });
 

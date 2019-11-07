@@ -1,94 +1,48 @@
-defineSuite([
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/CartographicGeocoderService',
-        'Core/Clock',
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/Color',
-        'Core/defined',
-        'Core/EllipsoidTerrainProvider',
-        'Core/HeadingPitchRange',
-        'Core/JulianDate',
-        'Core/Matrix4',
-        'Core/TimeIntervalCollection',
-        'Core/WebMercatorProjection',
-        'DataSources/BoundingSphereState',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/DataSourceClock',
-        'DataSources/DataSourceCollection',
-        'DataSources/DataSourceDisplay',
-        'DataSources/Entity',
-        'Scene/Camera',
-        'Scene/CameraFlightPath',
-        'Scene/Cesium3DTileset',
-        'Scene/ImageryLayerCollection',
-        'Scene/SceneMode',
-        'Scene/ShadowMode',
-        'Scene/TimeDynamicPointCloud',
-        'Specs/createViewer',
-        'Specs/DomEventSimulator',
-        'Specs/MockDataSource',
-        'Specs/pollToPromise',
-        'Widgets/Animation/Animation',
-        'Widgets/BaseLayerPicker/BaseLayerPicker',
-        'Widgets/BaseLayerPicker/ProviderViewModel',
-        'Widgets/CesiumWidget/CesiumWidget',
-        'Widgets/ClockViewModel',
-        'Widgets/FullscreenButton/FullscreenButton',
-        'Widgets/Geocoder/Geocoder',
-        'Widgets/HomeButton/HomeButton',
-        'Widgets/NavigationHelpButton/NavigationHelpButton',
-        'Widgets/SceneModePicker/SceneModePicker',
-        'Widgets/SelectionIndicator/SelectionIndicator',
-        'Widgets/Timeline/Timeline'
-    ], 'Widgets/Viewer/Viewer', function(
-        BoundingSphere,
-        Cartesian3,
-        CartographicGeocoderService,
-        Clock,
-        ClockRange,
-        ClockStep,
-        Color,
-        defined,
-        EllipsoidTerrainProvider,
-        HeadingPitchRange,
-        JulianDate,
-        Matrix4,
-        TimeIntervalCollection,
-        WebMercatorProjection,
-        BoundingSphereState,
-        ConstantPositionProperty,
-        ConstantProperty,
-        DataSourceClock,
-        DataSourceCollection,
-        DataSourceDisplay,
-        Entity,
-        Camera,
-        CameraFlightPath,
-        Cesium3DTileset,
-        ImageryLayerCollection,
-        SceneMode,
-        ShadowMode,
-        TimeDynamicPointCloud,
-        createViewer,
-        DomEventSimulator,
-        MockDataSource,
-        pollToPromise,
-        Animation,
-        BaseLayerPicker,
-        ProviderViewModel,
-        CesiumWidget,
-        ClockViewModel,
-        FullscreenButton,
-        Geocoder,
-        HomeButton,
-        NavigationHelpButton,
-        SceneModePicker,
-        SelectionIndicator,
-        Timeline) {
-    'use strict';
+import { BoundingSphere } from '../../../Source/Cesium.js';
+import { Cartesian3 } from '../../../Source/Cesium.js';
+import { CartographicGeocoderService } from '../../../Source/Cesium.js';
+import { Clock } from '../../../Source/Cesium.js';
+import { ClockRange } from '../../../Source/Cesium.js';
+import { ClockStep } from '../../../Source/Cesium.js';
+import { Color } from '../../../Source/Cesium.js';
+import { defined } from '../../../Source/Cesium.js';
+import { EllipsoidTerrainProvider } from '../../../Source/Cesium.js';
+import { HeadingPitchRange } from '../../../Source/Cesium.js';
+import { JulianDate } from '../../../Source/Cesium.js';
+import { Matrix4 } from '../../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../../Source/Cesium.js';
+import { ConstantProperty } from '../../../Source/Cesium.js';
+import { DataSourceClock } from '../../../Source/Cesium.js';
+import { DataSourceCollection } from '../../../Source/Cesium.js';
+import { DataSourceDisplay } from '../../../Source/Cesium.js';
+import { Entity } from '../../../Source/Cesium.js';
+import { Camera } from '../../../Source/Cesium.js';
+import { CameraFlightPath } from '../../../Source/Cesium.js';
+import { Cesium3DTileset } from '../../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../../Source/Cesium.js';
+import { SceneMode } from '../../../Source/Cesium.js';
+import { ShadowMode } from '../../../Source/Cesium.js';
+import { TimeDynamicPointCloud } from '../../../Source/Cesium.js';
+import createViewer from '../../createViewer.js';
+import DomEventSimulator from '../../DomEventSimulator.js';
+import MockDataSource from '../../MockDataSource.js';
+import pollToPromise from '../../pollToPromise.js';
+import { Animation } from '../../../Source/Cesium.js';
+import { BaseLayerPicker } from '../../../Source/Cesium.js';
+import { ProviderViewModel } from '../../../Source/Cesium.js';
+import { CesiumWidget } from '../../../Source/Cesium.js';
+import { ClockViewModel } from '../../../Source/Cesium.js';
+import { FullscreenButton } from '../../../Source/Cesium.js';
+import { Geocoder } from '../../../Source/Cesium.js';
+import { HomeButton } from '../../../Source/Cesium.js';
+import { NavigationHelpButton } from '../../../Source/Cesium.js';
+import { SceneModePicker } from '../../../Source/Cesium.js';
+import { SelectionIndicator } from '../../../Source/Cesium.js';
+import { Timeline } from '../../../Source/Cesium.js';
+
+describe('Widgets/Viewer/Viewer', function() {
 
     var testProvider = {
         isReady : function() {
@@ -634,6 +588,35 @@ defineSuite([
         expect(function() {
             viewer.resolutionScale = -1;
         }).toThrowDeveloperError();
+    });
+
+    it('can enable useBrowserRecommendedResolution', function() {
+        viewer = createViewer(container, {
+            useBrowserRecommendedResolution : true
+        });
+
+        expect(viewer.useBrowserRecommendedResolution).toBe(true);
+    });
+
+    it('useBrowserRecommendedResolution ignores devicePixelRatio', function() {
+        var oldDevicePixelRatio = window.devicePixelRatio;
+        window.devicePixelRatio = 2.0;
+
+        viewer = createViewer(container, {
+            useDefaultRenderLoop : false
+        });
+
+        viewer.resolutionScale = 0.5;
+
+        viewer.useBrowserRecommendedResolution = true;
+        viewer.resize();
+        expect(viewer.scene.pixelRatio).toEqual(0.5);
+
+        viewer.useBrowserRecommendedResolution = false;
+        viewer.resize();
+        expect(viewer.scene.pixelRatio).toEqual(1.0);
+
+        window.devicePixelRatio = oldDevicePixelRatio;
     });
 
     it('constructor throws with undefined container', function() {

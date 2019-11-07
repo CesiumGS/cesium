@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/TridiagonalSystemSolver',
-        'Core/Cartesian3',
-        'Core/Math'
-    ], function(
-        TridiagonalSystemSolver,
-        Cartesian3,
-        CesiumMath) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TridiagonalSystemSolver } from '../../Source/Cesium.js';
+
+describe('Core/TridiagonalSystemSolver', function() {
 
    it('solve throws exception without lower diagonal', function() {
         expect(function() {

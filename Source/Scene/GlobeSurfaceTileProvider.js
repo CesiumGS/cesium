@@ -1,110 +1,54 @@
-define([
-        '../Core/BoundingSphere',
-        '../Core/BoxOutlineGeometry',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/combine',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/GeometryInstance',
-        '../Core/GeometryPipeline',
-        '../Core/IndexDatatype',
-        '../Core/Intersect',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/OrientedBoundingBox',
-        '../Core/OrthographicFrustum',
-        '../Core/PrimitiveType',
-        '../Core/Rectangle',
-        '../Core/SphereOutlineGeometry',
-        '../Core/TerrainMesh',
-        '../Core/TerrainQuantization',
-        '../Core/Visibility',
-        '../Core/WebMercatorProjection',
-        '../Renderer/Buffer',
-        '../Renderer/BufferUsage',
-        '../Renderer/ContextLimits',
-        '../Renderer/DrawCommand',
-        '../Renderer/Pass',
-        '../Renderer/RenderState',
-        '../Renderer/VertexArray',
-        './BlendingState',
-        './ImageryState',
-        './TileBoundingRegion',
-        './TileSelectionResult',
-        './ClippingPlaneCollection',
-        './DepthFunction',
-        './GlobeSurfaceTile',
-        './ImageryLayer',
-        './PerInstanceColorAppearance',
-        './Primitive',
-        './QuadtreeTileLoadState',
-        './SceneMode',
-        './ShadowMode',
-        './TerrainFillMesh',
-        './TerrainState'
-    ], function(
-        BoundingSphere,
-        BoxOutlineGeometry,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        Color,
-        ColorGeometryInstanceAttribute,
-        combine,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Event,
-        GeometryInstance,
-        GeometryPipeline,
-        IndexDatatype,
-        Intersect,
-        CesiumMath,
-        Matrix4,
-        OrientedBoundingBox,
-        OrthographicFrustum,
-        PrimitiveType,
-        Rectangle,
-        SphereOutlineGeometry,
-        TerrainMesh,
-        TerrainQuantization,
-        Visibility,
-        WebMercatorProjection,
-        Buffer,
-        BufferUsage,
-        ContextLimits,
-        DrawCommand,
-        Pass,
-        RenderState,
-        VertexArray,
-        BlendingState,
-        ImageryState,
-        TileBoundingRegion,
-        TileSelectionResult,
-        ClippingPlaneCollection,
-        DepthFunction,
-        GlobeSurfaceTile,
-        ImageryLayer,
-        PerInstanceColorAppearance,
-        Primitive,
-        QuadtreeTileLoadState,
-        SceneMode,
-        ShadowMode,
-        TerrainFillMesh,
-        TerrainState) {
-    'use strict';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import BoxOutlineGeometry from '../Core/BoxOutlineGeometry.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import combine from '../Core/combine.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import GeometryPipeline from '../Core/GeometryPipeline.js';
+import IndexDatatype from '../Core/IndexDatatype.js';
+import Intersect from '../Core/Intersect.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrientedBoundingBox from '../Core/OrientedBoundingBox.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import PrimitiveType from '../Core/PrimitiveType.js';
+import Rectangle from '../Core/Rectangle.js';
+import SphereOutlineGeometry from '../Core/SphereOutlineGeometry.js';
+import TerrainQuantization from '../Core/TerrainQuantization.js';
+import Visibility from '../Core/Visibility.js';
+import WebMercatorProjection from '../Core/WebMercatorProjection.js';
+import Buffer from '../Renderer/Buffer.js';
+import BufferUsage from '../Renderer/BufferUsage.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import DrawCommand from '../Renderer/DrawCommand.js';
+import Pass from '../Renderer/Pass.js';
+import RenderState from '../Renderer/RenderState.js';
+import VertexArray from '../Renderer/VertexArray.js';
+import BlendingState from './BlendingState.js';
+import ClippingPlaneCollection from './ClippingPlaneCollection.js';
+import DepthFunction from './DepthFunction.js';
+import GlobeSurfaceTile from './GlobeSurfaceTile.js';
+import ImageryLayer from './ImageryLayer.js';
+import ImageryState from './ImageryState.js';
+import PerInstanceColorAppearance from './PerInstanceColorAppearance.js';
+import Primitive from './Primitive.js';
+import QuadtreeTileLoadState from './QuadtreeTileLoadState.js';
+import SceneMode from './SceneMode.js';
+import ShadowMode from './ShadowMode.js';
+import TerrainFillMesh from './TerrainFillMesh.js';
+import TerrainState from './TerrainState.js';
+import TileBoundingRegion from './TileBoundingRegion.js';
+import TileSelectionResult from './TileSelectionResult.js';
 
     /**
      * Provides quadtree tiles representing the surface of the globe.  This type is intended to be used
@@ -605,6 +549,10 @@ define([
         var cullingVolume = frameState.cullingVolume;
         var boundingVolume = surfaceTile.orientedBoundingBox;
 
+        if (!defined(boundingVolume) && defined(surfaceTile.renderedMesh)) {
+            boundingVolume = surfaceTile.renderedMesh.boundingSphere3D;
+        }
+
         // Check if the tile is outside the limit area in cartographic space
         surfaceTile.clippedByBoundaries = false;
         var clippedCartographicLimitRectangle = clipRectangleAntimeridian(tile.rectangle, this.cartographicLimitRectangle);
@@ -624,6 +572,10 @@ define([
             if (frameState.mode === SceneMode.MORPHING && defined(surfaceTile.renderedMesh)) {
                 boundingVolume = BoundingSphere.union(surfaceTile.renderedMesh.boundingSphere3D, boundingVolume, boundingVolume);
             }
+        }
+
+        if (!defined(boundingVolume)) {
+            return Intersect.INTERSECTING;
         }
 
         var clippingPlanes = this._clippingPlanes;
@@ -775,7 +727,7 @@ define([
 
     /**
      * Determines the priority for loading this tile. Lower priority values load sooner.
-     * @param {QuatreeTile} tile The tile.
+     * @param {QuadtreeTile} tile The tile.
      * @param {FrameState} frameState The frame state.
      * @returns {Number} The load priority value.
      */
@@ -898,14 +850,18 @@ define([
         } else if (surfaceTile.boundingVolumeSourceTile !== heightSource) {
             // Heights are from a new source tile, so update the bounding volume.
             surfaceTile.boundingVolumeSourceTile = heightSource;
-            surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
-                tile.rectangle,
-                tileBoundingRegion.minimumHeight,
-                tileBoundingRegion.maximumHeight,
-                tile.tilingScheme.ellipsoid,
-                surfaceTile.orientedBoundingBox);
 
-            surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
+            var rectangle = tile.rectangle;
+            if (defined(rectangle) && rectangle.width < CesiumMath.PI_OVER_TWO + CesiumMath.EPSILON5) {
+                surfaceTile.orientedBoundingBox = OrientedBoundingBox.fromRectangle(
+                    tile.rectangle,
+                    tileBoundingRegion.minimumHeight,
+                    tileBoundingRegion.maximumHeight,
+                    tile.tilingScheme.ellipsoid,
+                    surfaceTile.orientedBoundingBox);
+
+                surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
+            }
         }
 
         var min = tileBoundingRegion.minimumHeight;
@@ -1318,6 +1274,9 @@ define([
             u_hsbShift : function() {
                 return this.properties.hsbShift;
             },
+            u_colorsToAlpha : function() {
+                return this.properties.colorsToAlpha;
+            },
 
             // make a separate object so that changes to the properties are seen on
             // derived commands that combine another uniform map with this one.
@@ -1348,6 +1307,7 @@ define([
                 dayTextureSplit : [],
                 dayTextureCutoutRectangles : [],
                 dayIntensity : 0.0,
+                colorsToAlpha : [],
 
                 southAndNorthLatitude : new Cartesian2(),
                 southMercatorYAndOneOverHeight : new Cartesian2(),
@@ -1525,7 +1485,8 @@ define([
         clippingPlanes : undefined,
         clippedByBoundaries : undefined,
         hasImageryLayerCutout : undefined,
-        colorCorrect : undefined
+        colorCorrect : undefined,
+        colorToAlpha : undefined
     };
 
     function addDrawCommandsForTile(tileProvider, tile, frameState) {
@@ -1599,6 +1560,13 @@ define([
             --maxTextures;
         }
         if (showOceanWaves) {
+            --maxTextures;
+        }
+
+        if (defined(frameState.shadowState) && frameState.shadowState.shadowsEnabled) {
+            --maxTextures;
+        }
+        if (defined(tileProvider.clippingPlanes) && tileProvider.clippingPlanes.enabled) {
             --maxTextures;
         }
 
@@ -1782,6 +1750,7 @@ define([
             var applyAlpha = false;
             var applySplit = false;
             var applyCutout = false;
+            var applyColorToAlpha = false;
 
             while (numberOfDayTextures < maxTextures && imageryIndex < imageryLen) {
                 var tileImagery = tileImageryCollection[imageryIndex];
@@ -1860,6 +1829,25 @@ define([
                     dayTextureCutoutRectangle.w = (cutoutRectangle.north - cartographicTileRectangle.south) * inverseTileHeight;
                 }
 
+                // Update color to alpha
+                var colorToAlpha = uniformMapProperties.colorsToAlpha[numberOfDayTextures];
+                if (!defined(colorToAlpha)) {
+                    colorToAlpha = uniformMapProperties.colorsToAlpha[numberOfDayTextures] = new Cartesian4();
+                }
+
+                var hasColorToAlpha = defined(imageryLayer.colorToAlpha) && imageryLayer.colorToAlphaThreshold > 0.0;
+                applyColorToAlpha = applyColorToAlpha || hasColorToAlpha;
+
+                if (hasColorToAlpha) {
+                    var color = imageryLayer.colorToAlpha;
+                    colorToAlpha.x = color.red;
+                    colorToAlpha.y = color.green;
+                    colorToAlpha.z = color.blue;
+                    colorToAlpha.w = imageryLayer.colorToAlphaThreshold;
+                } else {
+                    colorToAlpha.w = -1.0;
+                }
+
                 if (defined(imagery.credits)) {
                     var credits = imagery.credits;
                     for (var creditIndex = 0, creditLength = credits.length; creditIndex < creditLength; ++creditIndex) {
@@ -1906,6 +1894,7 @@ define([
             surfaceShaderSetOptions.hasImageryLayerCutout = applyCutout;
             surfaceShaderSetOptions.colorCorrect = colorCorrect;
             surfaceShaderSetOptions.highlightFillTile = highlightFillTile;
+            surfaceShaderSetOptions.colorToAlpha = applyColorToAlpha;
 
             command.shaderProgram = tileProvider._surfaceShaderSet.getShaderProgram(surfaceShaderSetOptions);
             command.castShadows = castShadows;
@@ -1947,6 +1936,4 @@ define([
             initialColor = otherPassesInitialColor;
         } while (imageryIndex < imageryLen);
     }
-
-    return GlobeSurfaceTileProvider;
-});
+export default GlobeSurfaceTileProvider;

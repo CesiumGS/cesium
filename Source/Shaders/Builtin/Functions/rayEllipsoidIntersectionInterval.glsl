@@ -4,17 +4,17 @@
  * @name czm_rayEllipsoidIntersectionInterval
  * @glslFunction
  */
-czm_raySegment czm_rayEllipsoidIntersectionInterval(czm_ray ray, czm_ellipsoid ellipsoid)
+czm_raySegment czm_rayEllipsoidIntersectionInterval(czm_ray ray, vec3 ellipsoid_center, vec3 ellipsoid_inverseRadii)
 {
    // ray and ellipsoid center in eye coordinates.  radii in model coordinates.
-    vec3 q = ellipsoid.inverseRadii * (czm_inverseModelView * vec4(ray.origin, 1.0)).xyz;
-    vec3 w = ellipsoid.inverseRadii * (czm_inverseModelView * vec4(ray.direction, 0.0)).xyz;
-   
-    q = q - ellipsoid.inverseRadii * (czm_inverseModelView * vec4(ellipsoid.center, 1.0)).xyz;
-    
+    vec3 q = ellipsoid_inverseRadii * (czm_inverseModelView * vec4(ray.origin, 1.0)).xyz;
+    vec3 w = ellipsoid_inverseRadii * (czm_inverseModelView * vec4(ray.direction, 0.0)).xyz;
+
+    q = q - ellipsoid_inverseRadii * (czm_inverseModelView * vec4(ellipsoid_center, 1.0)).xyz;
+
     float q2 = dot(q, q);
     float qw = dot(q, w);
-    
+
     if (q2 > 1.0) // Outside ellipsoid.
     {
         if (qw >= 0.0) // Looking outward or tangent (0 intersections).
@@ -27,11 +27,11 @@ czm_raySegment czm_rayEllipsoidIntersectionInterval(czm_ray ray, czm_ellipsoid e
             float difference = q2 - 1.0; // Positively valued.
             float w2 = dot(w, w);
             float product = w2 * difference;
-            
+
             if (qw2 < product) // Imaginary roots (0 intersections).
             {
-                return czm_emptyRaySegment;     
-            }   
+                return czm_emptyRaySegment;
+            }
             else if (qw2 > product) // Distinct roots (2 intersections).
             {
                 float discriminant = qw * qw - product;

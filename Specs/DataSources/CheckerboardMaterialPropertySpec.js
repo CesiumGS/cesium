@@ -1,22 +1,13 @@
-defineSuite([
-        'DataSources/CheckerboardMaterialProperty',
-        'Core/Cartesian2',
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'DataSources/ConstantProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Specs/testDefinitionChanged'
-    ], function(
-        CheckerboardMaterialProperty,
-        Cartesian2,
-        Color,
-        JulianDate,
-        TimeInterval,
-        ConstantProperty,
-        TimeIntervalCollectionProperty,
-        testDefinitionChanged) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { CheckerboardMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
+
+describe('DataSources/CheckerboardMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new CheckerboardMaterialProperty();

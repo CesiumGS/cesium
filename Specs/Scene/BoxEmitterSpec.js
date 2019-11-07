@@ -1,12 +1,8 @@
-defineSuite([
-        'Scene/BoxEmitter',
-        'Core/Cartesian3',
-        'Scene/Particle'
-    ], function(
-        BoxEmitter,
-        Cartesian3,
-        Particle) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { BoxEmitter } from '../../Source/Cesium.js';
+import { Particle } from '../../Source/Cesium.js';
+
+describe('Scene/BoxEmitter', function() {
 
     var emitter;
 

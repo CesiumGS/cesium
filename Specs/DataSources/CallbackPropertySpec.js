@@ -1,10 +1,7 @@
-defineSuite([
-        'DataSources/CallbackProperty',
-        'Core/JulianDate'
-    ], function(
-        CallbackProperty,
-        JulianDate) {
-    'use strict';
+import { JulianDate } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/CallbackProperty', function() {
 
     var time = JulianDate.now();
 

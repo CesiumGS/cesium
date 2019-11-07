@@ -1,32 +1,16 @@
-defineSuite([
-        'Scene/Vector3DTilePolylines',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Cartographic',
-        'Core/combine',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/Rectangle',
-        'Scene/Cesium3DTileBatchTable',
-        'Scene/ColorBlendMode',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        Vector3DTilePolylines,
-        BoundingSphere,
-        Cartesian3,
-        Cartographic,
-        combine,
-        Ellipsoid,
-        CesiumMath,
-        Matrix4,
-        Rectangle,
-        Cesium3DTileBatchTable,
-        ColorBlendMode,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { Cesium3DTileBatchTable } from '../../Source/Cesium.js';
+import { ColorBlendMode } from '../../Source/Cesium.js';
+import { Vector3DTilePolylines } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/Vector3DTilePolylines', function() {
 
     var scene;
     var rectangle;

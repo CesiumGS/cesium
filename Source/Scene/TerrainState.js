@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -16,6 +12,4 @@ define([
         TRANSFORMED : 5,
         READY : 6
     };
-
-    return freezeObject(TerrainState);
-});
+export default freezeObject(TerrainState);

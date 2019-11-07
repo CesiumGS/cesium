@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/Color',
-        'Core/ComponentDatatype'
-    ], function(
-        ColorGeometryInstanceAttribute,
-        Color,
-        ComponentDatatype) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+
+describe('Core/ColorGeometryInstanceAttribute', function() {
 
     it('constructor', function() {
         var attribute = new ColorGeometryInstanceAttribute(1.0, 1.0, 0.0, 0.5);

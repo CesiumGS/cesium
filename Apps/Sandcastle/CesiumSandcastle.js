@@ -1,6 +1,6 @@
-/*global require,Blob,JSHINT */
+/*global JSHINT */
 /*global decodeBase64Data, embedInSandcastleTemplate */
-/*global gallery_demos, has_new_gallery_demos, hello_world_index*/// defined in gallery/gallery-index.js, created by build
+/*global gallery_demos, has_new_gallery_demos, hello_world_index, VERSION*/// defined in gallery/gallery-index.js, created by build
 /*global sandcastleJsHintOptions*/// defined by jsHintOptions.js, created by build
 require({
     baseUrl: '../../Source',
@@ -14,13 +14,6 @@ require({
         name: 'Sandcastle',
         location: '../Apps/Sandcastle'
     }, {
-        name: 'Source',
-        location: '.'
-    }, {
-        name: 'CesiumUnminified',
-        location: '../Build/CesiumUnminified',
-        main: 'Cesium'
-    }, {
         name: 'CodeMirror',
         location: '../ThirdParty/codemirror-4.6'
     }, {
@@ -28,11 +21,11 @@ require({
         location: '../Apps/Sandcastle/ThirdParty'
     }]
 }, [
+        'CodeMirror/lib/codemirror',
         'dijit/Dialog',
         'dijit/form/Button',
         'dijit/form/Form',
         'dijit/form/Textarea',
-        'CodeMirror/lib/codemirror',
         'dijit/layout/ContentPane',
         'dijit/popup',
         'dijit/registry',
@@ -49,10 +42,8 @@ require({
         'dojo/promise/all',
         'dojo/query',
         'dojo/when',
+        'dojo/request/script',
         'Sandcastle/LinkButton',
-        'Source/Cesium',
-        'Source/Core/defined',
-        'Source/Core/Resource',
         'ThirdParty/clipboard.min',
         'ThirdParty/pako.min',
         'CodeMirror/addon/hint/show-hint',
@@ -75,11 +66,11 @@ require({
         'dijit/ToolbarSeparator',
         'dojo/domReady!'
     ], function(
+        CodeMirror,
         Dialog,
         Button,
         Form,
         TextArea,
-        CodeMirror,
         ContentPane,
         popup,
         registry,
@@ -96,19 +87,16 @@ require({
         all,
         query,
         when,
+        dojoscript,
         LinkButton,
-        Cesium,
-        defined,
-        Resource,
         ClipboardJS,
         pako) {
     'use strict';
     // attach clipboard handling to our Copy button
     var clipboardjs = new ClipboardJS('.copyButton');
 
-    //In order for CodeMirror auto-complete to work, Cesium needs to be defined as a global.
-    if (!defined(window.Cesium)) {
-        window.Cesium = Cesium;
+    function defined(value) {
+        return value !== undefined && value !== null;
     }
 
     parser.parse();
@@ -296,14 +284,14 @@ require({
         var element = document.createElement('abbr');
         element.className = className;
         switch (className) {
-        case 'hintMarker':
-            element.innerHTML = '&#9650;';
-            break;
-        case 'errorMarker':
-            element.innerHTML = '&times;';
-            break;
-        default:
-            element.innerHTML = '&#9654;';
+            case 'hintMarker':
+                element.innerHTML = '&#9650;';
+                break;
+            case 'errorMarker':
+                element.innerHTML = '&times;';
+                break;
+            default:
+                element.innerHTML = '&#9654;';
         }
         element.title = msg;
         return element;
@@ -578,6 +566,7 @@ require({
                 return;
             }
             if (nodes.length > 0) {
+                while(nodes.length > 0){
                 node = nodes.shift();
                 var scriptElement = bucketDoc.createElement('script');
                 var hasSrc = false;
@@ -598,6 +587,7 @@ require({
                     bucketDoc.head.appendChild(scriptElement);
                     loadScript();
                 }
+            }
             } else {
                 // Apply user JS to bucket
                 var element = bucketDoc.createElement('script');
@@ -719,17 +709,18 @@ require({
 
             var json, code, html;
             if (defined(queryObject.gist)) {
-                Resource.fetchJsonp('https://api.github.com/gists/' + queryObject.gist + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60')
-                    .then(function(data) {
-                        var files = data.data.files;
-                        var code = files['Cesium-Sandcastle.js'].content;
-                        var htmlFile = files['Cesium-Sandcastle.html'];
-                        var html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
-                        applyLoadedDemo(code, html);
-                    }).otherwise(function(error) {
-                        appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
-                        console.log(error);
-                    });
+                dojoscript.get('https://api.github.com/gists/' + queryObject.gist + '?access_token=dd8f755c2e5d9bbb26806bb93eaa2291f2047c60', {
+                    jsonp: 'callback'
+                }).then(function(data) {
+                    var files = data.data.files;
+                    var code = files['Cesium-Sandcastle.js'].content;
+                    var htmlFile = files['Cesium-Sandcastle.html'];
+                    var html = defined(htmlFile) ? htmlFile.content : defaultHtml; // Use the default html for old gists
+                    applyLoadedDemo(code, html);
+                }).otherwise(function(error) {
+                    appendConsole('consoleError', 'Unable to GET from GitHub API. This could be due to too many request, try again in an hour or copy and paste the code from the gist: https://gist.github.com/' + queryObject.gist, true);
+                    console.log(error);
+                });
             } else if (defined(queryObject.code)) {
                 //The code query parameter is a Base64 encoded JSON string with `code` and `html` properties.
                 json = JSON.parse(window.atob(queryObject.code));
@@ -1059,7 +1050,7 @@ require({
         });
     }
 
-    var newInLabel = 'New in ' + window.Cesium.VERSION;
+    var newInLabel = 'New in ' + VERSION;
     function loadDemoFromFile(demo) {
         return requestDemo(demo.name).then(function(value) {
             // Store the file contents for later searching.
@@ -1231,7 +1222,7 @@ require({
         registerScroll(dom.byId('showcasesContainer'));
 
         if (has_new_gallery_demos) {
-            var name = 'New in ' + window.Cesium.VERSION;
+            var name = 'New in ' + VERSION;
             subtabs[name] = new ContentPane({
                 content: '<div id="' + name + 'Container" class="demosContainer"><div class="demos" id="' + name + 'Demos"></div></div>',
                 title: name,

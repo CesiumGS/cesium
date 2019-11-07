@@ -1,20 +1,10 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defined',
-        './DeveloperError',
-        './freezeObject',
-        './Math',
-        './Matrix4'
-    ], function(
-        Cartesian3,
-        Check,
-        defined,
-        DeveloperError,
-        freezeObject,
-        CesiumMath,
-        Matrix4) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
+import Matrix4 from './Matrix4.js';
 
     /**
      * A plane in Hessian Normal Form defined by
@@ -267,6 +257,4 @@ define([
      * @constant
      */
     Plane.ORIGIN_ZX_PLANE = freezeObject(new Plane(Cartesian3.UNIT_Y, 0.0));
-
-    return Plane;
-});
+export default Plane;

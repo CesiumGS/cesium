@@ -1,8 +1,4 @@
-define([
-        './DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * @typedef {Object} GeocoderService~Result
@@ -31,6 +27,4 @@ define([
      * @returns {Promise<GeocoderService~Result[]>}
      */
     GeocoderService.prototype.geocode = DeveloperError.throwInstantiationError;
-
-    return GeocoderService;
-});
+export default GeocoderService;

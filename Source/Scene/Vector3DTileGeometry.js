@@ -1,34 +1,17 @@
-define([
-        '../Core/arraySlice',
-        '../Core/BoundingSphere',
-        '../Core/Cartesian3',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/Matrix4',
-        '../Core/TaskProcessor',
-        '../ThirdParty/when',
-        './ClassificationType',
-        './Vector3DTileBatch',
-        './Vector3DTilePrimitive'
-    ], function(
-        arraySlice,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        Matrix4,
-        TaskProcessor,
-        when,
-        ClassificationType,
-        Vector3DTileBatch,
-        Vector3DTilePrimitive) {
-    'use strict';
+import arraySlice from '../Core/arraySlice.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import Matrix4 from '../Core/Matrix4.js';
+import TaskProcessor from '../Core/TaskProcessor.js';
+import when from '../ThirdParty/when.js';
+import ClassificationType from './ClassificationType.js';
+import Vector3DTileBatch from './Vector3DTileBatch.js';
+import Vector3DTilePrimitive from './Vector3DTilePrimitive.js';
 
     /**
      * Creates a batch of box, cylinder, ellipsoid and/or sphere geometries intersecting terrain or 3D Tiles.
@@ -472,6 +455,4 @@ define([
         this._primitive = this._primitive && this._primitive.destroy();
         return destroyObject(this);
     };
-
-    return Vector3DTileGeometry;
-});
+export default Vector3DTileGeometry;

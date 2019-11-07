@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     /**
      * Determines how input texture to a {@link PostProcessStage} is sampled.
@@ -22,6 +20,4 @@ define(function() {
          */
         LINEAR : 1
     };
-
-    return PostProcessStageSampleMode;
-});
+export default PostProcessStageSampleMode;

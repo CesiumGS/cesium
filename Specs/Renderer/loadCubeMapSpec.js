@@ -1,24 +1,14 @@
-defineSuite([
-        'Renderer/loadCubeMap',
-        'Core/Cartesian3',
-        'Core/PrimitiveType',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Renderer/DrawCommand',
-        'Renderer/ShaderProgram',
-        'Renderer/VertexArray',
-        'Specs/createContext'
-    ], function(
-        loadCubeMap,
-        Cartesian3,
-        PrimitiveType,
-        Buffer,
-        BufferUsage,
-        DrawCommand,
-        ShaderProgram,
-        VertexArray,
-        createContext) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { Buffer } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import { DrawCommand } from '../../Source/Cesium.js';
+import { loadCubeMap } from '../../Source/Cesium.js';
+import { ShaderProgram } from '../../Source/Cesium.js';
+import { VertexArray } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/loadCubeMap', function() {
 
     var context;
 

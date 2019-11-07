@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/LinearApproximation'
-    ], function(
-        LinearApproximation) {
-    'use strict';
+import { LinearApproximation } from '../../Source/Cesium.js';
+
+describe('Core/LinearApproximation', function() {
 
     it('should produce correct results', function() {
         var xTable = [2.0, 4.0];

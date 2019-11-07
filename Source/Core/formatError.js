@@ -1,8 +1,4 @@
-define([
-        './defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from './defined.js';
 
     /**
      * Formats an error object into a String.  If available, uses name, message, and stack
@@ -31,6 +27,4 @@ define([
 
         return result;
     }
-
-    return formatError;
-});
+export default formatError;

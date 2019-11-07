@@ -1,16 +1,8 @@
-define([
-        '../ThirdParty/measureText',
-        './Color',
-        './defaultValue',
-        './defined',
-        './DeveloperError'
-    ], function(
-        measureText,
-        Color,
-        defaultValue,
-        defined,
-        DeveloperError) {
-    'use strict';
+import measureText from '../ThirdParty/measureText.js';
+import Color from './Color.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
 
     var imageSmoothingEnabledName;
 
@@ -103,8 +95,9 @@ define([
         //While the height of the letter is correct, we need to adjust
         //where we start drawing it so that letters like j and y properly dip
         //below the line.
+
         var height = dimensions.height + doublePadding;
-        var baseline = height - dimensions.ascent + doublePadding;
+        var baseline = height - dimensions.ascent + padding;
         var y = height - baseline + doublePadding;
 
         canvas.width = width;
@@ -136,6 +129,4 @@ define([
 
         return canvas;
     }
-
-    return writeTextToCanvas;
-});
+export default writeTextToCanvas;

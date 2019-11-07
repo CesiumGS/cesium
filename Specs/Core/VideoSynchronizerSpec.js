@@ -1,20 +1,12 @@
-defineSuite([
-        'Core/VideoSynchronizer',
-        'Core/Clock',
-        'Core/FeatureDetection',
-        'Core/Iso8601',
-        'Core/JulianDate',
-        'Core/Math',
-        'Specs/pollToPromise'
-    ], function(
-        VideoSynchronizer,
-        Clock,
-        FeatureDetection,
-        Iso8601,
-        JulianDate,
-        CesiumMath,
-        pollToPromise) {
-    'use strict';
+import { Clock } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { VideoSynchronizer } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Core/VideoSynchronizer', function() {
 
     //Video textures do not work on Internet Explorer
     if (FeatureDetection.isInternetExplorer()) {

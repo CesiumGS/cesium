@@ -1,14 +1,10 @@
-defineSuite([
-        'Core/Iau2006XysData',
-        'Core/defined',
-        'Core/Iau2006XysSample',
-        'Specs/pollToPromise'
-    ], function(
-        Iau2006XysData,
-        defined,
-        Iau2006XysSample,
-        pollToPromise) {
-    'use strict';
+import { buildModuleUrl } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { Iau2006XysData } from '../../Source/Cesium.js';
+import { Iau2006XysSample } from '../../Source/Cesium.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Core/Iau2006XysData', function() {
 
     var xys;
 
@@ -50,5 +46,17 @@ defineSuite([
 
     it('returns undefined after the last XYS table sample', function() {
         expect(xys.computeXysRadians(2442396 + 27427, 0.0)).toBeUndefined();
+    });
+
+    it('allows configuring xysFileUrlTemplate', function() {
+        xys = new Iau2006XysData({
+            // this should be the same location as the default, but specifying the value
+            // takes the code through a different code path.
+            xysFileUrlTemplate: buildModuleUrl('Assets/IAU2006_XYS/IAU2006_XYS_{0}.json')
+        });
+
+        return pollToPromise(function() {
+            return defined(xys.computeXysRadians(2442398, 1234.56));
+        });
     });
 });

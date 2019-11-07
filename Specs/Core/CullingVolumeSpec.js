@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/CullingVolume',
-        'Core/AxisAlignedBoundingBox',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Intersect',
-        'Core/PerspectiveFrustum'
-    ], function(
-        CullingVolume,
-        AxisAlignedBoundingBox,
-        BoundingSphere,
-        Cartesian3,
-        Intersect,
-        PerspectiveFrustum) {
-    'use strict';
+import { AxisAlignedBoundingBox } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { CullingVolume } from '../../Source/Cesium.js';
+import { Intersect } from '../../Source/Cesium.js';
+import { PerspectiveFrustum } from '../../Source/Cesium.js';
+
+describe('Core/CullingVolume', function() {
 
     var cullingVolume;
 

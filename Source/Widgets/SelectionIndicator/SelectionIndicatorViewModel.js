@@ -1,22 +1,11 @@
-define([
-        '../../Core/Cartesian2',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/DeveloperError',
-        '../../Core/EasingFunction',
-        '../../Scene/SceneTransforms',
-        '../../ThirdParty/knockout'
-    ], function(
-        Cartesian2,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        EasingFunction,
-        SceneTransforms,
-        knockout) {
-    'use strict';
+import Cartesian2 from '../../Core/Cartesian2.js';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import EasingFunction from '../../Core/EasingFunction.js';
+import SceneTransforms from '../../Scene/SceneTransforms.js';
+import knockout from '../../ThirdParty/knockout.js';
 
     var screenSpacePos = new Cartesian2();
     var offScreen = '-1000px';
@@ -201,6 +190,4 @@ define([
      * @param {Cartesian2} result An object to return the input position transformed to window coordinates.
      * @returns {Cartesian2} The modified result parameter.
      */
-
-    return SelectionIndicatorViewModel;
-});
+export default SelectionIndicatorViewModel;

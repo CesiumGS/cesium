@@ -1,18 +1,9 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './freezeObject',
-        './Math'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
 
     /**
      * A 4D Cartesian point.
@@ -186,7 +177,7 @@ define([
      * Flattens an array of Cartesian4s into and array of components.
      *
      * @param {Cartesian4[]} array The array of cartesians to pack.
-     * @param {Number[]} result The array onto which to store the result.
+     * @param {Number[]} [result] The array onto which to store the result.
      * @returns {Number[]} The packed array.
      */
     Cartesian4.packArray = function(array, result) {
@@ -211,7 +202,7 @@ define([
      * Unpacks an array of cartesian components into and array of Cartesian4s.
      *
      * @param {Number[]} array The array of components to unpack.
-     * @param {Cartesian4[]} result The array onto which to store the result.
+     * @param {Cartesian4[]} [result] The array onto which to store the result.
      * @returns {Cartesian4[]} The unpacked array.
      */
     Cartesian4.unpackArray = function(array, result) {
@@ -809,9 +800,9 @@ define([
     };
 
     /**
-     * Creates a string representing this Cartesian in the format '(x, y)'.
+     * Creates a string representing this Cartesian in the format '(x, y, z, w)'.
      *
-     * @returns {String} A string representing the provided Cartesian in the format '(x, y)'.
+     * @returns {String} A string representing the provided Cartesian in the format '(x, y, z, w)'.
      */
     Cartesian4.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ', ' + this.w + ')';
@@ -905,6 +896,4 @@ define([
 
         return unpacked * Math.pow(10.0, exponent);
     };
-
-    return Cartesian4;
-});
+export default Cartesian4;

@@ -1,12 +1,8 @@
-defineSuite([
-        'Widgets/BaseLayerPicker/ProviderViewModel',
-        'ThirdParty/knockout',
-        'Widgets/createCommand'
-    ], function(
-        ProviderViewModel,
-        knockout,
-        createCommand) {
-    'use strict';
+import { knockout } from '../../../Source/Cesium.js';
+import { ProviderViewModel } from '../../../Source/Cesium.js';
+import { createCommand } from '../../../Source/Cesium.js';
+
+describe('Widgets/BaseLayerPicker/ProviderViewModel', function() {
 
     var spyCreationFunction;
     beforeEach(function() {

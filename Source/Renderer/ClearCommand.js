@@ -1,12 +1,6 @@
-define([
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/freezeObject'
-    ], function(
-        Color,
-        defaultValue,
-        freezeObject) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * Represents a command to the renderer for clearing a framebuffer.
@@ -103,6 +97,4 @@ define([
     ClearCommand.prototype.execute = function(context, passState) {
         context.clear(this, passState);
     };
-
-    return ClearCommand;
-});
+export default ClearCommand;

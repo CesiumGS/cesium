@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/objectToQuery',
-        'Core/queryToObject'
-    ], function(
-        objectToQuery,
-        queryToObject) {
-    'use strict';
+import { objectToQuery } from '../../Source/Cesium.js';
+import { queryToObject } from '../../Source/Cesium.js';
+
+describe('Core/objectToQuery', function() {
 
     it('can encode data', function() {
         var obj = {

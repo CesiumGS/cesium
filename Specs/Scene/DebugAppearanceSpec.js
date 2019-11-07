@@ -1,28 +1,16 @@
-defineSuite([
-        'Scene/DebugAppearance',
-        'Core/ComponentDatatype',
-        'Core/defaultValue',
-        'Core/GeometryInstance',
-        'Core/GeometryInstanceAttribute',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/VertexFormat',
-        'Scene/Appearance',
-        'Scene/Primitive',
-        'Specs/createScene'
-    ], function(
-        DebugAppearance,
-        ComponentDatatype,
-        defaultValue,
-        GeometryInstance,
-        GeometryInstanceAttribute,
-        Rectangle,
-        RectangleGeometry,
-        VertexFormat,
-        Appearance,
-        Primitive,
-        createScene) {
-    'use strict';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { GeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import { Appearance } from '../../Source/Cesium.js';
+import { DebugAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/DebugAppearance', function() {
 
     var scene;
     var primitive;

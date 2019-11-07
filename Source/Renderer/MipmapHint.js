@@ -1,10 +1,5 @@
-define([
-        '../Core/freezeObject',
-        '../Core/WebGLConstants'
-    ], function(
-        freezeObject,
-        WebGLConstants) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     /**
      * @private
@@ -20,6 +15,4 @@ define([
                     (mipmapHint === MipmapHint.NICEST));
         }
     };
-
-    return freezeObject(MipmapHint);
-});
+export default freezeObject(MipmapHint);

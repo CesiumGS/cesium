@@ -1,24 +1,14 @@
-defineSuite([
-        'Core/PolygonOutlineGeometry',
-        'Core/ArcType',
-        'Core/arrayFill',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
-        'Core/Math',
-        'Specs/createPackableSpecs'
-    ], function(
-        PolygonOutlineGeometry,
-        ArcType,
-        arrayFill,
-        BoundingSphere,
-        Cartesian3,
-        Ellipsoid,
-        GeometryOffsetAttribute,
-        CesiumMath,
-        createPackableSpecs) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { arrayFill } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PolygonOutlineGeometry } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/PolygonOutlineGeometry', function() {
 
     it('throws without hierarchy', function() {
         expect(function() {

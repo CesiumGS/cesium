@@ -1,18 +1,9 @@
-define([
-        './Check',
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './freezeObject',
-        './Math'
-    ], function(
-        Check,
-        defaultValue,
-        defined,
-        DeveloperError,
-        freezeObject,
-        CesiumMath) {
-    'use strict';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
 
     /**
      * A 3D Cartesian point.
@@ -186,7 +177,7 @@ define([
      * Flattens an array of Cartesian3s into an array of components.
      *
      * @param {Cartesian3[]} array The array of cartesians to pack.
-     * @param {Number[]} result The array onto which to store the result.
+     * @param {Number[]} [result] The array onto which to store the result.
      * @returns {Number[]} The packed array.
      */
     Cartesian3.packArray = function(array, result) {
@@ -211,7 +202,7 @@ define([
      * Unpacks an array of cartesian components into an array of Cartesian3s.
      *
      * @param {Number[]} array The array of components to unpack.
-     * @param {Cartesian3[]} result The array onto which to store the result.
+     * @param {Cartesian3[]} [result] The array onto which to store the result.
      * @returns {Cartesian3[]} The unpacked array.
      */
     Cartesian3.unpackArray = function(array, result) {
@@ -1087,6 +1078,4 @@ define([
     Cartesian3.prototype.toString = function() {
         return '(' + this.x + ', ' + this.y + ', ' + this.z + ')';
     };
-
-    return Cartesian3;
-});
+export default Cartesian3;

@@ -1,14 +1,7 @@
-define([
-        './CubicRealPolynomial',
-        './DeveloperError',
-        './Math',
-        './QuadraticRealPolynomial'
-    ], function(
-        CubicRealPolynomial,
-        DeveloperError,
-        CesiumMath,
-        QuadraticRealPolynomial) {
-    'use strict';
+import CubicRealPolynomial from './CubicRealPolynomial.js';
+import DeveloperError from './DeveloperError.js';
+import CesiumMath from './Math.js';
+import QuadraticRealPolynomial from './QuadraticRealPolynomial.js';
 
     /**
      * Defines functions for 4th order polynomial functions of one variable with only real coefficients.
@@ -321,6 +314,4 @@ define([
             return undefined;
         }
     };
-
-    return QuarticRealPolynomial;
-});
+export default QuarticRealPolynomial;

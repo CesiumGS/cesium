@@ -1,16 +1,10 @@
-defineSuite([
-        'DataSources/PathGraphics',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty'
-    ], function(
-        PathGraphics,
-        Color,
-        DistanceDisplayCondition,
-        ColorMaterialProperty,
-        ConstantProperty) {
-    'use strict';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { PathGraphics } from '../../Source/Cesium.js';
+
+describe('DataSources/PathGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {

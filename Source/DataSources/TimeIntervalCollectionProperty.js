@@ -1,18 +1,9 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/TimeIntervalCollection',
-        './Property'
-    ], function(
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        TimeIntervalCollection,
-        Property) {
-    'use strict';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import TimeIntervalCollection from '../Core/TimeIntervalCollection.js';
+import Property from './Property.js';
 
     /**
      * A {@link Property} which is defined by a {@link TimeIntervalCollection}, where the
@@ -137,6 +128,4 @@ define([
     TimeIntervalCollectionProperty.prototype._intervalsChanged = function() {
         this._definitionChanged.raiseEvent(this);
     };
-
-    return TimeIntervalCollectionProperty;
-});
+export default TimeIntervalCollectionProperty;

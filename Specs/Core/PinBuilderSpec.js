@@ -1,14 +1,9 @@
-defineSuite([
-        'Core/PinBuilder',
-        'Core/buildModuleUrl',
-        'Core/Color',
-        'ThirdParty/when'
-    ], function(
-        PinBuilder,
-        buildModuleUrl,
-        Color,
-        when) {
-    'use strict';
+import { buildModuleUrl } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { PinBuilder } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/PinBuilder', function() {
 
     function getPinColor(canvas) {
         var context2D = canvas.getContext('2d');

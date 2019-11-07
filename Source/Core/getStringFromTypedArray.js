@@ -1,14 +1,7 @@
-define([
-        './defaultValue',
-        './defined',
-        './DeveloperError',
-        './RuntimeError'
-    ], function(
-        defaultValue,
-        defined,
-        DeveloperError,
-        RuntimeError) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import DeveloperError from './DeveloperError.js';
+import RuntimeError from './RuntimeError.js';
 
     /**
      * @private
@@ -161,6 +154,4 @@ define([
     } else {
         getStringFromTypedArray.decode = getStringFromTypedArray.decodeWithFromCharCode;
     }
-
-    return getStringFromTypedArray;
-});
+export default getStringFromTypedArray;

@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/Matrix2',
-        'Core/Cartesian2',
-        'Core/Math'
-    ], function(
-        Matrix2,
-        Cartesian2,
-        CesiumMath) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix2 } from '../../Source/Cesium.js';
+
+describe('Core/Matrix2', function() {
 
     it('default constructor creates values array with all zeros.', function() {
         var matrix = new Matrix2();

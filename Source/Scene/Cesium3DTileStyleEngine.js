@@ -1,10 +1,5 @@
-define([
-        '../Core/defined',
-        '../Core/defineProperties'
-    ], function(
-        defined,
-        defineProperties) {
-    'use strict';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
 
     /**
      * @private
@@ -77,6 +72,4 @@ define([
             }
         }
     };
-
-    return Cesium3DTileStyleEngine;
-});
+export default Cesium3DTileStyleEngine;

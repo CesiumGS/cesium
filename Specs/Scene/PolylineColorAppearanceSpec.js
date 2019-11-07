@@ -1,24 +1,15 @@
-defineSuite([
-        'Scene/PolylineColorAppearance',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/GeometryInstance',
-        'Core/PolylineGeometry',
-        'Scene/Appearance',
-        'Scene/Primitive',
-        'Specs/createScene'
-    ], function(
-        PolylineColorAppearance,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        GeometryInstance,
-        PolylineGeometry,
-        Appearance,
-        Primitive,
-        createScene) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { PolylineGeometry } from '../../Source/Cesium.js';
+import { Appearance } from '../../Source/Cesium.js';
+import { PolylineColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+
+describe('Scene/PolylineColorAppearance', function() {
 
     var scene;
     var primitive;
@@ -59,7 +50,7 @@ defineSuite([
                     ],
                     width : 10.0,
                     vertexFormat : PolylineColorAppearance.VERTEX_FORMAT,
-                    followSurface: false
+                    arcType : ArcType.NONE
                 }),
                 attributes : {
                     color : ColorGeometryInstanceAttribute.fromColor(new Color(1.0, 1.0, 0.0, 1.0))

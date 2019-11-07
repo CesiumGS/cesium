@@ -1,24 +1,14 @@
-defineSuite([
-        'Core/SimplePolylineGeometry',
-        'Core/ArcType',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/Ellipsoid',
-        'Core/Math',
-        'Core/PrimitiveType',
-        'Specs/createPackableSpecs'
-    ], function(
-        SimplePolylineGeometry,
-        ArcType,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        Ellipsoid,
-        CesiumMath,
-        PrimitiveType,
-        createPackableSpecs) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { SimplePolylineGeometry } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/SimplePolylineGeometry', function() {
 
     it('constructor throws with no positions', function() {
         expect(function() {
@@ -116,7 +106,7 @@ defineSuite([
         var positions = [new Cartesian3(), new Cartesian3(1.0, 0.0, 0.0), new Cartesian3(2.0, 0.0, 0.0)];
         var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
             positions : positions,
-            followSurface: false
+            arcType: ArcType.NONE
         }));
 
         expect(line.attributes.position.values).toEqual([0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 2.0, 0.0, 0.0]);
@@ -131,7 +121,7 @@ defineSuite([
         var line = SimplePolylineGeometry.createGeometry(new SimplePolylineGeometry({
             positions : positions,
             colors : colors,
-            followSurface: false
+            arcType : ArcType.NONE
         }));
 
         expect(line.attributes.color).toBeDefined();
@@ -147,7 +137,7 @@ defineSuite([
             positions : positions,
             colors : colors,
             colorsPerVertex : true,
-            followSurface: false
+            arcType : ArcType.NONE
         }));
 
         expect(line.attributes.color).toBeDefined();
@@ -161,7 +151,7 @@ defineSuite([
         positions : positions,
         colors : [Color.RED, Color.LIME, Color.BLUE],
         colorsPerVertex : true,
-        followSurface : false,
+        arcType : ArcType.NONE,
         granularity : 11,
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
@@ -171,7 +161,7 @@ defineSuite([
     line = new SimplePolylineGeometry({
         positions : positions,
         colorsPerVertex : false,
-        followSurface : false,
+        arcType : ArcType.NONE,
         granularity : 11,
         ellipsoid : new Ellipsoid(12, 13, 14)
     });
