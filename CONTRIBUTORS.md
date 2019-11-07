@@ -67,7 +67,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
    * [Evax Software](https://github.com/evax)
 * [Aviture](http://aviture.us.com)
    * [Mike Macaulay](https://github.com/mmacaula)
-   * [Nathan Schulte](https://github.com/nmschulte)
+   * [Nathan Schulte](https://github.com/nmschulte-aviture)
    * [Jed Fong](https://github.com/jedfong)
    * [Brandon McAllister](https://github.com/bmcallis)
    * [Eric Strabala](https://github.com/emstrabala)
@@ -238,3 +238,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details on how to contribute to Cesiu
 * [Chris Wingler](https://github.com/chriswingler)
 * [Tinco Andringa](https://github.com/tinco)
 * [André Borud](https://github.com/andreborud)
+* [Nathan Schulte](https://github.com/nmschulte)
