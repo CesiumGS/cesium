@@ -202,9 +202,9 @@ Copyright 2011-2019 CesiumJS Contributors
    See the License for the specific language governing permissions and
    limitations under the License.
 
-Patents 9153063 9865085
+Patents US9153063B2 US9865085B1
 
-Patents pending 15/829,786 62/701,099 62/837,358 62/837,381
+Patents pending US15/829,786 US16/516,997 US62/837,358 US62/837,381
 
 Third-Party Code
 ================
