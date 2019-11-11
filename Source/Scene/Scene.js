@@ -1711,7 +1711,8 @@ import View from './View.js';
         var globe = scene.globe;
         if (scene._mode === SceneMode.SCENE3D && defined(globe) && globe.show) {
             var ellipsoid = globe.ellipsoid;
-            scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius;
+            var minimumRenderedTileHeight = globe._surface.tileProvider.minimumRenderedTileHeight;
+            scratchOccluderBoundingSphere.radius = ellipsoid.minimumRadius + Math.min(0.0, minimumRenderedTileHeight);
             scratchOccluder = Occluder.fromBoundingSphere(scratchOccluderBoundingSphere, scene.camera.positionWC, scratchOccluder);
             return scratchOccluder;
         }
