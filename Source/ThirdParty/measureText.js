@@ -35,8 +35,7 @@
   OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
   THE SOFTWARE.
 **/
-define(function() {
-    /*jshint strict:false*/
+
 /*
   var NAME = "FontMetrics Library"
   var VERSION = "1-2012.0121.1300";
@@ -205,5 +204,4 @@ define(function() {
     return metrics;
   };
 
-  return measureText;
-});
+export default measureText;

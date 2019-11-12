@@ -1,8 +1,4 @@
-define([
-        './defineProperties'
-    ], function(
-        defineProperties) {
-    'use strict';
+import defineProperties from './defineProperties.js';
 
     /**
      * A queue that can enqueue items at the end, and dequeue items from the front.
@@ -129,6 +125,4 @@ define([
      *     return a - b;
      * }
      */
-
-    return Queue;
-});
+export default Queue;

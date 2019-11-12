@@ -1,8 +1,4 @@
-define([
-        './DeveloperError'
-    ], function(
-        DeveloperError) {
-    'use strict';
+import DeveloperError from './DeveloperError.js';
 
     /**
      * Static interface for {@link Packable} types which are interpolated in a
@@ -44,6 +40,4 @@ define([
          */
         unpackInterpolationResult : DeveloperError.throwInstantiationError
     };
-
-    return PackableForInterpolation;
-});
+export default PackableForInterpolation;

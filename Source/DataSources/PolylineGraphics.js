@@ -1,22 +1,10 @@
-define([
-        '../Core/ArcType',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        ArcType,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describes a polyline. The first two positions define a line segment,
@@ -41,7 +29,7 @@ define([
      * @param {Property} [options.zIndex=0] A Property specifying the zIndex used for ordering ground geometry. Only has an effect if `clampToGround` is true and polylines on terrain is supported.
      *
      * @see Entity
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Polyline.html|Cesium Sandcastle Polyline Demo}
      */
     function PolylineGraphics(options) {
         this._definitionChanged = new Event();
@@ -240,6 +228,4 @@ define([
         this.classificationType = defaultValue(this.classificationType, source.classificationType);
         this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
-
-    return PolylineGraphics;
-});
+export default PolylineGraphics;

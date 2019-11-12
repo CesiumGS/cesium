@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/Quaternion',
-        'Core/Cartesian3',
-        'Core/HeadingPitchRoll',
-        'Core/Math',
-        'Core/Matrix3',
-        'Specs/createPackableSpecs'
-    ], function(
-        Quaternion,
-        Cartesian3,
-        HeadingPitchRoll,
-        CesiumMath,
-        Matrix3,
-        createPackableSpecs) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/Quaternion', function() {
 
     it('construct with default values', function() {
         var quaternion = new Quaternion();

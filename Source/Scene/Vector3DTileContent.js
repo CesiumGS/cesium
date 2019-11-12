@@ -1,50 +1,20 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Ellipsoid',
-        '../Core/FeatureDetection',
-        '../Core/getMagic',
-        '../Core/getStringFromTypedArray',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/Rectangle',
-        '../Core/RuntimeError',
-        '../ThirdParty/when',
-        './Cesium3DTileBatchTable',
-        './Vector3DTilePoints',
-        './Vector3DTilePolygons',
-        './Vector3DTilePolylines'
-    ], function(
-        Cartesian3,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Ellipsoid,
-        FeatureDetection,
-        getMagic,
-        getStringFromTypedArray,
-        CesiumMath,
-        Matrix4,
-        Rectangle,
-        RuntimeError,
-        when,
-        Cesium3DTileBatchTable,
-        Vector3DTilePoints,
-        Vector3DTilePolygons,
-        Vector3DTilePolylines) {
-    'use strict';
-
-    // Bail out if the browser doesn't support typed arrays, to prevent the setup function
-    // from failing, since we won't be able to create a WebGL context anyway.
-    if (!FeatureDetection.supportsTypedArrays()) {
-        return {};
-    }
+import Cartesian3 from '../Core/Cartesian3.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
+import getStringFromTypedArray from '../Core/getStringFromTypedArray.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Rectangle from '../Core/Rectangle.js';
+import RuntimeError from '../Core/RuntimeError.js';
+import when from '../ThirdParty/when.js';
+import Cesium3DTileBatchTable from './Cesium3DTileBatchTable.js';
+import Vector3DTilePoints from './Vector3DTilePoints.js';
+import Vector3DTilePolygons from './Vector3DTilePolygons.js';
+import Vector3DTilePolylines from './Vector3DTilePolylines.js';
 
     /**
      * Represents the contents of a
@@ -550,6 +520,4 @@ define([
         this._batchTable = this._batchTable && this._batchTable.destroy();
         return destroyObject(this);
     };
-
-    return Vector3DTileContent;
-});
+export default Vector3DTileContent;

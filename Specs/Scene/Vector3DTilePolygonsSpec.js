@@ -1,56 +1,27 @@
-defineSuite([
-        'Scene/Vector3DTilePolygons',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/combine',
-        'Core/destroyObject',
-        'Core/Ellipsoid',
-        'Core/GeometryInstance',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/Rectangle',
-        'Core/RectangleGeometry',
-        'Core/Transforms',
-        'Renderer/Pass',
-        'Renderer/RenderState',
-        'Scene/Cesium3DTileBatchTable',
-        'Scene/ClassificationType',
-        'Scene/ColorBlendMode',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/Primitive',
-        'Scene/StencilConstants',
-        'Specs/createContext',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        Vector3DTilePolygons,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        combine,
-        destroyObject,
-        Ellipsoid,
-        GeometryInstance,
-        CesiumMath,
-        Matrix4,
-        Rectangle,
-        RectangleGeometry,
-        Transforms,
-        Pass,
-        RenderState,
-        Cesium3DTileBatchTable,
-        ClassificationType,
-        ColorBlendMode,
-        PerInstanceColorAppearance,
-        Primitive,
-        StencilConstants,
-        createContext,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { combine } from '../../Source/Cesium.js';
+import { destroyObject } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryInstance } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { RectangleGeometry } from '../../Source/Cesium.js';
+import { Pass } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { Cesium3DTileBatchTable } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { ColorBlendMode } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { Primitive } from '../../Source/Cesium.js';
+import { StencilConstants } from '../../Source/Cesium.js';
+import { Vector3DTilePolygons } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('Scene/Vector3DTilePolygons', function() {
 
     createPolygonSpecs({});
     var c = createContext({ requestWebgl2 : true });

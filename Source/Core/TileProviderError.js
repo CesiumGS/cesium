@@ -1,16 +1,8 @@
-define([
-        './defaultValue',
-        './defined',
-        './formatError',
-        './RuntimeError',
-        '../ThirdParty/when'
-    ], function(
-        defaultValue,
-        defined,
-        formatError,
-        RuntimeError,
-        when) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import formatError from './formatError.js';
+import RuntimeError from './RuntimeError.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * Provides details about an error that occurred in an {@link ImageryProvider} or a {@link TerrainProvider}.
@@ -165,6 +157,4 @@ define([
      *                          be resolved if no waiting is necessary.
      * @callback TileProviderError~RetryFunction
      */
-
-    return TileProviderError;
-});
+export default TileProviderError;

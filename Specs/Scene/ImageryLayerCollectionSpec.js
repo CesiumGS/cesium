@@ -1,40 +1,22 @@
-defineSuite([
-        'Scene/ImageryLayerCollection',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/Event',
-        'Core/GeographicTilingScheme',
-        'Core/Matrix4',
-        'Core/Ray',
-        'Core/Rectangle',
-        'Core/WebMercatorProjection',
-        'Core/WebMercatorTilingScheme',
-        'Scene/Globe',
-        'Scene/ImageryLayer',
-        'Scene/ImageryLayerFeatureInfo',
-        'Scene/ImageryProvider',
-        'Specs/createScene',
-        'Specs/pollToPromise',
-        'ThirdParty/when'
-    ], function(
-        ImageryLayerCollection,
-        Cartesian3,
-        Ellipsoid,
-        Event,
-        GeographicTilingScheme,
-        Matrix4,
-        Ray,
-        Rectangle,
-        WebMercatorProjection,
-        WebMercatorTilingScheme,
-        Globe,
-        ImageryLayer,
-        ImageryLayerFeatureInfo,
-        ImageryProvider,
-        createScene,
-        pollToPromise,
-        when) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { GeographicTilingScheme } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Ray } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { WebMercatorProjection } from '../../Source/Cesium.js';
+import { WebMercatorTilingScheme } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import { ImageryLayer } from '../../Source/Cesium.js';
+import { ImageryLayerCollection } from '../../Source/Cesium.js';
+import { ImageryLayerFeatureInfo } from '../../Source/Cesium.js';
+import { ImageryProvider } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Scene/ImageryLayerCollection', function() {
 
     var fakeProvider = {
             isReady : function() { return false; }

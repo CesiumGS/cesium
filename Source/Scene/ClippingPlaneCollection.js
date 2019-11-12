@@ -1,56 +1,27 @@
-define([
-        '../Core/AttributeCompression',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/deprecationWarning',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        '../Core/Intersect',
-        '../Core/Matrix4',
-        '../Core/PixelFormat',
-        '../Core/Plane',
-        '../Renderer/ContextLimits',
-        '../Renderer/PixelDatatype',
-        '../Renderer/Sampler',
-        '../Renderer/Texture',
-        '../Renderer/TextureMagnificationFilter',
-        '../Renderer/TextureMinificationFilter',
-        '../Renderer/TextureWrap',
-        './ClippingPlane'
-    ], function(
-        AttributeCompression,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Check,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        deprecationWarning,
-        destroyObject,
-        DeveloperError,
-        Event,
-        Intersect,
-        Matrix4,
-        PixelFormat,
-        Plane,
-        ContextLimits,
-        PixelDatatype,
-        Sampler,
-        Texture,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        ClippingPlane) {
-    'use strict';
+import AttributeCompression from '../Core/AttributeCompression.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import Intersect from '../Core/Intersect.js';
+import Matrix4 from '../Core/Matrix4.js';
+import PixelFormat from '../Core/PixelFormat.js';
+import Plane from '../Core/Plane.js';
+import ContextLimits from '../Renderer/ContextLimits.js';
+import PixelDatatype from '../Renderer/PixelDatatype.js';
+import Sampler from '../Renderer/Sampler.js';
+import Texture from '../Renderer/Texture.js';
+import TextureMagnificationFilter from '../Renderer/TextureMagnificationFilter.js';
+import TextureMinificationFilter from '../Renderer/TextureMinificationFilter.js';
+import TextureWrap from '../Renderer/TextureWrap.js';
+import ClippingPlane from './ClippingPlane.js';
 
     /**
      * Specifies a set of clipping planes. Clipping planes selectively disable rendering in a region on the
@@ -74,8 +45,8 @@ define([
      * @param {Color} [options.edgeColor=Color.WHITE] The color applied to highlight the edge along which an object is clipped.
      * @param {Number} [options.edgeWidth=0.0] The width, in pixels, of the highlight applied to the edge along which an object is clipped.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=3D%20Tiles%20Clipping%20Planes.html|Clipping 3D Tiles and glTF models.}
-     * @demo {@link https://cesiumjs.org/Cesium/Build/Apps/Sandcastle/?src=Terrain%20Clipping%20Planes.html|Clipping the Globe.}
+     * @demo {@link https://sandcastle.cesium.com/?src=3D%20Tiles%20Clipping%20Planes.html|Clipping 3D Tiles and glTF models.}
+     * @demo {@link https://sandcastle.cesium.com/?src=Terrain%20Clipping%20Planes.html|Clipping the Globe.}
      *
      * @example
      * // This clipping plane's distance is positive, which means its normal
@@ -749,6 +720,4 @@ define([
         this._clippingPlanesTexture = this._clippingPlanesTexture && this._clippingPlanesTexture.destroy();
         return destroyObject(this);
     };
-
-    return ClippingPlaneCollection;
-});
+export default ClippingPlaneCollection;

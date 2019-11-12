@@ -1,30 +1,15 @@
-define([
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/destroyObject',
-        '../../Core/DeveloperError',
-        '../../Core/Rectangle',
-        '../../Core/ScreenSpaceEventHandler',
-        '../../Core/ScreenSpaceEventType',
-        '../../Scene/DebugModelMatrixPrimitive',
-        '../../Scene/PerformanceDisplay',
-        '../../Scene/TileCoordinatesImageryProvider',
-        '../../ThirdParty/knockout',
-        '../createCommand'
-    ], function(
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        Rectangle,
-        ScreenSpaceEventHandler,
-        ScreenSpaceEventType,
-        DebugModelMatrixPrimitive,
-        PerformanceDisplay,
-        TileCoordinatesImageryProvider,
-        knockout,
-        createCommand) {
-    'use strict';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import destroyObject from '../../Core/destroyObject.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import Rectangle from '../../Core/Rectangle.js';
+import ScreenSpaceEventHandler from '../../Core/ScreenSpaceEventHandler.js';
+import ScreenSpaceEventType from '../../Core/ScreenSpaceEventType.js';
+import DebugModelMatrixPrimitive from '../../Scene/DebugModelMatrixPrimitive.js';
+import PerformanceDisplay from '../../Scene/PerformanceDisplay.js';
+import TileCoordinatesImageryProvider from '../../Scene/TileCoordinatesImageryProvider.js';
+import knockout from '../../ThirdParty/knockout.js';
+import createCommand from '../createCommand.js';
 
     function frustumStatisticsToString(statistics) {
         var str;
@@ -959,6 +944,4 @@ define([
         this._pickTileActiveSubscription.dispose();
         return destroyObject(this);
     };
-
-    return CesiumInspectorViewModel;
-});
+export default CesiumInspectorViewModel;

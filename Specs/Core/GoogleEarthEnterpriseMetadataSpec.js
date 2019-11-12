@@ -1,24 +1,13 @@
-defineSuite([
-        'Core/GoogleEarthEnterpriseMetadata',
-        'Core/decodeGoogleEarthEnterpriseData',
-        'Core/DefaultProxy',
-        'Core/defaultValue',
-        'Core/GoogleEarthEnterpriseTileInformation',
-        'Core/Math',
-        'Core/Request',
-        'Core/Resource',
-        'ThirdParty/when'
-    ], function(
-        GoogleEarthEnterpriseMetadata,
-        decodeGoogleEarthEnterpriseData,
-        DefaultProxy,
-        defaultValue,
-        GoogleEarthEnterpriseTileInformation,
-        CesiumMath,
-        Request,
-        Resource,
-        when) {
-    'use strict';
+import { decodeGoogleEarthEnterpriseData } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseMetadata } from '../../Source/Cesium.js';
+import { GoogleEarthEnterpriseTileInformation } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Request } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Core/GoogleEarthEnterpriseMetadata', function() {
 
     it('tileXYToQuadKey', function() {
         expect(GoogleEarthEnterpriseMetadata.tileXYToQuadKey(1, 0, 0)).toEqual('2');

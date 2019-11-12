@@ -1,22 +1,13 @@
-defineSuite([
-        'DataSources/GridMaterialProperty',
-        'Core/Cartesian2',
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/TimeInterval',
-        'DataSources/ConstantProperty',
-        'DataSources/SampledProperty',
-        'DataSources/TimeIntervalCollectionProperty'
-    ], function(
-        GridMaterialProperty,
-        Cartesian2,
-        Color,
-        JulianDate,
-        TimeInterval,
-        ConstantProperty,
-        SampledProperty,
-        TimeIntervalCollectionProperty) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/GridMaterialProperty', function() {
 
     it('constructor provides the expected defaults', function() {
         var property = new GridMaterialProperty();

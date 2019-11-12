@@ -8,13 +8,8 @@
     <meta name="cesium-sandcastle-labels" content="Showcases">
     <title>Cesium Demo</title>
     <script type="text/javascript" src="../Sandcastle-header.js"></script>
-    <script type="text/javascript" src="../../../ThirdParty/requirejs-2.1.20/require.js"></script>
-    <script type="text/javascript">
-        require.config({
-                           baseUrl : '../../../Source',
-                           waitSeconds : 60
-                       });
-    </script>
+    <script type="text/javascript" src="../../../Build/CesiumUnminified/Cesium.js" nomodule></script>
+    <script type="module" src="../load-cesium-es6.js"></script>
 </head>
 <body class="sandcastle-loading" data-sandcastle-bucket="bucket-requirejs.html">
 <style>
@@ -93,11 +88,12 @@ function offsetBillboard(entity, entityPosition, angle, magnitude, lines, billbo
 
     var drawingBufferWidth = scene.drawingBufferWidth;
     var drawingBufferHeight = scene.drawingBufferHeight;
+    var pixelRatio = scene.pixelRatio;
 
     var diff = Cesium.Cartesian3.subtract(entityPosition, camera.positionWC, new Cesium.Cartesian3());
     var distance = Cesium.Cartesian3.dot(camera.directionWC, diff);
 
-    var dimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, new Cesium.Cartesian2());
+    var dimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, pixelRatio, new Cesium.Cartesian2());
     Cesium.Cartesian2.multiplyByScalar(offset, Cesium.Cartesian2.maximumComponent(dimensions), offset);
 
     var labelOffset;
@@ -321,9 +317,8 @@ function showLabels(mousePosition) {
 Sandcastle.finishedLoading();
 }
 if (typeof Cesium !== 'undefined') {
-startup(Cesium);
-} else if (typeof require === 'function') {
-require(['Cesium'], startup);
+    window.startupCalled = true;
+    startup(Cesium);
 }
 </script>
 </body>

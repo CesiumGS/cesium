@@ -1,10 +1,5 @@
-define([
-        '../ThirdParty/when',
-        './Check'
-    ], function(
-        when,
-        Check) {
-    'use strict';
+import when from '../ThirdParty/when.js';
+import Check from './Check.js';
 
     /**
      * Initiates a terrain height query for an array of {@link Cartographic} positions by
@@ -118,6 +113,4 @@ define([
             }
         };
     }
-
-    return sampleTerrain;
-});
+export default sampleTerrain;

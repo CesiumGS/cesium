@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/isCrossOriginUrl',
-        'Core/getAbsoluteUri',
-        'ThirdParty/Uri'
-    ], function(
-        isCrossOriginUrl,
-        getAbsoluteUri,
-        Uri) {
-    'use strict';
+import { getAbsoluteUri } from '../../Source/Cesium.js';
+import { isCrossOriginUrl } from '../../Source/Cesium.js';
+import { Uri } from '../../Source/Cesium.js';
+
+describe('Core/isCrossOriginUrl', function() {
 
     it('returns false for relative urls', function() {
         expect(isCrossOriginUrl('/some/url.jpg')).toEqual(false);

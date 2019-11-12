@@ -1,20 +1,10 @@
-define([
-        '../Core/Check',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/loadCRN',
-        '../Core/loadKTX',
-        '../Core/Resource'
-    ], function(
-        Check,
-        defined,
-        defineProperties,
-        DeveloperError,
-        loadCRN,
-        loadKTX,
-        Resource) {
-    'use strict';
+import Check from '../Core/Check.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import loadCRN from '../Core/loadCRN.js';
+import loadKTX from '../Core/loadKTX.js';
+import Resource from '../Core/Resource.js';
 
     /**
      * Provides imagery to be displayed on the surface of an ellipsoid.  This type describes an
@@ -25,8 +15,8 @@ define([
      *
      * @see ArcGisMapServerImageryProvider
      * @see BingMapsImageryProvider
-     * @see createOpenStreetMapImageryProvider
-     * @see createTileMapServiceImageryProvider
+     * @see OpenStreetMapImageryProvider
+     * @see TileMapServiceImageryProvider
      * @see GoogleEarthEnterpriseImageryProvider
      * @see GoogleEarthEnterpriseMapsProvider
      * @see GridImageryProvider
@@ -38,8 +28,8 @@ define([
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     function ImageryProvider() {
         /**
@@ -357,6 +347,4 @@ define([
             flipY : true
         });
     };
-
-    return ImageryProvider;
-});
+export default ImageryProvider;

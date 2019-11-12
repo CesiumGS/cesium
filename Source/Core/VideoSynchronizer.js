@@ -1,18 +1,9 @@
-define([
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './destroyObject',
-        './Iso8601',
-        './JulianDate'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        Iso8601,
-        JulianDate) {
-    'use strict';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import destroyObject from './destroyObject.js';
+import Iso8601 from './Iso8601.js';
+import JulianDate from './JulianDate.js';
 
     /**
      * Synchronizes a video element with a simulation clock.
@@ -26,7 +17,7 @@ define([
      * @param {JulianDate} [options.epoch=Iso8601.MINIMUM_VALUE] The simulation time that marks the start of the video.
      * @param {Number} [options.tolerance=1.0] The maximum amount of time, in seconds, that the clock and video can diverge.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Video.html|Video Material Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Video.html|Video Material Demo}
      */
     function VideoSynchronizer(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
@@ -226,6 +217,4 @@ define([
             that._firstTickAfterSeek = true;
         };
     }
-
-    return VideoSynchronizer;
-});
+export default VideoSynchronizer;

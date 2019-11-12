@@ -1,100 +1,53 @@
-defineSuite([
-        'DataSources/CzmlDataSource',
-        'Core/ArcType',
-        'Core/BoundingRectangle',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/Color',
-        'Core/CornerType',
-        'Core/DistanceDisplayCondition',
-        'Core/Event',
-        'Core/ExtrapolationType',
-        'Core/Iso8601',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/NearFarScalar',
-        'Core/PolygonHierarchy',
-        'Core/Quaternion',
-        'Core/Rectangle',
-        'Core/ReferenceFrame',
-        'Core/Resource',
-        'Core/RuntimeError',
-        'Core/Spherical',
-        'Core/TimeInterval',
-        'Core/Transforms',
-        'Core/TranslationRotationScale',
-        'DataSources/CompositeEntityCollection',
-        'DataSources/CompositeMaterialProperty',
-        'DataSources/CompositePositionProperty',
-        'DataSources/CompositeProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EntityCollection',
-        'DataSources/ReferenceProperty',
-        'DataSources/SampledPositionProperty',
-        'DataSources/SampledProperty',
-        'DataSources/StripeOrientation',
-        'DataSources/TimeIntervalCollectionPositionProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/ClassificationType',
-        'Scene/ColorBlendMode',
-        'Scene/HeightReference',
-        'Scene/HorizontalOrigin',
-        'Scene/LabelStyle',
-        'Scene/ShadowMode',
-        'Scene/VerticalOrigin',
-        'ThirdParty/when'
-    ], function(
-        CzmlDataSource,
-        ArcType,
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        ClockRange,
-        ClockStep,
-        Color,
-        CornerType,
-        DistanceDisplayCondition,
-        Event,
-        ExtrapolationType,
-        Iso8601,
-        JulianDate,
-        CesiumMath,
-        NearFarScalar,
-        PolygonHierarchy,
-        Quaternion,
-        Rectangle,
-        ReferenceFrame,
-        Resource,
-        RuntimeError,
-        Spherical,
-        TimeInterval,
-        Transforms,
-        TranslationRotationScale,
-        CompositeEntityCollection,
-        CompositeMaterialProperty,
-        CompositePositionProperty,
-        CompositeProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EntityCollection,
-        ReferenceProperty,
-        SampledPositionProperty,
-        SampledProperty,
-        StripeOrientation,
-        TimeIntervalCollectionPositionProperty,
-        TimeIntervalCollectionProperty,
-        ClassificationType,
-        ColorBlendMode,
-        HeightReference,
-        HorizontalOrigin,
-        LabelStyle,
-        ShadowMode,
-        VerticalOrigin,
-        when) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { ClockRange } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { CornerType } from '../../Source/Cesium.js';
+import { Credit } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { Event } from '../../Source/Cesium.js';
+import { ExtrapolationType } from '../../Source/Cesium.js';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { NearFarScalar } from '../../Source/Cesium.js';
+import { PolygonHierarchy } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { RuntimeError } from '../../Source/Cesium.js';
+import { Spherical } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { TranslationRotationScale } from '../../Source/Cesium.js';
+import { CompositeEntityCollection } from '../../Source/Cesium.js';
+import { CompositeMaterialProperty } from '../../Source/Cesium.js';
+import { CompositePositionProperty } from '../../Source/Cesium.js';
+import { CompositeProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { CzmlDataSource } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { ReferenceProperty } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { StripeOrientation } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionPositionProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { ColorBlendMode } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { LabelStyle } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('DataSources/CzmlDataSource', function() {
 
     function makeDocument(packet) {
         var documentPacket = {
@@ -211,6 +164,7 @@ defineSuite([
         expect(dataSource.entities).toBeInstanceOf(EntityCollection);
         expect(dataSource.entities.values.length).toEqual(0);
         expect(dataSource.show).toEqual(true);
+        expect(dataSource.credit).toBeUndefined();
     });
 
     it('show sets underlying entity collection show.', function() {
@@ -237,6 +191,14 @@ defineSuite([
         }).then(function(dataSource) {
             expect(dataSource.name).toEqual('simple.czml');
         });
+    });
+
+    it('credit gets set from options', function() {
+        return CzmlDataSource.load(nameCzml, {
+                credit: 'This is my credit'
+            }).then(function(dataSource) {
+                expect(dataSource.credit).toBeInstanceOf(Credit);
+            });
     });
 
     it('does not overwrite existing name if CZML name is undefined', function() {
@@ -5217,6 +5179,11 @@ defineSuite([
             expect(e.ellipse.zIndex.getValue(date)).toEqual(3341);
             expect(e.ellipsoid.show.getValue(date)).toEqual(true);
             expect(e.ellipsoid.radii.getValue(date)).toEqual(new Cartesian3(15638, 24381, 37983));
+            expect(e.ellipsoid.innerRadii.getValue(date)).toEqual(new Cartesian3(21988, 44373, 36013));
+            expect(e.ellipsoid.minimumClock.getValue(date)).toEqual(57589.0);
+            expect(e.ellipsoid.maximumClock.getValue(date)).toEqual(24940.0);
+            expect(e.ellipsoid.minimumCone.getValue(date)).toEqual(54533.0);
+            expect(e.ellipsoid.maximumCone.getValue(date)).toEqual(64532.0);
             expect(e.ellipsoid.heightReference.getValue(date)).toEqual(HeightReference.CLAMP_TO_GROUND);
             expect(e.ellipsoid.fill.getValue(date)).toEqual(true);
             expect(e.ellipsoid.material.color.getValue(date)).toEqual(Color.fromBytes(202, 67, 110, 69));
@@ -6198,6 +6165,11 @@ defineSuite([
             expect(e.ellipse.zIndex.getValue(date)).toEqual(constant.ellipse.zIndex.getValue(date));
             expect(e.ellipsoid.show.getValue(date)).toEqual(constant.ellipsoid.show.getValue(date));
             expect(e.ellipsoid.radii.getValue(date)).toEqual(constant.ellipsoid.radii.getValue(date));
+            expect(e.ellipsoid.innerRadii.getValue(date)).toEqual(constant.ellipsoid.innerRadii.getValue(date));
+            expect(e.ellipsoid.minimumClock.getValue(date)).toEqual(constant.ellipsoid.minimumClock.getValue(date));
+            expect(e.ellipsoid.maximumClock.getValue(date)).toEqual(constant.ellipsoid.maximumClock.getValue(date));
+            expect(e.ellipsoid.minimumCone.getValue(date)).toEqual(constant.ellipsoid.minimumCone.getValue(date));
+            expect(e.ellipsoid.maximumCone.getValue(date)).toEqual(constant.ellipsoid.maximumCone.getValue(date));
             expect(e.ellipsoid.heightReference.getValue(date)).toEqual(constant.ellipsoid.heightReference.getValue(date));
             expect(e.ellipsoid.fill.getValue(date)).toEqual(constant.ellipsoid.fill.getValue(date));
             expect(e.ellipsoid.material.color.getValue(date)).toEqual(constant.ellipsoid.material.color.getValue(date));
@@ -6784,6 +6756,16 @@ defineSuite([
             expect(e.ellipse.zIndex.getValue(documentStopDate)).toEqual(52730);
             expect(e.ellipsoid.radii.getValue(documentStartDate)).toEqual(new Cartesian3(5183, 10004, 13863));
             expect(e.ellipsoid.radii.getValue(documentStopDate)).toEqual(new Cartesian3(39497, 12186, 45103));
+            expect(e.ellipsoid.innerRadii.getValue(documentStartDate)).toEqual(new Cartesian3(40318, 27037, 59497));
+            expect(e.ellipsoid.innerRadii.getValue(documentStopDate)).toEqual(new Cartesian3(57650, 53729, 12241));
+            expect(e.ellipsoid.minimumClock.getValue(documentStartDate)).toEqual(13484.0);
+            expect(e.ellipsoid.minimumClock.getValue(documentStopDate)).toEqual(2170.0);
+            expect(e.ellipsoid.maximumClock.getValue(documentStartDate)).toEqual(10874.0);
+            expect(e.ellipsoid.maximumClock.getValue(documentStopDate)).toEqual(2968.0);
+            expect(e.ellipsoid.minimumCone.getValue(documentStartDate)).toEqual(54230.0);
+            expect(e.ellipsoid.minimumCone.getValue(documentStopDate)).toEqual(59454.0);
+            expect(e.ellipsoid.maximumCone.getValue(documentStartDate)).toEqual(49077.0);
+            expect(e.ellipsoid.maximumCone.getValue(documentStopDate)).toEqual(26303.0);
             expect(e.ellipsoid.material.color.getValue(documentStartDate)).toEqual(Color.fromBytes(137, 128, 194, 84));
             expect(e.ellipsoid.material.color.getValue(documentStopDate)).toEqual(Color.fromBytes(50, 122, 190, 247));
             expect(e.ellipsoid.outlineColor.getValue(documentStartDate)).toEqual(Color.fromBytes(247, 210, 180, 171));

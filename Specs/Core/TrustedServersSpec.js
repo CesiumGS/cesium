@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/TrustedServers'
-    ], function(
-        TrustedServers) {
-    'use strict';
+import { TrustedServers } from '../../Source/Cesium.js';
+
+describe('Core/TrustedServers', function() {
 
     afterEach(function() {
         TrustedServers.clear();

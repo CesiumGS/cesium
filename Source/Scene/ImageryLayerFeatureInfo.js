@@ -1,8 +1,4 @@
-define([
-        '../Core/defined'
-    ], function(
-        defined) {
-    'use strict';
+import defined from '../Core/defined.js';
 
     /**
      * Describes a rasterized feature, such as a point, polygon, polyline, etc., in an imagery layer.
@@ -115,6 +111,4 @@ define([
 
         this.description = describe(properties);
     };
-
-    return ImageryLayerFeatureInfo;
-});
+export default ImageryLayerFeatureInfo;

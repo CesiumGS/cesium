@@ -1,16 +1,10 @@
-defineSuite([
-        'Core/Clock',
-        'Core/ClockRange',
-        'Core/ClockStep',
-        'Core/defined',
-        'Core/JulianDate'
-    ], function(
-        Clock,
-        ClockRange,
-        ClockStep,
-        defined,
-        JulianDate) {
-    'use strict';
+import { Clock } from '../../Source/Cesium.js';
+import { ClockRange } from '../../Source/Cesium.js';
+import { ClockStep } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+
+describe('Core/Clock', function() {
 
     it('sets default parameters when constructed', function() {
         var clock = new Clock();

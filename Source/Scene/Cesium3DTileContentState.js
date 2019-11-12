@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * @private
@@ -15,6 +11,4 @@ define([
         EXPIRED : 4,    // Is expired and will be unloaded once new content is loaded.
         FAILED : 5      // Request failed.
     };
-
-    return freezeObject(Cesium3DTileContentState);
-});
+export default freezeObject(Cesium3DTileContentState);

@@ -1,8 +1,4 @@
-define([
-    '../ThirdParty/when'
-], function(
-    when) {
-        'use strict';
+import when from '../ThirdParty/when.js';
 
     /**
      * @private
@@ -27,6 +23,4 @@ define([
 
         return deferred.promise;
     }
-
-    return loadAndExecuteScript;
-});
+export default loadAndExecuteScript;

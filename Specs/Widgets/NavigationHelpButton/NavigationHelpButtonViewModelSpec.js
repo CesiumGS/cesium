@@ -1,8 +1,6 @@
-defineSuite([
-        'Widgets/NavigationHelpButton/NavigationHelpButtonViewModel'
-    ], function(
-        NavigationHelpButtonViewModel) {
-    'use strict';
+import { NavigationHelpButtonViewModel } from '../../../Source/Cesium.js';
+
+describe('Widgets/NavigationHelpButton/NavigationHelpButtonViewModel', function() {
 
     it('Can construct', function() {
         var viewModel = new NavigationHelpButtonViewModel();

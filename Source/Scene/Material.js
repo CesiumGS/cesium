@@ -1,80 +1,40 @@
-define([
-        '../Core/Cartesian2',
-        '../Core/clone',
-        '../Core/Color',
-        '../Core/combine',
-        '../Core/createGuid',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/destroyObject',
-        '../Core/DeveloperError',
-        '../Core/isArray',
-        '../Core/loadCRN',
-        '../Core/loadKTX',
-        '../Core/Matrix2',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/Resource',
-        '../Renderer/CubeMap',
-        '../Renderer/Texture',
-        '../Shaders/Materials/AspectRampMaterial',
-        '../Shaders/Materials/BumpMapMaterial',
-        '../Shaders/Materials/CheckerboardMaterial',
-        '../Shaders/Materials/DotMaterial',
-        '../Shaders/Materials/ElevationContourMaterial',
-        '../Shaders/Materials/ElevationRampMaterial',
-        '../Shaders/Materials/FadeMaterial',
-        '../Shaders/Materials/GridMaterial',
-        '../Shaders/Materials/NormalMapMaterial',
-        '../Shaders/Materials/PolylineArrowMaterial',
-        '../Shaders/Materials/PolylineDashMaterial',
-        '../Shaders/Materials/PolylineGlowMaterial',
-        '../Shaders/Materials/PolylineOutlineMaterial',
-        '../Shaders/Materials/RimLightingMaterial',
-        '../Shaders/Materials/SlopeRampMaterial',
-        '../Shaders/Materials/StripeMaterial',
-        '../Shaders/Materials/Water',
-        '../ThirdParty/when'
-    ], function(
-        Cartesian2,
-        clone,
-        Color,
-        combine,
-        createGuid,
-        defaultValue,
-        defined,
-        defineProperties,
-        destroyObject,
-        DeveloperError,
-        isArray,
-        loadCRN,
-        loadKTX,
-        Matrix2,
-        Matrix3,
-        Matrix4,
-        Resource,
-        CubeMap,
-        Texture,
-        AspectRampMaterial,
-        BumpMapMaterial,
-        CheckerboardMaterial,
-        DotMaterial,
-        ElevationContourMaterial,
-        ElevationRampMaterial,
-        FadeMaterial,
-        GridMaterial,
-        NormalMapMaterial,
-        PolylineArrowMaterial,
-        PolylineDashMaterial,
-        PolylineGlowMaterial,
-        PolylineOutlineMaterial,
-        RimLightingMaterial,
-        SlopeRampMaterial,
-        StripeMaterial,
-        WaterMaterial,
-        when) {
-    'use strict';
+import Cartesian2 from '../Core/Cartesian2.js';
+import clone from '../Core/clone.js';
+import Color from '../Core/Color.js';
+import combine from '../Core/combine.js';
+import createGuid from '../Core/createGuid.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import destroyObject from '../Core/destroyObject.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import isArray from '../Core/isArray.js';
+import loadCRN from '../Core/loadCRN.js';
+import loadKTX from '../Core/loadKTX.js';
+import Matrix2 from '../Core/Matrix2.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import Resource from '../Core/Resource.js';
+import CubeMap from '../Renderer/CubeMap.js';
+import Texture from '../Renderer/Texture.js';
+import AspectRampMaterial from '../Shaders/Materials/AspectRampMaterial.js';
+import BumpMapMaterial from '../Shaders/Materials/BumpMapMaterial.js';
+import CheckerboardMaterial from '../Shaders/Materials/CheckerboardMaterial.js';
+import DotMaterial from '../Shaders/Materials/DotMaterial.js';
+import ElevationContourMaterial from '../Shaders/Materials/ElevationContourMaterial.js';
+import ElevationRampMaterial from '../Shaders/Materials/ElevationRampMaterial.js';
+import FadeMaterial from '../Shaders/Materials/FadeMaterial.js';
+import GridMaterial from '../Shaders/Materials/GridMaterial.js';
+import NormalMapMaterial from '../Shaders/Materials/NormalMapMaterial.js';
+import PolylineArrowMaterial from '../Shaders/Materials/PolylineArrowMaterial.js';
+import PolylineDashMaterial from '../Shaders/Materials/PolylineDashMaterial.js';
+import PolylineGlowMaterial from '../Shaders/Materials/PolylineGlowMaterial.js';
+import PolylineOutlineMaterial from '../Shaders/Materials/PolylineOutlineMaterial.js';
+import RimLightingMaterial from '../Shaders/Materials/RimLightingMaterial.js';
+import SlopeRampMaterial from '../Shaders/Materials/SlopeRampMaterial.js';
+import StripeMaterial from '../Shaders/Materials/StripeMaterial.js';
+import WaterMaterial from '../Shaders/Materials/Water.js';
+import when from '../ThirdParty/when.js';
 
     /**
      * A Material defines surface appearance through a combination of diffuse, specular,
@@ -280,7 +240,7 @@ define([
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      *
      * @example
      * // Create a color material with fromType:
@@ -1601,6 +1561,4 @@ define([
         },
         translucent : false
     });
-
-    return Material;
-});
+export default Material;

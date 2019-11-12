@@ -1,8 +1,4 @@
-define([
-        '../Core/freezeObject'
-    ], function(
-        freezeObject) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
 
     /**
      * An enum describing the attribute type for glTF and 3D Tiles.
@@ -68,6 +64,4 @@ define([
          */
         MAT4 : 'MAT4'
     };
-
-    return freezeObject(AttributeType);
-});
+export default freezeObject(AttributeType);

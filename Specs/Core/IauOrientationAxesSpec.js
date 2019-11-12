@@ -1,18 +1,11 @@
-defineSuite([
-        'Core/IauOrientationAxes',
-        'Core/Iau2000Orientation',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Matrix3',
-        'Core/TimeStandard'
-    ], function(
-        IauOrientationAxes,
-        Iau2000Orientation,
-        JulianDate,
-        CesiumMath,
-        Matrix3,
-        TimeStandard) {
-    'use strict';
+import { Iau2000Orientation } from '../../Source/Cesium.js';
+import { IauOrientationAxes } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix3 } from '../../Source/Cesium.js';
+import { TimeStandard } from '../../Source/Cesium.js';
+
+describe('Core/IauOrientationAxes', function() {
 
     it('compute ICRF to Moon Fixed', function() {
         var date = new JulianDate(2451545.0, -32.184, TimeStandard.TAI);

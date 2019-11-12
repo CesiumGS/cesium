@@ -1,28 +1,16 @@
-defineSuite([
-        'DataSources/ReferenceProperty',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/JulianDate',
-        'Core/ReferenceFrame',
-        'DataSources/BillboardGraphics',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/Entity',
-        'DataSources/EntityCollection'
-    ], function(
-        ReferenceProperty,
-        Cartesian3,
-        Color,
-        JulianDate,
-        ReferenceFrame,
-        BillboardGraphics,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        Entity,
-        EntityCollection) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { BillboardGraphics } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { ReferenceProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/ReferenceProperty', function() {
 
     var time = JulianDate.now();
 

@@ -1,28 +1,16 @@
-defineSuite([
-        'DataSources/SampledProperty',
-        'Core/Cartesian3',
-        'Core/defined',
-        'Core/ExtrapolationType',
-        'Core/HermitePolynomialApproximation',
-        'Core/JulianDate',
-        'Core/LagrangePolynomialApproximation',
-        'Core/LinearApproximation',
-        'Core/Math',
-        'Core/Quaternion',
-        'Core/TimeInterval'
-    ], function(
-        SampledProperty,
-        Cartesian3,
-        defined,
-        ExtrapolationType,
-        HermitePolynomialApproximation,
-        JulianDate,
-        LagrangePolynomialApproximation,
-        LinearApproximation,
-        CesiumMath,
-        Quaternion,
-        TimeInterval) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { ExtrapolationType } from '../../Source/Cesium.js';
+import { HermitePolynomialApproximation } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { LagrangePolynomialApproximation } from '../../Source/Cesium.js';
+import { LinearApproximation } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/SampledProperty', function() {
 
     it('constructor sets expected defaults', function() {
         var property = new SampledProperty(Cartesian3);

@@ -1,16 +1,10 @@
-defineSuite([
-        'DataSources/ConstantPositionProperty',
-        'Core/Cartesian3',
-        'Core/JulianDate',
-        'Core/ReferenceFrame',
-        'DataSources/PositionProperty'
-    ], function(
-        ConstantPositionProperty,
-        Cartesian3,
-        JulianDate,
-        ReferenceFrame,
-        PositionProperty) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ReferenceFrame } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { PositionProperty } from '../../Source/Cesium.js';
+
+describe('DataSources/ConstantPositionProperty', function() {
 
     var time = JulianDate.now();
 

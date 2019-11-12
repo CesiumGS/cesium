@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/AssociativeArray'
-    ], function(
-        AssociativeArray) {
-    'use strict';
+import { AssociativeArray } from '../../Source/Cesium.js';
+
+describe('Core/AssociativeArray', function() {
 
     it('constructor has expected default values', function() {
         var associativeArray = new AssociativeArray();

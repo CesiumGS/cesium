@@ -1,5 +1,3 @@
-define(function() {
-    'use strict';
 
     var svgNS = 'http://www.w3.org/2000/svg';
     var svgClassName = 'cesium-svgPath-svg';
@@ -77,6 +75,4 @@ define(function() {
             knockout.virtualElements.allowedBindings.cesiumSvgPath = true;
         }
     };
-
-    return SvgPathBindingHandler;
-});
+export default SvgPathBindingHandler;

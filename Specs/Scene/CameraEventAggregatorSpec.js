@@ -1,22 +1,13 @@
-defineSuite([
-        'Scene/CameraEventAggregator',
-        'Core/Cartesian2',
-        'Core/combine',
-        'Core/FeatureDetection',
-        'Core/KeyboardEventModifier',
-        'Scene/CameraEventType',
-        'Specs/createCanvas',
-        'Specs/DomEventSimulator'
-    ], function(
-        CameraEventAggregator,
-        Cartesian2,
-        combine,
-        FeatureDetection,
-        KeyboardEventModifier,
-        CameraEventType,
-        createCanvas,
-        DomEventSimulator) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { combine } from '../../Source/Cesium.js';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { KeyboardEventModifier } from '../../Source/Cesium.js';
+import { CameraEventAggregator } from '../../Source/Cesium.js';
+import { CameraEventType } from '../../Source/Cesium.js';
+import createCanvas from '../createCanvas.js';
+import DomEventSimulator from '../DomEventSimulator.js';
+
+describe('Scene/CameraEventAggregator', function() {
 
     var usePointerEvents;
     var canvas;

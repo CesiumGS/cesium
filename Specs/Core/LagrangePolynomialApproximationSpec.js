@@ -1,8 +1,6 @@
-defineSuite([
-        'Core/LagrangePolynomialApproximation'
-    ], function(
-        LagrangePolynomialApproximation) {
-    'use strict';
+import { LagrangePolynomialApproximation } from '../../Source/Cesium.js';
+
+describe('Core/LagrangePolynomialApproximation', function() {
 
     //The results of these specs were validated against STK Components
     //an aerospace SDK available from Analytical Graphics. www.agi.com/components/

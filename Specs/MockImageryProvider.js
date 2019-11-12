@@ -1,18 +1,9 @@
-define([
-    'Core/GeographicTilingScheme',
-    'Core/Resource',
-    'Core/RuntimeError',
-    'ThirdParty/when',
-    './createTileKey',
-    './runLater'
-], function(
-    GeographicTilingScheme,
-    Resource,
-    RuntimeError,
-    when,
-    createTileKey,
-    runLater) {
-   'use strict';
+import createTileKey from './createTileKey.js';
+import runLater from './runLater.js';
+import { GeographicTilingScheme } from '../Source/Cesium.js';
+import { Resource } from '../Source/Cesium.js';
+import { RuntimeError } from '../Source/Cesium.js';
+import { when } from '../Source/Cesium.js';
 
     function MockImageryProvider() {
         this.tilingScheme = new GeographicTilingScheme();
@@ -68,6 +59,4 @@ define([
         this._requestImageWillSucceed[createTileKey(xOrTile, y, level)] = promise;
         return this;
     };
-
-    return MockImageryProvider;
-});
+export default MockImageryProvider;

@@ -27,13 +27,10 @@
  EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 **/
 
-define([
-        '../Core/buildModuleUrl',
-        '../Core/defineProperties'
-    ], function(
-        buildModuleUrl,
-        defineProperties) {
-    var tmp = {};
+import buildModuleUrl from '../Core/buildModuleUrl.js';
+import defineProperties from '../Core/defineProperties.js';
+
+var tmp = {};
 
 (function(obj) {
 
@@ -821,5 +818,4 @@ define([
 
 })(tmp);
 
-    return tmp.zip;
-});
+    export default tmp.zip;

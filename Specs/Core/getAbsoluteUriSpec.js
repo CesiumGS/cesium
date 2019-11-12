@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/getAbsoluteUri',
-        'Core/getBaseUri'
-    ], function(
-        getAbsoluteUri,
-        getBaseUri) {
-    'use strict';
+import { getAbsoluteUri } from '../../Source/Cesium.js';
+import { getBaseUri } from '../../Source/Cesium.js';
+
+describe('Core/getAbsoluteUri', function() {
 
     it('works as expected', function() {
         var result = getAbsoluteUri('http://www.mysite.com/awesome?makeitawesome=true');

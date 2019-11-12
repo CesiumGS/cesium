@@ -1,56 +1,30 @@
-defineSuite([
-    'DataSources/exportKml',
-    'Core/BoundingRectangle',
-    'Core/Cartesian2',
-    'Core/Cartesian3',
-    'Core/Cartographic',
-    'Core/Color',
-    'Core/defaultValue',
-    'Core/defined',
-    'Core/Iso8601',
-    'Core/JulianDate',
-    'Core/Math',
-    'Core/PolygonHierarchy',
-    'Core/Rectangle',
-    'Core/TimeInterval',
-    'DataSources/CallbackProperty',
-    'DataSources/ColorMaterialProperty',
-    'DataSources/Entity',
-    'DataSources/EntityCollection',
-    'DataSources/ImageMaterialProperty',
-    'DataSources/PolylineOutlineMaterialProperty',
-    'DataSources/SampledPositionProperty',
-    'Scene/HeightReference',
-    'Scene/HorizontalOrigin',
-    'Scene/VerticalOrigin',
-    'ThirdParty/when'
-], function(
-    exportKml,
-    BoundingRectangle,
-    Cartesian2,
-    Cartesian3,
-    Cartographic,
-    Color,
-    defaultValue,
-    defined,
-    Iso8601,
-    JulianDate,
-    CesiumMath,
-    PolygonHierarchy,
-    Rectangle,
-    TimeInterval,
-    CallbackProperty,
-    ColorMaterialProperty,
-    Entity,
-    EntityCollection,
-    ImageMaterialProperty,
-    PolylineOutlineMaterialProperty,
-    SampledPositionProperty,
-    HeightReference,
-    HorizontalOrigin,
-    VerticalOrigin,
-    when) {
-        'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Cartographic } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defaultValue } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { Iso8601 } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { PolygonHierarchy } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { CallbackProperty } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { exportKml } from '../../Source/Cesium.js';
+import { ImageMaterialProperty } from '../../Source/Cesium.js';
+import { PolylineOutlineMaterialProperty } from '../../Source/Cesium.js';
+import { SampledPositionProperty } from '../../Source/Cesium.js';
+import { HeightReference } from '../../Source/Cesium.js';
+import { HorizontalOrigin } from '../../Source/Cesium.js';
+import { VerticalOrigin } from '../../Source/Cesium.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('DataSources/exportKml', function() {
 
         var kmlDoc;
         function checkKmlDoc(entities, properties, options) {

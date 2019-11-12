@@ -1,14 +1,8 @@
-defineSuite([
-        'Core/HeadingPitchRoll',
-        'Core/Math',
-        'Core/Quaternion'
-    ], function(
-        HeadingPitchRoll,
-        CesiumMath,
-        Quaternion) {
-    'use strict';
-    /*global it,expect*/
+import { HeadingPitchRoll } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
 
+describe('Core/HeadingPitchRoll', function() {
     var deg2rad = CesiumMath.RADIANS_PER_DEGREE;
 
     it('construct with default values', function() {

@@ -1,23 +1,8 @@
-define([
-        './defined',
-        './Cartesian2',
-        './Cartesian3',
-        './Check',
-        './IntersectionTests',
-        './Math',
-        './Matrix3',
-        './OrientedBoundingBox'
-    ], function(
-        defined,
-        Cartesian2,
-        Cartesian3,
-        Check,
-        IntersectionTests,
-        CesiumMath,
-        Matrix3,
-        OrientedBoundingBox
-    ) {
-    'use strict';
+import Cartesian2 from './Cartesian2.js';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import Matrix3 from './Matrix3.js';
+import OrientedBoundingBox from './OrientedBoundingBox.js';
 
     /**
      * @private
@@ -119,6 +104,4 @@ define([
             return projectTo2D(position, center, axis1, axis2, result);
         };
     };
-
-    return CoplanarPolygonGeometryLibrary;
-});
+export default CoplanarPolygonGeometryLibrary;

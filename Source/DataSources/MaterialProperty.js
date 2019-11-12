@@ -1,16 +1,8 @@
-define([
-        '../Core/Color',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Scene/Material'
-    ], function(
-        Color,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Material) {
-    'use strict';
+import Color from '../Core/Color.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Material from '../Scene/Material.js';
 
     /**
      * The interface for all {@link Property} objects that represent {@link Material} uniforms.
@@ -18,6 +10,7 @@ define([
      *
      * @alias MaterialProperty
      * @constructor
+     * @abstract
      *
      * @see ColorMaterialProperty
      * @see CompositeMaterialProperty
@@ -110,6 +103,4 @@ define([
 
         return material;
     };
-
-    return MaterialProperty;
-});
+export default MaterialProperty;

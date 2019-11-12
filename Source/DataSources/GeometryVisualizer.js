@@ -1,68 +1,34 @@
-define([
-        '../Core/AssociativeArray',
-        '../Core/BoundingSphere',
-        '../Core/Check',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/destroyObject',
-        '../Core/Event',
-        '../Core/EventHelper',
-        '../Scene/ClassificationType',
-        '../Scene/MaterialAppearance',
-        '../Scene/PerInstanceColorAppearance',
-        '../Scene/ShadowMode',
-        './BoundingSphereState',
-        './BoxGeometryUpdater',
-        './ColorMaterialProperty',
-        './CorridorGeometryUpdater',
-        './CylinderGeometryUpdater',
-        './DynamicGeometryBatch',
-        './EllipseGeometryUpdater',
-        './EllipsoidGeometryUpdater',
-        './Entity',
-        './PlaneGeometryUpdater',
-        './PolygonGeometryUpdater',
-        './PolylineVolumeGeometryUpdater',
-        './RectangleGeometryUpdater',
-        './StaticGeometryColorBatch',
-        './StaticGeometryPerMaterialBatch',
-        './StaticGroundGeometryColorBatch',
-        './StaticGroundGeometryPerMaterialBatch',
-        './StaticOutlineGeometryBatch',
-        './WallGeometryUpdater'
-    ], function(
-        AssociativeArray,
-        BoundingSphere,
-        Check,
-        defaultValue,
-        defined,
-        destroyObject,
-        Event,
-        EventHelper,
-        ClassificationType,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        ShadowMode,
-        BoundingSphereState,
-        BoxGeometryUpdater,
-        ColorMaterialProperty,
-        CorridorGeometryUpdater,
-        CylinderGeometryUpdater,
-        DynamicGeometryBatch,
-        EllipseGeometryUpdater,
-        EllipsoidGeometryUpdater,
-        Entity,
-        PlaneGeometryUpdater,
-        PolygonGeometryUpdater,
-        PolylineVolumeGeometryUpdater,
-        RectangleGeometryUpdater,
-        StaticGeometryColorBatch,
-        StaticGeometryPerMaterialBatch,
-        StaticGroundGeometryColorBatch,
-        StaticGroundGeometryPerMaterialBatch,
-        StaticOutlineGeometryBatch,
-        WallGeometryUpdater) {
-    'use strict';
+import AssociativeArray from '../Core/AssociativeArray.js';
+import BoundingSphere from '../Core/BoundingSphere.js';
+import Check from '../Core/Check.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import destroyObject from '../Core/destroyObject.js';
+import Event from '../Core/Event.js';
+import EventHelper from '../Core/EventHelper.js';
+import ClassificationType from '../Scene/ClassificationType.js';
+import MaterialAppearance from '../Scene/MaterialAppearance.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import ShadowMode from '../Scene/ShadowMode.js';
+import BoundingSphereState from './BoundingSphereState.js';
+import BoxGeometryUpdater from './BoxGeometryUpdater.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import CorridorGeometryUpdater from './CorridorGeometryUpdater.js';
+import CylinderGeometryUpdater from './CylinderGeometryUpdater.js';
+import DynamicGeometryBatch from './DynamicGeometryBatch.js';
+import EllipseGeometryUpdater from './EllipseGeometryUpdater.js';
+import EllipsoidGeometryUpdater from './EllipsoidGeometryUpdater.js';
+import Entity from './Entity.js';
+import PlaneGeometryUpdater from './PlaneGeometryUpdater.js';
+import PolygonGeometryUpdater from './PolygonGeometryUpdater.js';
+import PolylineVolumeGeometryUpdater from './PolylineVolumeGeometryUpdater.js';
+import RectangleGeometryUpdater from './RectangleGeometryUpdater.js';
+import StaticGeometryColorBatch from './StaticGeometryColorBatch.js';
+import StaticGeometryPerMaterialBatch from './StaticGeometryPerMaterialBatch.js';
+import StaticGroundGeometryColorBatch from './StaticGroundGeometryColorBatch.js';
+import StaticGroundGeometryPerMaterialBatch from './StaticGroundGeometryPerMaterialBatch.js';
+import StaticOutlineGeometryBatch from './StaticOutlineGeometryBatch.js';
+import WallGeometryUpdater from './WallGeometryUpdater.js';
 
     var emptyArray = [];
 
@@ -489,6 +455,4 @@ define([
             }
         }
     };
-
-    return GeometryVisualizer;
-});
+export default GeometryVisualizer;

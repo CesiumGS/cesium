@@ -1,12 +1,8 @@
-defineSuite([
-        'Core/Iau2000Orientation',
-        'Core/JulianDate',
-        'Core/TimeStandard'
-    ], function(
-        Iau2000Orientation,
-        JulianDate,
-        TimeStandard) {
-    'use strict';
+import { Iau2000Orientation } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { TimeStandard } from '../../Source/Cesium.js';
+
+describe('Core/Iau2000Orientation', function() {
 
     it('compute moon', function() {
         var date = new JulianDate(2451545.0, -32.184, TimeStandard.TAI);

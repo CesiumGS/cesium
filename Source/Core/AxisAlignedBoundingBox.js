@@ -1,16 +1,8 @@
-define([
-        './Cartesian3',
-        './Check',
-        './defaultValue',
-        './defined',
-        './Intersect'
-    ], function(
-        Cartesian3,
-        Check,
-        defaultValue,
-        defined,
-        Intersect) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import Intersect from './Intersect.js';
 
     /**
      * Creates an instance of an AxisAlignedBoundingBox from the minimum and maximum points along the x, y, and z axes.
@@ -222,6 +214,4 @@ define([
     AxisAlignedBoundingBox.prototype.equals = function(right) {
         return AxisAlignedBoundingBox.equals(this, right);
     };
-
-    return AxisAlignedBoundingBox;
-});
+export default AxisAlignedBoundingBox;

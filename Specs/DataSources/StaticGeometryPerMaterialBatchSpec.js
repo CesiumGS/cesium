@@ -1,64 +1,34 @@
-defineSuite([
-        'DataSources/StaticGeometryPerMaterialBatch',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/TimeInterval',
-        'Core/TimeIntervalCollection',
-        'DataSources/BoxGeometryUpdater',
-        'DataSources/CheckerboardMaterialProperty',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EllipseGeometryUpdater',
-        'DataSources/EllipseGraphics',
-        'DataSources/Entity',
-        'DataSources/GridMaterialProperty',
-        'DataSources/PolylineArrowMaterialProperty',
-        'DataSources/PolylineGeometryUpdater',
-        'DataSources/PolylineGraphics',
-        'DataSources/StripeMaterialProperty',
-        'DataSources/TimeIntervalCollectionProperty',
-        'Scene/MaterialAppearance',
-        'Scene/PolylineColorAppearance',
-        'Scene/PolylineMaterialAppearance',
-        'Scene/ShadowMode',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        StaticGeometryPerMaterialBatch,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        JulianDate,
-        CesiumMath,
-        TimeInterval,
-        TimeIntervalCollection,
-        BoxGeometryUpdater,
-        CheckerboardMaterialProeprty,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EllipseGeometryUpdater,
-        EllipseGraphics,
-        Entity,
-        GridMaterialProperty,
-        PolylineArrowMaterialProperty,
-        PolylineGeometryUpdater,
-        PolylineGraphics,
-        StripeMaterialProperty,
-        TimeIntervalCollectionProperty,
-        MaterialAppearance,
-        PolylineColorAppearance,
-        PolylineMaterialAppearance,
-        ShadowMode,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { TimeInterval } from '../../Source/Cesium.js';
+import { TimeIntervalCollection } from '../../Source/Cesium.js';
+import { BoxGeometryUpdater } from '../../Source/Cesium.js';
+import { CheckerboardMaterialProperty } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EllipseGeometryUpdater } from '../../Source/Cesium.js';
+import { EllipseGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
+import { PolylineArrowMaterialProperty } from '../../Source/Cesium.js';
+import { PolylineGeometryUpdater } from '../../Source/Cesium.js';
+import { PolylineGraphics } from '../../Source/Cesium.js';
+import { StaticGeometryPerMaterialBatch } from '../../Source/Cesium.js';
+import { StripeMaterialProperty } from '../../Source/Cesium.js';
+import { TimeIntervalCollectionProperty } from '../../Source/Cesium.js';
+import { MaterialAppearance } from '../../Source/Cesium.js';
+import { PolylineColorAppearance } from '../../Source/Cesium.js';
+import { PolylineMaterialAppearance } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/StaticGeometryPerMaterialBatch', function() {
 
     var time = JulianDate.now();
     var scene;
@@ -395,9 +365,9 @@ defineSuite([
         }
 
         var entity1 = buildEntity(StripeMaterialProperty);
-        var entity2 = buildEntity(CheckerboardMaterialProeprty);
+        var entity2 = buildEntity(CheckerboardMaterialProperty);
         var entity3 = buildEntity(StripeMaterialProperty);
-        var entity4 = buildEntity(CheckerboardMaterialProeprty);
+        var entity4 = buildEntity(CheckerboardMaterialProperty);
 
         var updater1 = new EllipseGeometryUpdater(entity1, scene);
         var updater2 = new EllipseGeometryUpdater(entity2, scene);

@@ -1,40 +1,22 @@
-defineSuite([
-        'Core/BoundingRectangle',
-        'Core/Color',
-        'Core/ComponentDatatype',
-        'Core/IndexDatatype',
-        'Core/PrimitiveType',
-        'Core/WebGLConstants',
-        'Core/WindingOrder',
-        'Renderer/Buffer',
-        'Renderer/BufferUsage',
-        'Renderer/ClearCommand',
-        'Renderer/ContextLimits',
-        'Renderer/DrawCommand',
-        'Renderer/RenderState',
-        'Renderer/ShaderProgram',
-        'Renderer/VertexArray',
-        'Scene/BlendingState',
-        'Specs/createContext'
-    ], 'Renderer/Draw', function(
-        BoundingRectangle,
-        Color,
-        ComponentDatatype,
-        IndexDatatype,
-        PrimitiveType,
-        WebGLConstants,
-        WindingOrder,
-        Buffer,
-        BufferUsage,
-        ClearCommand,
-        ContextLimits,
-        DrawCommand,
-        RenderState,
-        ShaderProgram,
-        VertexArray,
-        BlendingState,
-        createContext) {
-    'use strict';
+import { BoundingRectangle } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ComponentDatatype } from '../../Source/Cesium.js';
+import { IndexDatatype } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { WebGLConstants } from '../../Source/Cesium.js';
+import { WindingOrder } from '../../Source/Cesium.js';
+import { Buffer } from '../../Source/Cesium.js';
+import { BufferUsage } from '../../Source/Cesium.js';
+import { ClearCommand } from '../../Source/Cesium.js';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { DrawCommand } from '../../Source/Cesium.js';
+import { RenderState } from '../../Source/Cesium.js';
+import { ShaderProgram } from '../../Source/Cesium.js';
+import { VertexArray } from '../../Source/Cesium.js';
+import { BlendingState } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+
+describe('Renderer/Draw', function() {
 
     var context;
     var sp;

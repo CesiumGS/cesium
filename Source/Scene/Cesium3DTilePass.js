@@ -1,14 +1,6 @@
-define([
-        '../Core/Check',
-        '../Core/freezeObject',
-        './Cesium3DTilesetMostDetailedTraversal',
-        './Cesium3DTilesetTraversal'
-    ], function(
-        Check,
-        freezeObject,
-        Cesium3DTilesetMostDetailedTraversal,
-        Cesium3DTilesetTraversal) {
-    'use strict';
+import freezeObject from '../Core/freezeObject.js';
+import Cesium3DTilesetMostDetailedTraversal from './Cesium3DTilesetMostDetailedTraversal.js';
+import Cesium3DTilesetTraversal from './Cesium3DTilesetTraversal.js';
 
     /**
      * The pass in which a 3D Tileset is updated.
@@ -88,6 +80,4 @@ define([
     Cesium3DTilePass.getPassOptions = function(pass) {
         return passOptions[pass];
     };
-
-    return freezeObject(Cesium3DTilePass);
-});
+export default freezeObject(Cesium3DTilePass);

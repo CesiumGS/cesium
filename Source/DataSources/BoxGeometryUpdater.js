@@ -1,52 +1,26 @@
-define([
-        '../Core/BoxGeometry',
-        '../Core/BoxOutlineGeometry',
-        '../Core/Cartesian3',
-        '../Core/Check',
-        '../Core/Color',
-        '../Core/ColorGeometryInstanceAttribute',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/DistanceDisplayConditionGeometryInstanceAttribute',
-        '../Core/GeometryInstance',
-        '../Core/GeometryOffsetAttribute',
-        '../Core/Iso8601',
-        '../Core/OffsetGeometryInstanceAttribute',
-        '../Core/ShowGeometryInstanceAttribute',
-        '../Scene/HeightReference',
-        '../Scene/MaterialAppearance',
-        '../Scene/PerInstanceColorAppearance',
-        './heightReferenceOnEntityPropertyChanged',
-        './ColorMaterialProperty',
-        './DynamicGeometryUpdater',
-        './GeometryUpdater',
-        './Property'
-    ], function(
-        BoxGeometry,
-        BoxOutlineGeometry,
-        Cartesian3,
-        Check,
-        Color,
-        ColorGeometryInstanceAttribute,
-        defined,
-        defineProperties,
-        DeveloperError,
-        DistanceDisplayConditionGeometryInstanceAttribute,
-        GeometryInstance,
-        GeometryOffsetAttribute,
-        Iso8601,
-        OffsetGeometryInstanceAttribute,
-        ShowGeometryInstanceAttribute,
-        HeightReference,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        heightReferenceOnEntityPropertyChanged,
-        ColorMaterialProperty,
-        DynamicGeometryUpdater,
-        GeometryUpdater,
-        Property) {
-    'use strict';
+import BoxGeometry from '../Core/BoxGeometry.js';
+import BoxOutlineGeometry from '../Core/BoxOutlineGeometry.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Check from '../Core/Check.js';
+import Color from '../Core/Color.js';
+import ColorGeometryInstanceAttribute from '../Core/ColorGeometryInstanceAttribute.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import DistanceDisplayConditionGeometryInstanceAttribute from '../Core/DistanceDisplayConditionGeometryInstanceAttribute.js';
+import GeometryInstance from '../Core/GeometryInstance.js';
+import GeometryOffsetAttribute from '../Core/GeometryOffsetAttribute.js';
+import Iso8601 from '../Core/Iso8601.js';
+import OffsetGeometryInstanceAttribute from '../Core/OffsetGeometryInstanceAttribute.js';
+import ShowGeometryInstanceAttribute from '../Core/ShowGeometryInstanceAttribute.js';
+import HeightReference from '../Scene/HeightReference.js';
+import MaterialAppearance from '../Scene/MaterialAppearance.js';
+import PerInstanceColorAppearance from '../Scene/PerInstanceColorAppearance.js';
+import ColorMaterialProperty from './ColorMaterialProperty.js';
+import DynamicGeometryUpdater from './DynamicGeometryUpdater.js';
+import GeometryUpdater from './GeometryUpdater.js';
+import heightReferenceOnEntityPropertyChanged from './heightReferenceOnEntityPropertyChanged.js';
+import Property from './Property.js';
 
     var defaultOffset = Cartesian3.ZERO;
 
@@ -242,6 +216,4 @@ define([
         options.dimensions = Property.getValueOrUndefined(box.dimensions, time, options.dimensions);
         options.offsetAttribute = heightReference !== HeightReference.NONE ? GeometryOffsetAttribute.ALL : undefined;
     };
-
-    return BoxGeometryUpdater;
-});
+export default BoxGeometryUpdater;

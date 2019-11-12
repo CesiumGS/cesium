@@ -1,38 +1,20 @@
-defineSuite([
-        'Renderer/Texture',
-        'Core/Cartesian2',
-        'Core/Color',
-        'Core/FeatureDetection',
-        'Core/loadKTX',
-        'Core/PixelFormat',
-        'Core/Resource',
-        'Renderer/ClearCommand',
-        'Renderer/ContextLimits',
-        'Renderer/PixelDatatype',
-        'Renderer/Sampler',
-        'Renderer/TextureMagnificationFilter',
-        'Renderer/TextureMinificationFilter',
-        'Renderer/TextureWrap',
-        'Specs/createContext',
-        'ThirdParty/when'
-    ], function(
-        Texture,
-        Cartesian2,
-        Color,
-        FeatureDetection,
-        loadKTX,
-        PixelFormat,
-        Resource,
-        ClearCommand,
-        ContextLimits,
-        PixelDatatype,
-        Sampler,
-        TextureMagnificationFilter,
-        TextureMinificationFilter,
-        TextureWrap,
-        createContext,
-        when) {
-    'use strict';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { loadKTX } from '../../Source/Cesium.js';
+import { PixelFormat } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { ClearCommand } from '../../Source/Cesium.js';
+import { ContextLimits } from '../../Source/Cesium.js';
+import { PixelDatatype } from '../../Source/Cesium.js';
+import { Sampler } from '../../Source/Cesium.js';
+import { Texture } from '../../Source/Cesium.js';
+import { TextureMagnificationFilter } from '../../Source/Cesium.js';
+import { TextureMinificationFilter } from '../../Source/Cesium.js';
+import { TextureWrap } from '../../Source/Cesium.js';
+import createContext from '../createContext.js';
+import { when } from '../../Source/Cesium.js';
+
+describe('Renderer/Texture', function() {
 
     var context;
     var greenImage;

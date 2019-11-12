@@ -1,30 +1,17 @@
-defineSuite([
-        'DataSources/PolygonGraphics',
-        'Core/ArcType',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/DistanceDisplayCondition',
-        'Core/PolygonHierarchy',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantProperty',
-        'Scene/ClassificationType',
-        'Scene/ShadowMode',
-        'Specs/testDefinitionChanged',
-        'Specs/testMaterialDefinitionChanged'
-    ], function(
-        PolygonGraphics,
-        ArcType,
-        Cartesian3,
-        Color,
-        DistanceDisplayCondition,
-        PolygonHierarchy,
-        ColorMaterialProperty,
-        ConstantProperty,
-        ClassificationType,
-        ShadowMode,
-        testDefinitionChanged,
-        testMaterialDefinitionChanged) {
-    'use strict';
+import { ArcType } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { PolygonHierarchy } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { PolygonGraphics } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import testDefinitionChanged from '../testDefinitionChanged.js';
+import testMaterialDefinitionChanged from '../testMaterialDefinitionChanged.js';
+
+describe('DataSources/PolygonGraphics', function() {
 
     it('creates expected instance from raw assignment and construction', function() {
         var options = {

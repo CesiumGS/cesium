@@ -1,18 +1,11 @@
-defineSuite([
-        'Scene/createTangentSpaceDebugPrimitive',
-        'Core/Cartesian3',
-        'Core/EllipsoidGeometry',
-        'Core/Matrix4',
-        'Core/PrimitiveType',
-        'Core/VertexFormat'
-    ], function(
-        createTangentSpaceDebugPrimitive,
-        Cartesian3,
-        EllipsoidGeometry,
-        Matrix4,
-        PrimitiveType,
-        VertexFormat) {
-    'use strict';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { EllipsoidGeometry } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { PrimitiveType } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import { createTangentSpaceDebugPrimitive } from '../../Source/Cesium.js';
+
+describe('Scene/createTangentSpaceDebugPrimitive', function() {
 
     it('computes all attributes', function() {
         var geometry = new EllipsoidGeometry({

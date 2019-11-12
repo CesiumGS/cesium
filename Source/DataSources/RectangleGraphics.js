@@ -1,20 +1,10 @@
-define([
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/DeveloperError',
-        '../Core/Event',
-        './createMaterialPropertyDescriptor',
-        './createPropertyDescriptor'
-    ], function(
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        createMaterialPropertyDescriptor,
-        createPropertyDescriptor) {
-    'use strict';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import DeveloperError from '../Core/DeveloperError.js';
+import Event from '../Core/Event.js';
+import createMaterialPropertyDescriptor from './createMaterialPropertyDescriptor.js';
+import createPropertyDescriptor from './createPropertyDescriptor.js';
 
     /**
      * Describes graphics for a {@link Rectangle}.
@@ -28,9 +18,9 @@ define([
      * @param {Property} [options.show=true] A boolean Property specifying the visibility of the rectangle.
      * @param {Property} [options.coordinates] The Property specifying the {@link Rectangle}.
      * @param {Property} [options.height=0] A numeric Property specifying the altitude of the rectangle relative to the ellipsoid surface.
-     * @param {Property} [options.heightReference] A Property specifying what the height is relative to.
+     * @param {Property} [options.heightReference=HeightReference.NONE] A Property specifying what the height is relative to.
      * @param {Property} [options.extrudedHeight] A numeric Property specifying the altitude of the rectangle's extruded face relative to the ellipsoid surface.
-     * @param {Property} [options.extrudedHeightReference] A Property specifying what the extrudedHeight is relative to.
+     * @param {Property} [options.extrudedHeightReference=HeightReference.NONE] A Property specifying what the extrudedHeight is relative to.
      * @param {Property} [options.rotation=0.0] A numeric property specifying the rotation of the rectangle clockwise from north.
      * @param {Property} [options.stRotation=0.0] A numeric property specifying the rotation of the rectangle texture counter-clockwise from north.
      * @param {Property} [options.granularity=Cesium.Math.RADIANS_PER_DEGREE] A numeric Property specifying the angular distance between points on the rectangle.
@@ -45,7 +35,7 @@ define([
      * @param {Property} [options.zIndex=0] A Property specifying the zIndex used for ordering ground geometry.  Only has an effect if the rectangle is constant and neither height or extrudedHeight are specified.
      *
      * @see Entity
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
      */
     function RectangleGraphics(options) {
         this._definitionChanged = new Event();
@@ -310,6 +300,4 @@ define([
         this.classificationType = defaultValue(this.classificationType, source.classificationType);
         this.zIndex = defaultValue(this.zIndex, source.zIndex);
     };
-
-    return RectangleGraphics;
-});
+export default RectangleGraphics;

@@ -1,26 +1,14 @@
-define([
-        './Cartesian3',
-        './Cartesian4',
-        './Check',
-        './defaultValue',
-        './defined',
-        './defineProperties',
-        './freezeObject',
-        './Math',
-        './Matrix3',
-        './RuntimeError'
-    ], function(
-        Cartesian3,
-        Cartesian4,
-        Check,
-        defaultValue,
-        defined,
-        defineProperties,
-        freezeObject,
-        CesiumMath,
-        Matrix3,
-        RuntimeError) {
-    'use strict';
+import Cartesian3 from './Cartesian3.js';
+import Cartesian4 from './Cartesian4.js';
+import Check from './Check.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import deprecationWarning from './deprecationWarning.js';
+import freezeObject from './freezeObject.js';
+import CesiumMath from './Math.js';
+import Matrix3 from './Matrix3.js';
+import RuntimeError from './RuntimeError.js';
 
     /**
      * A 4x4 matrix, indexable as a column-major order array.
@@ -65,9 +53,9 @@ define([
      * @see Packable
      */
     function Matrix4(column0Row0, column1Row0, column2Row0, column3Row0,
-                           column0Row1, column1Row1, column2Row1, column3Row1,
-                           column0Row2, column1Row2, column2Row2, column3Row2,
-                           column0Row3, column1Row3, column2Row3, column3Row3) {
+                     column0Row1, column1Row1, column2Row1, column3Row1,
+                     column0Row2, column1Row2, column2Row2, column3Row2,
+                     column0Row3, column1Row3, column2Row3, column3Row3) {
         this[0] = defaultValue(column0Row0, 0.0);
         this[1] = defaultValue(column0Row1, 0.0);
         this[2] = defaultValue(column0Row2, 0.0);
@@ -378,16 +366,16 @@ define([
         var m21 = 2.0 * (yz + xw);
         var m22 = -x2 - y2 + z2 + w2;
 
-        result[0]  = m00 * scaleX;
-        result[1]  = m10 * scaleX;
-        result[2]  = m20 * scaleX;
-        result[3]  = 0.0;
-        result[4]  = m01 * scaleY;
-        result[5]  = m11 * scaleY;
-        result[6]  = m21 * scaleY;
-        result[7]  = 0.0;
-        result[8]  = m02 * scaleZ;
-        result[9]  = m12 * scaleZ;
+        result[0] = m00 * scaleX;
+        result[1] = m10 * scaleX;
+        result[2] = m20 * scaleX;
+        result[3] = 0.0;
+        result[4] = m01 * scaleY;
+        result[5] = m11 * scaleY;
+        result[6] = m21 * scaleY;
+        result[7] = 0.0;
+        result[8] = m02 * scaleZ;
+        result[9] = m12 * scaleZ;
         result[10] = m22 * scaleZ;
         result[11] = 0.0;
         result[12] = translation.x;
@@ -565,8 +553,8 @@ define([
         var positionX = position.x;
         var positionY = position.y;
         var positionZ = position.z;
-        var t0 = sX * -positionX + sY * -positionY+ sZ * -positionZ;
-        var t1 = uX * -positionX + uY * -positionY+ uZ * -positionZ;
+        var t0 = sX * -positionX + sY * -positionY + sZ * -positionZ;
+        var t1 = uX * -positionX + uY * -positionY + uZ * -positionZ;
         var t2 = fX * positionX + fY * positionY + fZ * positionZ;
 
         // The code below this comment is an optimized
@@ -610,21 +598,21 @@ define([
         return result;
     };
 
-     /**
-      * Computes a Matrix4 instance representing a perspective transformation matrix.
-      *
-      * @param {Number} fovY The field of view along the Y axis in radians.
-      * @param {Number} aspectRatio The aspect ratio.
-      * @param {Number} near The distance to the near plane in meters.
-      * @param {Number} far The distance to the far plane in meters.
-      * @param {Matrix4} result The object in which the result will be stored.
-      * @returns {Matrix4} The modified result parameter.
-      *
-      * @exception {DeveloperError} fovY must be in (0, PI].
-      * @exception {DeveloperError} aspectRatio must be greater than zero.
-      * @exception {DeveloperError} near must be greater than zero.
-      * @exception {DeveloperError} far must be greater than zero.
-      */
+    /**
+     * Computes a Matrix4 instance representing a perspective transformation matrix.
+     *
+     * @param {Number} fovY The field of view along the Y axis in radians.
+     * @param {Number} aspectRatio The aspect ratio.
+     * @param {Number} near The distance to the near plane in meters.
+     * @param {Number} far The distance to the far plane in meters.
+     * @param {Matrix4} result The object in which the result will be stored.
+     * @returns {Matrix4} The modified result parameter.
+     *
+     * @exception {DeveloperError} fovY must be in (0, PI].
+     * @exception {DeveloperError} aspectRatio must be greater than zero.
+     * @exception {DeveloperError} near must be greater than zero.
+     * @exception {DeveloperError} far must be greater than zero.
+     */
     Matrix4.computePerspectiveFieldOfView = function(fovY, aspectRatio, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.number.greaterThan('fovY', fovY, 0.0);
@@ -661,17 +649,17 @@ define([
     };
 
     /**
-    * Computes a Matrix4 instance representing an orthographic transformation matrix.
-    *
-    * @param {Number} left The number of meters to the left of the camera that will be in view.
-    * @param {Number} right The number of meters to the right of the camera that will be in view.
-    * @param {Number} bottom The number of meters below of the camera that will be in view.
-    * @param {Number} top The number of meters above of the camera that will be in view.
-    * @param {Number} near The distance to the near plane in meters.
-    * @param {Number} far The distance to the far plane in meters.
-    * @param {Matrix4} result The object in which the result will be stored.
-    * @returns {Matrix4} The modified result parameter.
-    */
+     * Computes a Matrix4 instance representing an orthographic transformation matrix.
+     *
+     * @param {Number} left The number of meters to the left of the camera that will be in view.
+     * @param {Number} right The number of meters to the right of the camera that will be in view.
+     * @param {Number} bottom The number of meters below of the camera that will be in view.
+     * @param {Number} top The number of meters above of the camera that will be in view.
+     * @param {Number} near The distance to the near plane in meters.
+     * @param {Number} far The distance to the far plane in meters.
+     * @param {Matrix4} result The object in which the result will be stored.
+     * @returns {Matrix4} The modified result parameter.
+     */
     Matrix4.computeOrthographicOffCenter = function(left, right, bottom, top, near, far, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.number('left', left);
@@ -2110,7 +2098,7 @@ define([
         //>>includeEnd('debug');
 
         return (left === right) ||
-                (defined(left) &&
+               (defined(left) &&
                 defined(right) &&
                 Math.abs(left[0] - right[0]) <= epsilon &&
                 Math.abs(left[1] - right[1]) <= epsilon &&
@@ -2150,7 +2138,21 @@ define([
     };
 
     /**
-     * Gets the upper left 3x3 rotation matrix of the provided matrix, assuming the matrix is a affine transformation matrix.
+     * Gets the upper left 3x3 rotation matrix of the provided matrix, assuming the matrix is an affine transformation matrix.
+     *
+     * @param {Matrix4} matrix The matrix to use.
+     * @param {Matrix3} result The object onto which to store the result.
+     * @returns {Matrix3} The modified result parameter.
+     *
+     * @deprecated moved to Matrix4.getMatrix3
+     */
+    Matrix4.getRotation = function(matrix, result) {
+        deprecationWarning('Matrix4.getRotation', 'Matrix4.getRotation is deprecated and will be removed in Cesium 1.65. Use Matrix4.getMatrix3 instead.');
+        return Matrix4.getMatrix3(matrix, result);
+    };
+
+    /**
+     * Gets the upper left 3x3 rotation matrix of the provided matrix, assuming the matrix is an affine transformation matrix.
      *
      * @param {Matrix4} matrix The matrix to use.
      * @param {Matrix3} result The object onto which to store the result.
@@ -2165,13 +2167,13 @@ define([
      * //     [13.0, 17.0, 21.0, 25.0]
      *
      * var b = new Cesium.Matrix3();
-     * Cesium.Matrix4.getRotation(m,b);
+     * Cesium.Matrix4.getMatrix3(m,b);
      *
      * // b = [10.0, 14.0, 18.0]
      * //     [11.0, 15.0, 19.0]
      * //     [12.0, 16.0, 20.0]
      */
-    Matrix4.getRotation = function(matrix, result) {
+    Matrix4.getMatrix3 = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('matrix', matrix);
         Check.typeOf.object('result', result);
@@ -2194,18 +2196,18 @@ define([
     var scratchBottomRow = new Cartesian4();
     var scratchExpectedBottomRow = new Cartesian4(0.0, 0.0, 0.0, 1.0);
 
-     /**
-      * Computes the inverse of the provided matrix using Cramers Rule.
-      * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
-      * If the matrix is an affine transformation matrix, it is more efficient
-      * to invert it with {@link Matrix4.inverseTransformation}.
-      *
-      * @param {Matrix4} matrix The matrix to invert.
-      * @param {Matrix4} result The object onto which to store the result.
-      * @returns {Matrix4} The modified result parameter.
-      *
-      * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
-      */
+    /**
+     * Computes the inverse of the provided matrix using Cramers Rule.
+     * If the determinant is zero, the matrix can not be inverted, and an exception is thrown.
+     * If the matrix is an affine transformation matrix, it is more efficient
+     * to invert it with {@link Matrix4.inverseTransformation}.
+     *
+     * @param {Matrix4} matrix The matrix to invert.
+     * @param {Matrix4} result The object onto which to store the result.
+     * @returns {Matrix4} The modified result parameter.
+     *
+     * @exception {RuntimeError} matrix is not invertible because its determinate is zero.
+     */
     Matrix4.inverse = function(matrix, result) {
         //>>includeStart('debug', pragmas.debug);
         Check.typeOf.object('matrix', matrix);
@@ -2284,9 +2286,9 @@ define([
         var det = src0 * dst0 + src1 * dst1 + src2 * dst2 + src3 * dst3;
 
         if (Math.abs(det) < CesiumMath.EPSILON21) {
-                // Special case for a zero scale matrix that can occur, for example,
-                // when a model's node has a [0, 0, 0] scale.
-                if (Matrix3.equalsEpsilon(Matrix4.getRotation(matrix, scratchInverseRotation), scratchMatrix3Zero, CesiumMath.EPSILON7) &&
+            // Special case for a zero scale matrix that can occur, for example,
+            // when a model's node has a [0, 0, 0] scale.
+            if (Matrix3.equalsEpsilon(Matrix4.getMatrix3(matrix, scratchInverseRotation), scratchMatrix3Zero, CesiumMath.EPSILON7) &&
                 Cartesian4.equals(Matrix4.getRow(matrix, 3, scratchBottomRow), scratchExpectedBottomRow)) {
 
                 result[0] = 0.0;
@@ -2353,7 +2355,7 @@ define([
         //>>includeEnd('debug');
 
         //This function is an optimized version of the below 4 lines.
-        //var rT = Matrix3.transpose(Matrix4.getRotation(matrix));
+        //var rT = Matrix3.transpose(Matrix4.getMatrix3(matrix));
         //var rTN = Matrix3.negate(rT);
         //var rTT = Matrix3.multiplyByVector(rTN, Matrix4.getTranslation(matrix));
         //return Matrix4.fromRotationTranslation(rT, rTT, result);
@@ -2622,11 +2624,9 @@ define([
      * @returns {String} A string representing the provided Matrix with each row being on a separate line and in the format '(column0, column1, column2, column3)'.
      */
     Matrix4.prototype.toString = function() {
-        return '(' + this[0] + ', ' + this[4] + ', ' + this[8] + ', ' + this[12] +')\n' +
-               '(' + this[1] + ', ' + this[5] + ', ' + this[9] + ', ' + this[13] +')\n' +
-               '(' + this[2] + ', ' + this[6] + ', ' + this[10] + ', ' + this[14] +')\n' +
-               '(' + this[3] + ', ' + this[7] + ', ' + this[11] + ', ' + this[15] +')';
+        return '(' + this[0] + ', ' + this[4] + ', ' + this[8] + ', ' + this[12] + ')\n' +
+               '(' + this[1] + ', ' + this[5] + ', ' + this[9] + ', ' + this[13] + ')\n' +
+               '(' + this[2] + ', ' + this[6] + ', ' + this[10] + ', ' + this[14] + ')\n' +
+               '(' + this[3] + ', ' + this[7] + ', ' + this[11] + ', ' + this[15] + ')';
     };
-
-    return Matrix4;
-});
+export default Matrix4;

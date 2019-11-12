@@ -1,66 +1,36 @@
-define([
-    "../ThirdParty/Uri",
-    "../ThirdParty/when",
-    "./appendForwardSlash",
-    "./Check",
-    "./clone",
-    "./combine",
-    "./defaultValue",
-    "./defined",
-    "./defineProperties",
-    "./DeveloperError",
-    "./freezeObject",
-    "./getAbsoluteUri",
-    "./getBaseUri",
-    "./getExtensionFromUri",
-    "./isBlobUri",
-    "./isCrossOriginUrl",
-    "./isDataUri",
-    "./loadAndExecuteScript",
-    "./objectToQuery",
-    "./queryToObject",
-    "./Request",
-    "./RequestErrorEvent",
-    "./RequestScheduler",
-    "./RequestState",
-    "./RuntimeError",
-    "./TrustedServers"
-], function(
-    Uri,
-    when,
-    appendForwardSlash,
-    Check,
-    clone,
-    combine,
-    defaultValue,
-    defined,
-    defineProperties,
-    DeveloperError,
-    freezeObject,
-    getAbsoluteUri,
-    getBaseUri,
-    getExtensionFromUri,
-    isBlobUri,
-    isCrossOriginUrl,
-    isDataUri,
-    loadAndExecuteScript,
-    objectToQuery,
-    queryToObject,
-    Request,
-    RequestErrorEvent,
-    RequestScheduler,
-    RequestState,
-    RuntimeError,
-    TrustedServers
-) {
-    "use strict";
+import Uri from '../ThirdParty/Uri.js';
+import when from '../ThirdParty/when.js';
+import appendForwardSlash from './appendForwardSlash.js';
+import Check from './Check.js';
+import clone from './clone.js';
+import combine from './combine.js';
+import defaultValue from './defaultValue.js';
+import defined from './defined.js';
+import defineProperties from './defineProperties.js';
+import DeveloperError from './DeveloperError.js';
+import freezeObject from './freezeObject.js';
+import getAbsoluteUri from './getAbsoluteUri.js';
+import getBaseUri from './getBaseUri.js';
+import getExtensionFromUri from './getExtensionFromUri.js';
+import isBlobUri from './isBlobUri.js';
+import isCrossOriginUrl from './isCrossOriginUrl.js';
+import isDataUri from './isDataUri.js';
+import loadAndExecuteScript from './loadAndExecuteScript.js';
+import objectToQuery from './objectToQuery.js';
+import queryToObject from './queryToObject.js';
+import Request from './Request.js';
+import RequestErrorEvent from './RequestErrorEvent.js';
+import RequestScheduler from './RequestScheduler.js';
+import RequestState from './RequestState.js';
+import RuntimeError from './RuntimeError.js';
+import TrustedServers from './TrustedServers.js';
 
     var xhrBlobSupported = (function() {
         try {
             var xhr = new XMLHttpRequest();
-            xhr.open("GET", "#", true);
-            xhr.responseType = "blob";
-            return xhr.responseType === "blob";
+            xhr.open('GET', '#', true);
+            xhr.responseType = 'blob';
+            return xhr.responseType === 'blob';
         } catch (e) {
             return false;
         }
@@ -84,7 +54,7 @@ define([
 
         var query;
         // Special case we run into where the querystring is just a string, not key/value pairs
-        if (queryString.indexOf("=") === -1) {
+        if (queryString.indexOf('=') === -1) {
             var result = {};
             result[queryString] = undefined;
             query = result;
@@ -155,7 +125,7 @@ define([
             request.state === RequestState.ISSUED ||
             request.state === RequestState.ACTIVE
         ) {
-            throw new RuntimeError("The Resource is already being fetched.");
+            throw new RuntimeError('The Resource is already being fetched.');
         }
 
         request.state = RequestState.UNISSUED;
@@ -294,14 +264,14 @@ define([
      */
     function Resource(options) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);
-        if (typeof options === "string") {
+        if (typeof options === 'string') {
             options = {
                 url: options
             };
         }
 
         //>>includeStart('debug', pragmas.debug);
-        Check.typeOf.string("options.url", options.url);
+        Check.typeOf.string('options.url', options.url);
         //>>includeEnd('debug');
 
         this._url = undefined;
@@ -345,9 +315,9 @@ define([
         this._retryCount = 0;
 
         // True if the URL contains {placeholders}. We need to take care to avoid turning these into %7Bplaceholders%7D.
-        var open = options.url.indexOf("%7B");
+        var open = options.url.indexOf('%7B');
         this._containsPlaceholders = !(
-            open >= 0 && open < options.url.indexOf("%7D")
+            open >= 0 && open < options.url.indexOf('%7D')
         );
 
         var uri = new Uri(options.url);
@@ -379,7 +349,7 @@ define([
             });
         }
 
-        if (typeof resource !== "string") {
+        if (typeof resource !== 'string') {
             return resource;
         }
 
@@ -404,21 +374,21 @@ define([
             return supportsImageBitmapOptionsPromise;
         }
 
-        if (typeof createImageBitmap !== "function") {
+        if (typeof createImageBitmap !== 'function') {
             supportsImageBitmapOptionsPromise = when.resolve(false);
             return supportsImageBitmapOptionsPromise;
         }
 
         var imageDataUri =
-            "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4////fwAJ+wP9CNHoHgAAAABJRU5ErkJggg==";
+            'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQImWP4////fwAJ+wP9CNHoHgAAAABJRU5ErkJggg==';
 
         supportsImageBitmapOptionsPromise = Resource.fetchBlob({
             url: imageDataUri
         })
             .then(function(blob) {
                 return createImageBitmap(blob, {
-                    imageOrientation: "flipY",
-                    premultiplyAlpha: "none"
+                    imageOrientation: 'flipY',
+                    premultiplyAlpha: 'none'
                 });
             })
             .then(function(imageBitmap) {
@@ -584,7 +554,7 @@ define([
         var url = uri.toString();
 
         if (this._containsPlaceholders) {
-            url = url.replace(/%7B/g, "{").replace(/%7D/g, "}");
+            url = url.replace(/%7B/g, '{').replace(/%7D/g, '}');
         }
 
         var templateValues = this._templateValues;
@@ -736,7 +706,7 @@ define([
     Resource.prototype.retryOnError = function(error) {
         var retryCallback = this.retryCallback;
         if (
-            typeof retryCallback !== "function" ||
+            typeof retryCallback !== 'function' ||
             this._retryCount >= this.retryAttempts
         ) {
             return when(false);
@@ -817,7 +787,7 @@ define([
      */
     Resource.prototype.fetchArrayBuffer = function() {
         return this.fetch({
-            responseType: "arraybuffer"
+            responseType: 'arraybuffer'
         });
     };
 
@@ -861,7 +831,7 @@ define([
      */
     Resource.prototype.fetchBlob = function() {
         return this.fetch({
-            responseType: "blob"
+            responseType: 'blob'
         });
     };
 
@@ -1120,7 +1090,7 @@ define([
      */
     Resource.prototype.fetchText = function() {
         return this.fetch({
-            responseType: "text"
+            responseType: 'text'
         });
     };
 
@@ -1167,9 +1137,9 @@ define([
      */
     Resource.prototype.fetchJson = function() {
         var promise = this.fetch({
-            responseType: "text",
+            responseType: 'text',
             headers: {
-                Accept: "application/json,*/*;q=0.01"
+                Accept: 'application/json,*/*;q=0.01'
             }
         });
 
@@ -1229,8 +1199,8 @@ define([
      */
     Resource.prototype.fetchXML = function() {
         return this.fetch({
-            responseType: "document",
-            overrideMimeType: "text/xml"
+            responseType: 'document',
+            overrideMimeType: 'text/xml'
         });
     };
 
@@ -1271,7 +1241,7 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     Resource.prototype.fetchJsonp = function(callbackParameterName) {
-        callbackParameterName = defaultValue(callbackParameterName, "callback");
+        callbackParameterName = defaultValue(callbackParameterName, 'callback');
 
         checkAndResetRequest(this.request);
 
@@ -1279,7 +1249,7 @@ define([
         var functionName;
         do {
             functionName =
-                "loadJsonp" +
+                'loadJsonp' +
                 Math.random()
                     .toString()
                     .substring(2, 8);
@@ -1400,7 +1370,7 @@ define([
      */
     Resource.prototype.fetchXHR = function(options) {
         options = defaultClone(options, {});
-        options.method = "GET";
+        options.method = 'GET';
 
         return this._makeRequest(options);
     };
@@ -1526,34 +1496,34 @@ define([
     }
 
     function decodeDataUri(dataUriRegexResult, responseType) {
-        responseType = defaultValue(responseType, "");
+        responseType = defaultValue(responseType, '');
         var mimeType = dataUriRegexResult[1];
         var isBase64 = !!dataUriRegexResult[2];
         var data = dataUriRegexResult[3];
 
         switch (responseType) {
-            case "":
-            case "text":
+            case '':
+            case 'text':
                 return decodeDataUriText(isBase64, data);
-            case "arraybuffer":
+            case 'arraybuffer':
                 return decodeDataUriArrayBuffer(isBase64, data);
-            case "blob":
+            case 'blob':
                 var buffer = decodeDataUriArrayBuffer(isBase64, data);
                 return new Blob([buffer], {
                     type: mimeType
                 });
-            case "document":
+            case 'document':
                 var parser = new DOMParser();
                 return parser.parseFromString(
                     decodeDataUriText(isBase64, data),
                     mimeType
                 );
-            case "json":
+            case 'json':
                 return JSON.parse(decodeDataUriText(isBase64, data));
             default:
                 //>>includeStart('debug', pragmas.debug);
                 throw new DeveloperError(
-                    "Unhandled responseType: " + responseType
+                    'Unhandled responseType: ' + responseType
                 );
             //>>includeEnd('debug');
         }
@@ -1589,7 +1559,7 @@ define([
      */
     Resource.prototype.fetch = function(options) {
         options = defaultClone(options, {});
-        options.method = "GET";
+        options.method = 'GET';
 
         return this._makeRequest(options);
     };
@@ -1652,7 +1622,7 @@ define([
      */
     Resource.prototype.delete = function(options) {
         options = defaultClone(options, {});
-        options.method = "DELETE";
+        options.method = 'DELETE';
 
         return this._makeRequest(options);
     };
@@ -1717,7 +1687,7 @@ define([
      */
     Resource.prototype.head = function(options) {
         options = defaultClone(options, {});
-        options.method = "HEAD";
+        options.method = 'HEAD';
 
         return this._makeRequest(options);
     };
@@ -1780,7 +1750,7 @@ define([
      */
     Resource.prototype.options = function(options) {
         options = defaultClone(options, {});
-        options.method = "OPTIONS";
+        options.method = 'OPTIONS';
 
         return this._makeRequest(options);
     };
@@ -1844,10 +1814,10 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     Resource.prototype.post = function(data, options) {
-        Check.defined("data", data);
+        Check.defined('data', data);
 
         options = defaultClone(options, {});
-        options.method = "POST";
+        options.method = 'POST';
         options.data = data;
 
         return this._makeRequest(options);
@@ -1912,10 +1882,10 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     Resource.prototype.put = function(data, options) {
-        Check.defined("data", data);
+        Check.defined('data', data);
 
         options = defaultClone(options, {});
-        options.method = "PUT";
+        options.method = 'PUT';
         options.data = data;
 
         return this._makeRequest(options);
@@ -1980,10 +1950,10 @@ define([
      * @see {@link http://wiki.commonjs.org/wiki/Promises/A|CommonJS Promises/A}
      */
     Resource.prototype.patch = function(data, options) {
-        Check.defined("data", data);
+        Check.defined('data', data);
 
         options = defaultClone(options, {});
-        options.method = "PATCH";
+        options.method = 'PATCH';
         options.data = data;
 
         return this._makeRequest(options);
@@ -2039,9 +2009,9 @@ define([
 
         if (crossOrigin) {
             if (TrustedServers.contains(url)) {
-                image.crossOrigin = "use-credentials";
+                image.crossOrigin = 'use-credentials';
             } else {
-                image.crossOrigin = "";
+                image.crossOrigin = '';
             }
         }
 
@@ -2110,22 +2080,22 @@ define([
      * @private
      */
     Resource.createImageBitmapFromBlob = function(blob, options) {
-        Check.defined("options", options);
-        Check.typeOf.bool("options.flipY", options.flipY);
-        Check.typeOf.bool("options.premultiplyAlpha", options.premultiplyAlpha);
+        Check.defined('options', options);
+        Check.typeOf.bool('options.flipY', options.flipY);
+        Check.typeOf.bool('options.premultiplyAlpha', options.premultiplyAlpha);
 
         return createImageBitmap(blob, {
-            imageOrientation: options.flipY ? "flipY" : "none",
-            premultiplyAlpha: options.premultiplyAlpha ? "premultiply" : "none"
+            imageOrientation: options.flipY ? 'flipY' : 'none',
+            premultiplyAlpha: options.premultiplyAlpha ? 'premultiply' : 'none'
         });
     };
 
     function decodeResponse(loadWithHttpResponse, responseType) {
         switch (responseType) {
-            case "text":
-                return loadWithHttpResponse.toString("utf8");
-            case "json":
-                return JSON.parse(loadWithHttpResponse.toString("utf8"));
+            case 'text':
+                return loadWithHttpResponse.toString('utf8');
+            case 'json':
+                return JSON.parse(loadWithHttpResponse.toString('utf8'));
             default:
                 return new Uint8Array(loadWithHttpResponse).buffer;
         }
@@ -2145,12 +2115,12 @@ define([
         var nodeRequire = global.require; // eslint-disable-line
 
         // Note: only the 'json' and 'text' responseTypes transforms the loaded buffer
-        var URL = nodeRequire("url").parse(url);
+        var URL = nodeRequire('url').parse(url);
         var http =
-            URL.protocol === "https:"
-                ? nodeRequire("https")
-                : nodeRequire("http");
-        var zlib = nodeRequire("zlib");
+            URL.protocol === 'https:'
+                ? nodeRequire('https')
+                : nodeRequire('http');
+        var zlib = nodeRequire('zlib');
         var options = {
             protocol: URL.protocol,
             hostname: URL.hostname,
@@ -2162,7 +2132,7 @@ define([
         };
 
         http.request(options)
-            .on("response", function(res) {
+            .on('response', function(res) {
                 if (res.statusCode < 200 || res.statusCode >= 300) {
                     deferred.reject(
                         new RequestErrorEvent(res.statusCode, res, res.headers)
@@ -2171,18 +2141,18 @@ define([
                 }
 
                 var chunkArray = [];
-                res.on("data", function(chunk) {
+                res.on('data', function(chunk) {
                     chunkArray.push(chunk);
                 });
 
-                res.on("end", function() {
+                res.on('end', function() {
                     var result = Buffer.concat(chunkArray); // eslint-disable-line
-                    if (res.headers["content-encoding"] === "gzip") {
+                    if (res.headers['content-encoding'] === 'gzip') {
                         zlib.gunzip(result, function(error, resultUnzipped) {
                             if (error) {
                                 deferred.reject(
                                     new RuntimeError(
-                                        "Error decompressing response."
+                                        'Error decompressing response.'
                                     )
                                 );
                             } else {
@@ -2196,13 +2166,13 @@ define([
                     }
                 });
             })
-            .on("error", function(e) {
+            .on('error', function(e) {
                 deferred.reject(new RequestErrorEvent());
             })
             .end();
     }
 
-    var noXMLHttpRequest = typeof XMLHttpRequest === "undefined";
+    var noXMLHttpRequest = typeof XMLHttpRequest === 'undefined';
     Resource._Implementations.loadWithXhr = function(
         url,
         responseType,
@@ -2263,11 +2233,11 @@ define([
 
         // While non-standard, file protocol always returns a status of 0 on success
         var localFile = false;
-        if (typeof url === "string") {
+        if (typeof url === 'string') {
             localFile =
-                url.indexOf("file://") === 0 ||
-                (typeof window !== "undefined" &&
-                    window.location.origin === "file://");
+                url.indexOf('file://') === 0 ||
+                (typeof window !== 'undefined' &&
+                    window.location.origin === 'file://');
         }
 
         xhr.onload = function() {
@@ -2286,7 +2256,7 @@ define([
             }
 
             var response =
-                typeof xhr.response !== "undefined"
+                typeof xhr.response !== 'undefined'
                     ? xhr.response
                     : xhr.responseText;
             var browserResponseType = xhr.responseType;
@@ -2298,15 +2268,15 @@ define([
 
                 var responseHeaders = {};
                 splitHeaders.forEach(function(line) {
-                    var parts = line.split(": ");
+                    var parts = line.split(': ');
                     var header = parts.shift();
-                    responseHeaders[header] = parts.join(": ");
+                    responseHeaders[header] = parts.join(': ');
                 });
 
                 return responseHeaders;
             };
 
-            if (method === "HEAD" || method === "OPTIONS") {
+            if (method === 'HEAD' || method === 'OPTIONS') {
                 deferred.resolve(
                     xhrResponseHeadersToObject(
                         xhr.getAllResponseHeaders()
@@ -2319,9 +2289,9 @@ define([
             if (returnType !== undefined) {
                 var returnValue = {};
 
-                if (returnType === "RAWXHR") {
+                if (returnType === 'RAWXHR') {
                     returnValue = xhr;
-                } else if (returnType === "XHRJSONHEADERS") {
+                } else if (returnType === 'XHRJSONHEADERS') {
                     var responseHeaders = xhrResponseHeadersToObject(
                         xhr.getAllResponseHeaders()
                     );
@@ -2331,12 +2301,12 @@ define([
                         status: xhr.status,
                         headers: responseHeaders,
                         response: response
-                    }
+                    };
                 }
                 // else if anyone wants to add more
                 else {
                     deferred.reject(
-                        new RuntimeError("Service Misconfiguration for " + url.toString())
+                        new RuntimeError('Service Misconfiguration for ' + url.toString())
                     );
                     return;
                 }
@@ -2357,8 +2327,8 @@ define([
             ) {
                 deferred.resolve(response);
             } else if (
-                responseType === "json" &&
-                typeof response === "string"
+                responseType === 'json' &&
+                typeof response === 'string'
             ) {
                 try {
                     deferred.resolve(JSON.parse(response));
@@ -2366,35 +2336,35 @@ define([
                     deferred.reject(e);
                 }
             } else if (
-                responseType === "document" &&
-                typeof response === "string"
+                responseType === 'document' &&
+                typeof response === 'string'
             ) {
                 try {
                     var parser = new DOMParser();
                     deferred.resolve(
-                        parser.parseFromString(response, "text/xml")
+                        parser.parseFromString(response, 'text/xml')
                     );
                 } catch (e) {
                     deferred.reject(e);
                 }
             } else if (
-                (browserResponseType === "" ||
-                    browserResponseType === "document") &&
+                (browserResponseType === '' ||
+                    browserResponseType === 'document') &&
                 defined(xhr.responseXML) &&
                 xhr.responseXML.hasChildNodes()
             ) {
                 deferred.resolve(xhr.responseXML);
             } else if (
-                (browserResponseType === "" ||
-                    browserResponseType === "text") &&
+                (browserResponseType === '' ||
+                    browserResponseType === 'text') &&
                 defined(xhr.responseText)
             ) {
                 deferred.resolve(xhr.responseText);
-            } else if (typeof response === "string") {
+            } else if (typeof response === 'string') {
                 deferred.resolve(response);
             } else {
                 deferred.reject(
-                    new RuntimeError("Invalid XMLHttpRequest response type.")
+                    new RuntimeError('Invalid XMLHttpRequest response type.')
                 );
             }
         };
@@ -2446,9 +2416,9 @@ define([
     Resource.DEFAULT = freezeObject(
         new Resource({
             url:
-                typeof document === "undefined"
-                    ? ""
-                    : document.location.href.split("?")[0]
+                typeof document === 'undefined'
+                    ? ''
+                    : document.location.href.split('?')[0]
         })
     );
 
@@ -2460,6 +2430,4 @@ define([
      * @param {Error} [error] The error that occurred during the loading of the resource.
      * @returns {Boolean|Promise<Boolean>} If true or a promise that resolved to true, the resource will be retried. Otherwise the failure will be returned.
      */
-
-    return Resource;
-});
+export default Resource;

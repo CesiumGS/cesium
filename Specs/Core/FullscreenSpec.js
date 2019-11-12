@@ -1,10 +1,7 @@
-defineSuite([
-        'Core/Fullscreen',
-        'Core/FeatureDetection'
-    ], function(
-        Fullscreen,
-        FeatureDetection) {
-    'use strict';
+import { FeatureDetection } from '../../Source/Cesium.js';
+import { Fullscreen } from '../../Source/Cesium.js';
+
+describe('Core/Fullscreen', function() {
 
     it('can tell if fullscreen is supported', function() {
         // just make sure the function runs, the test can't expect a particular result.

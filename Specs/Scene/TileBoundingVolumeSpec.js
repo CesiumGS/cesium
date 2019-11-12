@@ -1,8 +1,6 @@
-defineSuite([
-        'Scene/TileBoundingVolume'
-    ], function(
-        TileBoundingVolume) {
-    'use strict';
+import { TileBoundingVolume } from '../../Source/Cesium.js';
+
+describe('Scene/TileBoundingVolume', function() {
 
     it('throws', function() {
         var boundingVolume = new TileBoundingVolume();

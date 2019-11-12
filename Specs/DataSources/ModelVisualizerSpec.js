@@ -1,54 +1,29 @@
-defineSuite([
-        'DataSources/ModelVisualizer',
-        'Core/BoundingSphere',
-        'Core/Cartesian2',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/defined',
-        'Core/DistanceDisplayCondition',
-        'Core/JulianDate',
-        'Core/Math',
-        'Core/Matrix4',
-        'Core/Quaternion',
-        'Core/Resource',
-        'Core/Transforms',
-        'DataSources/BoundingSphereState',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EntityCollection',
-        'DataSources/ModelGraphics',
-        'DataSources/NodeTransformationProperty',
-        'Scene/ClippingPlane',
-        'Scene/ClippingPlaneCollection',
-        'Scene/Globe',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        ModelVisualizer,
-        BoundingSphere,
-        Cartesian2,
-        Cartesian3,
-        Color,
-        defined,
-        DistanceDisplayCondition,
-        JulianDate,
-        CesiumMath,
-        Matrix4,
-        Quaternion,
-        Resource,
-        Transforms,
-        BoundingSphereState,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EntityCollection,
-        ModelGraphics,
-        NodeTransformationProperty,
-        ClippingPlane,
-        ClippingPlaneCollection,
-        Globe,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian2 } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { defined } from '../../Source/Cesium.js';
+import { DistanceDisplayCondition } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Matrix4 } from '../../Source/Cesium.js';
+import { Quaternion } from '../../Source/Cesium.js';
+import { Resource } from '../../Source/Cesium.js';
+import { Transforms } from '../../Source/Cesium.js';
+import { BoundingSphereState } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { ModelGraphics } from '../../Source/Cesium.js';
+import { ModelVisualizer } from '../../Source/Cesium.js';
+import { NodeTransformationProperty } from '../../Source/Cesium.js';
+import { ClippingPlane } from '../../Source/Cesium.js';
+import { ClippingPlaneCollection } from '../../Source/Cesium.js';
+import { Globe } from '../../Source/Cesium.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/ModelVisualizer', function() {
 
     var boxUrl = './Data/Models/Box/CesiumBoxTest.gltf';
     var boxArticulationsUrl = './Data/Models/Box-Articulations/Box-Articulations.gltf';

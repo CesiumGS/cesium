@@ -1,40 +1,20 @@
-define([
-        '../../Core/IonGeocoderService',
-        '../../Core/CartographicGeocoderService',
-        '../../Core/defaultValue',
-        '../../Core/defined',
-        '../../Core/defineProperties',
-        '../../Core/DeveloperError',
-        '../../Core/Event',
-        '../../Core/GeocodeType',
-        '../../Core/Math',
-        '../../Core/Matrix4',
-        '../../Core/Rectangle',
-        '../../Core/sampleTerrainMostDetailed',
-        '../../Scene/computeFlyToLocationForRectangle',
-        '../../ThirdParty/knockout',
-        '../../ThirdParty/when',
-        '../createCommand',
-        '../getElement'
-    ], function(
-        IonGeocoderService,
-        CartographicGeocoderService,
-        defaultValue,
-        defined,
-        defineProperties,
-        DeveloperError,
-        Event,
-        GeocodeType,
-        CesiumMath,
-        Matrix4,
-        Rectangle,
-        sampleTerrainMostDetailed,
-        computeFlyToLocationForRectangle,
-        knockout,
-        when,
-        createCommand,
-        getElement) {
-    'use strict';
+import CartographicGeocoderService from '../../Core/CartographicGeocoderService.js';
+import defaultValue from '../../Core/defaultValue.js';
+import defined from '../../Core/defined.js';
+import defineProperties from '../../Core/defineProperties.js';
+import DeveloperError from '../../Core/DeveloperError.js';
+import Event from '../../Core/Event.js';
+import GeocodeType from '../../Core/GeocodeType.js';
+import IonGeocoderService from '../../Core/IonGeocoderService.js';
+import CesiumMath from '../../Core/Math.js';
+import Matrix4 from '../../Core/Matrix4.js';
+import Rectangle from '../../Core/Rectangle.js';
+import sampleTerrainMostDetailed from '../../Core/sampleTerrainMostDetailed.js';
+import computeFlyToLocationForRectangle from '../../Scene/computeFlyToLocationForRectangle.js';
+import knockout from '../../ThirdParty/knockout.js';
+import when from '../../ThirdParty/when.js';
+import createCommand from '../createCommand.js';
+import getElement from '../getElement.js';
 
     // The height we use if geocoding to a specific point instead of an rectangle.
     var DEFAULT_HEIGHT = 1000;
@@ -535,6 +515,4 @@ define([
     //exposed for testing
     GeocoderViewModel._updateSearchSuggestions = updateSearchSuggestions;
     GeocoderViewModel._adjustSuggestionsScroll = adjustSuggestionsScroll;
-
-    return GeocoderViewModel;
-});
+export default GeocoderViewModel;

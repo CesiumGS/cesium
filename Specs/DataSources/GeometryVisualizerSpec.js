@@ -1,66 +1,30 @@
-defineSuite([
-        'DataSources/GeometryVisualizer',
-        'Core/ApproximateTerrainHeights',
-        'Core/BoundingSphere',
-        'Core/Cartesian3',
-        'Core/Color',
-        'Core/ColorGeometryInstanceAttribute',
-        'Core/JulianDate',
-        'Core/ShowGeometryInstanceAttribute',
-        'DataSources/BoundingSphereState',
-        'DataSources/CallbackProperty',
-        'DataSources/ColorMaterialProperty',
-        'DataSources/ConstantPositionProperty',
-        'DataSources/ConstantProperty',
-        'DataSources/EllipseGeometryUpdater',
-        'DataSources/EllipseGraphics',
-        'DataSources/Entity',
-        'DataSources/EntityCollection',
-        'DataSources/GridMaterialProperty',
-        'DataSources/SampledProperty',
-        'DataSources/StaticGeometryColorBatch',
-        'DataSources/StaticGeometryPerMaterialBatch',
-        'DataSources/StaticOutlineGeometryBatch',
-        'Scene/ClassificationType',
-        'Scene/GroundPrimitive',
-        'Scene/MaterialAppearance',
-        'Scene/PerInstanceColorAppearance',
-        'Scene/ShadowMode',
-        'Specs/createDynamicProperty',
-        'Specs/createScene',
-        'Specs/pollToPromise'
-    ], function(
-        GeometryVisualizer,
-        ApproximateTerrainHeights,
-        BoundingSphere,
-        Cartesian3,
-        Color,
-        ColorGeometryInstanceAttribute,
-        JulianDate,
-        ShowGeometryInstanceAttribute,
-        BoundingSphereState,
-        CallbackProperty,
-        ColorMaterialProperty,
-        ConstantPositionProperty,
-        ConstantProperty,
-        EllipseGeometryUpdater,
-        EllipseGraphics,
-        Entity,
-        EntityCollection,
-        GridMaterialProperty,
-        SampledProperty,
-        StaticGeometryColorBatch,
-        StaticGeometryPerMaterialBatch,
-        StaticOutlineGeometryBatch,
-        ClassificationType,
-        GroundPrimitive,
-        MaterialAppearance,
-        PerInstanceColorAppearance,
-        ShadowMode,
-        createDynamicProperty,
-        createScene,
-        pollToPromise) {
-    'use strict';
+import { ApproximateTerrainHeights } from '../../Source/Cesium.js';
+import { BoundingSphere } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { Color } from '../../Source/Cesium.js';
+import { ColorGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { JulianDate } from '../../Source/Cesium.js';
+import { ShowGeometryInstanceAttribute } from '../../Source/Cesium.js';
+import { BoundingSphereState } from '../../Source/Cesium.js';
+import { ColorMaterialProperty } from '../../Source/Cesium.js';
+import { ConstantPositionProperty } from '../../Source/Cesium.js';
+import { ConstantProperty } from '../../Source/Cesium.js';
+import { EllipseGraphics } from '../../Source/Cesium.js';
+import { Entity } from '../../Source/Cesium.js';
+import { EntityCollection } from '../../Source/Cesium.js';
+import { GeometryVisualizer } from '../../Source/Cesium.js';
+import { GridMaterialProperty } from '../../Source/Cesium.js';
+import { SampledProperty } from '../../Source/Cesium.js';
+import { ClassificationType } from '../../Source/Cesium.js';
+import { GroundPrimitive } from '../../Source/Cesium.js';
+import { MaterialAppearance } from '../../Source/Cesium.js';
+import { PerInstanceColorAppearance } from '../../Source/Cesium.js';
+import { ShadowMode } from '../../Source/Cesium.js';
+import createDynamicProperty from '../createDynamicProperty.js';
+import createScene from '../createScene.js';
+import pollToPromise from '../pollToPromise.js';
+
+describe('DataSources/GeometryVisualizer', function() {
 
     var time = JulianDate.now();
 

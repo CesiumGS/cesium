@@ -1,24 +1,14 @@
-defineSuite([
-        'Core/EllipseGeometry',
-        'Core/arrayFill',
-        'Core/Cartesian3',
-        'Core/Ellipsoid',
-        'Core/GeometryOffsetAttribute',
-        'Core/Math',
-        'Core/Rectangle',
-        'Core/VertexFormat',
-        'Specs/createPackableSpecs'
-    ], function(
-        EllipseGeometry,
-        arrayFill,
-        Cartesian3,
-        Ellipsoid,
-        GeometryOffsetAttribute,
-        CesiumMath,
-        Rectangle,
-        VertexFormat,
-        createPackableSpecs) {
-    'use strict';
+import { arrayFill } from '../../Source/Cesium.js';
+import { Cartesian3 } from '../../Source/Cesium.js';
+import { EllipseGeometry } from '../../Source/Cesium.js';
+import { Ellipsoid } from '../../Source/Cesium.js';
+import { GeometryOffsetAttribute } from '../../Source/Cesium.js';
+import { Math as CesiumMath } from '../../Source/Cesium.js';
+import { Rectangle } from '../../Source/Cesium.js';
+import { VertexFormat } from '../../Source/Cesium.js';
+import createPackableSpecs from '../createPackableSpecs.js';
+
+describe('Core/EllipseGeometry', function() {
 
     it('throws without a center', function() {
         expect(function() {

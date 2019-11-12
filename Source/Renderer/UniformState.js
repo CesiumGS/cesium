@@ -1,42 +1,20 @@
-define([
-        '../Core/BoundingRectangle',
-        '../Core/Cartesian2',
-        '../Core/Cartesian3',
-        '../Core/Cartesian4',
-        '../Core/Cartographic',
-        '../Core/Color',
-        '../Core/defaultValue',
-        '../Core/defined',
-        '../Core/defineProperties',
-        '../Core/EncodedCartesian3',
-        '../Core/Math',
-        '../Core/Matrix3',
-        '../Core/Matrix4',
-        '../Core/OrthographicFrustum',
-        '../Core/Simon1994PlanetaryPositions',
-        '../Core/Transforms',
-        '../Scene/SceneMode',
-        './Sampler'
-    ], function(
-        BoundingRectangle,
-        Cartesian2,
-        Cartesian3,
-        Cartesian4,
-        Cartographic,
-        Color,
-        defaultValue,
-        defined,
-        defineProperties,
-        EncodedCartesian3,
-        CesiumMath,
-        Matrix3,
-        Matrix4,
-        OrthographicFrustum,
-        Simon1994PlanetaryPositions,
-        Transforms,
-        SceneMode,
-        Sampler) {
-    'use strict';
+import BoundingRectangle from '../Core/BoundingRectangle.js';
+import Cartesian2 from '../Core/Cartesian2.js';
+import Cartesian3 from '../Core/Cartesian3.js';
+import Cartesian4 from '../Core/Cartesian4.js';
+import Cartographic from '../Core/Cartographic.js';
+import Color from '../Core/Color.js';
+import defaultValue from '../Core/defaultValue.js';
+import defined from '../Core/defined.js';
+import defineProperties from '../Core/defineProperties.js';
+import EncodedCartesian3 from '../Core/EncodedCartesian3.js';
+import CesiumMath from '../Core/Math.js';
+import Matrix3 from '../Core/Matrix3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import OrthographicFrustum from '../Core/OrthographicFrustum.js';
+import Simon1994PlanetaryPositions from '../Core/Simon1994PlanetaryPositions.js';
+import Transforms from '../Core/Transforms.js';
+import SceneMode from '../Scene/SceneMode.js';
 
     /**
      * @private
@@ -158,7 +136,7 @@ define([
         this._cameraUp = new Cartesian3();
         this._frustum2DWidth = 0.0;
         this._eyeHeight2D = new Cartesian2();
-        this._resolutionScale = 1.0;
+        this._pixelRatio = 1.0;
         this._orthographicIn3D = false;
         this._backgroundColor = new Color();
 
@@ -297,7 +275,7 @@ define([
                 if (this._inverseTransposeModelDirty) {
                     this._inverseTransposeModelDirty = false;
 
-                    Matrix4.getRotation(this.inverseModel, m);
+                    Matrix4.getMatrix3(this.inverseModel, m);
                     Matrix3.transpose(m, m);
                 }
 
@@ -813,9 +791,9 @@ define([
          * @memberof UniformState.prototype
          * @type {Number}
          */
-        resolutionScale : {
+        pixelRatio : {
             get : function() {
-                return this._resolutionScale;
+                return this._pixelRatio;
             }
         },
 
@@ -979,7 +957,7 @@ define([
 
     function setView(uniformState, matrix) {
         Matrix4.clone(matrix, uniformState._view);
-        Matrix4.getRotation(matrix, uniformState._viewRotation);
+        Matrix4.getMatrix3(matrix, uniformState._viewRotation);
 
         uniformState._view3DDirty = true;
         uniformState._inverseView3DDirty = true;
@@ -1001,7 +979,7 @@ define([
 
     function setInverseView(uniformState, matrix) {
         Matrix4.clone(matrix, uniformState._inverseView);
-        Matrix4.getRotation(matrix, uniformState._inverseViewRotation);
+        Matrix4.getMatrix3(matrix, uniformState._inverseViewRotation);
     }
 
     function setProjection(uniformState, matrix) {
@@ -1118,9 +1096,7 @@ define([
     UniformState.prototype.update = function(frameState) {
         this._mode = frameState.mode;
         this._mapProjection = frameState.mapProjection;
-
-        var canvas = frameState.context._canvas;
-        this._resolutionScale = canvas.width / canvas.clientWidth;
+        this._pixelRatio = frameState.pixelRatio;
 
         var camera = frameState.camera;
         this.updateCamera(camera);
@@ -1314,7 +1290,8 @@ define([
             uniformState._normalDirty = false;
 
             var m = uniformState._normal;
-            Matrix4.getRotation(uniformState.inverseModelView, m);
+            Matrix4.getMatrix3(uniformState.inverseModelView, m);
+            Matrix3.getRotation(m, m);
             Matrix3.transpose(m, m);
         }
     }
@@ -1324,7 +1301,8 @@ define([
             uniformState._normal3DDirty = false;
 
             var m = uniformState._normal3D;
-            Matrix4.getRotation(uniformState.inverseModelView3D, m);
+            Matrix4.getMatrix3(uniformState.inverseModelView3D, m);
+            Matrix3.getRotation(m, m);
             Matrix3.transpose(m, m);
         }
     }
@@ -1332,16 +1310,16 @@ define([
     function cleanInverseNormal(uniformState) {
         if (uniformState._inverseNormalDirty) {
             uniformState._inverseNormalDirty = false;
-
-            Matrix4.getRotation(uniformState.inverseModelView, uniformState._inverseNormal);
+            Matrix4.getMatrix3(uniformState.inverseModelView, uniformState._inverseNormal);
+            Matrix3.getRotation(uniformState._inverseNormal, uniformState._inverseNormal);
         }
     }
 
     function cleanInverseNormal3D(uniformState) {
         if (uniformState._inverseNormal3DDirty) {
             uniformState._inverseNormal3DDirty = false;
-
-            Matrix4.getRotation(uniformState.inverseModelView3D, uniformState._inverseNormal3D);
+            Matrix4.getMatrix3(uniformState.inverseModelView3D, uniformState._inverseNormal3D);
+            Matrix3.getRotation(uniformState._inverseNormal3D, uniformState._inverseNormal3D);
         }
     }
 
@@ -1444,7 +1422,7 @@ define([
             } else {
                 view2Dto3D(that._cameraPosition, that._cameraDirection, that._cameraRight, that._cameraUp, that._frustum2DWidth, that._mode, that._mapProjection, that._view3D);
             }
-            Matrix4.getRotation(that._view3D, that._viewRotation3D);
+            Matrix4.getMatrix3(that._view3D, that._viewRotation3D);
             that._view3DDirty = false;
         }
     }
@@ -1452,10 +1430,8 @@ define([
     function updateInverseView3D(that){
         if (that._inverseView3DDirty) {
             Matrix4.inverseTransformation(that.view3D, that._inverseView3D);
-            Matrix4.getRotation(that._inverseView3D, that._inverseViewRotation3D);
+            Matrix4.getMatrix3(that._inverseView3D, that._inverseViewRotation3D);
             that._inverseView3DDirty = false;
         }
     }
-
-    return UniformState;
-});
+export default UniformState;

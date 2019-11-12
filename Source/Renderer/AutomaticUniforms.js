@@ -1,15 +1,6 @@
-define([
-        '../Core/Cartesian3',
-        '../Core/Math',
-        '../Core/Matrix4',
-        '../Core/WebGLConstants'
-    ], function(
-        Cartesian3,
-        CesiumMath,
-        Matrix4,
-        WebGLConstants) {
-    'use strict';
-    /*global WebGLRenderingContext*/
+import Cartesian3 from '../Core/Cartesian3.js';
+import Matrix4 from '../Core/Matrix4.js';
+import WebGLConstants from '../Core/WebGLConstants.js';
 
     var viewerPositionWCScratch = new Cartesian3();
 
@@ -17,11 +8,6 @@ define([
         this._size = options.size;
         this._datatype = options.datatype;
         this.getValue = options.getValue;
-    }
-
-    // this check must use typeof, not defined, because defined doesn't work with undeclared variables.
-    if (typeof WebGLRenderingContext === 'undefined') {
-        return {};
     }
 
     var datatypeToGlsl = {};
@@ -1319,7 +1305,7 @@ define([
         /**
          * An automatic GLSL uniform representing the high bits of the camera position in model
          * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
-         * as described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
+         * as described in {@link http://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
          *
          * @alias czm_encodedCameraPositionMCHigh
          * @namespace
@@ -1344,7 +1330,7 @@ define([
         /**
          * An automatic GLSL uniform representing the low bits of the camera position in model
          * coordinates.  This is used for GPU RTE to eliminate jittering artifacts when rendering
-         * as described in {@link http://blogs.agi.com/insight3d/index.php/2008/09/03/precisions-precisions/|Precisions, Precisions}.
+         * as described in {@linkhttp://help.agi.com/AGIComponents/html/BlogPrecisionsPrecisions.htm|Precisions, Precisions}.
          *
          * @alias czm_encodedCameraPositionMCLow
          * @namespace
@@ -1666,18 +1652,18 @@ define([
         /**
          * An automatic GLSL uniform representing the ratio of canvas coordinate space to canvas pixel space.
          *
-         * @alias czm_resolutionScale
+         * @alias czm_pixelRatio
          * @namespace
          * @glslUniform
          *
          * @example
-         * uniform float czm_resolutionScale;
+         * uniform float czm_pixelRatio;
          */
-        czm_resolutionScale : new AutomaticUniform({
+        czm_pixelRatio : new AutomaticUniform({
             size : 1,
             datatype : WebGLConstants.FLOAT,
             getValue : function(uniformState) {
-                return uniformState.resolutionScale;
+                return uniformState.pixelRatio;
             }
         }),
 
@@ -1793,6 +1779,4 @@ define([
             }
         })
     };
-
-    return AutomaticUniforms;
-});
+export default AutomaticUniforms;
