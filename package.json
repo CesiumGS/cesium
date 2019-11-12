@@ -36,7 +36,7 @@
   "module": "Source/Cesium.js",
   "type": "module",
   "dependencies": {
-    "dompurify": "^1.0.2",
+    "dompurify": "^2.0.7",
     "esm": "^3.2.25"
   },
   "devDependencies": {

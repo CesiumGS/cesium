@@ -994,7 +994,6 @@ import TrustedServers from './TrustedServers.js';
         var request = resource.request;
         request.url = resource.url;
         request.requestFunction = function() {
-            var url = resource.url;
             var crossOrigin = false;
 
             // data URIs can't have crossorigin set.
@@ -1003,7 +1002,7 @@ import TrustedServers from './TrustedServers.js';
             }
 
             var deferred = when.defer();
-            Resource._Implementations.createImage(url, crossOrigin, deferred, flipY, preferImageBitmap);
+            Resource._Implementations.createImage(request, crossOrigin, deferred, flipY, preferImageBitmap);
 
             return deferred.promise;
         };
@@ -2020,12 +2019,13 @@ import TrustedServers from './TrustedServers.js';
     }
 
     Resource._Implementations.createImage = function(
-        url,
+        request,
         crossOrigin,
         deferred,
         flipY,
         preferImageBitmap
     ) {
+        var url = request.url;
         // Passing an Image to createImageBitmap will force it to run on the main thread
         // since DOM elements don't exist on workers. We convert it to a blob so it's non-blocking.
         // See:
@@ -2039,11 +2039,27 @@ import TrustedServers from './TrustedServers.js';
                     loadImageElement(url, crossOrigin, deferred);
                     return;
                 }
+                var responseType = "blob";
+                var method = "GET";
+                var xhrDeferred = when.defer();
+                var xhr = Resource._Implementations.loadWithXhr(
+                    url,
+                    responseType,
+                    method,
+                    undefined,
+                    undefined,
+                    xhrDeferred,
+                    undefined,
+                    undefined,
+                    undefined
+                );
 
-                return Resource.fetchBlob({
-                    url: url
-                })
-                .then(function(blob) {
+                if (defined(xhr) && defined(xhr.abort)) {
+                    request.cancelFunction = function() {
+                        xhr.abort();
+                    };
+                }
+                return xhrDeferred.promise.then(function(blob) {
                     if (!defined(blob)) {
                         deferred.reject(new RuntimeError('Successfully retrieved ' + url + ' but it contained no content.'));
                         return;
