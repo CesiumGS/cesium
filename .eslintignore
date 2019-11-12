@@ -5,6 +5,7 @@ Documentation/**
 Source/Shaders/**
 Source/ThirdParty/**
 Source/Workers/**
+!Source/Workers/transferTypedArrayTest.js
 ThirdParty/**
 Tools/**
 Apps/Sandcastle/jsHintOptions.js

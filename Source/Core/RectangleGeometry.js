@@ -799,7 +799,7 @@ import VertexFormat from './VertexFormat.js';
      *
      * @see RectangleGeometry#createGeometry
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
      *
      * @example
      * // 1. create a rectangle

@@ -37,7 +37,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.classificationType=ClassificationType.BOTH] An enum Property specifying whether this ellipse will classify terrain, 3D Tiles, or both when on the ground.
      * @param {ConstantProperty} [options.zIndex=0] A property specifying the zIndex of the Ellipse.  Used for ordering ground geometry.  Only has an effect if the ellipse is constant and neither height or exturdedHeight are specified.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Circles and Ellipses.html|Cesium Sandcastle Circles and Ellipses Demo}
      */
     function EllipseGraphics(options) {
         this._definitionChanged = new Event();

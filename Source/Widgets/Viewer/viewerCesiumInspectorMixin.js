@@ -13,7 +13,7 @@ import CesiumInspector from '../CesiumInspector/CesiumInspector.js';
      *
      * @exception {DeveloperError} viewer is required.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Cesium%20Inspector.html|Cesium Sandcastle Cesium Inspector Demo}
      *
      * @example
      * var viewer = new Cesium.Viewer('cesiumContainer');

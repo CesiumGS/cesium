@@ -1127,7 +1127,7 @@ import knockout from '../../ThirdParty/knockout.js';
                     var length = settings.length;
                     for (var i = 0; i < length; ++i) {
                         var setting = settings[i];
-                        this[setting] = this[setting];
+                        this[setting] = this[setting]; // eslint-disable-line no-self-assign
                     }
 
                     // update view model with existing tileset settings

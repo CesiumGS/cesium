@@ -12,6 +12,7 @@ import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
 import GetFeatureInfoFormat from './GetFeatureInfoFormat.js';
 import isArray from '../Core/isArray.js';
 import CesiumMath from '../Core/Math.js';
+import isArray from '../Core/isArray.js';
 import Rectangle from '../Core/Rectangle.js';
 import Resource from '../Core/Resource.js';
 import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
@@ -64,7 +65,7 @@ import Uri from '../ThirdParty/Uri.js';
      * @param {GetFeatureInfoFormat[]} [options.getFeatureInfoFormats=WebMapTileServiceImageryProvider.DefaultGetFeatureInfoFormats] The formats
      *        in which to try WMTS GetFeatureInfo requests.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Web%20Map%20Tile%20Service%20with%20Time.html|Cesium Sandcastle Web Map Tile Service with Time Demo}
      *
      * @example
      * // Example 1. USGS shaded relief tiles (KVP)

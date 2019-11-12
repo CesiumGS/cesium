@@ -46,8 +46,8 @@ import SceneMode from './SceneMode.js';
      *
      * @param {Scene} scene The scene.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="https://cesiumjs.org/2013/02/13/Cesium-Camera-Tutorial/|Camera Tutorial}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera.html|Cesium Sandcastle Camera Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Camera%20Tutorial.html">Sandcastle Example</a> from the <a href="https://cesium.com/docs/tutorials/camera/|Camera Tutorial}
      *
      * @example
      * // Create a camera looking down the negative z-axis, positioned at the origin,
@@ -2652,7 +2652,7 @@ import SceneMode from './SceneMode.js';
         //>>includeEnd('debug');
 
         var distance = this.distanceToBoundingSphere(boundingSphere);
-        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scratchPixelSize);
+        var pixelSize = this.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, this._scene.pixelRatio, scratchPixelSize);
         return Math.max(pixelSize.x, pixelSize.y);
     };
 

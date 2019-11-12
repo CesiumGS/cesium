@@ -76,7 +76,7 @@ for (var name in viewModel) {
 }
 
 if (!Cesium.PostProcessStageLibrary.isSilhouetteSupported(viewer.scene)) {
-    console.log('This browser does not support the silhouette post process.');
+    window.alert('This browser does not support the silhouette post process.');
 }
 
 var stages = viewer.scene.postProcessStages;

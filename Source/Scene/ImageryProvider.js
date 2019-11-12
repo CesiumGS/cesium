@@ -28,8 +28,8 @@ import Resource from '../Core/Resource.js';
      * @see WebMapServiceImageryProvider
      * @see WebMapTileServiceImageryProvider
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers.html|Cesium Sandcastle Imagery Layers Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     function ImageryProvider() {
         /**

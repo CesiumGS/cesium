@@ -15,8 +15,8 @@ import ImageryLayer from './ImageryLayer.js';
      * @alias ImageryLayerCollection
      * @constructor
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Adjustment.html|Cesium Sandcastle Imagery Adjustment Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Imagery%20Layers%20Manipulation.html|Cesium Sandcastle Imagery Manipulation Demo}
      */
     function ImageryLayerCollection() {
         this._layers = [];

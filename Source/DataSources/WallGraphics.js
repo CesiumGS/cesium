@@ -28,7 +28,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this wall will be displayed.
      *
      * @see Entity
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Wall.html|Cesium Sandcastle Wall Demo}
      */
     function WallGraphics(options) {
         this._definitionChanged = new Event();

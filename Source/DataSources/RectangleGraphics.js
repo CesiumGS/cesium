@@ -35,7 +35,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.zIndex=0] A Property specifying the zIndex used for ordering ground geometry.  Only has an effect if the rectangle is constant and neither height or extrudedHeight are specified.
      *
      * @see Entity
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Rectangle.html|Cesium Sandcastle Rectangle Demo}
      */
     function RectangleGraphics(options) {
         this._definitionChanged = new Event();

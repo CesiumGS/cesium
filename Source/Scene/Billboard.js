@@ -50,7 +50,7 @@ import VerticalOrigin from './VerticalOrigin.js';
      * @internalConstructor
      * @class
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Billboards.html|Cesium Sandcastle Billboard Demo}
      */
     function Billboard(options, billboardCollection) {
         options = defaultValue(options, defaultValue.EMPTY_OBJECT);

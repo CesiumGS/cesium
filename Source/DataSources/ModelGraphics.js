@@ -53,8 +53,8 @@ import PropertyBag from './PropertyBag.js';
      * @param {PropertyBag} [options.articulations] An object, where keys are composed of an articulation name, a single space, and a stage name, and the values are numeric properties.
      * @param {Property} [options.clippingPlanes] A property specifying the {@link ClippingPlaneCollection} used to selectively disable rendering the model.
      *
-     * @see {@link https://cesiumjs.org/tutorials/3D-Models-Tutorial/|3D Models Tutorial}
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
+     * @see {@link https://cesium.com/docs/tutorials/3d-models/|3D Models Tutorial}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=3D%20Models.html|Cesium Sandcastle 3D Models Demo}
      */
     function ModelGraphics(options) {
         this._definitionChanged = new Event();

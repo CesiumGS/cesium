@@ -40,7 +40,7 @@ import createPropertyDescriptor from './createPropertyDescriptor.js';
      * @param {Property} [options.distanceDisplayCondition] A Property specifying at what distance from the camera that this label will be displayed.
      * @param {Property} [options.disableDepthTestDistance] A Property specifying the distance from the camera at which to disable the depth test to.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Labels.html|Cesium Sandcastle Labels Demo}
      */
     function LabelGraphics(options) {
         this._definitionChanged = new Event();

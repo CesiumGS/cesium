@@ -27,6 +27,7 @@
             document.write('<script src="../Build/Specs/spec-main.js"><\/script>');
             document.write('<script src="../Build/Specs/Specs.js"><\/script>');
         } else {
+            window.CESIUM_BASE_URL = '../Source/';
             document.write('<script type="module" src="spec-main.js"><\/script>');
         }
     </script>

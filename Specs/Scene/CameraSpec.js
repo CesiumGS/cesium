@@ -2767,6 +2767,9 @@ describe('Scene/Camera', function() {
     it('getPixelSize', function() {
         scene.mode = SceneMode.SCENE3D;
 
+        var oldPixelRatio = scene.pixelRatio;
+        scene.pixelRatio = 1.0;
+
         var sphere = new BoundingSphere(Cartesian3.ZERO, 0.5);
         var context = scene.context;
         var drawingBufferWidth = context.drawingBufferWidth;
@@ -2774,11 +2777,13 @@ describe('Scene/Camera', function() {
 
         // Compute expected pixel size
         var distance = camera.distanceToBoundingSphere(sphere);
-        var pixelDimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, new Cartesian2());
+        var pixelDimensions = camera.frustum.getPixelDimensions(drawingBufferWidth, drawingBufferHeight, distance, scene.pixelRatio, new Cartesian2());
         var expectedPixelSize = Math.max(pixelDimensions.x, pixelDimensions.y);
 
         var pixelSize = camera.getPixelSize(sphere, drawingBufferWidth, drawingBufferHeight);
         expect(pixelSize).toEqual(expectedPixelSize);
+
+        scene.pixelRatio = oldPixelRatio;
     });
 
     it('getPixelSize throws when there is no bounding sphere', function() {

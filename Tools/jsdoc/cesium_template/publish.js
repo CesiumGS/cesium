@@ -87,6 +87,10 @@ function addSignatureTypes(f) {
 function addAttribs(f) {
     var attribs = helper.getAttribs(f);
 
+    if (f.deprecated) {
+        attribs.push('deprecated');
+    }
+
     if (attribs.length) {
         f.attribs = attribs.map(function(attrib) {
             return '<span class="type-signature attribute-' + attrib + '">' + htmlsafe(attrib) + '</span>';

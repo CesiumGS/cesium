@@ -187,7 +187,7 @@ Sandcastle.addToolbarButton('Sample Everest Terrain at Level 9', function() {
 
 Sandcastle.addToolbarButton('Sample Most Detailed Everest Terrain', function() {
     if (!Cesium.defined(viewer.terrainProvider.availability)) {
-        console.log('sampleTerrainMostDetailed is not supported for the selected terrain provider');
+        window.alert('sampleTerrainMostDetailed is not supported for the selected terrain provider');
         return;
     }
     var terrainSamplePositions = createGrid(0.0005);

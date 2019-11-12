@@ -240,7 +240,7 @@ import when from '../ThirdParty/when.js';
      *
      * @see {@link https://github.com/AnalyticalGraphicsInc/cesium/wiki/Fabric|Fabric wiki page} for a more detailed options of Fabric.
      *
-     * @demo {@link https://cesiumjs.org/Cesium/Apps/Sandcastle/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
+     * @demo {@link https://sandcastle.cesium.com/index.html?src=Materials.html|Cesium Sandcastle Materials Demo}
      *
      * @example
      * // Create a color material with fromType:

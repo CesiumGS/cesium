@@ -11,9 +11,7 @@
 /.travis.yml
 /.vscode
 /Apps
-/Build
-/Documentation
-/Instrumented
+/Build/Apps
 /Build/Coverage
 /Build/minifyShaders.state
 /Build/Documentation

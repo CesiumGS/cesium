@@ -217,7 +217,7 @@ import TweenCollection from './TweenCollection.js';
         /**
          * The minimum height the camera must be before testing for collision with terrain.
          * @type {Number}
-         * @default 10000.0
+         * @default 15000.0
          */
         this.minimumCollisionTerrainHeight = 15000.0;
         this._minimumCollisionTerrainHeight = this.minimumCollisionTerrainHeight;

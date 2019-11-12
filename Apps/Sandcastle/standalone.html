@@ -27,6 +27,14 @@
     var base64String;
     var data;
 
+    // Since we are setting the HTML base href below, we need to get the getCesiumBaseUrl
+    // upfront so that the value is correct. It gets cached for future calls.
+    // This is only a problem when using combined Cesium, which is the only time Cesium
+    // will be defined below.
+    if (typeof Cesium !== 'undefined') {
+        Cesium.buildModuleUrl.getCesiumBaseUrl();
+    }
+
     if (window.location.hash.indexOf('#c=') === 0) {
         base64String = window.location.hash.substr(3);
         data = window.decodeBase64Data(base64String, pako);

@@ -66,7 +66,7 @@ import Rectangle from './Rectangle.js';
                 return this._cameraPosition;
             },
             set : function(cameraPosition) {
-                // See https://cesiumjs.org/2013/04/25/Horizon-culling/
+                // See https://cesium.com/blog/2013/04/25/Horizon-culling/
                 var ellipsoid = this._ellipsoid;
                 var cv = ellipsoid.transformPositionToScaledSpace(cameraPosition, this._cameraPositionInScaledSpace);
                 var vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
@@ -116,7 +116,7 @@ import Rectangle from './Rectangle.js';
      * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
-        // See https://cesiumjs.org/2013/04/25/Horizon-culling/
+        // See https://cesium.com/blog/2013/04/25/Horizon-culling/
         var cv = this._cameraPositionInScaledSpace;
         var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
         var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);

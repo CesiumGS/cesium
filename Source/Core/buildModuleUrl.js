@@ -1,12 +1,11 @@
 import defined from './defined.js';
 import DeveloperError from './DeveloperError.js';
-import FeatureDetection from './FeatureDetection.js';
 import getAbsoluteUri from './getAbsoluteUri.js';
 import Resource from './Resource.js';
 
     /*global CESIUM_BASE_URL*/
 
-    var cesiumScriptRegex = /((?:.*\/)|^)cesium[\w-]*\.js(?:\W|$)/i;
+    var cesiumScriptRegex = /((?:.*\/)|^)Cesium\.js$/;
     function getBaseUrlFromCesiumScript() {
         var scripts = document.getElementsByTagName('script');
         for ( var i = 0, len = scripts.length; i < len; ++i) {
