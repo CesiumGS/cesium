@@ -12,7 +12,6 @@ import GeographicTilingScheme from '../Core/GeographicTilingScheme.js';
 import GetFeatureInfoFormat from './GetFeatureInfoFormat.js';
 import isArray from '../Core/isArray.js';
 import CesiumMath from '../Core/Math.js';
-import isArray from '../Core/isArray.js';
 import Rectangle from '../Core/Rectangle.js';
 import Resource from '../Core/Resource.js';
 import WebMercatorTilingScheme from '../Core/WebMercatorTilingScheme.js';
