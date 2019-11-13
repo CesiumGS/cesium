@@ -12,6 +12,7 @@ import defined from '../Core/defined.js';
 import defineProperties from '../Core/defineProperties.js';
 import destroyObject from '../Core/destroyObject.js';
 import DeveloperError from '../Core/DeveloperError.js';
+import Ellipsoid from '../Core/Ellipsoid.js';
 import Event from '../Core/Event.js';
 import GeometryInstance from '../Core/GeometryInstance.js';
 import GeometryPipeline from '../Core/GeometryPipeline.js';
@@ -49,6 +50,7 @@ import TerrainFillMesh from './TerrainFillMesh.js';
 import TerrainState from './TerrainState.js';
 import TileBoundingRegion from './TileBoundingRegion.js';
 import TileSelectionResult from './TileSelectionResult.js';
+import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
 
     /**
      * Provides quadtree tiles representing the surface of the globe.  This type is intended to be used
@@ -504,6 +506,10 @@ import TileSelectionResult from './TileSelectionResult.js';
     var splitCartographicLimitRectangleScratch = new Rectangle();
     var rectangleCenterScratch = new Cartographic();
 
+    var scratchEllipsoidShrunkRadii = new Cartesian3();
+    var scratchEllipsoidShrunk = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+    var scratchEllipsoidOccluderShrunk = new EllipsoidalOccluder(scratchEllipsoidShrunk);
+
     // cartographicLimitRectangle may span the IDL, but tiles never will.
     function clipRectangleAntimeridian(tileRectangle, cartographicLimitRectangle) {
         if (cartographicLimitRectangle.west < cartographicLimitRectangle.east) {
@@ -602,9 +608,26 @@ import TileSelectionResult from './TileSelectionResult.js';
                 return intersection;
             }
 
-            if (tileBoundingRegion.minimumHeight < 0.0 && occluders.ellipsoid.isScaledSpacePointVisibleUnder(occludeePointInScaledSpace, tileBoundingRegion.minimumHeight)) {
-                return intersection;
-            } else if (occluders.ellipsoid.isScaledSpacePointVisible(occludeePointInScaledSpace)) {
+            var ellipsoidOccluder;
+            var minimumHeight = tileBoundingRegion.minimumHeight;
+            if (minimumHeight < 0.0) {
+                var ellipsoidOrig = occluders.ellipsoid.ellipsoid;
+                var ellipsoidShrunkRadii = Cartesian3.fromElements(
+                    ellipsoidOrig.radii.x + minimumHeight,
+                    ellipsoidOrig.radii.y + minimumHeight,
+                    ellipsoidOrig.radii.z + minimumHeight,
+                    scratchEllipsoidShrunkRadii
+                );
+
+                var ellipsoidOccluderShrunk = scratchEllipsoidOccluderShrunk;
+                ellipsoidOccluderShrunk._ellipsoid = Ellipsoid.fromCartesian3(ellipsoidShrunkRadii, scratchEllipsoidShrunk);
+                ellipsoidOccluderShrunk.cameraPosition = frameState.camera.positionWC;
+                ellipsoidOccluder = ellipsoidOccluderShrunk;
+            } else {
+                ellipsoidOccluder = occluders.ellipsoid;
+            }
+
+            if (ellipsoidOccluder.isScaledSpacePointVisible(occludeePointInScaledSpace)) {
                 return intersection;
             }
 
