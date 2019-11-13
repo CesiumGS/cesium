@@ -6,6 +6,7 @@ import Cartesian3 from '../Core/Cartesian3.js';
 import Cartographic from '../Core/Cartographic.js';
 import defined from '../Core/defined.js';
 import Ellipsoid from '../Core/Ellipsoid.js';
+import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
 import IndexDatatype from '../Core/IndexDatatype.js';
 import CesiumMath from '../Core/Math.js';
 import Matrix4 from '../Core/Matrix4.js';
@@ -137,6 +138,18 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid);
         }
 
+        var occludeePointInScaledSpace;
+        if (ellipsoid.minimumRadius > -minimumHeight && minimumHeight < 0.0) {
+            var occluderEllipsoidShrunk = new Ellipsoid(
+                ellipsoid.radii.x + minimumHeight,
+                ellipsoid.radii.y + minimumHeight,
+                ellipsoid.radii.z + minimumHeight
+            );
+
+            var occluderShrunk = new EllipsoidalOccluder(occluderEllipsoidShrunk);
+            occludeePointInScaledSpace = occluderShrunk.computeHorizonCullingPoint(center, positions);
+        }
+
         var hMin = minimumHeight;
         hMin = Math.min(hMin, findMinMaxSkirts(parameters.westIndices, parameters.westSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
         hMin = Math.min(hMin, findMinMaxSkirts(parameters.southIndices, parameters.southSkirtHeight, heights, uvs, rectangle, ellipsoid, toENU, minimum, maximum));
@@ -218,6 +231,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
             maximumHeight : maximumHeight,
             boundingSphere : boundingSphere,
             orientedBoundingBox : orientedBoundingBox,
+            occludeePointInScaledSpace : occludeePointInScaledSpace,
             encoding : encoding,
             skirtIndex : parameters.indices.length
         };
