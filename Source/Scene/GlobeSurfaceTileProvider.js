@@ -149,8 +149,6 @@ import TileSelectionResult from './TileSelectionResult.js';
 
         this._hasLoadedTilesThisFrame = false;
         this._hasFillTilesThisFrame = false;
-
-        this.minimumRenderedTileHeight = Number.MAX_VALUE;
     }
 
     defineProperties(GlobeSurfaceTileProvider.prototype, {
@@ -414,7 +412,7 @@ import TileSelectionResult from './TileSelectionResult.js';
         }
 
         // Add the tile render commands to the command list, sorted by texture count.
-        this.minimumRenderedTileHeight = Number.MAX_VALUE;
+        frameState.minimumTerrainHeight = 0.0;
         var tilesToRenderByTextureCount = this._tilesToRenderByTextureCount;
         for (var textureCountIndex = 0, textureCountLength = tilesToRenderByTextureCount.length; textureCountIndex < textureCountLength; ++textureCountIndex) {
             var tilesToRender = tilesToRenderByTextureCount[textureCountIndex];
@@ -425,7 +423,7 @@ import TileSelectionResult from './TileSelectionResult.js';
             for (var tileIndex = 0, tileLength = tilesToRender.length; tileIndex < tileLength; ++tileIndex) {
                 var tile = tilesToRender[tileIndex];
                 addDrawCommandsForTile(this, tile, frameState);
-                this.minimumRenderedTileHeight = Math.min(tile.data.tileBoundingRegion.minimumHeight, this.minimumRenderedTileHeight);
+                frameState.minimumTerrainHeight = Math.min(tile.data.tileBoundingRegion.minimumHeight, frameState.minimumTerrainHeight);
             }
         }
     };
