@@ -396,7 +396,11 @@ import WebMercatorProjection from './WebMercatorProjection.js';
         var occludeePointInScaledSpace;
         if (hasRelativeToCenter) {
             var occluder = new EllipsoidalOccluder(ellipsoid);
-            occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(relativeToCenter, positions);
+            if (minimumHeight < 0.0) {
+                occludeePointInScaledSpace = occluder.computeHorizonCullingPointUnder(relativeToCenter, positions, minimumHeight);
+            } else {
+                occludeePointInScaledSpace = occluder.computeHorizonCullingPoint(relativeToCenter, positions);
+            }
         }
 
         var aaBox = new AxisAlignedBoundingBox(minimum, maximum, relativeToCenter);

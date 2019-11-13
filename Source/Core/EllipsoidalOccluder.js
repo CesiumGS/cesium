@@ -4,6 +4,7 @@ import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import defineProperties from './defineProperties.js';
+import Ellipsoid from './Ellipsoid.js';
 import Rectangle from './Rectangle.js';
 
     /**
@@ -116,17 +117,38 @@ import Rectangle from './Rectangle.js';
      * occluder.isScaledSpacePointVisible(scaledSpacePoint); //returns true
      */
     EllipsoidalOccluder.prototype.isScaledSpacePointVisible = function(occludeeScaledSpacePosition) {
+        return isScaledSpacePointVisible(this._cameraPositionInScaledSpace, this._distanceToLimbInScaledSpaceSquared, occludeeScaledSpacePosition);
+    };
+
+    var scratchCameraPosition = new Cartesian3();
+    var scratchMinimumEllipsoidRadii = new Cartesian3();
+    var scratchMinimumEllipsoid = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+
+    EllipsoidalOccluder.prototype.isScaledSpacePointVisibleUnder = function(occludeeScaledSpacePosition, minimumHeight) {
+        var ellipsoid = this._ellipsoid;
+        var minimumEllipsoidRadii = Cartesian3.fromElements(
+            ellipsoid.radii.x + minimumHeight,
+            ellipsoid.radii.y + minimumHeight,
+            ellipsoid.radii.z + minimumHeight,
+            scratchMinimumEllipsoidRadii
+        );
+        var minimumEllipsoid = Ellipsoid.fromCartesian3(minimumEllipsoidRadii, scratchMinimumEllipsoid);
+
+        var cameraPositionInScaledSpace = minimumEllipsoid.transformPositionToScaledSpace(this._cameraPosition, scratchCameraPosition);
+        var distanceToLimbInScaleSpace = Cartesian3.magnitudeSquared(cameraPositionInScaledSpace) - 1.0;
+        return isScaledSpacePointVisible(cameraPositionInScaledSpace, distanceToLimbInScaleSpace, occludeeScaledSpacePosition);
+    };
+
+    function isScaledSpacePointVisible(cameraPositionInScaledSpace, distanceToLimbInScaleSpace, occludeeScaledSpacePosition) {
         // See https://cesium.com/blog/2013/04/25/Horizon-culling/
-        var cv = this._cameraPositionInScaledSpace;
-        var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
-        var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);
-        var vtDotVc = -Cartesian3.dot(vt, cv);
+        var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cameraPositionInScaledSpace, scratchCartesian);
+        var vtDotVc = -Cartesian3.dot(vt, cameraPositionInScaledSpace);
         // If vhMagnitudeSquared < 0 then we are below the surface of the ellipsoid and
         // in this case, set the culling plane to be on V.
-        var isOccluded = vhMagnitudeSquared < 0 ? vtDotVc > 0 : (vtDotVc > vhMagnitudeSquared &&
-                         vtDotVc * vtDotVc / Cartesian3.magnitudeSquared(vt) > vhMagnitudeSquared);
+        var isOccluded = distanceToLimbInScaleSpace < 0 ? vtDotVc > 0 : (vtDotVc > distanceToLimbInScaleSpace &&
+                         vtDotVc * vtDotVc / Cartesian3.magnitudeSquared(vt) > distanceToLimbInScaleSpace);
         return !isOccluded;
-    };
+    }
 
     /**
      * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
@@ -161,6 +183,34 @@ import Rectangle from './Rectangle.js';
         for (var i = 0, len = positions.length; i < len; ++i) {
             var position = positions[i];
             var candidateMagnitude = computeMagnitude(ellipsoid, position, scaledSpaceDirectionToPoint);
+            resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
+        }
+
+        return magnitudeToPoint(scaledSpaceDirectionToPoint, resultMagnitude, result);
+    };
+
+    EllipsoidalOccluder.prototype.computeHorizonCullingPointUnder = function(directionToPoint, positions, minimumHeight, result) {
+        //>>includeStart('debug', pragmas.debug);
+        Check.typeOf.object('directionToPoint', directionToPoint);
+        Check.defined('positions', positions);
+        //>>includeEnd('debug');
+
+        if (!defined(result)) {
+            result = new Cartesian3();
+        }
+
+        var minEllipsoid = new Ellipsoid(
+            this._ellipsoid.radii.x + minimumHeight,
+            this._ellipsoid.radii.y + minimumHeight,
+            this._ellipsoid.radii.z + minimumHeight
+        );
+
+        var scaledSpaceDirectionToPoint = computeScaledSpaceDirectionToPoint(minEllipsoid, directionToPoint);
+        var resultMagnitude = 0.0;
+
+        for (var i = 0, len = positions.length; i < len; ++i) {
+            var position = positions[i];
+            var candidateMagnitude = computeMagnitude(minEllipsoid, position, scaledSpaceDirectionToPoint);
             resultMagnitude = Math.max(resultMagnitude, candidateMagnitude);
         }
 
