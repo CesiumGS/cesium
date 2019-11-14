@@ -269,7 +269,7 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         var orientedBoundingBox = OrientedBoundingBox.fromRectangle(rectangle, minimumHeight, maximumHeight, ellipsoid, orientedBoundingBoxScratch);
 
         var occluder = new EllipsoidalOccluder(ellipsoid);
-        var horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVertices(boundingSphere.center, cartesianVertices, 3, boundingSphere.center, horizonOcclusionPointScratch);
+        var horizonOcclusionPoint = occluder.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid(boundingSphere.center, cartesianVertices, 3, boundingSphere.center, minimumHeight, horizonOcclusionPointScratch);
 
         var heightRange = maximumHeight - minimumHeight;
 

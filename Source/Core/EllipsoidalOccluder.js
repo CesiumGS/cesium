@@ -4,6 +4,7 @@ import Check from './Check.js';
 import defaultValue from './defaultValue.js';
 import defined from './defined.js';
 import defineProperties from './defineProperties.js';
+import Ellipsoid from './Ellipsoid.js';
 import Rectangle from './Rectangle.js';
 
     /**
@@ -128,6 +129,35 @@ import Rectangle from './Rectangle.js';
         return !isOccluded;
     };
 
+    var scratchEllipsoidShrunkRadii = new Cartesian3();
+    var scratchEllipsoidShrunk = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+
+    EllipsoidalOccluder.prototype.isScaledSpacePointVisiblePossiblyUnderEllipsoid = function(occludeeScaledSpacePosition, minimumHeight) {
+        var ellipsoid = this._ellipsoid;
+        var cv = this._cameraPositionInScaledSpace;
+        var vhMagnitudeSquared = this._distanceToLimbInScaledSpaceSquared;
+
+        if (minimumHeight < 0.0 || ellipsoid.minimumRadius > -minimumHeight) {
+            var ellipsoidShrunkRadii = Cartesian3.fromElements(
+                ellipsoid.radii.x + minimumHeight,
+                ellipsoid.radii.y + minimumHeight,
+                ellipsoid.radii.z + minimumHeight,
+                scratchEllipsoidShrunkRadii
+            );
+            ellipsoid = Ellipsoid.fromCartesian3(ellipsoidShrunkRadii, scratchEllipsoidShrunk);
+            cv = ellipsoid.transformPositionToScaledSpace(this._cameraPosition, this._cameraPositionInScaledSpace);
+            vhMagnitudeSquared = Cartesian3.magnitudeSquared(cv) - 1.0;
+        }
+
+        var vt = Cartesian3.subtract(occludeeScaledSpacePosition, cv, scratchCartesian);
+        var vtDotVc = -Cartesian3.dot(vt, cv);
+        // If vhMagnitudeSquared < 0 then we are below the surface of the ellipsoid and
+        // in this case, set the culling plane to be on V.
+        var isOccluded = vhMagnitudeSquared < 0 ? vtDotVc > 0 : (vtDotVc > vhMagnitudeSquared &&
+                         vtDotVc * vtDotVc / Cartesian3.magnitudeSquared(vt) > vhMagnitudeSquared);
+        return !isOccluded;
+    };
+
     /**
      * Computes a point that can be used for horizon culling from a list of positions.  If the point is below
      * the horizon, all of the positions are guaranteed to be below the horizon as well.  The returned point
@@ -165,6 +195,46 @@ import Rectangle from './Rectangle.js';
         }
 
         return magnitudeToPoint(scaledSpaceDirectionToPoint, resultMagnitude, result);
+    };
+
+    var scratchEllipsoidShrunkRadii2 = new Cartesian3();
+    var scratchEllipsoidShrunk2 = Ellipsoid.clone(Ellipsoid.UNIT_SPHERE);
+
+    // /**
+    //  * Computes a point that can be used for horizon culling from a list of positions that might all be underneath the ellipsoid.
+    //  * If the minimum height of the points is under the ellipsoid, the returned point is relative to an ellipsoid that has been
+    //  * shrunk by the difference between the ellipsoid surface and the minimum height. If the point is below this shrunk horizon, all of the
+    //  * positions are guaranteed to be below the shrunk horizon as well. The returned point is expressed in the ellipsoid-scaled space
+    //  * and is suitable for use with {@link EllipsoidalOccluder#isScaledSpacePointVisiblePossiblyUnderEllipsoid}.
+    //  *
+    //  * @param {Cartesian3} directionToPoint The direction that the computed point will lie along.
+    //  *                     A reasonable direction to use is the direction from the center of the ellipsoid to
+    //  *                     the center of the bounding sphere computed from the positions.  The direction need not
+    //  *                     be normalized.
+    //  * @param {Cartesian3[]} positions The positions from which to compute the horizon culling point.  The positions
+    //  *                       must be expressed in a reference frame centered at the ellipsoid and aligned with the
+    //  *                       ellipsoid's axes.
+    //  * @param {Number} minimumHeight The minimum height of all positions.
+    //  * @param {Cartesian3} [result] The instance on which to store the result instead of allocating a new instance.
+    //  * @returns {Cartesian3} The computed horizon culling point, expressed in the ellipsoid-scaled space.
+    //  */
+    EllipsoidalOccluder.prototype.computeHorizonCullingPointPossiblyUnderEllipsoid = function(directionToPoint, positions, minimumHeight, result) {
+        var ellipsoidOrig = this._ellipsoid;
+        var ellipsoid = ellipsoidOrig;
+
+        if (minimumHeight < 0.0 && ellipsoid.minimumRadius > -minimumHeight) {
+            var ellipsoidShrunkRadii = Cartesian3.fromElements(
+                ellipsoid.radii.x + minimumHeight,
+                ellipsoid.radii.y + minimumHeight,
+                ellipsoid.radii.z + minimumHeight,
+                scratchEllipsoidShrunkRadii2
+            );
+            ellipsoid = Ellipsoid.fromCartesian3(ellipsoidShrunkRadii, scratchEllipsoidShrunk2);
+        }
+
+        this._ellipsoid = ellipsoid;
+        this.computeHorizonCullingPoint(directionToPoint, positions, result);
+        this._ellipsoid = ellipsoidOrig;
     };
 
     var positionScratch = new Cartesian3();
@@ -215,6 +285,25 @@ import Rectangle from './Rectangle.js';
         return magnitudeToPoint(scaledSpaceDirectionToPoint, resultMagnitude, result);
     };
 
+    EllipsoidalOccluder.prototype.computeHorizonCullingPointFromVerticesPossiblyUnderEllipsoid = function(directionToPoint, vertices, stride, center, minimumHeight, result) {
+        var ellipsoidOrig = this._ellipsoid;
+        var ellipsoid = ellipsoidOrig;
+
+        if (minimumHeight < 0.0 && ellipsoid.minimumRadius > -minimumHeight) {
+            var ellipsoidShrunkRadii = Cartesian3.fromElements(
+                ellipsoid.radii.x + minimumHeight,
+                ellipsoid.radii.y + minimumHeight,
+                ellipsoid.radii.z + minimumHeight,
+                scratchEllipsoidShrunkRadii2
+            );
+            ellipsoid = Ellipsoid.fromCartesian3(ellipsoidShrunkRadii, scratchEllipsoidShrunk2);
+        }
+
+        this._ellipsoid = ellipsoid;
+        this.computeHorizonCullingPointFromVertices(directionToPoint, vertices, stride, center, result);
+        this._ellipsoid = ellipsoidOrig;
+    };
+
     var subsampleScratch = [];
 
     /**
@@ -244,6 +333,25 @@ import Rectangle from './Rectangle.js';
         }
 
         return this.computeHorizonCullingPoint(bs.center, positions, result);
+    };
+
+    EllipsoidalOccluder.prototype.computeHorizonCullingPointFromRectanglePossiblyUnderEllipsoid = function(rectangle, ellipsoid, minimumHeight, result) {
+        var ellipsoidOrig = this._ellipsoid;
+        var ellipsoidNew = ellipsoidOrig;
+
+        if (minimumHeight < 0.0 && ellipsoid.minimumRadius > -minimumHeight) {
+            var ellipsoidShrunkRadii = Cartesian3.fromElements(
+                ellipsoidNew.radii.x + minimumHeight,
+                ellipsoidNew.radii.y + minimumHeight,
+                ellipsoidNew.radii.z + minimumHeight,
+                scratchEllipsoidShrunkRadii2
+            );
+            ellipsoidNew = Ellipsoid.fromCartesian3(ellipsoidShrunkRadii, scratchEllipsoidShrunk2);
+        }
+
+        this._ellipsoid = ellipsoidNew;
+        this.computeHorizonCullingPointFromRectangle(rectangle, ellipsoid, result);
+        this._ellipsoid = ellipsoidOrig;
     };
 
     var scaledSpaceScratch = new Cartesian3();

@@ -139,15 +139,9 @@ import createTaskProcessorWorker from './createTaskProcessorWorker.js';
         }
 
         var occludeePointInScaledSpace;
-        if (ellipsoid.minimumRadius > -minimumHeight && minimumHeight < 0.0) {
-            var occluderEllipsoidShrunk = new Ellipsoid(
-                ellipsoid.radii.x + minimumHeight,
-                ellipsoid.radii.y + minimumHeight,
-                ellipsoid.radii.z + minimumHeight
-            );
-
-            var occluderShrunk = new EllipsoidalOccluder(occluderEllipsoidShrunk);
-            occludeePointInScaledSpace = occluderShrunk.computeHorizonCullingPoint(center, positions);
+        if (exaggeration !== 1.0 || minimumHeight < 0.0) {
+            var occluder = new EllipsoidalOccluder(ellipsoid);
+            occludeePointInScaledSpace = occluder.computeHorizonCullingPointPossiblyUnderEllipsoid(center, positions, minimumHeight);
         }
 
         var hMin = minimumHeight;

@@ -608,26 +608,7 @@ import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
                 return intersection;
             }
 
-            var ellipsoidOccluder;
-            var minimumHeight = tileBoundingRegion.minimumHeight;
-            if (minimumHeight < 0.0) {
-                var ellipsoidOrig = occluders.ellipsoid.ellipsoid;
-                var ellipsoidShrunkRadii = Cartesian3.fromElements(
-                    ellipsoidOrig.radii.x + minimumHeight,
-                    ellipsoidOrig.radii.y + minimumHeight,
-                    ellipsoidOrig.radii.z + minimumHeight,
-                    scratchEllipsoidShrunkRadii
-                );
-
-                var ellipsoidOccluderShrunk = scratchEllipsoidOccluderShrunk;
-                ellipsoidOccluderShrunk._ellipsoid = Ellipsoid.fromCartesian3(ellipsoidShrunkRadii, scratchEllipsoidShrunk);
-                ellipsoidOccluderShrunk.cameraPosition = frameState.camera.positionWC;
-                ellipsoidOccluder = ellipsoidOccluderShrunk;
-            } else {
-                ellipsoidOccluder = occluders.ellipsoid;
-            }
-
-            if (ellipsoidOccluder.isScaledSpacePointVisible(occludeePointInScaledSpace)) {
+            if (occluders.ellipsoid.isScaledSpacePointVisiblePossiblyUnderEllipsoid(occludeePointInScaledSpace, tileBoundingRegion.minimumHeight)) {
                 return intersection;
             }
 
@@ -830,17 +811,17 @@ import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
 
     var cornerPositionsScratch = [new Cartesian3(), new Cartesian3(), new Cartesian3(), new Cartesian3()];
 
-    function computeOccludeePoint(tileProvider, center, rectangle, height, result) {
+    function computeOccludeePoint(tileProvider, center, rectangle, minimumHeight, maximumHeight, result) {
         var ellipsoidalOccluder = tileProvider.quadtree._occluders.ellipsoid;
         var ellipsoid = ellipsoidalOccluder.ellipsoid;
 
         var cornerPositions = cornerPositionsScratch;
-        Cartesian3.fromRadians(rectangle.west, rectangle.south, height, ellipsoid, cornerPositions[0]);
-        Cartesian3.fromRadians(rectangle.east, rectangle.south, height, ellipsoid, cornerPositions[1]);
-        Cartesian3.fromRadians(rectangle.west, rectangle.north, height, ellipsoid, cornerPositions[2]);
-        Cartesian3.fromRadians(rectangle.east, rectangle.north, height, ellipsoid, cornerPositions[3]);
+        Cartesian3.fromRadians(rectangle.west, rectangle.south, maximumHeight, ellipsoid, cornerPositions[0]);
+        Cartesian3.fromRadians(rectangle.east, rectangle.south, maximumHeight, ellipsoid, cornerPositions[1]);
+        Cartesian3.fromRadians(rectangle.west, rectangle.north, maximumHeight, ellipsoid, cornerPositions[2]);
+        Cartesian3.fromRadians(rectangle.east, rectangle.north, maximumHeight, ellipsoid, cornerPositions[3]);
 
-        return ellipsoidalOccluder.computeHorizonCullingPoint(center, cornerPositions, result);
+        return ellipsoidalOccluder.computeHorizonCullingPointPossiblyUnderEllipsoid(center, cornerPositions, minimumHeight, result);
     }
 
     /**
@@ -888,7 +869,7 @@ import EllipsoidalOccluder from '../Core/EllipsoidalOccluder.js';
                     tile.tilingScheme.ellipsoid,
                     surfaceTile.orientedBoundingBox);
 
-                surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
+                surfaceTile.occludeePointInScaledSpace = computeOccludeePoint(this, surfaceTile.orientedBoundingBox.center, tile.rectangle, tileBoundingRegion.minimumHeight, tileBoundingRegion.maximumHeight, surfaceTile.occludeePointInScaledSpace);
             }
         }
 
