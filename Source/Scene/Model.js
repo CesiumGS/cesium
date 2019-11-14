@@ -4025,7 +4025,7 @@ import ShadowMode from './ShadowMode.js';
         if ((alpha > 0.0) && (alpha < 1.0)) {
             var nodeCommands = model._nodeCommands;
             var length = nodeCommands.length;
-            if (!defined(nodeCommands[0].translucentCommand) || forceDerive) {
+            if (defined(nodeCommands[0]) && (!defined(nodeCommands[0].translucentCommand) || forceDerive)) {
                 for (var i = 0; i < length; ++i) {
                     var nodeCommand = nodeCommands[i];
                     var command = nodeCommand.command;
