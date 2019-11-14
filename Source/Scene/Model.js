@@ -4066,7 +4066,7 @@ import ShadowMode from './ShadowMode.js';
             '    n.x *= czm_projection[0][0]; \n' +
             '    n.y *= czm_projection[1][1]; \n' +
             '    vec4 clip = gl_Position; \n' +
-            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize / czm_viewport.z; \n' +
+            '    clip.xy += n.xy * clip.w * gltf_silhouetteSize * czm_pixelRatio / czm_viewport.z; \n' +
             '    gl_Position = clip; \n' +
             '}';
 

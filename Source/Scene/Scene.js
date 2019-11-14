@@ -2198,7 +2198,7 @@ import View from './View.js';
 
         var clearGlobeDepth = environmentState.clearGlobeDepth;
         var useDepthPlane = environmentState.useDepthPlane;
-        var separatePrimitiveFramebuffer = environmentState.separatePrimitiveFramebuffer = (numFrustums > 1) && clearGlobeDepth && environmentState.useGlobeDepthFramebuffer;
+        var separatePrimitiveFramebuffer = environmentState.separatePrimitiveFramebuffer = false;
         var clearDepth = scene._depthClearCommand;
         var clearStencil = scene._stencilClearCommand;
         var clearClassificationStencil = scene._classificationStencilClearCommand;
