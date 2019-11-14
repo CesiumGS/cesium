@@ -870,7 +870,11 @@ import TileOrientedBoundingBox from './TileOrientedBoundingBox.js';
                 var originCartographic = that._ellipsoid.cartesianToCartographic(clippingPlanesOrigin);
                 if (defined(originCartographic) && (originCartographic.height > ApproximateTerrainHeights._defaultMinTerrainHeight)) {
                     that._initialClippingPlanesOriginMatrix = Transforms.eastNorthUpToFixedFrame(clippingPlanesOrigin);
+                } else {
+                    // Make sure the origin of the clipping plane matches the bounding sphere center.
+                    that._initialClippingPlanesOriginMatrix = Matrix4.fromTranslation(clippingPlanesOrigin);
                 }
+
                 that._clippingPlanesOriginMatrix = Matrix4.clone(that._initialClippingPlanesOriginMatrix);
                 that._readyPromise.resolve(that);
             }).otherwise(function(error) {
