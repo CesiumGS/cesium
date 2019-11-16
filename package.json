@@ -78,7 +78,7 @@
     "rollup-plugin-strip-pragma": "^1.0.0",
     "rollup-plugin-uglify": "^6.0.3",
     "stream-to-promise": "^2.2.0",
-    "yargs": "^14.0.0"
+    "yargs": "^15.0.1"
   },
   "scripts": {
     "convertToModules": "gulp convertToModules",
